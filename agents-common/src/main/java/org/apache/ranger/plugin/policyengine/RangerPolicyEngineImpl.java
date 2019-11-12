@@ -25,7 +25,6 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -274,7 +273,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			String serviceType  = servicePolicies.getServiceDef().getName();
 			String propertyName = "ranger.plugin." + serviceType + ".policyengine.evaluator.auto.maximum.policycount.for.cache.type";
 
-			int thresholdForUsingOptimizedEvaluator = RangerConfiguration.getInstance().getInt(propertyName, MAX_POLICIES_FOR_CACHE_TYPE_EVALUATOR);
+			int thresholdForUsingOptimizedEvaluator = pluginContext.getConfig().getInt(propertyName, MAX_POLICIES_FOR_CACHE_TYPE_EVALUATOR);
 
 			int servicePoliciesCount = servicePolicies.getPolicies().size() + (servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getPolicies().size() : 0);
 

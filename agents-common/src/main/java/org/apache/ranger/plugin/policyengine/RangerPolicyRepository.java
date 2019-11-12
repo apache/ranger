@@ -23,7 +23,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.contextenricher.RangerAbstractContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
@@ -33,6 +32,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
+import org.apache.ranger.plugin.policyevaluator.RangerAbstractPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
@@ -296,7 +296,7 @@ class RangerPolicyRepository {
             if (options.cacheAuditResults) {
                 final int RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE = 64 * 1024;
 
-                int auditResultCacheSize = RangerConfiguration.getInstance().getInt(propertyName, RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE);
+                int auditResultCacheSize = pluginContext.getConfig().getInt(propertyName, RANGER_POLICYENGINE_AUDITRESULT_CACHE_SIZE);
                 accessAuditCache = Collections.synchronizedMap(new CacheMap<String, AuditInfo>(auditResultCacheSize));
             } else {
                 accessAuditCache = null;
@@ -982,7 +982,7 @@ class RangerPolicyRepository {
             ret.setAppId(appId);
             if (ret instanceof RangerAbstractContextEnricher) {
                 RangerAbstractContextEnricher abstractContextEnricher = (RangerAbstractContextEnricher) ret;
-                abstractContextEnricher.setAuthContext(pluginContext.getAuthContext());
+                abstractContextEnricher.setPluginContext(pluginContext);
             }
             ret.init();
         }
@@ -1001,7 +1001,7 @@ class RangerPolicyRepository {
         }
 
         scrubPolicy(policy);
-        RangerPolicyEvaluator ret;
+        RangerAbstractPolicyEvaluator ret;
 
         if(StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_CACHED)) {
             ret = new RangerCachedPolicyEvaluator();
@@ -1009,6 +1009,7 @@ class RangerPolicyRepository {
             ret = new RangerOptimizedPolicyEvaluator();
         }
 
+        ret.setPluginContext(pluginContext);
         ret.init(policy, serviceDef, options);
 
         if(LOG.isDebugEnabled()) {
@@ -1099,7 +1100,7 @@ class RangerPolicyRepository {
             ret = new HashMap<>();
 
             for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR, optimizeTrieForRetrieval));
+                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR, optimizeTrieForRetrieval, pluginContext));
             }
         } else {
             ret = null;
@@ -1122,7 +1123,7 @@ class RangerPolicyRepository {
                 if (RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE == policyDeltaType || RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE == policyDeltaType) {
                     LOG.warn("policyDeltaType is not for POLICY_CREATE and trie for resourceDef:[" + resourceDefName + "] was null! Should not have happened!!");
                 }
-                trie = new RangerResourceTrie<>(resourceDef, new ArrayList<>(), RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR, true);
+                trie = new RangerResourceTrie<>(resourceDef, new ArrayList<>(), RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR, true, pluginContext);
                 trieMap.put(resourceDefName, trie);
             }
 

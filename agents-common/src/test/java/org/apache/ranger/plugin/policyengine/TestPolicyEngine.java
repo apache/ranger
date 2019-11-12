@@ -31,7 +31,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -71,11 +70,14 @@ import java.util.TimeZone;
 import static org.junit.Assert.*;
 
 public class TestPolicyEngine {
+	static RangerPluginContext pluginContext;
 	static Gson gsonBuilder;
 	long requestCount = 0L;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
+		pluginContext = new RangerPluginContext("hive");
+
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
 				.setPrettyPrinting()
 				.registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
@@ -173,8 +175,7 @@ public class TestPolicyEngine {
                 "</configuration>\n");
 		writer.close();
 
-		RangerConfiguration config = RangerConfiguration.getInstance();
-		config.addResource(new org.apache.hadoop.fs.Path(file.toURI()));
+		pluginContext.getConfig().addResource(new org.apache.hadoop.fs.Path(file.toURI()));
 	}
 
 	@AfterClass
@@ -437,15 +438,14 @@ public class TestPolicyEngine {
 		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
 		policyEngineOptions.optimizeTrieForRetrieval = false;
 
-		boolean useForwardedIPAddress = RangerConfiguration.getInstance().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
-		String trustedProxyAddressString = RangerConfiguration.getInstance().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
+		boolean useForwardedIPAddress = pluginContext.getConfig().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = pluginContext.getConfig().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
 		String[] trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, ';');
 		if (trustedProxyAddresses != null) {
 			for (int i = 0; i < trustedProxyAddresses.length; i++) {
 				trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
 			}
 		}
-		RangerPluginContext pluginContext = new RangerPluginContext("hive");
 		pluginContext.setClusterName("cl1");
 		pluginContext.setClusterType("on-prem");
 

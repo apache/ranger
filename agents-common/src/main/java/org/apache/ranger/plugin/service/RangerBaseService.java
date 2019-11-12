@@ -36,6 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
@@ -65,6 +66,12 @@ public abstract class RangerBaseService {
 	protected Map<String, String>   configs;
 	protected String 			    serviceName;
 	protected String 				serviceType;
+
+	private final RangerAdminConfig config;
+
+	public RangerBaseService() {
+		this.config = new RangerAdminConfig();
+	}
 
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		this.serviceDef    = serviceDef;
@@ -111,6 +118,8 @@ public abstract class RangerBaseService {
 	public void setServiceType(String serviceType) {
 		this.serviceType = serviceType;
 	}
+
+	public RangerAdminConfig getConfig() { return config; }
 
 	public abstract Map<String, Object> validateConfig() throws Exception;
 	
@@ -403,7 +412,7 @@ public abstract class RangerBaseService {
 		List<String> ret = new ArrayList<>();
 
 		HashSet<String> uniqueUsers = new HashSet<String>();
-		String[] users = RangerConfiguration.getInstance().getStrings("ranger.default.policy.users");
+		String[] users = config.getStrings("ranger.default.policy.users");
 
 		if (users != null) {
 			for (String user : users) {
@@ -425,9 +434,9 @@ public abstract class RangerBaseService {
 				}
 			}
 		}
-		String authType = RangerConfiguration.getInstance().get(RANGER_AUTH_TYPE,"simple");
-		String lookupPrincipal = RangerConfiguration.getInstance().get(LOOKUP_PRINCIPAL);
-		String lookupKeytab = RangerConfiguration.getInstance().get(LOOKUP_KEYTAB);
+		String authType = config.get(RANGER_AUTH_TYPE,"simple");
+		String lookupPrincipal = config.get(LOOKUP_PRINCIPAL);
+		String lookupKeytab = config.get(LOOKUP_KEYTAB);
 
 		String lookUpUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
 
@@ -441,7 +450,7 @@ public abstract class RangerBaseService {
 		List<String> ret = new ArrayList<>();
 
 		HashSet<String> uniqueGroups = new HashSet<String>();
-		String[] groups = RangerConfiguration.getInstance().getStrings("ranger.default.policy.groups");
+		String[] groups = config.getStrings("ranger.default.policy.groups");
 
 		if (groups != null) {
 			for (String group : groups) {

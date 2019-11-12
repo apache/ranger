@@ -21,7 +21,7 @@ package org.apache.ranger.common;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.plugin.model.RangerRole;
 
@@ -57,7 +57,9 @@ public class RangerRoleCache {
 	}
 
 	private RangerRoleCache() {
-		waitTimeInSeconds = RangerConfiguration.getInstance().getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+		RangerAdminConfig config = new RangerAdminConfig();
+
+		waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 	}
 
 	public RangerRoles getLatestRangerRoleOrCached(String serviceName, RoleDBStore roleDBStore, Long lastKnownRoleVersion, Long rangerRoleVersionInDB) throws Exception {

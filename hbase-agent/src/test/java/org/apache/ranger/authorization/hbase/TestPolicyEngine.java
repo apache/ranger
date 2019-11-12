@@ -108,7 +108,7 @@ public class TestPolicyEngine {
 			pluginContext.setClusterType("on-prem");
 			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions, pluginContext);
 
-			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
+			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(pluginContext.getConfig());
 
 			for(TestData test : testCase.tests) {
 				RangerAccessResult expected = test.result;

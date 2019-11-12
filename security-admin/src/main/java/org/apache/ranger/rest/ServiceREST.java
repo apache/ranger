@@ -59,6 +59,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
@@ -243,6 +244,7 @@ public class ServiceREST {
 	private RangerPolicyEngineOptions delegateAdminOptions;
 	private RangerPolicyEngineOptions policySearchAdminOptions;
 	private RangerPolicyEngineOptions defaultAdminOptions;
+	private final RangerAdminConfig   config = new RangerAdminConfig();
 
 	public ServiceREST() {
 	}
@@ -3674,7 +3676,7 @@ public class ServiceREST {
 
 		final String propertyPrefix = "ranger.admin";
 
-		opts.configureDelegateAdmin(RangerConfiguration.getInstance(), propertyPrefix);
+		opts.configureDelegateAdmin(config, propertyPrefix);
 
 		return opts;
 	}
@@ -3684,7 +3686,7 @@ public class ServiceREST {
 
 		final String propertyPrefix = "ranger.admin";
 
-		opts.configureRangerAdminForPolicySearch(RangerConfiguration.getInstance(), propertyPrefix);
+		opts.configureRangerAdminForPolicySearch(config, propertyPrefix);
 		return opts;
 	}
 
@@ -3693,7 +3695,7 @@ public class ServiceREST {
 
 		final String propertyPrefix = "ranger.admin";
 
-		opts.configureDefaultRangerAdmin(RangerConfiguration.getInstance(), propertyPrefix);
+		opts.configureDefaultRangerAdmin(config, propertyPrefix);
 		return opts;
 	}
 
@@ -4085,11 +4087,11 @@ public class ServiceREST {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> scheduleCreateOrGetTagService(resourceService=" + resourceService.getName() + ")");
 		}
-		final boolean isAutoCreateTagService = RangerConfiguration.getInstance().getBoolean("ranger.tagservice.auto.create", true);
+		final boolean isAutoCreateTagService = config.getBoolean("ranger.tagservice.auto.create", true);
 
 		if (isAutoCreateTagService) {
 
-			String tagServiceName = RangerConfiguration.getInstance().get("ranger.tagservice.auto.name");
+			String tagServiceName = config.get("ranger.tagservice.auto.name");
 
 			if (StringUtils.isBlank(tagServiceName)) {
 				tagServiceName = getGeneratedTagServiceName(resourceService.getName());
@@ -4100,7 +4102,7 @@ public class ServiceREST {
 					LOG.debug("Attempting to get/create and possibly link to tag-service:[" + tagServiceName + "]");
 				}
 
-				final boolean isAutoLinkTagService = RangerConfiguration.getInstance().getBoolean("ranger.tagservice.auto.link", true);
+				final boolean isAutoLinkTagService = config.getBoolean("ranger.tagservice.auto.link", true);
 				RangerService tagService = null;
 
 				try {

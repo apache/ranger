@@ -144,7 +144,6 @@ public class RangerHdfsAuthorizerTest {
 
     @BeforeClass
     public static void setup() {
-
         try {
             File file = File.createTempFile("hdfs-version-site", ".xml");
             file.deleteOnExit();
@@ -152,21 +151,19 @@ public class RangerHdfsAuthorizerTest {
             try(final FileOutputStream outStream = new FileOutputStream(file);
                 final OutputStreamWriter writer = new OutputStreamWriter(outStream, StandardCharsets.UTF_8)) {
                 writer.write("<configuration>\n" +
-                    "        <property>\n" +
-                    "                <name>hdfs.version</name>\n" +
-                    "                <value>hdfs_version_3.0</value>\n" +
-                    "        </property>\n" +
-                    "</configuration>\n");
+                        "        <property>\n" +
+                        "                <name>hdfs.version</name>\n" +
+                        "                <value>hdfs_version_3.0</value>\n" +
+                        "        </property>\n" +
+                        "</configuration>\n");
             }
 
-            RangerConfiguration config = RangerConfiguration.getInstance();
-            config.addResource(new org.apache.hadoop.fs.Path(file.toURI()));
+            authorizer = new RangerHdfsAuthorizer(new org.apache.hadoop.fs.Path(file.toURI()));
+            authorizer.start();
         } catch (Exception exception) {
             Assert.fail("Cannot create hdfs-version-site file:[" + exception.getMessage() + "]");
         }
 
-        authorizer = new RangerHdfsAuthorizer();
-        authorizer.start();
         AccessControlEnforcer accessControlEnforcer = Mockito.mock(AccessControlEnforcer.class);
         rangerControlEnforcer = authorizer.getExternalAccessControlEnforcer(accessControlEnforcer);
     }

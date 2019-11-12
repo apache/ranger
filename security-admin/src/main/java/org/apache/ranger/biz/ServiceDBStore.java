@@ -60,7 +60,7 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.ranger.audit.provider.MiscUtil;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -341,6 +341,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public static final String ACCESS_TYPE_GET_METADATA   = "getmetadata";
 
 	private ServicePredicateUtil predicateUtil = null;
+	private RangerAdminConfig    config = null;
 
 
 	@Override
@@ -360,19 +361,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.initStore()");
 		}
 
+		config = new RangerAdminConfig();
+
 		if(! legacyServiceDefsInitDone) {
 			synchronized(ServiceDBStore.class) {
 				if(!legacyServiceDefsInitDone) {
 
-					if (! RangerConfiguration.getInstance().addAdminResources()) {
-						LOG.error("Could not add ranger-admin resources to RangerConfiguration.");
-					}
-
-					SUPPORTS_POLICY_DELTAS       = RangerConfiguration.getInstance().getBoolean("ranger.admin.supports.policy.deltas", false);
-					RETENTION_PERIOD_IN_DAYS     = RangerConfiguration.getInstance().getInt("ranger.admin.delta.retention.time.in.days", 7);
-					TAG_RETENTION_PERIOD_IN_DAYS = 	RangerConfiguration.getInstance().getInt("ranger.admin.tag.delta.retention.time.in.days", 3);
-
-					isRolesDownloadedByService = RangerConfiguration.getInstance().getBoolean("ranger.support.for.service.specific.role.download", false);
+					SUPPORTS_POLICY_DELTAS       = config.getBoolean("ranger.admin.supports.policy.deltas", false);
+					RETENTION_PERIOD_IN_DAYS     = config.getInt("ranger.admin.delta.retention.time.in.days", 7);
+					TAG_RETENTION_PERIOD_IN_DAYS = config.getInt("ranger.admin.tag.delta.retention.time.in.days", 3);
+					isRolesDownloadedByService   = config.getBoolean("ranger.support.for.service.specific.role.download", false);
 
 					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
@@ -3555,7 +3553,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 	}
 
-	private static void persistChangeLog(ServiceVersionUpdater serviceVersionUpdater) {
+	private void persistChangeLog(ServiceVersionUpdater serviceVersionUpdater) {
 		XXServiceVersionInfoDao serviceVersionInfoDao = serviceVersionUpdater.daoManager.getXXServiceVersionInfo();
 
 		XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(serviceVersionUpdater.serviceId);
@@ -4738,7 +4736,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	private String  getAuditMode(String serviceTypeName, String serviceName) {
-		RangerConfiguration config = RangerConfiguration.getInstance();
 		String ret = config.get("ranger.audit.global.mode");
 		if (StringUtils.isNotBlank(ret)) {
 			return ret;

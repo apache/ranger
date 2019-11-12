@@ -55,7 +55,6 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.wal.WALEdit;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -534,7 +533,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			perf = RangerPerfTracer.getPerfTracer(PERF_HBASEAUTH_REQUEST_LOG, "RangerAuthorizationCoprocessor.authorizeAccess(request=Operation[" + operation + "]");
 
 			ColumnFamilyAccessResult accessResult = evaluateAccess(ctx, operation, action, env, familyMap);
-			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
 			if (accessResult._everythingIsAccessible) {
 				auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
 				auditHandler.logAuthzAudits(accessResult._familyLevelAccessEvents);
@@ -577,7 +576,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				perf = RangerPerfTracer.getPerfTracer(PERF_HBASEAUTH_REQUEST_LOG, "RangerAuthorizationCoprocessor.requirePermission(request=Operation[" + operation + "]");
 			}
 			ColumnFamilyAccessResult accessResult = evaluateAccess(ctx, operation, action, regionServerEnv, familyMap);
-			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
 			if (accessResult._everythingIsAccessible) {
 				auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
 				auditHandler.logAuthzAudits(accessResult._familyLevelAccessEvents);
@@ -1101,7 +1100,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 					plugin.init();
 
-					UpdateRangerPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
+					UpdateRangerPoliciesOnGrantRevoke = plugin.getConfig().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 
 					hbasePlugin = plugin;
 				}
@@ -1237,7 +1236,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 				if(plugin != null) {
 
-					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
+					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
 
 					plugin.grantAccess(grData, auditHandler);
 
@@ -1277,7 +1276,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 				if(plugin != null) {
 
-					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
+					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
 
 					plugin.revokeAccess(grData, auditHandler);
 

@@ -21,7 +21,6 @@ package org.apache.ranger.policyengine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.PerfDataRecorder;
@@ -66,12 +65,7 @@ public class RangerPolicyenginePerfTester {
 
             URL configurationFileURL = perfTestOptions.getPerfConfigurationFileURL();
 
-            if (configurationFileURL != null) {
-	            RangerConfiguration config = RangerConfiguration.getInstance();
-	            config.addResource(configurationFileURL);
-            }
-
-            PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, policyEngineOptions, perfTestOptions.getIsDynamicReorderingDisabled());
+            PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, policyEngineOptions, perfTestOptions.getIsDynamicReorderingDisabled(), configurationFileURL);
             if (!perfTestEngine.init()) {
                 LOG.error("Error initializing test data. Existing...");
                 System.exit(1);

@@ -21,7 +21,7 @@ package org.apache.ranger.common;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -61,7 +61,9 @@ public class RangerServicePoliciesCache {
 	}
 
 	private RangerServicePoliciesCache() {
-		waitTimeInSeconds = RangerConfiguration.getInstance().getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+		RangerAdminConfig config = new RangerAdminConfig();
+
+		waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 	}
 
 	public void dump() {

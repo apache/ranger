@@ -41,15 +41,17 @@ public class PerfTestEngine {
 	static private final long POLICY_ENGINE_REORDER_AFTER_PROCESSING_REQUESTS_COUNT = 100;
 	private final URL servicePoliciesFileURL;
 	private final RangerPolicyEngineOptions policyEngineOptions;
+	private final URL configFileURL;
 	private RangerPolicyEngine policyEvaluationEngine;
 	private RangerPluginContext rangerPluginContext;
 	private final boolean disableDynamicPolicyEvalReordering;
 	private AtomicLong requestCount = new AtomicLong();
 
-	public PerfTestEngine(final URL servicePoliciesFileURL, RangerPolicyEngineOptions policyEngineOptions, boolean disableDynamicPolicyEvalReordering) {
+	public PerfTestEngine(final URL servicePoliciesFileURL, RangerPolicyEngineOptions policyEngineOptions, boolean disableDynamicPolicyEvalReordering, URL configFileURL) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
 		this.policyEngineOptions = policyEngineOptions;
 		this.disableDynamicPolicyEvalReordering = disableDynamicPolicyEvalReordering;
+		this.configFileURL = configFileURL;
 	}
 
 	public boolean init() {
@@ -76,6 +78,7 @@ public class PerfTestEngine {
 			RangerServiceDef serviceDef = servicePolicies.getServiceDef();
 			String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
 			rangerPluginContext = new RangerPluginContext(serviceType);
+			rangerPluginContext.getConfig().addResource(configFileURL);
 			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, policyEngineOptions, rangerPluginContext);
 
 			requestCount.set(0L);

@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
@@ -41,7 +42,12 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	private int              evalOrder;
 	protected long           usageCount;
 	protected boolean        usageCountMutable = true;
+	protected RangerPluginContext pluginContext = null;
 
+
+	public void setPluginContext(RangerPluginContext pluginContext) { this.pluginContext = pluginContext; }
+
+	public RangerPluginContext getPluginContext() { return pluginContext; }
 
 	@Override
 	public void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {

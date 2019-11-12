@@ -28,13 +28,16 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.conditionevaluator.RangerScriptExecutionContext;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -61,8 +64,9 @@ public class RangerBasePlugin {
 
 	private static Map<String, RangerBasePlugin> servicePluginMap = new ConcurrentHashMap<>();
 
-	private String                    serviceType;
-	private String                    appId;
+	private final String              serviceType;
+	private final String              appId;
+	private final RangerPluginConfig  config;
 	private String                    serviceName;
 	private String                    clusterName;
 	private PolicyRefresher           refresher;
@@ -113,16 +117,16 @@ public class RangerBasePlugin {
 
 		if (useStandaloneAuditProvider) {
 			StandAloneAuditProviderFactory factory = StandAloneAuditProviderFactory.getInstance();
+
 			if (factory.isInitDone()) {
 				ret = factory.getAuditProvider();
 			} else {
-				RangerConfiguration conf = RangerConfiguration.getInstance();
-				String auditCfg = "ranger-standalone-audit.xml";
-				if (conf.addResourceIfReadable(auditCfg)) {
+				RangerAuditConfig conf = new RangerAuditConfig();
+
+				if (conf.isInitSuccess()) {
 					factory.init(conf.getProperties(), "StandAlone");
+
 					ret = factory.getAuditProvider();
-				} else {
-					LOG.error("StandAlone audit handler configuration not readable:[" + auditCfg + "]");
 				}
 			}
 		}
@@ -133,10 +137,21 @@ public class RangerBasePlugin {
 	public RangerBasePlugin(String serviceType, String appId) {
 		this.serviceType = serviceType;
 		this.appId       = appId;
+		this.config      = new RangerPluginConfig(serviceType);
+
+		RangerScriptExecutionContext.init(config);
 	}
 
 	public String getServiceType() {
 		return serviceType;
+	}
+
+	public String getAppId() {
+		return appId;
+	}
+
+	public RangerPluginConfig getConfig() {
+		return config;
 	}
 
 	public String getClusterName() {
@@ -173,10 +188,6 @@ public class RangerBasePlugin {
 		return serviceDef != null && serviceDef.getId() != null ? serviceDef.getId().intValue() : -1;
 	}
 
-	public String getAppId() {
-		return appId;
-	}
-
 	public String getServiceName() {
 		return serviceName;
 	}
@@ -186,19 +197,16 @@ public class RangerBasePlugin {
 	public void init() {
 		cleanup();
 
-		RangerConfiguration configuration = RangerConfiguration.getInstance();
-		configuration.addResourcesForServiceType(serviceType);
-
 		String propertyPrefix    = "ranger.plugin." + serviceType;
-		long   pollingIntervalMs = configuration.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
-		String cacheDir          = configuration.get(propertyPrefix + ".policy.cache.dir");
-		serviceName = configuration.get(propertyPrefix + ".service.name");
-		clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.name", "");
+		long   pollingIntervalMs = config.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
+		String cacheDir          = config.get(propertyPrefix + ".policy.cache.dir");
+		serviceName = config.get(propertyPrefix + ".service.name");
+		clusterName = config.get(propertyPrefix + ".access.cluster.name", "");
 		if(StringUtil.isEmpty(clusterName)){
-			clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
+			clusterName = config.get(propertyPrefix + ".ambari.cluster.name", "");
 		}
-		useForwardedIPAddress = configuration.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
-		String trustedProxyAddressString = configuration.get(propertyPrefix + ".trusted.proxy.ipaddresses");
+		useForwardedIPAddress = config.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = config.get(propertyPrefix + ".trusted.proxy.ipaddresses");
 		trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
 		if (trustedProxyAddresses != null) {
 			for (int i = 0; i < trustedProxyAddresses.length; i++) {
@@ -216,26 +224,26 @@ public class RangerBasePlugin {
 			LOG.warn("Ranger plugin will trust RemoteIPAddress and treat first X-Forwarded-Address in the access-request as the clientIPAddress");
 		}
 
-		if (configuration.getProperties() != null) {
+		if (config.getProperties() != null) {
 			auditProviderFactory = new AuditProviderFactory();
-			auditProviderFactory.init(configuration.getProperties(), appId);
+			auditProviderFactory.init(config.getProperties(), appId);
 		} else {
 			LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
 			LOG.error("No authorization audits will be generated. ");
 			auditProviderFactory = null;
 		}
 
-		rangerPluginContext = new RangerPluginContext(serviceType);
+		rangerPluginContext = new RangerPluginContext(serviceType, config);
 
-		policyEngineOptions.configureForPlugin(configuration, propertyPrefix);
+		policyEngineOptions.configureForPlugin(config, propertyPrefix);
 
 		LOG.info(policyEngineOptions);
 
 		servicePluginMap.put(serviceName, this);
 
-		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix);
+		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix, config);
 
-		rangerRolesProvider = new RangerRolesProvider(serviceType, appId, serviceName, admin,  cacheDir);
+		rangerRolesProvider = new RangerRolesProvider(serviceType, appId, serviceName, admin,  cacheDir, config);
 
 		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, policyDownloadQueue, cacheDir, rangerRolesProvider);
 		refresher.setDaemon(true);
@@ -254,7 +262,7 @@ public class RangerBasePlugin {
 			policyDownloadTimer = null;
 		}
 
-		long policyReorderIntervalMs = configuration.getLong(propertyPrefix + ".policy.policyReorderInterval", 60 * 1000);
+		long policyReorderIntervalMs = config.getLong(propertyPrefix + ".policy.policyReorderInterval", 60 * 1000);
 		if (policyReorderIntervalMs >= 0 && policyReorderIntervalMs < 15 * 1000) {
 			policyReorderIntervalMs = 15 * 1000;
 		}
@@ -655,7 +663,7 @@ public class RangerBasePlugin {
 		this.authContextListener = null;
 	}
 
-	public static RangerAdminClient createAdminClient(String rangerServiceName, String applicationId, String propertyPrefix) {
+	public static RangerAdminClient createAdminClient(String rangerServiceName, String applicationId, String propertyPrefix, Configuration config) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + ")");
 		}
@@ -663,7 +671,7 @@ public class RangerBasePlugin {
 		RangerAdminClient ret = null;
 
 		String propertyName = propertyPrefix + ".policy.source.impl";
-		String policySourceImpl = RangerConfiguration.getInstance().get(propertyName);
+		String policySourceImpl = config.get(propertyName);
 
 		if(StringUtils.isEmpty(policySourceImpl)) {
 			if (LOG.isDebugEnabled()) {
@@ -687,7 +695,7 @@ public class RangerBasePlugin {
 			ret = new RangerAdminRESTClient();
 		}
 
-		ret.init(rangerServiceName, applicationId, propertyPrefix);
+		ret.init(rangerServiceName, applicationId, propertyPrefix, config);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerBasePlugin.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);

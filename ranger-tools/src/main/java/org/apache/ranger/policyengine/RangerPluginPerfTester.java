@@ -29,7 +29,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
@@ -76,10 +75,9 @@ public class RangerPluginPerfTester {
 		Path filePath = buildConfigurationFile();
 
 		if (filePath != null) {
-			RangerConfiguration rangerConfig = RangerConfiguration.getInstance();
-			rangerConfig.addResource(filePath);
-
 			plugin = new RangerBasePlugin(serviceType, appId);
+
+			plugin.getConfig().addResource(filePath);
 
 			Runtime runtime = Runtime.getRuntime();
 			runtime.gc();

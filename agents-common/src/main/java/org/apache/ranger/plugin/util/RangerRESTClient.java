@@ -50,7 +50,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
@@ -111,16 +111,14 @@ public class RangerRESTClient {
 
 	private int  lastKnownActiveUrlIndex;
 	private final List<String> configuredURLs;
+	private final Configuration config;
 
-	public RangerRESTClient() {
-		this(RangerConfiguration.getInstance().get(RANGER_PROP_POLICYMGR_URL),
-			 RangerConfiguration.getInstance().get(RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME));
-	}
 
-	public RangerRESTClient(String url, String sslConfigFileName) {
+	public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
 		mUrl               = url;
 		mSslConfigFileName = sslConfigFileName;
 		this.configuredURLs = getURLs(mUrl);
+		this.config         = config;
 		this.setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
 		init();
 	}
@@ -250,23 +248,21 @@ public class RangerRESTClient {
 			InputStream in = null;
 
 			try {
-				RangerConfiguration conf = RangerConfiguration.getInstance();
-
 				in = getFileInputStream(mSslConfigFileName);
 
 				if (in != null) {
-					conf.addResource(in);
+					config.addResource(in);
 				}
 
-				mKeyStoreURL = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
+				mKeyStoreURL = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
 				mKeyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
-				mKeyStoreType = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
-				mKeyStoreFile = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
+				mKeyStoreType = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
+				mKeyStoreFile = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
 
-				mTrustStoreURL = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
+				mTrustStoreURL = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
 				mTrustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
-				mTrustStoreType = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
-				mTrustStoreFile = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
+				mTrustStoreType = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
+				mTrustStoreFile = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
 			} catch (IOException ioe) {
 				LOG.error("Unable to load SSL Config FileName: [" + mSslConfigFileName + "]", ioe);
 			} finally {

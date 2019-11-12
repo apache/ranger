@@ -21,22 +21,30 @@ package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 public class RangerPluginContext {
-
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
+
+	private final RangerPluginConfig  config;
 	private String clusterName;
 	private String clusterType;
 	private RangerAuthContext authContext;
 
-	public RangerPluginContext(String serviceType){
+	public RangerPluginContext(String serviceType) {
+		this(serviceType,  new RangerPluginConfig(serviceType));
+	}
+
+	public RangerPluginContext(String serviceType, RangerPluginConfig config) {
+		this.config      = config;
 		this.clusterName = findClusterName(serviceType);
 		this.clusterType = findClusterType(serviceType);
 	}
+
+	public RangerPluginConfig getConfig() { return  config; }
 
 	public String getClusterName() {
 		return clusterName;
@@ -64,9 +72,9 @@ public class RangerPluginContext {
 		}
 
 		String propertyPrefix    = "ranger.plugin." + serviceType;
-		String clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.name", "");
+		String clusterName = config.get(propertyPrefix + ".access.cluster.name", "");
 		if(StringUtil.isEmpty(clusterName)){
-			clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
+			clusterName = config.get(propertyPrefix + ".ambari.cluster.name", "");
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -82,9 +90,9 @@ public class RangerPluginContext {
 		}
 
 		String propertyPrefix    = "ranger.plugin." + serviceType;
-		String clusterType = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.type", "");
+		String clusterType = config.get(propertyPrefix + ".access.cluster.type", "");
 		if(StringUtil.isEmpty(clusterType)){
-			clusterType = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.type", "");
+			clusterType = config.get(propertyPrefix + ".ambari.cluster.type", "");
 		}
 
 		if(LOG.isDebugEnabled()) {

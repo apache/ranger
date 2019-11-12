@@ -37,7 +37,7 @@ import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
@@ -107,10 +107,15 @@ public class RangerBizUtil {
 	public static final int batchSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
 
 	String auditDBType = AUDIT_STORE_RDBMS;
+	private final boolean allowUnauthenticatedAccessInSecureEnvironment;
 
 	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
 
 	public RangerBizUtil() {
+		RangerAdminConfig config = new RangerAdminConfig();
+
+		allowUnauthenticatedAccessInSecureEnvironment = config.getBoolean("ranger.admin.allow.unauthenticated.access", false);
+
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty("ranger.user.firstname.maxlength", "16"));
 		maxDisplayNameLength = PropertiesUtil.getIntProperty("ranger.bookmark.name.maxlen", maxDisplayNameLength);
 
@@ -441,11 +446,10 @@ public class RangerBizUtil {
 		return matchFound;
 	}
 
-	public static void failUnauthenticatedIfNotAllowed() throws Exception {
+	public void failUnauthenticatedIfNotAllowed() throws Exception {
 		if (UserGroupInformation.isSecurityEnabled()) {
 			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
 			if (currentUserSession == null) {
-				boolean allowUnauthenticatedAccessInSecureEnvironment = RangerConfiguration.getInstance().getBoolean("ranger.admin.allow.unauthenticated.access", false);
 				if (!allowUnauthenticatedAccessInSecureEnvironment) {
 					throw new Exception("Unauthenticated access not allowed");
 				}

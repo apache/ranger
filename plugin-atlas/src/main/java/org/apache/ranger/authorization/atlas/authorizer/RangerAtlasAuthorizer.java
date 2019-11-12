@@ -72,7 +72,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                     plugin = new RangerAtlasPlugin();
 
                     plugin.init();
-                    plugin.setResultProcessor(new RangerDefaultAuditHandler());
+
+                    plugin.setResultProcessor(new RangerDefaultAuditHandler(plugin.getConfig()));
 
                     atlasPlugin = plugin;
                 }

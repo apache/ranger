@@ -24,9 +24,10 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
@@ -59,10 +60,10 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     private final boolean isOptimizedForRetrieval;
 
     public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators) {
-        this(resourceDef, evaluators, null, true);
+        this(resourceDef, evaluators, null, true, null);
     }
 
-    public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, Comparator<T> comparator, boolean isOptimizedForRetrieval) {
+    public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, Comparator<T> comparator, boolean isOptimizedForRetrieval, RangerPluginContext pluginContext) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + ")");
         }
@@ -73,7 +74,8 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.init(name=" + resourceDef.getName() + ")");
         }
 
-        int builderThreadCount = RangerConfiguration.getInstance().getInt(TRIE_BUILDER_THREAD_COUNT, 1);
+        Configuration config             = pluginContext != null ? pluginContext.getConfig() : null;
+        int           builderThreadCount = config != null ? config.getInt(TRIE_BUILDER_THREAD_COUNT, 1) : 1;
 
         if (builderThreadCount < 1) {
             builderThreadCount = 1;

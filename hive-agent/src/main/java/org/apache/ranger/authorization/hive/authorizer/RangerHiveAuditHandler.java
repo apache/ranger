@@ -196,7 +196,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	public void logAuditEventForDfs(String userName, String dfsCommand, boolean accessGranted, int repositoryType, String repositoryName) {
 		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 
-		auditEvent.setAclEnforcer(RangerDefaultAuditHandler.RangerModuleName);
+		auditEvent.setAclEnforcer(moduleName);
 		auditEvent.setResourceType("@dfs"); // to be consistent with earlier release
 		auditEvent.setAccessType("DFS");
 		auditEvent.setAction("DFS");

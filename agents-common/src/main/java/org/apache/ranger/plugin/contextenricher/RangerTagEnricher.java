@@ -26,7 +26,6 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
@@ -120,9 +119,10 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			if (tagRetriever != null) {
 				String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
-				disableCacheIfServiceNotFound = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
-				String cacheDir          = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.cache.dir");
+				disableCacheIfServiceNotFound = getBooleanConfig(propertyPrefix + ".disable.cache.if.servicenotfound", true);
+				String cacheDir      = getConfig(propertyPrefix + ".policy.cache.dir", null);
 				String cacheFilename = String.format("%s_%s_tag.json", appId, serviceName);
+
 				cacheFilename = cacheFilename.replace(File.separatorChar,  '_');
 				cacheFilename = cacheFilename.replace(File.pathSeparatorChar,  '_');
 

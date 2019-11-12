@@ -23,6 +23,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.ServiceTags;
 
@@ -40,7 +41,9 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
 			String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
 
-			adminClient = RangerBasePlugin.createAdminClient(serviceName, appId, propertyPrefix);
+			RangerPluginConfig config = new RangerPluginConfig(serviceDef.getName());
+
+			adminClient = RangerBasePlugin.createAdminClient(serviceName, appId, propertyPrefix, config);
 
 		} else {
 			LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve tags.");

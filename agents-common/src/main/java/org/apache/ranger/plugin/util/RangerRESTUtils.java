@@ -26,7 +26,7 @@ import java.net.UnknownHostException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.hadoop.conf.Configuration;
 import com.kstruct.gethostname4j.Hostname;
 
 /**
@@ -99,8 +99,8 @@ public class RangerRESTUtils {
 		}
 	}
 
-	public String getPolicyRestUrl(String propertyPrefix) {
-		String url = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.url");
+	public String getPolicyRestUrl(String propertyPrefix, Configuration config) {
+		String url = config.get(propertyPrefix + ".policy.rest.url");
 		
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerRESTUtils.getPolicyRestUrl(" + url + ")");
@@ -109,8 +109,8 @@ public class RangerRESTUtils {
 		return url;
 	}
 	
-	public String getSsslConfigFileName(String propertyPrefix) {
-		String sslConfigFileName = RangerConfiguration.getInstance().get(propertyPrefix + ".policy.rest.ssl.config.file");
+	public String getSsslConfigFileName(String propertyPrefix, Configuration config) {
+		String sslConfigFileName = config.get(propertyPrefix + ".policy.rest.ssl.config.file");
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerRESTUtils.getSsslConfigFileName(" + sslConfigFileName + ")");

@@ -20,7 +20,6 @@ package org.apache.ranger.patch;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.JSONUtil;
@@ -247,7 +246,7 @@ public class PatchForTagServiceDefUpdate_J10028 extends BaseLoader {
 			RangerServiceDef.RangerRowFilterDef rowFilterDef = tagServiceDef.getRowFilterDef();
 
 			if (rowFilterDef != null) {
-				boolean autopropagateRowfilterdefToTag = RangerConfiguration.getInstance().getBoolean(AbstractServiceStore.AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP, AbstractServiceStore.AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT);
+				boolean autopropagateRowfilterdefToTag = config.getBoolean(AbstractServiceStore.AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP, AbstractServiceStore.AUTOPROPAGATE_ROWFILTERDEF_TO_TAG_PROP_DEFAULT);
 				if (autopropagateRowfilterdefToTag) {
 					if (CollectionUtils.isNotEmpty(rowFilterDef.getAccessTypes())) {
 						addOrUpdateResourceDefForTagResource(rowFilterDef.getResources(), accessPolicyTagResource);

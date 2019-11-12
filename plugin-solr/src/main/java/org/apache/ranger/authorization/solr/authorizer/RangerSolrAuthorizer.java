@@ -150,22 +150,22 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 				}
 			}
 			solrPlugin.init();
-			auditHandler = new RangerSolrAuditHandler();
+			auditHandler = new RangerSolrAuditHandler(solrPlugin.getConfig());
 			solrPlugin.setResultProcessor(auditHandler);
 		} catch (Throwable t) {
 			logger.fatal("Error creating and initializing RangerBasePlugin()");
 		}
 
 		try {
-			useProxyIP = RangerConfiguration.getInstance().getBoolean(
+			useProxyIP = solrPlugin.getConfig().getBoolean(
 					PROP_USE_PROXY_IP, useProxyIP);
-			proxyIPHeader = RangerConfiguration.getInstance().get(
+			proxyIPHeader = solrPlugin.getConfig().get(
 					PROP_PROXY_IP_HEADER, proxyIPHeader);
 			// First get from the -D property
 			solrAppName = System.getProperty("solr.kerberos.jaas.appname",
 					solrAppName);
 			// Override if required from Ranger properties
-			solrAppName = RangerConfiguration.getInstance().get(
+			solrAppName = solrPlugin.getConfig().get(
 					PROP_SOLR_APP_NAME, solrAppName);
 
 			logger.info("init(): useProxyIP=" + useProxyIP);

@@ -34,6 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 import com.sun.jersey.api.client.Client;
@@ -55,7 +56,7 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
 			String ugKeyStoreType, String ugTrustStoreFile, String ugTrustStoreFilepwd, String ugTrustStoreType,
 			String authenticationType, String principal, String keytab, String polMgrUsername, String polMgrPassword) {
 
-		super(policyMgrBaseUrls, "");
+		super(policyMgrBaseUrls, "", UserGroupSyncConfig.getInstance().getConfig());
 		if (!(authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
 				&& SecureClientLogin.isKerberosCredentialExists(principal, keytab))) {
 			setBasicAuthInfo(polMgrUsername, polMgrPassword);

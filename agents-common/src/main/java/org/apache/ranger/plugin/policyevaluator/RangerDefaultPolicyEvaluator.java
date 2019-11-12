@@ -1058,7 +1058,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY ||
 		   policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS ||
 		   policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
-			ret = ServiceDefUtil.getOption_enableDenyAndExceptionsInPolicies(serviceDef);
+			ret = ServiceDefUtil.getOption_enableDenyAndExceptionsInPolicies(serviceDef, pluginContext);
 		}
 
 		return ret;

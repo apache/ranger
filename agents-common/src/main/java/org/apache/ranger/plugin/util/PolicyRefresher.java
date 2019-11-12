@@ -30,7 +30,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.gson.Gson;
@@ -91,7 +90,7 @@ public class PolicyRefresher extends Thread {
 		this.gson = gson;
 
 		String propertyPrefix    = "ranger.plugin." + serviceType;
-		disableCacheIfServiceNotFound = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
+		disableCacheIfServiceNotFound = plugIn.getConfig().getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").PolicyRefresher()");
