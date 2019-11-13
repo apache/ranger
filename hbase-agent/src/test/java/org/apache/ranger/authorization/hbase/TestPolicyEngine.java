@@ -103,9 +103,7 @@ public class TestPolicyEngine {
 			servicePolicies.setPolicies(testCase.policies);
 
 			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-			RangerPluginContext pluginContext = new RangerPluginContext("hive");
-			pluginContext.setClusterName("cl1");
-			pluginContext.setClusterType("on-prem");
+			RangerPluginContext pluginContext = new RangerPluginContext("hive", "cl1", "on-prem");
 			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions, pluginContext);
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(pluginContext.getConfig());

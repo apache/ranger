@@ -45,7 +45,7 @@ public class ServiceDefUtil {
 
         if(serviceDef != null) {
             Configuration config = pluginContext != null ? pluginContext.getConfig() : null;
-            boolean enableDenyAndExceptionsInPoliciesHiddenOption = config != null ? config.getBoolean("ranger.servicedef.enableDenyAndExceptionsInPolicies", true) : true;
+            boolean enableDenyAndExceptionsInPoliciesHiddenOption = config == null || config.getBoolean("ranger.servicedef.enableDenyAndExceptionsInPolicies", true);
             boolean defaultValue = enableDenyAndExceptionsInPoliciesHiddenOption || StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
             ret = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, defaultValue);

@@ -35,7 +35,6 @@ import org.apache.hadoop.hdfs.server.namenode.INodeAttributes;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;

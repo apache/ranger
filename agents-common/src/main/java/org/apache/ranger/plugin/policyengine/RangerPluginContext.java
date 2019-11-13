@@ -29,19 +29,25 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 public class RangerPluginContext {
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
 
-	private final RangerPluginConfig  config;
-	private String clusterName;
-	private String clusterType;
-	private RangerAuthContext authContext;
+	private final RangerPluginConfig config;
+	private final String             clusterName;
+	private final String             clusterType;
+	private       RangerAuthContext  authContext;
 
 	public RangerPluginContext(String serviceType) {
-		this(serviceType,  new RangerPluginConfig(serviceType));
+		this(serviceType, new RangerPluginConfig(serviceType));
+	}
+
+	public RangerPluginContext(String serviceType, String clusterName, String clusterType) {
+		this.config      = new RangerPluginConfig(serviceType);
+		this.clusterName = clusterName;
+		this.clusterType = clusterType;
 	}
 
 	public RangerPluginContext(String serviceType, RangerPluginConfig config) {
 		this.config      = config;
-		this.clusterName = findClusterName(serviceType);
-		this.clusterType = findClusterType(serviceType);
+		this.clusterName = findClusterName(config, serviceType);
+		this.clusterType = findClusterType(config, serviceType);
 	}
 
 	public RangerPluginConfig getConfig() { return  config; }
@@ -50,53 +56,47 @@ public class RangerPluginContext {
 		return clusterName;
 	}
 
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
-	}
-
 	public String getClusterType() {
 		return clusterType;
-	}
-
-	public void setClusterType(String clusterType) {
-		this.clusterType = clusterType;
 	}
 
 	public RangerAuthContext getAuthContext() { return authContext; }
 
 	public void setAuthContext(RangerAuthContext authContext) { this.authContext = authContext; }
 
-	private String findClusterName(String serviceType) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPluginContext.findClusterName , serviceType = " + serviceType);
+	private static String findClusterName(RangerPluginConfig config, String serviceType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPluginContext.findClusterName(serviceType=" + serviceType + ")");
 		}
 
-		String propertyPrefix    = "ranger.plugin." + serviceType;
-		String clusterName = config.get(propertyPrefix + ".access.cluster.name", "");
-		if(StringUtil.isEmpty(clusterName)){
+		String propertyPrefix = "ranger.plugin." + serviceType;
+		String clusterName    = config.get(propertyPrefix + ".access.cluster.name", "");
+
+		if (StringUtil.isEmpty(clusterName)){
 			clusterName = config.get(propertyPrefix + ".ambari.cluster.name", "");
 		}
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPluginContext.findClusterName ");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPluginContext.findClusterName(serviceType=" + serviceType + "): ret=" + clusterName);
 		}
 
 		return clusterName;
 	}
 
-	private String findClusterType(String serviceType) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPluginContext.findClusterType , serviceType = " + serviceType);
+	private static String findClusterType(RangerPluginConfig config, String serviceType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPluginContext.findClusterType(serviceType=" + serviceType + ")");
 		}
 
-		String propertyPrefix    = "ranger.plugin." + serviceType;
-		String clusterType = config.get(propertyPrefix + ".access.cluster.type", "");
-		if(StringUtil.isEmpty(clusterType)){
+		String propertyPrefix = "ranger.plugin." + serviceType;
+		String clusterType    = config.get(propertyPrefix + ".access.cluster.type", "");
+
+		if (StringUtil.isEmpty(clusterType)){
 			clusterType = config.get(propertyPrefix + ".ambari.cluster.type", "");
 		}
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPluginContext.findClusterType ");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPluginContext.findClusterType(serviceType=" + serviceType + "): ret=" + clusterType);
 		}
 
 		return clusterType;

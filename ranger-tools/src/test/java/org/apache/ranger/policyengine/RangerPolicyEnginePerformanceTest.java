@@ -145,8 +145,7 @@ public class RangerPolicyEnginePerformanceTest {
 	public void policyEngineTest() throws InterruptedException {
 		List<RangerAccessRequest> requests = requestsCache.getUnchecked(concurrency);
 		ServicePolicies servicePolicies = servicePoliciesCache.getUnchecked(numberOfPolicies);
-		RangerPluginContext pluginContext = new RangerPluginContext("hive");
-		pluginContext.setClusterName("cl1");
+		RangerPluginContext pluginContext = new RangerPluginContext("hive", "cl1", "on-prem");
 		final RangerPolicyEngineImpl rangerPolicyEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, RangerPolicyFactory.createPolicyEngineOption(), pluginContext);
 		rangerPolicyEngine.preProcess(requests);
 

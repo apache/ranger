@@ -76,7 +76,7 @@ public class TestPolicyEngine {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		pluginContext = new RangerPluginContext("hive");
+		pluginContext = new RangerPluginContext("hive", "cl1", "on-prem");
 
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
 				.setPrettyPrinting()
@@ -446,8 +446,6 @@ public class TestPolicyEngine {
 				trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
 			}
 		}
-		pluginContext.setClusterName("cl1");
-		pluginContext.setClusterType("on-prem");
 
 		RangerRoles rangerRoles = new RangerRoles();
 		rangerRoles.setServiceName(testCase.serviceName);

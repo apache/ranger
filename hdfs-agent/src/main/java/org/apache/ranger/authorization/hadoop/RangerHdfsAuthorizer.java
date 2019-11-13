@@ -418,7 +418,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 								if (subDirAuthStatus != AuthzStatus.ALLOW) {
 									for(INode child : cList) {
 										if (child.isDirectory()) {
-											directories.push(new SubAccessData(child.asDirectory(), resourcePath + org.apache.hadoop.fs.Path.SEPARATOR_CHAR + child.getLocalName()));
+											directories.push(new SubAccessData(child.asDirectory(), resourcePath + Path.SEPARATOR_CHAR + child.getLocalName()));
 										}
 									}
 								}
@@ -724,8 +724,8 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				}
 
 				String subDirPath = path;
-				if (subDirPath.charAt(subDirPath.length() - 1) != org.apache.hadoop.fs.Path.SEPARATOR_CHAR) {
-					subDirPath = subDirPath + Character.toString(org.apache.hadoop.fs.Path.SEPARATOR_CHAR);
+				if (subDirPath.charAt(subDirPath.length() - 1) != Path.SEPARATOR_CHAR) {
+					subDirPath = subDirPath + Character.toString(Path.SEPARATOR_CHAR);
 				}
 				subDirPath = subDirPath + rangerPlugin.getRandomizedWildcardPathName();
 
