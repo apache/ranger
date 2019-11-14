@@ -33,7 +33,7 @@ import java.util.Map;
 
 @Service
 public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
-    private static final Logger logger = Logger.getLogger(RangerDaoManager.class);
+    private static final Logger logger = Logger.getLogger(XXGlobalStateDao.class);
 
     final static String APP_DATA_ENTRY_ROLE_VERSION = "RangerRoleVersion";
 
@@ -96,7 +96,9 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
                 ret = 1L;
             }
         } catch (Exception exception) {
-            logger.warn("Unable to find the role version in Ranger Database");
+            if (logger.isDebugEnabled()) {
+                logger.debug("Unable to find the role version in Ranger Database", exception);
+            }
         }
         return ret;
     }

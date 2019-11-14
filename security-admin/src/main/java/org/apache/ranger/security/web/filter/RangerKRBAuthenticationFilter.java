@@ -317,7 +317,9 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 					}
 					SecurityContextHolder.getContext().setAuthentication(authentication);
 					request.setAttribute("spnegoEnabled", true);
-					LOG.info("Logged into Ranger as = " + userName);
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Logged into Ranger as = " + userName);
+					}
 				}
 				filterChain.doFilter(request, response);
 			}else{
@@ -380,7 +382,9 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 				authentication = getGrantedAuthority(authentication);
 				SecurityContextHolder.getContext().setAuthentication(authentication);
 				request.setAttribute("spnegoEnabled", true);
-				LOG.info("Logged into Ranger as = "+userName);
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("Logged into Ranger as = " + userName);
+				}
 			}else{
 				try{
 					super.doFilter(request, response, filterChain);
