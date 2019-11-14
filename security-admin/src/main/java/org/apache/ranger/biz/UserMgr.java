@@ -1109,6 +1109,14 @@ public class UserMgr {
 		return saltEncodedpasswd;
 	}
 
+	public String encryptWithOlderAlgo(String loginId, String password) {
+		String saltEncodedpasswd = "";
+
+		saltEncodedpasswd = md5Encoder.encodePassword(password, loginId);
+
+		return saltEncodedpasswd;
+	}
+
 	public VXPortalUser createUser(VXPortalUser userProfile) {
 		checkAdminAccess();
                 rangerBizUtil.blockAuditorRoleUser();

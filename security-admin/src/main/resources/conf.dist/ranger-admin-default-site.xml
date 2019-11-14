@@ -463,7 +463,7 @@
 	</property>
 	<property>
 		<name>ranger.sha256Password.update.disable</name>
-		<value>true</value>
+		<value>false</value>
 		<description></description>
 	</property>
 	<!-- # DB Info for audit_DB -->
