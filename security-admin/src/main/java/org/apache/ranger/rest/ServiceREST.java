@@ -1259,21 +1259,23 @@ public class ServiceREST {
 						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.grantAccess(serviceName=" + serviceName + ")");
 					}
 
-					validateGrantRevokeRequest(grantRequest);
+					// This is an open API - dont care about who calls it. Caller is treated as privileged user
+					boolean hasAdminPrivilege = true;
+					String loggedInUser = null;
+					validateGrantRevokeRequest(grantRequest, hasAdminPrivilege, loggedInUser);
+
 					String               userName   = grantRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					String				 ownerUser  = grantRequest.getOwnerUser();
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
-                                        VXUser vxUser = xUserService.getXUserByUserName(userName);
-                                        if(vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)){
-                                                 VXResponse vXResponse = new VXResponse();
-                         vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-                         vXResponse.setMsgDesc("Operation"
-                                         + " denied. LoggedInUser="
-                                         +  vxUser.getId()
-                                         + " ,isn't permitted to perform the action.");
-                         throw restErrorUtil.generateRESTException(vXResponse);
-                                        }
+					VXUser               vxUser = xUserService.getXUserByUserName(userName);
+
+					if (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+						VXResponse vXResponse = new VXResponse();
+						vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+						vXResponse.setMsgDesc("Operation denied. LoggedInUser=" + vxUser.getId() + " is not permitted to perform the action.");
+						throw restErrorUtil.generateRESTException(vXResponse);
+					}
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 
 					if(!isAdmin) {
@@ -1359,42 +1361,40 @@ public class ServiceREST {
 		}
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
-		boolean isAllowed = false;
-		boolean isKeyAdmin = bizUtil.isKeyAdmin();
-                bizUtil.blockAuditorRoleUser();
-		if(grantRequest!=null){
+		bizUtil.blockAuditorRoleUser();
+
+		if(grantRequest != null) {
 			if (serviceUtil.isValidService(serviceName, request)) {
 				try {
 					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.scureGrantAccess(serviceName=" + serviceName + ")");
 					}
 
-					validateGrantRevokeRequest(grantRequest);
-
-					String               userName   = grantRequest.getGrantor();
-					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
-					String				 ownerUser  = grantRequest.getOwnerUser();
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
-					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-
 					XXService xService = daoManager.getXXService().findByName(serviceName);
 					XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 					RangerService rangerService = svcStore.getServiceByName(serviceName);
 
+					String  loggedInUser      = bizUtil.getCurrentUserLoginId();
+					boolean hasAdminPrivilege = bizUtil.isAdmin() || bizUtil.isUserServiceAdmin(rangerService, loggedInUser) || bizUtil.isUserAllowedForGrantRevoke(rangerService, loggedInUser);
+
+					validateGrantRevokeRequest(grantRequest, hasAdminPrivilege, loggedInUser);
+
+					String               userName   = grantRequest.getGrantor();
+					Set<String>          userGroups = grantRequest.getGrantorGroups();
+					String				 ownerUser  = grantRequest.getOwnerUser();
+
+					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
+
+					boolean isAllowed = false;
+
 					if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-						if (isKeyAdmin) {
-							isAllowed = true;
-						}else {
-							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
-						}
-					}else{
-						if (isAdmin) {
+						if (bizUtil.isKeyAdmin() || bizUtil.isUserAllowedForGrantRevoke(rangerService, loggedInUser)) {
 							isAllowed = true;
 						}
-						else{
-							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
-						}
+					} else {
+						isAllowed = hasAdminPrivilege || hasAdminAccess(serviceName, userName, userGroups, resource);
 					}
+
 					if (isAllowed) {
 						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
 
@@ -1489,22 +1489,23 @@ public class ServiceREST {
 						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.revokeAccess(serviceName=" + serviceName + ")");
 					}
 
-					validateGrantRevokeRequest(revokeRequest);
+					// This is an open API - dont care about who calls it. Caller is treated as privileged user
+					boolean hasAdminPrivilege = true;
+					String loggedInUser = null;
+					validateGrantRevokeRequest(revokeRequest, hasAdminPrivilege, loggedInUser);
 
 					String               userName   = revokeRequest.getGrantor();
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					String				 ownerUser  = revokeRequest.getOwnerUser();
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
-                                        VXUser vxUser = xUserService.getXUserByUserName(userName);
-                                        if(vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)){
-                                                 VXResponse vXResponse = new VXResponse();
-                         vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-                         vXResponse.setMsgDesc("Operation"
-                                         + " denied. LoggedInUser="
-                                         +  vxUser.getId()
-                                         + " ,isn't permitted to perform the action.");
-                         throw restErrorUtil.generateRESTException(vXResponse);
-                                        }
+					VXUser vxUser = xUserService.getXUserByUserName(userName);
+
+					if (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
+						VXResponse vXResponse = new VXResponse();
+						vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+						vXResponse.setMsgDesc("Operation denied. LoggedInUser=" + vxUser.getId() + " is not permitted to perform the action.");
+						throw restErrorUtil.generateRESTException(vXResponse);
+					}
 					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
 
 					if(!isAdmin) {
@@ -1554,40 +1555,38 @@ public class ServiceREST {
 		}
 		RESTResponse     ret  = new RESTResponse();
 		RangerPerfTracer perf = null;
-		if(revokeRequest!=null){
+		bizUtil.blockAuditorRoleUser();
+
+		if (revokeRequest != null) {
 			if (serviceUtil.isValidService(serviceName,request)) {
 				try {
 					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 						perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.secureRevokeAccess(serviceName=" + serviceName + ")");
 					}
 
-					validateGrantRevokeRequest(revokeRequest);
-
-					String               userName   = revokeRequest.getGrantor();
-					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
-					String				 ownerUser  = revokeRequest.getOwnerUser();
-					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
-					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
-					boolean isAllowed = false;
-					boolean isKeyAdmin = bizUtil.isKeyAdmin();
-                                        bizUtil.blockAuditorRoleUser();
 					XXService xService = daoManager.getXXService().findByName(serviceName);
 					XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
 					RangerService rangerService = svcStore.getServiceByName(serviceName);
 
+					String  loggedInUser      = bizUtil.getCurrentUserLoginId();
+					boolean hasAdminPrivilege = bizUtil.isAdmin() || bizUtil.isUserServiceAdmin(rangerService, loggedInUser) || bizUtil.isUserAllowedForGrantRevoke(rangerService, loggedInUser);
+
+					validateGrantRevokeRequest(revokeRequest, hasAdminPrivilege, loggedInUser);
+
+					String userName = revokeRequest.getGrantor();
+					Set<String> userGroups = revokeRequest.getGrantorGroups();
+					String ownerUser = revokeRequest.getOwnerUser();
+
+					RangerAccessResource resource = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
+
+					boolean isAllowed = false;
+
 					if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
-						if (isKeyAdmin) {
-							isAllowed = true;
-						}else {
-							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
-						}
-					}else{
-						if (isAdmin) {
+						if (bizUtil.isKeyAdmin() || bizUtil.isUserAllowedForGrantRevoke(rangerService, loggedInUser)) {
 							isAllowed = true;
 						}
-						else{
-							isAllowed = bizUtil.isUserAllowedForGrantRevoke(rangerService, Allowed_User_List_For_Grant_Revoke, userName);
-						}
+					} else {
+						isAllowed = hasAdminPrivilege || hasAdminAccess(serviceName, userName, userGroups, resource);
 					}
 
 					if (isAllowed) {
@@ -3916,13 +3915,20 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private void validateGrantRevokeRequest(GrantRevokeRequest request){
-		if( request!=null){
+	private void validateGrantRevokeRequest(GrantRevokeRequest request, final boolean hasAdminPrivilege, final String loggedInUser) {
+		if (request != null) {
 			validateUsersGroupsAndRoles(request.getUsers(),request.getGroups(), request.getRoles());
 			validateGrantor(request.getGrantor());
 			validateGrantees(request.getUsers());
 			validateGroups(request.getGroups());
 			validateRoles(request.getRoles());
+
+			if (!hasAdminPrivilege) {
+				if (!StringUtils.equals(request.getGrantor(), loggedInUser) || StringUtils.isNotBlank(request.getOwnerUser())) {
+					throw restErrorUtil.createGrantRevokeRESTException("Invalid grant/revoke request - contains grantor or userOwner specification");
+				}
+				request.setGrantorGroups(userMgr.getGroupsForUser(request.getGrantor()));
+			}
 		}
 	}
 

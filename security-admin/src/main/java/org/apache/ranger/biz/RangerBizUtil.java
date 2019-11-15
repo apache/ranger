@@ -62,6 +62,7 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.rest.ServiceREST;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResponse;
@@ -1406,12 +1407,18 @@ public class RangerBizUtil {
 		return false;
 	}
 
-	public boolean isUserAllowedForGrantRevoke(RangerService rangerService,
-			String cfgNameAllowedUsers, String userName) {
+	public boolean isUserAllowedForGrantRevoke(RangerService rangerService, String userName) {
+		return isUserInConfigParameter(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke, userName);
+	}
+	public boolean isUserServiceAdmin(RangerService rangerService, String userName) {
+		return isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_USERS, userName);
+	}
+
+	public boolean isUserInConfigParameter(RangerService rangerService, String configParamName, String userName) {
 		Map<String, String> map = rangerService.getConfigs();
 
-		if (map != null && map.containsKey(cfgNameAllowedUsers)) {
-			String userNames = map.get(cfgNameAllowedUsers);
+		if (map != null && map.containsKey(configParamName)) {
+			String userNames = map.get(configParamName);
 			String[] userList = userNames.split(",");
 			if (userList != null) {
 				for (String u : userList) {
@@ -1422,7 +1429,7 @@ public class RangerBizUtil {
 			}
 		}
 		return false;
-	}	
+	}
 
         public void blockAuditorRoleUser() {
                 UserSessionBase session = ContextUtil.getCurrentUserSession();
