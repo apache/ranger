@@ -35,17 +35,21 @@ define(function(require) {
 
                 template: RangerServiceViewDetailTmpl,
                 templateHelpers: function() {
-                    var that = this;
-
+                    var that = this, tagDetails = [];
+                    if(this.options.rangerService.get('tagService') && !_.isEmpty(this.options.rangerService.get('tagService'))) {
+                        tagDetails = this.options.rangerSeviceList.find(function(m) {
+                            return m.get('name') == that.options.rangerService.get('tagService')
+                        })
+                    }
                     return {
-               configsList : this.conf,
-               customConfigs : this.customConfigs,
-               serviceName : this.options.rangerService.get('name'),
-               description : this.options.rangerService.get('description'),
-               isEnabled   : this.options.rangerService.get('isEnabled'),
-               tagService  : (this.options.rangerService.get('tagService')) ? this.options.rangerService.get('tagService') : false,
-               displayName : this.options.rangerService.get('displayName'),
-           }
+                       configsList : this.conf,
+                       customConfigs : this.customConfigs,
+                       serviceName : this.options.rangerService.get('name'),
+                       description : this.options.rangerService.get('description'),
+                       isEnabled   : this.options.rangerService.get('isEnabled'),
+                       tagService  : (!_.isEmpty(tagDetails)) ? tagDetails.get('displayName') : false,
+                       displayName : this.options.rangerService.get('displayName'),
+                   }
                 },
 
                 /**

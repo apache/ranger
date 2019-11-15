@@ -280,6 +280,7 @@ define(function(require){
             var view = new RangerServiceViewDetail({
                 serviceDef : serviceDef,
                 rangerService : rangerService,
+                rangerSeviceList : that.services,
 
             });
             var modal = new Backbone.BootstrapModal({

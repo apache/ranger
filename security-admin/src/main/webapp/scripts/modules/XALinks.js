@@ -215,8 +215,8 @@ define(function(require) {
 				}
 				return {
 					href : href,
-					text : options.model.get('name') +' Policies',
-					title: options.model.get('name') +' Policies'
+                    text : options.model.get('displayName') +' Policies',
+                    title: options.model.get('displayName') +' Policies'
 				};
 			},
 			ManageHivePolicies : function(options){

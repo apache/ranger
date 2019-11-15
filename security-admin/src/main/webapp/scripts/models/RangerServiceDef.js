@@ -25,6 +25,7 @@ define(function(require){
 	var XAUtils		= require('utils/XAUtils');
 	var XAEnums		= require('utils/XAEnums');
 	var localization= require('utils/XALangSupport');
+	var RangerService	= require('models/RangerService');
 
 	var RangerServiceDef = RangerServiceDefBase.extend(
 	/** @lends RangerServiceDef.prototype */
@@ -54,15 +55,16 @@ define(function(require){
 
 			// Overwrite your schema definition here
 			return _.extend(attrs,{
-				displayName : {
-					type : 'Text',
-					title : 'Display Name'
-				},
 
 				name : {
 					type		: 'Text',
 					title		: 'Service Name *',
-                                        validators	: ['required',{type:'regexp',regexp:/^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/,message : localization.tt("validationMessages.nameValidationMsg")}],
+                                        validators	: ['required',{type:'regexp', regexp:/^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/,message : localization.tt("validationMessages.nameValidationMsg")}],
+				},
+				displayName : {
+					type : 'Text',
+					title : 'Display Name',
+					validators  : [{type:'regexp', regexp:/^[a-zA-Z0-9_-][a-zA-Z0-9\s_-]{0,254}$/, message :'Invalid email address', message : localization.tt("validationMessages.nameValidationMsg")}]
 				},
 				description : {
 					type		: 'TextArea',
@@ -96,7 +98,14 @@ define(function(require){
 				width :'220px',
 				allowClear: true,
 				initSelection : function (element, callback) {
-                                        callback( { id:_.escape(element.val()), text:_.escape(element.val()) })
+					var rangerService = new RangerService()
+					rangerService.url = '/service/plugins/services/name/'+element.val();
+					rangerService.fetch( {
+						cache : false,
+						async : false,
+					}).done(function(m) {
+						callback( { id:_.escape(m.get('name')), text:_.escape(m.get('displayName')) })
+					})
 				},
 				ajax: { 
 					url: "service/plugins/services",
@@ -107,8 +116,10 @@ define(function(require){
 					results: function (data, page) { 
 						var results = [];
 						if(data.resultSize != "0"){
-                                                        results = data.services.map(function(m, i){	return {id : _.escape(m.name), text: _.escape(m.name) };	});
-							return {results : results};
+							results = data.services.map(function(m, i){	return {id : _.escape(m.name), text: _.escape(m.displayName) }});
+						}
+						if($.find('[name="tagService"]') && !_.isEmpty($.find('[name="tagService"]')[0].value)) {
+							results = _.reject(results, function(m) {return m.id == $.find('[name="tagService"]')[0].value});
 						}
 						return {results : results};
 					},
