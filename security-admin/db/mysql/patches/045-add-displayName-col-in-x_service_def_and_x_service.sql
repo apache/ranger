@@ -35,3 +35,28 @@ delimiter ;
 call add_column_in_x_service_def_and_x_service();
 
 drop procedure if exists add_column_in_x_service_def_and_x_service;
+
+-- User changes
+drop procedure if exists add_column_in_x_user_and_x_portal_user_and_x_group;
+
+delimiter ;;
+create procedure add_column_in_x_user_and_x_portal_user_and_x_group() begin
+
+if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_user' and column_name='other_attributes') then
+        ALTER TABLE x_user ADD other_attributes varchar(4000) DEFAULT NULL;
+end if;
+
+if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_portal_user' and column_name='other_attributes') then
+        ALTER TABLE x_portal_user ADD other_attributes varchar(4000) DEFAULT NULL;
+end if;
+
+if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_group' and column_name='other_attributes') then
+        ALTER TABLE x_group ADD other_attributes varchar(4000) DEFAULT NULL;
+end if;
+
+end;;
+
+delimiter ;
+call add_column_in_x_user_and_x_portal_user_and_x_group();
+
+drop procedure if exists add_column_in_x_user_and_x_portal_user_and_x_group;

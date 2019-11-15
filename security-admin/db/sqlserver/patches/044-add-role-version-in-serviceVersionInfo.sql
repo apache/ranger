@@ -14,17 +14,17 @@
 -- limitations under the License.
 
 GO
-IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service_def' and column_name = 'display_name')
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name='x_service_version_info' and column_name='role_version')
 BEGIN
-	ALTER TABLE [dbo].[x_service_def] ADD [display_name] [varchar](1024) DEFAULT NULL NULL;
-	UPDATE [dbo].[x_service_def] SET [display_name] = [name];
-	UPDATE [dbo].[x_service_def] SET [display_name] = 'Hadoop SQL' where [name] = 'hive';
+	ALTER TABLE [dbo].[x_service_version_info] ADD [role_version] [bigint] DEFAULT 0 NOT NULL;
 END
 GO
-IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service' and column_name = 'display_name')
+
+GO
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name='x_service_version_info' and column_name='role_update_time')
 BEGIN
-	ALTER TABLE [dbo].[x_service] ADD [display_name] [varchar](255) DEFAULT NULL NULL;
-	UPDATE [dbo].[x_service] SET [display_name] = [name];
+	ALTER TABLE [dbo].[x_service_version_info] ADD [role_update_time] [datetime2] DEFAULT NULL NULL;
 END
 GO
+
 exit

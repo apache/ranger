@@ -14,6 +14,27 @@
 -- limitations under the License.
 
 GO
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service_def' and column_name = 'display_name')
+BEGIN
+	ALTER TABLE [dbo].[x_service_def] ADD [display_name] [varchar](1024) DEFAULT NULL NULL;
+END
+GO
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service' and column_name = 'display_name')
+BEGIN
+	ALTER TABLE [dbo].[x_service] ADD [display_name] [varchar](255) DEFAULT NULL NULL;
+END
+GO
+IF EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service_def' and column_name = 'display_name')
+BEGIN
+	UPDATE [dbo].[x_service_def] SET [display_name] = [name] WHERE [display_name] IS NULL AND [name] <> 'hive';
+	UPDATE [dbo].[x_service_def] SET [display_name] = 'Hadoop SQL' where [name] = 'hive' AND [display_name] IS NULL;
+END
+GO
+IF EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service' and column_name = 'display_name')
+BEGIN
+	UPDATE [dbo].[x_service] SET [display_name] = [name] WHERE [display_name] IS NULL;
+END
+GO
 IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_portal_user' and column_name = 'other_attributes')
 BEGIN
 	ALTER TABLE [dbo].[x_portal_user] ADD [other_attributes] [varchar](4000) DEFAULT NULL NULL;

@@ -26,6 +26,7 @@ BEGIN
   UPDATE x_service_def SET display_name='Hadoop SQL' where name='hive';
  END IF;
 
+ v_column_exists:=0;
  select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_service') and attname='display_name';
  IF v_column_exists = 0 THEN
   ALTER TABLE x_service ADD COLUMN display_name VARCHAR(255) DEFAULT NULL NULL;
@@ -37,4 +38,35 @@ $$ LANGUAGE plpgsql;
 select 'delimiter end';
 
 select add_col_in_x_service_def_and_x_service();
+select 'delimiter end';
+commit;
+
+select 'delimiter start';
+CREATE OR REPLACE FUNCTION add_column_in_x_user_and_x_portal_user_and_x_group()
+RETURNS void AS $$
+DECLARE
+ v_column_exists integer := 0;
+BEGIN
+ select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_portal_user') and attname='other_attributes';
+ IF v_column_exists = 0 THEN
+  ALTER TABLE x_portal_user ADD COLUMN other_attributes VARCHAR(4000) DEFAULT NULL NULL;
+ END IF;
+
+ v_column_exists:=0;
+ select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_user') and attname='other_attributes';
+ IF v_column_exists = 0 THEN
+  ALTER TABLE x_user ADD COLUMN other_attributes VARCHAR(4000) DEFAULT NULL NULL;
+ END IF;
+
+ v_column_exists:=0;
+ select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_group') and attname='other_attributes';
+ IF v_column_exists = 0 THEN
+  ALTER TABLE x_group ADD COLUMN other_attributes VARCHAR(4000) DEFAULT NULL NULL;
+ END IF;
+
+END;
+$$ LANGUAGE plpgsql;
+select 'delimiter end';
+
+select add_column_in_x_user_and_x_portal_user_and_x_group();
 select 'delimiter end';
