@@ -135,6 +135,10 @@ define(function(require){
 				}
 				return modal.preventClose();
 			}
+			if(this.targetFileObj.type != "application/json" || !(this.targetFileObj.name).match(".json$", "i")) {
+				this.$el.find('.selectFileValidationMsg').show();
+				return modal.preventClose();
+			}
 			var that = this, serviceMapping = {}, fileObj = this.targetFileObj, preventModal = false , url ="";
 			if(this.$el.find('input[data-name="override"]').is(':checked')){
         	    url = "service/plugins/policies/importPoliciesFromFile?isOverride=true";
@@ -222,8 +226,7 @@ define(function(require){
 	    	this.collection.add(new Backbone.Model());
 	    },
 	 	onRender: function() {
-	 		this.$el.find('.fileValidation').hide();
-        	this.$el.find('.selectFileValidationMsg').hide();
+	 		this.$el.find('.selectFileValidationMsg').hide();
         	if(this.serviceType==undefined){
 			   this.$el.find('.seviceFiled').show();
 			   this.renderComponentSelect();
@@ -270,20 +273,17 @@ define(function(require){
 		importPolicy : function(e){
 			var that =this;
 			console.log("uploading....");
-			this.$el.find('.selectFile').hide(); 
 			this.$el.find('.selectFileValidationMsg').hide(); 
-			this.$el.find('.fileValidation').hide();
 			this.targetFileObj = e.target.files[0];
 			if(!_.isUndefined(this.targetFileObj)){
-				this.$el.find('.selectFile').html('<i>'+this.targetFileObj.name+'</i><label class="icon icon-remove icon-1x icon-remove-btn" data-id="fileNameClosebtn"></label>').show()
+				this.$el.find('.selectFile').text(this.targetFileObj.name);
+				this.$el.find('.selectFile').append('<i></i><label class="icon icon-remove icon-1x icon-remove-btn" data-id="fileNameClosebtn"></label>');
 			}else{
-				this.$el.find('.selectFile').html("No file chosen").show();
+				this.$el.find('.selectFile').text("No file chosen");
 			}
 		},
 		fileNameClosebtn : function(){
-            this.$el.find('.selectFile').hide()
-	     	this.$el.find('.selectFile').html("No file chosen").show()
-			this.$el.find('.fileValidation').hide();
+			this.$el.find('.selectFile').text("No file chosen");
 			this.$el.find('.selectFileValidationMsg').hide();
 			this.targetFileObj = undefined;
 			this.ui.importFilePolicy.val('');
