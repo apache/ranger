@@ -1768,7 +1768,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				deletePolicy(rangerPolicy, service);
 				totalDeletedPolicies = totalDeletedPolicies + 1;
 				// its a bulk policy delete call flush and clear
-				if (totalDeletedPolicies % RangerBizUtil.batchSize == 0) {
+				if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
 					bizUtil.bulkModeOnlyFlushAndClear();
 				}
 			}
@@ -3151,7 +3151,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					for (RangerPolicy rangerPolicy : rangerPolicyList) {
 						deletePolicy(rangerPolicy, service);
 						totalDeletedPolicies = totalDeletedPolicies + 1;
-						if (totalDeletedPolicies % RangerBizUtil.batchSize == 0) {
+						if (totalDeletedPolicies % RangerBizUtil.policyBatchSize == 0) {
 							bizUtil.bulkModeOnlyFlushAndClear();
 						}
 					}

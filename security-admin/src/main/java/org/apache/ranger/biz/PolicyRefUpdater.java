@@ -113,6 +113,7 @@ public class PolicyRefUpdater {
 			}
 		}
 
+		List<XXPolicyRefResource> xPolResources = new ArrayList<>();
 		for (String resource : resourceNames) {
 			XXResourceDef xResDef = daoMgr.getXXResourceDef().findByNameAndPolicyId(resource, policy.getId());
 
@@ -126,9 +127,11 @@ public class PolicyRefUpdater {
 			xPolRes.setResourceDefId(xResDef.getId());
 			xPolRes.setResourceName(resource);
 
-			daoMgr.getXXPolicyRefResource().create(xPolRes);
+			xPolResources.add(xPolRes);
 		}
+		daoMgr.getXXPolicyRefResource().batchCreate(xPolResources);
 
+		List<XXPolicyRefRole> xPolRoles = new ArrayList<>();
 		for (String role : roleNames) {
 			if (StringUtils.isBlank(role)) {
 				continue;
@@ -146,9 +149,11 @@ public class PolicyRefUpdater {
 			xPolRole.setRoleId(xRole.getId());
 			xPolRole.setRoleName(role);
 
-			daoMgr.getXXPolicyRefRole().create(xPolRole);
+			xPolRoles.add(xPolRole);
 		}
+		daoMgr.getXXPolicyRefRole().batchCreate(xPolRoles);
 
+		List<XXPolicyRefGroup> xPolGroups = new ArrayList<>();
 		for (String group : groupNames) {
 			if (StringUtils.isBlank(group)) {
 				continue;
@@ -166,9 +171,11 @@ public class PolicyRefUpdater {
 			xPolGroup.setGroupId(xGroup.getId());
 			xPolGroup.setGroupName(group);
 
-			daoMgr.getXXPolicyRefGroup().create(xPolGroup);
+			xPolGroups.add(xPolGroup);
 		}
+		daoMgr.getXXPolicyRefGroup().batchCreate(xPolGroups);
 
+		List<XXPolicyRefUser> xPolUsers = new ArrayList<>();
 		for (String user : userNames) {
 			if (StringUtils.isBlank(user)) {
 				continue;
@@ -186,9 +193,11 @@ public class PolicyRefUpdater {
 			xPolUser.setUserId(xUser.getId());
 			xPolUser.setUserName(user);
 
-			daoMgr.getXXPolicyRefUser().create(xPolUser);
+			xPolUsers.add(xPolUser);
 		}
+		daoMgr.getXXPolicyRefUser().batchCreate(xPolUsers);
 
+		List<XXPolicyRefAccessType> xPolAccesses = new ArrayList<>();
 		for (String accessType : accessTypes) {
 			XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef().findByNameAndServiceId(accessType, xPolicy.getService());
 
@@ -202,9 +211,11 @@ public class PolicyRefUpdater {
 			xPolAccess.setAccessDefId(xAccTypeDef.getId());
 			xPolAccess.setAccessTypeName(accessType);
 
-			daoMgr.getXXPolicyRefAccessType().create(xPolAccess);
+			xPolAccesses.add(xPolAccess);
 		}
+		daoMgr.getXXPolicyRefAccessType().batchCreate(xPolAccesses);
 
+		List<XXPolicyRefCondition> xPolConds = new ArrayList<>();
 		for (String condition : conditionTypes) {
 			XXPolicyConditionDef xPolCondDef = daoMgr.getXXPolicyConditionDef().findByServiceDefIdAndName(xServiceDef.getId(), condition);
 
@@ -218,9 +229,11 @@ public class PolicyRefUpdater {
 			xPolCond.setConditionDefId(xPolCondDef.getId());
 			xPolCond.setConditionName(condition);
 
-			daoMgr.getXXPolicyRefCondition().create(xPolCond);
+			xPolConds.add(xPolCond);
 		}
+		daoMgr.getXXPolicyRefCondition().batchCreate(xPolConds);
 
+		List<XXPolicyRefDataMaskType> xxDataMaskInfos = new ArrayList<>();
 		for (String dataMaskType : dataMaskTypes ) {
 			XXDataMaskTypeDef dataMaskDef = daoMgr.getXXDataMaskTypeDef().findByNameAndServiceId(dataMaskType, xPolicy.getService());
 
@@ -234,8 +247,9 @@ public class PolicyRefUpdater {
 			xxDataMaskInfo.setDataMaskDefId(dataMaskDef.getId());
 			xxDataMaskInfo.setDataMaskTypeName(dataMaskType);
 
-			daoMgr.getXXPolicyRefDataMaskType().create(xxDataMaskInfo);
+			xxDataMaskInfos.add(xxDataMaskInfo);
 		}
+		daoMgr.getXXPolicyRefDataMaskType().batchCreate(xxDataMaskInfos);
 	}
 
 	public Boolean cleanupRefTables(RangerPolicy policy) {
