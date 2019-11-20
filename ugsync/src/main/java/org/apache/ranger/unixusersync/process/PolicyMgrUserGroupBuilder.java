@@ -965,23 +965,22 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 		return ret;
 	}
-
+	
 	private XUserInfo addXUserInfo(String aUserName) {
-
-		XUserInfo xuserInfo = new XUserInfo();
-
-		xuserInfo.setName(aUserName);
-
-		xuserInfo.setDescription(aUserName + " - add from Unix box");
-
-		List<String> userRole = new ArrayList<>();
-		userRole.add("ROLE_USER");
-		xuserInfo.setUserRoleList(userRole);
-
-		usergroupInfo.setXuserInfo(xuserInfo);
-
-		return xuserInfo;
-	}
+			XUserInfo xuserInfo = new XUserInfo();
+			xuserInfo.setName(aUserName);
+			xuserInfo.setDescription(aUserName + " - add from Unix box");
+			List<String> roleList = new ArrayList<String>();
+			if (userMap.containsKey(aUserName)) {
+	            roleList.add(userMap.get(aUserName));
+	        }else{
+	        	roleList.add("ROLE_USER");
+	        }
+			xuserInfo.setUserRoleList(roleList);
+			usergroupInfo.setXuserInfo(xuserInfo);
+			
+			return xuserInfo;
+		}
 
 
 	private XGroupInfo addXGroupInfo(String aGroupName) {
