@@ -1738,5 +1738,10 @@ define(function(require) {
         });
     };
 
+    //Get service details By Service name
+    XAUtils.getServiceByName = function(name) {
+        return "/service/plugins/services/name/" + name
+    };
+
 	return XAUtils;
 });

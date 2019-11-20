@@ -285,9 +285,15 @@ define(function(require) {
 		   var view				= require('views/service/ServiceCreate');
 		   var RangerServiceDef	= require('models/RangerServiceDef');
 		   var RangerService	= require('models/RangerService');
+		   var XAUtil			= require('utils/XAUtils');
 		   
 		   var rangerServiceDefModel	= new RangerServiceDef({ id : serviceTypeId });
-		   var rangerService = new RangerService({ 'id' : serviceId });
+            if(_.isNaN(parseInt(serviceId))){
+                var rangerService = new RangerService();
+                rangerService.url = XAUtil.getServiceByName(serviceId);
+            } else {
+                var rangerService = new RangerService({id : serviceId});
+            }
 
 		   rangerService.fetch({
 			   cache:false
@@ -306,27 +312,37 @@ define(function(require) {
 		   var RangerService	= require('models/RangerService');
 		   var RangerPolicyList 	=  require('collections/RangerPolicyList');
 		   
-		   var rangerService = new RangerService({id : serviceId});
 		   var rangerPolicyList = new RangerPolicyList();
 		   rangerPolicyList.queryParams['policyType'] = policyType;
-		   
+                    if(_.isNaN(parseInt(serviceId))){
+                        var rangerService = new RangerService();
+                        rangerService.url = XAUtil.getServiceByName(serviceId);
+                    } else {
+                        var rangerService = new RangerService({id : serviceId});
+                    }
 		   rangerService.fetch({
 			  cache : false,
 			  async : false
+                   }).done( function() {
+                                App.rContent.show(new view({
+                                        rangerService : rangerService,
+                                        collection : rangerPolicyList
+                                }));
 		   });
-		   App.rContent.show(new view({
-			   rangerService : rangerService,
-			   collection : rangerPolicyList
-		   }));
 	   },
 	   RangerPolicyCreateAction :function(serviceId, policyType){
     	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
-
+           var XAUtil			= require('utils/XAUtils');
 		   var view 			= require('views/policies/RangerPolicyCreate');
 		   var RangerService	= require('models/RangerService');
 		   var RangerPolicy		= require('models/RangerPolicy');
 		   
-		   var rangerService = new RangerService({id : serviceId});
+                    if(_.isNaN(parseInt(serviceId))){
+                        var rangerService = new RangerService();
+                        rangerService.url = XAUtil.getServiceByName(serviceId);
+                    } else {
+                        var rangerService = new RangerService({id : serviceId});
+                    }
 		   rangerService.fetch({
 				  cache : false,
 		   }).done(function(){
@@ -345,22 +361,28 @@ define(function(require) {
 		   var RangerPolicyList  = require('collections/RangerPolicyList');
 		   var XAUtil			 = require('utils/XAUtils');
 		   
-		   var rangerService = new RangerService({id : serviceId});
 		   var rangerPolicy = new RangerPolicy({ id : policyId});
+                   if(_.isNaN(parseInt(serviceId))){
+                        var rangerService = new RangerService();
+                        rangerService.url = XAUtil.getServiceByName(serviceId);
+                    } else {
+                        var rangerService = new RangerService({id : serviceId});
+                    }
 		   rangerPolicy.collection =new RangerPolicyList();
 		   rangerPolicy.collection.url = XAUtil.getServicePoliciesURL(serviceId);
 		   rangerService.fetch({
 			   cache : false,
 			   async : false,
-		   });
-		   rangerPolicy.fetch({
-				  cache : false,
-		   }).done(function(){
-			   App.rContent.show(new view({
-				   model : rangerPolicy,
-				   rangerService :rangerService
-			   }));
-		   });
+                   }).done( function() {
+                                rangerPolicy.fetch({
+                                        cache : false,
+                                }).done(function(){
+                                        App.rContent.show(new view({
+                                                model : rangerPolicy,
+                                                rangerService :rangerService
+                                        }));
+                                });
+                        });
 	   },
 	   /************PERMISSIONS LISTING *****************************************/
 	   modulePermissionsAction :function(){
