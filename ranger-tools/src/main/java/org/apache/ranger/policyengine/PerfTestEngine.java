@@ -33,24 +33,19 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.net.URL;
 import java.nio.charset.Charset;
-import java.util.concurrent.atomic.AtomicLong;
 
 public class PerfTestEngine {
 	static final Log LOG      = LogFactory.getLog(PerfTestEngine.class);
 
-	static private final long POLICY_ENGINE_REORDER_AFTER_PROCESSING_REQUESTS_COUNT = 100;
 	private final URL servicePoliciesFileURL;
 	private final RangerPolicyEngineOptions policyEngineOptions;
 	private final URL configFileURL;
 	private RangerPolicyEngine policyEvaluationEngine;
 	private RangerPluginContext rangerPluginContext;
-	private final boolean disableDynamicPolicyEvalReordering;
-	private AtomicLong requestCount = new AtomicLong();
 
-	public PerfTestEngine(final URL servicePoliciesFileURL, RangerPolicyEngineOptions policyEngineOptions, boolean disableDynamicPolicyEvalReordering, URL configFileURL) {
+	public PerfTestEngine(final URL servicePoliciesFileURL, RangerPolicyEngineOptions policyEngineOptions, URL configFileURL) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
 		this.policyEngineOptions = policyEngineOptions;
-		this.disableDynamicPolicyEvalReordering = disableDynamicPolicyEvalReordering;
 		this.configFileURL = configFileURL;
 	}
 
@@ -79,9 +74,7 @@ public class PerfTestEngine {
 			String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
 			rangerPluginContext = new RangerPluginContext(serviceType);
 			rangerPluginContext.getConfig().addResource(configFileURL);
-			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, policyEngineOptions, rangerPluginContext);
-
-			requestCount.set(0L);
+			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, policyEngineOptions, rangerPluginContext, null);
 
 			ret = true;
 
@@ -115,14 +108,6 @@ public class PerfTestEngine {
 
 		if (policyEvaluationEngine != null) {
 
-			long processedRequestCount = requestCount.getAndIncrement();
-
-			if (!disableDynamicPolicyEvalReordering && (processedRequestCount % POLICY_ENGINE_REORDER_AFTER_PROCESSING_REQUESTS_COUNT) == 0) {
-				policyEvaluationEngine.reorderPolicyEvaluators();
-			}
-
-			policyEvaluationEngine.preProcess(request);
-
 			ret = policyEvaluationEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, null);
 
 			if (LOG.isDebugEnabled()) {
@@ -139,10 +124,4 @@ public class PerfTestEngine {
 		return ret;
 	}
 
-	public void cleanup() {
-		if (policyEvaluationEngine != null) {
-			policyEvaluationEngine.cleanup();
-			policyEvaluationEngine = null;
-		}
-	}
 }

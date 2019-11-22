@@ -103,15 +103,14 @@ public class TestPolicyEngine {
 			servicePolicies.setPolicies(testCase.policies);
 
 			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-			RangerPluginContext pluginContext = new RangerPluginContext("hive", "cl1", "on-prem");
-			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions, pluginContext);
+			RangerPluginContext pluginContext = new RangerPluginContext("hbase", "cl1", "on-prem");
+			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions, pluginContext, null);
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(pluginContext.getConfig());
 
 			for(TestData test : testCase.tests) {
 				RangerAccessResult expected = test.result;
 				RangerAccessRequest request = test.request;
-				policyEngine.preProcess(request);
 
 				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 

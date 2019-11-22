@@ -103,7 +103,9 @@ public interface ServiceStore {
 
 	ServicePolicies getServicePolicyDeltasOrPolicies(String serviceName, Long lastKnownVersion) throws Exception;
 
-	ServicePolicies getOnlyServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception;
+	ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception;
+
+	ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion) throws Exception;
 
 	RangerPolicy getPolicyFromEventTime(String eventTimeStr, Long policyId);
 
@@ -114,4 +116,7 @@ public interface ServiceStore {
     RangerSecurityZone getSecurityZone(Long id) throws Exception;
 
     RangerSecurityZone getSecurityZone(String name) throws Exception;
+
+    long getPoliciesCount(final String serviceName);
+
 }

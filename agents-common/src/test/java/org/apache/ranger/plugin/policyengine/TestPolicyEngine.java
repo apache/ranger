@@ -72,7 +72,6 @@ import static org.junit.Assert.*;
 public class TestPolicyEngine {
 	static RangerPluginContext pluginContext;
 	static Gson gsonBuilder;
-	long requestCount = 0L;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -482,7 +481,7 @@ public class TestPolicyEngine {
 
 		rangerRoles.setRangerRoles(rangerRoleSet);
 
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext, rangerRoles);
+		RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext, rangerRoles);
 
 		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
@@ -490,7 +489,7 @@ public class TestPolicyEngine {
 		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
 		policyEngineOptions.optimizeTrieForRetrieval = false;
 
-		RangerPolicyEngine policyEngineForResourceAccessInfo = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext);
+		RangerPolicyEngineImpl policyEngineForResourceAccessInfo = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext, rangerRoles);
 
 		policyEngineForResourceAccessInfo.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngineForResourceAccessInfo.setTrustedProxyAddresses(trustedProxyAddresses);
@@ -500,8 +499,8 @@ public class TestPolicyEngine {
 		if (testCase.updatedPolicies != null) {
 			servicePolicies.setPolicyDeltas(testCase.updatedPolicies.policyDeltas);
 			servicePolicies.setSecurityZones(testCase.updatedPolicies.securityZones);
-			RangerPolicyEngine updatedPolicyEngine = policyEngine.cloneWithDelta(servicePolicies, rangerRoles);
-			RangerPolicyEngine updatedPolicyEngineForResourceAccessInfo = policyEngineForResourceAccessInfo.cloneWithDelta(servicePolicies, rangerRoles);
+			RangerPolicyEngine updatedPolicyEngine = RangerPolicyEngineImpl.getPolicyEngine(policyEngine, servicePolicies);
+			RangerPolicyEngine updatedPolicyEngineForResourceAccessInfo = RangerPolicyEngineImpl.getPolicyEngine(policyEngineForResourceAccessInfo, servicePolicies);
 			runTestCaseTests(updatedPolicyEngine, updatedPolicyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.updatedTests);
 		}
 	}
@@ -512,9 +511,7 @@ public class TestPolicyEngine {
 
         for(TestData test : tests) {
 			request = test.request;
-			if ((requestCount++ % 10) == 1) {
-				policyEngine.reorderPolicyEvaluators();
-			}
+
 			if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||
 					request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 				// Create a new AccessRequest
@@ -579,9 +576,6 @@ public class TestPolicyEngine {
 
 				request = newRequest;
 
-			} else
-			if (!request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
-				policyEngine.preProcess(request);
 			}
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();

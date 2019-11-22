@@ -78,6 +78,10 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 		if (authContext != null) {
 			authContext.addOrReplaceRequestContextEnricher(this, null);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("authContext is null. This context-enricher is not added to authContext");
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -100,6 +104,10 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 		if (authContext != null) {
 			authContext.cleanupRequestContextEnricher(this);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("authContext is null. AuthContext need not be cleaned.");
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

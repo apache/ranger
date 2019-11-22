@@ -90,7 +90,7 @@ public class TestRangerAuthContext {
 			RangerPluginContext pluginContext = new RangerPluginContext(testCase.servicePolicies.getServiceDef().getName());
 			plugin.setPluginContext(pluginContext);
 			plugin.setPolicies(testCase.servicePolicies);
-			RangerAuthContext ctx = plugin.createRangerAuthContext();
+			RangerAuthContext ctx = plugin.getCurrentRangerAuthContext();
 
 			Map<RangerContextEnricher, Object> contextEnrichers = ctx.getRequestContextEnrichers();
 			assertTrue(fileName + "-" + testName + " - Empty contextEnrichers", MapUtils.isNotEmpty(contextEnrichers) && contextEnrichers.size() == 2);

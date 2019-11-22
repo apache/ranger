@@ -19,15 +19,10 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+public interface RangerAccessRequestProcessor {
 
-import org.apache.ranger.plugin.model.RangerServiceDef;
+    void preProcess(RangerAccessRequest request);
 
-public class RangerTagResource extends RangerAccessResourceImpl {
-	private static final String KEY_TAG = "tag";
+    default void enrich(RangerAccessRequest request) {}
 
-
-	public RangerTagResource(String tagType, RangerServiceDef tagServiceDef) {
-		super.setValue(KEY_TAG, tagType);
-		super.setServiceDef(tagServiceDef);
-	}
 }

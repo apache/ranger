@@ -73,7 +73,6 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
-import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -2333,9 +2332,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		RangerHiveResource hiveResource = createHiveResource(hiveObject);
 		RangerAccessRequestImpl request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null);
 
-		final RangerAuthContext authContext = hivePlugin.createRangerAuthContext();
-
-		ret = authContext.getResourceACLs(request);
+		ret = hivePlugin.getResourceACLs(request);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerHivePolicyProvider.getRangerResourceACLs:[" + hiveObject + "], Computed ACLS:[" + ret + "]");

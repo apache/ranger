@@ -17,9 +17,10 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.policyengine;
+package org.apache.ranger.biz;
 
 import org.apache.ranger.plugin.store.RoleStore;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -31,7 +32,7 @@ public class RangerPolicyEngineCacheForEngineOptions {
 
     private static volatile RangerPolicyEngineCacheForEngineOptions sInstance = null;
 
-    private final Map<RangerPolicyEngineOptions, RangerPolicyEngineCache> policyEngineCacheForEngineOptions = Collections.synchronizedMap(new HashMap<RangerPolicyEngineOptions, RangerPolicyEngineCache>());
+    private final Map<RangerPolicyEngineOptions, RangerPolicyEngineCache> policyEngineCacheForEngineOptions = Collections.synchronizedMap(new HashMap<>());
 
     public static RangerPolicyEngineCacheForEngineOptions getInstance() {
         RangerPolicyEngineCacheForEngineOptions ret = sInstance;
@@ -47,12 +48,11 @@ public class RangerPolicyEngineCacheForEngineOptions {
         return ret;
     }
 
-    public final RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, RoleStore roleStore, RangerPolicyEngineOptions options) {
-        return getPolicyEngine(serviceName, svcStore, roleStore, null, options);
+    public final RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, RangerPolicyEngineOptions options) {
+        return getServicePoliciesAdmin(serviceName, svcStore, roleStore, null, options);
     }
 
-    public final RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
-
+    public final RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
         RangerPolicyEngineCache policyEngineCache;
 
         synchronized (this) {
@@ -62,7 +62,7 @@ public class RangerPolicyEngineCacheForEngineOptions {
                 policyEngineCacheForEngineOptions.put(options, policyEngineCache);
             }
         }
-        return policyEngineCache.getPolicyEngine(serviceName, svcStore, roleStore, zoneStore, options);
+        return policyEngineCache.getServicePoliciesAdmin(serviceName, svcStore, roleStore, zoneStore, options);
     }
 }
 

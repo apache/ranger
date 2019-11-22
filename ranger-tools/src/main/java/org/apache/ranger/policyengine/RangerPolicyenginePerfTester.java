@@ -65,7 +65,7 @@ public class RangerPolicyenginePerfTester {
 
             URL configurationFileURL = perfTestOptions.getPerfConfigurationFileURL();
 
-            PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, policyEngineOptions, perfTestOptions.getIsDynamicReorderingDisabled(), configurationFileURL);
+            PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, policyEngineOptions, configurationFileURL);
             if (!perfTestEngine.init()) {
                 LOG.error("Error initializing test data. Existing...");
                 System.exit(1);
@@ -157,8 +157,6 @@ public class RangerPolicyenginePerfTester {
             }
 
             LOG.info("Completed performance-run");
-
-            perfTestEngine.cleanup();
 
             PerfDataRecorder.printStatistics();
         }

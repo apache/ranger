@@ -17,9 +17,10 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.policyengine;
+package org.apache.ranger.biz;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +35,8 @@ import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.RoleStore;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -42,113 +45,108 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 public class RangerPolicyEngineCache {
 	private static final Log LOG = LogFactory.getLog(RangerPolicyEngineCache.class);
 
-	private final Map<String, RangerPolicyEngine> policyEngineCache = new HashMap<String, RangerPolicyEngine>();
+	private final Map<String, RangerPolicyAdmin> policyEngineCache = Collections.synchronizedMap(new HashMap<>());
 
-	synchronized final RangerPolicyEngine getPolicyEngine(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
-		RangerPolicyEngine ret = null;
+	final RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
+		RangerPolicyAdmin ret = null;
 
-		if(serviceName != null) {
-			ret = policyEngineCache.get(serviceName);
+		if (serviceName == null || svcStore == null || roleStore == null || zoneStore == null) {
+			LOG.warn("Cannot get policy-engine for null serviceName or serviceStore or roleStore or zoneStore");
+			return ret;
+		}
 
-			if(svcStore != null) {
-				long        policyVersion;
-				long        roleVersion;
-				RangerRoles rangerRoles;
-				boolean     isRolesUpdated = true;
+		ret = policyEngineCache.get(serviceName);
 
-				try {
-					if (ret == null) {
-						policyVersion = -1L;
-						roleVersion = -1L;
-						rangerRoles = roleStore.getRangerRoles(serviceName, roleVersion);
+		long policyVersion;
+		long roleVersion;
+		RangerRoles rangerRoles;
+		boolean isRolesUpdated = true;
 
-						if (rangerRoles == null) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("There are no roles in ranger-admin for service:" + serviceName +"]");
-							}
-						}
-					} else {
-						policyVersion = ret.getPolicyVersion();
+		try {
+			if (ret == null) {
+				policyVersion = -1L;
+				roleVersion = -1L;
+				rangerRoles = roleStore.getRangerRoles(serviceName, roleVersion);
 
-						if (ret.getRangerRoles() != null && ret.getRangerRoles().getRoleVersion() != null) {
-							roleVersion = ret.getRangerRoles().getRoleVersion();
-						} else {
-							roleVersion = -1L;
-						}
-
-						rangerRoles = roleStore.getRangerRoles(serviceName, roleVersion);
-
-						if (rangerRoles == null) {
-							rangerRoles = ret.getRangerRoles();
-							isRolesUpdated = false;
-						}
+				if (rangerRoles == null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("There are no roles in ranger-admin for service:" + serviceName + "]");
 					}
-
-					ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, policyVersion, false);
-
-					if (policies != null) {
-						if (policies.getPolicyVersion() != null && !policies.getPolicyVersion().equals(policyVersion)) {
-							ServicePolicies updatedServicePolicies = getUpdatedServicePolicies(serviceName, policies, svcStore, zoneStore);
-
-							if (ret == null) {
-								ret = addPolicyEngine(updatedServicePolicies, rangerRoles, options);
-							} else {
-								ret = updatePolicyEngine(ret, updatedServicePolicies, rangerRoles, options);
-							}
-						} else {
-							LOG.error("policies object is null or its version is null for getPolicyEngine(" + serviceName + ") !!");
-							LOG.error("Returning old policy engine");
-						}
-					} else {
-						if (ret == null) {
-							LOG.error("getPolicyEngine(" + serviceName + "): failed to get any policies from service-store");
-						} else {
-							if (isRolesUpdated) {
-								ret.setRangerRoles(rangerRoles);
-							}
-						}
-					}
-
-				} catch(Exception excp) {
-					LOG.error("getPolicyEngine(" + serviceName + "): failed to get latest policies from service-store", excp);
 				}
+			} else {
+				policyVersion = ret.getPolicyVersion();
+				roleVersion = ret.getRoleVersion();
+				rangerRoles = roleStore.getRangerRoles(serviceName, roleVersion);
+
+				if (rangerRoles == null) { // No changes to roles
+					rangerRoles = roleStore.getRangerRoles(serviceName, -1L);
+					isRolesUpdated = false;
+				}
+			}
+			ServicePolicies policies = svcStore.getServicePoliciesIfUpdated(serviceName, policyVersion, false);
+
+			if (policies != null) {
+				if (policies.getPolicyVersion() != null && !policies.getPolicyVersion().equals(policyVersion)) {
+					ServicePolicies updatedServicePolicies = getUpdatedServicePolicies(serviceName, policies, svcStore, zoneStore);
+
+					ret = addOrUpdatePolicyEngine(ret, updatedServicePolicies, rangerRoles, options);
+				} else {
+					LOG.error("policies object is null or its version is null for getPolicyEngine(" + serviceName + ") !!");
+					LOG.error("Returning old policy engine");
+				}
+			} else {
+				if (ret == null) {
+					LOG.error("getPolicyEngine(" + serviceName + "): failed to get any policies from service-store");
+				} else {
+					if (isRolesUpdated) {
+						ret.setRangerRoles(rangerRoles);
+					}
+				}
+			}
+
+		} catch (Exception excp) {
+			LOG.error("getPolicyEngine(" + serviceName + "): failed to get latest policies from service-store", excp);
+		}
+
+		return ret;
+	}
+
+	private RangerPolicyAdmin addOrUpdatePolicyEngine(RangerPolicyAdmin policyEngine, ServicePolicies policies, RangerRoles rangerRoles, RangerPolicyEngineOptions options) {
+		final RangerPolicyAdmin ret;
+
+		RangerPolicyAdminImpl oldPolicyEngine = (RangerPolicyAdminImpl) policyEngine;
+
+		synchronized(this) {
+			if (oldPolicyEngine == null || CollectionUtils.isEmpty(policies.getPolicyDeltas())) {
+				ret = addPolicyEngine(policies, rangerRoles, options);
+			} else {
+				RangerPolicyAdmin updatedEngine = RangerPolicyAdminImpl.getPolicyEngine(oldPolicyEngine, policies);
+
+				if (updatedEngine != null) {
+					updatedEngine.setRangerRoles(rangerRoles);
+					policyEngineCache.put(policies.getServiceName(), updatedEngine);
+
+					ret = updatedEngine;
+				} else {
+					ret = addPolicyEngine(policies, rangerRoles, options);
+				}
+			}
+			if (oldPolicyEngine != null) {
+				oldPolicyEngine.releaseResources();
 			}
 		}
 
 		return ret;
 	}
 
-
-	private RangerPolicyEngine addPolicyEngine(ServicePolicies policies, RangerRoles rangerRoles, RangerPolicyEngineOptions options) {
+	private RangerPolicyAdmin addPolicyEngine(ServicePolicies policies, RangerRoles rangerRoles, RangerPolicyEngineOptions options) {
 		RangerServiceDef serviceDef = policies.getServiceDef();
 		String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
 
 		RangerPluginContext rangerPluginContext = new RangerPluginContext(serviceType);
-		RangerPolicyEngine ret = new RangerPolicyEngineImpl("ranger-admin", policies, options, rangerPluginContext, rangerRoles);
+		RangerPolicyAdmin ret = new RangerPolicyAdminImpl("ranger-admin", policies, options, rangerPluginContext, rangerRoles);
 
 		policyEngineCache.put(policies.getServiceName(), ret);
-
-		return ret;
-	}
-
-	private RangerPolicyEngine updatePolicyEngine(RangerPolicyEngine policyEngine, ServicePolicies policies, RangerRoles rangerRoles, RangerPolicyEngineOptions options) {
-		final RangerPolicyEngine ret;
-
-
-		if (CollectionUtils.isNotEmpty(policies.getPolicyDeltas())) {
-			RangerPolicyEngine updatedEngine = policyEngine.cloneWithDelta(policies, rangerRoles);
-			if (updatedEngine != null) {
-				policyEngineCache.put(policies.getServiceName(), updatedEngine);
-				ret = updatedEngine;
-			} else {
-				LOG.warn("Could not cloneWithDelta policyEngine to policyVersion:[" + policies.getPolicyVersion() + "]");
-				LOG.warn("Retaining old policyEngine with policyVersion:[" + policyEngine.getPolicyVersion() + "]");
-				ret = policyEngine;
-			}
-		} else {
-			ret = addPolicyEngine(policies, rangerRoles, options);
-			((RangerPolicyEngineImpl)policyEngine).setIsShared(false);
-		}
 
 		return ret;
 	}

@@ -146,8 +146,7 @@ public class RangerPolicyEnginePerformanceTest {
 		List<RangerAccessRequest> requests = requestsCache.getUnchecked(concurrency);
 		ServicePolicies servicePolicies = servicePoliciesCache.getUnchecked(numberOfPolicies);
 		RangerPluginContext pluginContext = new RangerPluginContext("hive", "cl1", "on-prem");
-		final RangerPolicyEngineImpl rangerPolicyEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, RangerPolicyFactory.createPolicyEngineOption(), pluginContext);
-		rangerPolicyEngine.preProcess(requests);
+		final RangerPolicyEngineImpl rangerPolicyEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, RangerPolicyFactory.createPolicyEngineOption(), pluginContext, null);
 
 		for (int iterations = 0; iterations < WARM_UP__ITERATIONS; iterations++) {
 			// using return value of 'isAccessAllowed' with a cheap operation: System#identityHashCode so JIT wont remove it as dead code

@@ -557,7 +557,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
 	private Set<String> getRolesForUser(String name) {
 		if (solrPlugin.getCurrentRangerAuthContext() != null) {
-			return solrPlugin.getCurrentRangerAuthContext().getRolesFromUserAndGroups(name, getGroupsForUser(name));
+			return solrPlugin.getRolesFromUserAndGroups(name, getGroupsForUser(name));
 		}
 		else {
 			logger.info("Current Ranger Auth Context is null!!");

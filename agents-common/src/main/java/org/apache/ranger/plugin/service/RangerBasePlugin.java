@@ -52,6 +52,7 @@ import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.*;
@@ -81,12 +82,10 @@ public class RangerBasePlugin {
 	private Timer                     policyEngineRefreshTimer;
 	private RangerAuthContextListener authContextListener;
 	private AuditProviderFactory      auditProviderFactory;
-	private RangerRolesProvider		  rangerRolesProvider;
 	private RangerRoles               rangerRoles;
 
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private final DownloadTrigger                accessTrigger       = new DownloadTrigger();
-
 
 	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
 	int                     logInterval    = 30000; // 30 seconds
@@ -158,11 +157,10 @@ public class RangerBasePlugin {
 		return clusterName;
 	}
 
-	public RangerAuthContext createRangerAuthContext() {
-		return new RangerAuthContext(currentAuthContext);
-	}
-
 	public RangerAuthContext getCurrentRangerAuthContext() { return currentAuthContext; }
+
+	// For backward compatibility
+	public RangerAuthContext createRangerAuthContext() { return currentAuthContext; }
 
 	public void setClusterName(String clusterName) {
 		this.clusterName = clusterName;
@@ -174,6 +172,11 @@ public class RangerBasePlugin {
 
 	public void setRangerRoles(RangerRoles rangerRoles) {
 		this.rangerRoles = rangerRoles;
+
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		policyEngine.setRangerRoles(rangerRoles);
+		contextChanged();
 	}
 
 	public RangerServiceDef getServiceDef() {
@@ -243,7 +246,7 @@ public class RangerBasePlugin {
 
 		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix, config);
 
-		rangerRolesProvider = new RangerRolesProvider(serviceType, appId, serviceName, admin,  cacheDir, config);
+		RangerRolesProvider rangerRolesProvider = new RangerRolesProvider(serviceType, appId, serviceName, admin,  cacheDir, config);
 
 		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, policyDownloadQueue, cacheDir, rangerRolesProvider);
 		refresher.setDaemon(true);
@@ -261,31 +264,6 @@ public class RangerBasePlugin {
 			LOG.error("*** Policies will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
 			policyDownloadTimer = null;
 		}
-
-		long policyReorderIntervalMs = config.getLong(propertyPrefix + ".policy.policyReorderInterval", 60 * 1000);
-		if (policyReorderIntervalMs >= 0 && policyReorderIntervalMs < 15 * 1000) {
-			policyReorderIntervalMs = 15 * 1000;
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(propertyPrefix + ".policy.policyReorderInterval:" + policyReorderIntervalMs);
-		}
-
-		if (policyEngineOptions.disableTrieLookupPrefilter && policyReorderIntervalMs > 0) {
-			policyEngineRefreshTimer = new Timer("PolicyEngineRefreshTimer", true);
-			try {
-				policyEngineRefreshTimer.schedule(new PolicyEngineRefresher(this), policyReorderIntervalMs, policyReorderIntervalMs);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Scheduled PolicyEngineRefresher to reorder policies based on number of evaluations in and every " + policyReorderIntervalMs + " milliseconds");
-				}
-			} catch (IllegalStateException exception) {
-				LOG.error("Error scheduling policyEngineRefresher:", exception);
-				LOG.error("*** PolicyEngine will NOT be reorderd based on number of evaluations every " + policyReorderIntervalMs + " milliseconds ***");
-				policyEngineRefreshTimer = null;
-			}
-		} else {
-			LOG.info("Policies will NOT be reordered based on number of evaluations");
-		}
 	}
 
 	public void setPolicies(ServicePolicies policies) {
@@ -299,7 +277,6 @@ public class RangerBasePlugin {
 			ServicePolicies    servicePolicies = null;
 			boolean            isValid         = true;
 			boolean            usePolicyDeltas = false;
-			boolean            updateRangerRolesOnly = false;
 
 			if (policies == null) {
 				policies = getDefaultSvcPolicies();
@@ -308,7 +285,7 @@ public class RangerBasePlugin {
 					isValid = false;
 				}
 			} else {
-				if ((policies.getPolicies() != null && policies.getPolicyDeltas() != null)) {
+				if (policies.getPolicies() != null && policies.getPolicyDeltas() != null) {
 					LOG.error("Invalid servicePolicies: Both policies and policy-deltas cannot be null OR both of them cannot be non-null");
 					isValid = false;
 				} else if (policies.getPolicies() != null) {
@@ -323,9 +300,6 @@ public class RangerBasePlugin {
 						isValid = false;
 						LOG.error("Could not apply deltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()));
 					}
-				} else if (policies.getPolicies() == null && policies.getPolicyDeltas() == null && rangerRoles != null) {
-					// When no policies changes and only the role changes happens then update the policyengine with Role changes only.
-					updateRangerRolesOnly = true;
 				} else {
 					LOG.error("Should not get here!!");
 					isValid = false;
@@ -336,9 +310,7 @@ public class RangerBasePlugin {
 				RangerPolicyEngine newPolicyEngine      = null;
 				boolean            isPolicyEngineShared = false;
 
-				if(updateRangerRolesOnly) {
-					this.policyEngine.setRangerRoles(rangerRoles);
-				} else if (!usePolicyDeltas) {
+				if (!usePolicyDeltas) {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policies are not null. Creating engine from policies");
 					}
@@ -351,7 +323,10 @@ public class RangerBasePlugin {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Non empty policy-deltas found. Cloning engine using policy-deltas");
 						}
-						newPolicyEngine = oldPolicyEngine.cloneWithDelta(policies, rangerRoles);
+						if (oldPolicyEngine != null) {
+							RangerPolicyEngineImpl oldPolicyEngineImpl = (RangerPolicyEngineImpl) oldPolicyEngine;
+							newPolicyEngine = RangerPolicyEngineImpl.getPolicyEngine(oldPolicyEngineImpl, policies);
+						}
 						if (newPolicyEngine != null) {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("Applied policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + ")");
@@ -379,13 +354,12 @@ public class RangerBasePlugin {
 					}
 
 					this.policyEngine = newPolicyEngine;
-					this.currentAuthContext = new RangerAuthContext(rangerPluginContext.getAuthContext());
+					this.currentAuthContext = rangerPluginContext.getAuthContext();
 
 					contextChanged();
 
-					if (oldPolicyEngine != null && !isPolicyEngineShared) {
-						((RangerPolicyEngineImpl)oldPolicyEngine).setIsShared(false);
-						oldPolicyEngine.preCleanup();
+					if (oldPolicyEngine != null) {
+						((RangerPolicyEngineImpl) oldPolicyEngine).releaseResources();
 					}
 					if (this.refresher != null) {
 						this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);
@@ -416,8 +390,6 @@ public class RangerBasePlugin {
 
 		PolicyRefresher refresher = this.refresher;
 
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
 		Timer policyEngineRefreshTimer = this.policyEngineRefreshTimer;
 
 		Timer policyDownloadTimer = this.policyDownloadTimer;
@@ -440,10 +412,6 @@ public class RangerBasePlugin {
 
 		if (policyEngineRefreshTimer != null) {
 			policyEngineRefreshTimer.cancel();
-		}
-
-		if (policyEngine != null) {
-			policyEngine.cleanup();
 		}
 
 		if (serviceName != null) {
@@ -471,8 +439,6 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			policyEngine.preProcess(request);
-
 			return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, resultProcessor);
 		}
 
@@ -483,8 +449,6 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			policyEngine.preProcess(requests);
-
 			return policyEngine.evaluatePolicies(requests, RangerPolicy.POLICY_TYPE_ACCESS, resultProcessor);
 		}
 
@@ -495,8 +459,6 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			policyEngine.preProcess(request);
-
 			return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, resultProcessor);
 		}
 
@@ -507,8 +469,6 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			policyEngine.preProcess(request);
-
 			return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, resultProcessor);
 		}
 
@@ -519,9 +479,27 @@ public class RangerBasePlugin {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			policyEngine.preProcess(request);
-
 			return policyEngine.getResourceAccessInfo(request);
+		}
+
+		return null;
+	}
+
+	public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.getResourceACLs(request);
+		}
+
+		return null;
+	}
+
+	public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.getRolesFromUserAndGroups(user, groups);
 		}
 
 		return null;
@@ -819,22 +797,6 @@ public class RangerBasePlugin {
 	static private final class LogHistory {
 		long lastLogTime;
 		int counter;
-	}
-
-	static private final class PolicyEngineRefresher extends TimerTask {
-		private final RangerBasePlugin plugin;
-
-		PolicyEngineRefresher(RangerBasePlugin plugin) {
-			this.plugin = plugin;
-		}
-
-		@Override
-		public void run() {
-			RangerPolicyEngine policyEngine = plugin.policyEngine;
-			if (policyEngine != null) {
-				policyEngine.reorderPolicyEvaluators();
-			}
-		}
 	}
 
 	private void syncPoliciesWithAdmin(final DownloadTrigger token) throws InterruptedException{

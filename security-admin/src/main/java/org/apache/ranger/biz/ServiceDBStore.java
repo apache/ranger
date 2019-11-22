@@ -2766,16 +2766,28 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Override
 	public ServicePolicies getServicePolicyDeltasOrPolicies(String serviceName, Long lastKnownVersion) throws Exception {
 		boolean getOnlyDeltas = false;
-		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin.supports.policy.deltas\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
+		}
+		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, SUPPORTS_POLICY_DELTAS);
 	}
 
 	@Override
-	public ServicePolicies getOnlyServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception {
+	public ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception {
 		boolean getOnlyDeltas = true;
-		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin.supports.policy.deltas\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
+		}
+		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, SUPPORTS_POLICY_DELTAS);
 	}
 
-	private ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion, boolean getOnlyDeltas) throws Exception {
+	@Override
+	public ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion) throws Exception {
+		boolean getOnlyDeltas = false;
+		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, false);
+	}
+
+	private ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion, boolean getOnlyDeltas, boolean isDeltaEnabled) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceName  + ", " + lastKnownVersion + ")");
 		}
@@ -2825,11 +2837,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin.supports.policy.deltas\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
-		}
-
-		if (SUPPORTS_POLICY_DELTAS) {
+		if (isDeltaEnabled) {
 			ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, lastKnownVersion);
 		}
 
@@ -3743,6 +3751,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		return null;
 	}
+
+	@Override
+	public long getPoliciesCount(final String serviceName) {
+		final long ret;
+		if (StringUtils.isNotBlank(serviceName)) {
+			ret = daoMgr.getXXPolicy().getPoliciesCount(serviceName);
+		} else {
+			ret = 0L;
+		}
+		return ret;
+	}
+
 
 	private String getServiceName(Long serviceId) {
 		String ret = null;

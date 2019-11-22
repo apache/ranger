@@ -40,8 +40,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	private RangerServiceDef serviceDef;
 	private RangerServiceDef.RangerResourceDef leafResourceDef;
 	private int              evalOrder;
-	protected long           usageCount;
-	protected boolean        usageCountMutable = true;
 	protected RangerPluginContext pluginContext = null;
 
 
@@ -107,11 +105,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
-	public long getUsageCount() {
-		return usageCount;
-	}
-
-	@Override
 	public int getEvalOrder() {
 		return evalOrder;
 	}
@@ -122,22 +115,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 	public void setEvalOrder(int evalOrder) {
 		this.evalOrder = evalOrder;
-	}
-
-	@Override
-	public void incrementUsageCount(int number) {
-		if (usageCountMutable) usageCount += number;
-	}
-
-	@Override
-	public void setUsageCountImmutable() {
-		this.usageCountMutable = false;
-	}
-
-	@Override
-	public void resetUsageCount() {
-		this.usageCount = 0;
-		this.usageCountMutable = true;
 	}
 
 	@Override

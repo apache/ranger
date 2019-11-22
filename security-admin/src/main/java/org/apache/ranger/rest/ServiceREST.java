@@ -62,6 +62,7 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
+import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.SecurityZoneDBStore;
@@ -107,8 +108,8 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCache;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineCacheForEngineOptions;
+import org.apache.ranger.biz.RangerPolicyEngineCache;
+import org.apache.ranger.biz.RangerPolicyEngineCacheForEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -592,7 +593,7 @@ public class ServiceREST {
 				LOG.debug("getServicePolicies with service-name=" + service.getName());
 			}
 
-			RangerPolicyEngine engine = null;
+			RangerPolicyAdmin engine = null;
 
 			try {
 				engine = getPolicySearchPolicyEngine(service.getName());
@@ -3290,7 +3291,7 @@ public class ServiceREST {
 		}
 
 		RangerPolicy       ret          = null;
-		RangerPolicyEngine policyEngine = getPolicyEngine(serviceName);
+		RangerPolicyAdmin policyEngine = getPolicyEngine(serviceName);
 
 		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resource, null) : null;
 
@@ -3312,7 +3313,7 @@ public class ServiceREST {
 		}
 
 		RangerPolicy       ret          = null;
-		RangerPolicyEngine policyEngine = getPolicyEngine(policy.getService());
+		RangerPolicyAdmin policyEngine = getPolicyEngine(policy.getService());
 
 		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(policy, null) : null;
 
@@ -3598,7 +3599,7 @@ public class ServiceREST {
 						continue;
 					}
 
-					RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(serviceName);
+					RangerPolicyAdmin policyEngine = getDelegatedAdminPolicyEngine(serviceName);
 
 					if (policyEngine != null) {
 						if(userGroups == null) {
@@ -3607,7 +3608,7 @@ public class ServiceREST {
 						Set<String> roles = policyEngine.getRolesFromUserAndGroups(userName, userGroups);
 
 						for (RangerPolicy policy : listToFilter) {
-							if (policyEngine.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS) 
+							if (policyEngine.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS)
 									|| (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())))
 									|| isServiceAdminUser) {
 								ret.add(policy);
@@ -3700,7 +3701,7 @@ public class ServiceREST {
 	private boolean hasAdminAccess(RangerPolicy policy, String userName, Set<String> userGroups) {
 		boolean isAllowed = false;
 
-		RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(policy.getService());
+		RangerPolicyAdmin policyEngine = getDelegatedAdminPolicyEngine(policy.getService());
 
 		if(policyEngine != null) {
 			Set<String> roles = policyEngine.getRolesFromUserAndGroups(userName, userGroups);
@@ -3712,7 +3713,7 @@ public class ServiceREST {
 	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, RangerAccessResource resource) {
 		boolean isAllowed = false;
 
-		RangerPolicyEngine policyEngine = getDelegatedAdminPolicyEngine(serviceName);
+		RangerPolicyAdmin policyEngine = getDelegatedAdminPolicyEngine(serviceName);
 
 		if(policyEngine != null) {
 			isAllowed = policyEngine.isAccessAllowed(resource, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
@@ -3721,16 +3722,16 @@ public class ServiceREST {
 		return isAllowed;
 	}
 
-	public RangerPolicyEngine getDelegatedAdminPolicyEngine(String serviceName) {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, roleDBStore, delegateAdminOptions);
+	public RangerPolicyAdmin getDelegatedAdminPolicyEngine(String serviceName) {
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, delegateAdminOptions);
 	}
 
-	private RangerPolicyEngine getPolicySearchPolicyEngine(String serviceName) throws Exception {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, roleDBStore, policySearchAdminOptions);
+	private RangerPolicyAdmin getPolicySearchPolicyEngine(String serviceName) throws Exception {
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, policySearchAdminOptions);
 	}
 
-	private RangerPolicyEngine getPolicyEngine(String serviceName) throws Exception {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getPolicyEngine(serviceName, svcStore, roleDBStore, defaultAdminOptions);
+	private RangerPolicyAdmin getPolicyEngine(String serviceName) throws Exception {
+		return RangerPolicyEngineCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, defaultAdminOptions);
 	}
 
 	@GET

@@ -1336,7 +1336,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					@Override
 					public List<UserPermission> run() throws Exception {
 						return getUserPrermissions(
-								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest),
+								hbasePlugin.getResourceACLs(rangerAccessrequest),
 								table.getNameAsString(), false);
 					}
 				});
@@ -1349,7 +1349,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					@Override
 					public List<UserPermission> run() throws Exception {
 						return getUserPrermissions(
-								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest),
+								hbasePlugin.getResourceACLs(rangerAccessrequest),
 								namespace, true);
 					}
 				});
@@ -1359,7 +1359,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					@Override
 					public List<UserPermission> run() throws Exception {
 						return getUserPrermissions(
-								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest), null,
+								hbasePlugin.getResourceACLs(rangerAccessrequest), null,
 								false);
 					}
 				});
