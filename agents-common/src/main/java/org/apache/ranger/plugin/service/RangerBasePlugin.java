@@ -65,30 +65,28 @@ public class RangerBasePlugin {
 
 	private static Map<String, RangerBasePlugin> servicePluginMap = new ConcurrentHashMap<>();
 
-	private final String              serviceType;
-	private final String              appId;
-	private final RangerPluginConfig  config;
-	private String                    serviceName;
-	private String                    clusterName;
-	private PolicyRefresher           refresher;
-	private RangerPolicyEngine        policyEngine;
-	private RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-	private RangerPluginContext       rangerPluginContext;
-	private RangerAuthContext         currentAuthContext;
-	private RangerAccessResultProcessor resultProcessor;
-	private boolean                   useForwardedIPAddress;
-	private String[]                  trustedProxyAddresses;
-	private Timer                     policyDownloadTimer;
-	private Timer                     policyEngineRefreshTimer;
-	private RangerAuthContextListener authContextListener;
-	private AuditProviderFactory      auditProviderFactory;
-	private RangerRoles               rangerRoles;
-
+	private final String                         serviceType;
+	private final String                         appId;
+	private final RangerPluginConfig             config;
+	private final RangerPolicyEngineOptions      policyEngineOptions = new RangerPolicyEngineOptions();
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private final DownloadTrigger                accessTrigger       = new DownloadTrigger();
-
-	Map<String, LogHistory> logHistoryList = new Hashtable<String, RangerBasePlugin.LogHistory>();
-	int                     logInterval    = 30000; // 30 seconds
+	private final Map<String, LogHistory>        logHistoryList      = new Hashtable<String, RangerBasePlugin.LogHistory>();
+	private final int                            logInterval         = 30000; // 30 seconds
+	private       String                         serviceName;
+	private       String                         clusterName;
+	private       PolicyRefresher                refresher;
+	private       RangerPolicyEngine             policyEngine;
+	private       RangerPluginContext            rangerPluginContext;
+	private       RangerAuthContext              currentAuthContext;
+	private       RangerAccessResultProcessor    resultProcessor;
+	private       boolean                        useForwardedIPAddress;
+	private       String[]                       trustedProxyAddresses;
+	private       Timer                          policyDownloadTimer;
+	private       Timer                          policyEngineRefreshTimer;
+	private       RangerAuthContextListener      authContextListener;
+	private       AuditProviderFactory           auditProviderFactory;
+	private       RangerRoles                    rangerRoles;
 
 	public static Map<String, RangerBasePlugin> getServicePluginMap() {
 		return servicePluginMap;

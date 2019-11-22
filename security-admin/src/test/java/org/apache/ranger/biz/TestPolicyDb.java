@@ -117,14 +117,15 @@ public class TestPolicyDb {
 		policyEngineOptions.cacheAuditResults       = false;
 		policyEngineOptions.disableContextEnrichers = true;
 		policyEngineOptions.disableCustomConditions = true;
+
 		RangerPluginContext pluginContext = new RangerPluginContext("hive", "cl1", "on-prem");
-		RangerPolicyAdmin policyEngine = new RangerPolicyAdminImpl("test-policydb", testCase.servicePolicies, policyEngineOptions, pluginContext, null);
+		RangerPolicyAdmin   policyAdmin   = new RangerPolicyAdminImpl("test-policydb", testCase.servicePolicies, policyEngineOptions, pluginContext, null);
 
 		for(TestData test : testCase.tests) {
 			boolean expected = test.result;
 
 			if(test.allowedPolicies != null) {
-				List<RangerPolicy> allowedPolicies = policyEngine.getAllowedUnzonedPolicies(test.user, test.userGroups, test.accessType);
+				List<RangerPolicy> allowedPolicies = policyAdmin.getAllowedUnzonedPolicies(test.user, test.userGroups, test.accessType);
 
 				assertEquals("allowed-policy count mismatch!", test.allowedPolicies.size(), allowedPolicies.size());
 				
@@ -134,7 +135,7 @@ public class TestPolicyDb {
 				}
 				assertEquals("allowed-policy list mismatch!", test.allowedPolicies, allowedPolicyIds);
 			} else {
-				boolean result = policyEngine.isAccessAllowedByUnzonedPolicies(test.resources, test.user, test.userGroups, test.accessType);
+				boolean result = policyAdmin.isAccessAllowedByUnzonedPolicies(test.resources, test.user, test.userGroups, test.accessType);
 
 				assertEquals("isAccessAllowed mismatched! - " + test.name, expected, result);
 			}

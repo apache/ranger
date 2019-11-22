@@ -36,12 +36,17 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class RangerAuthContext {
-
     private final Map<RangerContextEnricher, Object> requestContextEnrichers;
     private       RangerRolesUtil                    rangerRolesUtil;
 
     public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers) {
         this.requestContextEnrichers = requestContextEnrichers != null ? requestContextEnrichers : new ConcurrentHashMap<>();
+    }
+
+    public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers, RangerRoles roles) {
+        this.requestContextEnrichers = requestContextEnrichers != null ? requestContextEnrichers : new ConcurrentHashMap<>();
+
+        setRangerRoles(roles);
     }
 
     public Map<RangerContextEnricher, Object> getRequestContextEnrichers() {
@@ -63,15 +68,14 @@ public class RangerAuthContext {
     }
 
     public Set<String> getRolesForUserAndGroups(String user, Set<String> groups) {
-        RangerRolesUtil rangerRolesUtil = this.rangerRolesUtil;
-
+        RangerRolesUtil          rangerRolesUtil  = this.rangerRolesUtil;
         Map<String, Set<String>> userRoleMapping  = rangerRolesUtil.getUserRoleMapping();
         Map<String, Set<String>> groupRoleMapping = rangerRolesUtil.getGroupRoleMapping();
-
-        Set<String> allRoles = new HashSet<>();
+        Set<String>              allRoles         = new HashSet<>();
 
         if (MapUtils.isNotEmpty(userRoleMapping) && StringUtils.isNotEmpty(user)) {
             Set<String> userRoles = userRoleMapping.get(user);
+
             if (CollectionUtils.isNotEmpty(userRoles)) {
                 allRoles.addAll(userRoles);
             }
@@ -81,12 +85,15 @@ public class RangerAuthContext {
             if (CollectionUtils.isNotEmpty(groups)) {
                 for (String group : groups) {
                     Set<String> groupRoles = groupRoleMapping.get(group);
+
                     if (CollectionUtils.isNotEmpty(groupRoles)) {
                         allRoles.addAll(groupRoles);
                     }
                 }
             }
+
             Set<String> publicGroupRoles = groupRoleMapping.get(RangerPolicyEngine.GROUP_PUBLIC);
+
             if (CollectionUtils.isNotEmpty(publicGroupRoles)) {
                 allRoles.addAll(publicGroupRoles);
             }
@@ -101,8 +108,10 @@ public class RangerAuthContext {
     public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
         // Invoke getResourceACLs on the first service in this plugin
         Collection<RangerBasePlugin> plugins = RangerBasePlugin.getServicePluginMap().values();
+
         if (plugins.size() > 0) {
             RangerBasePlugin[] array = plugins.toArray(new RangerBasePlugin[0]);
+
             return array[0].getResourceACLs(request);
         } else {
             return null;

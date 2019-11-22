@@ -56,7 +56,7 @@ public class RangerPolicyRepository {
     private static final Log LOG = LogFactory.getLog(RangerPolicyRepository.class);
 
     private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
-    private static final Log PERF_TRIE_OP_LOG = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
+    private static final Log PERF_TRIE_OP_LOG              = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
 
     enum AuditModeEnum {
         AUDIT_ALL, AUDIT_NONE, AUDIT_DEFAULT
@@ -78,50 +78,48 @@ public class RangerPolicyRepository {
         }
     }
 
-    private final String                      serviceName;
-    private final String                      zoneName;
-    private final String                      appId;
-    private final RangerPolicyEngineOptions   options;
-    private final RangerPluginContext         pluginContext;
-    private final RangerServiceDef            serviceDef;
-    private final List<RangerPolicy>          policies;
-    private final long                        policyVersion;
-    private final List<RangerContextEnricher> contextEnrichers;
-    private List<RangerPolicyEvaluator>       policyEvaluators;
-    private List<RangerPolicyEvaluator>       dataMaskPolicyEvaluators;
-    private List<RangerPolicyEvaluator>       rowFilterPolicyEvaluators;
-    private Map<Long, RangerPolicyEvaluator>  policyEvaluatorsMap;
-    private final AuditModeEnum               auditModeEnum;
-    private final Map<String, AuditInfo>      accessAuditCache;
-
-    private final String                      componentServiceName;
-    private final RangerServiceDef            componentServiceDef;
+    private final String                          serviceName;
+    private final String                          zoneName;
+    private final String                          appId;
+    private final RangerPolicyEngineOptions       options;
+    private final RangerPluginContext             pluginContext;
+    private final RangerServiceDef                serviceDef;
+    private final List<RangerPolicy>              policies;
+    private final long                            policyVersion;
+    private final List<RangerContextEnricher>     contextEnrichers;
+    private final AuditModeEnum                   auditModeEnum;
+    private final Map<String, AuditInfo>          accessAuditCache;
+    private final String                          componentServiceName;
+    private final RangerServiceDef                componentServiceDef;
     private final Map<String, RangerResourceTrie> policyResourceTrie;
     private final Map<String, RangerResourceTrie> dataMaskResourceTrie;
     private final Map<String, RangerResourceTrie> rowFilterResourceTrie;
-
-    private boolean                           isContextEnrichersShared = false;
-    private boolean                           isPreCleaned = false;
+    private       List<RangerPolicyEvaluator>       policyEvaluators;
+    private       List<RangerPolicyEvaluator>       dataMaskPolicyEvaluators;
+    private       List<RangerPolicyEvaluator>       rowFilterPolicyEvaluators;
+    private       Map<Long, RangerPolicyEvaluator>  policyEvaluatorsMap;
+    private       boolean                           isContextEnrichersShared = false;
+    private       boolean                           isPreCleaned = false;
 
     RangerPolicyRepository(final RangerPolicyRepository other, final List<RangerPolicyDelta> deltas, long policyVersion) {
-
-        this.serviceName = other.serviceName;
-        this.zoneName = other.zoneName;
-        this.appId = other.appId;
-        this.options = other.options;
-        this.pluginContext = other.pluginContext;
-        this.serviceDef = other.serviceDef;
-        this.policies = new ArrayList<>(other.policies);
-        this.policyEvaluators = new ArrayList<>(other.policyEvaluators);
-        this.dataMaskPolicyEvaluators = new ArrayList<>(other.dataMaskPolicyEvaluators);
+        this.serviceName               = other.serviceName;
+        this.zoneName                  = other.zoneName;
+        this.appId                     = other.appId;
+        this.options                   = other.options;
+        this.pluginContext             = other.pluginContext;
+        this.serviceDef                = other.serviceDef;
+        this.policies                  = new ArrayList<>(other.policies);
+        this.policyEvaluators          = new ArrayList<>(other.policyEvaluators);
+        this.dataMaskPolicyEvaluators  = new ArrayList<>(other.dataMaskPolicyEvaluators);
         this.rowFilterPolicyEvaluators = new ArrayList<>(other.rowFilterPolicyEvaluators);
-        this.auditModeEnum = other.auditModeEnum;
-        this.componentServiceName = other.componentServiceName;
-        this.componentServiceDef = other.componentServiceDef;
-        this.policyEvaluatorsMap = new HashMap<>(other.policyEvaluatorsMap);
+        this.auditModeEnum             = other.auditModeEnum;
+        this.componentServiceName      = other.componentServiceName;
+        this.componentServiceDef       = other.componentServiceDef;
+        this.policyEvaluatorsMap       = new HashMap<>(other.policyEvaluatorsMap);
 
         if (other.policyResourceTrie != null) {
             this.policyResourceTrie = new HashMap<>();
+
             for (Map.Entry<String, RangerResourceTrie> entry : other.policyResourceTrie.entrySet()) {
                 policyResourceTrie.put(entry.getKey(), new RangerResourceTrie(entry.getValue()));
             }
@@ -131,6 +129,7 @@ public class RangerPolicyRepository {
 
         if (other.dataMaskResourceTrie != null) {
             this.dataMaskResourceTrie = new HashMap<>();
+
             for (Map.Entry<String, RangerResourceTrie> entry : other.dataMaskResourceTrie.entrySet()) {
                 dataMaskResourceTrie.put(entry.getKey(), new RangerResourceTrie(entry.getValue()));
             }
@@ -140,6 +139,7 @@ public class RangerPolicyRepository {
 
         if (other.rowFilterResourceTrie != null) {
             this.rowFilterResourceTrie = new HashMap<>();
+
             for (Map.Entry<String, RangerResourceTrie> entry : other.rowFilterResourceTrie.entrySet()) {
                 rowFilterResourceTrie.put(entry.getKey(), new RangerResourceTrie(entry.getValue()));
             }
@@ -149,6 +149,7 @@ public class RangerPolicyRepository {
 
         if (other.accessAuditCache != null) {
             int auditResultCacheSize = other.accessAuditCache.size();
+
             this.accessAuditCache = Collections.synchronizedMap(new CacheMap<String, AuditInfo>(auditResultCacheSize));
         } else {
             this.accessAuditCache = null;
@@ -157,7 +158,6 @@ public class RangerPolicyRepository {
         boolean[] flags = new boolean[RangerPolicy.POLICY_TYPES.length];
 
         for (RangerPolicyDelta delta : deltas) {
-
             final Integer changeType  = delta.getChangeType();
             final String  serviceType = delta.getServiceType();
             final Long    policyId    = delta.getPolicyId();
@@ -175,17 +175,21 @@ public class RangerPolicyRepository {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Could not find policy for policy-id:[" + policyId + "]");
                         }
+
                         continue;
                     }
                     break;
+
                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE:
                     evaluator = getPolicyEvaluator(policyId);
+
                     if (evaluator == null) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("Could not find evaluator for policy-id:[" + policyId + "]");
                         }
                     }
                     break;
+
                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE:
                     evaluator = getPolicyEvaluator(policyId);
                     if (evaluator == null) {
@@ -194,6 +198,7 @@ public class RangerPolicyRepository {
                         }
                     }
                     break;
+
                 default:
                     LOG.error("Unknown changeType:[" + changeType + "], Ignoring");
                     break;
@@ -206,12 +211,15 @@ public class RangerPolicyRepository {
                     case RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE:
                         policyEvaluatorsMap.put(policyId, evaluator);
                         break;
+
                     case RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE:
                         policyEvaluatorsMap.put(policyId, evaluator);
                         break;
+
                     case RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE:
                         policyEvaluatorsMap.remove(policyId);
                         break;
+
                     default:
                         break;
                 }
@@ -221,7 +229,6 @@ public class RangerPolicyRepository {
         }
 
         for (int policyType = 0; policyType < flags.length; policyType++) {
-
             if (flags[policyType]) {
                 Map<String, RangerResourceTrie> trie = getTrie(policyType);
 
@@ -390,6 +397,63 @@ public class RangerPolicyRepository {
         toString(sb);
 
         return sb.toString();
+    }
+
+    public StringBuilder toString(StringBuilder sb) {
+        if (sb == null) {
+            sb = new StringBuilder();
+        }
+
+        sb.append("RangerPolicyRepository={");
+
+        sb.append("serviceName={").append(serviceName).append("} ");
+        sb.append("zoneName={").append(zoneName).append("} ");
+        sb.append("serviceDef={").append(serviceDef).append("} ");
+        sb.append("appId={").append(appId).append("} ");
+
+        sb.append("policyEvaluators={");
+        if (policyEvaluators != null) {
+            for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
+                if (policyEvaluator != null) {
+                    sb.append(policyEvaluator).append(" ");
+                }
+            }
+        }
+        sb.append("} ");
+
+        sb.append("dataMaskPolicyEvaluators={");
+        if (this.dataMaskPolicyEvaluators != null) {
+            for (RangerPolicyEvaluator policyEvaluator : dataMaskPolicyEvaluators) {
+                if (policyEvaluator != null) {
+                    sb.append(policyEvaluator).append(" ");
+                }
+            }
+        }
+        sb.append("} ");
+
+        sb.append("rowFilterPolicyEvaluators={");
+        if (this.rowFilterPolicyEvaluators != null) {
+            for (RangerPolicyEvaluator policyEvaluator : rowFilterPolicyEvaluators) {
+                if (policyEvaluator != null) {
+                    sb.append(policyEvaluator).append(" ");
+                }
+            }
+        }
+        sb.append("} ");
+
+        sb.append("contextEnrichers={");
+        if (contextEnrichers != null) {
+            for (RangerContextEnricher contextEnricher : contextEnrichers) {
+                if (contextEnricher != null) {
+                    sb.append(contextEnricher).append(" ");
+                }
+            }
+        }
+        sb.append("} ");
+
+        sb.append("} ");
+
+        return sb;
     }
 
     List<RangerContextEnricher> shareWith(RangerPolicyRepository other) {
@@ -1383,62 +1447,4 @@ public class RangerPolicyRepository {
 
         return ret;
     }
-
-    private StringBuilder toString(StringBuilder sb) {
-
-        sb.append("RangerPolicyRepository={");
-
-        sb.append("serviceName={").append(serviceName).append("} ");
-        sb.append("zoneName={").append(zoneName).append("} ");
-        sb.append("serviceDef={").append(serviceDef).append("} ");
-        sb.append("appId={").append(appId).append("} ");
-
-        sb.append("policyEvaluators={");
-        if (policyEvaluators != null) {
-            for (RangerPolicyEvaluator policyEvaluator : policyEvaluators) {
-                if (policyEvaluator != null) {
-                    sb.append(policyEvaluator).append(" ");
-                }
-            }
-        }
-        sb.append("} ");
-
-        sb.append("dataMaskPolicyEvaluators={");
-
-        if (this.dataMaskPolicyEvaluators != null) {
-            for (RangerPolicyEvaluator policyEvaluator : dataMaskPolicyEvaluators) {
-                if (policyEvaluator != null) {
-                    sb.append(policyEvaluator).append(" ");
-                }
-            }
-        }
-        sb.append("} ");
-
-        sb.append("rowFilterPolicyEvaluators={");
-
-        if (this.rowFilterPolicyEvaluators != null) {
-            for (RangerPolicyEvaluator policyEvaluator : rowFilterPolicyEvaluators) {
-                if (policyEvaluator != null) {
-                    sb.append(policyEvaluator).append(" ");
-                }
-            }
-        }
-        sb.append("} ");
-
-        sb.append("contextEnrichers={");
-
-        if (contextEnrichers != null) {
-            for (RangerContextEnricher contextEnricher : contextEnrichers) {
-                if (contextEnricher != null) {
-                    sb.append(contextEnricher).append(" ");
-                }
-            }
-        }
-        sb.append("} ");
-
-        sb.append("} ");
-
-        return sb;
-    }
-
 }

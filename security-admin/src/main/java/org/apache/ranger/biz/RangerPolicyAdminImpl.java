@@ -56,7 +56,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     private final PolicyEngine policyEngine;
     private final RangerAccessRequestProcessor requestProcessor;
 
-    static public RangerPolicyAdmin getPolicyEngine(final RangerPolicyAdminImpl other, final ServicePolicies servicePolicies) {
+    static public RangerPolicyAdmin getPolicyAdmin(final RangerPolicyAdminImpl other, final ServicePolicies servicePolicies) {
         RangerPolicyAdmin ret = null;
 
         if (other != null && servicePolicies != null) {

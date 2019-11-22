@@ -108,8 +108,8 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.biz.RangerPolicyEngineCache;
-import org.apache.ranger.biz.RangerPolicyEngineCacheForEngineOptions;
+import org.apache.ranger.biz.RangerPolicyAdminCache;
+import org.apache.ranger.biz.RangerPolicyAdminCacheForEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -593,18 +593,18 @@ public class ServiceREST {
 				LOG.debug("getServicePolicies with service-name=" + service.getName());
 			}
 
-			RangerPolicyAdmin engine = null;
+			RangerPolicyAdmin policyAdmin = null;
 
 			try {
-				engine = getPolicySearchPolicyEngine(service.getName());
+				policyAdmin = getPolicyAdminForSearch(service.getName());
 			} catch (Exception e) {
 				LOG.error("Cannot initialize Policy-Engine", e);
 				throw restErrorUtil.createRESTException("Cannot initialize Policy Engine",
 						MessageEnums.ERROR_SYSTEM);
 			}
 
-			if (engine != null) {
-				ret = engine.getMatchingPolicies(new RangerAccessResourceImpl(resource));
+			if (policyAdmin != null) {
+				ret = policyAdmin.getMatchingPolicies(new RangerAccessResourceImpl(resource));
 			}
 
 		}
@@ -3086,7 +3086,7 @@ public class ServiceREST {
 					Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
 					ServicePolicies updatedServicePolicies = servicePolicies;
 					if (MapUtils.isNotEmpty(securityZones)) {
-						updatedServicePolicies = RangerPolicyEngineCache.getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
+						updatedServicePolicies = RangerPolicyAdminCache.getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
 						patchAssociatedTagServiceInSecurityZoneInfos(updatedServicePolicies);
 					}
 					downloadedVersion = updatedServicePolicies.getPolicyVersion();
@@ -3208,7 +3208,7 @@ public class ServiceREST {
 						Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
 						ServicePolicies updatedServicePolicies = servicePolicies;
 						if (MapUtils.isNotEmpty(securityZones)) {
-							updatedServicePolicies = RangerPolicyEngineCache.getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
+							updatedServicePolicies = RangerPolicyAdminCache.getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
 							patchAssociatedTagServiceInSecurityZoneInfos(updatedServicePolicies);
 						}
 						downloadedVersion = updatedServicePolicies.getPolicyVersion();
@@ -3290,10 +3290,9 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resource + ", " + user + ")");
 		}
 
-		RangerPolicy       ret          = null;
-		RangerPolicyAdmin policyEngine = getPolicyEngine(serviceName);
-
-		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(resource, null) : null;
+		RangerPolicy       ret         = null;
+		RangerPolicyAdmin  policyAdmin = getPolicyAdmin(serviceName);
+		List<RangerPolicy> policies    = policyAdmin != null ? policyAdmin.getExactMatchPolicies(resource, null) : null;
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
@@ -3312,10 +3311,9 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + policy + ", " + user + ")");
 		}
 
-		RangerPolicy       ret          = null;
-		RangerPolicyAdmin policyEngine = getPolicyEngine(policy.getService());
-
-		List<RangerPolicy> policies     = policyEngine != null ? policyEngine.getExactMatchPolicies(policy, null) : null;
+		RangerPolicy       ret         = null;
+		RangerPolicyAdmin  policyAdmin = getPolicyAdmin(policy.getService());
+		List<RangerPolicy> policies    = policyAdmin != null ? policyAdmin.getExactMatchPolicies(policy, null) : null;
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
@@ -3599,16 +3597,16 @@ public class ServiceREST {
 						continue;
 					}
 
-					RangerPolicyAdmin policyEngine = getDelegatedAdminPolicyEngine(serviceName);
+					RangerPolicyAdmin policyAdmin = getPolicyAdminForDelegatedAdmin(serviceName);
 
-					if (policyEngine != null) {
+					if (policyAdmin != null) {
 						if(userGroups == null) {
 							userGroups = daoManager.getXXGroupUser().findGroupNamesByUserName(userName);
 						}
-						Set<String> roles = policyEngine.getRolesFromUserAndGroups(userName, userGroups);
+						Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
 						for (RangerPolicy policy : listToFilter) {
-							if (policyEngine.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS)
+							if (policyAdmin.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS)
 									|| (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())))
 									|| isServiceAdminUser) {
 								ret.add(policy);
@@ -3699,13 +3697,13 @@ public class ServiceREST {
 	}
 
 	private boolean hasAdminAccess(RangerPolicy policy, String userName, Set<String> userGroups) {
-		boolean isAllowed = false;
+		boolean           isAllowed   = false;
+		RangerPolicyAdmin policyAdmin = getPolicyAdminForDelegatedAdmin(policy.getService());
 
-		RangerPolicyAdmin policyEngine = getDelegatedAdminPolicyEngine(policy.getService());
+		if(policyAdmin != null) {
+			Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
-		if(policyEngine != null) {
-			Set<String> roles = policyEngine.getRolesFromUserAndGroups(userName, userGroups);
-			isAllowed = policyEngine.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS);
+			isAllowed = policyAdmin.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS);
 		}
 
 		return isAllowed;
@@ -3713,25 +3711,25 @@ public class ServiceREST {
 	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, RangerAccessResource resource) {
 		boolean isAllowed = false;
 
-		RangerPolicyAdmin policyEngine = getDelegatedAdminPolicyEngine(serviceName);
+		RangerPolicyAdmin policyAdmin = getPolicyAdminForDelegatedAdmin(serviceName);
 
-		if(policyEngine != null) {
-			isAllowed = policyEngine.isAccessAllowed(resource, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
+		if(policyAdmin != null) {
+			isAllowed = policyAdmin.isAccessAllowed(resource, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
 		}
 
 		return isAllowed;
 	}
 
-	public RangerPolicyAdmin getDelegatedAdminPolicyEngine(String serviceName) {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, delegateAdminOptions);
+	public RangerPolicyAdmin getPolicyAdminForDelegatedAdmin(String serviceName) {
+		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, delegateAdminOptions);
 	}
 
-	private RangerPolicyAdmin getPolicySearchPolicyEngine(String serviceName) throws Exception {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, policySearchAdminOptions);
+	private RangerPolicyAdmin getPolicyAdminForSearch(String serviceName) {
+		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, policySearchAdminOptions);
 	}
 
-	private RangerPolicyAdmin getPolicyEngine(String serviceName) throws Exception {
-		return RangerPolicyEngineCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, defaultAdminOptions);
+	private RangerPolicyAdmin getPolicyAdmin(String serviceName) {
+		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, defaultAdminOptions);
 	}
 
 	@GET

@@ -26,6 +26,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
@@ -36,10 +37,10 @@ import java.util.Map;
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyEvaluator.class);
 
-	private RangerPolicy     policy;
-	private RangerServiceDef serviceDef;
-	private RangerServiceDef.RangerResourceDef leafResourceDef;
-	private int              evalOrder;
+	private   RangerPolicy        policy;
+	private   RangerServiceDef    serviceDef;
+	private   RangerResourceDef   leafResourceDef;
+	private   int                 evalOrder;
 	protected RangerPluginContext pluginContext = null;
 
 
@@ -53,9 +54,9 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			LOG.debug("==> RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
 		}
 
-		this.policy            = policy;
-		this.serviceDef        = serviceDef;
-		this.leafResourceDef   = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
+		this.policy          = policy;
+		this.serviceDef      = serviceDef;
+		this.leafResourceDef = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
@@ -88,7 +89,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
-	public boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef) {
+	public boolean isAncestorOf(RangerResourceDef resourceDef) {
 		return ServiceDefUtil.isAncestorOf(serviceDef, leafResourceDef, resourceDef);
 	}
 
@@ -132,8 +133,11 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerAbstractPolicyEvaluator={");
 
-		sb.append("policy={").append(policy).append("} ");
-		sb.append("serviceDef={").append(serviceDef).append("} ");
+		sb.append("policy={");
+		if (policy != null) {
+			policy.toString(sb);
+		}
+		sb.append("} ");
 
 		sb.append("}");
 

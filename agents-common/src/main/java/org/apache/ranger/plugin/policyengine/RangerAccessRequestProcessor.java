@@ -20,9 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 public interface RangerAccessRequestProcessor {
-
     void preProcess(RangerAccessRequest request);
 
     default void enrich(RangerAccessRequest request) {}
-
 }
