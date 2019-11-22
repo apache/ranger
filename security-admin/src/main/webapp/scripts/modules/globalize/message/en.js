@@ -278,7 +278,6 @@ define(function(require) {
                 userWithGrantRolePrivilege      : 'Users (Grant privilege)',
                 groupWithGrantRolePrivilege      : 'Groups (Grant privilege)',
                 applicationType					: 'Application',
-                displayName						: 'Display Name',
 
 			},
 			btn : {
