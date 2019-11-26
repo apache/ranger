@@ -710,23 +710,24 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerTagEnricher.getEvaluators(" + (resource != null ? resource.getAsString() : null) + ")");
 		}
-
-		List<RangerServiceResourceMatcher> ret = null;
+		List<RangerServiceResourceMatcher>  ret        = Collections.EMPTY_LIST;
 
 		final Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = enrichedServiceTags.getServiceResourceTrie();
 
 		if (resource == null || resource.getKeys() == null || resource.getKeys().isEmpty() || serviceResourceTrie == null) {
 			ret = enrichedServiceTags.getServiceResourceMatchers();
 		} else {
+			Set<RangerServiceResourceMatcher> evaluators = null;
+
 			RangerPerfTracer perf = null;
 
-			if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_OP_LOG)) {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_OP_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_OP_LOG, "RangerTagEnricher.getEvaluators(resource=" + resource.getAsString() + ")");
 			}
 
-			Set<String> resourceKeys = resource.getKeys();
-			List<List<RangerServiceResourceMatcher>> serviceResourceMatchersList = null;
-			List<RangerServiceResourceMatcher> smallestList = null;
+			Set<String>                             resourceKeys = resource.getKeys();
+			List<Set<RangerServiceResourceMatcher>> serviceResourceMatchersList = null;
+			Set<RangerServiceResourceMatcher>       smallestList = null;
 
 			if (CollectionUtils.isNotEmpty(resourceKeys)) {
 
@@ -737,7 +738,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						continue;
 					}
 
-					List<RangerServiceResourceMatcher> serviceResourceMatchers = trie.getEvaluatorsForResource(resource.getValue(resourceName));
+					Set<RangerServiceResourceMatcher> serviceResourceMatchers = trie.getEvaluatorsForResource(resource.getValue(resourceName));
 
 					if (CollectionUtils.isEmpty(serviceResourceMatchers)) { // no tags for this resource, bail out
 						serviceResourceMatchersList = null;
@@ -760,26 +761,27 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					}
 				}
 				if (serviceResourceMatchersList != null) {
-					ret = new ArrayList<>(smallestList);
-					for (List<RangerServiceResourceMatcher> serviceResourceMatchers : serviceResourceMatchersList) {
+					evaluators = new HashSet<>(smallestList);
+					for (Set<RangerServiceResourceMatcher> serviceResourceMatchers : serviceResourceMatchersList) {
 						if (serviceResourceMatchers != smallestList) {
 							// remove other serviceResourceMatchers from ret that are not in serviceResourceMatchers
-							ret.retainAll(serviceResourceMatchers);
-							if (CollectionUtils.isEmpty(ret)) { // if no policy exists, bail out and return empty list
-								ret = null;
+							evaluators.retainAll(serviceResourceMatchers);
+							if (CollectionUtils.isEmpty(evaluators)) { // if no policy exists, bail out and return empty list
+								evaluators = null;
 								break;
 							}
 						}
 					}
 				} else {
-					ret = smallestList;
+					evaluators = smallestList;
 				}
 			}
-			RangerPerfTracer.logAlways(perf);
-		}
 
-		if(ret == null) {
-			ret = Collections.emptyList();
+			if (evaluators != null) {
+				ret = new ArrayList<>(evaluators);
+			}
+
+			RangerPerfTracer.logAlways(perf);
 		}
 
 		if(LOG.isDebugEnabled()) {

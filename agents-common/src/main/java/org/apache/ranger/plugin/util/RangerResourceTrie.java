@@ -34,10 +34,11 @@ import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -55,14 +56,13 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     private final boolean optWildcard;
     private final String wildcardChars;
     private final TrieNode<T> root;
-    private final Comparator<T> comparator;
     private final boolean isOptimizedForRetrieval;
 
     public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators) {
-        this(resourceDef, evaluators, null, true, null);
+        this(resourceDef, evaluators, true, null);
     }
 
-    public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, Comparator<T> comparator, boolean isOptimizedForRetrieval, RangerPluginContext pluginContext) {
+    public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, boolean isOptimizedForRetrieval, RangerPluginContext pluginContext) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + ")");
         }
@@ -104,7 +104,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         this.optIgnoreCase = RangerAbstractResourceMatcher.getOptionIgnoreCase(matcherOptions);
         this.optWildcard   = RangerAbstractResourceMatcher.getOptionWildCard(matcherOptions);
         this.wildcardChars = optWildcard ? DEFAULT_WILDCARD_CHARS + tokenReplaceSpecialChars : "" + tokenReplaceSpecialChars;
-        this.comparator    = comparator;
         this.isOptimizedForRetrieval = isOptimizedForRetrieval;
 
         TrieNode<T> tmpRoot = buildTrie(resourceDef, evaluators, builderThreadCount);
@@ -138,7 +137,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         return resourceDef.getName();
     }
 
-    public List<T> getEvaluatorsForResource(Object resource) {
+    public Set<T> getEvaluatorsForResource(Object resource) {
         if (resource instanceof String) {
             return getEvaluatorsForResource((String) resource);
         } else if (resource instanceof Collection) {
@@ -173,8 +172,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             } else {
                 if (CollectionUtils.isNotEmpty(resource.getValues())) {
                     for (String value : resource.getValues()) {
-                        TrieNode<T> node = insert(root, value, resource.getIsRecursive(), evaluator);
-                        node.sortEvaluators(comparator);
+                        insert(root, value, resource.getIsRecursive(), evaluator);
                     }
                 }
             }
@@ -219,7 +217,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
     public void wrapUpUpdate() {
         if (root != null) {
-            root.wrapUpUpdate(comparator);
+            root.wrapUpUpdate();
         }
     }
 
@@ -271,7 +269,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         return ret;
     }
 
-    private boolean compareLists(List<? extends RangerPolicyResourceEvaluator> me, List<? extends RangerPolicyResourceEvaluator> other) {
+    private boolean compareLists(Set<? extends RangerPolicyResourceEvaluator> me, Set<? extends RangerPolicyResourceEvaluator> other) {
         boolean ret;
 
         if (me == null || other == null) {
@@ -280,12 +278,15 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             ret = me.size() == other.size();
 
             if (ret) {
+		        List<? extends RangerPolicyResourceEvaluator> meAsList = new ArrayList<>(me);
+		        List<? extends RangerPolicyResourceEvaluator> otherAsList = new ArrayList<>(other);
+
                 List<Long> myIds = new ArrayList<>();
                 List<Long> otherIds = new ArrayList<>();
-                for (RangerPolicyResourceEvaluator evaluator : me) {
+                for (RangerPolicyResourceEvaluator evaluator : meAsList) {
                     myIds.add(evaluator.getId());
                 }
-                for (RangerPolicyResourceEvaluator evaluator : other) {
+                for (RangerPolicyResourceEvaluator evaluator : otherAsList) {
                     otherIds.add(evaluator.getId());
                 }
 
@@ -320,7 +321,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                 }
             } else {
                 if (source.wildcardEvaluators != null) {
-                    dest.wildcardEvaluators = new ArrayList<>(source.wildcardEvaluators);
+                    dest.wildcardEvaluators = new HashSet<>(source.wildcardEvaluators);
                 } else {
                     dest.wildcardEvaluators = null;
                 }
@@ -329,7 +330,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                 if (source.evaluators == source.wildcardEvaluators) {
                     dest.evaluators = dest.wildcardEvaluators;
                 } else {
-                    dest.evaluators = new ArrayList<>(source.evaluators);
+                    dest.evaluators = new HashSet<>(source.evaluators);
                 }
             } else {
                 dest.evaluators = null;
@@ -362,7 +363,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         this.optIgnoreCase = other.optIgnoreCase;
         this.optWildcard = other.optWildcard;
         this.wildcardChars = other.wildcardChars;
-        this.comparator = other.comparator;
         this.isOptimizedForRetrieval = false;
         this.root = copyTrieSubtree(other.root, null);
 
@@ -543,7 +543,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         return ret;
     }
 
-    private TrieNode<T> insert(TrieNode<T> currentRoot, String resource, boolean isRecursive, T evaluator) {
+    private void insert(TrieNode<T> currentRoot, String resource, boolean isRecursive, T evaluator) {
 
         TrieNode<T>   curr       = currentRoot;
         final String  prefix     = getNonWildcardPrefix(resource);
@@ -559,7 +559,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             curr.addEvaluator(evaluator);
         }
 
-        return curr;
     }
 
     private String getNonWildcardPrefix(String str) {
@@ -577,7 +576,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         return str.substring(0, minIndex);
     }
 
-    private List<T> getEvaluatorsForResource(String resource) {
+    private Set<T> getEvaluatorsForResource(String resource) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceTrie.getEvaluatorsForResource(" + resource + ")");
         }
@@ -595,7 +594,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
         while (i < len) {
             if (!isOptimizedForRetrieval) {
-                curr.setupIfNeeded(parent, comparator);
+                curr.setupIfNeeded(parent);
             }
 
             final TrieNode<T> child = curr.getChild(getLookupChar(resource, i));
@@ -616,10 +615,10 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
 
         if (!isOptimizedForRetrieval) {
-            curr.setupIfNeeded(parent, comparator);
+            curr.setupIfNeeded(parent);
         }
 
-        List<T> ret = i == len ? curr.getEvaluators() : curr.getWildcardEvaluators();
+        Set<T> ret = i == len ? curr.getEvaluators() : curr.getWildcardEvaluators();
 
         RangerPerfTracer.logAlways(perf);
 
@@ -672,16 +671,16 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         return curr;
     }
 
-    private List<T> getEvaluatorsForResources(Collection<String> resources) {
+    private Set<T> getEvaluatorsForResources(Collection<String> resources) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceTrie.getEvaluatorsForResources(" + resources + ")");
         }
 
-        List<T>      ret           = null;
+        Set<T>      ret           = null;
         Map<Long, T> evaluatorsMap = null;
 
         for (String resource : resources) {
-            List<T> resourceEvaluators = getEvaluatorsForResource(resource);
+            Set<T> resourceEvaluators = getEvaluatorsForResource(resource);
 
             if (CollectionUtils.isEmpty(resourceEvaluators)) {
                 continue;
@@ -709,11 +708,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
 
         if (ret == null && evaluatorsMap != null) {
-            ret = new ArrayList<>(evaluatorsMap.values());
-
-            if (comparator != null) {
-                ret.sort(comparator);
-            }
+            ret = new HashSet<>(evaluatorsMap.values());
         }
 
         if(LOG.isDebugEnabled()) {
@@ -826,8 +821,8 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         private          String                      str;
         private          TrieNode<U>                 parent;
         private final    Map<Character, TrieNode<U>> children = new HashMap<>();
-        private          List<U>                     evaluators;
-        private          List<U>                     wildcardEvaluators;
+        private          Set<U>                      evaluators;
+        private          Set<U>                      wildcardEvaluators;
         private          boolean                     isSharingParentWildcardEvaluators;
         private volatile boolean                     isSetup = false;
 
@@ -855,11 +850,11 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             return children;
         }
 
-        List<U> getEvaluators() {
+        Set<U> getEvaluators() {
             return evaluators;
         }
 
-        List<U> getWildcardEvaluators() {
+        Set<U> getWildcardEvaluators() {
             return wildcardEvaluators;
         }
 
@@ -974,17 +969,14 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
         void addEvaluator(U evaluator) {
             if (evaluators == null) {
-                evaluators = new ArrayList<>();
+                evaluators = new HashSet<>();
             }
-
-            if (!evaluators.contains(evaluator)) {
-                evaluators.add(evaluator);
-            }
+            evaluators.add(evaluator);
         }
 
         void addWildcardEvaluator(U evaluator) {
             if (wildcardEvaluators == null) {
-                wildcardEvaluators = new ArrayList<>();
+                wildcardEvaluators = new HashSet<>();
             }
 
             if (!wildcardEvaluators.contains(evaluator)) {
@@ -1036,7 +1028,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                             if (isSharingParentWildcardEvaluators) {
                                 wildcardEvaluators = null;
                             } else {
-                                List<U> parentWildcardEvaluators = getParent() == null ? null : getParent().getWildcardEvaluators();
+                                Set<U> parentWildcardEvaluators = getParent() == null ? null : getParent().getWildcardEvaluators();
 
                                 if (parentWildcardEvaluators != null) {
                                     wildcardEvaluators.removeAll(parentWildcardEvaluators);
@@ -1054,7 +1046,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             }
         }
 
-        void wrapUpUpdate(Comparator<U> comparator) {
+        void wrapUpUpdate() {
             if (isOptimizedForRetrieval) {
                 RangerPerfTracer postSetupPerf = null;
 
@@ -1062,25 +1054,25 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                     postSetupPerf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.init(name=" + resourceDef.getName() + "-postSetup)");
                 }
 
-                postSetup(null, comparator);
+                postSetup(null);
 
                 RangerPerfTracer.logAlways(postSetupPerf);
             }
         }
 
-        void postSetup(List<U> parentWildcardEvaluators, Comparator<U> comparator) {
+        void postSetup(Set<U> parentWildcardEvaluators) {
 
-            setup(parentWildcardEvaluators, comparator);
+            setup(parentWildcardEvaluators);
 
             for (Map.Entry<Character, TrieNode<U>> entry : children.entrySet()) {
                 TrieNode<U> child = entry.getValue();
 
-                child.postSetup(wildcardEvaluators, comparator);
+                child.postSetup(wildcardEvaluators);
             }
 
         }
 
-        void setupIfNeeded(TrieNode<U> parent, Comparator<U> comparator) {
+        void setupIfNeeded(TrieNode<U> parent) {
 
             boolean setupNeeded = !isSetup;
 
@@ -1089,7 +1081,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                     setupNeeded = !isSetup;
 
                     if (setupNeeded) {
-                        setup(parent == null ? null : parent.getWildcardEvaluators(), comparator);
+                        setup(parent == null ? null : parent.getWildcardEvaluators());
                         if (TRACE_LOG.isTraceEnabled()) {
                             StringBuilder sb = new StringBuilder();
                             this.toString(sb);
@@ -1100,7 +1092,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             }
         }
 
-        void setup(List<U> parentWildcardEvaluators, Comparator<U> comparator) {
+        void setup(Set<U> parentWildcardEvaluators) {
             if (!isSetup) {
                 // finalize wildcard-evaluators list by including parent's wildcard evaluators
                 if (parentWildcardEvaluators != null) {
@@ -1126,9 +1118,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                 }
 
                 isSetup = true;
-
-                sortEvaluators(comparator);
-
             }
         }
 
@@ -1141,18 +1130,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
             removeEvaluator(evaluator);
 
-        }
-
-        private void sortEvaluators(Comparator<U> comparator) {
-            if (isSetup && comparator != null) {
-                if (!isSharingParentWildcardEvaluators && CollectionUtils.isNotEmpty(wildcardEvaluators)) {
-                    wildcardEvaluators.sort(comparator);
-                }
-
-                if (evaluators != wildcardEvaluators && CollectionUtils.isNotEmpty(evaluators)) {
-                    evaluators.sort(comparator);
-                }
-            }
         }
 
         public void toString(StringBuilder sb) {

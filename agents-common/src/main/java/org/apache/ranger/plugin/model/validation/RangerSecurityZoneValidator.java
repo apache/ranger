@@ -411,15 +411,15 @@ public class RangerSecurityZoneValidator extends RangerValidator {
 
             for (Map<String, List<String>> resource : resources) {
 
-                List<List<RangerZoneResourceMatcher>> zoneMatchersList = null;
-                List<RangerZoneResourceMatcher>       smallestList     = null;
+                List<Set<RangerZoneResourceMatcher>> zoneMatchersList = null;
+                Set<RangerZoneResourceMatcher>       smallestList     = null;
 
                 for (Map.Entry<String, List<String>> entry : resource.entrySet()) {
                     String       resourceDefName = entry.getKey();
                     List<String> resourceValues  = entry.getValue();
 
                     RangerResourceTrie<RangerZoneResourceMatcher> trie         = trieMap.get(resourceDefName);
-                    List<RangerZoneResourceMatcher>               matchedZones = trie.getEvaluatorsForResource(resourceValues);
+                    Set<RangerZoneResourceMatcher>               matchedZones = trie.getEvaluatorsForResource(resourceValues);
 
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("ResourceDefName:[" + resourceDefName +"], values:[" + resourceValues +"], matched-zones:[" + matchedZones +"]");
@@ -447,11 +447,11 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                 if (smallestList == null) {
                     continue;
                 }
-                final List<RangerZoneResourceMatcher> intersection;
+                final Set<RangerZoneResourceMatcher> intersection;
 
                 if (zoneMatchersList != null) {
-                    intersection = new ArrayList<>(smallestList);
-                    for (List<RangerZoneResourceMatcher> zoneMatchers : zoneMatchersList) {
+                    intersection = new HashSet<>(smallestList);
+                    for (Set<RangerZoneResourceMatcher> zoneMatchers : zoneMatchersList) {
                         if (zoneMatchers != smallestList) {
                             // remove zones from intersection that are not in zoneMatchers
                             intersection.retainAll(zoneMatchers);

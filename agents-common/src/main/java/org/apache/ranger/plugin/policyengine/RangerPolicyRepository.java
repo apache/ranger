@@ -47,6 +47,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -721,8 +722,7 @@ public class RangerPolicyRepository {
     }
 
     private List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
-        List<RangerPolicyEvaluator> ret          = null;
-        Set<String>                 resourceKeys = resource == null ? null : resource.getKeys();
+        List<RangerPolicyEvaluator> ret          = Collections.EMPTY_LIST;
 
         RangerPerfTracer perf = null;
 
@@ -730,60 +730,64 @@ public class RangerPolicyRepository {
             perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_OP_LOG, "RangerPolicyRepository.getLikelyMatchEvaluators(resource=" + resource.getAsString() + ")");
         }
 
-        if(CollectionUtils.isNotEmpty(resourceKeys)) {
-            List<List<RangerPolicyEvaluator>> resourceEvaluatorsList = null;
-            List<RangerPolicyEvaluator> smallestList = null;
+        Set<String>                 resourceKeys = resource == null ? null : resource.getKeys();
 
-            for(String resourceName : resourceKeys) {
+        if(CollectionUtils.isNotEmpty(resourceKeys)) {
+            Set<RangerPolicyEvaluator>       evaluators = null;
+            List<Set<RangerPolicyEvaluator>> resourceEvaluatorsSet = null;
+            Set<RangerPolicyEvaluator>       smallestSet = null;
+
+            for (String resourceName : resourceKeys) {
                 RangerResourceTrie trie = resourceTrie.get(resourceName);
 
-                if(trie == null) { // if no trie exists for this resource level, ignore and continue to next level
+                if (trie == null) { // if no trie exists for this resource level, ignore and continue to next level
                     continue;
                 }
 
-                List<RangerPolicyEvaluator> resourceEvaluators = trie.getEvaluatorsForResource(resource.getValue(resourceName));
+                Set<RangerPolicyEvaluator> resourceEvaluators = trie.getEvaluatorsForResource(resource.getValue(resourceName));
 
-                if(CollectionUtils.isEmpty(resourceEvaluators)) { // no policies for this resource, bail out
-                    resourceEvaluatorsList = null;
-                    smallestList = null;
+                if (CollectionUtils.isEmpty(resourceEvaluators)) { // no policies for this resource, bail out
+                    resourceEvaluatorsSet = null;
+                    smallestSet = null;
                     break;
                 }
 
-                if (smallestList == null) {
-                    smallestList = resourceEvaluators;
+                if (smallestSet == null) {
+                    smallestSet = resourceEvaluators;
                 } else {
-                    if (resourceEvaluatorsList == null) {
-                        resourceEvaluatorsList = new ArrayList<>();
-                        resourceEvaluatorsList.add(smallestList);
+                    if (resourceEvaluatorsSet == null) {
+                        resourceEvaluatorsSet = new ArrayList<>();
+                        resourceEvaluatorsSet.add(smallestSet);
                     }
-                    resourceEvaluatorsList.add(resourceEvaluators);
+                    resourceEvaluatorsSet.add(resourceEvaluators);
 
-                    if (smallestList.size() > resourceEvaluators.size()) {
-                        smallestList = resourceEvaluators;
+                    if (smallestSet.size() > resourceEvaluators.size()) {
+                        smallestSet = resourceEvaluators;
                     }
                 }
             }
 
-            if (resourceEvaluatorsList != null) {
-                ret = new ArrayList<>(smallestList);
-                for (List<RangerPolicyEvaluator> resourceEvaluators : resourceEvaluatorsList) {
-                    if (resourceEvaluators != smallestList) {
+            if (resourceEvaluatorsSet != null) {
+                evaluators = new HashSet<>(smallestSet);
+                for (Set<RangerPolicyEvaluator> resourceEvaluators : resourceEvaluatorsSet) {
+                    if (resourceEvaluators != smallestSet) {
                         // remove policies from ret that are not in resourceEvaluators
-                        ret.retainAll(resourceEvaluators);
+                        evaluators.retainAll(resourceEvaluators);
 
-                        if (CollectionUtils.isEmpty(ret)) { // if no policy exists, bail out and return empty list
-                            ret = null;
+                        if (CollectionUtils.isEmpty(evaluators)) { // if no policy exists, bail out and return empty list
+                            evaluators = null;
                             break;
                         }
                     }
                 }
             } else {
-                ret = smallestList;
+                evaluators = smallestSet;
             }
-        }
 
-        if(ret == null) {
-            ret = Collections.emptyList();
+            if (evaluators != null) {
+                ret = new ArrayList<>(evaluators);
+                ret.sort(RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR);
+            }
         }
 
         RangerPerfTracer.logAlways(perf);
@@ -1189,7 +1193,7 @@ public class RangerPolicyRepository {
             ret = new HashMap<>();
 
             for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR, optimizeTrieForRetrieval, pluginContext));
+                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, optimizeTrieForRetrieval, pluginContext));
             }
         } else {
             ret = null;
@@ -1212,7 +1216,7 @@ public class RangerPolicyRepository {
                 if (RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE == policyDeltaType || RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE == policyDeltaType) {
                     LOG.warn("policyDeltaType is not for POLICY_CREATE and trie for resourceDef:[" + resourceDefName + "] was null! Should not have happened!!");
                 }
-                trie = new RangerResourceTrie<>(resourceDef, new ArrayList<>(), RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR, true, pluginContext);
+                trie = new RangerResourceTrie<>(resourceDef, new ArrayList<>(), true, pluginContext);
                 trieMap.put(resourceDefName, trie);
             }
 

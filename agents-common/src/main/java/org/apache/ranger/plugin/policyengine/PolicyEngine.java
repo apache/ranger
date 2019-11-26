@@ -484,8 +484,8 @@ public class PolicyEngine {
         String ret = null;
 
         if (MapUtils.isNotEmpty(this.resourceZoneTrie)) {
-            List<List<RangerZoneResourceMatcher>> zoneMatchersList = null;
-            List<RangerZoneResourceMatcher>       smallestList     = null;
+            List<Set<RangerZoneResourceMatcher>> zoneMatchersList = null;
+            Set<RangerZoneResourceMatcher>       smallestList     = null;
 
             for (Map.Entry<String, ?> entry : resource.entrySet()) {
                 String                                        resourceDefName = entry.getKey();
@@ -496,7 +496,7 @@ public class PolicyEngine {
                     continue;
                 }
 
-                List<RangerZoneResourceMatcher> matchedZones = trie.getEvaluatorsForResource(resourceValues);
+                Set<RangerZoneResourceMatcher> matchedZones = trie.getEvaluatorsForResource(resourceValues);
 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("ResourceDefName:[" + resourceDefName + "], values:[" + resourceValues + "], matched-zones:[" + matchedZones + "]");
@@ -526,12 +526,12 @@ public class PolicyEngine {
                 }
             }
             if (smallestList != null) {
-                final List<RangerZoneResourceMatcher> intersection;
+                final Set<RangerZoneResourceMatcher> intersection;
 
                 if (zoneMatchersList != null) {
-                    intersection = new ArrayList<>(smallestList);
+                    intersection = new HashSet<>(smallestList);
 
-                    for (List<RangerZoneResourceMatcher> zoneMatchers : zoneMatchersList) {
+                    for (Set<RangerZoneResourceMatcher> zoneMatchers : zoneMatchersList) {
                         if (zoneMatchers != smallestList) {
                             // remove zones from intersection that are not in zoneMatchers
                             intersection.retainAll(zoneMatchers);
