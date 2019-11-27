@@ -31,12 +31,12 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.ArrayList;

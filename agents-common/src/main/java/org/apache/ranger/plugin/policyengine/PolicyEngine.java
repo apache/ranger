@@ -25,7 +25,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -45,7 +44,6 @@ import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
-import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
@@ -153,58 +151,14 @@ public class PolicyEngine {
         return sb;
     }
 
-    public boolean compare(PolicyEngine other) {
-        boolean ret;
-
-        if (policyRepository != null && other.policyRepository != null) {
-            ret = policyRepository .compare(other.policyRepository);
-        } else {
-            ret = policyRepository == other.policyRepository;
-        }
-
-        if (ret) {
-            if (tagPolicyRepository != null && other.tagPolicyRepository != null) {
-                ret = tagPolicyRepository.compare(other.tagPolicyRepository);
-            } else {
-                ret = tagPolicyRepository == other.tagPolicyRepository;
-            }
-        }
-
-        if (ret) {
-            ret = Objects.equals(resourceZoneTrie.keySet(), other.resourceZoneTrie.keySet());
-
-            if (ret) {
-                for (Map.Entry<String, RangerResourceTrie> entry : resourceZoneTrie.entrySet()) {
-                    ret = entry.getValue().compareSubtree(other.resourceZoneTrie.get(entry.getKey()));
-
-                    if (!ret) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (ret) {
-            ret = Objects.equals(zonePolicyRepositories.keySet(), other.zonePolicyRepositories.keySet());
-
-            if (ret) {
-                for (Map.Entry<String, RangerPolicyRepository> entry : zonePolicyRepositories.entrySet()) {
-                    ret = entry.getValue().compare(other.zonePolicyRepositories.get(entry.getKey()));
-
-                    if (!ret) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        return ret;
-    }
-
     public List<RangerPolicy> getResourcePolicies(String zoneName) {
         RangerPolicyRepository zoneResourceRepository = zonePolicyRepositories.get(zoneName);
 
         return zoneResourceRepository == null ? ListUtils.EMPTY_LIST : zoneResourceRepository.getPolicies();
+    }
+
+    Map<String, RangerResourceTrie> getResourceZoneTrie() {
+        return resourceZoneTrie;
     }
 
     public RangerAccessResult createAccessResult(RangerAccessRequest request, int policyType) {

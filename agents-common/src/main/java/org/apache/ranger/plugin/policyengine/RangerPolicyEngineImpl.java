@@ -357,6 +357,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
+	PolicyEngine getPolicyEngine() {
+		return policyEngine;
+	}
+
 	// This API is used only used by test code
 	@Override
 	public RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request) {
@@ -527,10 +531,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.releaseResources()");
 		}
-	}
-
-	public boolean compare(RangerPolicyEngineImpl other) {
-		return policyEngine.compare(other.policyEngine);
 	}
 
 	private RangerPolicyEngineImpl(final PolicyEngine policyEngine) {

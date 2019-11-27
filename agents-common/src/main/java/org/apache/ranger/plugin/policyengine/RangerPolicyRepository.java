@@ -38,7 +38,6 @@ import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 
@@ -1404,7 +1403,7 @@ public class RangerPolicyRepository {
         return ret;
     }
 
-    private Map<String, RangerResourceTrie> getTrie(final int policyType) {
+    Map<String, RangerResourceTrie> getTrie(final int policyType) {
         final Map<String, RangerResourceTrie> ret;
         switch (policyType) {
             case RangerPolicy.POLICY_TYPE_ACCESS:
@@ -1422,33 +1421,4 @@ public class RangerPolicyRepository {
         return ret;
     }
 
-    public boolean compare(RangerPolicyRepository other) {
-        return compareTrie(RangerPolicy.POLICY_TYPE_ACCESS, other) &&
-                compareTrie(RangerPolicy.POLICY_TYPE_DATAMASK, other) &&
-                compareTrie(RangerPolicy.POLICY_TYPE_ROWFILTER, other);
-    }
-
-    private boolean compareTrie(final int policyType, RangerPolicyRepository other) {
-        boolean ret;
-
-        Map<String, RangerResourceTrie> myTrie    = getTrie(policyType);
-        Map<String, RangerResourceTrie> otherTrie = other.getTrie(policyType);
-
-        ret = myTrie.size() == otherTrie.size();
-
-        if (ret) {
-            for (Map.Entry<String, RangerResourceTrie> entry : myTrie.entrySet()) {
-                RangerResourceTrie myResourceTrie    = entry.getValue();
-                RangerResourceTrie otherResourceTrie = otherTrie.get(entry.getKey());
-
-                ret = otherResourceTrie != null && myResourceTrie.compareSubtree(otherResourceTrie);
-
-                if (!ret) {
-                    break;
-                }
-            }
-        }
-
-        return ret;
-    }
 }

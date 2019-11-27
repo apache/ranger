@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.util;
+package org.apache.ranger.plugin.policyengine;
 
 
 import org.apache.commons.collections.CollectionUtils;
@@ -27,10 +27,10 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,7 +62,33 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         this(resourceDef, evaluators, true, null);
     }
 
-    public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, boolean isOptimizedForRetrieval, RangerPluginContext pluginContext) {
+    public RangerResourceTrie(RangerResourceTrie<T> other) {
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_INIT_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.copyTrie(name=" + other.resourceDef.getName() + ")");
+        }
+
+        this.resourceDef = other.resourceDef;
+        this.optIgnoreCase = other.optIgnoreCase;
+        this.optWildcard = other.optWildcard;
+        this.wildcardChars = other.wildcardChars;
+        this.isOptimizedForRetrieval = false;
+        this.root = copyTrieSubtree(other.root, null);
+
+        RangerPerfTracer.logAlways(perf);
+
+        if (PERF_TRIE_INIT_LOG.isDebugEnabled()) {
+            PERF_TRIE_INIT_LOG.debug(toString());
+        }
+        if (TRACE_LOG.isTraceEnabled()) {
+            StringBuilder sb = new StringBuilder();
+            root.toString("", sb);
+            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.copyTrie(name=" + other.resourceDef.getName() + "):\n{" + sb.toString() + "}");
+        }
+    }
+
+    RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, boolean isOptimizedForRetrieval, RangerPluginContext pluginContext) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + ")");
         }
@@ -131,10 +157,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + "): " + toString());
         }
-    }
-
-    public String getResourceName() {
-        return resourceDef.getName();
     }
 
     public Set<T> getEvaluatorsForResource(Object resource) {
@@ -221,83 +243,8 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
     }
 
-    public boolean compareSubtree(RangerResourceTrie<T> other) {
-
-        final boolean ret;
-        List<TrieNode<T>> mismatchedNodes = new ArrayList<>();
-
-        if (this.root == null || other.root == null) {
-            ret = this.root == other.root;
-            if (!ret) {
-                mismatchedNodes.add(this.root);
-            }
-        } else {
-            ret = compareSubtree(this.root, other.root, mismatchedNodes);
-        }
-        return ret;
-    }
-
-    private boolean compareSubtree(TrieNode<T> me, TrieNode<T> other, List<TrieNode<T>> misMatched) {
-        boolean ret = StringUtils.equals(me.getStr(), other.getStr());
-
-        if (ret) {
-            Map<Character, TrieNode<T>> myChildren = me.getChildren();
-            Map<Character, TrieNode<T>> otherChildren = other.getChildren();
-
-            ret = myChildren.size() == otherChildren.size() &&
-                    compareLists(me.getEvaluators(), other.getEvaluators()) &&
-                    compareLists(me.getWildcardEvaluators(), other.getWildcardEvaluators()) &&
-                    myChildren.keySet().size() == otherChildren.keySet().size();
-            if (ret) {
-                // Check if subtrees match
-                for (Map.Entry<Character, TrieNode<T>> entry : myChildren.entrySet()) {
-                    Character c = entry.getKey();
-                    TrieNode<T> myNode = entry.getValue();
-                    TrieNode<T> otherNode = otherChildren.get(c);
-                    ret = otherNode != null && compareSubtree(myNode, otherNode, misMatched);
-                    if (!ret) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        if (!ret) {
-            misMatched.add(me);
-        }
-
-        return ret;
-    }
-
-    private boolean compareLists(Set<? extends RangerPolicyResourceEvaluator> me, Set<? extends RangerPolicyResourceEvaluator> other) {
-        boolean ret;
-
-        if (me == null || other == null) {
-            ret = me == other;
-        } else {
-            ret = me.size() == other.size();
-
-            if (ret) {
-		        List<? extends RangerPolicyResourceEvaluator> meAsList = new ArrayList<>(me);
-		        List<? extends RangerPolicyResourceEvaluator> otherAsList = new ArrayList<>(other);
-
-                List<Long> myIds = new ArrayList<>();
-                List<Long> otherIds = new ArrayList<>();
-                for (RangerPolicyResourceEvaluator evaluator : meAsList) {
-                    myIds.add(evaluator.getId());
-                }
-                for (RangerPolicyResourceEvaluator evaluator : otherAsList) {
-                    otherIds.add(evaluator.getId());
-                }
-
-                ret = compareLongLists(myIds, otherIds);
-            }
-        }
-        return ret;
-    }
-
-    private boolean compareLongLists(List<Long> me, List<Long> other) {
-        return me.size() == CollectionUtils.intersection(me, other).size();
+    TrieNode<T> getRoot() {
+        return root;
     }
 
     private TrieNode<T> copyTrieSubtree(final TrieNode<T> source, final TrieNode<T> parent) {
@@ -350,32 +297,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             TRACE_LOG.trace("<== copyTrieSubtree(" + sourceAsString + ") : " + destAsString);
         }
         return dest;
-    }
-
-    public RangerResourceTrie(RangerResourceTrie<T> other) {
-        RangerPerfTracer perf = null;
-
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_TRIE_INIT_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.copyTrie(name=" + other.resourceDef.getName() + ")");
-        }
-
-        this.resourceDef = other.resourceDef;
-        this.optIgnoreCase = other.optIgnoreCase;
-        this.optWildcard = other.optWildcard;
-        this.wildcardChars = other.wildcardChars;
-        this.isOptimizedForRetrieval = false;
-        this.root = copyTrieSubtree(other.root, null);
-
-        RangerPerfTracer.logAlways(perf);
-
-        if (PERF_TRIE_INIT_LOG.isDebugEnabled()) {
-            PERF_TRIE_INIT_LOG.debug(toString());
-        }
-        if (TRACE_LOG.isTraceEnabled()) {
-            StringBuilder sb = new StringBuilder();
-            root.toString("", sb);
-            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.copyTrie(name=" + other.resourceDef.getName() + "):\n{" + sb.toString() + "}");
-        }
     }
 
     private TrieNode<T> buildTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, int builderThreadCount) {
@@ -817,7 +738,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         int wildcardEvaluatorListRefCount;
     }
 
-    private class TrieNode<U extends T> {
+    class TrieNode<U extends T> {
         private          String                      str;
         private          TrieNode<U>                 parent;
         private final    Map<Character, TrieNode<U>> children = new HashMap<>();
@@ -1132,7 +1053,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
         }
 
-        public void toString(StringBuilder sb) {
+        void toString(StringBuilder sb) {
             String nodeValue = this.str;
 
             sb.append("nodeValue=").append(nodeValue);
@@ -1155,7 +1076,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             }
         }
 
-        public void toString(String prefix, StringBuilder sb) {
+        void toString(String prefix, StringBuilder sb) {
             String nodeValue = prefix + (str != null ? str : "");
 
             sb.append(prefix);
@@ -1168,13 +1089,6 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                 child.toString(nodeValue, sb);
             }
 
-        }
-
-        public void clear() {
-            children.clear();
-
-            evaluators         = null;
-            wildcardEvaluators = null;
         }
     }
 }

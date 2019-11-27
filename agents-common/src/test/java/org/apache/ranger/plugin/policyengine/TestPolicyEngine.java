@@ -32,20 +32,25 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.contextenricher.RangerServiceResourceMatcher;
+import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.ServiceTags;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -63,6 +68,7 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
@@ -766,5 +772,216 @@ public class TestPolicyEngine {
 			return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
 		}
 	}
+
+	// Test utility functions
+	public static boolean compare(PolicyEngine me, PolicyEngine other) {
+		boolean ret;
+
+		if (me.getPolicyRepository() != null && other.getPolicyRepository() != null) {
+			ret = compare(me.getPolicyRepository(), other.getPolicyRepository());
+		} else {
+			ret = me.getPolicyRepository() == other.getPolicyRepository();
+		}
+
+		if (ret) {
+			if (me.getTagPolicyRepository() != null && other.getTagPolicyRepository() != null) {
+				ret = compare(me.getTagPolicyRepository(), other.getTagPolicyRepository());
+			} else {
+				ret = me.getTagPolicyRepository() == other.getTagPolicyRepository();
+			}
+		}
+
+		if (ret) {
+			ret = Objects.equals(me.getResourceZoneTrie().keySet(), other.getResourceZoneTrie().keySet());
+
+			if (ret) {
+				for (Map.Entry<String, RangerResourceTrie> entry : me.getResourceZoneTrie().entrySet()) {
+					ret = compareSubtree(entry.getValue(), other.getResourceZoneTrie().get(entry.getKey()));
+
+					if (!ret) {
+						break;
+					}
+				}
+			}
+		}
+
+		if (ret) {
+			ret = Objects.equals(me.getZonePolicyRepositories().keySet(), other.getZonePolicyRepositories().keySet());
+
+			if (ret) {
+				for (Map.Entry<String, RangerPolicyRepository> entry : me.getZonePolicyRepositories().entrySet()) {
+					ret = compare(entry.getValue(), other.getZonePolicyRepositories().get(entry.getKey()));
+
+					if (!ret) {
+						break;
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public static boolean compare(RangerPolicyRepository me, RangerPolicyRepository other) {
+		return compareTrie(RangerPolicy.POLICY_TYPE_ACCESS, me, other) &&
+				compareTrie(RangerPolicy.POLICY_TYPE_DATAMASK, me, other) &&
+				compareTrie(RangerPolicy.POLICY_TYPE_ROWFILTER, me, other);
+	}
+
+	public static boolean compareTrie(final int policyType, RangerPolicyRepository me, RangerPolicyRepository other) {
+		boolean ret;
+
+		Map<String, RangerResourceTrie> myTrie    = me.getTrie(policyType);
+		Map<String, RangerResourceTrie> otherTrie = other.getTrie(policyType);
+
+		ret = myTrie.size() == otherTrie.size();
+
+		if (ret) {
+			for (Map.Entry<String, RangerResourceTrie> entry : myTrie.entrySet()) {
+				RangerResourceTrie myResourceTrie    = entry.getValue();
+				RangerResourceTrie otherResourceTrie = otherTrie.get(entry.getKey());
+
+				ret = otherResourceTrie != null && compareSubtree(myResourceTrie, otherResourceTrie);
+
+				if (!ret) {
+					break;
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public static boolean compare(RangerTagEnricher me, RangerTagEnricher other) {
+		boolean ret;
+
+		if (me.getEnrichedServiceTags() == null || other == null || other.getEnrichedServiceTags() == null) {
+			return false;
+		}
+
+		if (me.getEnrichedServiceTags().getServiceResourceTrie() != null && other.getEnrichedServiceTags().getServiceResourceTrie() != null) {
+			ret = me.getEnrichedServiceTags().getServiceResourceTrie().size() == other.getEnrichedServiceTags().getServiceResourceTrie().size();
+
+			if (ret && me.getEnrichedServiceTags().getServiceResourceTrie().size() > 0) {
+				for (Map.Entry<String, RangerResourceTrie<RangerServiceResourceMatcher>> entry : me.getEnrichedServiceTags().getServiceResourceTrie().entrySet()) {
+					ret = compareSubtree(entry.getValue(), other.getEnrichedServiceTags().getServiceResourceTrie().get(entry.getKey()));
+					if (!ret) {
+						break;
+					}
+				}
+			}
+		} else {
+			ret = me.getEnrichedServiceTags().getServiceResourceTrie() == other.getEnrichedServiceTags().getServiceResourceTrie();
+		}
+
+		if (ret) {
+			// Compare mappings
+			ServiceTags myServiceTags = me.getEnrichedServiceTags().getServiceTags();
+			ServiceTags otherServiceTags = other.getEnrichedServiceTags().getServiceTags();
+
+			ret = StringUtils.equals(myServiceTags.getServiceName(), otherServiceTags.getServiceName()) &&
+					//myServiceTags.getTagVersion().equals(otherServiceTags.getTagVersion()) &&
+					myServiceTags.getTags().size() == otherServiceTags.getTags().size() &&
+					myServiceTags.getServiceResources().size() == otherServiceTags.getServiceResources().size() &&
+					myServiceTags.getResourceToTagIds().size() == otherServiceTags.getResourceToTagIds().size();
+			if (ret) {
+				for (RangerServiceResource serviceResource : myServiceTags.getServiceResources()) {
+					Long serviceResourceId = serviceResource.getId();
+
+					List<Long> myTagsForResource = myServiceTags.getResourceToTagIds().get(serviceResourceId);
+					List<Long> otherTagsForResource = otherServiceTags.getResourceToTagIds().get(serviceResourceId);
+
+					ret = CollectionUtils.size(myTagsForResource) == CollectionUtils.size(otherTagsForResource);
+
+					if (ret && CollectionUtils.size(myTagsForResource) > 0) {
+						ret = myTagsForResource.size() == CollectionUtils.intersection(myTagsForResource, otherTagsForResource).size();
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public static boolean compareSubtree(RangerResourceTrie me, RangerResourceTrie other) {
+
+		final boolean ret;
+		List<RangerResourceTrie.TrieNode> mismatchedNodes = new ArrayList<>();
+
+		if (me.getRoot() == null || other.getRoot() == null) {
+			ret = me.getRoot() == other.getRoot();
+			if (!ret) {
+				mismatchedNodes.add(me.getRoot());
+			}
+		} else {
+			ret = compareSubtree(me.getRoot(), other.getRoot(), mismatchedNodes);
+		}
+		return ret;
+	}
+
+	private static boolean compareSubtree(RangerResourceTrie.TrieNode me, RangerResourceTrie.TrieNode other, List<RangerResourceTrie.TrieNode> misMatched) {
+		boolean ret = StringUtils.equals(me.getStr(), other.getStr());
+
+		if (ret) {
+			Map<Character, RangerResourceTrie.TrieNode> myChildren = me.getChildren();
+			Map<Character, RangerResourceTrie.TrieNode> otherChildren = other.getChildren();
+
+			ret = myChildren.size() == otherChildren.size() &&
+					compareLists(me.getEvaluators(), other.getEvaluators()) &&
+					compareLists(me.getWildcardEvaluators(), other.getWildcardEvaluators()) &&
+					myChildren.keySet().size() == otherChildren.keySet().size();
+			if (ret) {
+				// Check if subtrees match
+				for (Map.Entry<Character, RangerResourceTrie.TrieNode> entry : myChildren.entrySet()) {
+					Character c = entry.getKey();
+					RangerResourceTrie.TrieNode myNode = entry.getValue();
+					RangerResourceTrie.TrieNode otherNode = otherChildren.get(c);
+					ret = otherNode != null && compareSubtree(myNode, otherNode, misMatched);
+					if (!ret) {
+						break;
+					}
+				}
+			}
+		}
+
+		if (!ret) {
+			misMatched.add(me);
+		}
+
+		return ret;
+	}
+
+	private static boolean compareLists(Set me, Set other) {
+		boolean ret;
+
+		if (me == null || other == null) {
+			ret = me == other;
+		} else {
+			ret = me.size() == other.size();
+
+			if (ret) {
+				List<? extends RangerPolicyResourceEvaluator> meAsList = new ArrayList<>(me);
+				List<? extends RangerPolicyResourceEvaluator> otherAsList = new ArrayList<>(other);
+
+				List<Long> myIds = new ArrayList<>();
+				List<Long> otherIds = new ArrayList<>();
+				for (RangerPolicyResourceEvaluator evaluator : meAsList) {
+					myIds.add(evaluator.getId());
+				}
+				for (RangerPolicyResourceEvaluator evaluator : otherAsList) {
+					otherIds.add(evaluator.getId());
+				}
+
+				ret = compareLongLists(myIds, otherIds);
+			}
+		}
+		return ret;
+	}
+
+	private static boolean compareLongLists(List<Long> me, List<Long> other) {
+		return me.size() == CollectionUtils.intersection(me, other).size();
+	}
+
+
 }
 

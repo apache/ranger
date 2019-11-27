@@ -34,6 +34,7 @@ import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.DownloadTrigger;
@@ -42,7 +43,6 @@ import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -344,55 +344,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		token.waitForCompletion();
 	}
 
-	public boolean compare(RangerTagEnricher other) {
-		boolean ret;
-
-		if (enrichedServiceTags == null || other == null || other.enrichedServiceTags == null) {
-			return false;
-		}
-
-		if (enrichedServiceTags.getServiceResourceTrie() != null && other.enrichedServiceTags.getServiceResourceTrie() != null) {
-			ret = enrichedServiceTags.getServiceResourceTrie().size() == other.enrichedServiceTags.getServiceResourceTrie().size();
-
-			if (ret && enrichedServiceTags.getServiceResourceTrie().size() > 0) {
-				for (Map.Entry<String, RangerResourceTrie<RangerServiceResourceMatcher>> entry : enrichedServiceTags.getServiceResourceTrie().entrySet()) {
-					ret = entry.getValue().compareSubtree(other.enrichedServiceTags.getServiceResourceTrie().get(entry.getKey()));
-					if (!ret) {
-						break;
-					}
-				}
-			}
-		} else {
-			ret = enrichedServiceTags.getServiceResourceTrie() == other.enrichedServiceTags.getServiceResourceTrie();
-		}
-
-		if (ret) {
-			// Compare mappings
-			ServiceTags myServiceTags = enrichedServiceTags.getServiceTags();
-			ServiceTags otherServiceTags = other.enrichedServiceTags.getServiceTags();
-
-			ret = StringUtils.equals(myServiceTags.getServiceName(), otherServiceTags.getServiceName()) &&
-					//myServiceTags.getTagVersion().equals(otherServiceTags.getTagVersion()) &&
-					myServiceTags.getTags().size() == otherServiceTags.getTags().size() &&
-					myServiceTags.getServiceResources().size() == otherServiceTags.getServiceResources().size() &&
-					myServiceTags.getResourceToTagIds().size() == otherServiceTags.getResourceToTagIds().size();
-			if (ret) {
-				for (RangerServiceResource serviceResource : myServiceTags.getServiceResources()) {
-					Long serviceResourceId = serviceResource.getId();
-
-					List<Long> myTagsForResource = myServiceTags.getResourceToTagIds().get(serviceResourceId);
-					List<Long> otherTagsForResource = otherServiceTags.getResourceToTagIds().get(serviceResourceId);
-
-					ret = CollectionUtils.size(myTagsForResource) == CollectionUtils.size(otherTagsForResource);
-
-					if (ret && CollectionUtils.size(myTagsForResource) > 0) {
-						ret = myTagsForResource.size() == CollectionUtils.intersection(myTagsForResource, otherTagsForResource).size();
-					}
-				}
-			}
-		}
-
-		return ret;
+	public EnrichedServiceTags getEnrichedServiceTags() {
+		return enrichedServiceTags;
 	}
 
 	private void processServiceTags(ServiceTags serviceTags) {
@@ -830,7 +783,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	static private final class EnrichedServiceTags {
+	static public final class EnrichedServiceTags {
 		final private ServiceTags                                                      serviceTags;
 		final private List<RangerServiceResourceMatcher>                               serviceResourceMatchers;
 		final private Map<String, RangerResourceTrie<RangerServiceResourceMatcher>>    serviceResourceTrie;
@@ -844,11 +797,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			this.tagsForEmptyResourceAndAnyAccess = createTagsForEmptyResourceAndAnyAccess();
 			this.resourceTrieVersion              = serviceTags.getTagVersion();
 		}
-		ServiceTags                                                   getServiceTags() {return serviceTags;}
-		List<RangerServiceResourceMatcher>                            getServiceResourceMatchers() { return serviceResourceMatchers;}
-		Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> getServiceResourceTrie() { return serviceResourceTrie;}
-		Long                                                          getResourceTrieVersion() { return resourceTrieVersion;}
-		Set<RangerTagForEval>                                         getTagsForEmptyResourceAndAnyAccess() { return tagsForEmptyResourceAndAnyAccess;}
+		public ServiceTags                                                   getServiceTags() {return serviceTags;}
+		public List<RangerServiceResourceMatcher>                            getServiceResourceMatchers() { return serviceResourceMatchers;}
+		public Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> getServiceResourceTrie() { return serviceResourceTrie;}
+		public Long                                                          getResourceTrieVersion() { return resourceTrieVersion;}
+		public Set<RangerTagForEval>                                         getTagsForEmptyResourceAndAnyAccess() { return tagsForEmptyResourceAndAnyAccess;}
 
 		private Set<RangerTagForEval> createTagsForEmptyResourceAndAnyAccess() {
 			Set<RangerTagForEval> tagsForEmptyResourceAndAnyAccess = new HashSet<>();

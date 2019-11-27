@@ -126,7 +126,7 @@ public class TestPolicyEngineComparison {
                 RangerPolicyEngineImpl myPolicyEngine = new RangerPolicyEngineImpl("test-compare-my-engine", myServicePolicies, options, rangerPluginContext, null);
                 RangerPolicyEngineImpl otherPolicyEngine = new RangerPolicyEngineImpl("test-compare-other-engine", otherServicePolicies, options, rangerPluginContext, null);
 
-                isPolicyEnginesEqual = myPolicyEngine.compare(otherPolicyEngine) && otherPolicyEngine.compare(myPolicyEngine);
+                isPolicyEnginesEqual = TestPolicyEngine.compare(myPolicyEngine.getPolicyEngine(), otherPolicyEngine.getPolicyEngine()) && TestPolicyEngine.compare(otherPolicyEngine.getPolicyEngine(), myPolicyEngine.getPolicyEngine());
 
 
                 if (myServiceTags != null) {
@@ -143,7 +143,7 @@ public class TestPolicyEngineComparison {
                     otherTagEnricher.setServiceName(otherServiceTags.getServiceName());
                     otherTagEnricher.setServiceTags(otherServiceTags);
 
-                    isTagsEqual = myTagEnricher.compare(otherTagEnricher) && otherTagEnricher.compare(myTagEnricher);
+                    isTagsEqual = TestPolicyEngine.compare(myTagEnricher, otherTagEnricher) && TestPolicyEngine.compare(otherTagEnricher, myTagEnricher);
 
                 }
             }
