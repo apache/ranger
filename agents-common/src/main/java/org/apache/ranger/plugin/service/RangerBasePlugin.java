@@ -20,15 +20,11 @@
 package org.apache.ranger.plugin.service;
 
 import java.util.*;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.LinkedBlockingQueue;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.audit.provider.AuditHandler;
@@ -51,7 +47,6 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -61,98 +56,51 @@ import org.apache.ranger.plugin.util.*;
 public class RangerBasePlugin {
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
 
-	public static final char RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR = ',';
 
-	private static Map<String, RangerBasePlugin> servicePluginMap = new ConcurrentHashMap<>();
+	private final RangerPluginConfig          pluginConfig;
+	private final RangerPluginContext         pluginContext;
+	private final Map<String, LogHistory>     logHistoryList = new Hashtable<>();
+	private final int                         logInterval    = 30000; // 30 seconds
+	private final DownloadTrigger             accessTrigger  = new DownloadTrigger();
+	private       PolicyRefresher             refresher;
+	private       RangerPolicyEngine          policyEngine;
+	private       RangerAuthContext           currentAuthContext;
+	private       RangerAccessResultProcessor resultProcessor;
+	private       RangerRoles                 roles;
 
-	private final String                         serviceType;
-	private final String                         appId;
-	private final RangerPluginConfig             config;
-	private final RangerPolicyEngineOptions      policyEngineOptions = new RangerPolicyEngineOptions();
-	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
-	private final DownloadTrigger                accessTrigger       = new DownloadTrigger();
-	private final Map<String, LogHistory>        logHistoryList      = new Hashtable<String, RangerBasePlugin.LogHistory>();
-	private final int                            logInterval         = 30000; // 30 seconds
-	private       String                         serviceName;
-	private       String                         clusterName;
-	private       PolicyRefresher                refresher;
-	private       RangerPolicyEngine             policyEngine;
-	private       RangerPluginContext            rangerPluginContext;
-	private       RangerAuthContext              currentAuthContext;
-	private       RangerAccessResultProcessor    resultProcessor;
-	private       boolean                        useForwardedIPAddress;
-	private       String[]                       trustedProxyAddresses;
-	private       Timer                          policyDownloadTimer;
-	private       Timer                          policyEngineRefreshTimer;
-	private       RangerAuthContextListener      authContextListener;
-	private       AuditProviderFactory           auditProviderFactory;
-	private       RangerRoles                    rangerRoles;
 
-	public static Map<String, RangerBasePlugin> getServicePluginMap() {
-		return servicePluginMap;
+	public RangerBasePlugin(String serviceType, String appId) {
+		this(new RangerPluginConfig(serviceType, null, appId, null, null, null));
+	}
+
+	public RangerBasePlugin(RangerPluginConfig pluginConfig) {
+		this.pluginConfig  = pluginConfig;
+		this.pluginContext = new RangerPluginContext(pluginConfig);
+
+		RangerScriptExecutionContext.init(pluginConfig);
 	}
 
 	public static AuditHandler getAuditProvider(String serviceName) {
-		AuditHandler ret = null;
-
-		boolean useStandaloneAuditProvider = false;
-
-		if (StringUtils.isNotEmpty(serviceName)) {
-			RangerBasePlugin plugin = RangerBasePlugin.getServicePluginMap().get(serviceName);
-			if (plugin != null) {
-				if (plugin.getAuditProviderFactory() != null) {
-					ret = plugin.getAuditProviderFactory().getAuditProvider();
-				} else {
-					LOG.error("NULL AuditProviderFactory for serviceName:[" + serviceName + "]");
-				}
-			} else {
-				useStandaloneAuditProvider = true;
-			}
-		} else {
-			useStandaloneAuditProvider = true;
-		}
-
-		if (useStandaloneAuditProvider) {
-			StandAloneAuditProviderFactory factory = StandAloneAuditProviderFactory.getInstance();
-
-			if (factory.isInitDone()) {
-				ret = factory.getAuditProvider();
-			} else {
-				RangerAuditConfig conf = new RangerAuditConfig();
-
-				if (conf.isInitSuccess()) {
-					factory.init(conf.getProperties(), "StandAlone");
-
-					ret = factory.getAuditProvider();
-				}
-			}
-		}
+		AuditProviderFactory providerFactory = RangerBasePlugin.getAuditProviderFactory(serviceName);
+		AuditHandler         ret             = providerFactory.getAuditProvider();
 
 		return ret;
 	}
 
-	public RangerBasePlugin(String serviceType, String appId) {
-		this.serviceType = serviceType;
-		this.appId       = appId;
-		this.config      = new RangerPluginConfig(serviceType);
-
-		RangerScriptExecutionContext.init(config);
-	}
-
 	public String getServiceType() {
-		return serviceType;
+		return pluginConfig.getServiceType();
 	}
 
 	public String getAppId() {
-		return appId;
+		return pluginConfig.getAppId();
 	}
 
 	public RangerPluginConfig getConfig() {
-		return config;
+		return pluginConfig;
 	}
 
 	public String getClusterName() {
-		return clusterName;
+		return pluginConfig.getClusterName();
 	}
 
 	public RangerAuthContext getCurrentRangerAuthContext() { return currentAuthContext; }
@@ -160,21 +108,18 @@ public class RangerBasePlugin {
 	// For backward compatibility
 	public RangerAuthContext createRangerAuthContext() { return currentAuthContext; }
 
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
+	public RangerRoles getRoles() {
+		return this.roles;
 	}
 
-	public RangerRoles getRangerRoles() {
-		return this.rangerRoles;
-	}
-
-	public void setRangerRoles(RangerRoles rangerRoles) {
-		this.rangerRoles = rangerRoles;
+	public void setRoles(RangerRoles roles) {
+		this.roles = roles;
 
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
-		policyEngine.setRangerRoles(rangerRoles);
-		contextChanged();
+		policyEngine.setRoles(roles);
+
+		pluginContext.notifyAuthContextChanged();
 	}
 
 	public RangerServiceDef getServiceDef() {
@@ -190,78 +135,24 @@ public class RangerBasePlugin {
 	}
 
 	public String getServiceName() {
-		return serviceName;
+		return pluginConfig.getServiceName();
 	}
 
-	public AuditProviderFactory getAuditProviderFactory() { return auditProviderFactory; }
+	public AuditProviderFactory getAuditProviderFactory() { return RangerBasePlugin.getAuditProviderFactory(getServiceName()); }
 
 	public void init() {
 		cleanup();
 
-		String propertyPrefix    = "ranger.plugin." + serviceType;
-		long   pollingIntervalMs = config.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
-		String cacheDir          = config.get(propertyPrefix + ".policy.cache.dir");
-		serviceName = config.get(propertyPrefix + ".service.name");
-		clusterName = config.get(propertyPrefix + ".access.cluster.name", "");
-		if(StringUtil.isEmpty(clusterName)){
-			clusterName = config.get(propertyPrefix + ".ambari.cluster.name", "");
-		}
-		useForwardedIPAddress = config.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
-		String trustedProxyAddressString = config.get(propertyPrefix + ".trusted.proxy.ipaddresses");
-		trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
-		if (trustedProxyAddresses != null) {
-			for (int i = 0; i < trustedProxyAddresses.length; i++) {
-				trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(propertyPrefix + ".use.x-forwarded-for.ipaddress:" + useForwardedIPAddress);
-			LOG.debug(propertyPrefix + ".trusted.proxy.ipaddresses:[" + StringUtils.join(trustedProxyAddresses, ", ") + "]");
-		}
-
-		if (useForwardedIPAddress && StringUtils.isBlank(trustedProxyAddressString)) {
-			LOG.warn("Property " + propertyPrefix + ".use.x-forwarded-for.ipaddress" + " is set to true, and Property "
-					+ propertyPrefix + ".trusted.proxy.ipaddresses" + " is not set");
-			LOG.warn("Ranger plugin will trust RemoteIPAddress and treat first X-Forwarded-Address in the access-request as the clientIPAddress");
-		}
-
-		if (config.getProperties() != null) {
-			auditProviderFactory = new AuditProviderFactory();
-			auditProviderFactory.init(config.getProperties(), appId);
+		if (pluginConfig.getProperties() != null) {
+			AuditProviderFactory.getInstance().init(pluginConfig.getProperties(), getAppId());
 		} else {
 			LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
 			LOG.error("No authorization audits will be generated. ");
-			auditProviderFactory = null;
 		}
 
-		rangerPluginContext = new RangerPluginContext(serviceType, config);
-
-		policyEngineOptions.configureForPlugin(config, propertyPrefix);
-
-		LOG.info(policyEngineOptions);
-
-		servicePluginMap.put(serviceName, this);
-
-		RangerAdminClient admin = createAdminClient(serviceName, appId, propertyPrefix, config);
-
-		RangerRolesProvider rangerRolesProvider = new RangerRolesProvider(serviceType, appId, serviceName, admin,  cacheDir, config);
-
-		refresher = new PolicyRefresher(this, serviceType, appId, serviceName, admin, policyDownloadQueue, cacheDir, rangerRolesProvider);
+		refresher = new PolicyRefresher(this);
 		refresher.setDaemon(true);
 		refresher.startRefresher();
-
-		policyDownloadTimer = new Timer("policyDownloadTimer", true);
-
-		try {
-			policyDownloadTimer.schedule(new DownloaderTask(policyDownloadQueue), pollingIntervalMs, pollingIntervalMs);
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Scheduled policyDownloadRefresher to download policies every " + pollingIntervalMs + " milliseconds");
-			}
-		} catch (IllegalStateException exception) {
-			LOG.error("Error scheduling policyDownloadTimer:", exception);
-			LOG.error("*** Policies will NOT be downloaded every " + pollingIntervalMs + " milliseconds ***");
-			policyDownloadTimer = null;
-		}
 	}
 
 	public void setPolicies(ServicePolicies policies) {
@@ -278,28 +169,35 @@ public class RangerBasePlugin {
 
 			if (policies == null) {
 				policies = getDefaultSvcPolicies();
+
 				if (policies == null) {
 					LOG.error("Could not get default Service Policies");
+
 					isValid = false;
 				}
 			} else {
 				if (policies.getPolicies() != null && policies.getPolicyDeltas() != null) {
 					LOG.error("Invalid servicePolicies: Both policies and policy-deltas cannot be null OR both of them cannot be non-null");
+
 					isValid = false;
 				} else if (policies.getPolicies() != null) {
 					usePolicyDeltas = false;
 				} else if (policies.getPolicyDeltas() != null) {
 					// Rebuild policies from deltas
 					RangerPolicyEngineImpl policyEngine = (RangerPolicyEngineImpl) oldPolicyEngine;
+
 					servicePolicies = ServicePolicies.applyDelta(policies, policyEngine);
+
 					if (servicePolicies != null) {
 						usePolicyDeltas = true;
 					} else {
 						isValid = false;
+
 						LOG.error("Could not apply deltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()));
 					}
 				} else {
 					LOG.error("Should not get here!!");
+
 					isValid = false;
 				}
 			}
@@ -312,30 +210,37 @@ public class RangerBasePlugin {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policies are not null. Creating engine from policies");
 					}
-					newPolicyEngine = new RangerPolicyEngineImpl(appId, policies, policyEngineOptions, rangerPluginContext, rangerRoles);
+
+					newPolicyEngine = new RangerPolicyEngineImpl(policies, pluginContext, roles);
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policy-deltas are not null");
 					}
+
 					if (CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) || MapUtils.isNotEmpty(policies.getSecurityZones())) {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Non empty policy-deltas found. Cloning engine using policy-deltas");
 						}
+
 						if (oldPolicyEngine != null) {
 							RangerPolicyEngineImpl oldPolicyEngineImpl = (RangerPolicyEngineImpl) oldPolicyEngine;
+
 							newPolicyEngine = RangerPolicyEngineImpl.getPolicyEngine(oldPolicyEngineImpl, policies);
 						}
+
 						if (newPolicyEngine != null) {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("Applied policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + ")");
 							}
+
 							isPolicyEngineShared = true;
 						} else {
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("Failed to apply policyDeltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()) + "), Creating engine from policies");
 								LOG.debug("Creating new engine from servicePolicies:[" + servicePolicies + "]");
 							}
-							newPolicyEngine = new RangerPolicyEngineImpl(appId, servicePolicies, policyEngineOptions, rangerPluginContext, rangerRoles);
+
+							newPolicyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 						}
 					} else {
 						if (LOG.isDebugEnabled()) {
@@ -345,20 +250,20 @@ public class RangerBasePlugin {
 				}
 
 				if (newPolicyEngine != null) {
-
 					if (!isPolicyEngineShared) {
-						newPolicyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
-						newPolicyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+						newPolicyEngine.setUseForwardedIPAddress(pluginConfig.isUseForwardedIPAddress());
+						newPolicyEngine.setTrustedProxyAddresses(pluginConfig.getTrustedProxyAddresses());
 					}
 
-					this.policyEngine = newPolicyEngine;
-					this.currentAuthContext = rangerPluginContext.getAuthContext();
+					this.policyEngine       = newPolicyEngine;
+					this.currentAuthContext = pluginContext.getAuthContext();
 
-					contextChanged();
+					pluginContext.notifyAuthContextChanged();
 
 					if (oldPolicyEngine != null) {
 						((RangerPolicyEngineImpl) oldPolicyEngine).releaseResources();
 					}
+
 					if (this.refresher != null) {
 						this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);
 					}
@@ -376,44 +281,14 @@ public class RangerBasePlugin {
 		}
 	}
 
-	public void contextChanged() {
-		RangerAuthContextListener authContextListener = this.authContextListener;
-
-		if (authContextListener != null) {
-			authContextListener.contextChanged();
-		}
-	}
-
 	public void cleanup() {
-
 		PolicyRefresher refresher = this.refresher;
 
-		Timer policyEngineRefreshTimer = this.policyEngineRefreshTimer;
-
-		Timer policyDownloadTimer = this.policyDownloadTimer;
-
-		String serviceName = this.serviceName;
-
-		this.serviceName  = null;
 		this.policyEngine = null;
 		this.refresher    = null;
-		this.policyEngineRefreshTimer = null;
-		this.policyDownloadTimer = null;
 
 		if (refresher != null) {
 			refresher.stopRefresher();
-		}
-
-		if (policyDownloadTimer != null) {
-			policyDownloadTimer.cancel();
-		}
-
-		if (policyEngineRefreshTimer != null) {
-			policyEngineRefreshTimer.cancel();
-		}
-
-		if (serviceName != null) {
-			servicePluginMap.remove(serviceName);
 		}
 	}
 
@@ -520,6 +395,7 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.dropRole(" + roleName + ")");
 		}
+
 		getAdminClient().dropRole(execUser, roleName);
 
 		if(LOG.isDebugEnabled()) {
@@ -531,6 +407,7 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.getUserRoleNames(" + execUser + ")");
 		}
+
 		final List<String> ret = getAdminClient().getUserRoles(execUser);
 
 		if(LOG.isDebugEnabled()) {
@@ -543,6 +420,7 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.getAllRoles()");
 		}
+
 		final List<String> ret = getAdminClient().getAllRoles(execUser);
 
 		if(LOG.isDebugEnabled()) {
@@ -555,6 +433,7 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.getPrincipalsForRole(" + roleName + ")");
 		}
+
 		final RangerRole ret = getAdminClient().getRole(execUser, roleName);
 
 		if(LOG.isDebugEnabled()) {
@@ -567,6 +446,7 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.grantRole(" + request + ")");
 		}
+
 		getAdminClient().grantRole(request);
 
 		if(LOG.isDebugEnabled()) {
@@ -578,6 +458,7 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.revokeRole(" + request + ")");
 		}
+
 		getAdminClient().revokeRole(request);
 
 		if(LOG.isDebugEnabled()) {
@@ -589,9 +470,12 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.grantAccess(" + request + ")");
 		}
-		boolean           isSuccess = false;
+
+		boolean isSuccess = false;
 
 		try {
+			RangerPolicyEngine policyEngine = this.policyEngine;
+
 			if (policyEngine != null) {
 				request.setZoneName(policyEngine.getMatchedZoneName(request));
 			}
@@ -612,9 +496,12 @@ public class RangerBasePlugin {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.revokeAccess(" + request + ")");
 		}
-		boolean           isSuccess = false;
+
+		boolean isSuccess = false;
 
 		try {
+			RangerPolicyEngine policyEngine = this.policyEngine;
+
 			if (policyEngine != null) {
 				request.setZoneName(policyEngine.getMatchedZoneName(request));
 			}
@@ -632,22 +519,17 @@ public class RangerBasePlugin {
 	}
 
 	public void registerAuthContextEventListener(RangerAuthContextListener authContextListener) {
-		this.authContextListener = authContextListener;
+		this.pluginContext.setAuthContextListener(authContextListener);
 	}
 
-	public void unregisterAuthContextEventListener(RangerAuthContextListener authContextListener) {
-		this.authContextListener = null;
-	}
-
-	public static RangerAdminClient createAdminClient(String rangerServiceName, String applicationId, String propertyPrefix, Configuration config) {
+	public static RangerAdminClient createAdminClient(RangerPluginConfig pluginConfig) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerBasePlugin.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + ")");
+			LOG.debug("==> RangerBasePlugin.createAdminClient(" + pluginConfig.getServiceName() + ", " + pluginConfig.getAppId() + ", " + pluginConfig.getPropertyPrefix() + ")");
 		}
 
-		RangerAdminClient ret = null;
-
-		String propertyName = propertyPrefix + ".policy.source.impl";
-		String policySourceImpl = config.get(propertyName);
+		RangerAdminClient ret              = null;
+		String            propertyName     = pluginConfig.getPropertyPrefix() + ".policy.source.impl";
+		String            policySourceImpl = pluginConfig.get(propertyName);
 
 		if(StringUtils.isEmpty(policySourceImpl)) {
 			if (LOG.isDebugEnabled()) {
@@ -657,6 +539,7 @@ public class RangerBasePlugin {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug(String.format("Value for property[%s] was [%s].", propertyName, policySourceImpl));
 			}
+
 			try {
 				@SuppressWarnings("unchecked")
 				Class<RangerAdminClient> adminClass = (Class<RangerAdminClient>)Class.forName(policySourceImpl);
@@ -671,10 +554,10 @@ public class RangerBasePlugin {
 			ret = new RangerAdminRESTClient();
 		}
 
-		ret.init(rangerServiceName, applicationId, propertyPrefix, config);
+		ret.init(pluginConfig.getServiceName(), pluginConfig.getAppId(), pluginConfig.getPropertyPrefix(), pluginConfig);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerBasePlugin.createAdminClient(" + rangerServiceName + ", " + applicationId + ", " + propertyPrefix + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
+			LOG.debug("<== RangerBasePlugin.createAdminClient(" + pluginConfig.getServiceName() + ", " + pluginConfig.getAppId() + ", " + pluginConfig.getPropertyPrefix() + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
 		}
 		return ret;
 	}
@@ -683,15 +566,23 @@ public class RangerBasePlugin {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> refreshPoliciesAndTags()");
 		}
+
 		try {
+			RangerPolicyEngine policyEngine = this.policyEngine;
+
 			// Synch-up policies
-			long oldPolicyVersion = this.policyEngine.getPolicyVersion();
-			syncPoliciesWithAdmin(accessTrigger);
-			long newPolicyVersion = this.policyEngine.getPolicyVersion();
+			long oldPolicyVersion = policyEngine.getPolicyVersion();
+
+			refresher.syncPoliciesWithAdmin(accessTrigger);
+
+			policyEngine = this.policyEngine; // might be updated in syncPoliciesWithAdmin()
+
+			long newPolicyVersion = policyEngine.getPolicyVersion();
 
 			if (oldPolicyVersion == newPolicyVersion) {
 				// Synch-up tags
 				RangerTagEnricher tagEnricher = getTagEnricher();
+
 				if (tagEnricher != null) {
 					tagEnricher.syncTagsWithAdmin(accessTrigger);
 				}
@@ -699,19 +590,12 @@ public class RangerBasePlugin {
 		} catch (InterruptedException exception) {
 			LOG.error("Failed to update policy-engine, continuing to use old policy-engine and/or tags", exception);
 		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.info("<== refreshPoliciesAndTags()");
 		}
 	}
 
-
-	/*
-		This API is provided only for unit testing
-	 */
-
-	public void setPluginContext(RangerPluginContext pluginContext) {
-		this.rangerPluginContext = pluginContext;
-	}
 
 	private void auditGrantRevoke(GrantRevokeRequest request, String action, boolean isSuccess, RangerAccessResultProcessor resultProcessor) {
 		if(request != null && resultProcessor != null) {
@@ -745,29 +629,32 @@ public class RangerBasePlugin {
 	private RangerServiceDef getDefaultServiceDef() {
 		RangerServiceDef ret = null;
 
-		if (StringUtils.isNotBlank(serviceType)) {
+		if (StringUtils.isNotBlank(getServiceType())) {
 			try {
-				ret = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(serviceType);
+				ret = EmbeddedServiceDefsUtil.instance().getEmbeddedServiceDef(getServiceType());
 			} catch (Exception exp) {
-				LOG.error("Could not get embedded service-def for " + serviceType);
+				LOG.error("Could not get embedded service-def for " + getServiceType());
 			}
 		}
 		return ret;
 	}
 
 	private ServicePolicies getDefaultSvcPolicies() {
-		ServicePolicies ret = null;
-
+		ServicePolicies  ret        = null;
 		RangerServiceDef serviceDef = getServiceDef();
+
 		if (serviceDef == null) {
 			serviceDef = getDefaultServiceDef();
 		}
+
 		if (serviceDef != null) {
 			ret = new ServicePolicies();
+
 			ret.setServiceDef(serviceDef);
-			ret.setServiceName(serviceName);
+			ret.setServiceName(getServiceName());
 			ret.setPolicies(new ArrayList<RangerPolicy>());
 		}
+
 		return ret;
 	}
 
@@ -797,22 +684,20 @@ public class RangerBasePlugin {
 		int counter;
 	}
 
-	private void syncPoliciesWithAdmin(final DownloadTrigger token) throws InterruptedException{
-		policyDownloadQueue.put(token);
-		token.waitForCompletion();
-	}
-
 	private RangerTagEnricher getTagEnricher() {
-		RangerTagEnricher ret = null;
+		RangerTagEnricher ret         = null;
 		RangerAuthContext authContext = getCurrentRangerAuthContext();
+
 		if (authContext != null) {
 			Map<RangerContextEnricher, Object> contextEnricherMap = authContext.getRequestContextEnrichers();
+
 			if (MapUtils.isNotEmpty(contextEnricherMap)) {
 				Set<RangerContextEnricher> contextEnrichers = contextEnricherMap.keySet();
 
 				for (RangerContextEnricher enricher : contextEnrichers) {
 					if (enricher instanceof RangerTagEnricher) {
 						ret = (RangerTagEnricher) enricher;
+
 						break;
 					}
 				}
@@ -831,4 +716,23 @@ public class RangerBasePlugin {
 		return admin;
 	}
 
+	private static AuditProviderFactory getAuditProviderFactory(String serviceName) {
+		AuditProviderFactory ret = AuditProviderFactory.getInstance();
+
+		if (!ret.isInitDone()) {
+			LOG.warn("RangerBasePlugin.getAuditProviderFactory(serviceName=" + serviceName + "): audit not initialized yet. Will use stand-alone audit factory");
+
+			ret = StandAloneAuditProviderFactory.getInstance();
+
+			if (!ret.isInitDone()) {
+				RangerAuditConfig conf = new RangerAuditConfig();
+
+				if (conf.isInitSuccess()) {
+					ret.init(conf.getProperties(), "StandAlone");
+				}
+			}
+		}
+
+		return ret;
+	}
 }

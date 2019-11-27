@@ -730,15 +730,15 @@ public class RoleREST {
                 lastKnownRoleVersion = Long.valueOf(-1);
             }
             try {
-                RangerRoles rangerRoles = roleStore.getRangerRoles(serviceName, lastKnownRoleVersion);
-                if (rangerRoles == null) {
+                RangerRoles roles = roleStore.getRoles(serviceName, lastKnownRoleVersion);
+                if (roles == null) {
                     downloadedVersion = lastKnownRoleVersion;
                     httpCode = HttpServletResponse.SC_NOT_MODIFIED;
                     logMsg = "No change since last update";
                 } else {
-                    downloadedVersion = rangerRoles.getRoleVersion();
-                    rangerRoles.setServiceName(serviceName);
-                    ret = rangerRoles;
+                    downloadedVersion = roles.getRoleVersion();
+                    roles.setServiceName(serviceName);
+                    ret = roles;
                     httpCode = HttpServletResponse.SC_OK;
                     logMsg = "Returning RangerRoles =>" + (ret.toString());
                 }
@@ -827,15 +827,15 @@ public class RoleREST {
                 }
 
                 if (isAllowed) {
-                    RangerRoles rangerRoles = roleStore.getRangerRoles(serviceName, lastKnownRoleVersion);
-                    if (rangerRoles == null) {
+                    RangerRoles roles = roleStore.getRoles(serviceName, lastKnownRoleVersion);
+                    if (roles == null) {
                         downloadedVersion = lastKnownRoleVersion;
                         httpCode = HttpServletResponse.SC_NOT_MODIFIED;
                         logMsg = "No change since last update";
                     } else {
-                        downloadedVersion = rangerRoles.getRoleVersion();
-                        rangerRoles.setServiceName(serviceName);
-                        ret = rangerRoles;
+                        downloadedVersion = roles.getRoleVersion();
+                        roles.setServiceName(serviceName);
+                        ret = roles;
                         httpCode = HttpServletResponse.SC_OK;
                         logMsg = "Returning RangerRoles =>" + (ret.toString());
                     }

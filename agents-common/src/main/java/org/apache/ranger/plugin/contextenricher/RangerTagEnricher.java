@@ -40,7 +40,6 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.apache.ranger.plugin.util.DownloadTrigger;
 import org.apache.ranger.plugin.util.DownloaderTask;
 import org.apache.ranger.plugin.service.RangerAuthContext;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
@@ -582,14 +581,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		}
 
 		RangerAuthContext authContext = getAuthContext();
+
 		if (authContext != null) {
 			authContext.addOrReplaceRequestContextEnricher(this, enrichedServiceTags);
 
-			Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
-			RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
-			if (plugin != null) {
-				plugin.contextChanged();
-			}
+			notifyAuthContextChanged();
 		}
 
 		if (LOG.isDebugEnabled()) {

@@ -266,12 +266,12 @@ public class RoleDBStore implements RoleStore {
     }
 
     @Override
-    public RangerRoles getRangerRoles(String serviceName, Long lastKnownRoleVersion) throws Exception {
+    public RangerRoles getRoles(String serviceName, Long lastKnownRoleVersion) throws Exception {
         RangerRoles ret                   = null;
         Long        rangerRoleVersionInDB = getRoleVersion(serviceName);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RoleDBStore.getRangerRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB);
+            LOG.debug("==> RoleDBStore.getRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB);
         }
 
         if (rangerRoleVersionInDB != null) {
@@ -279,7 +279,7 @@ public class RoleDBStore implements RoleStore {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<= RoleDBStore.getRangerRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB + " RangerRoles= " + ret);
+            LOG.debug("<= RoleDBStore.getRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB + " RangerRoles= " + ret);
         }
 
         return ret;

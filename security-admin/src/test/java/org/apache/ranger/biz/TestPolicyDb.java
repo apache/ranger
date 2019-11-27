@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -118,8 +119,8 @@ public class TestPolicyDb {
 		policyEngineOptions.disableContextEnrichers = true;
 		policyEngineOptions.disableCustomConditions = true;
 
-		RangerPluginContext pluginContext = new RangerPluginContext("hive", "cl1", "on-prem");
-		RangerPolicyAdmin   policyAdmin   = new RangerPolicyAdminImpl("test-policydb", testCase.servicePolicies, policyEngineOptions, pluginContext, null);
+		RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "test-policydb", "cl1", "on-prem", policyEngineOptions));
+		RangerPolicyAdmin   policyAdmin   = new RangerPolicyAdminImpl(testCase.servicePolicies, pluginContext, null);
 
 		for(TestData test : testCase.tests) {
 			boolean expected = test.result;

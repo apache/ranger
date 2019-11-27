@@ -62,44 +62,28 @@ public class RangerPolicyRepository {
         AUDIT_ALL, AUDIT_NONE, AUDIT_DEFAULT
     }
 
-    static private final class AuditInfo {
-        final boolean isAudited;
-        final long    auditPolicyId;
-
-        AuditInfo(boolean isAudited, long auditPolicyId) {
-            this.isAudited = isAudited;
-            this.auditPolicyId = auditPolicyId;
-        }
-        long getAuditPolicyId() {
-            return this.auditPolicyId;
-        }
-        boolean getIsAudited() {
-            return isAudited;
-        }
-    }
-
-    private final String                          serviceName;
-    private final String                          zoneName;
-    private final String                          appId;
-    private final RangerPolicyEngineOptions       options;
-    private final RangerPluginContext             pluginContext;
-    private final RangerServiceDef                serviceDef;
-    private final List<RangerPolicy>              policies;
-    private final long                            policyVersion;
-    private final List<RangerContextEnricher>     contextEnrichers;
-    private final AuditModeEnum                   auditModeEnum;
-    private final Map<String, AuditInfo>          accessAuditCache;
-    private final String                          componentServiceName;
-    private final RangerServiceDef                componentServiceDef;
-    private final Map<String, RangerResourceTrie> policyResourceTrie;
-    private final Map<String, RangerResourceTrie> dataMaskResourceTrie;
-    private final Map<String, RangerResourceTrie> rowFilterResourceTrie;
+    private final String                            serviceName;
+    private final String                            zoneName;
+    private final String                            appId;
+    private final RangerPolicyEngineOptions         options;
+    private final RangerPluginContext               pluginContext;
+    private final RangerServiceDef                  serviceDef;
+    private final List<RangerPolicy>                policies;
+    private final long                              policyVersion;
+    private final List<RangerContextEnricher>       contextEnrichers;
+    private final AuditModeEnum                     auditModeEnum;
+    private final Map<String, AuditInfo>            accessAuditCache;
+    private final String                            componentServiceName;
+    private final RangerServiceDef                  componentServiceDef;
+    private final Map<String, RangerResourceTrie>   policyResourceTrie;
+    private final Map<String, RangerResourceTrie>   dataMaskResourceTrie;
+    private final Map<String, RangerResourceTrie>   rowFilterResourceTrie;
     private       List<RangerPolicyEvaluator>       policyEvaluators;
     private       List<RangerPolicyEvaluator>       dataMaskPolicyEvaluators;
     private       List<RangerPolicyEvaluator>       rowFilterPolicyEvaluators;
     private       Map<Long, RangerPolicyEvaluator>  policyEvaluatorsMap;
     private       boolean                           isContextEnrichersShared = false;
-    private       boolean                           isPreCleaned = false;
+    private       boolean                           isPreCleaned             = false;
 
     RangerPolicyRepository(final RangerPolicyRepository other, final List<RangerPolicyDelta> deltas, long policyVersion) {
         this.serviceName               = other.serviceName;
@@ -265,21 +249,19 @@ public class RangerPolicyRepository {
         this.policyVersion = policyVersion;
     }
 
-    RangerPolicyRepository(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext pluginContext) {
-        this(appId, servicePolicies, options, pluginContext, null);
+    RangerPolicyRepository(ServicePolicies servicePolicies, RangerPluginContext pluginContext) {
+        this(servicePolicies, pluginContext, null);
     }
 
-    RangerPolicyRepository(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext pluginContext, String zoneName) {
+    RangerPolicyRepository(ServicePolicies servicePolicies, RangerPluginContext pluginContext, String zoneName) {
         super();
 
         this.componentServiceName = this.serviceName = servicePolicies.getServiceName();
-        this.componentServiceDef = this.serviceDef = ServiceDefUtil.normalize(servicePolicies.getServiceDef());
-
-        this.zoneName = zoneName;
-
-        this.appId = appId;
-        this.options = new RangerPolicyEngineOptions(options);
-        this.pluginContext = pluginContext;
+        this.componentServiceDef  = this.serviceDef = ServiceDefUtil.normalize(servicePolicies.getServiceDef());
+        this.zoneName             = zoneName;
+        this.appId                = pluginContext.getConfig().getAppId();
+        this.options              = new RangerPolicyEngineOptions(pluginContext.getConfig().getPolicyEngineOptions());
+        this.pluginContext        = pluginContext;
 
         if (StringUtils.isEmpty(zoneName)) {
             this.policies = Collections.unmodifiableList(servicePolicies.getPolicies());
@@ -336,24 +318,20 @@ public class RangerPolicyRepository {
         }
     }
 
-    RangerPolicyRepository(String appId, ServicePolicies.TagPolicies tagPolicies, RangerPolicyEngineOptions options, RangerPluginContext pluginContext,
+    RangerPolicyRepository(ServicePolicies.TagPolicies tagPolicies, RangerPluginContext pluginContext,
                            RangerServiceDef componentServiceDef, String componentServiceName) {
         super();
 
-        this.serviceName = tagPolicies.getServiceName();
+        this.serviceName          = tagPolicies.getServiceName();
         this.componentServiceName = componentServiceName;
-
-        this.zoneName = null;
-
-        this.serviceDef = ServiceDefUtil.normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagPolicies.getServiceDef()), componentServiceDef.getName());
-        this.componentServiceDef = componentServiceDef;
-
-        this.appId = appId;
-        this.options = options;
-        this.pluginContext = pluginContext;
-
-        this.policies = Collections.unmodifiableList(normalizeAndPrunePolicies(tagPolicies.getPolicies(), componentServiceDef.getName()));
-        this.policyVersion = tagPolicies.getPolicyVersion() != null ? tagPolicies.getPolicyVersion() : -1;
+        this.zoneName             = null;
+        this.serviceDef           = ServiceDefUtil.normalizeAccessTypeDefs(ServiceDefUtil.normalize(tagPolicies.getServiceDef()), componentServiceDef.getName());
+        this.componentServiceDef  = componentServiceDef;
+        this.appId                = pluginContext.getConfig().getAppId();
+        this.options              = new RangerPolicyEngineOptions(pluginContext.getConfig().getPolicyEngineOptions());
+        this.pluginContext        = pluginContext;
+        this.policies             = Collections.unmodifiableList(normalizeAndPrunePolicies(tagPolicies.getPolicies(), componentServiceDef.getName()));
+        this.policyVersion        = tagPolicies.getPolicyVersion() != null ? tagPolicies.getPolicyVersion() : -1;
 
         String auditMode = tagPolicies.getAuditMode();
 
@@ -1421,4 +1399,19 @@ public class RangerPolicyRepository {
         return ret;
     }
 
+    static private final class AuditInfo {
+        final boolean isAudited;
+        final long    auditPolicyId;
+
+        AuditInfo(boolean isAudited, long auditPolicyId) {
+            this.isAudited     = isAudited;
+            this.auditPolicyId = auditPolicyId;
+        }
+        long getAuditPolicyId() {
+            return this.auditPolicyId;
+        }
+        boolean getIsAudited() {
+            return isAudited;
+        }
+    }
 }

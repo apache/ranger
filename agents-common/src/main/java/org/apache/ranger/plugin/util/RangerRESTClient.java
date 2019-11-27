@@ -102,25 +102,24 @@ public class RangerRESTClient {
 	private String mTrustStoreAlias;
 	private String mTrustStoreFile;
 	private String mTrustStoreType;
-
 	private Gson   gsonBuilder;
-	private volatile Client client;
+	private int    mRestClientConnTimeOutMs;
+	private int    mRestClientReadTimeOutMs;
+	private int    lastKnownActiveUrlIndex;
 
-	private int  mRestClientConnTimeOutMs;
-	private int  mRestClientReadTimeOutMs;
-
-	private int  lastKnownActiveUrlIndex;
 	private final List<String> configuredURLs;
-	private final Configuration config;
+
+	private volatile Client client;
 
 
 	public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
 		mUrl               = url;
 		mSslConfigFileName = sslConfigFileName;
-		this.configuredURLs = getURLs(mUrl);
-		this.config         = config;
-		this.setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
-		init();
+		configuredURLs     = getURLs(mUrl);
+
+		setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
+
+		init(config);
 	}
 
 	public String getUrl() {
@@ -234,7 +233,7 @@ public class RangerRESTClient {
 		client = null;
 	}
 
-	private void init() {
+	private void init(Configuration config) {
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();
 		} catch(Throwable excp) {

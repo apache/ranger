@@ -43,10 +43,10 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	private static final Log LOG = LogFactory.getLog(RangerAbstractContextEnricher.class);
 
 	protected RangerContextEnricherDef enricherDef;
-	protected String serviceName;
-	protected String appId;
-	protected RangerServiceDef serviceDef;
-	private   RangerPluginContext pluginContext;
+	protected String                   serviceName;
+	protected String                   appId;
+	protected RangerServiceDef         serviceDef;
+	private   RangerPluginContext      pluginContext;
 
 	@Override
 	public void setEnricherDef(RangerContextEnricherDef enricherDef) {
@@ -166,6 +166,8 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public RangerAuthContext getAuthContext() {
+		RangerPluginContext pluginContext = this.pluginContext;
+
 		return pluginContext != null ? pluginContext.getAuthContext() : null;
 	}
 
@@ -173,9 +175,16 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		this.pluginContext = pluginContext;
 	}
 
-	public String getConfig(String configName, String defaultValue) {
-		String ret = defaultValue;
+	public void notifyAuthContextChanged() {
+		RangerPluginContext pluginContext = this.pluginContext;
 
+		if (pluginContext != null) {
+			pluginContext.notifyAuthContextChanged();
+		}
+	}
+
+	public String getConfig(String configName, String defaultValue) {
+		String        ret    = defaultValue;
 		Configuration config = pluginContext != null ? pluginContext.getConfig() : null;
 
 		if (config != null) {
@@ -186,8 +195,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public int getIntConfig(String configName, int defaultValue) {
-		int ret = defaultValue;
-
+		int           ret    = defaultValue;
 		Configuration config = pluginContext != null ? pluginContext.getConfig() : null;
 
 		if (config != null) {
@@ -198,8 +206,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public boolean getBooleanConfig(String configName, boolean defaultValue) {
-		boolean ret = defaultValue;
-
+		boolean       ret    = defaultValue;
 		Configuration config = pluginContext != null ? pluginContext.getConfig() : null;
 
 		if (config != null) {
@@ -243,8 +250,8 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public long getLongOption(String name, long defaultValue) {
-		long ret = defaultValue;
-		String  val = getOption(name);
+		long   ret = defaultValue;
+		String val = getOption(name);
 
 		if(val != null) {
 			ret = Long.parseLong(val);
@@ -255,15 +262,13 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 	public Properties readProperties(String fileName) {
 		Properties  ret     = null;
-
 		InputStream inStr   = null;
 		URL         fileURL = null;
-
-		File f = new File(fileName);
+		File        f       = new File(fileName);
 
 		if (f.exists() && f.isFile() && f.canRead()) {
 			try {
-				inStr = new FileInputStream(f);
+				inStr   = new FileInputStream(f);
 				fileURL = f.toURI().toURL();
 			} catch (FileNotFoundException exception) {
 				LOG.error("Error processing input file:" + fileName + " or no privilege for reading file " + fileName, exception);
@@ -279,6 +284,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 			if (fileURL == null) {
 				fileURL = ClassLoader.getSystemClassLoader().getResource(fileName);
+
 				if (fileURL == null && !fileName.startsWith("/")) {
 					fileURL = ClassLoader.getSystemClassLoader().getResource("/" + fileName);
 				}

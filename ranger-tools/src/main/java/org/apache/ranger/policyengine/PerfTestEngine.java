@@ -23,6 +23,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
@@ -72,9 +73,9 @@ public class PerfTestEngine {
 			servicePolicies = gsonBuilder.fromJson(reader, ServicePolicies.class);
 			RangerServiceDef serviceDef = servicePolicies.getServiceDef();
 			String serviceType = (serviceDef != null) ? serviceDef.getName() : "";
-			rangerPluginContext = new RangerPluginContext(serviceType);
+			rangerPluginContext = new RangerPluginContext(new RangerPluginConfig(serviceType, null, "perf-test", null, null, policyEngineOptions));
 			rangerPluginContext.getConfig().addResource(configFileURL);
-			policyEvaluationEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, policyEngineOptions, rangerPluginContext, null);
+			policyEvaluationEngine = new RangerPolicyEngineImpl(servicePolicies, rangerPluginContext, null);
 
 			ret = true;
 

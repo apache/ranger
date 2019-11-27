@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
+import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -51,7 +52,6 @@ public class TestRangerAuthContext {
 				.create();
 
 		plugin = new RangerBasePlugin("hive", "TestRangerAuthContext");
-		RangerBasePlugin.getServicePluginMap().put("hivedev", plugin);
 	}
 
 	@AfterClass
@@ -87,26 +87,27 @@ public class TestRangerAuthContext {
 
 		for(RangerAuthContextTests.TestCase testCase : testCases.testCases) {
 			String testName = testCase.name;
-			RangerPluginContext pluginContext = new RangerPluginContext(testCase.servicePolicies.getServiceDef().getName());
-			plugin.setPluginContext(pluginContext);
-			plugin.setPolicies(testCase.servicePolicies);
-			RangerAuthContext ctx = plugin.getCurrentRangerAuthContext();
 
+			plugin.setPolicies(testCase.servicePolicies);
+
+			RangerAuthContext                  ctx              = plugin.getCurrentRangerAuthContext();
 			Map<RangerContextEnricher, Object> contextEnrichers = ctx.getRequestContextEnrichers();
+
 			assertTrue(fileName + "-" + testName + " - Empty contextEnrichers", MapUtils.isNotEmpty(contextEnrichers) && contextEnrichers.size() == 2);
 
 			for (Map.Entry<RangerContextEnricher, Object> entry : contextEnrichers.entrySet()) {
-				String contextEnricherName = entry.getKey().getName();
+				RangerContextEnricher enricher     = entry.getKey();
+				String                enricherName = enricher.getName();
+				Object                enricherData = entry.getValue();
 
-				if (contextEnricherName.equals("ProjectProvider")) {
-					assertTrue(fileName + "-" + testName + " - Invalid contextEnricher", entry.getValue() instanceof RangerContextEnricher);
-				} else if (contextEnricherName.equals("TagEnricher")) {
-					assertFalse("- Invalid contextEnricher", entry.getValue() instanceof RangerContextEnricher);
+				if (enricherName.equals("ProjectProvider")) {
+					assertTrue(fileName + "-" + testName + " - Invalid contextEnricher", enricherData instanceof RangerContextEnricher);
+				} else if (enricherName.equals("TagEnricher")) {
+					assertTrue("- Invalid contextEnricher", (enricherData instanceof RangerTagEnricher || enricherData instanceof RangerTagEnricher.EnrichedServiceTags));
 				} else {
 					assertTrue(fileName + "-" + testName + " - Unexpected type of contextEnricher", false);
 				}
 			}
-
 		}
 	}
 

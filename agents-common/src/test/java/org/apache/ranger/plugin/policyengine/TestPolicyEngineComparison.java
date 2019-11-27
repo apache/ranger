@@ -27,6 +27,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -122,9 +123,10 @@ public class TestPolicyEngineComparison {
             boolean isTagsEqual = true;
 
             if (myServicePolicies != null) {
-                RangerPluginContext rangerPluginContext = new RangerPluginContext(myServicePolicies.getServiceDef().getName());
-                RangerPolicyEngineImpl myPolicyEngine = new RangerPolicyEngineImpl("test-compare-my-engine", myServicePolicies, options, rangerPluginContext, null);
-                RangerPolicyEngineImpl otherPolicyEngine = new RangerPolicyEngineImpl("test-compare-other-engine", otherServicePolicies, options, rangerPluginContext, null);
+                RangerPluginContext myPluginContext = new RangerPluginContext(new RangerPluginConfig(myServicePolicies.getServiceDef().getName(), null, "test-compare-my-tags", null, null, options));
+                RangerPluginContext otherPluginContext = new RangerPluginContext(new RangerPluginConfig(myServicePolicies.getServiceDef().getName(), null, "test-compare-other-tags", null, null, options));
+                RangerPolicyEngineImpl myPolicyEngine = new RangerPolicyEngineImpl(myServicePolicies, myPluginContext, null);
+                RangerPolicyEngineImpl otherPolicyEngine = new RangerPolicyEngineImpl(otherServicePolicies, otherPluginContext, null);
 
                 isPolicyEnginesEqual = TestPolicyEngine.compare(myPolicyEngine.getPolicyEngine(), otherPolicyEngine.getPolicyEngine()) && TestPolicyEngine.compare(otherPolicyEngine.getPolicyEngine(), myPolicyEngine.getPolicyEngine());
 

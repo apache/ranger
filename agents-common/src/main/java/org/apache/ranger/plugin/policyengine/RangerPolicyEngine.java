@@ -51,7 +51,7 @@ public interface RangerPolicyEngine {
 
 	long getRoleVersion();
 
-	void setRangerRoles(RangerRoles rangerRoles);
+	void setRoles(RangerRoles roles);
 
 	RangerAccessResult evaluatePolicies(RangerAccessRequest request, int policyType, RangerAccessResultProcessor resultProcessor);
 

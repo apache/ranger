@@ -83,7 +83,7 @@ public class PolicyEngine {
 
     public long getRoleVersion() { return this.pluginContext.getAuthContext().getRoleVersion(); }
 
-    public void setRangerRoles(RangerRoles rangerRoles) { this.pluginContext.getAuthContext().setRangerRoles(rangerRoles); }
+    public void setRoles(RangerRoles roles) { this.pluginContext.getAuthContext().setRoles(roles); }
 
     public String getServiceName() {
         return policyRepository.getServiceName();
@@ -183,15 +183,15 @@ public class PolicyEngine {
         return ret;
     }
 
-    public PolicyEngine(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext pluginContext, RangerRoles roles) {
+    public PolicyEngine(ServicePolicies servicePolicies, RangerPluginContext pluginContext, RangerRoles roles) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> PolicyEngine(" + appId + ", " + servicePolicies + ", " + options + ", " + pluginContext + ")");
+            LOG.debug("==> PolicyEngine(" + ", " + servicePolicies + ", " + pluginContext + ")");
         }
 
         RangerPerfTracer perf = null;
 
         if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "RangerPolicyEngine.init(appId=" + appId + ",hashCode=" + Integer.toHexString(System.identityHashCode(this)) + ")");
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "RangerPolicyEngine.init(hashCode=" + Integer.toHexString(System.identityHashCode(this)) + ")");
 
             long freeMemory  = Runtime.getRuntime().freeMemory();
             long totalMemory = Runtime.getRuntime().totalMemory();
@@ -199,19 +199,17 @@ public class PolicyEngine {
             PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory - freeMemory) + ", Free memory:" + freeMemory);
         }
 
-        if (options == null) {
-            options = new RangerPolicyEngineOptions();
-        }
-
         this.pluginContext = pluginContext;
 
         this.pluginContext.setAuthContext(new RangerAuthContext(null, roles));
+
+        RangerPolicyEngineOptions options = pluginContext.getConfig().getPolicyEngineOptions();
 
         if(StringUtils.isBlank(options.evaluatorType) || StringUtils.equalsIgnoreCase(options.evaluatorType, RangerPolicyEvaluator.EVALUATOR_TYPE_AUTO)) {
             options.evaluatorType = RangerPolicyEvaluator.EVALUATOR_TYPE_OPTIMIZED;
         }
 
-        policyRepository = new RangerPolicyRepository(appId, servicePolicies, options, this.pluginContext);
+        policyRepository = new RangerPolicyRepository(servicePolicies, this.pluginContext);
 
         ServicePolicies.TagPolicies tagPolicies = servicePolicies.getTagPolicies();
 
@@ -224,7 +222,7 @@ public class PolicyEngine {
                 LOG.debug("PolicyEngine : Building tag-policy-repository for tag-service " + tagPolicies.getServiceName());
             }
 
-            tagPolicyRepository = new RangerPolicyRepository(appId, tagPolicies, options, this.pluginContext, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
+            tagPolicyRepository = new RangerPolicyRepository(tagPolicies, this.pluginContext, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
         } else {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("PolicyEngine : No tag-policy-repository for service " + servicePolicies.getServiceName());
@@ -253,7 +251,7 @@ public class PolicyEngine {
             buildZoneTrie(servicePolicies);
 
             for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> zone : servicePolicies.getSecurityZones().entrySet()) {
-                RangerPolicyRepository policyRepository = new RangerPolicyRepository(appId, servicePolicies, options, this.pluginContext, zone.getKey());
+                RangerPolicyRepository policyRepository = new RangerPolicyRepository(servicePolicies, this.pluginContext, zone.getKey());
 
                 zonePolicyRepositories.put(zone.getKey(), policyRepository);
             }
@@ -637,7 +635,7 @@ public class PolicyEngine {
 
                         servicePolicies.getSecurityZones().get(zoneName).setPolicies(policies);
 
-                        policyRepository = new RangerPolicyRepository(other.policyRepository.getAppId(), servicePolicies, other.policyRepository.getOptions(), this.pluginContext, zoneName);
+                        policyRepository = new RangerPolicyRepository(servicePolicies, this.pluginContext, zoneName);
                     } else {
                         policyRepository = new RangerPolicyRepository(otherRepository, zoneDeltas, policyVersion);
                     }
@@ -680,7 +678,7 @@ public class PolicyEngine {
 
                 servicePolicies.getTagPolicies().setPolicies(tagPolicies);
 
-                this.tagPolicyRepository = new RangerPolicyRepository(other.policyRepository.getAppId(), servicePolicies.getTagPolicies(), other.policyRepository.getOptions(), this.pluginContext, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
+                this.tagPolicyRepository = new RangerPolicyRepository(servicePolicies.getTagPolicies(), this.pluginContext, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
             } else {
                 this.tagPolicyRepository = new RangerPolicyRepository(other.tagPolicyRepository, defaultZoneDeltasForTagPolicies, policyVersion);
             }

@@ -23,13 +23,10 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRolesUtil;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -37,16 +34,13 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class RangerAuthContext {
     private final Map<RangerContextEnricher, Object> requestContextEnrichers;
-    private       RangerRolesUtil                    rangerRolesUtil;
+    private       RangerRolesUtil                    rolesUtil;
 
-    public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers) {
-        this.requestContextEnrichers = requestContextEnrichers != null ? requestContextEnrichers : new ConcurrentHashMap<>();
-    }
 
     public RangerAuthContext(Map<RangerContextEnricher, Object> requestContextEnrichers, RangerRoles roles) {
         this.requestContextEnrichers = requestContextEnrichers != null ? requestContextEnrichers : new ConcurrentHashMap<>();
 
-        setRangerRoles(roles);
+        setRoles(roles);
     }
 
     public Map<RangerContextEnricher, Object> getRequestContextEnrichers() {
@@ -63,14 +57,14 @@ public class RangerAuthContext {
         requestContextEnrichers.remove(enricher);
     }
 
-    public void setRangerRoles(RangerRoles rangerRoles) {
-        this.rangerRolesUtil = rangerRoles != null ? new RangerRolesUtil(rangerRoles) : new RangerRolesUtil(null);
+    public void setRoles(RangerRoles roles) {
+        this.rolesUtil = roles != null ? new RangerRolesUtil(roles) : new RangerRolesUtil(null);
     }
 
     public Set<String> getRolesForUserAndGroups(String user, Set<String> groups) {
-        RangerRolesUtil          rangerRolesUtil  = this.rangerRolesUtil;
-        Map<String, Set<String>> userRoleMapping  = rangerRolesUtil.getUserRoleMapping();
-        Map<String, Set<String>> groupRoleMapping = rangerRolesUtil.getGroupRoleMapping();
+        RangerRolesUtil          rolesUtil        = this.rolesUtil;
+        Map<String, Set<String>> userRoleMapping  = rolesUtil.getUserRoleMapping();
+        Map<String, Set<String>> groupRoleMapping = rolesUtil.getGroupRoleMapping();
         Set<String>              allRoles         = new HashSet<>();
 
         if (MapUtils.isNotEmpty(userRoleMapping) && StringUtils.isNotEmpty(user)) {
@@ -102,19 +96,5 @@ public class RangerAuthContext {
         return allRoles;
     }
 
-    public long getRoleVersion() { return this.rangerRolesUtil.getRoleVersion(); }
-
-    // For backward compatibility
-    public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
-        // Invoke getResourceACLs on the first service in this plugin
-        Collection<RangerBasePlugin> plugins = RangerBasePlugin.getServicePluginMap().values();
-
-        if (plugins.size() > 0) {
-            RangerBasePlugin[] array = plugins.toArray(new RangerBasePlugin[0]);
-
-            return array[0].getResourceACLs(request);
-        } else {
-            return null;
-        }
-    }
+    public long getRoleVersion() { return this.rolesUtil.getRoleVersion(); }
 }

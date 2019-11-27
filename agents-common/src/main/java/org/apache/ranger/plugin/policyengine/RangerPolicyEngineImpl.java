@@ -73,10 +73,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	public RangerPolicyEngineImpl(String appId, ServicePolicies servicePolicies, RangerPolicyEngineOptions options, RangerPluginContext pluginContext, RangerRoles roles) {
-		policyEngine = new PolicyEngine(appId, servicePolicies, options, pluginContext, roles);
+	public RangerPolicyEngineImpl(ServicePolicies servicePolicies, RangerPluginContext pluginContext, RangerRoles roles) {
+		policyEngine = new PolicyEngine(servicePolicies, pluginContext, roles);
 
-		policyEngine.getPluginContext().getAuthContext().setRangerRoles(roles);
+		policyEngine.getPluginContext().getAuthContext().setRoles(roles);
 
 		requestProcessor = new RangerDefaultRequestProcessor(policyEngine);
 	}
@@ -485,8 +485,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	public long getRoleVersion() { return policyEngine.getRoleVersion(); }
 
 	@Override
-	public void setRangerRoles(RangerRoles rangerRoles) {
-		policyEngine.setRangerRoles(rangerRoles);
+	public void setRoles(RangerRoles roles) {
+		policyEngine.setRoles(roles);
 	}
 
 	@Override

@@ -27,6 +27,7 @@ import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.util.List;
 
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hbase.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -103,8 +104,8 @@ public class TestPolicyEngine {
 			servicePolicies.setPolicies(testCase.policies);
 
 			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-			RangerPluginContext pluginContext = new RangerPluginContext("hbase", "cl1", "on-prem");
-			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions, pluginContext, null);
+			RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("hbase", null, testName, "cl1", "on-prem", policyEngineOptions));
+			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, null);
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(pluginContext.getConfig());
 

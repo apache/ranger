@@ -27,19 +27,23 @@ public class RangerAuditConfig extends RangerConfiguration {
     private final boolean initSuccess;
 
     public RangerAuditConfig() {
+        this("standalone");
+    }
+
+    public RangerAuditConfig(String serviceName) {
         super();
 
-        initSuccess = addAuditResources();
+        initSuccess = addAuditResources(serviceName);
     }
 
     public boolean isInitSuccess() { return initSuccess; }
 
-    private boolean addAuditResources() {
+    private boolean addAuditResources(String serviceName) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> addAuditResources()");
         }
 
-        String defaultCfg = "ranger-standalone-audit.xml";
+        String defaultCfg = "ranger-" + serviceName + "-audit.xml";
 
         boolean ret = true;
 

@@ -30,6 +30,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -60,16 +61,16 @@ public class RangerPolicyAdminCache {
 
 		long        policyVersion;
 		long        roleVersion;
-		RangerRoles rangerRoles;
+		RangerRoles roles;
 		boolean     isRolesUpdated = true;
 
 		try {
 			if (ret == null) {
 				policyVersion = -1L;
 				roleVersion   = -1L;
-				rangerRoles   = roleStore.getRangerRoles(serviceName, roleVersion);
+				roles         = roleStore.getRoles(serviceName, roleVersion);
 
-				if (rangerRoles == null) {
+				if (roles == null) {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("There are no roles in ranger-admin for service:" + serviceName + "]");
 					}
@@ -77,10 +78,10 @@ public class RangerPolicyAdminCache {
 			} else {
 				policyVersion = ret.getPolicyVersion();
 				roleVersion   = ret.getRoleVersion();
-				rangerRoles   = roleStore.getRangerRoles(serviceName, roleVersion);
+				roles         = roleStore.getRoles(serviceName, roleVersion);
 
-				if (rangerRoles == null) { // No changes to roles
-					rangerRoles    = roleStore.getRangerRoles(serviceName, -1L);
+				if (roles == null) { // No changes to roles
+					roles          = roleStore.getRoles(serviceName, -1L);
 					isRolesUpdated = false;
 				}
 			}
@@ -91,7 +92,7 @@ public class RangerPolicyAdminCache {
 				if (policies.getPolicyVersion() != null && !policies.getPolicyVersion().equals(policyVersion)) {
 					ServicePolicies updatedServicePolicies = getUpdatedServicePolicies(serviceName, policies, svcStore, zoneStore);
 
-					ret = addOrUpdatePolicyAdmin(ret, updatedServicePolicies, rangerRoles, options);
+					ret = addOrUpdatePolicyAdmin(ret, updatedServicePolicies, roles, options);
 				} else {
 					LOG.error("policies object is null or its version is null for getPolicyAdmin(" + serviceName + ") !!");
 					LOG.error("Returning old policy admin");
@@ -101,7 +102,7 @@ public class RangerPolicyAdminCache {
 					LOG.error("getPolicyAdmin(" + serviceName + "): failed to get any policies from service-store");
 				} else {
 					if (isRolesUpdated) {
-						ret.setRangerRoles(rangerRoles);
+						ret.setRoles(roles);
 					}
 				}
 			}
@@ -112,23 +113,23 @@ public class RangerPolicyAdminCache {
 		return ret;
 	}
 
-	private RangerPolicyAdmin addOrUpdatePolicyAdmin(RangerPolicyAdmin policyAdmin, ServicePolicies policies, RangerRoles rangerRoles, RangerPolicyEngineOptions options) {
+	private RangerPolicyAdmin addOrUpdatePolicyAdmin(RangerPolicyAdmin policyAdmin, ServicePolicies policies, RangerRoles roles, RangerPolicyEngineOptions options) {
 		final RangerPolicyAdmin ret;
 		RangerPolicyAdminImpl   oldPolicyAdmin = (RangerPolicyAdminImpl) policyAdmin;
 
 		synchronized(this) {
 			if (oldPolicyAdmin == null || CollectionUtils.isEmpty(policies.getPolicyDeltas())) {
-				ret = addPolicyAdmin(policies, rangerRoles, options);
+				ret = addPolicyAdmin(policies, roles, options);
 			} else {
 				RangerPolicyAdmin updatedPolicyAdmin = RangerPolicyAdminImpl.getPolicyAdmin(oldPolicyAdmin, policies);
 
 				if (updatedPolicyAdmin != null) {
-					updatedPolicyAdmin.setRangerRoles(rangerRoles);
+					updatedPolicyAdmin.setRoles(roles);
 					policyAdminCache.put(policies.getServiceName(), updatedPolicyAdmin);
 
 					ret = updatedPolicyAdmin;
 				} else {
-					ret = addPolicyAdmin(policies, rangerRoles, options);
+					ret = addPolicyAdmin(policies, roles, options);
 				}
 			}
 
@@ -140,11 +141,11 @@ public class RangerPolicyAdminCache {
 		return ret;
 	}
 
-	private RangerPolicyAdmin addPolicyAdmin(ServicePolicies policies, RangerRoles rangerRoles, RangerPolicyEngineOptions options) {
+	private RangerPolicyAdmin addPolicyAdmin(ServicePolicies policies, RangerRoles roles, RangerPolicyEngineOptions options) {
 		RangerServiceDef    serviceDef          = policies.getServiceDef();
 		String              serviceType         = (serviceDef != null) ? serviceDef.getName() : "";
-		RangerPluginContext rangerPluginContext = new RangerPluginContext(serviceType);
-		RangerPolicyAdmin   ret                 = new RangerPolicyAdminImpl("ranger-admin", policies, options, rangerPluginContext, rangerRoles);
+		RangerPluginContext rangerPluginContext = new RangerPluginContext(new RangerPluginConfig(serviceType, null, "ranger-admin", null, null, options));
+		RangerPolicyAdmin   ret                 = new RangerPolicyAdminImpl(policies, rangerPluginContext, roles);
 
 		policyAdminCache.put(policies.getServiceName(), ret);
 

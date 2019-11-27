@@ -44,7 +44,7 @@ public interface RangerPolicyAdmin {
 
     long getRoleVersion();
 
-    void setRangerRoles(RangerRoles rangerRoles);
+    void setRoles(RangerRoles roles);
 
     String getServiceName();
 

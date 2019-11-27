@@ -19,19 +19,128 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
+import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 import java.io.File;
 import java.net.URL;
 
+
 public class RangerPluginConfig extends RangerConfiguration {
     private static final Logger LOG = Logger.getLogger(RangerPluginConfig.class);
 
-    public RangerPluginConfig(String serviceType) {
+    private static final char RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR = ',';
+
+    private final String                    serviceType;
+    private final String                    serviceName;
+    private final String                    appId;
+    private final String                    clusterName;
+    private final String                    clusterType;
+    private final RangerPolicyEngineOptions policyEngineOptions;
+    private final boolean                   useForwardedIPAddress;
+    private final String[]                  trustedProxyAddresses;
+    private final String                    propertyPrefix;
+
+
+    public RangerPluginConfig(String serviceType, String serviceName, String appId, String clusterName, String clusterType, RangerPolicyEngineOptions policyEngineOptions) {
         super();
 
         addResourcesForServiceType(serviceType);
+
+        this.serviceType    = serviceType;
+        this.appId          = StringUtils.isEmpty(appId) ? appId : serviceType;
+        this.propertyPrefix = "ranger.plugin." + serviceType;
+        this.serviceName    = StringUtils.isEmpty(serviceName) ? this.get(propertyPrefix + ".service.name") : serviceName;
+
+        addResourcesForServiceName(this.serviceType, this.serviceName);
+
+        String trustedProxyAddressString = this.get(propertyPrefix + ".trusted.proxy.ipaddresses");
+
+        if (StringUtil.isEmpty(clusterName)) {
+            clusterName = this.get(propertyPrefix + ".access.cluster.name", "");
+
+            if (StringUtil.isEmpty(clusterName)) {
+                clusterName = this.get(propertyPrefix + ".ambari.cluster.name", "");
+            }
+        }
+
+        if (StringUtil.isEmpty(clusterType)) {
+            clusterType = this.get(propertyPrefix + ".access.cluster.type", "");
+
+            if (StringUtil.isEmpty(clusterType)) {
+                clusterType = this.get(propertyPrefix + ".ambari.cluster.type", "");
+            }
+        }
+
+        this.clusterName           = clusterName;
+        this.clusterType           = clusterType;
+        this.useForwardedIPAddress = this.getBoolean(propertyPrefix + ".use.x-forwarded-for.ipaddress", false);
+        this.trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR);
+
+        if (trustedProxyAddresses != null) {
+            for (int i = 0; i < trustedProxyAddresses.length; i++) {
+                trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug(propertyPrefix + ".use.x-forwarded-for.ipaddress:" + useForwardedIPAddress);
+            LOG.debug(propertyPrefix + ".trusted.proxy.ipaddresses:[" + StringUtils.join(trustedProxyAddresses, ", ") + "]");
+        }
+
+        if (useForwardedIPAddress && StringUtils.isBlank(trustedProxyAddressString)) {
+            LOG.warn("Property " + propertyPrefix + ".use.x-forwarded-for.ipaddress" + " is set to true, and Property " + propertyPrefix + ".trusted.proxy.ipaddresses" + " is not set");
+            LOG.warn("Ranger plugin will trust RemoteIPAddress and treat first X-Forwarded-Address in the access-request as the clientIPAddress");
+        }
+
+        if (policyEngineOptions == null) {
+            policyEngineOptions = new RangerPolicyEngineOptions();
+
+            policyEngineOptions.configureForPlugin(this, propertyPrefix);
+        }
+
+        this.policyEngineOptions = policyEngineOptions;
+
+        LOG.info(policyEngineOptions);
+    }
+
+    public String getServiceType() {
+        return serviceType;
+    }
+
+    public String getAppId() {
+        return appId;
+    }
+
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public String getClusterName() {
+        return clusterName;
+    }
+
+    public String getClusterType() {
+        return clusterType;
+    }
+
+    public boolean isUseForwardedIPAddress() {
+        return useForwardedIPAddress;
+    }
+
+    public String[] getTrustedProxyAddresses() {
+        return trustedProxyAddresses;
+    }
+
+    public String getPropertyPrefix() {
+        return propertyPrefix;
+    }
+
+    public RangerPolicyEngineOptions getPolicyEngineOptions() {
+        return policyEngineOptions;
     }
 
 
@@ -50,6 +159,19 @@ public class RangerPluginConfig extends RangerConfiguration {
 
         if (!addResourceIfReadable(sslCfg)) {
             addSslConfigResource(serviceType);
+        }
+    }
+
+    // load service specific config overrides, if config files are available
+    private void addResourcesForServiceName(String serviceType, String serviceName) {
+        if (StringUtils.isNotBlank(serviceType) && StringUtils.isNotBlank(serviceName)) {
+            String serviceAuditCfg    = "ranger-" + serviceType + "-" + serviceName + "-audit.xml";
+            String serviceSecurityCfg = "ranger-" + serviceType + "-" + serviceName + "-security.xml";
+            String serviceSslCfg      = "ranger-" + serviceType + "-" + serviceName + "-policymgr-ssl.xml";
+
+            addResourceIfReadable(serviceAuditCfg);
+            addResourceIfReadable(serviceSecurityCfg);
+            addResourceIfReadable(serviceSslCfg);
         }
     }
 

@@ -31,6 +31,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerServiceResourceMatcher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
@@ -81,7 +82,7 @@ public class TestPolicyEngine {
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		pluginContext = new RangerPluginContext("hive", "cl1", "on-prem");
+		pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "hive", "cl1", "on-prem", null));
 
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
 				.setPrettyPrinting()
@@ -120,7 +121,7 @@ public class TestPolicyEngine {
 			auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
 		}
 
-		AuditProviderFactory factory = new AuditProviderFactory();
+		AuditProviderFactory factory = AuditProviderFactory.getInstance();
 		factory.init(auditProperties, "hdfs"); // second parameter does not matter for v2
 
 		AuditHandler provider = factory.getAuditProvider();
@@ -437,12 +438,6 @@ public class TestPolicyEngine {
 			servicePolicies.setTagPolicies(tagPolicies);
 		}
 
-		RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-
-		policyEngineOptions.disableTagPolicyEvaluation = false;
-		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
-		policyEngineOptions.optimizeTrieForRetrieval = false;
-
 		boolean useForwardedIPAddress = pluginContext.getConfig().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
 		String trustedProxyAddressString = pluginContext.getConfig().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
 		String[] trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, ';');
@@ -452,10 +447,10 @@ public class TestPolicyEngine {
 			}
 		}
 
-		RangerRoles rangerRoles = new RangerRoles();
-		rangerRoles.setServiceName(testCase.serviceName);
-		rangerRoles.setRoleVersion(-1L);
-		Set<RangerRole> rangerRoleSet = new HashSet<>();
+		RangerRoles roles = new RangerRoles();
+		roles.setServiceName(testCase.serviceName);
+		roles.setRoleVersion(-1L);
+		Set<RangerRole> rolesSet = new HashSet<>();
 
 		Map<String, Set<String>> userRoleMapping = testCase.userRoles;
 		Map<String, Set<String>> groupRoleMapping = testCase.groupRoles;
@@ -467,7 +462,7 @@ public class TestPolicyEngine {
 				List<RangerRole.RoleMember> userRoleMembers = Arrays.asList(userRoleMember);
 				for (String usrRole : userRoles) {
 					RangerRole rangerUserRole = new RangerRole(usrRole, usrRole, null, userRoleMembers, null);
-					rangerRoleSet.add(rangerUserRole);
+					rolesSet.add(rangerUserRole);
 				}
 			}
 		}
@@ -480,14 +475,20 @@ public class TestPolicyEngine {
 				List<RangerRole.RoleMember> groupRoleMembers = Arrays.asList(groupRoleMember);
 				for (String grpRole : groupRoles) {
 					RangerRole rangerGroupRole = new RangerRole(grpRole, grpRole, null, groupRoleMembers, null);
-					rangerRoleSet.add(rangerGroupRole);
+					rolesSet.add(rangerGroupRole);
 				}
 			}
 		}
 
-		rangerRoles.setRangerRoles(rangerRoleSet);
+		roles.setRangerRoles(rolesSet);
 
-		RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext, rangerRoles);
+        RangerPolicyEngineOptions policyEngineOptions = pluginContext.getConfig().getPolicyEngineOptions();
+
+        policyEngineOptions.disableTagPolicyEvaluation = false;
+        policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
+        policyEngineOptions.optimizeTrieForRetrieval = false;
+
+		RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 
 		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
@@ -495,7 +496,7 @@ public class TestPolicyEngine {
 		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
 		policyEngineOptions.optimizeTrieForRetrieval = false;
 
-		RangerPolicyEngineImpl policyEngineForResourceAccessInfo = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext, rangerRoles);
+		RangerPolicyEngineImpl policyEngineForResourceAccessInfo = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 
 		policyEngineForResourceAccessInfo.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngineForResourceAccessInfo.setTrustedProxyAddresses(trustedProxyAddresses);

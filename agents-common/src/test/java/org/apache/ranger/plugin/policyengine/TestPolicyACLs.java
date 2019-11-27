@@ -34,6 +34,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -91,8 +92,8 @@ public class TestPolicyACLs {
 
 		for(PolicyACLsTests.TestCase testCase : testCases.testCases) {
 			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-			RangerPluginContext       pluginContext       = new RangerPluginContext("hive", "cl1", "on-prem");
-			RangerPolicyEngine        policyEngine        = new RangerPolicyEngineImpl("test-policy-acls", testCase.servicePolicies, policyEngineOptions, pluginContext, null);
+			RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig("hive", null, "test-policy-acls", "cl1", "on-prem", policyEngineOptions));
+			RangerPolicyEngine        policyEngine        = new RangerPolicyEngineImpl(testCase.servicePolicies, pluginContext, null);
 
 			for(PolicyACLsTests.TestCase.OneTest oneTest : testCase.tests) {
 				if(oneTest == null) {
