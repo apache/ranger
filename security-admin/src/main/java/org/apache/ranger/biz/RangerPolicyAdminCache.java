@@ -51,8 +51,8 @@ public class RangerPolicyAdminCache {
 	final RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
 		RangerPolicyAdmin ret = null;
 
-		if (serviceName == null || svcStore == null || roleStore == null || zoneStore == null) {
-			LOG.warn("Cannot get policy-admin for null serviceName or serviceStore or roleStore or zoneStore");
+		if (serviceName == null || svcStore == null || roleStore == null) {
+			LOG.warn("Cannot get policy-admin for null serviceName or serviceStore or roleStore");
 
 			return ret;
 		}
