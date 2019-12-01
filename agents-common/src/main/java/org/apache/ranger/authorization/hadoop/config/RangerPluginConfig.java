@@ -51,7 +51,7 @@ public class RangerPluginConfig extends RangerConfiguration {
         addResourcesForServiceType(serviceType);
 
         this.serviceType    = serviceType;
-        this.appId          = StringUtils.isEmpty(appId) ? appId : serviceType;
+        this.appId          = StringUtils.isEmpty(appId) ? serviceType : appId;
         this.propertyPrefix = "ranger.plugin." + serviceType;
         this.serviceName    = StringUtils.isEmpty(serviceName) ? this.get(propertyPrefix + ".service.name") : serviceName;
 
