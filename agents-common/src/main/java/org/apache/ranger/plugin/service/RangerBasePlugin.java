@@ -143,11 +143,15 @@ public class RangerBasePlugin {
 	public void init() {
 		cleanup();
 
-		if (pluginConfig.getProperties() != null) {
-			AuditProviderFactory.getInstance().init(pluginConfig.getProperties(), getAppId());
-		} else {
-			LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
-			LOG.error("No authorization audits will be generated. ");
+		AuditProviderFactory providerFactory = AuditProviderFactory.getInstance();
+
+		if (!providerFactory.isInitDone()) {
+			if (pluginConfig.getProperties() != null) {
+				providerFactory.init(pluginConfig.getProperties(), getAppId());
+			} else {
+				LOG.error("Audit subsystem is not initialized correctly. Please check audit configuration. ");
+				LOG.error("No authorization audits will be generated. ");
+			}
 		}
 
 		refresher = new PolicyRefresher(this);
