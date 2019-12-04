@@ -89,11 +89,13 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         Long ret = null;
         try {
             XXGlobalState       globalState     = findByStateName(stateName);
-            Map<String, String> roleVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
-            if(MapUtils.isNotEmpty(roleVersionJson)) {
-                ret = Long.valueOf(roleVersionJson.get(APP_DATA_ENTRY_ROLE_VERSION));
-            } else {
-                ret = 1L;
+            if (globalState != null) {
+                Map<String, String> roleVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
+                if (MapUtils.isNotEmpty(roleVersionJson)) {
+                    ret = Long.valueOf(roleVersionJson.get(APP_DATA_ENTRY_ROLE_VERSION));
+                } else {
+                    ret = 1L;
+                }
             }
         } catch (Exception exception) {
             if (logger.isDebugEnabled()) {

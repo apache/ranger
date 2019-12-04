@@ -50,11 +50,11 @@ public class RangerPolicyAdminCacheForEngineOptions {
         return ret;
     }
 
-    public final RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, RangerPolicyEngineOptions options) {
-        return getServicePoliciesAdmin(serviceName, svcStore, roleStore, null, options);
+    public final RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, SecurityZoneStore zoneStore, RoleStore roleStore, RangerPolicyEngineOptions options) {
+        return getServicePoliciesAdmin(serviceName, svcStore, roleStore, zoneStore, options);
     }
 
-    public final RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
+    private RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
         RangerPolicyAdminCache policyAdminCache;
 
         synchronized (this) {

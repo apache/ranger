@@ -3721,15 +3721,15 @@ public class ServiceREST {
 	}
 
 	public RangerPolicyAdmin getPolicyAdminForDelegatedAdmin(String serviceName) {
-		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, delegateAdminOptions);
+		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, zoneStore, roleDBStore, delegateAdminOptions);
 	}
 
 	private RangerPolicyAdmin getPolicyAdminForSearch(String serviceName) {
-		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, policySearchAdminOptions);
+		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, zoneStore, roleDBStore, policySearchAdminOptions);
 	}
 
 	private RangerPolicyAdmin getPolicyAdmin(String serviceName) {
-		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, roleDBStore, defaultAdminOptions);
+		return RangerPolicyAdminCacheForEngineOptions.getInstance().getServicePoliciesAdmin(serviceName, svcStore, zoneStore,roleDBStore, defaultAdminOptions);
 	}
 
 	@GET
