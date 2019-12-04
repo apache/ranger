@@ -86,6 +86,20 @@
         {"accesses":[{"type":"serviceadmin","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false}
       ]
     }
+    ,
+    {"id":6,"name":"db=demo1,demo2","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"database":{"values":["demo1", "demo2"]}},
+      "policyItems":[
+        {"accesses":[{"type":"select","isAllowed":true}],"users":["user1","user2"],"groups":["group1","group2"],"delegateAdmin":false}
+      ]
+    }
+    ,
+    {"id":7,"name":"db=demo1; table=demo1_tbl1,demo1_tbl2; column=*","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"database":{"values":["demo1"]},"table":{"values":["demo1_tbl1", "demo1_tbl2"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"create","isAllowed":true}],"users":["user1","user2"],"groups":["group1","group2"],"delegateAdmin":false}
+      ]
+    }
   ],
 
   "tests":[
@@ -392,6 +406,14 @@
         "accessType":"serviceadmin","user":"user1","userGroups":["users"],"requestData":"kill query 'dummyqueryid'"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":5}
+    }
+    ,
+    {"name":"ALLOW '_any access to demo1/demo_tbl1' for user1: show table test",
+      "request":{
+        "resource":{"elements":{"database":"demo1", "table":"demo1_tbl1"}},
+        "accessType":"","user":"user1","userGroups":["users"],"requestData":"show tables"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":7}
     }
   ]
 }

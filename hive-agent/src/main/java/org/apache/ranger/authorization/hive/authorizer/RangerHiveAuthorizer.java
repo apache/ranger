@@ -837,6 +837,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		RangerPerfTracer perf = null;
 
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_HIVEAUTH_REQUEST_LOG)) {
 			perf = RangerPerfTracer.getPerfTracer(PERF_HIVEAUTH_REQUEST_LOG, "RangerHiveAuthorizer.filterListCmdObjects()");
 		}
@@ -891,7 +893,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					LOG.error("filterListCmdObjects: RangerHiveResource returned by createHiveResource is null");
 				} else {
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, context, sessionContext);
-					RangerAccessResult result = hivePlugin.isAccessAllowed(request);
+					RangerAccessResult result = hivePlugin.isAccessAllowed(request, auditHandler);
 					if (result == null) {
 						LOG.error("filterListCmdObjects: Internal error: null RangerAccessResult object received back from isAccessAllowed()!");
 					} else if (!result.getIsAllowed()) {
@@ -909,6 +911,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 			}
 		}
+
+		auditHandler.flushAudit();
 
 		RangerPerfTracer.log(perf);
 
@@ -1155,7 +1159,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		switch(objectType) {
 		case DATABASE:
-			resource = new RangerHiveResource(HiveObjectType.DATABASE, objectName);
+			resource = new RangerHiveResource(HiveObjectType.DATABASE, dbName);
 			//when fix is in place for HIVE-22128 we can un comment this.
 			//resource.setOwnerUser(privilegeObject.getOwnerName());
 			break;

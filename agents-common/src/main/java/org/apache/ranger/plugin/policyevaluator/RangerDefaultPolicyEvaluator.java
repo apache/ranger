@@ -476,11 +476,13 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			}
 		} else {
 			if (!result.getIsAllowed()) { // if access is not yet allowed by another policy
-				result.setIsAllowed(true);
-				result.setPolicyPriority(getPolicyPriority());
-				result.setPolicyId(getId());
-				result.setReason(reason);
-				result.setPolicyVersion(getPolicy().getVersion());
+				if (matchType != RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
+					result.setIsAllowed(true);
+					result.setPolicyPriority(getPolicyPriority());
+					result.setPolicyId(getId());
+					result.setReason(reason);
+					result.setPolicyVersion(getPolicy().getVersion());
+				}
 			}
 		}
 		if (LOG.isDebugEnabled()) {

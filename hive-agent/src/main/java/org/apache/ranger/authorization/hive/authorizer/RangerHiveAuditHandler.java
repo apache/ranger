@@ -40,6 +40,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
 
 	public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
+	public static final String  ACTION_TYPE_METADATA_OPERATION = "METADATA OPERATION";
 	Collection<AuthzAuditEvent> auditEvents  = null;
 	boolean                     deniedExists = false;
 
@@ -115,6 +116,11 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 				RangerHiveAccessRequest hiveRequest = (RangerHiveAccessRequest) request;
 
 				accessType = hiveRequest.getHiveAccessType().toString();
+
+				String action = request.getAction();
+				if (ACTION_TYPE_METADATA_OPERATION.equals(action)) {
+					accessType = ACTION_TYPE_METADATA_OPERATION;
+				}
 			}
 
 			if (StringUtils.isEmpty(accessType)) {
@@ -174,6 +180,11 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		if(! result.getIsAudited()) {
 			return;
 		}
+
+		if  (skipFilterOperationAuditing(result)) {
+			return;
+		}
+
 		AuthzAuditEvent auditEvent = createAuditEvent(result);
 
 		if(auditEvent != null) {
@@ -272,6 +283,18 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			String[] cmd = cmdString.trim().split("\\s+");
 			if (!ArrayUtils.isEmpty(cmd) && cmd.length > 2) {
 				ret = ret + cmd[2];
+			}
+		}
+		return ret;
+	}
+
+	private boolean skipFilterOperationAuditing(RangerAccessResult result) {
+		boolean ret = false;
+		RangerAccessRequest accessRequest = result.getAccessRequest();
+		if (accessRequest != null) {
+			String action = accessRequest.getAction();
+			if (ACTION_TYPE_METADATA_OPERATION.equals(action) && !result.getIsAllowed()) {
+				ret = true;
 			}
 		}
 		return ret;
