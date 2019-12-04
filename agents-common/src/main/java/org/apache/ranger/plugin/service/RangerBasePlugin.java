@@ -117,7 +117,9 @@ public class RangerBasePlugin {
 
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
-		policyEngine.setRoles(roles);
+		if (policyEngine != null) {
+			policyEngine.setRoles(roles);
+		}
 
 		pluginContext.notifyAuthContextChanged();
 	}
