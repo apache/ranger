@@ -1094,7 +1094,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			case RangerPolicy.POLICY_TYPE_ACCESS: {
 				ret = getMatchingPolicyItem(request, denyEvaluators, denyExceptionEvaluators);
 
-				if(ret == null && !result.getIsAllowed()) { // if not denied, evaluate allowItems only if not already allowed
+				if(ret == null && !result.getIsAccessDetermined()) { // a deny policy could have set isAllowed=true, but in such case it wouldn't set isAccessDetermined=true
 					ret = getMatchingPolicyItem(request, allowEvaluators, allowExceptionEvaluators);
 				}
 				break;

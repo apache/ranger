@@ -484,35 +484,32 @@ public class TestPolicyEngine {
 
         RangerPolicyEngineOptions policyEngineOptions = pluginContext.getConfig().getPolicyEngineOptions();
 
-        policyEngineOptions.disableTagPolicyEvaluation = false;
+        policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
+
+        RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
+
+        policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+        policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+
         policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
-        policyEngineOptions.optimizeTrieForRetrieval = false;
 
-		RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
+		RangerPolicyEngineImpl policyEngineForEvaluatingWithACLs = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 
-		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
-		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
+		policyEngineForEvaluatingWithACLs.setUseForwardedIPAddress(useForwardedIPAddress);
+		policyEngineForEvaluatingWithACLs.setTrustedProxyAddresses(trustedProxyAddresses);
 
-		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
-		policyEngineOptions.optimizeTrieForRetrieval = false;
-
-		RangerPolicyEngineImpl policyEngineForResourceAccessInfo = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
-
-		policyEngineForResourceAccessInfo.setUseForwardedIPAddress(useForwardedIPAddress);
-		policyEngineForResourceAccessInfo.setTrustedProxyAddresses(trustedProxyAddresses);
-
-		runTestCaseTests(policyEngine, policyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.tests);
+		runTestCaseTests(policyEngine, policyEngineForEvaluatingWithACLs, testCase.serviceDef, testName, testCase.tests);
 
 		if (testCase.updatedPolicies != null) {
 			servicePolicies.setPolicyDeltas(testCase.updatedPolicies.policyDeltas);
 			servicePolicies.setSecurityZones(testCase.updatedPolicies.securityZones);
 			RangerPolicyEngine updatedPolicyEngine = RangerPolicyEngineImpl.getPolicyEngine(policyEngine, servicePolicies);
-			RangerPolicyEngine updatedPolicyEngineForResourceAccessInfo = RangerPolicyEngineImpl.getPolicyEngine(policyEngineForResourceAccessInfo, servicePolicies);
-			runTestCaseTests(updatedPolicyEngine, updatedPolicyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.updatedTests);
+            RangerPolicyEngine updatedPolicyEngineForEvaluatingWithACLs = RangerPolicyEngineImpl.getPolicyEngine(policyEngineForEvaluatingWithACLs, servicePolicies);
+			runTestCaseTests(updatedPolicyEngine, updatedPolicyEngineForEvaluatingWithACLs, testCase.serviceDef, testName, testCase.updatedTests);
 		}
 	}
 
-    private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerPolicyEngine policyEngineForResourceAccessInfo, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
+    private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerPolicyEngine policyEngineForEvaluatingWithACLs, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
 
         RangerAccessRequest request = null;
 
@@ -588,38 +585,66 @@ public class TestPolicyEngine {
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 			if(test.result != null) {
-				RangerAccessResult expected = test.result;
-				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
+                RangerAccessResult expected = test.result;
+                RangerAccessResult result;
+
+				result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
 				assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
+
+				result   = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
+
+                assertNotNull("result was null! - " + test.name, result);
+                assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
+                assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
 			}
 
 			if(test.dataMaskResult != null) {
 				RangerAccessResult expected = test.dataMaskResult;
-				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
+				RangerAccessResult result;
+
+                result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
+
+                assertNotNull("result was null! - " + test.name, result);
+                assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
+                assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
+                assertEquals("maskedValue mismatched! - " + test.name, expected.getMaskedValue(), result.getMaskedValue());
+                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+
+                result = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
 				assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
 				assertEquals("maskedValue mismatched! - " + test.name, expected.getMaskedValue(), result.getMaskedValue());
 				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+
 			}
 
 			if(test.rowFilterResult != null) {
 				RangerAccessResult expected = test.rowFilterResult;
-				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
+				RangerAccessResult result;
+
+                result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
+
+                assertNotNull("result was null! - " + test.name, result);
+                assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
+                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+
+				result = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
 				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
+
 			}
 
 			if(test.resourceAccessInfo != null) {
 
 				RangerResourceAccessInfo expected = new RangerResourceAccessInfo(test.resourceAccessInfo);
-				RangerResourceAccessInfo result   = policyEngineForResourceAccessInfo.getResourceAccessInfo(test.request);
+				RangerResourceAccessInfo result   = policyEngine.getResourceAccessInfo(test.request);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("allowedUsers mismatched! - " + test.name, expected.getAllowedUsers(), result.getAllowedUsers());
