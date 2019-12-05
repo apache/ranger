@@ -52,7 +52,7 @@ public class RangerHivePolicyProvider implements HivePolicyProvider {
 
 	private final RangerBasePlugin  rangerPlugin;
 
-	RangerHivePolicyProvider(@NotNull RangerHivePlugin hivePlugin) {
+	public RangerHivePolicyProvider(@NotNull RangerBasePlugin hivePlugin) {
 
 		Set<String> privileges = new HashSet<>();
 		for (HiveResourceACLs.Privilege privilege : HiveResourceACLs.Privilege.values()) {
@@ -94,7 +94,7 @@ public class RangerHivePolicyProvider implements HivePolicyProvider {
 		}
 	}
 
-	private HiveResourceACLs getResourceACLs(RangerHiveResource hiveResource) {
+	public HiveResourceACLs getResourceACLs(RangerHiveResource hiveResource) {
 	    HiveResourceACLs ret;
 
 	    RangerAccessRequestImpl request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null);
