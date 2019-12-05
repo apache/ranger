@@ -57,6 +57,7 @@ Build Process
    ranger-<version>-usersync.tar.gz
    ranger-<version>-yarn-plugin.tar.gz
    ranger-<version>-kylin-plugin.tar.gz
+   ranger-<version>-elasticsearch-plugin.tar.gz
 
 Importing Apache Ranger Project into Eclipse
 ============================================
@@ -83,6 +84,7 @@ Installation Host Information
     (g)  YARN plugin needs to be installed on YARN Resource Manager hosts
     (h)  Sqoop plugin needs to be installed on Sqoop2 hosts
     (i)  Kylin plugin needs to be installed on Kylin hosts
+    (j)  Elasticsearch plugin needs to be installed on Elasticsearch hosts
 
 Installation Process
 ~~~~~~~~~~~~~~~~~~~~
