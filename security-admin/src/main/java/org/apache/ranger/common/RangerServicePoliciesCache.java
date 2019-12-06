@@ -61,7 +61,7 @@ public class RangerServicePoliciesCache {
 	}
 
 	private RangerServicePoliciesCache() {
-		RangerAdminConfig config = new RangerAdminConfig();
+		RangerAdminConfig config = RangerAdminConfig.getInstance();
 
 		waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 	}

@@ -59,7 +59,7 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
         super.init();
 
         if (!ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS_INITIALIZED) {
-            RangerAdminConfig config = new RangerAdminConfig();
+            RangerAdminConfig config = RangerAdminConfig.getInstance();
 
             ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS = config.getBoolean("ranger.admin.tag.enricher.supports.tag.deltas", true);
 

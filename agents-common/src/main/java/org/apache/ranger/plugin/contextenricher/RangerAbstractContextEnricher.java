@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -175,6 +176,12 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		this.pluginContext = pluginContext;
 	}
 
+	public RangerPluginConfig getPluginConfig() {
+		RangerPluginContext pluginContext = this.pluginContext;
+
+		return pluginContext != null ? pluginContext.getConfig() : null;
+	}
+
 	public void notifyAuthContextChanged() {
 		RangerPluginContext pluginContext = this.pluginContext;
 
@@ -184,8 +191,9 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public String getConfig(String configName, String defaultValue) {
-		String        ret    = defaultValue;
-		Configuration config = pluginContext != null ? pluginContext.getConfig() : null;
+		RangerPluginContext pluginContext = this.pluginContext;
+		String              ret           = defaultValue;
+		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
 
 		if (config != null) {
 			ret = config.get(configName, defaultValue);
@@ -195,8 +203,9 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public int getIntConfig(String configName, int defaultValue) {
-		int           ret    = defaultValue;
-		Configuration config = pluginContext != null ? pluginContext.getConfig() : null;
+		RangerPluginContext pluginContext = this.pluginContext;
+		int                 ret           = defaultValue;
+		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
 
 		if (config != null) {
 			ret = config.getInt(configName, defaultValue);
@@ -206,8 +215,9 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public boolean getBooleanConfig(String configName, boolean defaultValue) {
-		boolean       ret    = defaultValue;
-		Configuration config = pluginContext != null ? pluginContext.getConfig() : null;
+		RangerPluginContext pluginContext = this.pluginContext;
+		boolean             ret           = defaultValue;
+		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
 
 		if (config != null) {
 			ret = config.getBoolean(configName, defaultValue);

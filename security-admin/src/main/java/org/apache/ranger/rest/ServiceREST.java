@@ -244,7 +244,7 @@ public class ServiceREST {
 	private RangerPolicyEngineOptions delegateAdminOptions;
 	private RangerPolicyEngineOptions policySearchAdminOptions;
 	private RangerPolicyEngineOptions defaultAdminOptions;
-	private final RangerAdminConfig   config = new RangerAdminConfig();
+	private final RangerAdminConfig   config = RangerAdminConfig.getInstance();
 
 	public ServiceREST() {
 	}

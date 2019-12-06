@@ -38,7 +38,7 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 	public RangerServiceDefService() {
 		super();
 
-		this.config = new RangerAdminConfig();
+		this.config = RangerAdminConfig.getInstance();
 	}
 
 	@Override

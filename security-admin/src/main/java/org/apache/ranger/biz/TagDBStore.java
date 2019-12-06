@@ -104,7 +104,7 @@ public class TagDBStore extends AbstractTagStore {
 
 	@PostConstruct
 	public void initStore() {
-		config = new RangerAdminConfig();
+		config = RangerAdminConfig.getInstance();
 
 		RangerAdminTagEnricher.setTagStore(this);
 		RangerAdminTagEnricher.setDaoManager(daoManager);
@@ -1272,7 +1272,7 @@ public class TagDBStore extends AbstractTagStore {
 
 	public static boolean isSupportsTagDeltas() {
         if (!IS_SUPPORTS_TAG_DELTAS_INITIALIZED) {
-            RangerAdminConfig config = new RangerAdminConfig();
+            RangerAdminConfig config = RangerAdminConfig.getInstance();
 
             SUPPORTS_TAG_DELTAS = config.getBoolean("ranger.admin.supports.tag.deltas", false);
             IS_SUPPORTS_TAG_DELTAS_INITIALIZED = true;

@@ -113,7 +113,7 @@ public class RangerBizUtil {
 	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
 
 	public RangerBizUtil() {
-		RangerAdminConfig config = new RangerAdminConfig();
+		RangerAdminConfig config = RangerAdminConfig.getInstance();
 
 		allowUnauthenticatedAccessInSecureEnvironment = config.getBoolean("ranger.admin.allow.unauthenticated.access", false);
 

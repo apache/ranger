@@ -119,7 +119,7 @@ public class EmbeddedServiceDefsUtil {
 	/** Private constructor to restrict instantiation of this singleton utility class. */
 	private EmbeddedServiceDefsUtil() {
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
-		config      = new RangerAdminConfig();
+		config      = RangerAdminConfig.getInstance();
 	}
 
 	public static EmbeddedServiceDefsUtil instance() {

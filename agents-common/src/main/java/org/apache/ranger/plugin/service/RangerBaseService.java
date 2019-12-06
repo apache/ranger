@@ -69,7 +69,7 @@ public abstract class RangerBaseService {
 	private final RangerAdminConfig config;
 
 	public RangerBaseService() {
-		this.config = new RangerAdminConfig();
+		this.config = RangerAdminConfig.getInstance();
 	}
 
 	public void init(RangerServiceDef serviceDef, RangerService service) {

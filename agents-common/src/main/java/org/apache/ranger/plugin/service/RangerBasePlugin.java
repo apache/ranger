@@ -73,6 +73,10 @@ public class RangerBasePlugin {
 		this(new RangerPluginConfig(serviceType, null, appId, null, null, null));
 	}
 
+	public RangerBasePlugin(String serviceType, String serviceName, String appId) {
+		this(new RangerPluginConfig(serviceType, serviceName, appId, null, null, null));
+	}
+
 	public RangerBasePlugin(RangerPluginConfig pluginConfig) {
 		this.pluginConfig  = pluginConfig;
 		this.pluginContext = new RangerPluginContext(pluginConfig);

@@ -361,7 +361,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			LOG.debug("==> ServiceDBStore.initStore()");
 		}
 
-		config = new RangerAdminConfig();
+		config = RangerAdminConfig.getInstance();
 
 		if(! legacyServiceDefsInitDone) {
 			synchronized(ServiceDBStore.class) {

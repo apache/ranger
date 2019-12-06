@@ -39,9 +39,13 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 	public void init(Map<String, String> options) {
 
 		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
-			RangerPluginConfig config = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
+			RangerPluginConfig pluginConfig = super.pluginConfig;
 
-			adminClient = RangerBasePlugin.createAdminClient(config);
+			if (pluginConfig == null) {
+				pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
+			}
+
+			adminClient = RangerBasePlugin.createAdminClient(pluginConfig);
 		} else {
 			LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve tags.");
 		}

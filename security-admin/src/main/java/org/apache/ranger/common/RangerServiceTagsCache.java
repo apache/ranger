@@ -59,7 +59,7 @@ public class RangerServiceTagsCache {
 	}
 
 	private RangerServiceTagsCache() {
-		RangerAdminConfig config = new RangerAdminConfig();
+		RangerAdminConfig config = RangerAdminConfig.getInstance();
 
 		useServiceTagsCache = config.getBoolean("ranger.admin.tag.download.usecache", true);
 		waitTimeInSeconds   = config.getInt("ranger.admin.tag.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);

@@ -129,6 +129,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				tagRetriever.setServiceName(serviceName);
 				tagRetriever.setServiceDef(serviceDef);
 				tagRetriever.setAppId(appId);
+				tagRetriever.setPluginConfig(getPluginConfig());
 				tagRetriever.init(enricherDef.getEnricherOptions());
 
 				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, tagDownloadQueue, cacheFile);

@@ -24,7 +24,25 @@ import org.apache.log4j.Logger;
 public class RangerAdminConfig extends RangerConfiguration {
     private static final Logger LOG = Logger.getLogger(RangerAdminConfig.class);
 
-    public RangerAdminConfig() {
+    private static volatile RangerAdminConfig sInstance = null;
+
+    public static RangerAdminConfig getInstance() {
+        RangerAdminConfig ret = RangerAdminConfig.sInstance;
+
+        if (ret == null) {
+            synchronized (RangerAdminConfig.class) {
+                ret = RangerAdminConfig.sInstance;
+
+                if (ret == null) {
+                    ret = RangerAdminConfig.sInstance = new RangerAdminConfig();
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private RangerAdminConfig() {
         super();
 
         addAdminResources();

@@ -83,7 +83,7 @@ public class RoleDBStore implements RoleStore {
             LOG.debug("==> RoleDBStore.initStore()");
         }
 
-        config = new RangerAdminConfig();
+        config = RangerAdminConfig.getInstance();
 
         roleService.setPopulateExistingBaseFields(populateExistingBaseFields);
         predicateUtil = new RolePredicateUtil();

@@ -55,7 +55,7 @@ public abstract class AbstractServiceStore implements ServiceStore {
 	protected abstract void updateServicesForServiceDefUpdate(RangerServiceDef serviceDef) throws Exception;
 
 	protected AbstractServiceStore() {
-		this.config = new RangerAdminConfig();
+		this.config = RangerAdminConfig.getInstance();
 	}
 
 	@Override

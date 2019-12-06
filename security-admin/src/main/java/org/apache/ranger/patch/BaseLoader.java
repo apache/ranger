@@ -49,7 +49,7 @@ public abstract class BaseLoader {
     protected final RangerAdminConfig config;
 
     public BaseLoader() {
-    	this.config = new RangerAdminConfig();
+        this.config = RangerAdminConfig.getInstance();
     }
 
     public void init(int batchSize) throws Exception {
