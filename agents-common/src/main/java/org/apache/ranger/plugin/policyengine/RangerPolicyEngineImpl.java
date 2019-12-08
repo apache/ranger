@@ -269,7 +269,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
 						isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 					} else {
-						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR_WITH_WILDCARDS;
+						isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
 					}
 
 					if (!isMatched) {
