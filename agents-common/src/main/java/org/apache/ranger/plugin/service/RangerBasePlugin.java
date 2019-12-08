@@ -176,39 +176,41 @@ public class RangerBasePlugin {
 			ServicePolicies    servicePolicies = null;
 			boolean            isValid         = true;
 			boolean            usePolicyDeltas = false;
+			boolean            updateRolesOnly = false;
 
 			if (policies == null) {
 				policies = getDefaultSvcPolicies();
 
 				if (policies == null) {
 					LOG.error("Could not get default Service Policies");
-
 					isValid = false;
 				}
 			} else {
-				if (policies.getPolicies() != null && policies.getPolicyDeltas() != null) {
-					LOG.error("Invalid servicePolicies: Both policies and policy-deltas cannot be null OR both of them cannot be non-null");
+				Boolean hasPolicyDeltas = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
 
-					isValid = false;
-				} else if (policies.getPolicies() != null) {
-					usePolicyDeltas = false;
-				} else if (policies.getPolicyDeltas() != null) {
-					// Rebuild policies from deltas
-					RangerPolicyEngineImpl policyEngine = (RangerPolicyEngineImpl) oldPolicyEngine;
-
-					servicePolicies = ServicePolicies.applyDelta(policies, policyEngine);
-
-					if (servicePolicies != null) {
-						usePolicyDeltas = true;
+				if (hasPolicyDeltas == null) {
+					if (roles != null) {
+						updateRolesOnly = true;
 					} else {
+						LOG.error("Policies, policy-deltas and roles are all null, Should not get here!!");
 						isValid = false;
-
-						LOG.error("Could not apply deltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()));
 					}
 				} else {
-					LOG.error("Should not get here!!");
+					if (hasPolicyDeltas.equals(Boolean.TRUE)) {
+						// Rebuild policies from deltas
+						RangerPolicyEngineImpl policyEngine = (RangerPolicyEngineImpl) oldPolicyEngine;
 
-					isValid = false;
+						servicePolicies = ServicePolicies.applyDelta(policies, policyEngine);
+
+						if (servicePolicies != null) {
+							usePolicyDeltas = true;
+						} else {
+							LOG.error("Could not apply deltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()));
+							isValid = false;
+						}
+					} else {
+						usePolicyDeltas = false;
+					}
 				}
 			}
 
@@ -216,7 +218,9 @@ public class RangerBasePlugin {
 				RangerPolicyEngine newPolicyEngine      = null;
 				boolean            isPolicyEngineShared = false;
 
-				if (!usePolicyDeltas) {
+				if (updateRolesOnly) {
+					this.policyEngine.setRoles(roles);
+				} else if (!usePolicyDeltas) {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policies are not null. Creating engine from policies");
 					}
