@@ -118,7 +118,8 @@ define(function(require) {
 			var userList 	= new VXUserList();
 			App.rContent.show(new view({
 				collection : userList,
-				tab :tab
+                                tab : tab.split('?')[0],
+                                urlQueryParams : tab.indexOf("?") !== -1 ? tab.substring(tab.indexOf("?") + 1) : undefined,
 			}));
 		},
 	   userCreateAction : function(){
@@ -304,7 +305,7 @@ define(function(require) {
 			   }));
 		   });
 	   },
-	   
+
 	   policyManageAction : function(serviceId,policyType){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var XAUtil			= require('utils/XAUtils');
@@ -313,7 +314,7 @@ define(function(require) {
 		   var RangerPolicyList 	=  require('collections/RangerPolicyList');
 		   
 		   var rangerPolicyList = new RangerPolicyList();
-		   rangerPolicyList.queryParams['policyType'] = policyType;
+                   rangerPolicyList.queryParams['policyType'] = policyType.split("?")[0];
                     if(_.isNaN(parseInt(serviceId))){
                         var rangerService = new RangerService();
                         rangerService.url = XAUtil.getServiceByName(serviceId);
@@ -326,7 +327,8 @@ define(function(require) {
                    }).done( function() {
                                 App.rContent.show(new view({
                                         rangerService : rangerService,
-                                        collection : rangerPolicyList
+                                        collection : rangerPolicyList,
+                                        urlQueryParams : policyType.indexOf("?") !== -1 ? policyType.substring(policyType.indexOf("?") + 1) : undefined,
                                 }));
 		   });
 	   },
@@ -385,13 +387,14 @@ define(function(require) {
                         });
 	   },
 	   /************PERMISSIONS LISTING *****************************************/
-	   modulePermissionsAction :function(){
+           modulePermissionsAction :function(argument){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Settings.value });
 		   var view 			= require('views/permissions/ModulePermsTableLayout');
 		   var ModulePermissionList	= require('collections/VXModuleDefList');
 
 		   App.rContent.show(new view({
-			   collection : new ModulePermissionList()
+               collection : new ModulePermissionList(),
+               urlQueryParams : argument.indexOf("?") !== -1 ? argument.substring(argument.indexOf("?") + 1) : undefined,
 		   }));
 
 	   },
@@ -428,8 +431,9 @@ define(function(require) {
 		   var KmsKeyList	= require('collections/VXKmsKeyList');
 		   App.rContent.show(new view({
 			   collection     : new KmsKeyList(),
-			   kmsServiceName : kmsServiceName,
-			   kmsManagePage  : kmsManagePage
+                           kmsServiceName : kmsServiceName.split("?")[0],
+                           kmsManagePage  : kmsManagePage,
+                           urlQueryParams : kmsServiceName.indexOf("?") !== -1 ? kmsServiceName.substring(kmsServiceName.indexOf("?") + 1) : undefined,
 		   }));
 	   },
 	   kmsKeyCreateAction : function(kmsServiceName){

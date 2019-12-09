@@ -264,7 +264,7 @@ define(function(require) {
                 };
 			},
 			ModulePermissions :{
-				href : '#!/permissions',
+                                href : '#!/permissions/models',
 				text : 'h.permissions',
 				title: 'h.permissions'
 			},
