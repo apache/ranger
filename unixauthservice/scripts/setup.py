@@ -533,6 +533,19 @@ def main():
     os.chown(ugsyncCryptPath, ownerId, groupId)
 
     writeXMLUsingProperties(fn, mergeProps, outfn)
+    
+    hadoop_conf_full_path = join(hadoop_conf, hadoopConfFileName)
+    usersync_conf_full_path = join(usersyncBaseDirFullName, confBaseDirName, hadoopConfFileName)
+    if not isfile(hadoop_conf_full_path):
+        print "WARN: core-site.xml file not found in provided hadoop conf path..."
+        f = open(usersync_conf_full_path, "w")
+        f.write("<configuration></configuration>")
+        f.close()
+        os.chown(usersync_conf_full_path, ownerId, groupId)
+        os.chmod(usersync_conf_full_path, 0750)
+    else:
+        if os.path.islink(usersync_conf_full_path):
+            os.remove(usersync_conf_full_path)
 
     fixPermList = [".", usersyncBaseDirFullName, confFolderName, certFolderName]
 
@@ -579,19 +592,6 @@ def main():
     f = open(join(confBaseDirName, ENV_PID_FILE), "a+")
     f.write("\nexport {0}={1}".format("UNIX_USERSYNC_USER", unix_user))
     f.close()
-
-    hadoop_conf_full_path = join(hadoop_conf, hadoopConfFileName)
-    usersync_conf_full_path = join(usersyncBaseDirFullName, confBaseDirName, hadoopConfFileName)
-    if not isfile(hadoop_conf_full_path):
-        print "WARN: core-site.xml file not found in provided hadoop conf path..."
-        f = open(usersync_conf_full_path, "w")
-        f.write("<configuration></configuration>")
-        f.close()
-        os.chown(usersync_conf_full_path, ownerId, groupId)
-        os.chmod(usersync_conf_full_path, 0750)
-    else:
-        if os.path.islink(usersync_conf_full_path):
-            os.remove(usersync_conf_full_path)
 
     if isfile(hadoop_conf_full_path) and not isfile(usersync_conf_full_path):
         os.symlink(hadoop_conf_full_path, usersync_conf_full_path)
