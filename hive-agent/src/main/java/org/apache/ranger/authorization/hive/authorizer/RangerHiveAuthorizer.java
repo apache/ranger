@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
+import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -62,11 +63,13 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObje
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveRoleGrant;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveResourceACLs;
 import org.apache.hadoop.hive.ql.session.SessionState;
+import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -97,6 +100,15 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static volatile RangerHivePlugin hivePlugin = null;
 
 	private static final String ROLE_ALL = "ALL", ROLE_DEFAULT = "DEFAULT", ROLE_NONE = "NONE";
+
+	private static final String CMD_CREATE_ROLE        = "create role %s";
+	private static final String CMD_DROP_ROLE          = "drop role %s";
+	private static final String CMD_SHOW_ROLES         = "show roles";
+	private static final String CMD_SHOW_ROLE_GRANT    = "show role grant %s %s";
+	private static final String CMD_SHOW_PRINCIPALS    = "show principals %s";
+	private static final String CMD_GRANT_ROLE         = "grant role %s to %s ";
+	private static final String CMD_REVOKE_ROLE        = "revoke role %s from %s";
+
 	private static final Set<String> RESERVED_ROLE_NAMES;
 
 	static {
@@ -176,6 +188,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 		String currentUserName = getGrantorUsername(adminGrantor);
+		List<String> roleNames     = Arrays.asList(roleName);
+		List<String> userNames     = Arrays.asList(currentUserName);
+		boolean		 result		   = false;
 
 		if (RESERVED_ROLE_NAMES.contains(roleName.trim().toUpperCase())) {
 			throw new HiveAuthzPluginException("Role name cannot be one of the reserved roles: " +
@@ -197,10 +212,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== createRole(): " + ret);
 			}
-
+			result = true;
 		} catch(Exception excp) {
 			throw new HiveAccessControlException(excp);
 		} finally {
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, currentUserName, userNames, HiveOperationType.CREATEROLE, HiveAccessType.CREATE, roleNames, result);
+			auditHandler.processResult(accessResult);
 			auditHandler.flushAudit();
 		}
 	}
@@ -214,7 +231,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 
-		UserGroupInformation ugi = getCurrentUserGroupInfo();
+		UserGroupInformation ugi       = getCurrentUserGroupInfo();
+		boolean	             result    = false;
+		List<String>	     roleNames = Arrays.asList(roleName);
 
 		if(ugi == null) {
 			throw new HiveAccessControlException("Permission denied: user information not available");
@@ -225,15 +244,20 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					RESERVED_ROLE_NAMES);
 		}
 
+		String currentUserName = ugi.getShortUserName();
+		List<String> userNames = Arrays.asList(currentUserName);
+
 		try {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== dropRole(): " + roleName);
 			}
-
-			hivePlugin.dropRole(ugi.getShortUserName(), roleName, auditHandler);
+			hivePlugin.dropRole(currentUserName, roleName, auditHandler);
+			result = true;
 		} catch(Exception excp) {
 			throw new HiveAccessControlException(excp);
 		} finally {
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, currentUserName, userNames, HiveOperationType.DROPROLE, HiveAccessType.DROP, roleNames, result);
+			auditHandler.processResult(accessResult);
 			auditHandler.flushAudit();
 		}
 
@@ -245,12 +269,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			LOG.debug("RangerHiveAuthorizer.getCurrentRoleNames()");
 		}
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
+		boolean	          result = false;
 
 		if(ugi == null) {
 			throw new HiveAuthzPluginException("User information not available");
 		}
 		List<String> ret = null;
 		String user = ugi.getShortUserName();
+		List<String> userNames = Arrays.asList(user);
 
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 		try {
@@ -259,9 +285,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			}
 
 			ret = hivePlugin.getUserRoles(user, auditHandler);
+			result = true;
 		} catch(Exception excp) {
 			throw new HiveAuthzPluginException(excp);
 		} finally {
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, user, userNames, HiveOperationType.SHOW_ROLES, HiveAccessType.SELECT, null, result);
+			auditHandler.processResult(accessResult);
 			auditHandler.flushAudit();
 		}
 
@@ -272,7 +301,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	public List<String> getAllRoles()
 			throws HiveAuthzPluginException, HiveAccessControlException {
 		LOG.debug("RangerHiveAuthorizer.getAllRoles()");
-
+		boolean	               result       = false;
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
@@ -281,15 +310,22 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 		List<String> ret = null;
 
+		String currentUserName = ugi.getShortUserName();
+		List<String> userNames = Arrays.asList(currentUserName);
+
 		try {
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== getAllRoles()");
 			}
 
 			ret = hivePlugin.getAllRoles(ugi.getShortUserName(), auditHandler);
+			result = true;
+
 		} catch(Exception excp) {
 			throw new HiveAuthzPluginException(excp);
 		} finally {
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, currentUserName, userNames, HiveOperationType.SHOW_ROLES, HiveAccessType.SELECT, null, result);
+			auditHandler.processResult(accessResult);
 			auditHandler.flushAudit();
 		}
 
@@ -300,7 +336,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	public List<HiveRoleGrant> getPrincipalGrantInfoForRole(String roleName)
 			throws HiveAuthzPluginException, HiveAccessControlException {
 		LOG.debug("RangerHiveAuthorizer.getPrincipalGrantInfoForRole()");
-
+		boolean	               result       = false;
+		List<String>	       roleNames    = Arrays.asList(roleName);
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
@@ -308,6 +345,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			throw new HiveAccessControlException("Permission denied: user information not available");
 		}
 		List<HiveRoleGrant> ret = new ArrayList<>();
+
+		String currentUserName = ugi.getShortUserName();
+		List<String> userNames = Arrays.asList(currentUserName);
+
 		try {
 			RangerRole role = hivePlugin.getRole(ugi.getShortUserName(), roleName, auditHandler);
 
@@ -343,7 +384,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				hiveRoleGrant.setGrantTime((int) (role.getUpdateTime().getTime()/1000));
 				ret.add(hiveRoleGrant);
 			}
-
+			result = true;
 			if(LOG.isDebugEnabled()) {
 				LOG.debug("<== getPrincipalGrantInfoForRole() for role " + role);
 			}
@@ -351,6 +392,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		} catch(Exception excp) {
 			throw new HiveAuthzPluginException(excp);
 		} finally {
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, currentUserName, userNames, HiveOperationType.SHOW_ROLE_PRINCIPALS, HiveAccessType.SELECT, roleNames, result);
+			auditHandler.processResult(accessResult);
 			auditHandler.flushAudit();
 		}
 
@@ -363,27 +406,36 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			throws HiveAuthzPluginException, HiveAccessControlException {
 		LOG.debug("RangerHiveAuthorizerBase.grantRole()");
 
+		boolean	               result       = false;
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
-
+		String 				   username     = getGrantorUsername(grantorPrinc);
+		List<String> 		   principals   = new ArrayList<>();
 		try {
 			GrantRevokeRoleRequest request  = new GrantRevokeRoleRequest();
-			request.setGrantor(getGrantorUsername(grantorPrinc));
+			request.setGrantor(username);
 			request.setGrantorGroups(getGrantorGroupNames(grantorPrinc));
 			Set<String> userList = new HashSet<>();
 			Set<String> roleList = new HashSet<>();
 			Set<String> groupList = new HashSet<>();
 			for(HivePrincipal principal : hivePrincipals) {
+				String  name = null;
 				switch(principal.getType()) {
 					case USER:
-						userList.add(principal.getName());
+						name = principal.getName();
+						userList.add(name);
+						principals.add("USER " + name);
 						break;
 
 					case GROUP:
-						groupList.add(principal.getName());
+						name = principal.getName();
+						groupList.add(name);
+						principals.add("GROUP " + name);
 						break;
 
 					case ROLE:
-						roleList.add(principal.getName());
+						name = principal.getName();
+						roleList.add(name);
+						principals.add("ROLE "+ name);
 						break;
 
 					case UNKNOWN:
@@ -414,10 +466,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 
 			hivePlugin.grantRole(request, auditHandler);
-
+			result = true;
 		} catch(Exception excp) {
 			throw new HiveAccessControlException(excp);
 		} finally {
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, username, principals, HiveOperationType.GRANT_ROLE, HiveAccessType.ALTER, roles, result);
+			auditHandler.processResult(accessResult);
 			auditHandler.flushAudit();
 		}
 	}
@@ -428,26 +482,38 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			throws HiveAuthzPluginException, HiveAccessControlException {
 		LOG.debug("RangerHiveAuthorizerBase.revokeRole()");
 
+		boolean result = false;
+
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+
+		String 		  grantorUserName = getGrantorUsername(grantorPrinc);
+		List<String>  principals      = new ArrayList<>();
 
 		try {
 			GrantRevokeRoleRequest request  = new GrantRevokeRoleRequest();
-			request.setGrantor(getGrantorUsername(grantorPrinc));
+			request.setGrantor(grantorUserName);
 			request.setGrantorGroups(getGrantorGroupNames(grantorPrinc));
 			Set<String> userList = new HashSet<>();
 			Set<String> roleList = new HashSet<>();
 			Set<String> groupList = new HashSet<>();
 			for(HivePrincipal principal : hivePrincipals) {
+				String principalName = null;
 				switch(principal.getType()) {
 					case USER:
-						userList.add(principal.getName());
+						principalName = principal.getName();
+						userList.add(principalName);
+						principals.add("USER " + principalName);
 						break;
 
 					case GROUP:
-						groupList.add(principal.getName());
+						principalName = principal.getName();
+						groupList.add(principalName);
+						principals.add("GROUP " + principalName);
 						break;
 					case ROLE:
-						roleList.add(principal.getName());
+						principalName = principal.getName();
+						roleList.add(principalName);
+						principals.add("ROLE " + principalName);
 						break;
 
 					case UNKNOWN:
@@ -482,10 +548,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				LOG.debug("revokeRole(): " + request);
 			}
 			hivePlugin.revokeRole(request, auditHandler);
-
+			result = true;
 		} catch(Exception excp) {
 			throw new HiveAccessControlException(excp);
 		} finally {
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, grantorUserName, principals, HiveOperationType.REVOKE_ROLE, HiveAccessType.ALTER, roles, result);
+			auditHandler.processResult(accessResult);
 			auditHandler.flushAudit();
 		}
 	}
@@ -2532,6 +2600,129 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		sb.append("}");
 
 		return sb;
+	}
+
+	private RangerAccessResult createAuditEvent(RangerHivePlugin hivePlugin, String userOrGrantor, List<String> roleUsers, HiveOperationType hiveOperationType, HiveAccessType accessType, List<String> roleNames, boolean result) {
+		RangerHiveAccessRequest	rangerHiveAccessRequest	= createRangerHiveAccessRequest(userOrGrantor, roleUsers, hiveOperationType, accessType, roleNames);
+		RangerAccessResult		accessResult 			= createRangerHiveAccessResult(hivePlugin, userOrGrantor, rangerHiveAccessRequest, result);
+		return accessResult;
+	}
+
+	private RangerHiveAccessRequest createRangerHiveAccessRequest(String userOrGrantor, List<String> roleUsers, HiveOperationType hiveOperationType, HiveAccessType accessType, List<String> roleNames) {
+		RangerHiveAccessRequest ret = null;
+
+		HiveAuthzContext.Builder builder	   = new HiveAuthzContext.Builder();
+		String					 roleNameStr   = createRoleString(roleNames);
+		String 					 userNameStr   = createUserString(roleUsers);
+		String					 commandString = getCommandString(hiveOperationType, userNameStr, roleNameStr);
+		String 					 cmdStr		   = (commandString != null) ? commandString : StringUtils.EMPTY;
+		builder.setCommandString(cmdStr);
+		HiveAuthzContext 		hiveAuthzContext = builder.build();
+
+		RangerHiveResource rangerHiveResource	= new RangerHiveResource(HiveObjectType.GLOBAL,"*");
+		ret = new RangerHiveAccessRequest(rangerHiveResource, userOrGrantor, null, hiveOperationType, accessType, hiveAuthzContext, null);
+		ret.setClusterName(hivePlugin.getClusterName());
+		ret.setAction(hiveOperationType.name());
+		ret.setClientIPAddress(getRemoteIp());
+		ret.setRemoteIPAddress(getRemoteIp());
+
+		return ret;
+	}
+
+	private RangerAccessResult createRangerHiveAccessResult(RangerHivePlugin hivePlugin, String userOrGrantor, RangerHiveAccessRequest rangerHiveAccessRequest, boolean result) {
+		RangerAccessResult ret = null;
+
+		String				serviceName	= hivePlugin.getServiceName();
+		RangerServiceDef    serviceDef	= hivePlugin.getServiceDef();
+		String				reason		= String.format("%s is not an Admin", userOrGrantor);
+		if (result) {
+			reason = String.format("%s is Admin", userOrGrantor);
+		}
+		ret = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, serviceName, serviceDef, rangerHiveAccessRequest);
+		ret.setIsAccessDetermined(true);
+		ret.setIsAudited(true);
+		ret.setIsAllowed(result);
+		ret.setAuditPolicyId(-1);
+		ret.setPolicyId(-1);
+		ret.setPolicyPriority(RangerPolicy.POLICY_PRIORITY_NORMAL);
+		ret.setZoneName(null);
+		ret.setPolicyVersion(null);
+		ret.setReason(reason);
+		ret.setAdditionalInfo(MapUtils.EMPTY_MAP);
+
+		return ret;
+	}
+
+	private String getCommandString(HiveOperationType hiveOperationType, String user, String roleName) {
+		String ret = StringUtils.EMPTY;
+
+		switch (hiveOperationType) {
+			case CREATEROLE:
+				ret = String.format(CMD_CREATE_ROLE, roleName);
+				break;
+			case DROPROLE:
+				ret = String.format(CMD_DROP_ROLE, roleName);
+				break;
+			case SHOW_ROLES:
+				ret = CMD_SHOW_ROLES;
+				break;
+			case SHOW_ROLE_GRANT:
+				ret = String.format(CMD_SHOW_ROLE_GRANT, user);
+				break;
+			case SHOW_ROLE_PRINCIPALS:
+				ret = String.format(CMD_SHOW_PRINCIPALS, roleName);
+				break;
+			case GRANT_ROLE:
+				ret = String.format(CMD_GRANT_ROLE, roleName, user);
+				break;
+			case REVOKE_ROLE:
+				ret = String.format(CMD_REVOKE_ROLE, user, roleName);
+				break;
+		}
+
+		return ret;
+	}
+
+	private String createRoleString(List<String> roleNames) {
+		String ret = null;
+
+		if (CollectionUtils.isEmpty(roleNames)) {
+			ret = StringUtils.EMPTY;
+		} else {
+			if (roleNames.size() > 1) {
+				ret = StringUtils.join(roleNames,",");
+			} else {
+				ret = roleNames.get(0);
+			}
+		}
+
+		return ret;
+	}
+
+	private String createUserString (List<String> userNames) {
+		String ret = null;
+
+		if (CollectionUtils.isEmpty(userNames)) {
+			ret = StringUtils.EMPTY;
+		} else {
+			if (userNames.size() > 1) {
+				ret = StringUtils.join(userNames,",");
+			} else {
+				ret = userNames.get(0);
+			}
+		}
+
+		return ret;
+	}
+
+
+	private static String getRemoteIp() {
+		String ret = null;
+		InetAddress ip = Server.getRemoteIp();
+		if (ip != null) {
+			ret = ip.getHostAddress();
+		}
+		return ret;
 	}
 }
 

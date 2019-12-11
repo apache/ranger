@@ -44,6 +44,11 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	Collection<AuthzAuditEvent> auditEvents  = null;
 	boolean                     deniedExists = false;
 
+	Set<String> roleOperationCmds = new HashSet<>(Arrays.asList(HiveOperationType.CREATEROLE.name(), HiveOperationType.DROPROLE.name(),
+			HiveOperationType.SHOW_ROLES.name(), HiveOperationType.SHOW_ROLE_GRANT.name(),
+			HiveOperationType.SHOW_ROLE_PRINCIPALS.name(), HiveOperationType.GRANT_ROLE.name(),
+			HiveOperationType.REVOKE_ROLE.name()));
+
 	public RangerHiveAuditHandler() {
 		super();
 	}
@@ -90,6 +95,11 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 					}
 				}
 				auditEvent.setAccessType(commandStr);
+			}
+
+			String action = request.getAction();
+			if (hiveResource.getObjectType() == HiveObjectType.GLOBAL && isRoleOperation(action)) {
+				auditEvent.setAccessType(action);
 			}
 		}
 
@@ -296,6 +306,14 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			if (ACTION_TYPE_METADATA_OPERATION.equals(action) && !result.getIsAllowed()) {
 				ret = true;
 			}
+		}
+		return ret;
+	}
+
+	private boolean isRoleOperation(String action) {
+		boolean ret = false;
+		if (roleOperationCmds.contains(action)) {
+			ret = true;
 		}
 		return ret;
 	}
