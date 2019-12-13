@@ -1651,6 +1651,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
 
+		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
+		boolean hasExcludedUGRConfigChanged = hasExcludedUGRConfigChanged(dbConfigMaps, validConfigs);
+
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
 		if(populateExistingBaseFields) {
@@ -1663,7 +1666,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setVersion(existing.getVersion());
 			service = svcService.update(service);
 
-			if (hasTagServiceValueChanged || hasIsEnabledChanged) {
+			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasExcludedUGRConfigChanged) {
 				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null, false);
 			}
 		}
@@ -1672,7 +1675,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		String oldPassword = null;
 
-		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
 		for(XXServiceConfigMap dbConfigMap : dbConfigMaps) {
 			if(StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), CONFIG_KEY_PASSWORD)) {
 				oldPassword = dbConfigMap.getConfigvalue();
@@ -5316,4 +5318,39 @@ public class ServiceDBStore extends AbstractServiceStore {
 			ServiceDBStore.persistVersionChange(this);
 		}
 	}
+
+	@Override
+	public Map<String, String> getServiceConfigForPlugin(Long serviceId) {
+		Map<String, String> configs = new HashMap<String, String>();
+		List<XXServiceConfigMap> xxServiceConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(serviceId);
+		if (CollectionUtils.isNotEmpty(xxServiceConfigMaps)) {
+			for (XXServiceConfigMap svcConfMap : xxServiceConfigMaps) {
+				if (StringUtils.startsWith(svcConfMap.getConfigkey(), "ranger.plugin.")) {
+					configs.put(svcConfMap.getConfigkey(), svcConfMap.getConfigvalue());
+				}
+			}
+		}
+		return configs;
+	}
+
+	private boolean hasExcludedUGRConfigChanged(List<XXServiceConfigMap> dbConfigMaps, Map<String, String> validConfigs) {
+		boolean ret = false;
+		String auditExcludeUsers = null;
+		String auditExcludeGroups = null;
+		String auditExcludeRoles = null;
+		for (XXServiceConfigMap dbConfigMap : dbConfigMaps) {
+			if (StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_USERS)) {
+				auditExcludeUsers = StringUtils.trimToEmpty(dbConfigMap.getConfigvalue());
+			} else if (StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_GROUPS)) {
+				auditExcludeGroups = StringUtils.trimToEmpty(dbConfigMap.getConfigvalue());
+			} else if (StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_ROLES)) {
+				auditExcludeRoles = StringUtils.trimToEmpty(dbConfigMap.getConfigvalue());
+			}
+		}
+		ret = !StringUtils.equals(auditExcludeUsers, validConfigs.get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_USERS))
+				|| !StringUtils.equals(auditExcludeGroups, validConfigs.get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_GROUPS))
+				|| !StringUtils.equals(auditExcludeRoles, validConfigs.get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_ROLES));
+		return ret;
+	}
+
 }

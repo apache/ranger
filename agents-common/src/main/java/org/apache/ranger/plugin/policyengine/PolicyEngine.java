@@ -33,6 +33,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
@@ -63,6 +64,9 @@ public class PolicyEngine {
     private       boolean                             useForwardedIPAddress;
     private       String[]                            trustedProxyAddresses;
     private       boolean                             isPreCleaned = false;
+    private final Set<String>                         auditExcludeUsers;
+    private final Set<String>                         auditExcludeGroups;
+    private final Set<String>                         auditExcludeRoles;
 
 
     public boolean getUseForwardedIPAddress() {
@@ -110,6 +114,18 @@ public class PolicyEngine {
     public List<RangerContextEnricher> getAllContextEnrichers() { return allContextEnrichers; }
 
     public RangerPluginContext getPluginContext() { return pluginContext; }
+
+	public Set<String> getAuditExcludeUsers() {
+		return auditExcludeUsers;
+	}
+
+	public Set<String> getAuditExcludeGroups() {
+		return auditExcludeGroups;
+	}
+
+	public Set<String> getAuditExcludeRoles() {
+		return auditExcludeRoles;
+	}
 
     @Override
     public String toString() {
@@ -180,8 +196,25 @@ public class PolicyEngine {
 
                 break;
         }
+        if (isAuditExcludedRequest(request)) {
+            ret.setIsAudited(false);
+        }
         return ret;
     }
+
+	private boolean isAuditExcludedRequest(RangerAccessRequest request) {
+		boolean ret = getAuditExcludeUsers().contains(request.getUser());
+
+		if (!ret && CollectionUtils.isNotEmpty(getAuditExcludeGroups())) {
+			ret = CollectionUtils.containsAny(getAuditExcludeGroups(), request.getUserGroups());
+		}
+
+		if (!ret && CollectionUtils.isNotEmpty(getAuditExcludeRoles())) {
+			Set<String> roles = this.pluginContext.getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
+			ret = CollectionUtils.containsAny(getAuditExcludeRoles(), roles);
+		}
+		return ret;
+	}
 
     public PolicyEngine(ServicePolicies servicePolicies, RangerPluginContext pluginContext, RangerRoles roles) {
         if (LOG.isDebugEnabled()) {
@@ -256,6 +289,10 @@ public class PolicyEngine {
                 zonePolicyRepositories.put(zone.getKey(), policyRepository);
             }
         }
+
+        this.auditExcludeUsers  = servicePolicies.getServiceConfig() !=null ? StringUtil.toSet(servicePolicies.getServiceConfig().get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_USERS)) : new HashSet<String>();
+        this.auditExcludeGroups = servicePolicies.getServiceConfig() !=null ? StringUtil.toSet(servicePolicies.getServiceConfig().get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_GROUPS)) : new HashSet<String>();
+        this.auditExcludeRoles  = servicePolicies.getServiceConfig() !=null ? StringUtil.toSet(servicePolicies.getServiceConfig().get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_ROLES)) : new HashSet<String>();
 
         RangerPerfTracer.log(perf);
 
@@ -584,6 +621,10 @@ public class PolicyEngine {
         this.useForwardedIPAddress = other.useForwardedIPAddress;
         this.trustedProxyAddresses = other.trustedProxyAddresses;
         this.pluginContext         = other.pluginContext;
+
+        this.auditExcludeUsers  = servicePolicies.getServiceConfig() !=null ? StringUtil.toSet(servicePolicies.getServiceConfig().get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_USERS)) : new HashSet<String>();
+        this.auditExcludeGroups = servicePolicies.getServiceConfig() !=null ? StringUtil.toSet(servicePolicies.getServiceConfig().get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_GROUPS)) : new HashSet<String>();
+        this.auditExcludeRoles  = servicePolicies.getServiceConfig() !=null ? StringUtil.toSet(servicePolicies.getServiceConfig().get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_ROLES)) : new HashSet<String>();
 
         long                    policyVersion                   = servicePolicies.getPolicyVersion() != null ? servicePolicies.getPolicyVersion() : -1L;
         List<RangerPolicyDelta> defaultZoneDeltas               = new ArrayList<>();

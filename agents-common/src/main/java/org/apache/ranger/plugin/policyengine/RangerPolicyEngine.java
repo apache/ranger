@@ -38,6 +38,10 @@ public interface RangerPolicyEngine {
 	String AUDIT_NONE     = "audit-none";
 	String AUDIT_DEFAULT  = "audit-default";
 
+	String PLUGIN_AUDIT_EXCLUDE_USERS = "ranger.plugin.audit.exclude.users";
+	String PLUGIN_AUDIT_EXCLUDE_GROUPS = "ranger.plugin.audit.exclude.groups";
+	String PLUGIN_AUDIT_EXCLUDE_ROLES = "ranger.plugin.audit.exclude.roles";
+
 	String USER_CURRENT   = "{" + RangerAccessRequestUtil.KEY_USER + "}";
 	String RESOURCE_OWNER = "{OWNER}";
 

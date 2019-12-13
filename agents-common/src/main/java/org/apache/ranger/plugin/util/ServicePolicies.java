@@ -59,6 +59,7 @@ public class ServicePolicies implements java.io.Serializable {
 	private TagPolicies        tagPolicies;
 	private Map<String, SecurityZoneInfo> securityZones;
 	private List<RangerPolicyDelta> policyDeltas;
+	private Map<String, String> serviceConfig;
 
 	/**
 	 * @return the serviceName
@@ -108,6 +109,14 @@ public class ServicePolicies implements java.io.Serializable {
 	public void setPolicyUpdateTime(Date policyUpdateTime) {
 		this.policyUpdateTime = policyUpdateTime;
 	}
+
+	public Map<String, String> getServiceConfig() {
+		return serviceConfig;
+	}
+	public void setServiceConfig(Map<String, String> serviceConfig) {
+		this.serviceConfig = serviceConfig;
+	}
+
 	/**
 	 * @return the policies
 	 */

@@ -119,4 +119,5 @@ public interface ServiceStore {
 
     long getPoliciesCount(final String serviceName);
 
+    Map<String, String> getServiceConfigForPlugin(Long serviceId);
 }
