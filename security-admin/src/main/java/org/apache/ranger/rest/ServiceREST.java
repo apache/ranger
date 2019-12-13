@@ -745,12 +745,16 @@ public class ServiceREST {
 			}
                          bizUtil.blockAuditorRoleUser();
 
-			if (StringUtils.isBlank(service.getTagService()) && xxServiceDef != null && !StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, xxServiceDef.getName())) {
+			if (StringUtils.isBlank(service.getTagService())
+					&& xxServiceDef != null
+					&& !StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, xxServiceDef.getName())
+					&& !StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME , xxServiceDef.getName())) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Tag service may need to be created and linked with this service:[" + service.getName() + "]");
 				}
 				scheduleCreateOrGetTagService(service);
 			}
+
 			ret = svcStore.createService(service);
 		} catch(WebApplicationException excp) {
 			throw excp;
