@@ -63,6 +63,7 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.rest.ServiceREST;
+import org.apache.ranger.security.context.RangerAdminOpContext;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
@@ -1496,7 +1497,8 @@ public class RangerBizUtil {
 	}
 
 	public static boolean setBulkMode(boolean val) {
-		RangerContextHolder.getOpContext().setBulkModeContext(val);
+		RangerAdminOpContext opContext = RangerContextHolder.getOpContext();
+		if(null != opContext) opContext.setBulkModeContext(val);
 		return isBulkMode();
 	}
 
