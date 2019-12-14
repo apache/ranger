@@ -33,7 +33,6 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzPluginEx
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveAuthzSessionContext.CLIENT_TYPE;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveMetastoreClientFactory;
-import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePolicyProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrincipal;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeInfo;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
@@ -157,12 +156,6 @@ public abstract class RangerHiveAuthorizerBase extends AbstractHiveAuthorizer {
 
 	private void throwNotImplementedException(String method) throws HiveAuthzPluginException {
 		throw new HiveAuthzPluginException(method + "() not implemented in Ranger AbstractHiveAuthorizer");
-	}
-
-	@Override
-	public HivePolicyProvider getHivePolicyProvider() throws HiveAuthzPluginException {
-	    // TODO Auto-generated method stub
-	    return null;
 	}
 
 }
