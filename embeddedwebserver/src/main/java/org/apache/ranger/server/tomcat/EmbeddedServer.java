@@ -497,7 +497,11 @@ public class EmbeddedServer {
 	private KeyManager[] getKeyManagers() {
 		KeyManager[] kmList = null;
 		String keyStoreFile = getConfig("ranger.keystore.file");
-		String keyStoreAlias = getConfig("ranger.keystore.alias");
+		String keyStoreAlias = getConfig("ranger.keystore.alias", "keyStoreCredentialAlias");
+		if (StringUtils.isBlank(keyStoreFile)) {
+			keyStoreFile = getKeystoreFile();
+			keyStoreAlias = getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
+		}
 		String credentialProviderPath = getConfig("ranger.credential.provider.path");
 		String keyStoreFilepwd = getCredential(credentialProviderPath, keyStoreAlias);
 
@@ -534,6 +538,16 @@ public class EmbeddedServer {
 				LOG.log(Level.SEVERE, "Unable to recover the key from keystore", e);
 			} finally {
 				close(in, keyStoreFile);
+			}
+		} else {
+			if (StringUtils.isBlank(keyStoreFile)) {
+				LOG.warning("Config 'ranger.keystore.file' or 'ranger.service.https.attrib.keystore.file' is not found or contains blank value");
+			} else if (StringUtils.isBlank(keyStoreAlias)) {
+				LOG.warning("Config 'ranger.keystore.alias' or 'ranger.service.https.attrib.keystore.credential.alias' is not found or contains blank value");
+			} else if (StringUtils.isBlank(credentialProviderPath)) {
+				LOG.warning("Config 'ranger.credential.provider.path' is not found or contains blank value");
+			} else if (StringUtils.isBlank(keyStoreFilepwd)) {
+				LOG.warning("Unable to read credential from credential store file ["+ credentialProviderPath + "] for given alias:"+keyStoreAlias);
 			}
 		}
 		return kmList;
@@ -577,6 +591,16 @@ public class EmbeddedServer {
 				LOG.log(Level.SEVERE, "Unable to read the necessary SSL TrustStore Files :" + truststoreFile, e);
 			} finally {
 				close(in, truststoreFile);
+			}
+		} else {
+			if (StringUtils.isBlank(truststoreFile)) {
+				LOG.warning("Config 'ranger.truststore.file' is not found or contains blank value!");
+			} else if (StringUtils.isBlank(truststoreAlias)) {
+				LOG.warning("Config 'ranger.truststore.alias' is not found or contains blank value!");
+			} else if (StringUtils.isBlank(credentialProviderPath)) {
+				LOG.warning("Config 'ranger.credential.provider.path' is not found or contains blank value!");
+			} else if (StringUtils.isBlank(trustStoreFilepwd)) {
+				LOG.warning("Unable to read credential from credential store file ["+ credentialProviderPath + "] for given alias:"+truststoreAlias);
 			}
 		}
 
