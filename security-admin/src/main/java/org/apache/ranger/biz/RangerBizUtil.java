@@ -63,6 +63,7 @@ import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.rest.ServiceREST;
+import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResponse;
@@ -1491,6 +1492,11 @@ public class RangerBizUtil {
 
 	public static boolean isBulkMode() {
 		return ContextUtil.isBulkModeContext();
+	}
+
+	public static boolean setBulkMode(boolean val) {
+		RangerContextHolder.getOpContext().setBulkModeContext(val);
+		return isBulkMode();
 	}
 
 	//should be used only in bulk operation like importPolicies, policies delete.
