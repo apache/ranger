@@ -240,4 +240,15 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 		return ret;
 	}
+
+	public long getPoliciesCount(String serviceName) {
+		long ret = 0L;
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicy.getPoliciesCount", Long.class)
+					.setParameter("serviceName", serviceName).getSingleResult();
+		} catch (Exception e) {
+		}
+		return ret;
+	}
 }

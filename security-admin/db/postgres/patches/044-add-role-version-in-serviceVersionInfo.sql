@@ -15,7 +15,7 @@
 
 -- function add-role-version-in-serviceVersionInfo
 select 'delimiter start';
-CREATE OR REPLACE FUNCTION add-role-version-in-serviceVersionInfo()
+CREATE OR REPLACE FUNCTION add_role_version_in_serviceVersionInfo()
 RETURNS void AS $$
 DECLARE
  v_column_exists integer := 0;
@@ -32,5 +32,5 @@ END;
 $$ LANGUAGE plpgsql;
 select 'delimiter end';
 
-select add-role-version-in-serviceVersionInfo();
+select add_role_version_in_serviceVersionInfo();
 select 'delimiter end';

@@ -16,24 +16,11 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ranger.plugin.policyevaluator;
 
-import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+package org.apache.ranger.plugin.policyengine;
 
-public interface RangerResourceAccessCache {
-    public enum LookupResult {
-        IN_MATCHED_CACHE,
-        IN_NOTMATCHED_CACHE,
-        NOT_FOUND,
-        ERROR
-    }
+public interface RangerAccessRequestProcessor {
+    void preProcess(RangerAccessRequest request);
 
-    public enum CacheType {
-        MATCHED_CACHE,
-        NOTMATCHED_CACHE
-    }
-
-    LookupResult lookup(RangerAccessResource resource);
-
-    void add(RangerAccessResource resource, CacheType cacheType);
+    default void enrich(RangerAccessRequest request) {}
 }

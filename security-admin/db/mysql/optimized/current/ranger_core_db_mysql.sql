@@ -116,6 +116,7 @@ CREATE TABLE `x_portal_user` (
   `status` int(11) NOT NULL DEFAULT '0',
   `user_src` int(11) NOT NULL DEFAULT '0',
   `notes` varchar(4000) DEFAULT NULL,
+  `other_attributes` varchar(4000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `x_portal_user_UK_login_id` (`login_id`),
   UNIQUE KEY `x_portal_user_UK_email` (`email`),
@@ -274,6 +275,7 @@ CREATE TABLE `x_group` (
   `cred_store_id` bigint(20) DEFAULT NULL,
   `group_src` INT NOT NULL DEFAULT 0,
   `is_visible` INT(11) NOT NULL DEFAULT '1',
+  `other_attributes` varchar(4000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `x_group_UK_group_name` (`group_name`),
   KEY `x_group_FK_added_by_id` (`added_by_id`),
@@ -319,6 +321,7 @@ CREATE TABLE `x_user` (
   `status` int(11) NOT NULL DEFAULT '0',
   `cred_store_id` bigint(20) DEFAULT NULL,
   `is_visible` INT(11) NOT NULL DEFAULT '1',
+  `other_attributes` varchar(4000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `x_user_FK_added_by_id` (`added_by_id`),
   KEY `x_user_FK_upd_by_id` (`upd_by_id`),
@@ -513,6 +516,7 @@ CREATE TABLE `x_service_def` (
 `upd_by_id` bigint(20) DEFAULT NULL,
 `version` bigint(20) DEFAULT NULL,
 `name` varchar(1024) DEFAULT NULL,
+`display_name` varchar(1024) DEFAULT NULL,
 `impl_class_name` varchar(1024) DEFAULT NULL,
 `label` varchar(1024) DEFAULT NULL,
 `description` varchar(1024) DEFAULT NULL,
@@ -539,6 +543,7 @@ CREATE TABLE `x_service` (
 `version` bigint(20) DEFAULT NULL,
 `type` bigint(20) DEFAULT NULL,
 `name` varchar(255) DEFAULT NULL,
+`display_name` varchar(255) DEFAULT NULL,
 `policy_version` bigint(20) DEFAULT NULL,
 `policy_update_time`datetime DEFAULT NULL,
 `description` varchar(1024) DEFAULT NULL,
@@ -1667,6 +1672,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('044',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('045',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)

@@ -19,7 +19,7 @@
 
 package org.apache.ranger.common;
 
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
@@ -38,6 +38,7 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
     private static TagStore         tagStore   = null;
     private static RangerDaoManager daoManager = null;
 
+    private static boolean ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS_INITIALIZED = false;
     private static boolean ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS;
 
     private Long serviceId;
@@ -57,7 +58,13 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
         }
         super.init();
 
-        ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS = RangerConfiguration.getInstance().getBoolean("ranger.admin.tag.enricher.supports.tag.deltas", true);
+        if (!ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS_INITIALIZED) {
+            RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+            ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS = config.getBoolean("ranger.admin.tag.enricher.supports.tag.deltas", true);
+
+            ADMIN_TAG_ENRICHER_SUPPORTS_TAG_DELTAS_INITIALIZED = true;
+        }
 
         ServiceStore svcStore = tagStore != null ? tagStore.getServiceStore() : null;
 

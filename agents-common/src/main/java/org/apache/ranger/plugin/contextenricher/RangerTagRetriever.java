@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.ServiceTags;
 
@@ -26,9 +27,10 @@ import java.util.Map;
 
 public abstract class RangerTagRetriever {
 
-	protected String serviceName;
-	protected RangerServiceDef serviceDef;
-	protected String appId;
+	protected String             serviceName;
+	protected RangerServiceDef   serviceDef;
+	protected String             appId;
+	protected RangerPluginConfig pluginConfig;
 
 	public abstract void init(Map<String, String> options);
 
@@ -57,4 +59,6 @@ public abstract class RangerTagRetriever {
 	public void setAppId(String appId) {
 		this.appId = appId;
 	}
+
+	public void setPluginConfig(RangerPluginConfig pluginConfig) { this.pluginConfig = pluginConfig; }
 }

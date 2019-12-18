@@ -45,7 +45,7 @@ public interface RoleStore {
 
     List<String>     getRoleNames(SearchFilter filter) throws Exception;
 
-    RangerRoles getRangerRoles(String serviceName, Long lastKnownRoleVersion) throws Exception;
+    RangerRoles getRoles(String serviceName, Long lastKnownRoleVersion) throws Exception;
 
     Long getRoleVersion(String serviceName);
 

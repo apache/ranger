@@ -525,8 +525,14 @@
 				if (!serv.get('isEnabled')) {
 					tr += '<i class="icon-ban-circle text-color-red pull-left icon-large"></i>';
 				}
-				tr += '<a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
-					  </div></td></tr>';
+                                //For service name
+                                if(!_.isUndefined(serv) && !_.isUndefined(serv.get('displayName')) ) {
+                                        tr += '<a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.get('displayName'))+'">'+_.escape(serv.get('displayName'))+'</a>'+serviceOperationDiv+'\
+                                                </div></td></tr>';
+                                } else {
+                                        tr += '<a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
+                                                </div></td></tr>';
+                                }
 			});
 		}
 		return tr;

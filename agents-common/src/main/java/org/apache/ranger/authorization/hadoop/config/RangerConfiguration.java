@@ -20,7 +20,6 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
-import java.io.File;
 import java.net.URL;
 import java.util.Properties;
 
@@ -30,63 +29,14 @@ import org.apache.log4j.Logger;
 
 public class RangerConfiguration extends Configuration {
 	private static final Logger LOG = Logger.getLogger(RangerConfiguration.class);
-	
-	private static volatile RangerConfiguration config;
-	
-	private RangerConfiguration() {
+
+	protected RangerConfiguration() {
 		super(false);
 	}
 
-	public void addResourcesForServiceType(String serviceType) {
-		String auditCfg    = "ranger-" + serviceType + "-audit.xml";
-		String securityCfg = "ranger-" + serviceType + "-security.xml";
-		String sslCfg 	   = "ranger-" + serviceType + "-policymgr-ssl.xml";
-
-		if ( !addResourceIfReadable(auditCfg)) {
-			addAuditResource(serviceType);
-		}
-
-		if ( !addResourceIfReadable(securityCfg)) {
-			addSecurityResource(serviceType);
-		}
-
-		if ( !addResourceIfReadable(sslCfg)) {
-			addSslConfigResource(serviceType);
-		}
-
-	}
-
-	public boolean addAdminResources() {
-		String defaultCfg = "ranger-admin-default-site.xml";
-		String addlCfg = "ranger-admin-site.xml";
-		String coreCfg = "core-site.xml";
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> addAdminResources()");
-		}
-		boolean ret = true;
-
-		if (! addResourceIfReadable(defaultCfg)) {
-			ret = false;
-		}
-
-		if (! addResourceIfReadable(addlCfg)) {
-			ret = false;
-		}
-		
-		if(! addResourceIfReadable(coreCfg)){
-			ret = false;
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== addAdminResources(), result=" + ret);
-		}
-		return ret;
-	}
-
 	public boolean addResourceIfReadable(String aResourceName) {
-		
 		boolean ret = false;
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> addResourceIfReadable(" + aResourceName + ")");
 		}
@@ -116,23 +66,10 @@ public class RangerConfiguration extends Configuration {
 		return ret;
 	}
 	
-
-	public static RangerConfiguration getInstance() {
-        RangerConfiguration result = config;
-		if (result == null) {
-			synchronized (RangerConfiguration.class) {
-				result = config;
-				if (result == null) {
-					config = result = new RangerConfiguration();
-				}
-			}
-		}
-		return result;
-	}
-
 	public Properties getProperties() {
 		return getProps();
 	}
+
 
 	private URL getFileLocation(String fileName) {
 		URL lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
@@ -142,94 +79,4 @@ public class RangerConfiguration extends Configuration {
 		}
 		return lurl;
 	}
-	
-	private void  addSecurityResource(String serviceType) {
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> addSecurityResource(Service Type: " + serviceType );
-		}
-
-		Configuration rangerConf = RangerLegacyConfigBuilder.getSecurityConfig(serviceType);
-
-		if ( rangerConf != null ) {
-			addResource(rangerConf);
-		} else {
-			if(LOG.isDebugEnabled()) {
-				LOG.debug("Unable to add the Security Config for " + serviceType + ". Plugin won't be enabled!");
-			}
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<= addSecurityResource(Service Type: " + serviceType );
-		}
-	}
-
-	private void  addAuditResource(String serviceType) {
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> addAuditResource(Service Type: " + serviceType );
-		}
-
-		try {
-			URL url = RangerLegacyConfigBuilder.getAuditConfig(serviceType);
-
-			if( url != null) {
-				addResource(url);
-				
-				if(LOG.isDebugEnabled()) {
-					LOG.debug("==> addAuditResource() URL" + url.getPath());
-				}
-			}
-				
-		} catch (Throwable t) {
-			LOG.warn(" Unable to find Audit Config for "  + serviceType + " Auditing not enabled !" );
-			if(LOG.isDebugEnabled()) {
-				LOG.debug(" Unable to find Audit Config for "  + serviceType + " Auditing not enabled !" + t);
-			}
-		}
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== addAuditResource(Service Type: " + serviceType + ")");
-		}
-	}
-
-	private void addSslConfigResource(String serviceType) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> addSslConfigResource(Service Type: " + serviceType);
-		}
-		try {
-			String sslConfigFile = config.get(RangerLegacyConfigBuilder.getPropertyName(RangerConfigConstants.RANGER_PLUGIN_REST_SSL_CONFIG_FILE, serviceType));
-			URL url = getSSLConfigResource(sslConfigFile);
-			if (url != null) {
-				addResource(url);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("SSL config file URL:" + url.getPath());
-				}
-			}
-		} catch (Throwable t) {
-			LOG.warn(" Unable to find SSL Configs");
-			if (LOG.isDebugEnabled()) {
-				LOG.debug(" Unable to find SSL Configs");
-			}
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== addSslConfigResource(Service Type: " + serviceType + ")");
-		}
-	}
-
-	private URL getSSLConfigResource(String fileName) throws Throwable {
-		URL ret = null;
-		try {
-			if (fileName != null) {
-				File f = new File(fileName);
-				if (f.exists() && f.canRead()) {
-					ret = f.toURI().toURL();
-				}
-			}
-		} catch (Throwable t) {
-			LOG.error("Unable to read SSL configuration file:" + fileName);
-			throw t;
-		}
-		return ret;
-	}
-
 }

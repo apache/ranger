@@ -17,59 +17,29 @@
  */
 package org.apache.hadoop.crypto.key.kms.server;
 
-import org.apache.commons.codec.binary.Base64;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.crypto.key.KeyProvider;
-import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension.EncryptedKeyVersion;
 import org.apache.hadoop.crypto.key.kms.KMSRESTConstants;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import org.apache.hadoop.util.KMSUtil;
 
 /**
  * JSON utility methods for the KMS.
  */
 @InterfaceAudience.Private
 public class KMSServerJSONUtils {
-  @SuppressWarnings("unchecked")
-  public static Map toJSON(KeyProvider.KeyVersion keyVersion) {
-    Map json = new LinkedHashMap();
-    if (keyVersion != null) {
-      json.put(KMSRESTConstants.NAME_FIELD,
-          keyVersion.getName());
-      json.put(KMSRESTConstants.VERSION_NAME_FIELD,
-          keyVersion.getVersionName());
-      json.put(KMSRESTConstants.MATERIAL_FIELD,
-          Base64.encodeBase64URLSafeString(
-              keyVersion.getMaterial()));
-    }
-    return json;
-  }
 
   @SuppressWarnings("unchecked")
   public static List toJSON(List<KeyProvider.KeyVersion> keyVersions) {
     List json = new ArrayList();
     if (keyVersions != null) {
       for (KeyProvider.KeyVersion version : keyVersions) {
-        json.add(toJSON(version));
+        json.add(KMSUtil.toJSON(version));
       }
-    }
-    return json;
-  }
-
-  @SuppressWarnings("unchecked")
-  public static Map toJSON(EncryptedKeyVersion encryptedKeyVersion) {
-    Map json = new LinkedHashMap();
-    if (encryptedKeyVersion != null) {
-      json.put(KMSRESTConstants.VERSION_NAME_FIELD,
-          encryptedKeyVersion.getEncryptionKeyVersionName());
-      json.put(KMSRESTConstants.IV_FIELD,
-          Base64.encodeBase64URLSafeString(
-              encryptedKeyVersion.getEncryptedKeyIv()));
-      json.put(KMSRESTConstants.ENCRYPTED_KEY_VERSION_FIELD,
-          toJSON(encryptedKeyVersion.getEncryptedKeyVersion()));
     }
     return json;
   }

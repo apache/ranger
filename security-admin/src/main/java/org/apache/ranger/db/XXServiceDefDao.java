@@ -24,6 +24,8 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceDef;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
+
 @Service
 public class XXServiceDefDao extends BaseDao<XXServiceDef> {
 	/**
@@ -46,6 +48,21 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
 			return null;
 		}
 	}
+
+	public XXServiceDef findByDisplayName(String displayName) {
+		if (Objects.isNull(displayName)) {
+			return null;
+		}
+		try {
+			XXServiceDef xServiceDef = getEntityManager()
+					.createNamedQuery("XXServiceDef.findByDisplayName", tClass)
+					.setParameter("displayName", displayName).getSingleResult();
+			return xServiceDef;
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
 
 	public Long getMaxIdOfXXServiceDef() {
 		try {

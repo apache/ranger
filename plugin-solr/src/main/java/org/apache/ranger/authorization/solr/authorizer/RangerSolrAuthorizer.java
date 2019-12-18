@@ -33,7 +33,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -150,22 +149,22 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 				}
 			}
 			solrPlugin.init();
-			auditHandler = new RangerSolrAuditHandler();
+			auditHandler = new RangerSolrAuditHandler(solrPlugin.getConfig());
 			solrPlugin.setResultProcessor(auditHandler);
 		} catch (Throwable t) {
 			logger.fatal("Error creating and initializing RangerBasePlugin()");
 		}
 
 		try {
-			useProxyIP = RangerConfiguration.getInstance().getBoolean(
+			useProxyIP = solrPlugin.getConfig().getBoolean(
 					PROP_USE_PROXY_IP, useProxyIP);
-			proxyIPHeader = RangerConfiguration.getInstance().get(
+			proxyIPHeader = solrPlugin.getConfig().get(
 					PROP_PROXY_IP_HEADER, proxyIPHeader);
 			// First get from the -D property
 			solrAppName = System.getProperty("solr.kerberos.jaas.appname",
 					solrAppName);
 			// Override if required from Ranger properties
-			solrAppName = RangerConfiguration.getInstance().get(
+			solrAppName = solrPlugin.getConfig().get(
 					PROP_SOLR_APP_NAME, solrAppName);
 
 			logger.info("init(): useProxyIP=" + useProxyIP);
@@ -558,7 +557,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 
 	private Set<String> getRolesForUser(String name) {
 		if (solrPlugin.getCurrentRangerAuthContext() != null) {
-			return solrPlugin.getCurrentRangerAuthContext().getRolesFromUserAndGroups(name, getGroupsForUser(name));
+			return solrPlugin.getRolesFromUserAndGroups(name, getGroupsForUser(name));
 		}
 		else {
 			logger.info("Current Ranger Auth Context is null!!");

@@ -975,6 +975,7 @@ CREATE TABLE [dbo].[x_portal_user](
         [status] [int] DEFAULT 0 NOT NULL,
         [user_src] [int] DEFAULT 0 NOT NULL,
         [notes] [varchar](4000) DEFAULT NULL NULL,
+        [other_attributes] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1126,6 +1127,7 @@ CREATE TABLE [dbo].[x_group](
         [cred_store_id] [bigint] DEFAULT NULL NULL,
         [group_src] [int] DEFAULT 0 NOT NULL,
         [is_visible] [int] DEFAULT 1 NOT NULL,
+        [other_attributes] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1168,6 +1170,7 @@ CREATE TABLE [dbo].[x_user](
         [status] [int] DEFAULT 0 NOT NULL,
         [cred_store_id] [bigint] DEFAULT NULL NULL,
         [is_visible] [int] DEFAULT 1 NOT NULL,
+        [other_attributes] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1350,6 +1353,7 @@ CREATE TABLE [dbo].[x_service_def](
         [upd_by_id] [bigint] DEFAULT NULL NULL,
         [version] [bigint] DEFAULT NULL NULL,
         [name] [varchar](1024) DEFAULT NULL NULL,
+        [display_name] [varchar](1024) DEFAULT NULL NULL,
         [impl_class_name] [varchar](1024) DEFAULT NULL NULL,
         [label] [varchar](1024) DEFAULT NULL NULL,
         [description] [varchar](1024) DEFAULT NULL NULL,
@@ -1375,6 +1379,7 @@ CREATE TABLE [dbo].[x_service] (
         [version] [bigint] DEFAULT NULL NULL,
         [type] [bigint] DEFAULT NULL NULL,
         [name] [varchar](255) DEFAULT NULL NULL,
+        [display_name] [varchar](255) DEFAULT NULL NULL,
         [policy_version] [bigint] DEFAULT NULL NULL,
         [policy_update_time] [datetime2] DEFAULT NULL NULL,
         [description] [varchar](1024) DEFAULT NULL NULL,
@@ -2048,7 +2053,7 @@ CREATE TABLE [dbo].[x_service_version_info](
         [policy_update_time] [datetime2] DEFAULT NULL NULL,
         [tag_version] [bigint] NOT NULL DEFAULT 0,
         [tag_update_time] [datetime2] DEFAULT NULL NULL,
-        [policy_version] [bigint] NOT NULL DEFAULT 0,
+        [role_version] [bigint] NOT NULL DEFAULT 0,
         [role_update_time] [datetime2] DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
 (
@@ -3895,6 +3900,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('044',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('045',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);

@@ -763,29 +763,44 @@ define(function(require) {
 			pluginAttr) {
 		var visualSearch, that = this;
 		var supportMultipleItems = pluginAttr.supportMultipleItems || false;
-		var multipleFacet = serverAttrName.filter(function(elem) { 
+                var multipleFacet = serverAttrName.filter(function(elem) {
 			return elem['addMultiple'];
 		}).map(function(elem) {
 			return elem.text;
 		});
 		var search = function(searchCollection, collection) {
-			var params = {};
+                        var params = {}, urlParams = {};
 			if($('.popover')){
 					$('.popover').remove();
 			}
 			searchCollection.each(function(m) {
-				var serverParamName = _.findWhere(serverAttrName, {
-					text : m.attributes.category
-				});
-				var extraParam = {};
-				if (_.has(serverParamName, 'multiple')
-						&& serverParamName.multiple) {
-					extraParam[serverParamName.label] = XAUtils
-							.enumLabelToValue(serverParamName.optionsArr, m
-									.get('value'));
-					;
-					$.extend(params, extraParam);
-				} else {
+                //For url params
+                if(_.has(urlParams, m.get('category'))) {
+                        var oldValue = urlParams[m.get('category')], newValue = m.get('value');
+                        if (Array.isArray(oldValue)) {
+                                // if it's a list, append to the end
+                                oldValue.push(newValue);
+                        } else {
+                                // convert to a list
+                                urlParams[m.get('category')] = [oldValue, newValue];
+                        }
+                } else {
+                        urlParams[m.get('category')] = m.get('value')
+                }
+                var serverParamName = _.findWhere(serverAttrName, {
+                        text : m.attributes.category
+                });
+                //  pass label in url params
+                // if(_.isUndefined(serverParamName)) {
+                // 	var serverParamName = _.findWhere(serverAttrName, {
+                // 		label : m.attributes.category
+                // 	});
+                // }
+                var extraParam = {};
+                if (serverParamName && _.has(serverParamName, 'multiple') && serverParamName.multiple) {
+                        extraParam[serverParamName.label] = XAUtils.enumLabelToValue(serverParamName.optionsArr, m.get('value'));
+                        $.extend(params, extraParam);
+                } else {
 					if (!_.isUndefined(serverParamName)) {
 						var oldValue = params[serverParamName.label];
 						var newValue = m.get('value');
@@ -806,6 +821,16 @@ define(function(require) {
 			});
 			collection.queryParams = $.extend(collection.queryParams, params);
 			collection.state.currentPage = collection.state.firstPage;
+            //Add urlLabel to URL
+            var urlLabelParam = {};
+            _.map(urlParams, function(attr, key) {
+                _.filter(serverAttrName, function(val) {
+                    if(val.text === key) {
+                        return urlLabelParam[val.urlLabel] = attr
+                    }
+                })
+            })
+            XAUtils.changeParamToUrlFragment(urlLabelParam, collection.modelName);
 			collection.fetch({
 				reset : true,
 				cache : false,
@@ -1737,6 +1762,86 @@ define(function(require) {
             field.focus();
         });
     };
+
+    //Get service details By Service name
+    XAUtils.getServiceByName = function(name) {
+        return "/service/plugins/services/name/" + name
+    };
+
+    //Add visual search query parameter to URL
+    XAUtils.changeParamToUrlFragment = function(obj, modelName) {
+	var App = require('App');
+        var baseUrlFregment = Backbone.history.fragment.split('?')[0],
+        str = [];
+        for (var p in obj) {
+            if (obj.hasOwnProperty(p)) {
+                if(_.isArray(obj[p])) {
+                    _.each(obj[p], function(val) {
+                        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(val));
+                    })
+                } else {
+                    str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+                }
+            }
+        }
+        if(App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName) && !obj.hasOwnProperty("securityZone") &&
+            modelName && (modelName === "RangerServiceDef" || modelName === "RangerPolicy")) {
+		str.push(encodeURIComponent("securityZone")+"="+ encodeURIComponent(App.vZone.vZoneName));
+        }
+        if( _.isEmpty(str)) {
+            Backbone.history.navigate(baseUrlFregment , false);
+        } else {
+            Backbone.history.navigate(baseUrlFregment+"?"+str.join("&") , false);
+        }
+    }
+
+    //convert URL to object params
+    XAUtils.changeUrlToSearchQuery = function(query) {
+        var query_string = {};
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            pair[0] = decodeURIComponent(pair[0]);
+            pair[1] = decodeURIComponent(pair[1]);
+            // If first entry with this name
+            if (typeof query_string[pair[0]] === "undefined") {
+                query_string[pair[0]] = pair[1];
+                // If second entry with this name
+            } else if (typeof query_string[pair[0]] === "string") {
+                var arr = [ query_string[pair[0]], pair[1] ];
+                query_string[pair[0]] = arr;
+                // If third or later entry with this name
+            } else {
+                query_string[pair[0]].push(pair[1]);
+            }
+        }
+        return query_string;
+    }
+
+    //convert URL to visual search query parameter
+    XAUtils.changeUrlToVSSearchQuery = function(urlQuery) {
+        return '"'+decodeURIComponent(urlQuery.replace(/"/g, '\\"').replace(/&/g, '""').replace(/=/g, '":"'))+'"'
+    }
+
+    //Return key from serverAttrName for vsSearch
+    XAUtils.filterKeyForVSQuery = function(list, key) {
+        var value = _.filter(list, function(m) {
+            return m.urlLabel === key
+        })
+        if(_.isEmpty(value) || _.isUndefined(value)) {
+            value = _.filter(list, function(m) {
+                return m.text === key
+            })
+        }
+       return value[0].text
+    }
+
+    //convert string to Camel Case
+    XAUtils.stringToCamelCase = function(str) {
+        return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
+            return index == 0 ? word.toLowerCase() : word.toUpperCase();
+        }).replace(/\s+/g, '');
+    }
 
 	return XAUtils;
 });

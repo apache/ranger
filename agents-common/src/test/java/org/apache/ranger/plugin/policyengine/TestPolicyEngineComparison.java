@@ -27,6 +27,7 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -122,10 +123,12 @@ public class TestPolicyEngineComparison {
             boolean isTagsEqual = true;
 
             if (myServicePolicies != null) {
-                RangerPolicyEngineImpl myPolicyEngine = new RangerPolicyEngineImpl("test-compare-my-engine", myServicePolicies, options, null);
-                RangerPolicyEngineImpl otherPolicyEngine = new RangerPolicyEngineImpl("test-compare-other-engine", otherServicePolicies, options, null);
+                RangerPluginContext myPluginContext = new RangerPluginContext(new RangerPluginConfig(myServicePolicies.getServiceDef().getName(), null, "test-compare-my-tags", null, null, options));
+                RangerPluginContext otherPluginContext = new RangerPluginContext(new RangerPluginConfig(myServicePolicies.getServiceDef().getName(), null, "test-compare-other-tags", null, null, options));
+                RangerPolicyEngineImpl myPolicyEngine = new RangerPolicyEngineImpl(myServicePolicies, myPluginContext, null);
+                RangerPolicyEngineImpl otherPolicyEngine = new RangerPolicyEngineImpl(otherServicePolicies, otherPluginContext, null);
 
-                isPolicyEnginesEqual = myPolicyEngine.compare(otherPolicyEngine) && otherPolicyEngine.compare(myPolicyEngine);
+                isPolicyEnginesEqual = TestPolicyEngine.compare(myPolicyEngine.getPolicyEngine(), otherPolicyEngine.getPolicyEngine()) && TestPolicyEngine.compare(otherPolicyEngine.getPolicyEngine(), myPolicyEngine.getPolicyEngine());
 
 
                 if (myServiceTags != null) {
@@ -142,7 +145,7 @@ public class TestPolicyEngineComparison {
                     otherTagEnricher.setServiceName(otherServiceTags.getServiceName());
                     otherTagEnricher.setServiceTags(otherServiceTags);
 
-                    isTagsEqual = myTagEnricher.compare(otherTagEnricher) && otherTagEnricher.compare(myTagEnricher);
+                    isTagsEqual = TestPolicyEngine.compare(myTagEnricher, otherTagEnricher) && TestPolicyEngine.compare(otherTagEnricher, myTagEnricher);
 
                 }
             }

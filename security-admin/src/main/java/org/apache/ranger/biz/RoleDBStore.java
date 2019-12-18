@@ -29,7 +29,7 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerRoleCache;
@@ -69,6 +69,8 @@ public class RoleDBStore implements RoleStore {
     @Autowired
     RangerBizUtil bizUtil;
 
+    RangerAdminConfig config;
+
     private Boolean populateExistingBaseFields = true;
 
     AbstractPredicateUtil predicateUtil = null;
@@ -80,6 +82,8 @@ public class RoleDBStore implements RoleStore {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RoleDBStore.initStore()");
         }
+
+        config = RangerAdminConfig.getInstance();
 
         roleService.setPopulateExistingBaseFields(populateExistingBaseFields);
         predicateUtil = new RolePredicateUtil();
@@ -262,12 +266,12 @@ public class RoleDBStore implements RoleStore {
     }
 
     @Override
-    public RangerRoles getRangerRoles(String serviceName, Long lastKnownRoleVersion) throws Exception {
+    public RangerRoles getRoles(String serviceName, Long lastKnownRoleVersion) throws Exception {
         RangerRoles ret                   = null;
         Long        rangerRoleVersionInDB = getRoleVersion(serviceName);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RoleDBStore.getRangerRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB);
+            LOG.debug("==> RoleDBStore.getRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB);
         }
 
         if (rangerRoleVersionInDB != null) {
@@ -275,7 +279,7 @@ public class RoleDBStore implements RoleStore {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<= RoleDBStore.getRangerRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB + " RangerRoles= " + ret);
+            LOG.debug("<= RoleDBStore.getRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB + " RangerRoles= " + ret);
         }
 
         return ret;
@@ -330,7 +334,7 @@ public class RoleDBStore implements RoleStore {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Service Type for serviceId (" + serviceId + ") = " + serviceTypeName);
             }
-            String       serviceTypesToGetAllRoles  = RangerConfiguration.getInstance().get("ranger.admin.service.types.for.returning.all.roles", "solr");
+            String       serviceTypesToGetAllRoles  = config.get("ranger.admin.service.types.for.returning.all.roles", "solr");
 
             boolean      getAllRoles                = false;
             if (StringUtils.isNotEmpty(serviceTypesToGetAllRoles)) {

@@ -30,9 +30,28 @@ import java.util.Map;
 import java.util.Set;
 
 public class RangerRolesUtil {
+    private final long                     roleVersion;
+    private final Map<String, Set<String>> userRoleMapping = new HashMap<>();
+    private final Map<String, Set<String>> groupRoleMapping = new HashMap<>();
 
-    Map<String, Set<String>> userRoleMapping = new HashMap<>();
-    Map<String, Set<String>> groupRoleMapping = new HashMap<>();
+    public RangerRolesUtil(RangerRoles roles) {
+        if (roles != null) {
+            roleVersion = roles.getRoleVersion();
+
+            if (CollectionUtils.isNotEmpty(roles.getRangerRoles())) {
+                for (RangerRole role : roles.getRangerRoles()) {
+                    Set<RangerRole> containedRoles = getAllContainedRoles(roles.getRangerRoles(), role);
+
+                    buildMap(userRoleMapping, role, containedRoles, true);
+                    buildMap(groupRoleMapping, role, containedRoles, false);
+                }
+            }
+        } else {
+            roleVersion = -1L;
+        }
+    }
+
+    public long getRoleVersion() { return roleVersion; }
 
     public Map<String, Set<String>> getUserRoleMapping() {
         return this.userRoleMapping;
@@ -42,60 +61,54 @@ public class RangerRolesUtil {
         return this.groupRoleMapping;
     }
 
-    public RangerRoles init(Set<RangerRole> rangerRoles) {
-        RangerRoles ret = new RangerRoles();
-        if (rangerRoles != null) {
-            if (CollectionUtils.isNotEmpty(rangerRoles)) {
-                for (RangerRole role : rangerRoles) {
-                    Set<RangerRole> containedRoles = getAllContainedRoles(rangerRoles, role);
-                    buildMap(userRoleMapping, role, containedRoles, true);
-                    buildMap(groupRoleMapping, role, containedRoles, false);
-                }
-            }
-        }
-        return ret;
-    }
-
-    public Set<RangerRole> getAllContainedRoles(Set<RangerRole> rangerRoles, RangerRole role) {
+    private Set<RangerRole> getAllContainedRoles(Set<RangerRole> roles, RangerRole role) {
         Set<RangerRole> allRoles = new HashSet<>();
+
         allRoles.add(role);
-        addContainedRoles(allRoles, rangerRoles, role);
+        addContainedRoles(allRoles, roles, role);
+
         return allRoles;
     }
 
-    private void addContainedRoles(Set<RangerRole> allRoles, Set<RangerRole> rangerRoles, RangerRole role) {
+    private void addContainedRoles(Set<RangerRole> allRoles, Set<RangerRole> roles, RangerRole role) {
         List<RangerRole.RoleMember> roleMembers = role.getRoles();
+
         for (RangerRole.RoleMember roleMember : roleMembers) {
-            RangerRole containedRole = getContainedRole(rangerRoles, roleMember.getName());
+            RangerRole containedRole = getContainedRole(roles, roleMember.getName());
+
             if (containedRole!= null && !allRoles.contains(containedRole)) {
                 allRoles.add(containedRole);
-                addContainedRoles(allRoles, rangerRoles, containedRole);
+                addContainedRoles(allRoles, roles, containedRole);
             }
         }
     }
 
-    public void buildMap(Map<String, Set<String>> map, RangerRole role, Set<RangerRole> containedRoles, boolean isUser) {
+    private void buildMap(Map<String, Set<String>> map, RangerRole role, Set<RangerRole> containedRoles, boolean isUser) {
         buildMap(map, role, role.getName(), isUser);
+
         for (RangerRole containedRole : containedRoles) {
             buildMap(map, containedRole, role.getName(), isUser);
         }
     }
 
-    public void buildMap(Map<String, Set<String>> map, RangerRole role, String roleName, boolean isUser) {
+    private void buildMap(Map<String, Set<String>> map, RangerRole role, String roleName, boolean isUser) {
         for (RangerRole.RoleMember userOrGroup : isUser ? role.getUsers() : role.getGroups()) {
             if (StringUtils.isNotEmpty(userOrGroup.getName())) {
                 Set<String> roleNames = map.get(userOrGroup.getName());
+
                 if (roleNames == null) {
                     roleNames = new HashSet<>();
+
                     map.put(userOrGroup.getName(), roleNames);
                 }
+
                 roleNames.add(roleName);
             }
         }
     }
 
-    public RangerRole getContainedRole(Set<RangerRole> rangerRoles, String role) {
-        return (rangerRoles
+    private RangerRole getContainedRole(Set<RangerRole> roles, String role) {
+        return (roles
                 .stream()
                 .filter(containedRole -> role.equals(containedRole.getName()))
                 .findAny()

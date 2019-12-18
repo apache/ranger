@@ -47,6 +47,7 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		mObj.setGroupType( vObj.getGroupType());
 		mObj.setCredStoreId( vObj.getCredStoreId());
 		mObj.setGroupSource(vObj.getGroupSource());
+		mObj.setOtherAttributes(vObj.getOtherAttributes());
 		return mObj;
 	}
 
@@ -58,6 +59,7 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		vObj.setGroupType( mObj.getGroupType());
 		vObj.setCredStoreId( mObj.getCredStoreId());
 		vObj.setGroupSource(mObj.getGroupSource());
+		vObj.setOtherAttributes(mObj.getOtherAttributes());
 		return vObj;
 	}
 

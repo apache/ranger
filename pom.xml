@@ -120,7 +120,7 @@
         <ozone.version>0.4.0-alpha</ozone.version>
         <hamcrest.all.version>1.3</hamcrest.all.version>
         <hbase.version>2.0.2</hbase.version>
-        <hive.version>3.1.0</hive.version>
+        <hive.version>3.1.2</hive.version>
         <hbase-shaded-protobuf>2.0.0</hbase-shaded-protobuf>
         <hbase-shaded-netty>2.0.0</hbase-shaded-netty>
         <hbase-shaded-miscellaneous>2.0.0</hbase-shaded-miscellaneous>
@@ -150,12 +150,13 @@
         <kafka.version>2.0.0</kafka.version>
         <kerby.version>1.0.0</kerby.version>
         <knox.gateway.version>1.2.0</knox.gateway.version>
-        <kylin.version>2.5.0</kylin.version>
+        <kylin.version>2.6.4</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
         <metrics.core.version>3.0.2</metrics.core.version>
-        <mockito.version>2.23.4</mockito.version>
+        <mockito.version>3.0.0</mockito.version>
+        <mockito.all.version>1.10.19</mockito.all.version>
         <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
         <netty.version>3.10.5.Final</netty.version>
         <netty-all.version>4.1.34.Final</netty-all.version>

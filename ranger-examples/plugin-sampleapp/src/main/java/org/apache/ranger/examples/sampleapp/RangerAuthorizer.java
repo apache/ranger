@@ -41,7 +41,7 @@ public class RangerAuthorizer implements IAuthorizer {
                 if(plugin == null) {
                     plugin = new RangerBasePlugin("sampleapp", "sampleapp");
 
-                    plugin.setResultProcessor(new RangerDefaultAuditHandler());
+                    plugin.setResultProcessor(new RangerDefaultAuditHandler(plugin.getConfig()));
 
                     plugin.init();
                 }

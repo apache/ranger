@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.plugin.policyengine;
+package org.apache.ranger.biz;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -29,10 +29,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.policyengine.TestPolicyDb.PolicyDbTestCase.TestData;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.biz.TestPolicyDb.PolicyDbTestCase.TestData;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.AfterClass;
@@ -78,14 +81,14 @@ public class TestPolicyDb {
 	@Test
 	public void testPolicyDb_hdfs() {
 
-		String[] hdfsTestResourceFiles = { "/policyengine/test_policydb_hdfs.json" };
+		String[] hdfsTestResourceFiles = { "/biz/test_policydb_hdfs.json" };
 
 		runTestsFromResourceFiles(hdfsTestResourceFiles, hdfsServiceDef);
 	}
 
     @Test
     public void testPolicyDb_hive() {
-        String[] hiveTestResourceFiles = { "/policyengine/test_policydb_hive.json" };
+        String[] hiveTestResourceFiles = { "/biz/test_policydb_hive.json" };
 
         runTestsFromResourceFiles(hiveTestResourceFiles, hiveServiceDef);
     }
@@ -115,16 +118,15 @@ public class TestPolicyDb {
 		policyEngineOptions.cacheAuditResults       = false;
 		policyEngineOptions.disableContextEnrichers = true;
 		policyEngineOptions.disableCustomConditions = true;
-		RangerPluginContext pluginContext = new RangerPluginContext("hive");
-		pluginContext.setClusterName("cl1");
-		pluginContext.setClusterType("on-prem");
-		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl("test-policydb", testCase.servicePolicies, policyEngineOptions, pluginContext);
+
+		RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "test-policydb", "cl1", "on-prem", policyEngineOptions));
+		RangerPolicyAdmin   policyAdmin   = new RangerPolicyAdminImpl(testCase.servicePolicies, pluginContext, null);
 
 		for(TestData test : testCase.tests) {
 			boolean expected = test.result;
 
 			if(test.allowedPolicies != null) {
-				List<RangerPolicy> allowedPolicies = policyEngine.getAllowedPolicies(test.user, test.userGroups, test.accessType);
+				List<RangerPolicy> allowedPolicies = policyAdmin.getAllowedUnzonedPolicies(test.user, test.userGroups, test.accessType);
 
 				assertEquals("allowed-policy count mismatch!", test.allowedPolicies.size(), allowedPolicies.size());
 				
@@ -134,7 +136,7 @@ public class TestPolicyDb {
 				}
 				assertEquals("allowed-policy list mismatch!", test.allowedPolicies, allowedPolicyIds);
 			} else {
-				boolean result = policyEngine.isAccessAllowed(test.resources, test.user, test.userGroups, test.accessType);
+				boolean result = policyAdmin.isAccessAllowedByUnzonedPolicies(test.resources, test.user, test.userGroups, test.accessType);
 
 				assertEquals("isAccessAllowed mismatched! - " + test.name, expected, result);
 			}

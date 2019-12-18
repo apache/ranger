@@ -37,7 +37,7 @@ import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
@@ -62,6 +62,8 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.rest.ServiceREST;
+import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResponse;
@@ -104,13 +106,19 @@ public class RangerBizUtil {
 	public static final String AUDIT_STORE_RDBMS = "DB";
 	public static final String AUDIT_STORE_SOLR = "solr";
 	public static final boolean batchClearEnabled = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
-	public static final int batchSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
+	public static final int policyBatchSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
+	public static final int batchPersistSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-persist.size", 500);
 
 	String auditDBType = AUDIT_STORE_RDBMS;
+	private final boolean allowUnauthenticatedAccessInSecureEnvironment;
 
 	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
 
 	public RangerBizUtil() {
+		RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+		allowUnauthenticatedAccessInSecureEnvironment = config.getBoolean("ranger.admin.allow.unauthenticated.access", false);
+
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty("ranger.user.firstname.maxlength", "16"));
 		maxDisplayNameLength = PropertiesUtil.getIntProperty("ranger.bookmark.name.maxlen", maxDisplayNameLength);
 
@@ -441,11 +449,10 @@ public class RangerBizUtil {
 		return matchFound;
 	}
 
-	public static void failUnauthenticatedIfNotAllowed() throws Exception {
+	public void failUnauthenticatedIfNotAllowed() throws Exception {
 		if (UserGroupInformation.isSecurityEnabled()) {
 			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
 			if (currentUserSession == null) {
-				boolean allowUnauthenticatedAccessInSecureEnvironment = RangerConfiguration.getInstance().getBoolean("ranger.admin.allow.unauthenticated.access", false);
 				if (!allowUnauthenticatedAccessInSecureEnvironment) {
 					throw new Exception("Unauthenticated access not allowed");
 				}
@@ -1402,12 +1409,18 @@ public class RangerBizUtil {
 		return false;
 	}
 
-	public boolean isUserAllowedForGrantRevoke(RangerService rangerService,
-			String cfgNameAllowedUsers, String userName) {
+	public boolean isUserAllowedForGrantRevoke(RangerService rangerService, String userName) {
+		return isUserInConfigParameter(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke, userName);
+	}
+	public boolean isUserServiceAdmin(RangerService rangerService, String userName) {
+		return isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_USERS, userName);
+	}
+
+	public boolean isUserInConfigParameter(RangerService rangerService, String configParamName, String userName) {
 		Map<String, String> map = rangerService.getConfigs();
 
-		if (map != null && map.containsKey(cfgNameAllowedUsers)) {
-			String userNames = map.get(cfgNameAllowedUsers);
+		if (map != null && map.containsKey(configParamName)) {
+			String userNames = map.get(configParamName);
 			String[] userList = userNames.split(",");
 			if (userList != null) {
 				for (String u : userList) {
@@ -1418,7 +1431,7 @@ public class RangerBizUtil {
 			}
 		}
 		return false;
-	}	
+	}
 
         public void blockAuditorRoleUser() {
                 UserSessionBase session = ContextUtil.getCurrentUserSession();
@@ -1479,6 +1492,11 @@ public class RangerBizUtil {
 
 	public static boolean isBulkMode() {
 		return ContextUtil.isBulkModeContext();
+	}
+
+	public static boolean setBulkMode(boolean val) {
+		RangerContextHolder.getOpContext().setBulkModeContext(val);
+		return isBulkMode();
 	}
 
 	//should be used only in bulk operation like importPolicies, policies delete.

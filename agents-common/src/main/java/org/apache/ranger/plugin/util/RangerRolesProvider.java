@@ -24,8 +24,8 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.RangerAdminClient;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import java.io.File;
@@ -57,7 +57,7 @@ public class RangerRolesProvider {
 	private boolean rangerUserGroupRolesSetInPlugin;
 	private boolean serviceDefSetInPlugin;
 
-	public RangerRolesProvider(String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, String cacheDir) {
+	public RangerRolesProvider(String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, String cacheDir, Configuration config) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerRolesProvider(serviceName=" + serviceName + ").RangerRolesProvider()");
 		}
@@ -88,7 +88,7 @@ public class RangerRolesProvider {
 		this.gson = gson;
 
 		String propertyPrefix = "ranger.plugin." + serviceType;
-		disableCacheIfServiceNotFound = RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
+		disableCacheIfServiceNotFound = config.getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerRolesProvider(serviceName=" + serviceName + ").RangerRolesProvider()");
@@ -120,12 +120,12 @@ public class RangerRolesProvider {
 
 		try {
 			//load userGroupRoles from ranger admin
-			RangerRoles rangerRoles = loadUserGroupRolesFromAdmin();
+			RangerRoles roles = loadUserGroupRolesFromAdmin();
 
-			if (rangerRoles == null) {
+			if (roles == null) {
 				//if userGroupRoles fetch from ranger Admin Fails, load from cache
 				if (!rangerUserGroupRolesSetInPlugin) {
-					rangerRoles = loadUserGroupRolesFromCache();
+					roles = loadUserGroupRolesFromCache();
 				}
 			}
 
@@ -135,21 +135,21 @@ public class RangerRolesProvider {
 				PERF_POLICYENGINE_INIT_LOG.debug("In-Use memory: " + (totalMemory - freeMemory) + ", Free memory:" + freeMemory);
 			}
 
-			if (rangerRoles != null) {
-				plugIn.setRangerRoles(rangerRoles);
+			if (roles != null) {
+				plugIn.setRoles(roles);
 				rangerUserGroupRolesSetInPlugin = true;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
-				lastKnownRoleVersion = rangerRoles.getRoleVersion();
+				lastKnownRoleVersion = roles.getRoleVersion();
 			} else {
 				if (!rangerUserGroupRolesSetInPlugin && !serviceDefSetInPlugin) {
-					plugIn.setRangerRoles(null);
+					plugIn.setRoles(null);
 					serviceDefSetInPlugin = true;
 				}
 			}
 		} catch (RangerServiceNotFoundException snfe) {
 			if (disableCacheIfServiceNotFound) {
 				disableCache();
-				plugIn.setRangerRoles(null);
+				plugIn.setRoles(null);
 				setLastActivationTimeInMillis(System.currentTimeMillis());
 				lastKnownRoleVersion = -1L;
 				serviceDefSetInPlugin = true;
@@ -171,7 +171,7 @@ public class RangerRolesProvider {
 			LOG.debug("==> RangerRolesProvider(serviceName=" + serviceName + ").loadUserGroupRolesFromAdmin()");
 		}
 
-		RangerRoles rangerRoles = null;
+		RangerRoles roles;
 
 		RangerPerfTracer perf = null;
 
@@ -180,13 +180,13 @@ public class RangerRolesProvider {
 		}
 
 		try {
-			rangerRoles = rangerAdmin.getRolesIfUpdated(lastKnownRoleVersion, lastActivationTimeInMillis);
+			roles = rangerAdmin.getRolesIfUpdated(lastKnownRoleVersion, lastActivationTimeInMillis);
 
-			boolean isUpdated = rangerRoles != null;
+			boolean isUpdated = roles != null;
 
 			if(isUpdated) {
-				long newVersion = rangerRoles.getRoleVersion() == null ? -1 : rangerRoles.getRoleVersion().longValue();
-				saveToCache(rangerRoles);
+				long newVersion = roles.getRoleVersion() == null ? -1 : roles.getRoleVersion().longValue();
+				saveToCache(roles);
 				LOG.info("RangerRolesProvider(serviceName=" + serviceName + "): found updated version. lastKnownRoleVersion=" + lastKnownRoleVersion + "; newVersion=" + newVersion );
 			} else {
 				if(LOG.isDebugEnabled()) {
@@ -194,11 +194,11 @@ public class RangerRolesProvider {
 				}
 			}
 		} catch (RangerServiceNotFoundException snfe) {
-			LOG.error("RangerRolesProvider(serviceName=" + serviceName + "): failed to find service. Will clean up local cache of rangerRoles (" + lastKnownRoleVersion + ")", snfe);
+			LOG.error("RangerRolesProvider(serviceName=" + serviceName + "): failed to find service. Will clean up local cache of roles (" + lastKnownRoleVersion + ")", snfe);
 			throw snfe;
 		} catch (Exception excp) {
-			LOG.error("RangerRolesProvider(serviceName=" + serviceName + "): failed to refresh rangerRoles. Will continue to use last known version of rangerRoles (" + "lastKnowRoleVersion= " + lastKnownRoleVersion, excp);
-			rangerRoles = null;
+			LOG.error("RangerRolesProvider(serviceName=" + serviceName + "): failed to refresh roles. Will continue to use last known version of roles (" + "lastKnowRoleVersion= " + lastKnownRoleVersion, excp);
+			roles = null;
 		}
 
 		RangerPerfTracer.log(perf);
@@ -207,12 +207,12 @@ public class RangerRolesProvider {
 			LOG.debug("<== RangerRolesProvider(serviceName=" + serviceName + " serviceType= " + serviceType + " ).loadUserGroupRolesFromAdmin()");
 		 }
 
-		 return rangerRoles;
+		 return roles;
 	}
 
 	private RangerRoles loadUserGroupRolesFromCache() {
 
-		RangerRoles rangerRoles = null;
+		RangerRoles roles = null;
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerRolesProvider(serviceName=" + serviceName + ").loadUserGroupRolesFromCache()");
@@ -232,16 +232,16 @@ public class RangerRolesProvider {
 			try {
 				reader = new FileReader(cacheFile);
 
-				rangerRoles = gson.fromJson(reader, RangerRoles.class);
+				roles = gson.fromJson(reader, RangerRoles.class);
 
-				if (rangerRoles != null) {
-					if (!StringUtils.equals(serviceName, rangerRoles.getServiceName())) {
-						LOG.warn("ignoring unexpected serviceName '" + rangerRoles.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
+				if (roles != null) {
+					if (!StringUtils.equals(serviceName, roles.getServiceName())) {
+						LOG.warn("ignoring unexpected serviceName '" + roles.getServiceName() + "' in cache file '" + cacheFile.getAbsolutePath() + "'");
 
-						rangerRoles.setServiceName(serviceName);
+						roles.setServiceName(serviceName);
 					}
 
-					lastKnownRoleVersion = rangerRoles.getRoleVersion() == null ? -1 : rangerRoles.getRoleVersion().longValue();
+					lastKnownRoleVersion = roles.getRoleVersion() == null ? -1 : roles.getRoleVersion().longValue();
 				}
 			} catch (Exception excp) {
 				LOG.error("failed to load userGroupRoles from cache file " + cacheFile.getAbsolutePath(), excp);
@@ -257,27 +257,27 @@ public class RangerRolesProvider {
 				}
 			}
 		} else {
-			rangerRoles = new RangerRoles();
-			rangerRoles.setServiceName(serviceName);
-			rangerRoles.setRoleVersion(-1L);
-			rangerRoles.setRoleUpdateTime(new Date());
-			rangerRoles.setRangerRoles(new HashSet<>());
-			saveToCache(rangerRoles);
+			roles = new RangerRoles();
+			roles.setServiceName(serviceName);
+			roles.setRoleVersion(-1L);
+			roles.setRoleUpdateTime(new Date());
+			roles.setRangerRoles(new HashSet<>());
+			saveToCache(roles);
 		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerRolesProvider(serviceName=" + serviceName + ").RangerRolesProvider()");
 		}
 
-		return rangerRoles;
+		return roles;
 	}
 
-	public void saveToCache(RangerRoles rangerRoles) {
+	public void saveToCache(RangerRoles roles) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerRolesProvider(serviceName=" + serviceName + ").saveToCache()");
 		}
 
-		if(rangerRoles != null) {
+		if(roles != null) {
 			File cacheFile = null;
 			if (cacheDir != null) {
 				// Create the cacheDir if it doesn't already exist
@@ -307,9 +307,9 @@ public class RangerRolesProvider {
 				try {
 					writer = new FileWriter(cacheFile);
 
-			        gson.toJson(rangerRoles, writer);
+			        gson.toJson(roles, writer);
 		        } catch (Exception excp) {
-					LOG.error("failed to save rangerRoles to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+					LOG.error("failed to save roles to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
 		        } finally {
 					if(writer != null) {
 						try {
@@ -323,7 +323,7 @@ public class RangerRolesProvider {
 				RangerPerfTracer.log(perf);
 			}
 		} else {
-			LOG.info("rangerRoles is null. Nothing to save in cache");
+			LOG.info("roles is null. Nothing to save in cache");
 		}
 
 		if(LOG.isDebugEnabled()) {

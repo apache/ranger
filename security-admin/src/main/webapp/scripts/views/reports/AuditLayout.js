@@ -126,16 +126,35 @@ define(function(require) {
 			console.log("initialized a AuditLayout Layout");
 
 			_.extend(this, _.pick(options, 'accessAuditList','tab'));
+                        var that = this;
 			this.bindEvents();
-			this.currentTab = '#'+this.tab;
+                        this.currentTab = '#'+this.tab.split('?')[0];
 			var date = new Date().toString();
 			this.timezone = date.replace(/^.*GMT.*\(/, "").replace(/\)$/, "");
 			this.initializeServiceDefColl();
             if(_.isUndefined(App.vsHistory)){
-	            var startDateModel = new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")});
-                    App.vsHistory = {'bigData':[startDateModel], 'admin':[], 'loginSession':[], 'plugin':[],'pluginStatus':[], 'userSync': []};
+                App.vsHistory = {'bigData':[], 'admin':[], 'loginSession':[], 'agent':[],'pluginStatus':[], 'userSync': []};
             }
-		},
+            //Add url params to vsHistory
+            if(!_.isUndefined(this.tab.split('?')[1])) {
+		App.vsHistory[that.tab.split('?')[0]] = [];
+                var searchFregment = XAUtils.changeUrlToSearchQuery(decodeURIComponent(this.tab.substring(this.tab.indexOf("?") + 1)));
+                _.map (searchFregment, function(val, key) {
+                    if (_.isArray(val)) {
+                        _.map(val, function (v) {
+                            App.vsHistory[that.tab.split('?')[0]].push(new Backbone.Model( {'category': key, 'value' : v}));
+                        })
+                    } else {
+                        App.vsHistory[that.tab.split('?')[0]].push(new Backbone.Model( {'category': key, 'value' : val}));
+                    }
+                } )
+            }
+            //if url params are not present then set a default value in Audit assecc vsHistory
+            if(_.isEmpty(App.vsHistory.bigData)){
+                var startDateModel = new Backbone.Model({'category':'startDate', value:Globalize.format(new Date(),"MM/dd/yyyy")});
+                App.vsHistory['bigData'].push(startDateModel);
+            }
+        },
 
 		/** all events binding here */
 		bindEvents : function() {
@@ -219,7 +238,10 @@ define(function(require) {
 			var that = this, tab;
 			tab = !_.isUndefined(e) ? $(e.currentTarget).attr('href') : this.currentTab;
 			this.$el.parents('body').find('.datepicker').remove();
-			switch (tab) {
+            if (!_.isUndefined(e)) {
+                    Backbone.history.navigate("!/reports/audit/"+ tab.slice(1), false)
+            }
+            switch (tab) {
 				case "#bigData":
 					this.currentTab = '#bigData';
                     //Remove empty search values on tab changes for visual search.
@@ -272,12 +294,12 @@ define(function(require) {
 					break;
 				case "#agent":
 					this.currentTab = '#agent';
-                                        App.vsHistory.plugin = XAUtils.removeEmptySearchValue(App.vsHistory.plugin);
+                                        App.vsHistory.agent = XAUtils.removeEmptySearchValue(App.vsHistory.agent);
 					this.policyExportAuditList = new VXPolicyExportAuditList();	
 					var params = { priAcctId : 1 };
 					that.renderAgentTable();
 					this.policyExportAuditList.setSorting('createDate',1);
-                    if(_.isEmpty(App.vsHistory.plugin)){
+                    if(_.isEmpty(App.vsHistory.agent)){
                     this.policyExportAuditList.fetch({
 	                    cache : false,
 	                    data :params
@@ -337,18 +359,25 @@ define(function(require) {
             var that = this , query = '';
 			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
             var serviceUser = [{'label' : 'True' , 'value' : true},{'label' : 'False' , 'value' : false}]
-			var serverAttrName = [{text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-				                  {text : 'Application',label : 'agentId'},
-				                  {text : 'User',label :'requestUser', 'addMultiple': true},
-				                  {text : 'Exclude User',label :'excludeUser', 'addMultiple': true},
-				                  {text : 'Resource Name',label :'resourcePath'},
-			                      {text : 'Service Name',label :'repoName'},{text : 'Policy ID',label :'policyId'},
-			                      {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType},
-			                      {text : 'Result',label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult)},
-			                      {text : 'Access Type',label :'accessType'},{text : 'Access Enforcer',label :'aclEnforcer'},
-			                      {text : 'Client IP',label :'clientIP'},{text : 'Tags',label :'tags'},
-			                      {text : 'Resource Type',label : 'resourceType'},{text : 'Cluster Name',label : 'cluster'},
-                                  {text : 'Zone Name',label : 'zoneName'},{text : localization.tt("lbl.agentHost"), label :"agentHost"}];
+            var serverAttrName = [{text : 'Start Date', label :'startDate', urlLabel : 'startDate'},
+                                    {text : 'End Date', label :'endDate', urlLabel : 'endDate'},
+                                    {text : 'Application', label : 'agentId', urlLabel : 'application'},
+                                    {text : 'User', label :'requestUser', 'addMultiple': true, urlLabel : 'user'},
+                                    {text : 'Exclude User', label :'excludeUser', 'addMultiple': true, urlLabel : 'excludeUser'},
+                                    {text : 'Resource Name',label :'resourcePath', urlLabel : 'resourceName'},
+                                    {text : 'Service Name', label :'repoName', urlLabel : 'serviceName'},
+                                    {text : 'Policy ID', label :'policyId', urlLabel : 'policyID'},
+                                    {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType, urlLabel : 'serviceType'},
+                                    {text : 'Result', label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult), urlLabel : 'result'},
+                                    {text : 'Access Type', label :'accessType', urlLabel : 'accessType'},
+                                    {text : 'Access Enforcer',label :'aclEnforcer', urlLabel : 'accessEnforcer'},
+                                    {text : 'Client IP',label :'clientIP', urlLabel : 'clientIP'},
+                                    {text : 'Tags',label :'tags', urlLabel : 'tags'},
+                                    {text : 'Resource Type',label : 'resourceType', urlLabel : 'resourceType'},
+                                    {text : 'Cluster Name',label : 'cluster', urlLabel : 'clusterName'},
+                                    {text : 'Zone Name',label : 'zoneName', urlLabel : 'zoneName'},
+                                    {text : localization.tt("lbl.agentHost"), label :"agentHost", urlLabel : 'agentHost'}
+                                ];
             var searchOpt = ['Resource Type','Start Date','End Date','Application','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
             'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude User', localization.tt("lbl.agentHost")];//,'Policy ID'
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
@@ -372,10 +401,12 @@ define(function(require) {
                         XAUtils.searchInfoPopover(this.searchInfoArr , this.ui.iconSearchInfo , 'bottom');
                         //Set query(search filter values in query)
                         if(_.isEmpty(App.vsHistory.bigData)){
-                                query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
-                                App.vsHistory.bigData.push(new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
+                            query = '"startDate": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
+                            App.vsHistory.bigData.push(new Backbone.Model({'category':'startDate', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
                         }else{
-                                _.map(App.vsHistory.bigData, function(a){ query += '"'+a.get('category')+'":"'+a.get('value')+'"'; });
+                            _.map(App.vsHistory.bigData, function(a) {
+                                query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, a.get('category'))+'":"'+a.get('value')+'"';
+                            });
                         }
 			var pluginAttr = {
 			      placeholder :localization.tt('h.searchForYourAccessAudit'),
@@ -474,10 +505,13 @@ define(function(require) {
 		addSearchForAdminTab : function(){
 			var that = this;
 			var searchOpt = ["Audit Type", "User", "Actions", "Session ID", "Start Date", "End Date"];
-			var serverAttrName  = [{text : "Audit Type", label :"objectClassType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.ClassTypes)},
-                                               {text : "User", label :"owner"}, {text :  "Session ID", label :"sessionId"},
-                                               {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-                                               {text : "Actions", label :"action",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAGlobals.ActionType)},];
+                        var serverAttrName  = [{text : "Audit Type", label :"objectClassType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.ClassTypes), urlLabel : 'auditType'},
+                                    {text : "User", label :"owner", urlLabel : 'user'},
+                                    {text :  "Session ID", label :"sessionId", urlLabel : 'sessionId'},
+                                    {text : 'Start Date',label :'startDate', urlLabel : 'startDate'},
+                                    {text : 'End Date',label :'endDate', urlLabel : 'endDate'},
+                                    {text : "Actions", label :"action",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAGlobals.ActionType), urlLabel : 'actions'}
+                                ];
 			
                         var auditList = [],query = '', actionTypeList = [];
 			_.each(XAEnums.ClassTypes, function(obj){
@@ -495,12 +529,14 @@ define(function(require) {
 				}
 			})
 			if(!_.isUndefined(App.sessionId)){
-                                App.vsHistory.admin = [] ;
+                App.vsHistory.admin = [] ;
 				query = '"Session ID": "'+App.sessionId+'"';
-                                App.vsHistory.admin.push(new Backbone.Model({'category':'Session ID', value:App.sessionId}));
+                App.vsHistory.admin.push(new Backbone.Model({'category':'Session ID', value:App.sessionId}));
 				delete App.sessionId;
-                        }else{
-                                _.map(App.vsHistory.admin, function(a){ query += '"'+a.get('category')+'":"'+a.get('value')+'"'; });
+            }else{
+                _.map(App.vsHistory.admin, function(a) {
+                    query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, a.get('category'))+'":"'+a.get('value')+'"';
+                });
 			}
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourAccessLog'),
@@ -544,13 +580,18 @@ define(function(require) {
 		addSearchForLoginSessionTab : function(){
                         var that = this , query = '' ;
 			var searchOpt = ["Session ID", "Login ID", "Result", "Login Type", "IP", "User Agent", "Start Date","End Date"];
-			var serverAttrName  = [{text : "Session ID", label :"id"}, {text : "Login ID", label :"loginId"},
-			                       {text : "Result", label :"authStatus",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthStatus)},
-			                       {text : "Login Type", label :"authType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthType)},
-			                       {text : "IP", label :"requestIP"},{text :"User Agent", label :"requestUserAgent"},
-			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'} ];
-									
-                        _.map(App.vsHistory.loginSession, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
+                        var serverAttrName  = [{text : "Session ID", label :"id", urlLabel : 'sessionID'},
+                                    {text : "Login ID", label :"loginId", urlLabel : 'loginID'},
+                                    {text : "Result", label :"authStatus",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthStatus), urlLabel : 'result'},
+                                    {text : "Login Type", label :"authType",'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AuthType), urlLabel : 'loginType'},
+                                    {text : "IP", label :"requestIP", urlLabel : 'requestIP'},
+                                    {text :"User Agent", label :"requestUserAgent", urlLabel : 'userAgent'},
+                                    {text : 'Start Date',label :'startDate', urlLabel : 'startDate'},
+                                    {text : 'End Date',label :'endDate', urlLabel : 'endDate'}
+                                ];
+            _.map(App.vsHistory.loginSession, function(m) {
+                query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, m.get('category'))+'":"'+m.get('value')+'"';
+            });
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourLoginSession'),
 				      container : this.ui.visualSearch,
@@ -600,12 +641,17 @@ define(function(require) {
 		addSearchForAgentTab : function(){
                         var that = this , query = '';
                         var searchOpt = ["Service Name", "Plugin ID", "Plugin IP", "Http Response Code", "Start Date","End Date", "Cluster Name"];
-                        var serverAttrName  = [{text : "Plugin ID", label :"agentId"}, {text : "Plugin IP", label :"clientIP"},
-			                       {text : "Service Name", label :"repositoryName"},{text : "Http Response Code", label :"httpRetCode"},
-			                       {text : "Export Date", label :"createDate"},
-			                       {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-				                   {text : 'Cluster Name',label :'cluster'}];
-                        _.map(App.vsHistory.plugin, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
+                        var serverAttrName  = [{text : "Plugin ID", label :"agentId", urlLabel : 'pluginID'},
+                                                {text : "Plugin IP", label :"clientIP", urlLabel : 'pluginIP'},
+                                                {text : "Service Name", label :"repositoryName", urlLabel : 'serviceName'},
+                                                {text : "Http Response Code", label :"httpRetCode", urlLabel : 'httpResponseCode'},
+                                                {text : "Export Date", label :"createDate", urlLabel : 'exportDate'},
+                                                {text : 'Start Date',label :'startDate', urlLabel : 'startDate'},
+                                                {text : 'End Date',label :'endDate', urlLabel : 'endDate'},
+                                                {text : 'Cluster Name',label :'cluster', urlLabel : 'clusterName'}];
+                        _.map(App.vsHistory.agent, function(m) {
+                            query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, m.get('category'))+'":"'+m.get('value')+'"';
+                        });
 			var pluginAttr = {
 				      placeholder :localization.tt('h.searchForYourAgent'),
 				      container : this.ui.visualSearch,
@@ -646,16 +692,21 @@ define(function(require) {
 				      }
 				};
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.policyExportAuditList, pluginAttr);
-                        this.setEventsToFacets(this.visualSearch, App.vsHistory.plugin);
+                        this.setEventsToFacets(this.visualSearch, App.vsHistory.agent);
 		},
 		addSearchForPluginStatusTab : function(){
                         var that = this , query = '';
                         var searchOpt = [localization.tt("lbl.serviceName"), localization.tt("lbl.serviceType"),localization.tt("lbl.applicationType"),
 			                 localization.tt("lbl.agentIp"), localization.tt("lbl.hostName"), localization.tt("lbl.clusterName")];
-                        var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName"},{text : localization.tt("lbl.applicationType"), label :"pluginAppType"},
-                                               {text : localization.tt("lbl.agentIp"), label :"pluginIpAddress"}, {text : localization.tt("lbl.hostName"), label :"pluginHostName"},
-                                               {text : localization.tt("lbl.serviceType"), label :"serviceType"}, {text : localization.tt("lbl.clusterName"),label :'clusterName'}];
-                        _.map(App.vsHistory.pluginStatus, function(m){ query += '"'+m.get('category')+'":"'+m.get('value')+'"'; });
+                        var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName", urlLabel : 'serviceName'},
+                                                {text : localization.tt("lbl.applicationType"), label :"pluginAppType", urlLabel : 'applicationType'},
+                                                {text : localization.tt("lbl.agentIp"), label :"pluginIpAddress", urlLabel : 'agentIp'},
+                                                {text : localization.tt("lbl.hostName"), label :"pluginHostName", urlLabel : 'hostName'},
+                                                {text : localization.tt("lbl.serviceType"), label :"serviceType", urlLabel : 'serviceType'},
+                                                {text : localization.tt("lbl.clusterName"),label :'clusterName', urlLabel : 'clusterName'}];
+                        _.map(App.vsHistory.pluginStatus, function(m) {
+                            query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, m.get('category'))+'":"'+m.get('value')+'"';
+                        });
 			var pluginAttr = {
 					placeholder    : localization.tt('msg.searchForPluginStatus'),
 					container         : this.ui.visualSearch,
@@ -712,13 +763,17 @@ define(function(require) {
         addSearchForUserSyncTab : function(){
             var that = this , query = '';
             var searchOpt = [localization.tt("lbl.userName"), localization.tt("lbl.syncSource"), localization.tt("lbl.startDate"), localization.tt("lbl.endDate")];
-            var serverAttrName  = [{text : localization.tt("lbl.userName"), label :"userName"},{text : localization.tt("lbl.syncSource"), label :"syncSource"},
-                                   {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'}];
+            var serverAttrName  = [{text : localization.tt("lbl.userName"), label :"userName", urlLabel : 'userName'},
+                                    {text : localization.tt("lbl.syncSource"), label :"syncSource", urlLabel : 'syncSource'},
+                                    {text : 'Start Date',label :'startDate', urlLabel : 'startDate'},
+                                    {text : 'End Date',label :'endDate', urlLabel : 'endDate'}];
             if(_.isEmpty(App.vsHistory.userSync)){
-                query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
-                App.vsHistory.userSync.push(new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
+                query = '"startDate": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
+                App.vsHistory.userSync.push(new Backbone.Model({'category':'startDate', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
             }else{
-                _.map(App.vsHistory.userSync, function(a){ query += '"'+a.get('category')+'":"'+a.get('value')+'"'; });
+                _.map(App.vsHistory.userSync, function(a) {
+                    query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, a.get('category'))+'":"'+a.get('value')+'"';
+                });
             }
             var pluginAttr = {
                 placeholder    : localization.tt('msg.searchForUserSync'),

@@ -58,6 +58,15 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 	protected String name;
 
 	/**
+	 * displayName of the XXServiceDef
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "display_name")
+	protected String displayName;
+
+	/**
 	 * implClassName of the XXServiceDef
 	 * <ul>
 	 * </ul>
@@ -306,6 +315,25 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 		return this.isEnabled;
 	}
 
+	/**
+	 * This method sets the value to the member attribute <b> displayName</b> . You cannot set null to the attribute.
+	 *
+	 * @param displayName
+	 *            Value to set member attribute <b> displayName</b>
+	 */
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>displayName</b>
+	 *
+	 * @return Date - value of member attribute <b>displayName</b> .
+	 */
+	public String getDisplayName() {
+		return displayName;
+	}
+
 	/*
 	 * (non-Javadoc)
 	 *
@@ -396,7 +424,7 @@ public abstract class XXServiceDefBase extends XXDBBase implements Serializable 
 	 */
 	@Override
 	public String toString() {
-		return "XXServiceDefBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", name=" + name
+		return "XXServiceDefBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", name=" + name +", displayName=" + displayName
 				+ ", implClassName=" + implClassName + ", label=" + label + ", description=" + description
 				+ ", rbKeyLabel=" + rbKeyLabel + ", rbKeyDescription=" + rbKeyDescription + ", isEnabled" + isEnabled
 				+ "]";

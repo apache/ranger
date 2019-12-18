@@ -37,6 +37,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
+import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -83,7 +84,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -230,7 +230,7 @@ public class TestServiceREST {
 	RangerPolicyEngineImpl rpImpl;
 	
 	@Mock
-	RangerPolicyEngine policyEngine;
+    RangerPolicyAdmin policyAdmin;
 
 	@Mock
 	RangerTransactionService rangerTransactionService;
@@ -301,6 +301,7 @@ public class TestServiceREST {
 		rangerService.setGuid("1427365526516_835_0");
 		rangerService.setIsEnabled(true);
 		rangerService.setName("HDFS_1");
+		rangerService.setDisplayName("HDFS_1");
 		rangerService.setPolicyUpdateTime(new Date());
 		rangerService.setType("1");
 		rangerService.setUpdatedBy("Admin");
@@ -1092,7 +1093,7 @@ public class TestServiceREST {
 		/*here we are setting serviceAdminRole, so we will get the required policy with serviceAdmi role*/
 		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xGroupDao);
 		Mockito.when(svcStore.isServiceAdminUser(rPol.getService(), null)).thenReturn(true);
-		Mockito.doReturn(policyEngine).when(spySVCRest).getDelegatedAdminPolicyEngine("HDFS_1-1-20150316062453");
+		Mockito.doReturn(policyAdmin).when(spySVCRest).getPolicyAdminForDelegatedAdmin("HDFS_1-1-20150316062453");
 		RangerPolicyList dbRangerPolicy = spySVCRest.getPolicies(request);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy.getListSize(), 1);

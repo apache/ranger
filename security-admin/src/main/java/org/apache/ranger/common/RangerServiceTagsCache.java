@@ -21,7 +21,7 @@ package org.apache.ranger.common;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.store.TagStore;
 
 import org.apache.commons.logging.Log;
@@ -59,8 +59,10 @@ public class RangerServiceTagsCache {
 	}
 
 	private RangerServiceTagsCache() {
-		useServiceTagsCache = RangerConfiguration.getInstance().getBoolean("ranger.admin.tag.download.usecache", true);
-		waitTimeInSeconds = RangerConfiguration.getInstance().getInt("ranger.admin.tag.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+		RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+		useServiceTagsCache = config.getBoolean("ranger.admin.tag.download.usecache", true);
+		waitTimeInSeconds   = config.getInt("ranger.admin.tag.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 	}
 
 	public void dump() {

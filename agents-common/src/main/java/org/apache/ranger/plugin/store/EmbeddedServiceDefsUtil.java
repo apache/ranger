@@ -27,7 +27,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
 import com.google.gson.Gson;
@@ -113,11 +113,13 @@ public class EmbeddedServiceDefsUtil {
 
 	private RangerServiceDef tagServiceDef;
 
-	private Gson gsonBuilder;
+	private final Gson              gsonBuilder;
+	private final RangerAdminConfig config;
 
 	/** Private constructor to restrict instantiation of this singleton utility class. */
 	private EmbeddedServiceDefsUtil() {
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+		config      = RangerAdminConfig.getInstance();
 	}
 
 	public static EmbeddedServiceDefsUtil instance() {
@@ -128,7 +130,7 @@ public class EmbeddedServiceDefsUtil {
 		LOG.info("==> EmbeddedServiceDefsUtil.init()");
 
 		try {
-			createEmbeddedServiceDefs = RangerConfiguration.getInstance().getBoolean(PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS, true);
+			createEmbeddedServiceDefs = config.getBoolean(PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS, true);
 
 			supportedServiceDefs =getSupportedServiceDef();
 			/*
@@ -308,7 +310,7 @@ public class EmbeddedServiceDefsUtil {
 	private Set<String> getSupportedServiceDef(){
 		Set<String> supportedServiceDef =new HashSet<>();
 		try{
-			String ranger_supportedcomponents=RangerConfiguration.getInstance().get(PROPERTY_SUPPORTED_SERVICE_DEFS, DEFAULT_BOOTSTRAP_SERVICEDEF_LIST);
+			String ranger_supportedcomponents = config.get(PROPERTY_SUPPORTED_SERVICE_DEFS, DEFAULT_BOOTSTRAP_SERVICEDEF_LIST);
 			if(StringUtils.isBlank(ranger_supportedcomponents) || "all".equalsIgnoreCase(ranger_supportedcomponents)){
 				ranger_supportedcomponents=DEFAULT_BOOTSTRAP_SERVICEDEF_LIST;
 			}

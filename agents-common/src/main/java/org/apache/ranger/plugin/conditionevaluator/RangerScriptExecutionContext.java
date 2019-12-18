@@ -23,7 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -57,21 +57,7 @@ public final class RangerScriptExecutionContext {
 	private static String[] dateFormatStrings = null;
 
 	static {
-		StringBuilder sb = new StringBuilder(DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT);
-		sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME);
-
-		String additionalDateFormatsValue = RangerConfiguration.getInstance().get(TAG_ATTR_DATE_FORMAT_PROP);
-		if (StringUtils.isNotBlank(additionalDateFormatsValue)) {
-			sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(additionalDateFormatsValue);
-		}
-
-		dateFormatStrings = sb.toString().split(TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX);
-		Arrays.sort(dateFormatStrings, new Comparator<String>() {
-			@Override
-			public int compare(String first, String second) {
-				return Integer.compare(second.length(), first.length());
-			}
-		});
+		init(null);
 	}
 
 	private static final ThreadLocal<List<SimpleDateFormat>> THREADLOCAL_DATE_FORMATS =
@@ -100,6 +86,29 @@ public final class RangerScriptExecutionContext {
 
 	RangerScriptExecutionContext(final RangerAccessRequest accessRequest) {
 		this.accessRequest = accessRequest;
+	}
+
+	public static void init(Configuration config) {
+		StringBuilder sb = new StringBuilder(DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT);
+
+		sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME);
+
+		String additionalDateFormatsValue = config != null ? config.get(TAG_ATTR_DATE_FORMAT_PROP) : null;
+
+		if (StringUtils.isNotBlank(additionalDateFormatsValue)) {
+			sb.append(TAG_ATTR_DATE_FORMAT_SEPARATOR).append(additionalDateFormatsValue);
+		}
+
+		String[] formatStrings = sb.toString().split(TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX);
+
+		Arrays.sort(formatStrings, new Comparator<String>() {
+			@Override
+			public int compare(String first, String second) {
+				return Integer.compare(second.length(), first.length());
+			}
+		});
+
+		RangerScriptExecutionContext.dateFormatStrings = formatStrings;
 	}
 
 	public String getResource() {

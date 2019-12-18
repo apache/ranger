@@ -77,7 +77,7 @@ public class RangerServiceDefHelper {
 			modifiedResourceDefs.add(modifiedResourceDef);
 		}
 
-		return new RangerServiceDef(serviceDef.getName(), serviceDef.getImplClass(), serviceDef.getLabel(),
+		return new RangerServiceDef(serviceDef.getName(), serviceDef.getDisplayName(), serviceDef.getImplClass(), serviceDef.getLabel(),
 				serviceDef.getDescription(), serviceDef.getOptions(), serviceDef.getConfigs(), modifiedResourceDefs, serviceDef.getAccessTypes(),
 				serviceDef.getPolicyConditions(), serviceDef.getContextEnrichers(), serviceDef.getEnums());
 	}

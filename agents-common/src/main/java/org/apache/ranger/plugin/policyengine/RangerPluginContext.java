@@ -19,79 +19,42 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.service.RangerAuthContext;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.service.RangerAuthContextListener;
 
 public class RangerPluginContext {
+	private final RangerPluginConfig        config;
+	private       RangerAuthContext         authContext;
+	private       RangerAuthContextListener authContextListener;
 
-	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
-	private String clusterName;
-	private String clusterType;
-	private RangerAuthContext authContext;
 
-	public RangerPluginContext(String serviceType){
-		this.clusterName = findClusterName(serviceType);
-		this.clusterType = findClusterType(serviceType);
+	public RangerPluginContext(RangerPluginConfig config) {
+		this.config = config;
 	}
+
+	public RangerPluginConfig getConfig() { return  config; }
 
 	public String getClusterName() {
-		return clusterName;
-	}
-
-	public void setClusterName(String clusterName) {
-		this.clusterName = clusterName;
+		return config.getClusterName();
 	}
 
 	public String getClusterType() {
-		return clusterType;
-	}
-
-	public void setClusterType(String clusterType) {
-		this.clusterType = clusterType;
+		return config.getClusterType();
 	}
 
 	public RangerAuthContext getAuthContext() { return authContext; }
 
 	public void setAuthContext(RangerAuthContext authContext) { this.authContext = authContext; }
 
-	private String findClusterName(String serviceType) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPluginContext.findClusterName , serviceType = " + serviceType);
+	public void setAuthContextListener(RangerAuthContextListener authContextListener) { this.authContextListener = authContextListener; }
+
+	public void notifyAuthContextChanged() {
+		RangerAuthContextListener authContextListener = this.authContextListener;
+
+		if (authContextListener != null) {
+			authContextListener.contextChanged();
 		}
-
-		String propertyPrefix    = "ranger.plugin." + serviceType;
-		String clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.name", "");
-		if(StringUtil.isEmpty(clusterName)){
-			clusterName = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPluginContext.findClusterName ");
-		}
-
-		return clusterName;
-	}
-
-	private String findClusterType(String serviceType) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPluginContext.findClusterType , serviceType = " + serviceType);
-		}
-
-		String propertyPrefix    = "ranger.plugin." + serviceType;
-		String clusterType = RangerConfiguration.getInstance().get(propertyPrefix + ".access.cluster.type", "");
-		if(StringUtil.isEmpty(clusterType)){
-			clusterType = RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.type", "");
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPluginContext.findClusterType ");
-		}
-
-		return clusterType;
 	}
 
 }

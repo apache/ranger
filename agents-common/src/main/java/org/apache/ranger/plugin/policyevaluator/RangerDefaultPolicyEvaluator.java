@@ -247,7 +247,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				} else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
 					isMatched = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
 				} else {
-					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR_WITH_WILDCARDS;
+					isMatched = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
 				}
 
 				if (isMatched) {
@@ -476,11 +476,13 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			}
 		} else {
 			if (!result.getIsAllowed()) { // if access is not yet allowed by another policy
-				result.setIsAllowed(true);
-				result.setPolicyPriority(getPolicyPriority());
-				result.setPolicyId(getId());
-				result.setReason(reason);
-				result.setPolicyVersion(getPolicy().getVersion());
+				if (matchType != RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
+					result.setIsAllowed(true);
+					result.setPolicyPriority(getPolicyPriority());
+					result.setPolicyId(getId());
+					result.setReason(reason);
+					result.setPolicyVersion(getPolicy().getVersion());
+				}
 			}
 		}
 		if (LOG.isDebugEnabled()) {
@@ -1058,7 +1060,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY ||
 		   policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS ||
 		   policyItemType == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS) {
-			ret = ServiceDefUtil.getOption_enableDenyAndExceptionsInPolicies(serviceDef);
+			ret = ServiceDefUtil.getOption_enableDenyAndExceptionsInPolicies(serviceDef, pluginContext);
 		}
 
 		return ret;
@@ -1092,7 +1094,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			case RangerPolicy.POLICY_TYPE_ACCESS: {
 				ret = getMatchingPolicyItem(request, denyEvaluators, denyExceptionEvaluators);
 
-				if(ret == null && !result.getIsAllowed()) { // if not denied, evaluate allowItems only if not already allowed
+				if(ret == null && !result.getIsAccessDetermined()) { // a deny policy could have set isAllowed=true, but in such case it wouldn't set isAccessDetermined=true
 					ret = getMatchingPolicyItem(request, allowEvaluators, allowExceptionEvaluators);
 				}
 				break;

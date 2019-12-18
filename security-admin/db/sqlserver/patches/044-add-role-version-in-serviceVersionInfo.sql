@@ -14,13 +14,14 @@
 -- limitations under the License.
 
 GO
-IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service_version_info' and column_name = 'role_version')
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name='x_service_version_info' and column_name='role_version')
 BEGIN
-	ALTER TABLE [dbo].[x_service_version_info] ADD [policy_version] [bigint] NOT NULL DEFAULT 0;
+	ALTER TABLE [dbo].[x_service_version_info] ADD [role_version] [bigint] DEFAULT 0 NOT NULL;
 END
 GO
+
 GO
-IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service_version_info' and column_name = 'role_update_time')
+IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name='x_service_version_info' and column_name='role_update_time')
 BEGIN
 	ALTER TABLE [dbo].[x_service_version_info] ADD [role_update_time] [datetime2] DEFAULT NULL NULL;
 END

@@ -18,8 +18,8 @@
  */
 package org.apache.ranger.authorization.solr.authorizer;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerMultiResourceAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
@@ -37,8 +37,8 @@ public class RangerSolrAuditHandler extends RangerMultiResourceAuditHandler {
     private AuthzAuditEvent auditEvent   = null;
 
 
-    public RangerSolrAuditHandler(){
-        String excludeUserList = RangerConfiguration.getInstance().get(PROP_SOLR_PLUGIN_AUDIT_EXCLUDED_USERS, solrUser);
+    public RangerSolrAuditHandler(Configuration config){
+        String excludeUserList = config.get(PROP_SOLR_PLUGIN_AUDIT_EXCLUDED_USERS, solrUser);
         excludeUsers           = Arrays.asList(excludeUserList.split(","));
     }
 

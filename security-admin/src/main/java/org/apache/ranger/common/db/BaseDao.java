@@ -93,6 +93,23 @@ public abstract class BaseDao<T> {
 		return ret;
 	}
 
+	public List<T> batchCreate(List<T> obj) {
+		List<T> ret = null;
+
+		for (int n = 0; n < obj.size(); ++n) {
+			em.persist(obj.get(n));
+			if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.policyBatchSize == 0)) {
+				em.flush();
+			}
+		}
+		if (!RangerBizUtil.isBulkMode()) {
+			em.flush();
+		}
+
+		ret = obj;
+		return ret;
+	}
+
 	public T update(T obj) {
 		em.merge(obj);
 		if (!RangerBizUtil.isBulkMode()) {

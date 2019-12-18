@@ -111,6 +111,13 @@ define(function(require){
                     vZoneName: ""
                 }
             }
+            if(this.type && this.type.split('?')[1]) {
+                var searchFregment = XAUtil.changeUrlToSearchQuery(decodeURIComponent(this.type.substring(this.type.indexOf("?") + 1)));
+                console.log(searchFregment);
+                if(_.has(searchFregment, 'securityZone')) {
+                        App.vZone.vZoneName = searchFregment['securityZone'];
+                }
+            }
         },
 
 		/** all events binding here */
@@ -280,6 +287,7 @@ define(function(require){
             var view = new RangerServiceViewDetail({
                 serviceDef : serviceDef,
                 rangerService : rangerService,
+                rangerSeviceList : that.services,
 
             });
             var modal = new Backbone.BootstrapModal({
@@ -312,8 +320,11 @@ define(function(require){
                 App.vZone.vZoneName = e.val;
                 if(e.added){
                     App.vZone.vZoneId = e.added.zoneId;
+                        XAUtil.changeParamToUrlFragment({"securityZone" : e.val}, that.collection.modelName);
                 } else {
                     App.vZone.vZoneId = null;
+                    //for url change on UI
+                    XAUtil.changeParamToUrlFragment();
                 }
                 var rBreadcrumbsText = !_.isEmpty(App.vZone.vZoneName) ? 'Service Manager : ' + App.vZone.vZoneName + ' zone' : 'Service Manager';
                 App.rBreadcrumbs.currentView.breadcrumb[0].text = rBreadcrumbsText;

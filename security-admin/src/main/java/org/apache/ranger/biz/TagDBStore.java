@@ -30,7 +30,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -100,8 +100,12 @@ public class TagDBStore extends AbstractTagStore {
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
+	RangerAdminConfig config;
+
 	@PostConstruct
 	public void initStore() {
+		config = RangerAdminConfig.getInstance();
+
 		RangerAdminTagEnricher.setTagStore(this);
 		RangerAdminTagEnricher.setDaoManager(daoManager);
 	}
@@ -1268,7 +1272,9 @@ public class TagDBStore extends AbstractTagStore {
 
 	public static boolean isSupportsTagDeltas() {
         if (!IS_SUPPORTS_TAG_DELTAS_INITIALIZED) {
-            SUPPORTS_TAG_DELTAS = RangerConfiguration.getInstance().getBoolean("ranger.admin.supports.tag.deltas", false);
+            RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+            SUPPORTS_TAG_DELTAS = config.getBoolean("ranger.admin.supports.tag.deltas", false);
             IS_SUPPORTS_TAG_DELTAS_INITIALIZED = true;
         }
         return SUPPORTS_TAG_DELTAS;

@@ -41,11 +41,11 @@ import javax.ws.rs.core.Response;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.util.*;
 import org.apache.ranger.audit.provider.MiscUtil;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.glassfish.jersey.client.ClientProperties;
 
@@ -81,26 +81,28 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	private final String   pluginCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 
 	@Override
-	public void init(String serviceName, String appId, String configPropertyPrefix) {
+	public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminJersey2RESTClient.init(" + configPropertyPrefix + ")");
 		}
 
+		super.init(serviceName, appId, configPropertyPrefix, config);
+
 		_serviceName = serviceName;
 		_pluginId = _utils.getPluginId(serviceName, appId);
-		String tmpUrl = _utils.getPolicyRestUrl(configPropertyPrefix);
-		_sslConfigFileName = _utils.getSsslConfigFileName(configPropertyPrefix);
-		_restClientConnTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
-		_restClientReadTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
-		_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".access.cluster.name", "");
+		String tmpUrl = _utils.getPolicyRestUrl(configPropertyPrefix, config);
+		_sslConfigFileName = _utils.getSsslConfigFileName(configPropertyPrefix, config);
+		_restClientConnTimeOutMs = config.getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
+		_restClientReadTimeOutMs = config.getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
+		_clusterName = config.get(configPropertyPrefix + ".access.cluster.name", "");
 		if(StringUtil.isEmpty(_clusterName)){
-			_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".ambari.cluster.name", "");
+			_clusterName =config.get(configPropertyPrefix + ".ambari.cluster.name", "");
 		}
-		_supportsPolicyDeltas = RangerConfiguration.getInstance().get(configPropertyPrefix + ".policy.rest.supports.policy.deltas", "false");
+		_supportsPolicyDeltas = config.get(configPropertyPrefix + ".policy.rest.supports.policy.deltas", "false");
 		if (!"true".equalsIgnoreCase(_supportsPolicyDeltas)) {
 			_supportsPolicyDeltas = "false";
 		}
-		_supportsTagDeltas = RangerConfiguration.getInstance().get(configPropertyPrefix + ".tag.rest.supports.tag.deltas", "false");
+		_supportsTagDeltas = config.get(configPropertyPrefix + ".tag.rest.supports.tag.deltas", "false");
 		if (!"true".equalsIgnoreCase(_supportsTagDeltas)) {
 			_supportsTagDeltas = "false";
 		}
