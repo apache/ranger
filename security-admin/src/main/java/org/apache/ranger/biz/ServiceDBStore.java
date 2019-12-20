@@ -122,6 +122,7 @@ import org.apache.ranger.entity.XXPolicyLabelMap;
 import org.apache.ranger.entity.XXPolicyRefAccessType;
 import org.apache.ranger.entity.XXPolicyRefCondition;
 import org.apache.ranger.entity.XXPolicyRefResource;
+import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
@@ -190,6 +191,7 @@ import org.apache.ranger.view.VXMetricServiceCount;
 import org.apache.ranger.view.VXMetricServiceNameCount;
 import org.apache.ranger.view.VXMetricUserGroupCount;
 import org.apache.ranger.view.VXPolicyLabelList;
+import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
@@ -330,6 +332,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
 	RangerRoleService roleService;
+
+	@Autowired
+	UserMgr userMgr;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -1529,7 +1534,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 					configValue = paddedEncryptedPwd;
 				}
 			}
-
 			XXServiceConfigMap xConfMap = new XXServiceConfigMap();
 			xConfMap = rangerAuditFields.populateAuditFields(xConfMap, xCreatedService);
 			xConfMap.setServiceId(xCreatedService.getId());
@@ -1540,6 +1544,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMap.setConfigvalue(configValue);
 			xConfMap = xConfMapDao.create(xConfMap);
 		}
+		updateTabPermissions(service.getType(), validConfigs);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("vXUser:[" + vXUser + "]");
 		}
@@ -1740,6 +1745,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMap.setConfigvalue(configValue);
 			xConfMapDao.create(xConfMap);
 		}
+		updateTabPermissions(service.getType(), validConfigs);
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("vXUser:[" + vXUser + "]");
 		}
@@ -1798,6 +1804,45 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
 		bizUtil.createTrxLog(trxLogList);
+	}
+
+	private void updateTabPermissions(String svcType, Map<String, String> svcConfig) {
+		if (StringUtils.equalsIgnoreCase(svcType, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+			String svcAdminUsers = svcConfig.get(SERVICE_ADMIN_USERS);
+			if (StringUtils.isNotEmpty(svcAdminUsers)) {
+				for (String user : svcAdminUsers.split(",")) {
+					validateUserAndProvideTabTagBasedPolicyPermission(user.trim());
+				}
+			}
+		}
+
+	}
+
+	private void validateUserAndProvideTabTagBasedPolicyPermission(String username){
+		XXPortalUser xxPortalUser = daoMgr.getXXPortalUser().findByLoginId(username);
+		if (xxPortalUser == null) {
+			throw restErrorUtil
+					.createRESTException(
+							"Username : "
+									+ username
+									+ " does not exist. Please provide valid user as service admin for tag service .",
+							MessageEnums.ERROR_CREATING_OBJECT);
+		} else {
+			VXPortalUser vXPortalUser = userMgr
+					.mapXXPortalUserToVXPortalUserForDefaultAccount(xxPortalUser);
+			if (CollectionUtils.isNotEmpty(vXPortalUser.getUserRoleList())
+					&& vXPortalUser.getUserRoleList().size() == 1) {
+				for (String userRole : vXPortalUser.getUserRoleList()) {
+					if (userRole.equals(RangerConstants.ROLE_USER)) {
+						HashMap<String, Long> moduleNameId = xUserMgr
+								.getAllModuleNameAndIdMap();
+						xUserMgr.createOrUpdateUserPermisson(
+								vXPortalUser,
+								moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES),true);
+					}
+				}
+			}
+		}
 	}
 
 	private void restrictIfZoneService(RangerService service)
