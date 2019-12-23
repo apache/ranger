@@ -82,6 +82,7 @@
         <apacheds.version>2.0.0-M22</apacheds.version>
         <asm.all.version>3.2</asm.all.version>
         <aspectj.version>1.8.2</aspectj.version>
+        <assembly.plugin.version>2.6</assembly.plugin.version>
         <atlas.version>3.0.0-SNAPSHOT</atlas.version>
         <atlas.gson.version>2.5</atlas.gson.version>
         <atlas.jackson.version>2.9.9</atlas.jackson.version>
@@ -97,6 +98,7 @@
         <commons.codec.version>1.12</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.8.1</commons.compress.version>
+        <commons.configuration1.version>1.10</commons.configuration1.version>
         <commons.configuration.version>2.1.1</commons.configuration.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
         <commons.digester.version>2.1</commons.digester.version>
@@ -127,9 +129,9 @@
         <libfb303.version>0.9.3</libfb303.version>
         <libthrift.version>0.12.0</libthrift.version>
         <htrace-core.version>4.1.0-incubating</htrace-core.version>
-        <httpcomponents.httpclient.version>4.5.3</httpcomponents.httpclient.version>
+        <httpcomponents.httpclient.version>4.5.6</httpcomponents.httpclient.version>
         <httpcomponents.httpcore.version>4.4.6</httpcomponents.httpcore.version>
-        <httpcomponents.httpmime.version>4.5.3</httpcomponents.httpmime.version>
+        <httpcomponents.httpmime.version>4.5.6</httpcomponents.httpmime.version>
         <javax.persistence.version>2.1.0</javax.persistence.version>
         <javax.servlet.version>3.1.0</javax.servlet.version>
         <javax-inject.version>1</javax-inject.version>
@@ -142,6 +144,7 @@
         <jersey-spring.version>1.19.3</jersey-spring.version>
         <jettison.version>1.1</jettison.version>
         <jline.version>0.9.94</jline.version>
+        <jopt-simple.version>3.2</jopt-simple.version>
         <json4s.version>3.2.11</json4s.version>
         <jsonsmart.version>2.3</jsonsmart.version>
         <jsr250.version>1.0</jsr250.version>
@@ -268,41 +271,12 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <!--
+                   'distro' should be the last module. If a module gets inserted after
+                   ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
+                -->
+                <module>distro</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/hive-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/knox-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/storm-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
-                                <descriptor>src/main/assembly/admin-web.xml</descriptor>
-                                <descriptor>src/main/assembly/solr_audit_conf.xml</descriptor>
-                                <descriptor>src/main/assembly/usersync.xml</descriptor>
-                                <descriptor>src/main/assembly/tagsync.xml</descriptor>
-                                <descriptor>src/main/assembly/migration-util.xml</descriptor>
-                                <descriptor>src/main/assembly/kms.xml</descriptor>
-                                <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
-                                <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-admin</id>
@@ -310,19 +284,6 @@
                 <module>agents-common</module>
                 <module>security-admin</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/admin-web.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-hdfs-plugin</id>
@@ -337,19 +298,6 @@
                 <module>hdfs-agent</module>
                 <module>ranger-hdfs-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-hive-plugin</id>
@@ -364,19 +312,6 @@
                 <module>hive-agent</module>
                 <module>ranger-hive-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hive-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-hbase-plugin</id>
@@ -391,19 +326,6 @@
                 <module>hbase-agent</module>
                 <module>ranger-hbase-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-knox-plugin</id>
@@ -418,19 +340,6 @@
                 <module>knox-agent</module>
                 <module>ranger-knox-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/knox-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-storm-plugin</id>
@@ -445,19 +354,6 @@
                 <module>storm-agent</module>
                 <module>ranger-storm-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/storm-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-yarn-plugin</id>
@@ -472,19 +368,6 @@
                 <module>plugin-yarn</module>
                 <module>ranger-yarn-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
     <profile>
             <id>ranger-ozone-plugin</id>
@@ -499,19 +382,6 @@
                 <module>plugin-ozone</module>
                 <module>ranger-ozone-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-kafka-plugin</id>
@@ -526,19 +396,6 @@
                 <module>plugin-kafka</module>
                 <module>ranger-kafka-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-solr-plugin</id>
@@ -553,19 +410,6 @@
                 <module>plugin-solr</module>
                 <module>ranger-solr-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-kms-plugin</id>
@@ -580,19 +424,6 @@
                 <module>plugin-kms</module>
                 <module>ranger-kms-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-kms.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-atlas-plugin</id>
@@ -607,19 +438,6 @@
                 <module>plugin-atlas</module>
                 <module>ranger-atlas-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-sqoop-plugin</id>
@@ -634,19 +452,6 @@
                 <module>plugin-sqoop</module>
                 <module>ranger-sqoop-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-kylin-plugin</id>
@@ -661,19 +466,6 @@
                 <module>plugin-kylin</module>
                 <module>ranger-kylin-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-elasticsearch-plugin</id>
@@ -688,19 +480,6 @@
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-presto-plugin</id>
@@ -715,19 +494,6 @@
                 <module>plugin-presto</module>
                 <module>ranger-presto-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>linux</id>
@@ -761,6 +527,7 @@
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
                 <module>unixauthservice</module>
+                <module>unixauthnative</module>
                 <module>ranger-util</module>
                 <module>plugin-kms</module>
                 <module>tagsync</module>
@@ -783,46 +550,16 @@
                 <module>ranger-sqoop-plugin-shim</module>
                 <module>plugin-kylin</module>
                 <module>ranger-kylin-plugin-shim</module>
-                <module>plugin-elasticsearch</module>
-                <module>ranger-elasticsearch-plugin-shim</module>
                 <module>plugin-presto</module>
                 <module>ranger-presto-plugin-shim</module>
-                <module>unixauthnative</module>
+                <module>plugin-elasticsearch</module>
+                <module>ranger-elasticsearch-plugin-shim</module>
+                <!--
+                   'distro' should be the last module. If a module gets inserted after
+                   ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
+                -->
+                <module>distro</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-            <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/hive-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/knox-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/storm-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
-                                <descriptor>src/main/assembly/admin-web.xml</descriptor>
-                                <descriptor>src/main/assembly/solr_audit_conf.xml</descriptor>
-                                <descriptor>src/main/assembly/usersync.xml</descriptor>
-                                <descriptor>src/main/assembly/tagsync.xml</descriptor>
-                                <descriptor>src/main/assembly/migration-util.xml</descriptor>
-                                <descriptor>src/main/assembly/kms.xml</descriptor>
-                                <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
-                                <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>linux-pam</id>
@@ -1268,6 +1005,15 @@
                 <version>${findbugs.plugin.version}</version>
                 <configuration>
                     <includeFilterFile>./dev-support/findbugsIncludeFile.xml</includeFilterFile>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${assembly.plugin.version}</version>
+                <configuration>
+                    <skipAssembly>true</skipAssembly>
                 </configuration>
             </plugin>
         </plugins>
