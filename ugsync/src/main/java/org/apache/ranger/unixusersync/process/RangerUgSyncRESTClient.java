@@ -80,7 +80,7 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
 
 			setClient(Client.create(config));
 			if (StringUtils.isNotEmpty(getUsername()) && StringUtils.isNotEmpty(getPassword())) {
-				getClient().addFilter(new HTTPBasicAuthFilter(getPassword(), getPassword()));
+				getClient().addFilter(new HTTPBasicAuthFilter(getUsername(), getPassword()));
 			}
 		}
 	}
