@@ -192,7 +192,7 @@ public class TestAuditQueue {
 		props.put(propPrefix + "." + BaseAuditHandler.PROP_CLASS_NAME,
 				TestConsumer.class.getName());
 
-		AuditProviderFactory factory = AuditProviderFactory.getInstance();
+		AuditProviderFactory factory = new AuditProviderFactory();
 		factory.init(props, "test");
 		AuditQueue queue = (AuditQueue) factory.getAuditProvider();
 		BaseAuditHandler consumer = (BaseAuditHandler) queue.getConsumer();

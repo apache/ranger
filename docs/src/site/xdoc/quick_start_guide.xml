@@ -112,7 +112,7 @@
             	3. Get the keys used to sign the releases for verification. https://dist.apache.org/repos/dist/release/ranger/KEYS
         <source> 
            $ gpg --import KEYS
-           $ gpg --fingerprint key-id 
+           $ gpg --fingerprint <key-id> 
         </source>
 			</p>
         

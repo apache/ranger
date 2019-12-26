@@ -181,7 +181,7 @@ CREATE TABLE IF NOT EXISTS `x_service_resource_element_val` (
 `upd_by_id` BIGINT(20) NULL DEFAULT NULL,
 `res_element_id` BIGINT(20) NOT NULL,
 `value` VARCHAR(1024) NOT NULL,
-`sort_order` int DEFAULT 0,
+`sort_order` tinyint(3) NULL DEFAULT '0',
 PRIMARY KEY (`id`),
 KEY `x_srvc_res_el_val_IDX_resel_id` (`res_element_id`),
 KEY `x_srvc_res_el_val_IDX_addby_id` (`added_by_id`),

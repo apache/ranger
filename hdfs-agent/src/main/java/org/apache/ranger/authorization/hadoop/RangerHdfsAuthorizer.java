@@ -26,14 +26,17 @@ import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConst
 
 import java.net.InetAddress;
 import java.security.SecureRandom;
-import java.util.*;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.Stack;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.hdfs.DFSUtil;
 import org.apache.hadoop.hdfs.server.namenode.INode;
@@ -46,7 +49,7 @@ import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
-import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.hadoop.exceptions.RangerAccessControlException;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -77,18 +80,11 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 	private RangerHdfsPlugin           rangerPlugin            = null;
 	private Map<FsAction, Set<String>> access2ActionListMapper = new HashMap<FsAction, Set<String>>();
-	private final Path                 addlConfigFile;
 
 	public RangerHdfsAuthorizer() {
-		this(null);
-	}
-
-	public RangerHdfsAuthorizer(Path addlConfigFile) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerHdfsAuthorizer.RangerHdfsAuthorizer()");
 		}
-
-		this.addlConfigFile = addlConfigFile;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerHdfsAuthorizer.RangerHdfsAuthorizer()");
@@ -100,11 +96,10 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			LOG.debug("==> RangerHdfsAuthorizer.start()");
 		}
 
-		RangerHdfsPlugin plugin = new RangerHdfsPlugin(addlConfigFile);
-
+		RangerHdfsPlugin plugin = new RangerHdfsPlugin();
 		plugin.init();
 
-		if (plugin.isOptimizeSubAccessAuthEnabled()) {
+		if (RangerHdfsPlugin.isOptimizeSubAccessAuthEnabled()) {
 			LOG.info(RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP + " is enabled");
 		}
 
@@ -186,10 +181,6 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 		return rangerAce;
 	}
 
-	// for testing
-	public Configuration getConfig() {
-		return rangerPlugin.getConfig();
-	}
 
 	private enum AuthzStatus { ALLOW, DENY, NOT_DETERMINED };
 
@@ -320,7 +311,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					parent   = inodes.length > 1 ? inodes[inodes.length - 2] : null;
 					inode    = inodes[inodes.length - 1]; // could be null while creating a new file
 
-					auditHandler = doNotGenerateAuditRecord ? null : new RangerHdfsAuditHandler(resourcePath, isTraverseOnlyCheck, rangerPlugin.getHadoopModuleName(), rangerPlugin.getExcludedUsers());
+					auditHandler = doNotGenerateAuditRecord ? null : new RangerHdfsAuditHandler(resourcePath, isTraverseOnlyCheck);
 
 					/* Hadoop versions prior to 2.8.0 didn't ask for authorization of parent/ancestor traversal for
 					 * reading or writing a file. However, Hadoop version 2.8.0 and later ask traversal authorization for
@@ -409,7 +400,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 								AuthzStatus subDirAuthStatus = AuthzStatus.NOT_DETERMINED;
 
-								boolean optimizeSubAccessAuthEnabled = rangerPlugin.isOptimizeSubAccessAuthEnabled();
+								boolean optimizeSubAccessAuthEnabled = RangerHdfsPlugin.isOptimizeSubAccessAuthEnabled();
 
 								if (optimizeSubAccessAuthEnabled) {
 									subDirAuthStatus = isAccessAllowedForHierarchy(data.dir, dirAttribs, data.resourcePath, subAccess, user, groups, plugin);
@@ -418,7 +409,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 								if (subDirAuthStatus != AuthzStatus.ALLOW) {
 									for(INode child : cList) {
 										if (child.isDirectory()) {
-											directories.push(new SubAccessData(child.asDirectory(), resourcePath + Path.SEPARATOR_CHAR + child.getLocalName()));
+											directories.push(new SubAccessData(child.asDirectory(), resourcePath + org.apache.hadoop.fs.Path.SEPARATOR_CHAR + child.getLocalName()));
 										}
 									}
 								}
@@ -585,7 +576,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 			}
 
 			AuthzStatus authzStatus = AuthzStatus.NOT_DETERMINED;
-			if(rangerPlugin.isHadoopAuthEnabled() && defaultEnforcer != null) {
+			if(RangerHdfsPlugin.isHadoopAuthEnabled() && defaultEnforcer != null) {
 
 				RangerPerfTracer hadoopAuthPerf = null;
 
@@ -724,10 +715,10 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				}
 
 				String subDirPath = path;
-				if (subDirPath.charAt(subDirPath.length() - 1) != Path.SEPARATOR_CHAR) {
-					subDirPath = subDirPath + Character.toString(Path.SEPARATOR_CHAR);
+				if (subDirPath.charAt(subDirPath.length() - 1) != org.apache.hadoop.fs.Path.SEPARATOR_CHAR) {
+					subDirPath = subDirPath + Character.toString(org.apache.hadoop.fs.Path.SEPARATOR_CHAR);
 				}
-				subDirPath = subDirPath + rangerPlugin.getRandomizedWildcardPathName();
+				subDirPath = subDirPath + RangerHdfsPlugin.getRandomizedWildcardPathName();
 
 				for (String accessType : accessTypes) {
 					RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(null, subDirPath, pathOwner, access, accessType, user, groups);
@@ -763,47 +754,24 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 
 class RangerHdfsPlugin extends RangerBasePlugin {
-	private static final Log LOG = LogFactory.getLog(RangerHdfsPlugin.class);
+	private static boolean hadoopAuthEnabled = RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT;
+	private static String fileNameExtensionSeparator;
+	private static boolean optimizeSubAccessAuthEnabled = RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_DEFAULT;
+	private static String randomizedWildcardPathName;
 
-	private static String fileNameExtensionSeparator = RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR;
-
-	private final boolean     hadoopAuthEnabled;
-	private final boolean     optimizeSubAccessAuthEnabled;
-	private final String      randomizedWildcardPathName;
-	private final String      hadoopModuleName;
-	private final Set<String> excludeUsers = new HashSet<>();
-
-	public RangerHdfsPlugin(Path addlConfigFile) {
+	public RangerHdfsPlugin() {
 		super("hdfs", "hdfs");
+	}
 
-		RangerPluginConfig config = getConfig();
+	public void init() {
+		super.init();
 
-		if (addlConfigFile != null) {
-			config.addResource(addlConfigFile);
-		}
+		RangerHdfsPlugin.hadoopAuthEnabled = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT);
+		RangerHdfsPlugin.fileNameExtensionSeparator = RangerConfiguration.getInstance().get(RangerHdfsAuthorizer.RANGER_FILENAME_EXTENSION_SEPARATOR_PROP, RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR);
+		RangerHdfsPlugin.optimizeSubAccessAuthEnabled = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP, RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_DEFAULT);
 
 		String random = generateString("^&#@!%()-_+=@:;'<>`~abcdefghijklmnopqrstuvwxyz01234567890");
-
-		RangerHdfsPlugin.fileNameExtensionSeparator = config.get(RangerHdfsAuthorizer.RANGER_FILENAME_EXTENSION_SEPARATOR_PROP, RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR);
-
-		this.hadoopAuthEnabled            = config.getBoolean(RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_HDFS_PERMISSION_DEFAULT);
-		this.optimizeSubAccessAuthEnabled = config.getBoolean(RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_PROP, RangerHadoopConstants.RANGER_OPTIMIZE_SUBACCESS_AUTHORIZATION_DEFAULT);
-		this.randomizedWildcardPathName   = RangerPathResourceMatcher.WILDCARD_ASTERISK + random + RangerPathResourceMatcher.WILDCARD_ASTERISK;
-		this.hadoopModuleName             = config.get(RangerHadoopConstants.AUDITLOG_HADOOP_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_HADOOP_MODULE_ACL_NAME);
-
-		String excludeUserList = config.get(RangerHadoopConstants.AUDITLOG_HDFS_EXCLUDE_LIST_PROP, RangerHadoopConstants.AUDITLOG_EMPTY_STRING);
-
-		if (excludeUserList != null && excludeUserList.trim().length() > 0) {
-			for(String excludeUser : excludeUserList.trim().split(",")) {
-				excludeUser = excludeUser.trim();
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Adding exclude user [" + excludeUser + "]");
-				}
-
-				excludeUsers.add(excludeUser);
-			}
-		}
+		randomizedWildcardPathName = RangerPathResourceMatcher.WILDCARD_ASTERISK + random + RangerPathResourceMatcher.WILDCARD_ASTERISK;
 	}
 
 	// Build random string of length between 56 and 112 characters
@@ -826,21 +794,18 @@ class RangerHdfsPlugin extends RangerBasePlugin {
 		return new String(text);
 	}
 
+	public static boolean isHadoopAuthEnabled() {
+		return RangerHdfsPlugin.hadoopAuthEnabled;
+	}
 	public static String getFileNameExtensionSeparator() {
-		return fileNameExtensionSeparator;
+		return RangerHdfsPlugin.fileNameExtensionSeparator;
 	}
-
-	public boolean isHadoopAuthEnabled() {
-		return hadoopAuthEnabled;
+	public static boolean isOptimizeSubAccessAuthEnabled() {
+		return RangerHdfsPlugin.optimizeSubAccessAuthEnabled;
 	}
-	public boolean isOptimizeSubAccessAuthEnabled() {
-		return optimizeSubAccessAuthEnabled;
+	public static String getRandomizedWildcardPathName() {
+		return RangerHdfsPlugin.randomizedWildcardPathName;
 	}
-	public String getRandomizedWildcardPathName() {
-		return randomizedWildcardPathName;
-	}
-	public String getHadoopModuleName() { return hadoopModuleName; }
-	public Set<String> getExcludedUsers() { return  excludeUsers; }
 }
 
 class RangerHdfsResource extends RangerAccessResourceImpl {
@@ -861,8 +826,6 @@ class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessTime(new Date());
 		super.setClientIPAddress(getRemoteIp());
 		super.setAction(access.toString());
-		super.setForwardedAddresses(null);
-		super.setRemoteIPAddress(getRemoteIp());
 
 		if (inode != null) {
 			buildRequestContext(inode);
@@ -898,14 +861,26 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 	private final String pathToBeValidated;
 	private final boolean auditOnlyIfDenied;
 
-	private final String      hadoopModuleName;
-	private final Set<String> excludeUsers;
+	private static final String    HadoopModuleName = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_HADOOP_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_HADOOP_MODULE_ACL_NAME);
+	private static final String    excludeUserList  = RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_HDFS_EXCLUDE_LIST_PROP, RangerHadoopConstants.AUDITLOG_EMPTY_STRING);
+	private static HashSet<String> excludeUsers     = null;
 
-	public RangerHdfsAuditHandler(String pathToBeValidated, boolean auditOnlyIfDenied, String hadoopModuleName, Set<String> excludedUsers) {
+	static {
+		if (excludeUserList != null && excludeUserList.trim().length() > 0) {
+			excludeUsers = new HashSet<String>();
+			for(String excludeUser : excludeUserList.trim().split(",")) {
+				excludeUser = excludeUser.trim();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Adding exclude user [" + excludeUser + "]");
+				}
+				excludeUsers.add(excludeUser);
+				}
+		}
+	}
+
+	public RangerHdfsAuditHandler(String pathToBeValidated, boolean auditOnlyIfDenied) {
 		this.pathToBeValidated = pathToBeValidated;
 		this.auditOnlyIfDenied = auditOnlyIfDenied;
-		this.hadoopModuleName  = hadoopModuleName;
-		this.excludeUsers      = excludedUsers;
 	}
 
 	@Override
@@ -957,7 +932,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 			auditEvent.setResultReason(path);
 			auditEvent.setAccessResult((short) (accessGranted ? 1 : 0));
 			auditEvent.setAccessType(action == null ? null : action.toString());
-			auditEvent.setAclEnforcer(hadoopModuleName);
+			auditEvent.setAclEnforcer(HadoopModuleName);
 			auditEvent.setPolicyId(-1);
 		}
 

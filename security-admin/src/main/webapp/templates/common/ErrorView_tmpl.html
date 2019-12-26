@@ -15,22 +15,14 @@
   limitations under the License.
 --}}
 
-<div data-id="pageNotFoundPage" class="new-error-page">
-    <div class="new-error-box">
-        <div class="error-white-bg">
-            <div class="new-icon-box">
-                <img src="images/error-404-icon.png" style="margin-top:5px">
-            </div>
-            <div class="new-description-box">
-                <h4 class="m-t-xs m-b-xs" data-id="msg"></h4>
-                <div data-id="moreInfo"></div>
-            </div>
-        </div>
-        <div class="m-t-xs">
-            <a href="javascript:;" class="btn btn-primary btn-small" data-id="goBack">
-                <i class="icon-long-arrow-left"></i> Go back
-            </a>
-            <a href="#!/policymanager/resource" class="btn btn-small" data-id="home">Home</a>
-        </div>
-    </div>
+<div data-id="pageNotFoundPage" class="error-page">
+<div class="error-box" style="margin-top: 0px;">
+		<div class="icon-box"><img src="images/error-404-icon.png"></div>
+
+		<h1>{{msg}}</h1>
+		<p>{{moreInfo}}</p>
+
+		<a href="javascript:;" class="btn btn-primary btn-small" data-id="goBack"><i class="icon-long-arrow-left"></i> Go back</a>&nbsp;&nbsp;
+		<a href="#!/policymanager/resource" class="btn btn-small" data-id="home">Home</a>
+</div>
 </div>

@@ -25,6 +25,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -59,7 +60,8 @@ public class ServicePolicies implements java.io.Serializable {
 	private TagPolicies        tagPolicies;
 	private Map<String, SecurityZoneInfo> securityZones;
 	private List<RangerPolicyDelta> policyDeltas;
-	private Map<String, String> serviceConfig;
+	private Map<String, Set<String>> userRoles;
+	private Map<String, Set<String>> groupRoles;
 
 	/**
 	 * @return the serviceName
@@ -109,14 +111,6 @@ public class ServicePolicies implements java.io.Serializable {
 	public void setPolicyUpdateTime(Date policyUpdateTime) {
 		this.policyUpdateTime = policyUpdateTime;
 	}
-
-	public Map<String, String> getServiceConfig() {
-		return serviceConfig;
-	}
-	public void setServiceConfig(Map<String, String> serviceConfig) {
-		this.serviceConfig = serviceConfig;
-	}
-
 	/**
 	 * @return the policies
 	 */
@@ -168,6 +162,12 @@ public class ServicePolicies implements java.io.Serializable {
 		this.securityZones = securityZones;
 	}
 
+	public Map<String, Set<String>> getUserRoles() { return userRoles; }
+	public Map<String, Set<String>> getGroupRoles() { return groupRoles; }
+
+	public void setUserRoles(Map<String, Set<String>> userRoles) { this.userRoles = userRoles; }
+	public void setGroupRoles(Map<String, Set<String>> groupRoles) { this.groupRoles = groupRoles; }
+
 	@Override
 	public String toString() {
 		return "serviceName=" + serviceName + ", "
@@ -179,7 +179,9 @@ public class ServicePolicies implements java.io.Serializable {
 			 	+ "policyDeltas=" + policyDeltas + ", "
 			 	+ "serviceDef=" + serviceDef + ", "
 			 	+ "auditMode=" + auditMode + ", "
-				+ "securityZones=" + securityZones
+			 	+ "securityZones=" + securityZones + ", "
+				+ "userRoles=" + userRoles + ", "
+				+ "groupRoles=" + groupRoles + ", "
 				;
 	}
 	public List<RangerPolicyDelta> getPolicyDeltas() { return this.policyDeltas; }
@@ -361,24 +363,26 @@ public class ServicePolicies implements java.io.Serializable {
 		ret.setServiceDef(source.getServiceDef());
 		ret.setPolicyUpdateTime(source.getPolicyUpdateTime());
 		ret.setSecurityZones(source.getSecurityZones());
+		ret.setUserRoles(source.getUserRoles());
+		ret.setGroupRoles(source.getGroupRoles());
 		ret.setPolicies(Collections.emptyList());
 		ret.setPolicyDeltas(null);
 		if (source.getTagPolicies() != null) {
-			TagPolicies tagPolicies = copyHeader(source.getTagPolicies(), source.getServiceDef().getName());
+			TagPolicies tagPolicies = copyHeader(source.getTagPolicies());
 			ret.setTagPolicies(tagPolicies);
 		}
 
 		return ret;
 	}
 
-	static public TagPolicies copyHeader(TagPolicies source, String componentServiceName) {
+	static public TagPolicies copyHeader(TagPolicies source) {
 		TagPolicies ret = new TagPolicies();
 
 		ret.setServiceName(source.getServiceName());
 		ret.setServiceId(source.getServiceId());
 		ret.setPolicyVersion(source.getPolicyVersion());
 		ret.setAuditMode(source.getAuditMode());
-		ret.setServiceDef(ServiceDefUtil.normalizeAccessTypeDefs(source.getServiceDef(), componentServiceName));
+		ret.setServiceDef(source.getServiceDef());
 		ret.setPolicyUpdateTime(source.getPolicyUpdateTime());
 		ret.setPolicies(Collections.emptyList());
 
@@ -399,7 +403,7 @@ public class ServicePolicies implements java.io.Serializable {
 		if (servicePolicies.getTagPolicies() != null) {
 			newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(oldTagPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getTagPolicies().getServiceDef().getName());
 		} else {
-			newTagPolicies = oldTagPolicies;
+			newTagPolicies = null;
 		}
 
 		if (ret.getTagPolicies() != null) {

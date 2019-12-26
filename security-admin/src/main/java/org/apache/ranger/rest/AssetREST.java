@@ -514,7 +514,6 @@ public class AssetREST {
 		String            policyCount = request.getParameter("policyCount");
 		String            agentId     = request.getParameter("agentId");
 		Long              lastKnowPolicyVersion = Long.valueOf(-1);
-		String            capabilityVector = "0";
 
 		if (ipAddress == null) {
 			ipAddress = request.getRemoteAddr();
@@ -525,7 +524,7 @@ public class AssetREST {
 		ServicePolicies servicePolicies = null;
 
 		try {
-			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, 0L, agentId, "", "", false, capabilityVector, request);
+			servicePolicies = serviceREST.getServicePoliciesIfUpdated(repository, lastKnowPolicyVersion, 0L, agentId, "", "", false, request);
 		} catch(Exception excp) {
 			logger.error("failed to retrieve policies for repository " + repository, excp);
 		}

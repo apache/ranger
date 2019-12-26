@@ -59,7 +59,7 @@ public class HadoopException extends RuntimeException {
 	public String getMessage(Throwable excp) {
 		List<String> errList = new ArrayList<>();
 		while (excp != null) {
-			if (!errList.contains(excp.getMessage() + ". \n") && !errList.contains(excp.toString() + ". \n")) {
+			if (!errList.contains(excp.getMessage() + ". \n")) {
 				if (excp.getMessage() != null && !(excp.getMessage().equalsIgnoreCase(""))) {
 					errList.add(excp.getMessage() + ". \n");
 				}

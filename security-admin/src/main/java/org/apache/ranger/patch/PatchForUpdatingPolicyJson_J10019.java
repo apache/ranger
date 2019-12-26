@@ -235,7 +235,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 				public String doInTransaction(TransactionStatus status) {
 					String ret = null;
 					try {
-						policyRefUpdater.cleanupRefTables(policy);
+						policyRefUpdater.cleanupRefTables(policy, true);
 						portPolicy(service.getType(), policy);
 					} catch (Throwable e) {
 						logger.error("PortPolicy failed for policy:[" + policy + "]", e);

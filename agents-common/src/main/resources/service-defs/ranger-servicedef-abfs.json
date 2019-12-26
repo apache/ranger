@@ -1,7 +1,6 @@
 {
   "id":103,
   "name": "abfs",
-  "displayName": "abfs",
   "implClass": "",
   "label": "Azure Blob File System",
   "description": "Ranger plugin for ABFS",

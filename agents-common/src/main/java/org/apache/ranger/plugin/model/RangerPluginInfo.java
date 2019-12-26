@@ -43,7 +43,6 @@ public class RangerPluginInfo implements Serializable {
 
 	public static final int ENTITY_TYPE_POLICIES = 0;
 	public static final int ENTITY_TYPE_TAGS     = 1;
-	public static final int ENTITY_TYPE_ROLES	 = 2;
 
 	public static final String PLUGIN_INFO_POLICY_DOWNLOAD_TIME      = "policyDownloadTime";
 	public static final String PLUGIN_INFO_POLICY_DOWNLOADED_VERSION = "policyDownloadedVersion";
@@ -54,18 +53,11 @@ public class RangerPluginInfo implements Serializable {
 	public static final String PLUGIN_INFO_TAG_ACTIVATION_TIME       = "tagActivationTime";
 	public static final String PLUGIN_INFO_TAG_ACTIVE_VERSION        = "tagActiveVersion";
 
-	public static final String PLUGIN_INFO_ROLE_DOWNLOAD_TIME         = "roleDownloadTime";
-	public static final String PLUGIN_INFO_ROLE_DOWNLOADED_VERSION    = "roleDownloadedVersion";
-	public static final String PLUGIN_INFO_ROLE_ACTIVATION_TIME       = "roleActivationTime";
-	public static final String PLUGIN_INFO_ROLE_ACTIVE_VERSION        = "roleActiveVersion";
 
 	public static final String RANGER_ADMIN_LAST_POLICY_UPDATE_TIME  = "lastPolicyUpdateTime";
 	public static final String RANGER_ADMIN_LATEST_POLICY_VERSION    = "latestPolicyVersion";
 	public static final String RANGER_ADMIN_LAST_TAG_UPDATE_TIME     = "lastTagUpdateTime";
 	public static final String RANGER_ADMIN_LATEST_TAG_VERSION       = "latestTagVersion";
-
-	public static final String RANGER_ADMIN_CAPABILITIES             = "adminCapabilities";
-	public static final String PLUGIN_INFO_CAPABILITIES              = "pluginCapabilities";
 
 	private Long    id;
 	private Date    createTime;
@@ -277,81 +269,6 @@ public class RangerPluginInfo implements Serializable {
 	public Long getLastTagUpdateTime() {
 		String updateTimeString = getInfo().get(RANGER_ADMIN_LAST_TAG_UPDATE_TIME);
 		return StringUtils.isNotBlank(updateTimeString) ? Long.valueOf(updateTimeString) : null;
-	}
-
-	@JsonIgnore
-	public void setRoleDownloadTime(Long roleDownloadTime) {
-		getInfo().put(PLUGIN_INFO_ROLE_DOWNLOAD_TIME, roleDownloadTime == null ? null : Long.toString(roleDownloadTime));
-	}
-
-	@JsonIgnore
-	public Long getRoleDownloadTime() {
-		String downloadTimeString = getInfo().get(PLUGIN_INFO_ROLE_DOWNLOAD_TIME);
-		return StringUtils.isNotBlank(downloadTimeString) ? Long.valueOf(downloadTimeString) : null;
-	}
-
-	@JsonIgnore
-	public void setRoleDownloadedVersion(Long roleDownloadedVersion) {
-		getInfo().put(PLUGIN_INFO_ROLE_DOWNLOADED_VERSION, roleDownloadedVersion == null ? null : Long.toString(roleDownloadedVersion));
-	}
-
-	@JsonIgnore
-	public Long getRoleDownloadedVersion() {
-		String downloadedVersionString = getInfo().get(PLUGIN_INFO_ROLE_DOWNLOADED_VERSION);
-		return StringUtils.isNotBlank(downloadedVersionString) ? Long.valueOf(downloadedVersionString) : null;
-	}
-
-	@JsonIgnore
-	public void setRoleActivationTime(Long roleActivationTime) {
-		getInfo().put(PLUGIN_INFO_ROLE_ACTIVATION_TIME, roleActivationTime == null ? null : Long.toString(roleActivationTime));
-	}
-
-	@JsonIgnore
-	public Long getRoleActivationTime() {
-		String activationTimeString = getInfo().get(PLUGIN_INFO_ROLE_ACTIVATION_TIME);
-		return StringUtils.isNotBlank(activationTimeString) ? Long.valueOf(activationTimeString) : null;
-	}
-
-	@JsonIgnore
-	public void setRoleActiveVersion(Long roleActiveVersion) {
-		getInfo().put(PLUGIN_INFO_ROLE_ACTIVE_VERSION, roleActiveVersion == null ? null : Long.toString(roleActiveVersion));
-	}
-
-	@JsonIgnore
-	public Long getRoleActiveVersion() {
-		String activeVersionString = getInfo().get(PLUGIN_INFO_POLICY_ACTIVE_VERSION);
-		return StringUtils.isNotBlank(activeVersionString) ? Long.valueOf(activeVersionString) : null;
-	}
-
-	@JsonIgnore
-	public void setPluginCapabilities(String capabilities) {
-		setCapabilities(PLUGIN_INFO_CAPABILITIES, capabilities);
-	}
-
-	@JsonIgnore
-	public String getPluginCapabilities() {
-		return getCapabilities(PLUGIN_INFO_CAPABILITIES);
-	}
-
-	@JsonIgnore
-	public void setAdminCapabilities(String capabilities) {
-		setCapabilities(RANGER_ADMIN_CAPABILITIES, capabilities);
-	}
-
-	@JsonIgnore
-	public String getAdminCapabilities() {
-		return getCapabilities(RANGER_ADMIN_CAPABILITIES);
-	}
-
-	@JsonIgnore
-	private void setCapabilities(String optionName, String capabilities) {
-		getInfo().put(optionName, capabilities == null ? null : capabilities);
-	}
-
-	@JsonIgnore
-	private String getCapabilities(String optionName) {
-		String capabilitiesString = getInfo().get(optionName);
-		return StringUtils.isNotBlank(capabilitiesString) ? capabilitiesString : null;
 	}
 
 	@Override

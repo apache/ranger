@@ -110,57 +110,6 @@
                             <include>com.fasterxml.jackson.core:jackson-core</include>
                             <include>com.fasterxml.jackson.core:jackson-annotations</include>
                             <include>com.fasterxml.jackson.core:jackson-databind</include>
-                            <include>com.microsoft.azure:azure:jar:${com.microsoft.azure.version}</include>
-                            <include>com.microsoft.azure:azure-keyvault:jar:${com.microsoft.azure.azure-keyvault.version}</include>
-                            <include>com.microsoft.azure:azure-mgmt-keyvault:jar:${com.microsoft.azure.azure-mgmt-keyvault.version}</include>
-                            <include>com.microsoft.rest:client-runtime:jar:${com.microsoft.rest.client-runtime.version}</include>
-                            <include>com.microsoft.azure:azure-client-runtime:jar:${com.microsoft.azure.azure-client-runtime.version}</include>
-                            <include>com.microsoft.azure:adal4j:jar:${com.microsoft.azure.adal4j.version}</include>
-                            <include>io.reactivex:rxjava:jar:${io.reactivex.rxjava.version}</include>
-                            <include>com.squareup.okhttp3:okhttp</include>
-                            <include>com.squareup.okio:okio</include>
-                            <include>com.squareup.retrofit2:retrofit</include>
-                            <include>com.squareup.retrofit2:adapter-rxjava</include>
-                            <include>com.squareup.okhttp3:okhttp-urlconnection</include>
-                            <include>com.fasterxml.jackson.datatype:jackson-datatype-joda</include>
-                            <include>joda-time:okhttp-urlconnection</include>
-                            <include>joda-time:joda-time</include>
-                            <include>com.nimbusds:oauth2-oidc-sdk</include>
-                            <include>net.minidev:json-smart</include>
-                            <include>net.minidev:asm:jar:${net.minidev.asm.version}</include>
-                            <include>javax.mail:javax.mail-api</include>
-                            <include>com.sun.mail:javax.mail</include>
-                            <include>com.nimbusds:nimbus-jose-jwt</include>
-                            <include>org.apache.commons:commons-lang3</include>
-                            <include>com.microsoft.azure:azure-keyvault-webkey</include>
-                            <include>org.bouncycastle:bcprov-jdk15on</include>
-                            <include>org.bouncycastle:bcpkix-jdk15on</include>
-                            <include>com.microsoft.azure:azure-mgmt-resources</include>
-                            <include>com.microsoft.azure:azure-client-authentication</include>
-                            <include>com.microsoft.azure:azure-mgmt-graph-rbac</include>
-                            <include>com.microsoft.azure:azure-mgmt-storage</include>
-                            <include>com.microsoft.azure:azure-mgmt-compute</include>
-                            <include>com.microsoft.azure:azure-mgmt-network</include>
-                            <include>com.microsoft.azure:azure-mgmt-batch</include>
-                            <include>com.microsoft.azure:azure-mgmt-batchai</include>
-                            <include>com.microsoft.azure:azure-mgmt-trafficmanager</include>
-                            <include>com.microsoft.azure:azure-mgmt-redis</include>
-                            <include>com.microsoft.azure:azure-mgmt-cdn</include>
-                            <include>com.microsoft.azure:azure-mgmt-dns</include>
-                            <include>com.microsoft.azure:azure-mgmt-appservice</include>
-                            <include>com.microsoft.azure:azure-mgmt-sql</include>
-                            <include>com.microsoft.azure:azure-mgmt-servicebus</include>
-                            <include>com.microsoft.azure:azure-mgmt-containerinstance</include>
-                            <include>com.microsoft.azure:azure-mgmt-containerregistry</include>
-                            <include>com.microsoft.azure:azure-mgmt-containerservice</include>
-                            <include>com.microsoft.azure:azure-mgmt-cosmosdb</include>
-                            <include>com.microsoft.azure:azure-mgmt-search</include>
-                            <include>com.microsoft.azure:azure-mgmt-locks</include>
-                            <include>com.microsoft.azure:azure-mgmt-msi</include>
-                            <include>com.microsoft.azure:azure-mgmt-monitor</include>
-                            <include>com.microsoft.azure:azure-mgmt-eventhub</include>
-                            <include>com.microsoft.azure:azure-mgmt-eventhub</include>
-                            <include>com.microsoft.azure:azure-keyvault-cryptography</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
@@ -169,7 +118,7 @@
                 <include>org.apache.ranger:ranger-kms</include>
             </includes>
         </moduleSet>
-	
+
         <moduleSet>
             <binaries>
                 <includeDependencies>false</includeDependencies>
@@ -203,7 +152,6 @@
                             <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                             <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                             <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
-                            <include>org.apache.ranger:ranger-plugins-cred</include>
                         </includes>
                         <unpack>false</unpack>
                     </dependencySet>
@@ -388,8 +336,7 @@
                 <include>VerifyIsDBMasterkeyCorrect.sh</include>
                 <include>VerifyIsHSMMasterkeyCorrect.sh</include>
                 <include>DBMKTOKEYSECURE.sh</include>
-                <include>DBMKTOAZUREKEYVAULT.sh</include>
-                <include>KEYSECUREMKTOKMSDB.sh</include>
+                                <include>KEYSECUREMKTOKMSDB.sh</include>
             </includes>
             <fileMode>544</fileMode>
         </fileSet>

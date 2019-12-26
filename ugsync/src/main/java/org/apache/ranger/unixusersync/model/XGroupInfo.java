@@ -58,24 +58,5 @@ public class XGroupInfo {
 		this.groupSource = groupSource;
 	}
 	
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-		XGroupInfo groupInfo = (XGroupInfo) o;
-		if (name == null) {
-			if (groupInfo.name != null)
-				return false;
-		} else if (!name.equals(groupInfo.name))
-			return false;
-		return true;
-	}
-
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + ((name == null) ? 0 : name.hashCode());
-		return result;
-	}
+	
 }

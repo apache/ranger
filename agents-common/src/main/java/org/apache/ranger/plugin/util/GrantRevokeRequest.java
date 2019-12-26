@@ -20,10 +20,8 @@
 package org.apache.ranger.plugin.util;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -52,8 +50,6 @@ public class GrantRevokeRequest implements Serializable {
 	private Set<String>         groups;
 	private Set<String>         roles;
 	private Set<String>         accessTypes;
-	private List<String>        forwardedAddresses;
-	private String              remoteIPAddress;
 	private Boolean             delegateAdmin              = Boolean.FALSE;
 	private Boolean             enableAudit                = Boolean.TRUE;
 	private Boolean             replaceExistingPermissions = Boolean.FALSE;
@@ -64,7 +60,6 @@ public class GrantRevokeRequest implements Serializable {
 	private String              sessionId;
 	private String              clusterName;
 	private String              zoneName;
-	private String 				ownerUser;
 
 	public GrantRevokeRequest() {
 		this(null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null);
@@ -81,13 +76,6 @@ public class GrantRevokeRequest implements Serializable {
 							  Set<String> groups, Set<String> roles, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit,
 							  Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress,
 							  String clientType, String requestData, String sessionId, String clusterName, String zoneName) {
-		this(grantor, grantorGroups, resource, users, groups, roles, accessTypes, delegateAdmin, enableAudit, replaceExistingPermissions, isRecursive, clientIPAddress, clientType, requestData, sessionId, clusterName, zoneName, null);
-	}
-
-	public GrantRevokeRequest(String grantor, Set<String> grantorGroups, Map<String, String> resource, Set<String> users,
-							  Set<String> groups, Set<String> roles, Set<String> accessTypes, Boolean delegateAdmin, Boolean enableAudit,
-							  Boolean replaceExistingPermissions, Boolean isRecursive, String clientIPAddress,
-							  String clientType, String requestData, String sessionId, String clusterName, String zoneName, String ownerUser) {
 		setGrantor(grantor);
 		setGrantorGroups(grantorGroups);
 		setResource(resource);
@@ -105,7 +93,6 @@ public class GrantRevokeRequest implements Serializable {
 		setSessionId(sessionId);
 		setClusterName(clusterName);
 		setZoneName(zoneName);
-		setOwnerUser(ownerUser);
 	}
 
 	/**
@@ -141,15 +128,6 @@ public class GrantRevokeRequest implements Serializable {
 	public Map<String, String> getResource() {
 		return resource;
 	}
-	
-	public void setForwardedAddresses(List<String> forwardedAddresses) {
-		this.forwardedAddresses = (forwardedAddresses == null) ? new ArrayList<String>() : forwardedAddresses;
-	}
-
-	public void setRemoteIPAddress(String remoteIPAddress) {
-		this.remoteIPAddress = remoteIPAddress;
-	}
-
 
 	/**
 	 * @param resource the resource to set
@@ -244,20 +222,6 @@ public class GrantRevokeRequest implements Serializable {
 	}
 
 	/**
-	 * @return the ownerUser
-	 */
-	public String getOwnerUser() {
-		return ownerUser;
-	}
-
-	/**
-	 * @param ownerUser the ownerUser to set
-	 */
-	public void setOwnerUser(String ownerUser) {
-		this.ownerUser = ownerUser;
-	}
-
-	/**
 	 * @return the replaceExistingPermissions
 	 */
 	public Boolean getReplaceExistingPermissions() {
@@ -346,14 +310,6 @@ public class GrantRevokeRequest implements Serializable {
 	 */
 	public String getClusterName() {
 		return clusterName;
-	}
-	
-	public String getRemoteIPAddress() {
-		return remoteIPAddress;
-	}
-
-	public List<String> getForwardedAddresses() { 
-		return forwardedAddresses; 
 	}
 
 	/**

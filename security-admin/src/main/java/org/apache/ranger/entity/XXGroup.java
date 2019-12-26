@@ -119,14 +119,6 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 	@Column(name="CRED_STORE_ID"   )
 	protected Long credStoreId;
 
-	/**
-	 * Additional store attributes.
-	 * <ul>
-	 * </ul>
-	 *
-	 */
-	@Column(name="OTHER_ATTRIBUTES")
-	protected String otherAttributes;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -247,22 +239,7 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 		return this.credStoreId;
 	}
 
-	/**
-	 * This method sets JSON {@link String} representation of additional store attributes.
-	 * This method accepts null values.
-	 * @param otherAttributes
-	 */
-	public void setOtherAttributes(String otherAttributes) {
-		this.otherAttributes = otherAttributes;
-	}
 
-	/**
-	 * @return JSON {@link String} representation of additional store attributes if available,
-	 * <code>null</code> otherwise.
-	 */
-	public String getOtherAttributes() {
-		return otherAttributes;
-	}
 
 	/**
 	 * This return the bean content in string format
@@ -279,11 +256,10 @@ public class XXGroup extends XXDBBase implements java.io.Serializable {
 		str += "groupType={" + groupType + "} ";
 		str += "credStoreId={" + credStoreId + "} ";
 		str += "groupSrc={" + groupSource + "} ";
-		str += "otherAttributes={" + otherAttributes + "} ";
 		str += "}";
 		return str;
 	}
-
+	
 	public int getGroupSource() {
 		return groupSource;
 	}

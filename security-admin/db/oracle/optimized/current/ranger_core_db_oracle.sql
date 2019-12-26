@@ -99,7 +99,6 @@ call spdropsequence('X_SEC_ZONE_REF_TAG_SRVC_SEQ');
 call spdropsequence('X_RANGER_GLOBAL_STATE_SEQ');
 call spdropsequence('X_SECURITY_ZONE_SEQ');
 call spdropsequence('X_POLICY_CHANGE_LOG_SEQ');
-call spdropsequence('X_TAG_CHANGE_LOG_SEQ');
 
 CREATE SEQUENCE SEQ_GEN_IDENTITY START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_ACCESS_AUDIT_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
@@ -169,7 +168,6 @@ CREATE SEQUENCE X_SEC_ZONE_REF_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE 
 CREATE SEQUENCE X_SEC_ZONE_REF_USER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_SEC_ZONE_REF_GROUP_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_POLICY_CHANGE_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-CREATE SEQUENCE X_TAG_CHANGE_LOG_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 call spdropsequence('X_DB_VERSION_H_SEQ');
 CREATE SEQUENCE X_DB_VERSION_H_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 
@@ -206,7 +204,6 @@ END;/
 call spdropview('vx_trx_log');
 call spdroptable('x_security_zone_ref_resource');
 call spdroptable('x_policy_change_log');
-call spdroptable('x_tag_change_log');
 call spdroptable('x_policy_ref_group');
 call spdroptable('x_policy_ref_user');
 call spdroptable('x_policy_ref_datamask_type');
@@ -310,7 +307,6 @@ CREATE TABLE x_portal_user (
         status NUMBER(11) DEFAULT '0' NOT NULL ,
         user_src NUMBER(11) DEFAULT '0' NOT NULL ,
         notes VARCHAR(4000) DEFAULT NULL NULL ,
-        other_attributes VARCHAR(4000) DEFAULT NULL NULL,
         PRIMARY KEY (id),
         CONSTRAINT x_portal_user_UK_login_id UNIQUE (login_id) ,
         CONSTRAINT x_portal_user_UK_email UNIQUE (email),
@@ -436,7 +432,6 @@ CREATE TABLE X_GROUP(
         CRED_STORE_ID NUMBER(20,0) DEFAULT NULL,
         group_src NUMBER(10) DEFAULT 0 NOT NULL,
         is_visible NUMBER(11) DEFAULT 1 NOT NULL,
-        other_attributes VARCHAR(4000) DEFAULT NULL NULL,
         PRIMARY KEY (ID),
         CONSTRAINT x_group_UK_group_name UNIQUE (group_name),
         CONSTRAINT X_GROUP_FK_ADDED_BY_ID FOREIGN KEY (ADDED_BY_ID) REFERENCES X_PORTAL_USER (ID) ENABLE,
@@ -471,7 +466,6 @@ CREATE TABLE x_user (
         status NUMBER(11) DEFAULT '0' NOT NULL,
         cred_store_id NUMBER(20) DEFAULT NULL NULL ,
         is_visible NUMBER(11) DEFAULT 1 NOT NULL ,
-        other_attributes VARCHAR(4000) DEFAULT NULL NULL ,
         PRIMARY KEY (id),
         CONSTRAINT x_user_UK_user_name UNIQUE (user_name),
         CONSTRAINT x_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -627,7 +621,6 @@ added_by_id NUMBER(20) DEFAULT NULL NULL,
 upd_by_id NUMBER(20) DEFAULT NULL NULL,
 version NUMBER(20) DEFAULT NULL NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
-display_name VARCHAR(1024) DEFAULT NULL NULL,
 impl_class_name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
@@ -650,7 +643,6 @@ upd_by_id NUMBER(20) DEFAULT NULL NULL,
 version NUMBER(20) DEFAULT NULL NULL,
 type NUMBER(20) DEFAULT NULL NULL,
 name varchar(255) DEFAULT NULL NULL,
-display_name varchar(255) DEFAULT NULL NULL,
 policy_version NUMBER(20) DEFAULT NULL NULL,
 policy_update_time DATE DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
@@ -821,7 +813,7 @@ description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_validation_message VARCHAR(1024) DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 primary key (id),
 CONSTRAINT x_service_conf_def_FK_defid FOREIGN KEY (def_id) REFERENCES x_service_def (id),
 CONSTRAINT x_service_conf_def_FK_added_by FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -855,7 +847,7 @@ description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_validation_message VARCHAR(1024) DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
 primary key (id),
@@ -877,7 +869,7 @@ item_id NUMBER(20) NOT NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
 primary key (id),
@@ -921,7 +913,7 @@ description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_validation_message VARCHAR(1024) DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 primary key (id),
 CONSTRAINT x_policy_cond_def_FK_defid FOREIGN KEY (def_id) REFERENCES x_service_def (id),
 CONSTRAINT x_policy_cond_def_FK_added_by FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -940,7 +932,7 @@ item_id NUMBER(20) NOT NULL,
 name varchar(1024) DEFAULT NULL NULL,
 enricher varchar(1024) DEFAULT NULL NULL,
 enricher_options varchar(1024) DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 primary key (id),
 CONSTRAINT x_cont_enr_def_FK_defid FOREIGN KEY (def_id) REFERENCES x_service_def (id),
 CONSTRAINT x_cont_enr_def_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -976,7 +968,7 @@ item_id NUMBER(20) NOT NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 primary key (id),
 CONSTRAINT x_enum_element_def_FK_defid FOREIGN KEY (enum_def_id) REFERENCES x_enum_def (id),
 CONSTRAINT x_enum_element_def_FK_added_by FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -1042,7 +1034,7 @@ added_by_id NUMBER(20) DEFAULT NULL NULL,
 upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_id NUMBER(20) NOT NULL,
 delegate_admin NUMBER(1) DEFAULT '0' NOT NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 item_type NUMBER(10) DEFAULT 0 NOT NULL,
 is_enabled NUMBER(1) DEFAULT 1 NOT NULL,
 comments VARCHAR(255) DEFAULT NULL NULL,
@@ -1062,7 +1054,7 @@ upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_item_id NUMBER(20) NOT NULL,
 type NUMBER(20) NOT NULL,
 is_allowed NUMBER(3) DEFAULT '0' NOT NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 primary key (id),
 CONSTRAINT x_plc_item_access_FK_pi_id FOREIGN KEY (policy_item_id) REFERENCES x_policy_item (id),
 CONSTRAINT x_plc_item_access_FK_atd_id FOREIGN KEY (type) REFERENCES x_access_type_def (id),
@@ -1080,7 +1072,7 @@ upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_item_id NUMBER(20) NOT NULL,
 type NUMBER(20) NOT NULL,
 value VARCHAR(1024) DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 primary key (id),
 CONSTRAINT x_plc_item_cond_FK_pi_id FOREIGN KEY (policy_item_id) REFERENCES x_policy_item (id),
 CONSTRAINT x_plc_item_cond_FK_pcd_id FOREIGN KEY (type) REFERENCES x_policy_condition_def (id),
@@ -1268,7 +1260,7 @@ transformer VARCHAR(1024) DEFAULT NULL NULL,
 datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
-sort_order NUMBER(10) DEFAULT '0' NULL,
+sort_order NUMBER(3) DEFAULT '0' NULL,
 primary key (id),
 CONSTRAINT x_dm_type_def_FK_def_id FOREIGN KEY (def_id) REFERENCES x_service_def(id),
 CONSTRAINT x_dm_type_def_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user(id),
@@ -1315,8 +1307,6 @@ policy_version NUMBER(20) DEFAULT 0 NOT NULL,
 policy_update_time DATE DEFAULT NULL NULL,
 tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
-role_version NUMBER(20) DEFAULT 0 NOT NULL,
-role_update_time DATE DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_svc_ver_info_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service(id)
 );
@@ -1507,20 +1497,6 @@ policy_id NUMBER(20) DEFAULT NULL NULL,
 );
 CREATE INDEX x_plcy_chng_log_IDX_service_id ON x_policy_change_log(service_id);
 CREATE INDEX x_plcy_chng_log_IDX_policy_ver ON x_policy_change_log(policy_version);
-COMMIT;
-
-CREATE TABLE x_tag_change_log (
-id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-service_id NUMBER(20) NOT NULL,
-change_type NUMBER(11) NOT NULL,
-service_tags_version NUMBER(20) DEFAULT '0' NOT NULL,
-service_resource_id NUMBER(20) DEFAULT NULL NULL,
-tag_id NUMBER(20) DEFAULT NULL NULL,
-primary key (id)
-);
-CREATE INDEX x_tag_chng_log_IDX_service_id ON x_tag_change_log(service_id);
-CREATE INDEX x_tag_chng_log_IDX_tag_ver ON x_tag_change_log(service_tags_version);
 COMMIT;
 
 CREATE TABLE x_role(
@@ -1776,7 +1752,6 @@ CREATE INDEX x_plugin_info_IDX_host_name ON x_plugin_info(host_name);
 CREATE INDEX x_ugsync_audit_info_etime ON x_ugsync_audit_info(event_time);
 CREATE INDEX x_ugsync_audit_info_sync_src ON x_ugsync_audit_info(sync_source);
 CREATE INDEX x_ugsync_audit_info_uname ON x_ugsync_audit_info(user_name);
-CREATE INDEX x_data_hist_idx_objid_clstype ON x_data_hist(obj_id,obj_class_type);
 commit;
 
 CREATE OR REPLACE FUNCTION getModulesIdByName(inputval IN VARCHAR2)
@@ -1866,10 +1841,6 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '039',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '040',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '041',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
-INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '042',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
-INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '043',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
-INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '044',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
-INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '045',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Resource Based Policies'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

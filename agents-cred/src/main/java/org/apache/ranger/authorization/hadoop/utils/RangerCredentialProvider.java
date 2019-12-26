@@ -43,18 +43,18 @@ public final class RangerCredentialProvider {
 	}
 
 	public String getCredentialString(String url, String alias) {
-		if (url != null && alias != null) {
-			List<CredentialProvider> providers = getCredentialProviders(url);
-			if (providers != null) {
-				for (CredentialProvider provider : providers) {
-					try {
-						CredentialProvider.CredentialEntry credEntry = provider.getCredentialEntry(alias);
-						if (credEntry != null && credEntry.getCredential() != null) {
-							return new String(credEntry.getCredential());
-						}
-					} catch (Exception ie) {
-						LOG.error("Unable to get the Credential Provider from the Configuration", ie);
+		List<CredentialProvider> providers = getCredentialProviders(url);
+
+		if (providers != null) {
+			for (CredentialProvider provider : providers) {
+				try {
+					CredentialProvider.CredentialEntry credEntry = provider.getCredentialEntry(alias);
+
+					if (credEntry != null && credEntry.getCredential() != null) {
+						return new String(credEntry.getCredential());
 					}
+				} catch(Exception ie) {
+					LOG.error("Unable to get the Credential Provider from the Configuration", ie);	
 				}
 			}
 		}
@@ -62,14 +62,14 @@ public final class RangerCredentialProvider {
 	}
 
 	List<CredentialProvider> getCredentialProviders(String url) {
-		if (url != null) {
-			try {
-				Configuration conf = new Configuration();
-				conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, url);
-				return CredentialProviderFactory.getProviders(conf);
-			} catch (Exception ie) {
-				LOG.error("Unable to get the Credential Provider from the Configuration", ie);
-			}
+		try {
+			Configuration conf = new Configuration();
+
+			conf.set(CredentialProviderFactory.CREDENTIAL_PROVIDER_PATH, url);
+
+			return CredentialProviderFactory.getProviders(conf);
+		} catch(Exception ie) {
+			LOG.error("Unable to get the Credential Provider from the Configuration", ie);
 		}
 		return null;
 	}

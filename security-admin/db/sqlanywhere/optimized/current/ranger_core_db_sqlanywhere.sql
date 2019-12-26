@@ -39,8 +39,6 @@ call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_change_log')
 GO
-call dbo.removeForeignKeysAndTable('x_tag_change_log')
-GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_group')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_user')
@@ -217,7 +215,6 @@ create table dbo.x_portal_user(
 	status int DEFAULT 0 NOT NULL,
 	user_src int DEFAULT 0 NOT NULL,
 	notes varchar(4000) DEFAULT NULL NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
 	CONSTRAINT x_portal_user_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_portal_user_UK_login_id UNIQUE NONCLUSTERED (login_id)
 )
@@ -331,7 +328,6 @@ create table dbo.x_group(
 	cred_store_id bigint DEFAULT NULL NULL,
 	group_src int DEFAULT 0 NOT NULL,
 	is_visible int DEFAULT 1 NOT NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
 	CONSTRAINT x_group_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_group_UK_group_name UNIQUE NONCLUSTERED (group_name)
 )
@@ -359,7 +355,6 @@ create table dbo.x_user(
 	status int DEFAULT 0 NOT NULL,
 	cred_store_id bigint DEFAULT NULL NULL,
 	is_visible int DEFAULT 1 NOT NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
 	CONSTRAINT x_user_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_user_UK_user_name UNIQUE NONCLUSTERED (user_name)
 )
@@ -490,7 +485,6 @@ create table dbo.x_service_def(
 	upd_by_id bigint DEFAULT NULL NULL,
 	version bigint DEFAULT NULL NULL,
 	name varchar(1024) DEFAULT NULL NULL,
-	display_name varchar(1024) DEFAULT NULL NULL,
 	impl_class_name varchar(1024) DEFAULT NULL NULL,
 	label varchar(1024) DEFAULT NULL NULL,
 	description varchar(1024) DEFAULT NULL NULL,
@@ -511,7 +505,6 @@ create table dbo.x_service (
 	version bigint DEFAULT NULL NULL,
 	type bigint DEFAULT NULL NULL,
 	name varchar(255) DEFAULT NULL NULL,
-	display_name varchar(255) DEFAULT NULL NULL,
 	policy_version bigint DEFAULT NULL NULL,
 	policy_update_time datetime DEFAULT NULL NULL,
 	description varchar(1024) DEFAULT NULL NULL,
@@ -596,7 +589,7 @@ create table dbo.x_service_config_def (
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
 	rb_key_validation_message varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	CONSTRAINT x_service_config_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -627,7 +620,7 @@ create table dbo.x_resource_def (
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
 	rb_key_validation_message varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 	rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
 	CONSTRAINT x_resource_def_PK_id PRIMARY KEY CLUSTERED(id)
@@ -645,7 +638,7 @@ create table dbo.x_access_type_def (
 	name varchar(1024) DEFAULT NULL NULL,
 	label varchar(1024) DEFAULT NULL NULL,
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 	rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
 	CONSTRAINT x_access_type_def_PK_id PRIMARY KEY CLUSTERED(id)
@@ -683,7 +676,7 @@ create table dbo.x_policy_condition_def (
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
 	rb_key_validation_message varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	CONSTRAINT x_policy_condition_def_grants_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -699,7 +692,7 @@ create table dbo.x_context_enricher_def(
 	name varchar(1024) DEFAULT NULL NULL,
 	enricher varchar(1024) DEFAULT NULL NULL,
 	enricher_options varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	CONSTRAINT x_context_enricher_def_grants_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -729,7 +722,7 @@ create table dbo.x_enum_element_def (
 	name varchar(1024) DEFAULT NULL NULL,
 	label varchar(1024) DEFAULT NULL NULL,
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	CONSTRAINT x_enum_element_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -769,7 +762,7 @@ create table dbo.x_policy_resource_map (
 	upd_by_id bigint DEFAULT NULL NULL,
 	resource_id bigint NOT NULL,
 	value varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order INT DEFAULT 0 NULL,
 	CONSTRAINT x_policy_resource_map_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -782,7 +775,7 @@ create table dbo.x_policy_item (
 	upd_by_id bigint DEFAULT NULL NULL,
 	policy_id bigint NOT NULL,
 	delegate_admin tinyint DEFAULT 0 NOT NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	item_type int DEFAULT 0 NOT NULL,
 	is_enabled tinyint DEFAULT 1 NOT NULL,
 	comments varchar(255) DEFAULT NULL NULL,
@@ -799,7 +792,7 @@ create table dbo.x_policy_item_access (
 	policy_item_id bigint NOT NULL,
 	type bigint NOT NULL,
 	is_allowed tinyint DEFAULT 0 NOT NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	CONSTRAINT x_policy_item_access_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -813,7 +806,7 @@ create table dbo.x_policy_item_condition (
 	policy_item_id bigint NOT NULL,
 	type bigint NOT NULL,
 	value varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0 NULL,
 	CONSTRAINT x_policy_item_condition_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -826,7 +819,7 @@ create table dbo.x_policy_item_user_perm (
 	upd_by_id bigint DEFAULT NULL NULL,
 	policy_item_id bigint NOT NULL,
 	user_id bigint DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order INT DEFAULT 0 NULL,
 	CONSTRAINT x_policy_item_user_perm_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -839,7 +832,7 @@ create table dbo.x_policy_item_group_perm (
 	upd_by_id bigint DEFAULT NULL NULL,
 	policy_item_id bigint NOT NULL,
 	group_id bigint DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order INT DEFAULT 0 NULL,
 	CONSTRAINT x_policy_item_group_perm_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -973,7 +966,7 @@ CREATE TABLE dbo.x_datamask_type_def(
 	datamask_options varchar(1024) DEFAULT NULL NULL,
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0 NULL,
+	sort_order tinyint DEFAULT 0  NULL,
 	CONSTRAINT x_datamask_type_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -1010,8 +1003,6 @@ CREATE TABLE dbo.x_service_version_info(
 	policy_update_time datetime DEFAULT NULL NULL,
 	tag_version bigint NOT NULL DEFAULT 0,
 	tag_update_time datetime DEFAULT NULL NULL,
-	role_version bigint NOT NULL DEFAULT 0,
-	role_update_time datetime DEFAULT NULL NULL,
 	CONSTRAINT x_service_version_info_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -1227,18 +1218,6 @@ CREATE TABLE dbo.x_policy_change_log(
         zone_name varchar(256) DEFAULT NULL NULL,
 		    policy_id bigint DEFAULT NULL NULL,
         CONSTRAINT x_policy_change_log_PK_id PRIMARY KEY CLUSTERED(id)
-)
-GO
-
-CREATE TABLE IF NOT EXISTS dbo.x_tag_change_log (
-id bigint IDENTITY NOT NULL,
-create_time datetime DEFAULT NULL NULL,
-service_id bigint NOT NULL,
-change_type int NOT NULL,
-service_tags_version  bigint DEFAULT 0 NOT NULL,
-service_resource_id bigint DEFAULT NULL NULL,
-tag_id bigint DEFAULT NULL NULL,
-CONSTRAINT x_tag_change_log_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
 
@@ -2030,8 +2009,6 @@ CREATE NONCLUSTERED INDEX x_ugsync_audit_info_sync_src ON dbo.x_ugsync_audit_inf
 GO
 CREATE NONCLUSTERED INDEX x_ugsync_audit_info_uname ON dbo.x_ugsync_audit_info(user_name ASC)
 GO
-CREATE NONCLUSTERED INDEX x_data_hist_idx_objid_objclstype ON dbo.x_data_hist(obj_id ASC, obj_class_type ASC)
-GO
 
 CREATE OR REPLACE FUNCTION dbo.getXportalUIdByLoginId (input_val CHAR(60))
 RETURNS INTEGER
@@ -2052,10 +2029,6 @@ END;
 CREATE NONCLUSTERED INDEX x_policy_change_log_IDX_service_id ON dbo.x_policy_change_log(service_id ASC)
 GO
 CREATE NONCLUSTERED INDEX x_policy_change_log_IDX_policy_version ON dbo.x_policy_change_log(policy_version ASC)
-GO
-CREATE NONCLUSTERED INDEX x_tag_change_log_IDX_service_id ON dbo.x_tag_change_log(service_id ASC);
-GO
-CREATE NONCLUSTERED INDEX x_tag_change_log_IDX_tag_version ON dbo.x_tag_change_log(service_tags_version ASC);
 GO
 insert into x_portal_user (create_time,update_time,first_name,last_name,pub_scr_name,login_id,password,email,status) values (GETDATE(),GETDATE(),'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1)
 GO
@@ -2150,14 +2123,6 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
-GO
-INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
-GO
-INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
-GO
-INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('044',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
-GO
-INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('045',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

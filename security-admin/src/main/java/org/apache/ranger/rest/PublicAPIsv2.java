@@ -32,6 +32,9 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.view.RangerPluginInfoList;
+import org.apache.ranger.view.RangerRoleList;
+import org.apache.ranger.view.RangerSecurityZoneList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -57,9 +60,6 @@ public class PublicAPIsv2 {
 
 	@Autowired
 	ServiceREST serviceREST;
-
-	@Autowired
-	TagREST tagREST;
 
 	@Autowired
 	SecurityZoneREST securityZoneRest;
@@ -117,8 +117,8 @@ public class PublicAPIsv2 {
 
 	@GET
     @Path("/api/zones")
-    public List<RangerSecurityZone> getAllZones(@Context HttpServletRequest request){
-		return securityZoneRest.getAllZones(request).getSecurityZones();
+    public RangerSecurityZoneList getAllZones(@Context HttpServletRequest request){
+		return securityZoneRest.getAllZones(request);
 	}
 
 	/*
@@ -516,41 +516,26 @@ public class PublicAPIsv2 {
 			logger.debug("==> PublicAPIsv2.getPluginsInfo()");
 		}
 
-		List<RangerPluginInfo> ret = serviceREST.getPluginsInfo(request).getPluginInfoList();
+		RangerPluginInfoList pluginInfoList = serviceREST.getPluginsInfo(request);
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.getPluginsInfo()");
 		}
-		return ret;
+		return pluginInfoList.getPluginInfoList();
 	}
 
 	@DELETE
 	@Path("/api/server/policydeltas")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @Context HttpServletRequest request) {
+	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @DefaultValue("false") @QueryParam("reloadServicePoliciesCache") Boolean reloadServicePoliciesCache, @Context HttpServletRequest request) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("==> PublicAPIsv2.deletePolicyDeltas(" + olderThan + ")");
+			logger.debug("==> PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
 		}
 
-		serviceREST.deletePolicyDeltas(olderThan, request);
+		serviceREST.deletePolicyDeltas(olderThan, reloadServicePoliciesCache, request);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ")");
-		}
-	}
-
-	@DELETE
-	@Path("/api/server/tagdeltas")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deleteTagDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @Context HttpServletRequest request) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("==> PublicAPIsv2.deleteTagDeltas(" + olderThan + ")");
-		}
-
-		tagREST.deleteTagDeltas(olderThan, request);
-
-		if (logger.isDebugEnabled()) {
-			logger.debug("<== PublicAPIsv2.deleteTagDeltas(" + olderThan + ")");
+			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
 		}
 	}
 
@@ -611,8 +596,8 @@ public class PublicAPIsv2 {
 	@GET
 	@Path("/api/roles")
 	@Produces({ "application/json", "application/xml" })
-	public List<RangerRole> getAllRoles(@Context HttpServletRequest request) {
-		return roleREST.getAllRoles(request).getSecurityRoles();
+	public RangerRoleList getAllRoles(@Context HttpServletRequest request){
+		return roleREST.getAllRoles(request);
 	}
 
 	@GET

@@ -53,7 +53,7 @@ public interface RangerPolicyItemEvaluator {
 
 	boolean isMatch(RangerAccessRequest request);
 
-	boolean matchUserGroupAndOwner(String user, Set<String> userGroups, Set<String> roles, String owner);
+	boolean matchUserGroup(String user, Set<String> userGroups, Set<String> roles);
 
 	boolean matchAccessType(String accessType);
 

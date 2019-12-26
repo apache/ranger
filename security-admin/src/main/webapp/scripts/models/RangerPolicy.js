@@ -137,7 +137,7 @@ define(function(require){
 				async : false,
 				dataType : 'JSON',
 				success : function(data){
-                                        versionList = (data.value.split(',').map(Number)).sort(function(a, b) { return a - b });
+					versionList = data.value.split(',');
 				},
 			});
 			return versionList;

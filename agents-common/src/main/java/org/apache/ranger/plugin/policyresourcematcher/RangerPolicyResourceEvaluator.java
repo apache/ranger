@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.policyresourcematcher;
 
 
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 import java.util.Map;
@@ -35,5 +34,5 @@ public interface RangerPolicyResourceEvaluator {
 
     RangerResourceMatcher getResourceMatcher(String resourceName);
 
-    boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef);
+    Integer getLeafResourceLevel();
 }

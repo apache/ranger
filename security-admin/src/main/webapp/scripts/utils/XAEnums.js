@@ -146,10 +146,7 @@ define(function(require) {
 
 	XAEnums.AuthType = mergeParams(XAEnums.AuthType, {
 		AUTH_TYPE_UNKNOWN:{value:0, label:'Unknown', rbkey:'xa.enum.AuthType.AUTH_TYPE_UNKNOWN', tt: 'lbl.AuthType_AUTH_TYPE_UNKNOWN'},
-		AUTH_TYPE_PASSWORD:{value:1, label:'Username/Password', rbkey:'xa.enum.AuthType.AUTH_TYPE_PASSWORD', tt: 'lbl.AuthType_AUTH_TYPE_PASSWORD'},
-		AUTH_TYPE_KERBEROS:{value:2, label:'Kerberos', rbkey:'xa.enum.AuthType.AUTH_TYPE_KERBEROS', tt: 'lbl.AuthType_AUTH_TYPE_KERBEROS'},
-		AUTH_TYPE_SSO:{value:3, label:'SingleSignOn', rbkey:'xa.enum.AuthType.AUTH_TYPE_SSO', tt: 'lbl.AuthType_AUTH_TYPE_SSO'},
-		AUTH_TYPE_TRUSTED_PROXY:{value:4, label:'Trusted Proxy', rbkey:'xa.enum.AuthType.AUTH_TYPE_TRUSTED_PROXY', tt: 'lbl.AuthType_AUTH_TYPE_TRUSTED_PROXY'}
+		AUTH_TYPE_PASSWORD:{value:1, label:'Username/Password', rbkey:'xa.enum.AuthType.AUTH_TYPE_PASSWORD', tt: 'lbl.AuthType_AUTH_TYPE_PASSWORD'}
 	});
 
 	XAEnums.BooleanValue = mergeParams(XAEnums.BooleanValue, {

@@ -1,7 +1,6 @@
 {
   "id":101,
   "name": "wasb",
-  "displayName": "wasb",
   "implClass": "",
   "label": "WASB File System",
   "description": "Ranger plugin for WASB File System",

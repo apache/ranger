@@ -43,10 +43,8 @@ public class RangerPolicyDelta implements java.io.Serializable {
     public static final int CHANGE_TYPE_SERVICE_DEF_CHANGE  = 4;
     public static final int CHANGE_TYPE_RANGER_ADMIN_START  = 5;
     public static final int CHANGE_TYPE_LOG_ERROR           = 6;
-    public static final int CHANGE_TYPE_INVALIDATE_POLICY_DELTAS = 7;
-    public static final int CHANGE_TYPE_ROLE_UPDATE         = 8;
 
-    private static String[] changeTypeNames = { "POLICY_CREATE", "POLICY_UPDATE", "POLICY_DELETE", "SERVICE_CHANGE", "SERVICE_DEF_CHANGE", "RANGER_ADMIN_START", "LOG_ERROR", "INVALIDATE_POLICY_DELTAS", "ROLE_UPDATE" };
+    private static String[] changeTypeNames = { "POLICY_CREATE", "POLICY_UPDATE", "POLICY_DELETE", "SERVICE_CHANGE", "SERVICE_DEF_CHANGE", "RANGER_ADMIN_START", "LOG_ERROR" };
 
     private Long                id;
     private Integer             changeType;

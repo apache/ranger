@@ -35,7 +35,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import com.google.common.annotations.VisibleForTesting;
+import java.util.regex.Pattern;
 
 /**
  * Provides access to the <code>AccessControlList</code>s used by KMS,
@@ -58,12 +58,9 @@ public class KMSACLs implements Runnable, KeyACLs {
 
   private volatile Map<Type, AccessControlList> acls;
   private volatile Map<Type, AccessControlList> blacklistedAcls;
-  @VisibleForTesting
-  volatile Map<String, HashMap<KeyOpType, AccessControlList>> keyAcls;
-  @VisibleForTesting
-  volatile Map<KeyOpType, AccessControlList> defaultKeyAcls = new HashMap<>();
-  @VisibleForTesting
-  volatile Map<KeyOpType, AccessControlList> whitelistKeyAcls = new HashMap<>();
+  private volatile Map<String, HashMap<KeyOpType, AccessControlList>> keyAcls;
+  private final Map<KeyOpType, AccessControlList> defaultKeyAcls =
+      new HashMap<KeyOpType, AccessControlList>();
   private ScheduledExecutorService executorService;
   private long lastReload;
 
@@ -97,10 +94,11 @@ public class KMSACLs implements Runnable, KeyACLs {
     blacklistedAcls = tempBlacklist;
   }
 
-  @VisibleForTesting
-  void setKeyACLs(Configuration conf) {
-    Map<String, HashMap<KeyOpType, AccessControlList>> tempKeyAcls = new HashMap<String, HashMap<KeyOpType,AccessControlList>>();
-    Map<String, String> allKeyACLS = conf.getValByRegex(KMSConfiguration.KEY_ACL_PREFIX_REGEX);
+  private void setKeyACLs(Configuration conf) {
+    Map<String, HashMap<KeyOpType, AccessControlList>> tempKeyAcls =
+        new HashMap<String, HashMap<KeyOpType,AccessControlList>>();
+    Map<String, String> allKeyACLS =
+        conf.getValByRegex(Pattern.quote(KMSConfiguration.KEY_ACL_PREFIX));
     for (Map.Entry<String, String> keyAcl : allKeyACLS.entrySet()) {
       String k = keyAcl.getKey();
       // this should be of type "key.acl.<KEY_NAME>.<OP_TYPE>"
@@ -135,39 +133,20 @@ public class KMSACLs implements Runnable, KeyACLs {
     }
 
     keyAcls = tempKeyAcls;
-    final Map<KeyOpType, AccessControlList> tempDefaults = new HashMap<>();
-    final Map<KeyOpType, AccessControlList> tempWhitelists = new HashMap<>();
     for (KeyOpType keyOp : KeyOpType.values()) {
-      parseAclsWithPrefix(conf, KMSConfiguration.DEFAULT_KEY_ACL_PREFIX,keyOp, tempDefaults);
-      parseAclsWithPrefix(conf, KMSConfiguration.WHITELIST_KEY_ACL_PREFIX,keyOp, tempWhitelists);
-    }
-    defaultKeyAcls = tempDefaults;
-    whitelistKeyAcls = tempWhitelists;
- }
-/**
-   * Parse the acls from configuration with the specified prefix. Currently
-   * only 2 possible prefixes: whitelist and default.
-   *
-   * @param conf The configuration.
-   * @param prefix The prefix.
-   * @param keyOp The key operation.
-   * @param results The collection of results to add to.
-   */
-  private void parseAclsWithPrefix(final Configuration conf,final String prefix, final KeyOpType keyOp,Map<KeyOpType, AccessControlList> results) {
-    String confKey = prefix + keyOp;
-    String aclStr = conf.get(confKey);
-    if (aclStr != null) {
-      if (keyOp == KeyOpType.ALL) {
-        // Ignore All operation for default key and whitelist key acls
-        LOG.warn("Invalid KEY_OP '{}' for {}, ignoring", keyOp, prefix);
-      } else {
-        if (aclStr.equals("*")) {
-          LOG.info("{} for KEY_OP '{}' is set to '*'", prefix, keyOp);
-       }
-        results.put(keyOp, new AccessControlList(aclStr));
+      if (!defaultKeyAcls.containsKey(keyOp)) {
+        String confKey = KMSConfiguration.DEFAULT_KEY_ACL_PREFIX + keyOp;
+        String aclStr = conf.get(confKey);
+        if (aclStr != null) {
+          if (aclStr.equals("*")) {
+            LOG.info("Default Key ACL for  KEY_OP '{}' is set to '*'", keyOp);
+          }
+          defaultKeyAcls.put(keyOp, new AccessControlList(aclStr));
+        }
       }
     }
   }
+
   @Override
   public void run() {
     try {
@@ -218,26 +197,9 @@ public class KMSACLs implements Runnable, KeyACLs {
   @Override
   public boolean hasAccess(Type type, UserGroupInformation ugi, String clientIp) {
     boolean access = acls.get(type).isUserAllowed(ugi);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("Checking user [{}] for: {} {} ", ugi.getShortUserName(),
-      type.toString(), acls.get(type).getAclString());
-    }
     if (access) {
       AccessControlList blacklist = blacklistedAcls.get(type);
       access = (blacklist == null) || !blacklist.isUserInList(ugi);
-      if (LOG.isDebugEnabled()) {
-        if (blacklist == null) {
-          LOG.debug("No blacklist for {}", type.toString());
-        } else if (access) {
-          LOG.debug("user is in {}" , blacklist.getAclString());
-        } else {
-          LOG.debug("user is not in {}" , blacklist.getAclString());
-        }
-      }
-    }
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("User: [{}], Type: {} Result: {}", ugi.getShortUserName(),
-      type.toString(), access);
     }
     return access;
   }
@@ -259,41 +221,19 @@ public class KMSACLs implements Runnable, KeyACLs {
   @Override
   public boolean hasAccessToKey(String keyName, UserGroupInformation ugi,
       KeyOpType opType) {
-    boolean access = checkKeyAccess(keyName, ugi, opType)
-      || checkKeyAccess(whitelistKeyAcls, ugi, opType);
-    if (!access) {
-      KMSWebApp.getKMSAudit().unauthorized(ugi, opType, keyName);
-    }
-    return access;
-  }
-
-  private boolean checkKeyAccess(String keyName, UserGroupInformation ugi,KeyOpType opType) {
     Map<KeyOpType, AccessControlList> keyAcl = keyAcls.get(keyName);
     if (keyAcl == null) {
-      // If No key acl defined for this key, check to see if
-      // there are key defaults configured for this operation
-      LOG.debug("Key: {} has no ACLs defined, using defaults.", keyName);
+      // Get KeyAcl map of DEFAULT KEY.
       keyAcl = defaultKeyAcls;
     }
-    boolean access = checkKeyAccess(keyAcl, ugi, opType);
-    if (LOG.isDebugEnabled()) {
-      LOG.debug("User: [{}], OpType: {}, KeyName: {} Result: {}",
-      ugi.getShortUserName(), opType.toString(), keyName, access);
-    }
-    return access;
-  }
-  private boolean checkKeyAccess(Map<KeyOpType, AccessControlList> keyAcl,UserGroupInformation ugi, KeyOpType opType) {
+    // If No key acl defined for this key, check to see if
+    // there are key defaults configured for this operation
     AccessControlList acl = keyAcl.get(opType);
     if (acl == null) {
       // If no acl is specified for this operation,
       // deny access
-      LOG.debug("No ACL available for key, denying access for {}", opType);
       return false;
     } else {
-      if (LOG.isDebugEnabled()) {
-        LOG.debug("Checking user [{}] for: {}: {}" + ugi.getShortUserName(),
-        opType.toString(), acl.getAclString());
-      }
       return acl.isUserAllowed(ugi);
     }
   }

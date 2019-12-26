@@ -79,8 +79,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerOzoneAuthorizer.checkAccess with operation = " + operation + ", resource = " +
-					resource + ", store type = " + OzoneObj.StoreType.values() + ", ugi = " + ugi + ", ip = " +
-					context.getIp() + ", resourceType = " + ozoneObj.getResourceType() + ")");
+					resource + ", store type = " + OzoneObj.StoreType.values() + ", ugi = " + ugi + ", ip = " + context.getIp() + ")");
 		}
 
 		if (rangerPlugin == null) {
@@ -128,22 +127,20 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		rangerRequest.setAction(action);
 		rangerRequest.setRequestData(resource);
 		rangerRequest.setClusterName(clusterName);
-
-		if (ozoneObj.getResourceType() == OzoneObj.ResourceType.VOLUME) {
+		if (ozoneObj.getStoreType() == OzoneObj.StoreType.S3) {
+			rangerResource.setValue(KEY_RESOURCE_VOLUME, "s3Vol");
+		} else {
 			rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getVolumeName());
-		} else if (ozoneObj.getResourceType() == OzoneObj.ResourceType.BUCKET || ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
-			if (ozoneObj.getStoreType() == OzoneObj.StoreType.S3) {
-				rangerResource.setValue(KEY_RESOURCE_VOLUME, "s3Vol");
-			} else {
-				rangerResource.setValue(KEY_RESOURCE_VOLUME, ozoneObj.getVolumeName());
-			}
+		}
+
+		if (ozoneObj.getResourceType() == OzoneObj.ResourceType.BUCKET) {
 			rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
-			if (ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
-				rangerResource.setValue(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
-			}
+		} else if (ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
+			rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
+			rangerResource.setValue(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
 		} else {
 			LOG.fatal("Unsupported resource = " + resource);
-			MiscUtil.logErrorMessageByInterval(LOG, "Unsupported resource type " + ozoneObj.getResourceType() + " for resource = " + resource
+			MiscUtil.logErrorMessageByInterval(LOG, "Unsupported resource = " + resource
 					+ ", request=" + rangerRequest);
 			return returnValue;
 		}

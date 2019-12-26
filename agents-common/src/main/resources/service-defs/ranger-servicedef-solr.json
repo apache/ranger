@@ -1,7 +1,6 @@
 {
 	"id":8,
 	"name":"solr",
-    "displayName": "solr",
 	"implClass":"org.apache.ranger.services.solr.RangerServiceSolr",
 	"label":"SOLR",
 	"description":"Solr",

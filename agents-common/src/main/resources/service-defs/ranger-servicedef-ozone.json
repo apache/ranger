@@ -1,7 +1,6 @@
 {
 	"id":201,
 	"name": "ozone",
-	"displayName": "ozone",
 	"implClass": "org.apache.ranger.services.ozone.RangerServiceOzone",
 	"label": "OZONE",
 	"description": "Ozone Repository",

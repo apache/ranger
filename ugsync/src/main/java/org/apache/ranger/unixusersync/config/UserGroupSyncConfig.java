@@ -26,7 +26,6 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.usergroupsync.UserGroupSink;
@@ -261,16 +260,6 @@ public class UserGroupSyncConfig  {
 		XMLUtils.loadConfig(DEFAULT_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CONFIG_FILE, prop);
-	}
-
-	public Configuration getConfig() {
-		Configuration ret = new Configuration();
-
-		for (String propName : prop.stringPropertyNames()) {
-			ret.set(propName, prop.getProperty(propName));
-		}
-
-		return ret;
 	}
 
 	public String getUserSyncFileSource(){

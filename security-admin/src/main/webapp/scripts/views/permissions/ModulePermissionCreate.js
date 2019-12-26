@@ -72,7 +72,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a ModulePermissionCreate Layout");
 
-                _.extend(this, _.pick(options, 'urlQueryParams'));
+			_.extend(this, _.pick(options));
 			this.editMode = this.model.has('id') ? true : false;
 			this.bindEvents();
 		},
@@ -118,7 +118,7 @@ define(function(require){
 					XAUtil.allowNavigation();
 					var msg = that.editMode ? 'Module Permissions updated successfully' :'Module Permissions created successfully';
 					XAUtil.notifySuccess('Success', msg);
-                                        App.appRouter.navigate("#!/permissions/models",{trigger: true});
+					App.appRouter.navigate("#!/permissions",{trigger: true});
 				},
 				error : function(model,resp){
 					XAUtil.blockUI('unblock');
@@ -132,7 +132,7 @@ define(function(require){
 		},
 		onCancel : function(){
 			XAUtil.allowNavigation();
-                        App.appRouter.navigate("#!/permissions/models",{trigger: true});
+			App.appRouter.navigate("#!/permissions",{trigger: true});
 
 		},
 		/** on close */

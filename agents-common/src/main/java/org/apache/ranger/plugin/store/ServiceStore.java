@@ -47,8 +47,6 @@ public interface ServiceStore {
 
 	RangerServiceDef getServiceDefByName(String name) throws Exception;
 
-	RangerServiceDef getServiceDefByDisplayName(String name) throws Exception;
-
 	List<RangerServiceDef> getServiceDefs(SearchFilter filter) throws Exception;
 
 	PList<RangerServiceDef> getPaginatedServiceDefs(SearchFilter filter) throws Exception;
@@ -63,8 +61,6 @@ public interface ServiceStore {
 
 	RangerService getServiceByName(String name) throws Exception;
 
-	RangerService getServiceByDisplayName(String displayName) throws Exception;
-
 	List<RangerService> getServices(SearchFilter filter) throws Exception;
 
 	PList<RangerService> getPaginatedServices(SearchFilter filter) throws Exception;
@@ -73,11 +69,7 @@ public interface ServiceStore {
 
 	RangerPolicy updatePolicy(RangerPolicy policy) throws Exception;
 
-	void deletePolicy(RangerPolicy policy, RangerService service) throws Exception;
-
-	void deletePolicy(RangerPolicy policy) throws Exception;
-
-	boolean policyExists(Long id) throws Exception;
+	void deletePolicy(Long id) throws Exception;
 
 	RangerPolicy getPolicy(Long id) throws Exception;
 
@@ -103,9 +95,7 @@ public interface ServiceStore {
 
 	ServicePolicies getServicePolicyDeltasOrPolicies(String serviceName, Long lastKnownVersion) throws Exception;
 
-	ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception;
-
-	ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion) throws Exception;
+	ServicePolicies getOnlyServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception;
 
 	RangerPolicy getPolicyFromEventTime(String eventTimeStr, Long policyId);
 
@@ -116,8 +106,4 @@ public interface ServiceStore {
     RangerSecurityZone getSecurityZone(Long id) throws Exception;
 
     RangerSecurityZone getSecurityZone(String name) throws Exception;
-
-    long getPoliciesCount(final String serviceName);
-
-    Map<String, String> getServiceConfigForPlugin(Long serviceId);
 }

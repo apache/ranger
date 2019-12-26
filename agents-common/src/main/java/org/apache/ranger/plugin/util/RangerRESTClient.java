@@ -31,11 +31,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Set;
 
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
@@ -44,21 +39,20 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
-import javax.ws.rs.core.Cookie;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
@@ -102,24 +96,23 @@ public class RangerRESTClient {
 	private String mTrustStoreAlias;
 	private String mTrustStoreFile;
 	private String mTrustStoreType;
+
 	private Gson   gsonBuilder;
-	private int    mRestClientConnTimeOutMs;
-	private int    mRestClientReadTimeOutMs;
-	private int    lastKnownActiveUrlIndex;
-
-	private final List<String> configuredURLs;
-
 	private volatile Client client;
 
+	private int  mRestClientConnTimeOutMs;
+	private int  mRestClientReadTimeOutMs;
 
-	public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
+	public RangerRESTClient() {
+		this(RangerConfiguration.getInstance().get(RANGER_PROP_POLICYMGR_URL),
+			 RangerConfiguration.getInstance().get(RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME));
+	}
+
+	public RangerRESTClient(String url, String sslConfigFileName) {
 		mUrl               = url;
 		mSslConfigFileName = sslConfigFileName;
-		configuredURLs     = getURLs(mUrl);
 
-		setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
-
-		init(config);
+		init();
 	}
 
 	public String getUrl() {
@@ -218,7 +211,7 @@ public class RangerRESTClient {
 			client = Client.create(config);
 		}
 
-		if(StringUtils.isNotEmpty(mUsername) && StringUtils.isNotEmpty(mPassword)) {
+		if(!StringUtils.isEmpty(mUsername) && !StringUtils.isEmpty(mPassword)) {
 			client.addFilter(new HTTPBasicAuthFilter(mUsername, mPassword));
 		}
 
@@ -233,35 +226,37 @@ public class RangerRESTClient {
 		client = null;
 	}
 
-	private void init(Configuration config) {
+	private void init() {
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();
 		} catch(Throwable excp) {
 			LOG.fatal("RangerRESTClient.init(): failed to create GsonBuilder object", excp);
 		}
 
-		mIsSSL = StringUtils.containsIgnoreCase(mUrl, "https");
+		mIsSSL = StringUtil.containsIgnoreCase(mUrl, "https");
 
 		if (mIsSSL) {
 
 			InputStream in = null;
 
 			try {
+				Configuration conf = new Configuration();
+
 				in = getFileInputStream(mSslConfigFileName);
 
 				if (in != null) {
-					config.addResource(in);
+					conf.addResource(in);
 				}
 
-				mKeyStoreURL = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
+				mKeyStoreURL = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL);
 				mKeyStoreAlias = RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL_ALIAS;
-				mKeyStoreType = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
-				mKeyStoreFile = config.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
+				mKeyStoreType = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE, RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE_DEFAULT);
+				mKeyStoreFile = conf.get(RANGER_POLICYMGR_CLIENT_KEY_FILE);
 
-				mTrustStoreURL = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
+				mTrustStoreURL = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL);
 				mTrustStoreAlias = RANGER_POLICYMGR_TRUSTSTORE_FILE_CREDENTIAL_ALIAS;
-				mTrustStoreType = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
-				mTrustStoreFile = config.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
+				mTrustStoreType = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE, RANGER_POLICYMGR_TRUSTSTORE_FILE_TYPE_DEFAULT);
+				mTrustStoreFile = conf.get(RANGER_POLICYMGR_TRUSTSTORE_FILE);
 			} catch (IOException ioe) {
 				LOG.error("Unable to load SSL Config FileName: [" + mSslConfigFileName + "]", ioe);
 			} finally {
@@ -276,32 +271,25 @@ public class RangerRESTClient {
 
 		String keyStoreFilepwd = getCredential(mKeyStoreURL, mKeyStoreAlias);
 
-		kmList = getKeyManagers(mKeyStoreFile,keyStoreFilepwd);
-		return kmList;
-	}
-
-	public KeyManager[] getKeyManagers(String keyStoreFile, String keyStoreFilePwd) {
-		KeyManager[] kmList = null;
-
-		if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilePwd)) {
+		if (!StringUtil.isEmpty(mKeyStoreFile) && !StringUtil.isEmpty(keyStoreFilepwd)) {
 			InputStream in =  null;
 
 			try {
-				in = getFileInputStream(keyStoreFile);
+				in = getFileInputStream(mKeyStoreFile);
 
 				if (in != null) {
 					KeyStore keyStore = KeyStore.getInstance(mKeyStoreType);
 
-					keyStore.load(in, keyStoreFilePwd.toCharArray());
+					keyStore.load(in, keyStoreFilepwd.toCharArray());
 
 					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
 
-					keyManagerFactory.init(keyStore, keyStoreFilePwd.toCharArray());
+					keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
 
 					kmList = keyManagerFactory.getKeyManagers();
 				} else {
-					LOG.error("Unable to obtain keystore from file [" + keyStoreFile + "]");
-					throw new IllegalStateException("Unable to find keystore file :" + keyStoreFile);
+					LOG.error("Unable to obtain keystore from file [" + mKeyStoreFile + "]");
+					throw new IllegalStateException("Unable to find keystore file :" + mKeyStoreFile);
 				}
 			} catch (KeyStoreException e) {
 				LOG.error("Unable to obtain from KeyStore :" + e.getMessage(), e);
@@ -314,15 +302,15 @@ public class RangerRESTClient {
 				throw new IllegalStateException("Unable to obtain the requested certification :" + e.getMessage(), e);
 			} catch (FileNotFoundException e) {
 				LOG.error("Unable to find the necessary SSL Keystore Files", e);
-				throw new IllegalStateException("Unable to find keystore file :" + keyStoreFile + ", error :" + e.getMessage(), e);
+				throw new IllegalStateException("Unable to find keystore file :" + mKeyStoreFile + ", error :" + e.getMessage(), e);
 			} catch (IOException e) {
 				LOG.error("Unable to read the necessary SSL Keystore Files", e);
-				throw new IllegalStateException("Unable to read keystore file :" + keyStoreFile + ", error :" + e.getMessage(), e);
+				throw new IllegalStateException("Unable to read keystore file :" + mKeyStoreFile + ", error :" + e.getMessage(), e);
 			} catch (UnrecoverableKeyException e) {
 				LOG.error("Unable to recover the key from keystore", e);
-				throw new IllegalStateException("Unable to recover the key from keystore :" + keyStoreFile+", error :" + e.getMessage(), e);
+				throw new IllegalStateException("Unable to recover the key from keystore :" + mKeyStoreFile+", error :" + e.getMessage(), e);
 			} finally {
-				close(in, keyStoreFile);
+				close(in, mKeyStoreFile);
 			}
 		}
 
@@ -334,18 +322,11 @@ public class RangerRESTClient {
 
 		String trustStoreFilepwd = getCredential(mTrustStoreURL, mTrustStoreAlias);
 
-		tmList = getTrustManagers(mTrustStoreFile, trustStoreFilepwd);
-		return tmList;
-	}
-
-	public TrustManager[] getTrustManagers(String trustStoreFile, String trustStoreFilepwd) {
-		TrustManager[] tmList = null;
-
-		if (StringUtils.isNotEmpty(trustStoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
+		if (!StringUtil.isEmpty(mTrustStoreFile) && !StringUtil.isEmpty(trustStoreFilepwd)) {
 			InputStream in =  null;
 
 			try {
-				in = getFileInputStream(trustStoreFile);
+				in = getFileInputStream(mTrustStoreFile);
 
 				if (in != null) {
 					KeyStore trustStore = KeyStore.getInstance(mTrustStoreType);
@@ -358,8 +339,8 @@ public class RangerRESTClient {
 
 					tmList = trustManagerFactory.getTrustManagers();
 				} else {
-					LOG.error("Unable to obtain truststore from file [" + trustStoreFile + "]");
-					throw new IllegalStateException("Unable to find truststore file :" + trustStoreFile);
+					LOG.error("Unable to obtain truststore from file [" + mTrustStoreFile + "]");
+					throw new IllegalStateException("Unable to find truststore file :" + mTrustStoreFile);
 				}
 			} catch (KeyStoreException e) {
 				LOG.error("Unable to obtain from KeyStore", e);
@@ -371,20 +352,20 @@ public class RangerRESTClient {
 				LOG.error("Unable to obtain the requested certification :" + e.getMessage(), e);
 				throw new IllegalStateException("Unable to obtain the requested certification :" + e.getMessage(), e);
 			} catch (FileNotFoundException e) {
-				LOG.error("Unable to find the necessary SSL TrustStore File:" + trustStoreFile, e);
-				throw new IllegalStateException("Unable to find trust store file :" + trustStoreFile + ", error :" + e.getMessage(), e);
+				LOG.error("Unable to find the necessary SSL TrustStore File:" + mTrustStoreFile, e);
+				throw new IllegalStateException("Unable to find trust store file :" + mTrustStoreFile + ", error :" + e.getMessage(), e);
 			} catch (IOException e) {
-				LOG.error("Unable to read the necessary SSL TrustStore Files :" + trustStoreFile, e);
-				throw new IllegalStateException("Unable to read the trust store file :" + trustStoreFile + ", error :" + e.getMessage(), e);
+				LOG.error("Unable to read the necessary SSL TrustStore Files :" + mTrustStoreFile, e);
+				throw new IllegalStateException("Unable to read the trust store file :" + mTrustStoreFile + ", error :" + e.getMessage(), e);
 			} finally {
-				close(in, trustStoreFile);
+				close(in, mTrustStoreFile);
 			}
 		}
 		
 		return tmList;
 	}
 
-	protected SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
+	private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
 	        Validate.notNull(tmList, "TrustManager is not specified");
 		try {
 			SSLContext sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
@@ -408,7 +389,7 @@ public class RangerRESTClient {
 	private InputStream getFileInputStream(String fileName)  throws IOException {
 		InputStream in = null;
 
-		if(StringUtils.isNotEmpty(fileName)) {
+		if(! StringUtil.isEmpty(fileName)) {
 			File f = new File(fileName);
 
 			if (f.exists()) {
@@ -430,202 +411,5 @@ public class RangerRESTClient {
 				LOG.error("Error while closing file: [" + filename + "]", excp);
 			}
 		}
-	}
-
-	public ClientResponse get(String relativeUrl, Map<String, String> params) throws Exception {
-		ClientResponse finalResponse = null;
-		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
-
-		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
-
-				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
-				webResource = setQueryParams(webResource, params);
-
-				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
-
-				if (finalResponse != null) {
-					setLastKnownActiveUrlIndex(currentIndex);
-					break;
-				}
-			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, ex);
-			}
-		}
-		return finalResponse;
-	}
-
-	public ClientResponse post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
-		ClientResponse finalResponse = null;
-		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
-
-		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
-
-				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
-				webResource = setQueryParams(webResource, params);
-				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).post(ClientResponse.class, toJson(obj));
-				if (finalResponse != null) {
-					setLastKnownActiveUrlIndex(currentIndex);
-					break;
-				}
-			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, ex);
-			}
-		}
-		return finalResponse;
-	}
-
-	public ClientResponse delete(String relativeUrl, Map<String, String> params) throws Exception {
-		ClientResponse finalResponse = null;
-		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
-
-		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
-
-				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
-				webResource = setQueryParams(webResource, params);
-
-				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).delete(ClientResponse.class);
-				if (finalResponse != null) {
-					setLastKnownActiveUrlIndex(currentIndex);
-					break;
-				}
-			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, ex);
-			}
-		}
-		return finalResponse;
-	}
-
-	public ClientResponse put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
-		ClientResponse finalResponse = null;
-		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
-		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
-
-				WebResource webResource = getClient().resource(configuredURLs.get(currentIndex) + relativeUrl);
-				webResource = setQueryParams(webResource, params);
-				finalResponse = webResource.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).put(ClientResponse.class, toJson(obj));
-				if (finalResponse != null) {
-					setLastKnownActiveUrlIndex(currentIndex);
-					break;
-				}
-			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, ex);
-			}
-		}
-		return finalResponse;
-	}
-
-	public ClientResponse put(String relativeURL, Object request, Cookie sessionId) throws Exception {
-		ClientResponse response = null;
-		int startIndex = this.lastKnownActiveUrlIndex;
-		int currentIndex = 0;
-
-		for (int index = 0; index < configuredURLs.size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % configuredURLs.size();
-
-				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
-				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
-				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON)
-						.put(ClientResponse.class, toJson(request));
-				if (response != null) {
-					setLastKnownActiveUrlIndex(currentIndex);
-					break;
-				}
-			} catch (ClientHandlerException e) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, e);
-			}
-		}
-		return response;
-	}
-
-
-	public static List<String> getURLs(String configURLs) {
-		List<String> configuredURLs = new ArrayList<>();
-		if(configURLs!=null) {
-			String[] urls = configURLs.split(",");
-			for (String strUrl : urls) {
-				if (StringUtils.isNotEmpty(StringUtils.trimToEmpty(strUrl))) {
-					if (strUrl.endsWith("/")) {
-						strUrl = strUrl.substring(0, strUrl.length() - 1);
-					}
-					configuredURLs.add(strUrl);
-				}
-			}
-		}
-		return configuredURLs;
-	}
-
-	protected static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {
-		WebResource ret = webResource;
-		if (webResource != null && params != null) {
-			Set<Map.Entry<String, String>> entrySet= params.entrySet();
-			for (Map.Entry<String, String> entry : entrySet) {
-				ret = ret.queryParam(entry.getKey(), entry.getValue());
-			}
-		}
-		return ret;
-	}
-
-	protected void setLastKnownActiveUrlIndex(int lastKnownActiveUrlIndex) {
-		this.lastKnownActiveUrlIndex = lastKnownActiveUrlIndex;
-	}
-
-	protected WebResource createWebResourceForCookieAuth(int currentIndex, String relativeURL) {
-		Client cookieClient = getClient();
-		cookieClient.removeAllFilters();
-		WebResource ret = cookieClient.resource(configuredURLs.get(currentIndex) + relativeURL);
-		return ret;
-	}
-
-	protected void processException(int index, ClientHandlerException e) throws Exception {
-		if (index == configuredURLs.size() - 1) {
-			LOG.error("Failed to communicate with all Ranger Admin's URL's : [ " + configuredURLs + " ]");
-			throw e;
-		}
-	}
-
-	public int getLastKnownActiveUrlIndex() {
-		return lastKnownActiveUrlIndex;
-	}
-
-	public List<String> getConfiguredURLs() {
-		return configuredURLs;
-	}
-
-	public boolean isSSL() {
-		return mIsSSL;
-	}
-
-	public void setSSL(boolean mIsSSL) {
-		this.mIsSSL = mIsSSL;
-	}
-
-	protected void setClient(Client client) {
-		this.client = client;
-	}
-
-	protected void setKeyStoreType(String mKeyStoreType) {
-		this.mKeyStoreType = mKeyStoreType;
-	}
-
-	protected void setTrustStoreType(String mTrustStoreType) {
-		this.mTrustStoreType = mTrustStoreType;
 	}
 }

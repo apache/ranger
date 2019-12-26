@@ -64,7 +64,6 @@
 			    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration2.version}</include>
 			    <include>com.sun.jersey:jersey-core</include>
                             <include>com.sun.jersey:jersey-client</include>
-			    <include>com.sun.jersey:jersey-bundle</include>
                             <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
 			    <include>com.kstruct:gethostname4j</include>
 			    <include>net.java.dev.jna:jna</include>
@@ -103,7 +102,6 @@
 			    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration2.version}</include>
 			    <include>com.sun.jersey:jersey-core</include>
                             <include>com.sun.jersey:jersey-client</include>
-                            <include>com.sun.jersey:jersey-bundle</include>
                             <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
 			    <include>commons-lang:commons-lang</include>
 			    <include>com.kstruct:gethostname4j</include>

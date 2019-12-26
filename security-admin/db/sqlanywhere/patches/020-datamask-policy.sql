@@ -57,7 +57,7 @@ CREATE TABLE dbo.x_datamask_type_def(
 	datamask_options varchar(1024) DEFAULT NULL NULL,
 	rb_key_label varchar(1024) DEFAULT NULL NULL,
 	rb_key_description varchar(1024) DEFAULT NULL NULL,
-	sort_order int DEFAULT 0  NULL,
+	sort_order tinyint DEFAULT 0  NULL,
 	CONSTRAINT x_datamask_type_def_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO

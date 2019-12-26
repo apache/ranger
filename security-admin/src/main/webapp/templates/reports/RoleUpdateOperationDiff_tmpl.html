@@ -27,107 +27,48 @@
             <div class="delete-text legend"></div> Deleted
         </div>
     </div>
-    {{#if collection.length}}
-        <h5>Role Detail :</h5>
-        <div class="diff">
-            <div class="diff-left">
-                <h3>Fields</h3>
-                <ol class="attr">
-                {{#each collection}}
-                    <li class="change-row">{{./this.attributes.attributeName}}</li>
-                {{/each}}
-                </ol>
-            </div>
-            <div class="diff-left">
-                <h3>Old Value</h3>
-                <ol class="unstyled data">
-                {{#each collection}}
-                    {{#if ./this.attributes.previousValue}}
-                        {{#compare ./this.attributes.previousValue "eq" ''}}
-                                <li>--</li>
-                        {{else}}
-                                <li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'old'}}}</li>
-                        {{/compare}}
-                    {{else}}
-                            <li>--</li>
-                    {{/if}}
-                {{/each}}
-                </ol>
-            </div>
-            <div class="diff-right">
-                <h3>New Value</h3>
-                <ol class="unstyled data">
-                {{#each collection}}
-                    {{#if ./this.attributes.newValue}}
-                        {{#compare ./this.attributes.newValue "eq" ''}}
-                            <li>--</li>
-                        {{else}}
-                            <li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'new'}}}</li>
-                        {{/compare}}
-                    {{else}}
-                        <li>--</li>
-                    {{/if}}
-                {{/each}}
-                </ol>
-            </div>
+
+    <h5>Role Detail :</h5>
+    <div class="diff">
+        <div class="diff-left">
+            <h3>Fields</h3>
+            <ol class="attr">
+            {{#each collection}}
+                <li class="change-row">{{./this.attributes.attributeName}}</li>
+            {{/each}}
+            </ol>
         </div>
-    {{/if}}
-    <div class="row clear-seconds">
-        {{#each updateRolesUsersGroupsRolesDetails}}
-            <div class="span6">
-                <h5>Old {{@key}} Details :</h5>
-                <table class="table table-bordered table-operations-old">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Is Role Admin</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#compare this.oldVal "eq" ''}}
-                            <tr><td colspan="2">Empty</td></tr>
-                        {{else}}
-                            {{#each this.oldVal}}
-                                <tr>
-                                    <td>{{name}}</td>
-                                    {{#if isAdmin}}
-                                        <td>{{isAdmin}}</td>
-                                    {{else}}
-                                        <td>false</td>
-                                    {{/if}}
-                                </tr>
-                            {{/each}}
-                        {{/compare}}
-                    </tbody>
-                </table>
-            </div>
-            <div class="span6">
-                <h5>New {{@key}} Details :</h5>
-                <table class="table table-bordered table-operations-new">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Is Role Admin</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {{#compare this.newVal "eq" ''}}
-                            <tr><td colspan="2">Empty</td></tr>
-                        {{else}}
-                            {{#each this.newVal}}
-                                <tr>
-                                    <td>{{name}}</td>
-                                    {{#if isAdmin}}
-                                        <td>{{isAdmin}}</td>
-                                    {{else}}
-                                        <td>false</td>
-                                    {{/if}}
-                                </tr>
-                            {{/each}}
-                        {{/compare}}
-                    </tbody>
-                </table>
-            </div>
-        {{/each}}
+        <div class="diff-left">
+            <h3>Old Value</h3>
+            <ol class="unstyled data">
+            {{#each collection}}
+                {{#if ./this.attributes.previousValue}}
+                    {{#compare ./this.attributes.previousValue "eq" ''}}
+                            <li>--</li>
+                    {{else}}
+                            <li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'old'}}}</li>
+                    {{/compare}}
+                {{else}}
+                        <li>--</li>
+                {{/if}}
+            {{/each}}
+            </ol>
+        </div>
+        <div class="diff-right">
+            <h3>New Value</h3>
+            <ol class="unstyled data">
+            {{#each collection}}
+                {{#if ./this.attributes.newValue}}
+                    {{#compare ./this.attributes.newValue "eq" ''}}
+                        <li>--</li>
+                    {{else}}
+                        <li class="change-row">{{{highlightNewForAttr ./this.attributes.newValue ./this.attributes.previousValue 'new'}}}</li>
+                    {{/compare}}
+                {{else}}
+                    <li>--</li>
+                {{/if}}
+            {{/each}}
+            </ol>
+        </div>
     </div>
 </div>

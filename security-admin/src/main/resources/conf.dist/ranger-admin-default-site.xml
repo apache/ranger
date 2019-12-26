@@ -366,24 +366,6 @@
 	</property>
 
 	<property>
-		<name>ranger.jpa.jdbc.batch-clear.enable</name>
-		<value>true</value>
-		<description>property to enable bulk mode optimization</description>
-	</property>
-
-	<property>
-		<name>ranger.jpa.jdbc.batch-clear.size</name>
-		<value>10</value>
-		<description>batch size (in number of policies) to flush and clear jdbc statements during batch policy import/delete</description>
-	</property>
-
-	<property>
-		<name>ranger.jpa.jdbc.batch-persist.size</name>
-		<value>500</value>
-		<description>batch size (in number of objects) to flush and clear jdbc statements during jpa persistence</description>
-	</property>
-
-	<property>
 		<name>ranger.jpa.jdbc.credential.alias</name>
 		<value>ranger.db.password</value>
 		<description></description>
@@ -469,7 +451,7 @@
 	</property>
 	<property>
 		<name>ranger.sha256Password.update.disable</name>
-		<value>false</value>
+		<value>true</value>
 		<description></description>
 	</property>
 	<!-- # DB Info for audit_DB -->

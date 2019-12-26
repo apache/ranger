@@ -293,7 +293,7 @@ public abstract class RangerDaoManagerBase {
 
 	public XXSecurityZoneRefServiceDao getXXSecurityZoneRefService() { return new XXSecurityZoneRefServiceDao(this); }
 
-	public XXSecurityZoneRefTagServiceDao getXXSecurityZoneRefTagService() { return new XXSecurityZoneRefTagServiceDao(this); }
+        public XXSecurityZoneRefTagServiceDao getXXSecurityZoneRefTagService() { return new XXSecurityZoneRefTagServiceDao(this); }
 
 	public XXSecurityZoneRefResourceDao getXXSecurityZoneRefResource() { return new XXSecurityZoneRefResourceDao(this); }
 
@@ -314,9 +314,6 @@ public abstract class RangerDaoManagerBase {
 	public XXRoleRefGroupDao getXXRoleRefGroup() { return new XXRoleRefGroupDao(this); }
 
 	public XXRoleRefRoleDao getXXRoleRefRole() { return new XXRoleRefRoleDao(this); }
-
-	public XXTagChangeLogDao getXXTagChangeLog() { return new XXTagChangeLogDao(this); }
-
 
 }
 

@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
@@ -146,8 +145,10 @@ public class RangerPolicyEnginePerformanceTest {
 	public void policyEngineTest() throws InterruptedException {
 		List<RangerAccessRequest> requests = requestsCache.getUnchecked(concurrency);
 		ServicePolicies servicePolicies = servicePoliciesCache.getUnchecked(numberOfPolicies);
-		RangerPluginContext pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "perf-test", "cl1", "on-prem", RangerPolicyFactory.createPolicyEngineOption()));
-		final RangerPolicyEngineImpl rangerPolicyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, null);
+		RangerPluginContext pluginContext = new RangerPluginContext("hive");
+		pluginContext.setClusterName("cl1");
+		final RangerPolicyEngineImpl rangerPolicyEngine = new RangerPolicyEngineImpl("perf-test", servicePolicies, RangerPolicyFactory.createPolicyEngineOption(), pluginContext);
+		rangerPolicyEngine.preProcess(requests);
 
 		for (int iterations = 0; iterations < WARM_UP__ITERATIONS; iterations++) {
 			// using return value of 'isAccessAllowed' with a cheap operation: System#identityHashCode so JIT wont remove it as dead code

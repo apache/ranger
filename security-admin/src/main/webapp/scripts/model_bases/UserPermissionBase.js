@@ -27,7 +27,7 @@ define(function(require){
 	var UserPermissionBase = XABaseModel.extend(
 	/** @lends UserPermissionBase.prototype */
 	{
-                urlRoot: XAGlobals.baseURL + 'permissions/models',
+		urlRoot: XAGlobals.baseURL + 'permissions',
 
 		defaults: {},
 

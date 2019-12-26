@@ -43,7 +43,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 
 	private String              type;
 	private String              name;
-	private String              displayName;
 	private String              description;
 	private String              tagService;
 	private Map<String, String> configs;
@@ -85,7 +84,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 
 		setType(other.getType());
 		setName(other.getName());
-		setDisplayName(other.getDisplayName());
 		setDescription(other.getDescription());
 		setConfigs(other.getConfigs());
 		setTagService(other.tagService);
@@ -117,14 +115,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 	 */
 	public void setName(String name) {
 		this.name = name;
-	}
-
-	public String getDisplayName() {
-		return displayName;
-	}
-
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
 	}
 
 	/**
@@ -254,7 +244,6 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 
 		super.toString(sb);
 		sb.append("name={").append(name).append("} ");
-		sb.append("displayName={").append(displayName).append("} ");
 		sb.append("type={").append(type).append("} ");
 		sb.append("description={").append(description).append("} ");
 		sb.append("tagService={").append(tagService).append("} ");

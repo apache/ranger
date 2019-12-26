@@ -76,19 +76,6 @@ public class XXRoleDao extends BaseDao<XXRole> {
         return ret;
     }
 
-    public List<String> findRoleNamesByServiceId(Long serviceId) {
-        List<String> ret;
-        try {
-            ret = getEntityManager()
-                    .createNamedQuery("XXRole.findRoleNamesByServiceId", String.class)
-                    .setParameter("serviceId", serviceId)
-                    .getResultList();
-        } catch (NoResultException e) {
-            ret = ListUtils.EMPTY_LIST;
-        }
-        return ret;
-    }
-
     public List<String> getAllNames() {
         try {
             return getEntityManager().createNamedQuery("XXRole.getAllNames", String.class).getResultList();

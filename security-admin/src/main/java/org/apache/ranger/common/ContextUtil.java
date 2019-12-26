@@ -19,7 +19,6 @@
 
  package org.apache.ranger.common;
 
-import org.apache.ranger.security.context.RangerAdminOpContext;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 
@@ -80,15 +79,6 @@ public class ContextUtil {
 			}
 		}
 		return null;
-	}
-
-	public static boolean isBulkModeContext() {
-		RangerAdminOpContext context = RangerContextHolder.getOpContext();
-		boolean bulkMode = false;
-		if (context != null) {
-			bulkMode = context.isBulkModeContext();
-		}
-		return bulkMode;
 	}
 
 }

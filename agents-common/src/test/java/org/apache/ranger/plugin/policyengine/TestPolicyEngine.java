@@ -31,27 +31,20 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
-import org.apache.ranger.plugin.contextenricher.RangerServiceResourceMatcher;
-import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
-import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
-import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
-import org.apache.ranger.plugin.util.ServiceTags;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -64,12 +57,9 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Properties;
 import java.util.Set;
 import java.util.TimeZone;
@@ -77,13 +67,11 @@ import java.util.TimeZone;
 import static org.junit.Assert.*;
 
 public class TestPolicyEngine {
-	static RangerPluginContext pluginContext;
 	static Gson gsonBuilder;
+	long requestCount = 0L;
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
-		pluginContext = new RangerPluginContext(new RangerPluginConfig("hive", null, "hive", "cl1", "on-prem", null));
-
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSSZ")
 				.setPrettyPrinting()
 				.registerTypeAdapter(RangerAccessRequest.class, new RangerAccessRequestDeserializer())
@@ -121,7 +109,7 @@ public class TestPolicyEngine {
 			auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
 		}
 
-		AuditProviderFactory factory = AuditProviderFactory.getInstance();
+		AuditProviderFactory factory = new AuditProviderFactory();
 		factory.init(auditProperties, "hdfs"); // second parameter does not matter for v2
 
 		AuditHandler provider = factory.getAuditProvider();
@@ -181,7 +169,8 @@ public class TestPolicyEngine {
                 "</configuration>\n");
 		writer.close();
 
-		pluginContext.getConfig().addResource(new org.apache.hadoop.fs.Path(file.toURI()));
+		RangerConfiguration config = RangerConfiguration.getInstance();
+		config.addResource(new org.apache.hadoop.fs.Path(file.toURI()));
 	}
 
 	@AfterClass
@@ -394,13 +383,6 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
-	@Test
-	public void testPolicyEngine_with_owner() {
-		String[] conditionsTestResourceFiles = { "/policyengine/test_policyengine_hive_default_policies.json" };
-
-		runTestsFromResourceFiles(conditionsTestResourceFiles);
-	}
-
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
@@ -416,11 +398,12 @@ public class TestPolicyEngine {
 		assertTrue("invalid input: " + testName, testCase != null && testCase.serviceDef != null && testCase.policies != null && testCase.tests != null);
 
 		ServicePolicies servicePolicies = new ServicePolicies();
-		servicePolicies.setPolicyVersion(100L);
 		servicePolicies.setServiceName(testCase.serviceName);
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
 		servicePolicies.setSecurityZones(testCase.securityZones);
+		servicePolicies.setUserRoles(testCase.userRoles);
+		servicePolicies.setGroupRoles(testCase.groupRoles);
 
 		if (StringUtils.isNotBlank(testCase.auditMode)) {
 			servicePolicies.setAuditMode(testCase.auditMode);
@@ -438,84 +421,57 @@ public class TestPolicyEngine {
 			servicePolicies.setTagPolicies(tagPolicies);
 		}
 
-		boolean useForwardedIPAddress = pluginContext.getConfig().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
-		String trustedProxyAddressString = pluginContext.getConfig().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
+		RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
+
+		policyEngineOptions.disableTagPolicyEvaluation = false;
+		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
+		policyEngineOptions.optimizeTrieForRetrieval = false;
+
+		boolean useForwardedIPAddress = RangerConfiguration.getInstance().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = RangerConfiguration.getInstance().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
 		String[] trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, ';');
 		if (trustedProxyAddresses != null) {
 			for (int i = 0; i < trustedProxyAddresses.length; i++) {
 				trustedProxyAddresses[i] = trustedProxyAddresses[i].trim();
 			}
 		}
+		RangerPluginContext pluginContext = new RangerPluginContext("hive");
+		pluginContext.setClusterName("cl1");
+		pluginContext.setClusterType("on-prem");
+		RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext);
 
-		RangerRoles roles = new RangerRoles();
-		roles.setServiceName(testCase.serviceName);
-		roles.setRoleVersion(-1L);
-		Set<RangerRole> rolesSet = new HashSet<>();
+		policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
+		policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 
-		Map<String, Set<String>> userRoleMapping = testCase.userRoles;
-		Map<String, Set<String>> groupRoleMapping = testCase.groupRoles;
-		if (userRoleMapping != null) {
-			for (Map.Entry<String, Set<String>> userRole : userRoleMapping.entrySet()) {
-				String user = userRole.getKey();
-				Set<String> userRoles = userRole.getValue();
-				RangerRole.RoleMember userRoleMember = new RangerRole.RoleMember(user, true);
-				List<RangerRole.RoleMember> userRoleMembers = Arrays.asList(userRoleMember);
-				for (String usrRole : userRoles) {
-					RangerRole rangerUserRole = new RangerRole(usrRole, usrRole, null, userRoleMembers, null);
-					rolesSet.add(rangerUserRole);
-				}
-			}
-		}
+		policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
+		policyEngineOptions.optimizeTrieForRetrieval = false;
 
-		if (groupRoleMapping != null) {
-			for (Map.Entry<String, Set<String>> groupRole : groupRoleMapping.entrySet()) {
-				String group = groupRole.getKey();
-				Set<String> groupRoles = groupRole.getValue();
-				RangerRole.RoleMember groupRoleMember = new RangerRole.RoleMember(group, true);
-				List<RangerRole.RoleMember> groupRoleMembers = Arrays.asList(groupRoleMember);
-				for (String grpRole : groupRoles) {
-					RangerRole rangerGroupRole = new RangerRole(grpRole, grpRole, null, groupRoleMembers, null);
-					rolesSet.add(rangerGroupRole);
-				}
-			}
-		}
+		RangerPolicyEngine policyEngineForResourceAccessInfo = new RangerPolicyEngineImpl(testName, servicePolicies, policyEngineOptions,  pluginContext);
 
-		roles.setRangerRoles(rolesSet);
+		policyEngineForResourceAccessInfo.setUseForwardedIPAddress(useForwardedIPAddress);
+		policyEngineForResourceAccessInfo.setTrustedProxyAddresses(trustedProxyAddresses);
 
-        RangerPolicyEngineOptions policyEngineOptions = pluginContext.getConfig().getPolicyEngineOptions();
+		runTestCaseTests(policyEngine, policyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.tests);
 
-        policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
+		if (CollectionUtils.isNotEmpty(testCase.updatedPolicies)) {
+			servicePolicies.setPolicyDeltas(testCase.updatedPolicies);
+			servicePolicies.setPolicyVersion(-1L);
+			RangerPolicyEngine updatedPolicyEngine = policyEngine.cloneWithDelta(servicePolicies);
+			RangerPolicyEngine updatedPolicyEngineForResourceAccessInfo = policyEngineForResourceAccessInfo.cloneWithDelta(servicePolicies);
+			runTestCaseTests(updatedPolicyEngine, updatedPolicyEngineForResourceAccessInfo, testCase.serviceDef, testName, testCase.updatedTests);
 
-        RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
-
-        policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
-        policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
-
-        policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
-
-		RangerPolicyEngineImpl policyEngineForEvaluatingWithACLs = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
-
-		policyEngineForEvaluatingWithACLs.setUseForwardedIPAddress(useForwardedIPAddress);
-		policyEngineForEvaluatingWithACLs.setTrustedProxyAddresses(trustedProxyAddresses);
-
-		runTestCaseTests(policyEngine, policyEngineForEvaluatingWithACLs, testCase.serviceDef, testName, testCase.tests);
-
-		if (testCase.updatedPolicies != null) {
-			servicePolicies.setPolicyDeltas(testCase.updatedPolicies.policyDeltas);
-			servicePolicies.setSecurityZones(testCase.updatedPolicies.securityZones);
-			RangerPolicyEngine updatedPolicyEngine = RangerPolicyEngineImpl.getPolicyEngine(policyEngine, servicePolicies);
-            RangerPolicyEngine updatedPolicyEngineForEvaluatingWithACLs = RangerPolicyEngineImpl.getPolicyEngine(policyEngineForEvaluatingWithACLs, servicePolicies);
-			runTestCaseTests(updatedPolicyEngine, updatedPolicyEngineForEvaluatingWithACLs, testCase.serviceDef, testName, testCase.updatedTests);
 		}
 	}
 
-    private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerPolicyEngine policyEngineForEvaluatingWithACLs, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
+    private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerPolicyEngine policyEngineForResourceAccessInfo, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
 
         RangerAccessRequest request = null;
 
         for(TestData test : tests) {
 			request = test.request;
-
+			if ((requestCount++ % 10) == 1) {
+				policyEngine.reorderPolicyEvaluators();
+			}
 			if (request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_TAGS) ||
 					request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
 				// Create a new AccessRequest
@@ -580,71 +536,46 @@ public class TestPolicyEngine {
 
 				request = newRequest;
 
+			} else
+			if (!request.getContext().containsKey(RangerAccessRequestUtil.KEY_CONTEXT_REQUESTED_RESOURCES)) {
+				policyEngine.preProcess(request);
 			}
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 			if(test.result != null) {
-                RangerAccessResult expected = test.result;
-                RangerAccessResult result;
-
-				result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
+				RangerAccessResult expected = test.result;
+				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
 				assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
-
-				result   = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
-
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
-                assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
 			}
 
 			if(test.dataMaskResult != null) {
 				RangerAccessResult expected = test.dataMaskResult;
-				RangerAccessResult result;
-
-                result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
-
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
-                assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
-                assertEquals("maskedValue mismatched! - " + test.name, expected.getMaskedValue(), result.getMaskedValue());
-                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
-
-                result = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
+				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
 				assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
 				assertEquals("maskedValue mismatched! - " + test.name, expected.getMaskedValue(), result.getMaskedValue());
 				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
-
 			}
 
 			if(test.rowFilterResult != null) {
 				RangerAccessResult expected = test.rowFilterResult;
-				RangerAccessResult result;
-
-                result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
-
-                assertNotNull("result was null! - " + test.name, result);
-                assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
-                assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
-
-				result = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
+				RangerAccessResult result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
 				assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
-
 			}
 
 			if(test.resourceAccessInfo != null) {
 
 				RangerResourceAccessInfo expected = new RangerResourceAccessInfo(test.resourceAccessInfo);
-				RangerResourceAccessInfo result   = policyEngine.getResourceAccessInfo(test.request);
+				RangerResourceAccessInfo result   = policyEngineForResourceAccessInfo.getResourceAccessInfo(test.request);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("allowedUsers mismatched! - " + test.name, expected.getAllowedUsers(), result.getAllowedUsers());
@@ -667,7 +598,7 @@ public class TestPolicyEngine {
 		public String             auditMode;
 		public List<TestData>     tests;
 
-		public UpdatedPolicies    updatedPolicies;
+		public List<RangerPolicyDelta> updatedPolicies;
 		public List<TestData>     updatedTests;
 		
 		class TestData {
@@ -684,11 +615,6 @@ public class TestPolicyEngine {
 			public RangerServiceDef serviceDef;
 			public List<RangerPolicy> tagPolicies;
 		}
-	}
-
-	static class UpdatedPolicies {
-		public Map<String, ServicePolicies.SecurityZoneInfo> securityZones;
-		public List<RangerPolicyDelta>                       policyDeltas;
 	}
 
     static class ValiditySchedulerTestResult {
@@ -798,216 +724,5 @@ public class TestPolicyEngine {
 			return gsonBuilder.fromJson(jsonObj, RangerAccessResourceImpl.class);
 		}
 	}
-
-	// Test utility functions
-	public static boolean compare(PolicyEngine me, PolicyEngine other) {
-		boolean ret;
-
-		if (me.getPolicyRepository() != null && other.getPolicyRepository() != null) {
-			ret = compare(me.getPolicyRepository(), other.getPolicyRepository());
-		} else {
-			ret = me.getPolicyRepository() == other.getPolicyRepository();
-		}
-
-		if (ret) {
-			if (me.getTagPolicyRepository() != null && other.getTagPolicyRepository() != null) {
-				ret = compare(me.getTagPolicyRepository(), other.getTagPolicyRepository());
-			} else {
-				ret = me.getTagPolicyRepository() == other.getTagPolicyRepository();
-			}
-		}
-
-		if (ret) {
-			ret = Objects.equals(me.getResourceZoneTrie().keySet(), other.getResourceZoneTrie().keySet());
-
-			if (ret) {
-				for (Map.Entry<String, RangerResourceTrie> entry : me.getResourceZoneTrie().entrySet()) {
-					ret = compareSubtree(entry.getValue(), other.getResourceZoneTrie().get(entry.getKey()));
-
-					if (!ret) {
-						break;
-					}
-				}
-			}
-		}
-
-		if (ret) {
-			ret = Objects.equals(me.getZonePolicyRepositories().keySet(), other.getZonePolicyRepositories().keySet());
-
-			if (ret) {
-				for (Map.Entry<String, RangerPolicyRepository> entry : me.getZonePolicyRepositories().entrySet()) {
-					ret = compare(entry.getValue(), other.getZonePolicyRepositories().get(entry.getKey()));
-
-					if (!ret) {
-						break;
-					}
-				}
-			}
-		}
-
-		return ret;
-	}
-
-	public static boolean compare(RangerPolicyRepository me, RangerPolicyRepository other) {
-		return compareTrie(RangerPolicy.POLICY_TYPE_ACCESS, me, other) &&
-				compareTrie(RangerPolicy.POLICY_TYPE_DATAMASK, me, other) &&
-				compareTrie(RangerPolicy.POLICY_TYPE_ROWFILTER, me, other);
-	}
-
-	public static boolean compareTrie(final int policyType, RangerPolicyRepository me, RangerPolicyRepository other) {
-		boolean ret;
-
-		Map<String, RangerResourceTrie> myTrie    = me.getTrie(policyType);
-		Map<String, RangerResourceTrie> otherTrie = other.getTrie(policyType);
-
-		ret = myTrie.size() == otherTrie.size();
-
-		if (ret) {
-			for (Map.Entry<String, RangerResourceTrie> entry : myTrie.entrySet()) {
-				RangerResourceTrie myResourceTrie    = entry.getValue();
-				RangerResourceTrie otherResourceTrie = otherTrie.get(entry.getKey());
-
-				ret = otherResourceTrie != null && compareSubtree(myResourceTrie, otherResourceTrie);
-
-				if (!ret) {
-					break;
-				}
-			}
-		}
-
-		return ret;
-	}
-
-	public static boolean compare(RangerTagEnricher me, RangerTagEnricher other) {
-		boolean ret;
-
-		if (me.getEnrichedServiceTags() == null || other == null || other.getEnrichedServiceTags() == null) {
-			return false;
-		}
-
-		if (me.getEnrichedServiceTags().getServiceResourceTrie() != null && other.getEnrichedServiceTags().getServiceResourceTrie() != null) {
-			ret = me.getEnrichedServiceTags().getServiceResourceTrie().size() == other.getEnrichedServiceTags().getServiceResourceTrie().size();
-
-			if (ret && me.getEnrichedServiceTags().getServiceResourceTrie().size() > 0) {
-				for (Map.Entry<String, RangerResourceTrie<RangerServiceResourceMatcher>> entry : me.getEnrichedServiceTags().getServiceResourceTrie().entrySet()) {
-					ret = compareSubtree(entry.getValue(), other.getEnrichedServiceTags().getServiceResourceTrie().get(entry.getKey()));
-					if (!ret) {
-						break;
-					}
-				}
-			}
-		} else {
-			ret = me.getEnrichedServiceTags().getServiceResourceTrie() == other.getEnrichedServiceTags().getServiceResourceTrie();
-		}
-
-		if (ret) {
-			// Compare mappings
-			ServiceTags myServiceTags = me.getEnrichedServiceTags().getServiceTags();
-			ServiceTags otherServiceTags = other.getEnrichedServiceTags().getServiceTags();
-
-			ret = StringUtils.equals(myServiceTags.getServiceName(), otherServiceTags.getServiceName()) &&
-					//myServiceTags.getTagVersion().equals(otherServiceTags.getTagVersion()) &&
-					myServiceTags.getTags().size() == otherServiceTags.getTags().size() &&
-					myServiceTags.getServiceResources().size() == otherServiceTags.getServiceResources().size() &&
-					myServiceTags.getResourceToTagIds().size() == otherServiceTags.getResourceToTagIds().size();
-			if (ret) {
-				for (RangerServiceResource serviceResource : myServiceTags.getServiceResources()) {
-					Long serviceResourceId = serviceResource.getId();
-
-					List<Long> myTagsForResource = myServiceTags.getResourceToTagIds().get(serviceResourceId);
-					List<Long> otherTagsForResource = otherServiceTags.getResourceToTagIds().get(serviceResourceId);
-
-					ret = CollectionUtils.size(myTagsForResource) == CollectionUtils.size(otherTagsForResource);
-
-					if (ret && CollectionUtils.size(myTagsForResource) > 0) {
-						ret = myTagsForResource.size() == CollectionUtils.intersection(myTagsForResource, otherTagsForResource).size();
-					}
-				}
-			}
-		}
-
-		return ret;
-	}
-
-	public static boolean compareSubtree(RangerResourceTrie me, RangerResourceTrie other) {
-
-		final boolean ret;
-		List<RangerResourceTrie.TrieNode> mismatchedNodes = new ArrayList<>();
-
-		if (me.getRoot() == null || other.getRoot() == null) {
-			ret = me.getRoot() == other.getRoot();
-			if (!ret) {
-				mismatchedNodes.add(me.getRoot());
-			}
-		} else {
-			ret = compareSubtree(me.getRoot(), other.getRoot(), mismatchedNodes);
-		}
-		return ret;
-	}
-
-	private static boolean compareSubtree(RangerResourceTrie.TrieNode me, RangerResourceTrie.TrieNode other, List<RangerResourceTrie.TrieNode> misMatched) {
-		boolean ret = StringUtils.equals(me.getStr(), other.getStr());
-
-		if (ret) {
-			Map<Character, RangerResourceTrie.TrieNode> myChildren = me.getChildren();
-			Map<Character, RangerResourceTrie.TrieNode> otherChildren = other.getChildren();
-
-			ret = myChildren.size() == otherChildren.size() &&
-					compareLists(me.getEvaluators(), other.getEvaluators()) &&
-					compareLists(me.getWildcardEvaluators(), other.getWildcardEvaluators()) &&
-					myChildren.keySet().size() == otherChildren.keySet().size();
-			if (ret) {
-				// Check if subtrees match
-				for (Map.Entry<Character, RangerResourceTrie.TrieNode> entry : myChildren.entrySet()) {
-					Character c = entry.getKey();
-					RangerResourceTrie.TrieNode myNode = entry.getValue();
-					RangerResourceTrie.TrieNode otherNode = otherChildren.get(c);
-					ret = otherNode != null && compareSubtree(myNode, otherNode, misMatched);
-					if (!ret) {
-						break;
-					}
-				}
-			}
-		}
-
-		if (!ret) {
-			misMatched.add(me);
-		}
-
-		return ret;
-	}
-
-	private static boolean compareLists(Set me, Set other) {
-		boolean ret;
-
-		if (me == null || other == null) {
-			ret = me == other;
-		} else {
-			ret = me.size() == other.size();
-
-			if (ret) {
-				List<? extends RangerPolicyResourceEvaluator> meAsList = new ArrayList<>(me);
-				List<? extends RangerPolicyResourceEvaluator> otherAsList = new ArrayList<>(other);
-
-				List<Long> myIds = new ArrayList<>();
-				List<Long> otherIds = new ArrayList<>();
-				for (RangerPolicyResourceEvaluator evaluator : meAsList) {
-					myIds.add(evaluator.getId());
-				}
-				for (RangerPolicyResourceEvaluator evaluator : otherAsList) {
-					otherIds.add(evaluator.getId());
-				}
-
-				ret = compareLongLists(myIds, otherIds);
-			}
-		}
-		return ret;
-	}
-
-	private static boolean compareLongLists(List<Long> me, List<Long> other) {
-		return me.size() == CollectionUtils.intersection(me, other).size();
-	}
-
-
 }
 

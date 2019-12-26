@@ -278,7 +278,6 @@ define(function(require) {
                 userWithGrantRolePrivilege      : 'Users (Grant privilege)',
                 groupWithGrantRolePrivilege      : 'Groups (Grant privilege)',
                 applicationType					: 'Application',
-                displayName						: 'Display Name',
 
 			},
 			btn : {
@@ -477,14 +476,7 @@ define(function(require) {
                 noDeleteRoleRow         :'Please select ranger role first to delete.',
                 addRolePermission       : 'Please add permission(s) for the selected role, else role will not be added.',
                 addRole                 : 'Please select role for the selected permission(s), else role will not be added.',
-                addSelectedUserGroupRoles : 'Please add selected user/group/roles to there respective table else user/group/roles will not be added.',
-                accessDenied            : 'Sorry, you don\'t have enough privileges to view this page.',
-                noContent               : 'Sorry, Please sync-up the users with your source directory.',
-                signOutIsNotComplete    : 'Authentication to this instance of Ranger is managed externally(for example,Apache Knox). \
-                                        You can still open this instance of Ranger from the same web browser without re-authentication. \
-                                        To prevent additional access to Ranger, <b>close all browser windows and exit the browser</b>.',
-                pageNotFound            : 'Sorry, this page isn\'t here or has moved.'
-
+                addSelectedUserGroupRoles : 'Please add selected user/group/roles to there respective table else user/group/roles will not be added.'
 
 			},
 			plcHldr : {

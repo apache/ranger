@@ -636,7 +636,7 @@ public class TestAssetREST {
 		// Mockito.when(PropertiesUtil.getBooleanProperty("ranger.service.http.enabled",true)).thenReturn(true);
 		try {
 			Mockito.when(serviceREST.getServicePoliciesIfUpdated(Mockito.anyString(), Mockito.anyLong(),
-					Mockito.anyLong(), Mockito.anyString(), Mockito.anyString() , Mockito.anyString() , Mockito.anyBoolean(), Mockito.anyString(), (HttpServletRequest) Mockito.any()))
+					Mockito.anyLong(), Mockito.anyString(), Mockito.anyString() , Mockito.anyString() , Mockito.anyBoolean(), (HttpServletRequest) Mockito.any()))
 					.thenReturn(servicePolicies);
 		} catch (Exception e) {
 			fail("test failed due to: " + e.getMessage());

@@ -29,17 +29,14 @@ import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
-import org.apache.ranger.common.RangerRoleCache;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.store.AbstractPredicateUtil;
 import org.apache.ranger.plugin.store.RolePredicateUtil;
 import org.apache.ranger.plugin.store.RoleStore;
-import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerRoleService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,8 +48,6 @@ import com.google.gson.GsonBuilder;
 @Component
 public class RoleDBStore implements RoleStore {
     private static final Log LOG = LogFactory.getLog(RoleDBStore.class);
-
-    private static final String RANGER_ROLE_GLOBAL_STATE_NAME = "RangerRole";
 
     @Autowired
     RangerRoleService roleService;
@@ -69,8 +64,6 @@ public class RoleDBStore implements RoleStore {
     @Autowired
     RangerBizUtil bizUtil;
 
-    RangerAdminConfig config;
-
     private Boolean populateExistingBaseFields = true;
 
     AbstractPredicateUtil predicateUtil = null;
@@ -82,8 +75,6 @@ public class RoleDBStore implements RoleStore {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RoleDBStore.initStore()");
         }
-
-        config = RangerAdminConfig.getInstance();
 
         roleService.setPopulateExistingBaseFields(populateExistingBaseFields);
         predicateUtil = new RolePredicateUtil();
@@ -105,8 +96,6 @@ public class RoleDBStore implements RoleStore {
             throw restErrorUtil.createRESTException("role with name: " + role.getName() + " already exists", MessageEnums.ERROR_DUPLICATE_OBJECT);
         }
 
-        daoMgr.getXXGlobalState().onGlobalAppDataChange(RANGER_ROLE_GLOBAL_STATE_NAME);
-
         RangerRole createdRole = roleService.create(role);
         if (createdRole == null) {
             throw new Exception("Cannot create role:[" + role + "]");
@@ -126,14 +115,8 @@ public class RoleDBStore implements RoleStore {
             throw restErrorUtil.createRESTException("role with id: " + role.getId() + " does not exist");
         }
 
-		if (!role.getName().equals(xxRole.getName())) { // ensure only if role name is changed
-			ensureRoleNameUpdateAllowed(xxRole.getName());
-		}
-
         Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
         RangerRole oldRole = gsonBuilder.fromJson(xxRole.getRoleText(), RangerRole.class);
-
-        daoMgr.getXXGlobalState().onGlobalAppDataChange(RANGER_ROLE_GLOBAL_STATE_NAME);
 
         RangerRole updatedRole = roleService.update(role);
         if (updatedRole == null) {
@@ -144,40 +127,17 @@ public class RoleDBStore implements RoleStore {
 
         roleService.updatePolicyVersions(updatedRole.getId());
 
-        if (ServiceDBStore.isSupportsRolesDownloadByService()) {
-            roleService.updateRoleVersions(updatedRole.getId());
-        }
-
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(updatedRole, oldRole, "update");
         bizUtil.createTrxLog(trxLogList);
         return role;
     }
 
-	private void ensureRoleNameUpdateAllowed(String roleName) throws Exception {
-		boolean roleNotInPolicy = ensureRoleNotInPolicy(roleName);
-		if (!roleNotInPolicy) {
-			throw new Exception(
-					"Rolename for '" + roleName + "' can not be updated as it is referenced in one or more policies");
-		}
-
-		boolean roleNotInOtherRole = ensureRoleNotInRole(roleName);
-		if (!roleNotInOtherRole) {
-			throw new Exception("Rolename for '" + roleName
-					+ "' can not be updated as it is referenced in one or more other roles");
-		}
-	}
-
-	@Override
+    @Override
     public void deleteRole(String roleName) throws Exception {
         XXRole xxRole = daoMgr.getXXRole().findByRoleName(roleName);
         if (xxRole == null) {
             throw restErrorUtil.createRESTException("Role with name: " + roleName + " does not exist");
         }
-
-        ensureRoleDeleteAllowed(roleName);
-
-        daoMgr.getXXGlobalState().onGlobalAppDataChange(RANGER_ROLE_GLOBAL_STATE_NAME);
-
         RangerRole role = roleService.read(xxRole.getId());
         roleRefUpdater.cleanupRefTables(role);
         roleService.delete(role);
@@ -190,39 +150,11 @@ public class RoleDBStore implements RoleStore {
     public void deleteRole(Long roleId) throws Exception {
         RangerRole role = roleService.read(roleId);
 
-        ensureRoleDeleteAllowed(role.getName());
-
-        daoMgr.getXXGlobalState().onGlobalAppDataChange(RANGER_ROLE_GLOBAL_STATE_NAME);
-
         roleRefUpdater.cleanupRefTables(role);
         roleService.delete(role);
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
         bizUtil.createTrxLog(trxLogList);
     }
-
-    private void ensureRoleDeleteAllowed(String roleName) throws Exception {
-        boolean roleNotInPolicy = ensureRoleNotInPolicy(roleName);
-        if(!roleNotInPolicy) {
-            throw new Exception("Role '"+ roleName +"' can not be deleted as it is referenced in one or more policies");
-        }
-
-        boolean roleNotInOtherRole = ensureRoleNotInRole(roleName);
-        if(!roleNotInOtherRole) {
-            throw new Exception("Role '"+ roleName + "' can not be deleted as it is referenced in one or more other roles");
-        }
-    }
-
-	private boolean ensureRoleNotInPolicy(String roleName) {
-		Long roleRefPolicyCount = daoMgr.getXXPolicyRefRole().findRoleRefPolicyCount(roleName);
-
-		return roleRefPolicyCount < 1;
-	}
-
-	private boolean ensureRoleNotInRole(String roleName) {
-		Long roleRefRoleCount = daoMgr.getXXRoleRefRole().findRoleRefRoleCount(roleName);
-
-		return roleRefRoleCount < 1;
-	}
 
     @Override
     public RangerRole getRole(Long id) throws Exception {
@@ -265,40 +197,6 @@ public class RoleDBStore implements RoleStore {
         return daoMgr.getXXRole().getAllNames();
     }
 
-    @Override
-    public RangerRoles getRoles(String serviceName, Long lastKnownRoleVersion) throws Exception {
-        RangerRoles ret                   = null;
-        Long        rangerRoleVersionInDB = getRoleVersion(serviceName);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RoleDBStore.getRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB);
-        }
-
-        if (rangerRoleVersionInDB != null) {
-            ret = RangerRoleCache.getInstance().getLatestRangerRoleOrCached(serviceName, this, lastKnownRoleVersion, rangerRoleVersionInDB);
-        }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<= RoleDBStore.getRoles() lastKnownRoleVersion= " + lastKnownRoleVersion + " rangerRoleVersionInDB= " + rangerRoleVersionInDB + " RangerRoles= " + ret);
-        }
-
-        return ret;
-    }
-
-    @Override
-    public Long getRoleVersion(String serviceName) {
-        Long ret = null;
-
-        if (ServiceDBStore.isSupportsRolesDownloadByService()) {
-            XXServiceVersionInfo xxServiceVersionInfo = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
-            ret = (xxServiceVersionInfo != null) ? xxServiceVersionInfo.getRoleVersion() : null;
-        } else {
-            ret = daoMgr.getXXGlobalState().getRoleVersion(RANGER_ROLE_GLOBAL_STATE_NAME);
-        }
-
-        return ret;
-    }
-
     public Set<RangerRole> getRoleNames(String userName, Set<String> userGroups) throws Exception{
         Set<RangerRole> ret = new HashSet<>();
         if (StringUtils.isNotEmpty(userName)) {
@@ -328,27 +226,8 @@ public class RoleDBStore implements RoleStore {
 
     public List<RangerRole> getRoles(Long serviceId) {
         List<RangerRole> ret = ListUtils.EMPTY_LIST;
-
         if (serviceId != null) {
-            String       serviceTypeName            = daoMgr.getXXServiceDef().findServiceDefTypeByServiceId(serviceId);
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Service Type for serviceId (" + serviceId + ") = " + serviceTypeName);
-            }
-            String       serviceTypesToGetAllRoles  = config.get("ranger.admin.service.types.for.returning.all.roles", "solr");
-
-            boolean      getAllRoles                = false;
-            if (StringUtils.isNotEmpty(serviceTypesToGetAllRoles)) {
-                String[] allRolesServiceTypes = StringUtils.split(serviceTypesToGetAllRoles, ",");
-                if (allRolesServiceTypes != null) {
-                    for (String allRolesServiceType : allRolesServiceTypes) {
-                        if (StringUtils.equalsIgnoreCase(serviceTypeName, allRolesServiceType)) {
-                            getAllRoles = true;
-                            break;
-                        }
-                    }
-                }
-            }
-            List<XXRole> rolesFromDb = getAllRoles ? daoMgr.getXXRole().getAll() : daoMgr.getXXRole().findByServiceId(serviceId);
+            List<XXRole> rolesFromDb = daoMgr.getXXRole().findByServiceId(serviceId);
             if (CollectionUtils.isNotEmpty(rolesFromDb)) {
                 ret = new ArrayList<>();
                 for (XXRole xxRole : rolesFromDb) {
@@ -363,16 +242,5 @@ public class RoleDBStore implements RoleStore {
         return service == null ? ListUtils.EMPTY_LIST : getRoles(service.getId());
     }
 
-    @Override
-    public boolean roleExists(Long id) throws Exception {
-        XXRole role = daoMgr.getXXRole().findByRoleId(id);
-        return role != null;
-    }
-
-    @Override
-    public boolean roleExists(String name) throws Exception {
-        XXRole role = daoMgr.getXXRole().findByRoleName(name);
-        return role != null;
-    }
 }
 

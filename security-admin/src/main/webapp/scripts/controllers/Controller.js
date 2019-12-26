@@ -118,8 +118,7 @@ define(function(require) {
 			var userList 	= new VXUserList();
 			App.rContent.show(new view({
 				collection : userList,
-                                tab : tab.split('?')[0],
-                                urlQueryParams : tab.indexOf("?") !== -1 ? tab.substring(tab.indexOf("?") + 1) : undefined,
+				tab :tab
 			}));
 		},
 	   userCreateAction : function(){
@@ -286,15 +285,9 @@ define(function(require) {
 		   var view				= require('views/service/ServiceCreate');
 		   var RangerServiceDef	= require('models/RangerServiceDef');
 		   var RangerService	= require('models/RangerService');
-		   var XAUtil			= require('utils/XAUtils');
 		   
 		   var rangerServiceDefModel	= new RangerServiceDef({ id : serviceTypeId });
-            if(_.isNaN(parseInt(serviceId))){
-                var rangerService = new RangerService();
-                rangerService.url = XAUtil.getServiceByName(serviceId);
-            } else {
-                var rangerService = new RangerService({id : serviceId});
-            }
+		   var rangerService = new RangerService({ 'id' : serviceId });
 
 		   rangerService.fetch({
 			   cache:false
@@ -305,7 +298,7 @@ define(function(require) {
 			   }));
 		   });
 	   },
-
+	   
 	   policyManageAction : function(serviceId,policyType){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var XAUtil			= require('utils/XAUtils');
@@ -313,38 +306,27 @@ define(function(require) {
 		   var RangerService	= require('models/RangerService');
 		   var RangerPolicyList 	=  require('collections/RangerPolicyList');
 		   
+		   var rangerService = new RangerService({id : serviceId});
 		   var rangerPolicyList = new RangerPolicyList();
-                   rangerPolicyList.queryParams['policyType'] = policyType.split("?")[0];
-                    if(_.isNaN(parseInt(serviceId))){
-                        var rangerService = new RangerService();
-                        rangerService.url = XAUtil.getServiceByName(serviceId);
-                    } else {
-                        var rangerService = new RangerService({id : serviceId});
-                    }
+		   rangerPolicyList.queryParams['policyType'] = policyType;
+		   
 		   rangerService.fetch({
 			  cache : false,
 			  async : false
-                   }).done( function() {
-                                App.rContent.show(new view({
-                                        rangerService : rangerService,
-                                        collection : rangerPolicyList,
-                                        urlQueryParams : policyType.indexOf("?") !== -1 ? policyType.substring(policyType.indexOf("?") + 1) : undefined,
-                                }));
 		   });
+		   App.rContent.show(new view({
+			   rangerService : rangerService,
+			   collection : rangerPolicyList
+		   }));
 	   },
 	   RangerPolicyCreateAction :function(serviceId, policyType){
     	   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
-           var XAUtil			= require('utils/XAUtils');
+
 		   var view 			= require('views/policies/RangerPolicyCreate');
 		   var RangerService	= require('models/RangerService');
 		   var RangerPolicy		= require('models/RangerPolicy');
 		   
-                    if(_.isNaN(parseInt(serviceId))){
-                        var rangerService = new RangerService();
-                        rangerService.url = XAUtil.getServiceByName(serviceId);
-                    } else {
-                        var rangerService = new RangerService({id : serviceId});
-                    }
+		   var rangerService = new RangerService({id : serviceId});
 		   rangerService.fetch({
 				  cache : false,
 		   }).done(function(){
@@ -363,38 +345,31 @@ define(function(require) {
 		   var RangerPolicyList  = require('collections/RangerPolicyList');
 		   var XAUtil			 = require('utils/XAUtils');
 		   
+		   var rangerService = new RangerService({id : serviceId});
 		   var rangerPolicy = new RangerPolicy({ id : policyId});
-                   if(_.isNaN(parseInt(serviceId))){
-                        var rangerService = new RangerService();
-                        rangerService.url = XAUtil.getServiceByName(serviceId);
-                    } else {
-                        var rangerService = new RangerService({id : serviceId});
-                    }
 		   rangerPolicy.collection =new RangerPolicyList();
 		   rangerPolicy.collection.url = XAUtil.getServicePoliciesURL(serviceId);
 		   rangerService.fetch({
 			   cache : false,
 			   async : false,
-                   }).done( function() {
-                                rangerPolicy.fetch({
-                                        cache : false,
-                                }).done(function(){
-                                        App.rContent.show(new view({
-                                                model : rangerPolicy,
-                                                rangerService :rangerService
-                                        }));
-                                });
-                        });
+		   });
+		   rangerPolicy.fetch({
+				  cache : false,
+		   }).done(function(){
+			   App.rContent.show(new view({
+				   model : rangerPolicy,
+				   rangerService :rangerService
+			   }));
+		   });
 	   },
 	   /************PERMISSIONS LISTING *****************************************/
-           modulePermissionsAction :function(argument){
+	   modulePermissionsAction :function(){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.Settings.value });
 		   var view 			= require('views/permissions/ModulePermsTableLayout');
 		   var ModulePermissionList	= require('collections/VXModuleDefList');
 
 		   App.rContent.show(new view({
-               collection : new ModulePermissionList(),
-               urlQueryParams : argument.indexOf("?") !== -1 ? argument.substring(argument.indexOf("?") + 1) : undefined,
+			   collection : new ModulePermissionList()
 		   }));
 
 	   },
@@ -431,9 +406,8 @@ define(function(require) {
 		   var KmsKeyList	= require('collections/VXKmsKeyList');
 		   App.rContent.show(new view({
 			   collection     : new KmsKeyList(),
-                           kmsServiceName : kmsServiceName.split("?")[0],
-                           kmsManagePage  : kmsManagePage,
-                           urlQueryParams : kmsServiceName.indexOf("?") !== -1 ? kmsServiceName.substring(kmsServiceName.indexOf("?") + 1) : undefined,
+			   kmsServiceName : kmsServiceName,
+			   kmsManagePage  : kmsManagePage
 		   }));
 	   },
 	   kmsKeyCreateAction : function(kmsServiceName){

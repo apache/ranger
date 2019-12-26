@@ -24,13 +24,9 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.TimeZone;
-
-import org.apache.commons.lang.StringUtils;
 
 public class StringUtil {
 
@@ -293,17 +289,4 @@ public class StringUtil {
 
 		return ret;
 	}
-
-	public static Set<String> toSet(String str) {
-		Set<String> values = new HashSet<String>();
-		if (StringUtils.isNotBlank(str)) {
-			for (String item : str.split(",")) {
-				if (StringUtils.isNotBlank(item)) {
-					values.add(StringUtils.trim(item));
-				}
-			}
-		}
-		return values;
-	}
-
 }

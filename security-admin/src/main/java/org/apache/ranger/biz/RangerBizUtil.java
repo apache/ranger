@@ -35,9 +35,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
-import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
@@ -48,7 +46,6 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXDBBaseDao;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.entity.XXGroup;
@@ -62,9 +59,6 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
-import org.apache.ranger.rest.ServiceREST;
-import org.apache.ranger.security.context.RangerAdminOpContext;
-import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResponse;
@@ -106,20 +100,12 @@ public class RangerBizUtil {
 	private static int PATH_CHAR_SET_LEN = PATH_CHAR_SET.length;
 	public static final String AUDIT_STORE_RDBMS = "DB";
 	public static final String AUDIT_STORE_SOLR = "solr";
-	public static final boolean batchClearEnabled = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
-	public static final int policyBatchSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
-	public static final int batchPersistSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-persist.size", 500);
 
 	String auditDBType = AUDIT_STORE_RDBMS;
-	private final boolean allowUnauthenticatedAccessInSecureEnvironment;
 
 	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
 
 	public RangerBizUtil() {
-		RangerAdminConfig config = RangerAdminConfig.getInstance();
-
-		allowUnauthenticatedAccessInSecureEnvironment = config.getBoolean("ranger.admin.allow.unauthenticated.access", false);
-
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty("ranger.user.firstname.maxlength", "16"));
 		maxDisplayNameLength = PropertiesUtil.getIntProperty("ranger.bookmark.name.maxlen", maxDisplayNameLength);
 
@@ -448,17 +434,6 @@ public class RangerBizUtil {
 			}
 		}
 		return matchFound;
-	}
-
-	public void failUnauthenticatedIfNotAllowed() throws Exception {
-		if (UserGroupInformation.isSecurityEnabled()) {
-			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-			if (currentUserSession == null) {
-				if (!allowUnauthenticatedAccessInSecureEnvironment) {
-					throw new Exception("Unauthenticated access not allowed");
-				}
-			}
-		}
 	}
 
 	/**
@@ -1173,6 +1148,46 @@ public class RangerBizUtil {
 		}
 	}
 
+	public void createTrxLog(List<XXTrxLog> trxLogList, boolean flush) {
+		if (trxLogList == null) {
+			return;
+		}
+
+		UserSessionBase usb = ContextUtil.getCurrentUserSession();
+		Long authSessionId = null;
+		if (usb != null) {
+			authSessionId = ContextUtil.getCurrentUserSession().getSessionId();
+		}
+		if(guidUtil != null){
+		Long trxId = guidUtil.genLong();
+		for (XXTrxLog xTrxLog : trxLogList) {
+			if (xTrxLog != null) {
+				if ("Password".equalsIgnoreCase(StringUtil.trim(xTrxLog.getAttributeName()))) {
+					if (xTrxLog.getPreviousValue() != null
+							&& !xTrxLog.getPreviousValue().trim().isEmpty()
+							&& !"null".equalsIgnoreCase(xTrxLog
+									.getPreviousValue().trim())) {
+						xTrxLog.setPreviousValue(AppConstants.Masked_String);
+					}
+					if (xTrxLog.getNewValue() != null
+							&& !xTrxLog.getNewValue().trim().isEmpty()
+							&& !"null".equalsIgnoreCase(xTrxLog.getNewValue()
+									.trim())) {
+						xTrxLog.setNewValue(AppConstants.Masked_String);
+					}
+				}
+				xTrxLog.setTransactionId(trxId.toString());
+				if (authSessionId != null) {
+					xTrxLog.setSessionId("" + authSessionId);
+				}
+				xTrxLog.setSessionType("Spring Authenticated Session");
+				xTrxLog.setRequestId(trxId.toString());
+				daoManager.getXXTrxLog().create(xTrxLog, flush);
+			}
+		}
+		}
+	}
+
 	public static int getDBFlavor() {
 		String[] propertyNames = { "xa.db.flavor",
 									"ranger.jpa.jdbc.dialect",
@@ -1410,18 +1425,12 @@ public class RangerBizUtil {
 		return false;
 	}
 
-	public boolean isUserAllowedForGrantRevoke(RangerService rangerService, String userName) {
-		return isUserInConfigParameter(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke, userName);
-	}
-	public boolean isUserServiceAdmin(RangerService rangerService, String userName) {
-		return isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_USERS, userName);
-	}
-
-	public boolean isUserInConfigParameter(RangerService rangerService, String configParamName, String userName) {
+	public boolean isUserAllowedForGrantRevoke(RangerService rangerService,
+			String cfgNameAllowedUsers, String userName) {
 		Map<String, String> map = rangerService.getConfigs();
 
-		if (map != null && map.containsKey(configParamName)) {
-			String userNames = map.get(configParamName);
+		if (map != null && map.containsKey(cfgNameAllowedUsers)) {
+			String userNames = map.get(cfgNameAllowedUsers);
 			String[] userList = userNames.split(",");
 			if (userList != null) {
 				for (String u : userList) {
@@ -1432,7 +1441,7 @@ public class RangerBizUtil {
 			}
 		}
 		return false;
-	}
+	}	
 
         public void blockAuditorRoleUser() {
                 UserSessionBase session = ContextUtil.getCurrentUserSession();
@@ -1487,33 +1496,6 @@ public class RangerBizUtil {
 				if(item.startsWith(" ") || item.endsWith(" ")) {
 					list.set(i, StringUtils.trim(item));
 				}
-			}
-		}
-	}
-
-	public static boolean isBulkMode() {
-		return ContextUtil.isBulkModeContext();
-	}
-
-	public static boolean setBulkMode(boolean val) {
-		if(RangerContextHolder.getOpContext()!=null){
-			RangerContextHolder.getOpContext().setBulkModeContext(val);
-		}
-		else {
-			  RangerAdminOpContext opContext = new RangerAdminOpContext();
-			  opContext.setBulkModeContext(val);
-			  RangerContextHolder.setOpContext(opContext);
-		}
-		return isBulkMode();
-	}
-
-	//should be used only in bulk operation like importPolicies, policies delete.
-	public void bulkModeOnlyFlushAndClear() {
-		if (batchClearEnabled) {
-			XXDBBaseDao xXDBBaseDao = daoManager.getXXDBBase();
-			if (xXDBBaseDao != null) {
-				xXDBBaseDao.flush();
-				xXDBBaseDao.clear();
 			}
 		}
 	}

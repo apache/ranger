@@ -52,6 +52,7 @@ public class CommandLineParser
     private int concurrentClientCount = 1;
     private int iterationsCount = 1;
 
+    private boolean isDynamicReorderingDisabled = true;
     private boolean isTrieLookupPrefixDisabled = true;
 
     private boolean isLazyTriePostSetupDisabled = true;
@@ -68,7 +69,7 @@ public class CommandLineParser
         PerfTestOptions ret = null;
         if (parseArguments(args) && validateInputFiles()) {
             // Instantiate a data-object and return
-            ret = new PerfTestOptions(servicePoliciesFileURL, requestFileURLs, statCollectionFileURL, concurrentClientCount, iterationsCount, isTrieLookupPrefixDisabled, isLazyTriePostSetupDisabled, configurationFileURL);
+            ret = new PerfTestOptions(servicePoliciesFileURL, requestFileURLs, statCollectionFileURL, concurrentClientCount, iterationsCount, isDynamicReorderingDisabled, isTrieLookupPrefixDisabled, isLazyTriePostSetupDisabled, configurationFileURL);
         } else {
             showUsage();
         }
@@ -84,6 +85,7 @@ public class CommandLineParser
             -n number-of-iterations
             -p modules-to-collect-stats
             -f configuration-file-name
+            -o
             -t
             -d
 
@@ -106,6 +108,7 @@ public class CommandLineParser
         options.addOption("c", "clients", true, "Number of concurrent clients");
         options.addOption("n", "cycles", true, "Number of iterations");
         options.addOption("f", "configurations", true, "Configuration File Name");
+        options.addOption("o", "optimize", false, "Enable usage-based policy reordering");
         options.addOption("t", "trie-prefilter", false, "Enable trie-prefilter");
         options.addOption("d", "trie-lazy-setup", false, "Enable lazy trie-setup");
 
@@ -135,6 +138,9 @@ public class CommandLineParser
             if (iterationsOptionValue != null) {
                 iterationsCount = Integer.parseInt(iterationsOptionValue);
             }
+            if (commandLine.hasOption("o")) {
+                isDynamicReorderingDisabled = false;
+            }
             if (commandLine.hasOption("t")) {
                 isTrieLookupPrefixDisabled = false;
             }
@@ -148,6 +154,7 @@ public class CommandLineParser
             if (LOG.isDebugEnabled()) {
                 LOG.debug("servicePoliciesFileName=" + servicePoliciesFileName + ", requestFileName=" + Arrays.toString(requestFileNames));
                 LOG.debug("concurrentClientCount=" + concurrentClientCount + ", iterationsCount=" + iterationsCount);
+                LOG.debug("isDynamicReorderingDisabled=" + isDynamicReorderingDisabled);
                 LOG.debug("isTrieLookupPrefixDisabled=" + isTrieLookupPrefixDisabled);
                 LOG.debug("isLazyTriePostSetupDisabled=" + isLazyTriePostSetupDisabled);
                 LOG.debug("configurationFileName=" + configurationFileName);

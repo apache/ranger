@@ -20,7 +20,6 @@
 package org.apache.ranger.entity;
 
 import java.util.Date;
-import java.util.Objects;
 
 import javax.persistence.Cacheable;
 import javax.persistence.Entity;
@@ -189,12 +188,45 @@ public class XXPolicyChangeLog implements java.io.Serializable {
             return false;
         if (getClass() != obj.getClass())
             return false;
-
         XXPolicyChangeLog other = (XXPolicyChangeLog) obj;
+        if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+            return false;
+        }
+        if ((this.serviceId == null && other.serviceId != null) || (this.serviceId != null && !this.serviceId.equals(other.serviceId))) {
+            return false;
+        }
+        if ((this.policyVersion == null && other.policyVersion != null) || (this.policyVersion != null && !this.policyVersion.equals(other.policyVersion))) {
+            return false;
+        }
+        if ((this.createTime == null && other.createTime != null) || (this.createTime != null && !this.createTime.equals(other.createTime))) {
+            return false;
+        }
+        if ((this.changeType == null && other.changeType != null) || (this.changeType != null && !this.changeType.equals(other.changeType))) {
+            return false;
+        }
+		if ((this.serviceType == null && other.serviceType != null) || (this.serviceType != null && !this.serviceType.equals(other.serviceType))) {
+			return false;
+		}
+		if ((this.policyType == null && other.policyType != null) || (this.policyType != null && !this.policyType.equals(other.policyType))) {
+			return false;
+		}
+        if ((this.zoneName == null && other.zoneName != null) || (this.zoneName != null && !this.zoneName.equals(other.zoneName))) {
+            return false;
+        }
+		if ((this.policyId == null && other.policyId != null) || (this.policyId != null && !this.policyId.equals(other.policyId))) {
+			return false;
+		}
+		return true;
+    }
 
-        return Objects.equals(this.id, other.id) && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.policyVersion, other.policyVersion)
-                && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceType, other.serviceType)
-                && Objects.equals(this.policyType, other.policyType) && Objects.equals(this.zoneName, other.zoneName) && Objects.equals(this.policyId, other.policyId);
+    public static boolean equals(Object object1, Object object2) {
+        if (object1 == object2) {
+            return true;
+        }
+        if ((object1 == null) || (object2 == null)) {
+            return false;
+        }
+        return object1.equals(object2);
     }
 
 }

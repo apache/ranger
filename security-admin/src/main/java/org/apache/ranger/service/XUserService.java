@@ -210,6 +210,8 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	public VXUser populateViewBean(XXUser xUser) {
 		VXUser vObj = super.populateViewBean(xUser);
 		vObj.setIsVisible(xUser.getIsVisible());
+		String userName = vObj.getName();
+		populateUserAttributes(userName, vObj);
 		populateGroupList(xUser.getId(), vObj);
 		return vObj;
 	}

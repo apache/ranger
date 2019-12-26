@@ -20,22 +20,11 @@
 package org.apache.ranger.server.tomcat;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
-import java.security.KeyManagementException;
-import java.security.KeyStore;
-import java.security.KeyStoreException;
-import java.security.NoSuchAlgorithmException;
 import java.security.PrivilegedAction;
-import java.security.SecureRandom;
-import java.security.UnrecoverableKeyException;
-import java.security.cert.CertificateException;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.List;
 
@@ -44,20 +33,12 @@ import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Connector;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.AccessLogValve;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.security.alias.JavaKeyStoreProvider;
-import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.ranger.plugin.util.XMLUtils;
-
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
 import javax.security.auth.Subject;
 
 public class EmbeddedServer {
@@ -83,11 +64,6 @@ public class EmbeddedServer {
 	private static final String ADMIN_SERVER_NAME = "rangeradmin";
 	
 	private Properties serverConfigProperties = new Properties();
-	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = "jks";
-	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = "jks";
-	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLS";
-	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE = KeyManagerFactory.getDefaultAlgorithm();
-	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE = TrustManagerFactory.getDefaultAlgorithm();
 
 	public static void main(String[] args) {
 		new EmbeddedServer(args).start();
@@ -107,10 +83,6 @@ public class EmbeddedServer {
 	public static String DEFAULT_SHUTDOWN_COMMAND = "SHUTDOWN";
 	
 	public void start() {
-		SSLContext sslContext = getSSLContext();
-		if (sslContext != null) {
-			SSLContext.setDefault(sslContext);
-		}
 		final Tomcat server = new Tomcat();
 
 		String logDir =  null;
@@ -476,162 +448,4 @@ public class EmbeddedServer {
 		}
 		return credential;
 	}
-
-	private SSLContext getSSLContext() {
-		KeyManager[] kmList = getKeyManagers();
-		TrustManager[] tmList = getTrustManagers();
-		SSLContext sslContext = null;
-		if (tmList != null) {
-			try {
-				sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
-				sslContext.init(kmList, tmList, new SecureRandom());
-			} catch (NoSuchAlgorithmException e) {
-				LOG.severe("SSL algorithm is not available in the environment. Reason: " + e.toString());
-			} catch (KeyManagementException e) {
-				LOG.severe("Unable to initials the SSLContext. Reason: " + e.toString());
-			}
-		}
-		return sslContext;
-	}
-
-	private KeyManager[] getKeyManagers() {
-		KeyManager[] kmList = null;
-		String keyStoreFile = getConfig("ranger.keystore.file");
-		String keyStoreAlias = getConfig("ranger.keystore.alias", "keyStoreCredentialAlias");
-		if (StringUtils.isBlank(keyStoreFile)) {
-			keyStoreFile = getKeystoreFile();
-			keyStoreAlias = getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
-		}
-		String credentialProviderPath = getConfig("ranger.credential.provider.path");
-		String keyStoreFilepwd = getCredential(credentialProviderPath, keyStoreAlias);
-
-		if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
-			InputStream in = null;
-
-			try {
-				in = getFileInputStream(keyStoreFile);
-
-				if (in != null) {
-					KeyStore keyStore = KeyStore.getInstance(RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
-
-					keyStore.load(in, keyStoreFilepwd.toCharArray());
-
-					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
-
-					keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
-
-					kmList = keyManagerFactory.getKeyManagers();
-				} else {
-					LOG.severe("Unable to obtain keystore from file [" + keyStoreFile + "]");
-				}
-			} catch (KeyStoreException e) {
-				LOG.log(Level.SEVERE, "Unable to obtain from KeyStore :" + e.getMessage(), e);
-			} catch (NoSuchAlgorithmException e) {
-				LOG.log(Level.SEVERE, "SSL algorithm is NOT available in the environment", e);
-			} catch (CertificateException e) {
-				LOG.log(Level.SEVERE, "Unable to obtain the requested certification ", e);
-			} catch (FileNotFoundException e) {
-				LOG.log(Level.SEVERE, "Unable to find the necessary SSL Keystore Files", e);
-			} catch (IOException e) {
-				LOG.log(Level.SEVERE, "Unable to read the necessary SSL Keystore Files", e);
-			} catch (UnrecoverableKeyException e) {
-				LOG.log(Level.SEVERE, "Unable to recover the key from keystore", e);
-			} finally {
-				close(in, keyStoreFile);
-			}
-		} else {
-			if (StringUtils.isBlank(keyStoreFile)) {
-				LOG.warning("Config 'ranger.keystore.file' or 'ranger.service.https.attrib.keystore.file' is not found or contains blank value");
-			} else if (StringUtils.isBlank(keyStoreAlias)) {
-				LOG.warning("Config 'ranger.keystore.alias' or 'ranger.service.https.attrib.keystore.credential.alias' is not found or contains blank value");
-			} else if (StringUtils.isBlank(credentialProviderPath)) {
-				LOG.warning("Config 'ranger.credential.provider.path' is not found or contains blank value");
-			} else if (StringUtils.isBlank(keyStoreFilepwd)) {
-				LOG.warning("Unable to read credential from credential store file ["+ credentialProviderPath + "] for given alias:"+keyStoreAlias);
-			}
-		}
-		return kmList;
-	}
-
-	private TrustManager[] getTrustManagers() {
-		TrustManager[] tmList = null;
-		String truststoreFile = getConfig("ranger.truststore.file");
-		String truststoreAlias = getConfig("ranger.truststore.alias");
-		String credentialProviderPath = getConfig("ranger.credential.provider.path");
-		String trustStoreFilepwd = getCredential(credentialProviderPath, truststoreAlias);
-
-		if (StringUtils.isNotEmpty(truststoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
-			InputStream in = null;
-
-			try {
-				in = getFileInputStream(truststoreFile);
-
-				if (in != null) {
-					KeyStore trustStore = KeyStore.getInstance(RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
-
-					trustStore.load(in, trustStoreFilepwd.toCharArray());
-
-					TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(RANGER_SSL_TRUSTMANAGER_ALGO_TYPE);
-
-					trustManagerFactory.init(trustStore);
-
-					tmList = trustManagerFactory.getTrustManagers();
-				} else {
-					LOG.log(Level.SEVERE, "Unable to obtain truststore from file [" + truststoreFile + "]");
-				}
-			} catch (KeyStoreException e) {
-				LOG.log(Level.SEVERE, "Unable to obtain from KeyStore", e);
-			} catch (NoSuchAlgorithmException e) {
-				LOG.log(Level.SEVERE, "SSL algorithm is NOT available in the environment :" + e.getMessage(), e);
-			} catch (CertificateException e) {
-				LOG.log(Level.SEVERE, "Unable to obtain the requested certification :" + e.getMessage(), e);
-			} catch (FileNotFoundException e) {
-				LOG.log(Level.SEVERE, "Unable to find the necessary SSL TrustStore File:" + truststoreFile, e);
-			} catch (IOException e) {
-				LOG.log(Level.SEVERE, "Unable to read the necessary SSL TrustStore Files :" + truststoreFile, e);
-			} finally {
-				close(in, truststoreFile);
-			}
-		} else {
-			if (StringUtils.isBlank(truststoreFile)) {
-				LOG.warning("Config 'ranger.truststore.file' is not found or contains blank value!");
-			} else if (StringUtils.isBlank(truststoreAlias)) {
-				LOG.warning("Config 'ranger.truststore.alias' is not found or contains blank value!");
-			} else if (StringUtils.isBlank(credentialProviderPath)) {
-				LOG.warning("Config 'ranger.credential.provider.path' is not found or contains blank value!");
-			} else if (StringUtils.isBlank(trustStoreFilepwd)) {
-				LOG.warning("Unable to read credential from credential store file ["+ credentialProviderPath + "] for given alias:"+truststoreAlias);
-			}
-		}
-
-		return tmList;
-	}
-
-	private String getCredential(String url, String alias) {
-		return RangerCredentialProvider.getInstance().getCredentialString(url, alias);
-	}
-
-	private InputStream getFileInputStream(String fileName) throws IOException {
-		InputStream in = null;
-		if (StringUtils.isNotEmpty(fileName)) {
-			File f = new File(fileName);
-			if (f.exists()) {
-				in = new FileInputStream(f);
-			} else {
-				in = ClassLoader.getSystemResourceAsStream(fileName);
-			}
-		}
-		return in;
-	}
-
-	private void close(InputStream str, String filename) {
-		if (str != null) {
-			try {
-				str.close();
-			} catch (IOException excp) {
-				LOG.log(Level.SEVERE, "Error while closing file: [" + filename + "]", excp);
-			}
-		}
-	}
-
 }

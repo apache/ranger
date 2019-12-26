@@ -68,13 +68,6 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 	@Column(name="tag_update_time"   )
 	protected Date tagUpdateTime = DateUtil.getUTCDate();
 
-	@Column(name = "role_version")
-	protected Long roleVersion;
-
-	@Temporal(TemporalType.TIMESTAMP)
-	@Column(name="role_update_time"   )
-	protected Date roleUpdateTime = DateUtil.getUTCDate();
-
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -137,21 +130,6 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		return this.tagUpdateTime;
 	}
 
-	public void setRoleVersion(Long roleVersion) {
-		this.roleVersion = roleVersion;
-	}
-
-	public Long getRoleVersion() {
-		return this.roleVersion;
-	}
-
-	public void setRoleUpdateTime( Date updateTime ) {
-		this.roleUpdateTime = updateTime;
-	}
-
-	public Date getRoleUpdateTime( ) {
-		return this.roleUpdateTime;
-	}
 
 	/**
 	 * This return the bean content in string format
@@ -166,8 +144,6 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		str += "policyUpdateTime={" + policyUpdateTime + "} ";
 		str += "tagVersion={" + tagVersion + "} ";
 		str += "tagUpdateTime={" + tagUpdateTime + "} ";
-		str += "setRoleVersion={" + roleVersion + "}" ;
-		str += "setRoleUpdateTime={" + roleUpdateTime + "}" ;
 		str += "}";
 		return str;
 	}
@@ -203,12 +179,6 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 			return false;
 		}
 		if ((this.tagUpdateTime == null && other.tagUpdateTime != null) || (this.tagUpdateTime != null && !this.tagUpdateTime.equals(other.tagUpdateTime))) {
-			return false;
-		}
-		if ((this.roleVersion == null && other.roleVersion != null) || (this.roleVersion != null && !this.roleVersion.equals(other.roleVersion))) {
-			return false;
-		}
-		if ((this.roleUpdateTime == null && other.roleUpdateTime != null) || (this.roleUpdateTime != null && !this.roleUpdateTime.equals(other.roleUpdateTime))) {
 			return false;
 		}
 		return true;

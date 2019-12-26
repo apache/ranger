@@ -63,7 +63,7 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/service/:serviceId/policies/:id/edit"			: "RangerPolicyEditAction",
 
 			/************PERMISSIONS VIEWS *****************************************/
-            "!/permissions/:models"					: "modulePermissionsAction",
+            "!/permissions"					: "modulePermissionsAction",
             "!/permissions/:id/edit"        : "modulePermissionEditAction",
 			
 			/************ KMS ***************************/

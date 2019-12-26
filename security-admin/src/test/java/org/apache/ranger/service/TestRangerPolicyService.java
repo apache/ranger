@@ -123,7 +123,6 @@ public class TestRangerPolicyService {
 		policy.setIsAuditEnabled(true);
 		policy.setPolicyItems(policyItems);
 		policy.setResources(policyResource);
-		policy.setPolicyType(0);
 
 		return policy;
 	}

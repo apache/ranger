@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -102,7 +103,7 @@ public class RangerServiceKafka extends RangerBaseService {
 
 		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
 
-		String authType = getConfig().get(RANGER_AUTH_TYPE,"simple");
+		String authType = RangerConfiguration.getInstance().get(RANGER_AUTH_TYPE,"simple");
 
 		if (StringUtils.equalsIgnoreCase(authType, KERBEROS_TYPE)) {
 			if (LOG.isDebugEnabled()) {

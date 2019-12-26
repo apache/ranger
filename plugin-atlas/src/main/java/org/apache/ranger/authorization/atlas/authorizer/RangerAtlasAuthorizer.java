@@ -72,8 +72,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                     plugin = new RangerAtlasPlugin();
 
                     plugin.init();
-
-                    plugin.setResultProcessor(new RangerDefaultAuditHandler(plugin.getConfig()));
+                    plugin.setResultProcessor(new RangerDefaultAuditHandler());
 
                     atlasPlugin = plugin;
                 }
@@ -112,9 +111,6 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setAction(action);
-            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
-            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
-
 
             ret = checkAccess(rangerRequest);
         } finally {
@@ -187,8 +183,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setAction(action);
-            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
-            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
 
             ret = checkAccess(rangerRequest);
         } finally {
@@ -233,8 +228,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setAction(action);
-            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
-            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
 
             rangerResource.setValue(RESOURCE_RELATIONSHIP_TYPE, relationShipType);
 
@@ -349,8 +343,6 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setResource(rangerResource);
-            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
-            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
 
             if (StringUtils.isNotEmpty(classification)) {
                 rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classification));
@@ -425,8 +417,6 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             final AtlasEntityAccessRequest entityAccessRequest = new AtlasEntityAccessRequest(request.getTypeRegistry(), AtlasPrivilege.ENTITY_READ, entity, request.getUser(), request.getUserGroups());
 
             entityAccessRequest.setClientIPAddress(request.getClientIPAddress());
-            entityAccessRequest.setForwardedAddresses(request.getForwardedAddresses());
-            entityAccessRequest.setRemoteIPAddress(request.getRemoteIPAddress());
 
             if (!isAccessAllowed(entityAccessRequest, null)) {
                 scrubEntityHeader(entity);

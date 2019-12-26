@@ -41,9 +41,9 @@ import java.io.IOException;
 @Provider
 @InterfaceAudience.Private
 public class KMSExceptionsProvider implements ExceptionMapper<Exception> {
-  private static Logger LOG =
+  private static final Logger LOG =
       LoggerFactory.getLogger(KMSExceptionsProvider.class);
-  private final static Logger EXCEPTION_LOG = KMS.LOG;
+
   private static final String ENTER = System.getProperty("line.separator");
 
   protected Response createResponse(Response.Status status, Throwable ex) {
@@ -100,9 +100,6 @@ public class KMSExceptionsProvider implements ExceptionMapper<Exception> {
           KMSMDCFilter.getMethod(),
           KMSMDCFilter.getURL(), getOneLineMessage(exception));
     }
-    EXCEPTION_LOG.warn("User {} request {} {} caused exception.",
-      KMSMDCFilter.getUgi(), KMSMDCFilter.getMethod(),
-      KMSMDCFilter.getURL(), exception);
     return createResponse(status, throwable);
   }
 

@@ -34,7 +34,6 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -92,14 +91,17 @@ public class TestPolicyACLs {
 
 		for(PolicyACLsTests.TestCase testCase : testCases.testCases) {
 			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-			RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig("hive", null, "test-policy-acls", "cl1", "on-prem", policyEngineOptions));
-			RangerPolicyEngine        policyEngine        = new RangerPolicyEngineImpl(testCase.servicePolicies, pluginContext, null);
+			RangerPluginContext pluginContext = new RangerPluginContext("hive");
+			pluginContext.setClusterName("cl1");
+			pluginContext.setClusterType("on-prem");
+			RangerPolicyEngine policyEngine = new RangerPolicyEngineImpl("test-policy-acls", testCase.servicePolicies, policyEngineOptions, pluginContext);
 
 			for(PolicyACLsTests.TestCase.OneTest oneTest : testCase.tests) {
 				if(oneTest == null) {
 					continue;
 				}
 				RangerAccessRequestImpl request = new RangerAccessRequestImpl(oneTest.resource, RangerPolicyEngine.ANY_ACCESS, null, null);
+				policyEngine.preProcess(request);
 				RangerResourceACLs acls = policyEngine.getResourceACLs(request);
 
 				boolean userACLsMatched = true, groupACLsMatched = true, roleACLsMatched = true;

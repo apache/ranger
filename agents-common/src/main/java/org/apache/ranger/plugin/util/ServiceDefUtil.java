@@ -22,30 +22,26 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.policyengine.RangerPluginContext;
-import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceDefUtil {
 
-    public static boolean getOption_enableDenyAndExceptionsInPolicies(RangerServiceDef serviceDef, RangerPluginContext pluginContext) {
+    public static boolean getOption_enableDenyAndExceptionsInPolicies(RangerServiceDef serviceDef) {
         boolean ret = false;
 
         if(serviceDef != null) {
-            Configuration config = pluginContext != null ? pluginContext.getConfig() : null;
-            boolean enableDenyAndExceptionsInPoliciesHiddenOption = config == null || config.getBoolean("ranger.servicedef.enableDenyAndExceptionsInPolicies", true);
+            boolean enableDenyAndExceptionsInPoliciesHiddenOption = RangerConfiguration.getInstance().getBoolean("ranger.servicedef.enableDenyAndExceptionsInPolicies", true);
             boolean defaultValue = enableDenyAndExceptionsInPoliciesHiddenOption || StringUtils.equalsIgnoreCase(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
             ret = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES, defaultValue);
@@ -130,24 +126,6 @@ public class ServiceDefUtil {
         return ret;
     }
 
-    public static boolean isAncestorOf(RangerServiceDef serviceDef, RangerResourceDef ancestor, RangerResourceDef descendant) {
-
-        boolean ret = false;
-
-        if (ancestor != null && descendant != null) {
-            final String ancestorName = ancestor.getName();
-
-            for (RangerResourceDef node = descendant; node != null; node = ServiceDefUtil.getResourceDef(serviceDef, node.getParent())) {
-                if (StringUtils.equalsIgnoreCase(ancestorName, node.getParent())) {
-                    ret = true;
-                    break;
-                }
-            }
-        }
-
-        return ret;
-    }
-
     public static boolean isEmpty(RangerPolicy.RangerPolicyResource policyResource) {
         boolean ret = true;
         if (policyResource != null) {
@@ -184,68 +162,6 @@ public class ServiceDefUtil {
         String val = getOption(options, name, null);
 
         return StringUtils.isEmpty(val) ? defaultValue : val.charAt(0);
-    }
-
-    public static RangerServiceDef normalizeAccessTypeDefs(RangerServiceDef serviceDef, final String componentType) {
-
-        if (serviceDef != null && StringUtils.isNotBlank(componentType)) {
-
-            List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs = serviceDef.getAccessTypes();
-
-            if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
-
-                String prefix = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
-
-                List<RangerServiceDef.RangerAccessTypeDef> unneededAccessTypeDefs = null;
-
-                for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
-
-                    String accessType = accessTypeDef.getName();
-
-                    if (StringUtils.startsWith(accessType, prefix)) {
-
-                        String newAccessType = StringUtils.removeStart(accessType, prefix);
-
-                        accessTypeDef.setName(newAccessType);
-
-                        Collection<String> impliedGrants = accessTypeDef.getImpliedGrants();
-
-                        if (CollectionUtils.isNotEmpty(impliedGrants)) {
-
-                            Collection<String> newImpliedGrants = null;
-
-                            for (String impliedGrant : impliedGrants) {
-
-                                if (StringUtils.startsWith(impliedGrant, prefix)) {
-
-                                    String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
-
-                                    if (newImpliedGrants == null) {
-                                        newImpliedGrants = new ArrayList<>();
-                                    }
-
-                                    newImpliedGrants.add(newImpliedGrant);
-                                }
-                            }
-                            accessTypeDef.setImpliedGrants(newImpliedGrants);
-
-                        }
-                    } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
-                        if(unneededAccessTypeDefs == null) {
-                            unneededAccessTypeDefs = new ArrayList<>();
-                        }
-
-                        unneededAccessTypeDefs.add(accessTypeDef);
-                    }
-                }
-
-                if(unneededAccessTypeDefs != null) {
-                    accessTypeDefs.removeAll(unneededAccessTypeDefs);
-                }
-            }
-        }
-
-        return serviceDef;
     }
 
     private static void normalizeDataMaskDef(RangerServiceDef serviceDef) {
@@ -395,17 +311,7 @@ public class ServiceDefUtil {
         if(CollectionUtils.isNotEmpty(delta.getAccessTypeRestrictions()))
             ret.setAccessTypeRestrictions(delta.getAccessTypeRestrictions());
 
-        boolean copyLeafValue = false;
-        if (ret.getIsValidLeaf() != null) {
-            if (!ret.getIsValidLeaf().equals(delta.getIsValidLeaf())) {
-                copyLeafValue = true;
-            }
-        } else {
-            if (delta.getIsValidLeaf() != null) {
-                copyLeafValue = true;
-            }
-        }
-        if (copyLeafValue)
+        if (delta.getIsValidLeaf() != null)
             ret.setIsValidLeaf(delta.getIsValidLeaf());
 
         return ret;

@@ -1,7 +1,6 @@
 {
   "id":100,
   "name": "tag",
-  "displayName": "tag",
   "implClass": "org.apache.ranger.services.tag.RangerServiceTag",
   "label": "TAG",
   "description": "TAG Service Definition",

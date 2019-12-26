@@ -31,21 +31,20 @@ import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 import java.util.Map;
-import java.util.List;
 
 @Provider
 @Consumes(MediaType.APPLICATION_JSON)
 @InterfaceAudience.Private
-public class KMSJSONReader implements MessageBodyReader<Object> {
+public class KMSJSONReader implements MessageBodyReader<Map> {
 
   @Override
   public boolean isReadable(Class<?> type, Type genericType,
       Annotation[] annotations, MediaType mediaType) {
-    return type.isAssignableFrom(Map.class) || type.isAssignableFrom(List.class);
+    return type.isAssignableFrom(Map.class);
   }
 
   @Override
-  public Object readFrom(Class<Object> type, Type genericType,
+  public Map readFrom(Class<Map> type, Type genericType,
       Annotation[] annotations, MediaType mediaType,
       MultivaluedMap<String, String> httpHeaders, InputStream entityStream)
       throws IOException, WebApplicationException {

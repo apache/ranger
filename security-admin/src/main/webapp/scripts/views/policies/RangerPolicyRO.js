@@ -262,8 +262,7 @@ define(function(require) {
 			var $el = $(e.currentTarget);
 			if($el.hasClass('active')){
 				var curr = this.policy.get('version');
-                                var nextVal = this.policyVersionList[(_.indexOf(this.policyVersionList, curr)+1) % this.policyVersionList.length];
-                                this.getPolicyByVersion(nextVal, e);
+				this.getPolicyByVersion(++curr, e);
 			}
 		},
 
@@ -271,8 +270,7 @@ define(function(require) {
 			var $el = $(e.currentTarget);
 			if($el.hasClass('active')){
 				var curr = this.policy.get('version');
-                                var previousVal = this.policyVersionList[(_.indexOf(this.policyVersionList, curr)-1) % this.policyVersionList.length];
-                                this.getPolicyByVersion(previousVal, e);
+				this.getPolicyByVersion(--curr, e);
 			}
 		},
 
@@ -280,7 +278,7 @@ define(function(require) {
 			//to support old policy log after updating that policy.
 			this.policy.set('serviceType',undefined);
 			if(this.policy.has('conditions')){
-				this.policy.unset('conditions', { silent: true });
+				this.policy.set('conditions', '');
 			}
 			this.policy.fetchByVersion(ver, {
 				cache : false,
@@ -298,7 +296,7 @@ define(function(require) {
 			}else{
 				prevEl.removeClass('active');
 			}
-                        var policyVerIndexAt = this.policyVersionList.indexOf(this.policy.get('version'));
+			var policyVerIndexAt = this.policyVersionList.indexOf(this.policy.get('version').toString());
 			if(!_.isUndefined(this.policyVersionList[++policyVerIndexAt])){
 				nextEl.addClass('active');
 				reverEl.css('display','');

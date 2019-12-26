@@ -38,10 +38,8 @@ public class KMSConfiguration {
   public static final String CONFIG_PREFIX = "hadoop.kms.";
 
   public static final String KEY_ACL_PREFIX = "key.acl.";
-  public static final String KEY_ACL_PREFIX_REGEX = "^key\\.acl\\..+";
   public static final String DEFAULT_KEY_ACL_PREFIX = "default.key.acl.";
-  public static final String WHITELIST_KEY_ACL_PREFIX = "whitelist.key.acl.";
-  public static final String HTTP_ADMINS_KEY = "hadoop.kms.http.administrators";
+
   // Property to set the backing KeyProvider
   public static final String KEY_PROVIDER_URI = CONFIG_PREFIX +
       "key.provider.uri";
@@ -58,9 +56,7 @@ public class KMSConfiguration {
   // Delay for Audit logs that need aggregation
   public static final String KMS_AUDIT_AGGREGATION_WINDOW = CONFIG_PREFIX +
       "audit.aggregation.window.ms";
-  //KMS Audit logger classes to use
-  public static final String KMS_AUDIT_LOGGER_KEY = CONFIG_PREFIX +
-     "audit.logger";
+
   //for authorizer
   public static final String KMS_SECURITY_AUTHORIZER = CONFIG_PREFIX + "security.authorization.manager";
 

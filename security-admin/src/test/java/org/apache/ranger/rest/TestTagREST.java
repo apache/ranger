@@ -37,7 +37,6 @@ import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.store.TagValidator;
-import org.apache.ranger.plugin.util.RangerPluginCapability;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.junit.Assert;
@@ -92,12 +91,6 @@ public class TestTagREST {
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
-
-	private static String capabilityVector;
-
-	static {
-		capabilityVector = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
-	}
 
 	@Test
 	public void test1createTagDef() {
@@ -1413,16 +1406,16 @@ public class TestTagREST {
 		ServiceTags oldServiceTag = null;
 		
 		try {
-			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, true)).thenReturn(oldServiceTag);
+			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(),Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
-		tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+		tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		
 		try {
-			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, true);
+			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion);
 		} catch (Exception e) {
 		}
 		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyInt(),Mockito.anyString(), Mockito.anyBoolean());
@@ -1435,15 +1428,15 @@ public class TestTagREST {
 		oldServiceTag.setTagVersion(5L);
 		
 		try {
-			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, true)).thenReturn(oldServiceTag);
+			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
-		ServiceTags serviceTags = tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+		ServiceTags serviceTags = tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertEquals(serviceTags.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(serviceTags.getTagVersion(), oldServiceTag.getTagVersion());
 		
 		try {
-			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, true);
+			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion);
 		} catch (Exception e) {
 		}
 	}
@@ -1486,11 +1479,11 @@ public class TestTagREST {
 		}
 		
 		try {
-			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, true)).thenReturn(oldServiceTag);
+			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
 		
-		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertNotNull(result.getServiceName());
 		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1506,7 +1499,7 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 		try {
-			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, true);
+			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion);
 		} catch (Exception e) {
 		}
 	}
@@ -1548,11 +1541,11 @@ public class TestTagREST {
 		}
 		
 		try {
-			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, true)).thenReturn(oldServiceTag);
+			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
 		
-		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertNotNull(result.getServiceName());
 		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1568,7 +1561,7 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 		try {
-			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, true);
+			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion);
 		} catch (Exception e) {
 		}
 	}
@@ -1613,11 +1606,11 @@ public class TestTagREST {
 		
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
-			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, true)).thenReturn(oldServiceTag);
+			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
 		
-		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertNotNull(result.getServiceName());
 		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1634,7 +1627,7 @@ public class TestTagREST {
 		}
 		Mockito.verify(bizUtil).isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
 		try {
-			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, true);
+			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion);
 		} catch (Exception e) {
 		}
 	}
@@ -1678,11 +1671,11 @@ public class TestTagREST {
 		
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
-			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, true)).thenReturn(oldServiceTag);
+			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
 		
-		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+		ServiceTags result = tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		Assert.assertNotNull(result.getServiceName());
 		Assert.assertEquals(result.getServiceName(), oldServiceTag.getServiceName());
 		Assert.assertEquals(result.getTagVersion(), oldServiceTag.getTagVersion());
@@ -1699,7 +1692,7 @@ public class TestTagREST {
 		}
 		Mockito.verify(bizUtil).isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
 		try {
-			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, true);
+			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion);
 		} catch (Exception e) {
 		}
 	}
@@ -1745,7 +1738,7 @@ public class TestTagREST {
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
-		tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+		tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		
 		Mockito.verify(bizUtil).isAdmin();
 		Mockito.verify(bizUtil).isKeyAdmin();
@@ -1798,13 +1791,13 @@ public class TestTagREST {
 		
 		Mockito.when(bizUtil.isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download)).thenReturn(isAllowed);
 		try {
-			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, true)).thenReturn(oldServiceTag);
+			Mockito.when(tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion)).thenReturn(oldServiceTag);
 		} catch (Exception e) {
 		}
 		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		
-		tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, false, capabilityVector, null);
+		tagREST.getSecureServiceTagsIfUpdated(serviceName, lastKnownVersion, 0L, pluginId, null);
 		
 		Mockito.verify(bizUtil).isAdmin();
 		Mockito.verify(bizUtil).isKeyAdmin();
@@ -1818,7 +1811,7 @@ public class TestTagREST {
 		}
 		Mockito.verify(bizUtil).isUserAllowed(rangerService, Allowed_User_List_For_Tag_Download);
 		try {
-			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, false);
+			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion);
 		} catch (Exception e) {
 		}
 		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean());

@@ -26,8 +26,6 @@ public class RangerContextHolder {
 
     private static final ThreadLocal<RangerSecurityContext> securityContextThreadLocal = new ThreadLocal<RangerSecurityContext>();
 
-    private static final ThreadLocal<RangerAdminOpContext> operationContextThreadLocal = new ThreadLocal<RangerAdminOpContext>();
-
     private RangerContextHolder() {
 
     }
@@ -44,15 +42,4 @@ public class RangerContextHolder {
 	securityContextThreadLocal.remove();
     }
 
-	public static RangerAdminOpContext getOpContext() {
-		return operationContextThreadLocal.get();
-	}
-
-	public static void setOpContext(RangerAdminOpContext context) {
-		operationContextThreadLocal.set(context);
-	}
-
-	public static void resetOpContext() {
-		operationContextThreadLocal.remove();
-	}
 }

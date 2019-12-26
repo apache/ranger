@@ -234,15 +234,15 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     }
 
     @Override
-    protected boolean isAccessAllowed(String user, Set<String> userGroups, Set<String> roles, String owner, String accessType) {
+    protected boolean isAccessAllowed(String user, Set<String> userGroups, Set<String> roles, String accessType) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerOptimizedPolicyEvaluator.isAccessAllowed(" + user + ", " + userGroups + ", " + roles + ", " + owner + ", " + accessType + ")");
+            LOG.debug("==> RangerOptimizedPolicyEvaluator.isAccessAllowed(" + user + ", " + userGroups + ", " + roles + ", " + accessType + ")");
         }
 
-        boolean ret = hasMatchablePolicyItem(user, userGroups, roles, owner, accessType) && super.isAccessAllowed(user, userGroups, roles, owner, accessType);
+        boolean ret = hasMatchablePolicyItem(user, userGroups, roles, accessType) && super.isAccessAllowed(user, userGroups, roles, accessType);
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerOptimizedPolicyEvaluator.isAccessAllowed(" + user + ", " + userGroups + ", " + roles + ", " + owner + ", " + accessType + "): " + ret);
+            LOG.debug("<== RangerOptimizedPolicyEvaluator.isAccessAllowed(" + user + ", " + userGroups + ", " + roles + ", " + accessType + "): " + ret);
         }
 
         return ret;
@@ -281,7 +281,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
         return ret;
     }
 
-    private boolean hasMatchablePolicyItem(String user, Set<String> userGroups, Set<String> rolesFromContext, String owner, String accessType) {
+    private boolean hasMatchablePolicyItem(String user, Set<String> userGroups, Set<String> rolesFromContext, String accessType) {
         boolean ret = false;
 
         boolean hasRole = false;
@@ -291,7 +291,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
             }
         }
 
-        if (hasPublicGroup || hasCurrentUser || users.contains(user) || CollectionUtils.containsAny(groups, userGroups) || hasRole || (hasResourceOwner && StringUtils.equals(user, owner))) {
+        if (hasPublicGroup || hasCurrentUser || users.contains(user) || CollectionUtils.containsAny(groups, userGroups) || hasRole) {
             boolean isAdminAccess = StringUtils.equals(accessType, RangerPolicyEngine.ADMIN_ACCESS);
 
             if(isAdminAccess) {

@@ -1,7 +1,6 @@
 {
         "id": 15,
 	"name": "atlas",
-	"displayName": "atlas",
 	"implClass": "org.apache.ranger.services.atlas.RangerServiceAtlas",
 	"label": "Atlas Metadata Server",
 	"description": "Atlas Metadata Server",

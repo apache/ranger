@@ -45,8 +45,9 @@ import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 public class RangerTagDBRetriever {
-	private static final Log LOG = LogFactory.getLog(RangerTagDBRetriever.class);
-	private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerTagDBRetriever");
+	static final Log LOG = LogFactory.getLog(RangerTagDBRetriever.class);
+	static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerTagDBRetriever");
+	public static final String OPTION_RANGER_FILTER_TAGS_FOR_SERVICE_PLUGIN = "ranger.filter.tags.for.service.plugin";
 
 	public static final Type subsumedDataType = new TypeToken<List<RangerTagDef.RangerTagAttributeDef>>() {}.getType();
 
@@ -79,7 +80,7 @@ public class RangerTagDBRetriever {
 			RangerPerfTracer perf = null;
 
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBRetriever.RangerTagDBRetriever(serviceName=" + xService.getName() + ")");
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerTagDBReceiver.getTags(serviceName=" + xService.getName());
 			}
 
 			if (txTemplate == null) {

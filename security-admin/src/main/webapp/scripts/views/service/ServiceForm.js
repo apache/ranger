@@ -82,7 +82,7 @@ define(function(require){
 		* Override here ONLY if special case!!
 		*/
 
-                fields: ['name', 'displayName', 'description', 'isEnabled', 'type','configs', '_vPassword'],
+		fields: ['name', 'description', 'isEnabled', 'type','configs', '_vPassword'],
 
 		schema : function(){
 			var attrs = _.pick(_.result(this.rangerServiceDefModel,'schemaBase'), this.getSerivceBaseFieldNames());
@@ -225,7 +225,7 @@ define(function(require){
 			}
 		},
 		getSerivceBaseFieldNames : function(){
-                         var fields = ['name', 'displayName', 'description', 'isEnabled','tagService']
+			 var fields = ['name', 'description', 'isEnabled','tagService']
 			 return this.rangerServiceDefModel.get('name') == XAEnums.ServiceType.SERVICE_TAG.label ? fields.slice(0,fields.indexOf("tagService")) : fields;
 		}
 	});

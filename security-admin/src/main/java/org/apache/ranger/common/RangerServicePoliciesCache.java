@@ -21,7 +21,7 @@ package org.apache.ranger.common;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.store.ServiceStore;
 
@@ -61,9 +61,7 @@ public class RangerServicePoliciesCache {
 	}
 
 	private RangerServicePoliciesCache() {
-		RangerAdminConfig config = RangerAdminConfig.getInstance();
-
-		waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+		waitTimeInSeconds = RangerConfiguration.getInstance().getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 	}
 
 	public void dump() {
@@ -208,7 +206,7 @@ public class RangerServicePoliciesCache {
 						ServicePolicies servicePoliciesForDeltas  = this.deltaCache != null ? this.deltaCache.getServicePolicyDeltasFromVersion(lastKnownVersion) : null;
 
 						if (servicePoliciesForDeltas == null) {
-							servicePoliciesForDeltas  = serviceStore.getServicePolicyDeltas(serviceName, lastKnownVersion);
+							servicePoliciesForDeltas  = serviceStore.getOnlyServicePolicyDeltas(serviceName, lastKnownVersion);
 							isDeltaCacheReinitialized = true;
 						}
 						if (servicePoliciesForDeltas != null && servicePoliciesForDeltas.getPolicyDeltas() != null) {
@@ -270,9 +268,8 @@ public class RangerServicePoliciesCache {
 				}
 
 				final long            startTimeMs           = System.currentTimeMillis();
+				final ServicePolicies servicePoliciesFromDb = serviceStore.getServicePolicyDeltasOrPolicies(serviceName, cachedServicePoliciesVersion);
 				final long            dbLoadTime            = System.currentTimeMillis() - startTimeMs;
-
-				ServicePolicies       servicePoliciesFromDb = serviceStore.getServicePolicyDeltasOrPolicies(serviceName, cachedServicePoliciesVersion);
 
 				if (dbLoadTime > longestDbLoadTimeInMs) {
 					longestDbLoadTimeInMs = dbLoadTime;
@@ -306,35 +303,21 @@ public class RangerServicePoliciesCache {
 
 						final List<RangerPolicy> policies = servicePolicies.getPolicies() == null ? new ArrayList<>() : servicePolicies.getPolicies();
 						final List<RangerPolicy> newPolicies = RangerPolicyDeltaUtil.applyDeltas(policies, servicePoliciesFromDb.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
+						servicePolicies.setPolicies(newPolicies);
 
-						boolean isSanityCheckPassed = checkAndLoadCompleteSetOfPolicies(serviceName, serviceStore, newPolicies);
+						// Rebuild tag-policies from original tag-policies and deltas
+						if (servicePoliciesFromDb.getTagPolicies() != null) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("This service has associated tag service. Will compute tagPolicies from corresponding policy-deltas");
+							}
 
-						if (!isSanityCheckPassed) {
-							isCacheReloadedByDQEvent = true;
+							final List<RangerPolicy> tagPolicies = (servicePolicies.getTagPolicies() == null || CollectionUtils.isEmpty(servicePolicies.getTagPolicies().getPolicies())) ? new ArrayList<>() : servicePolicies.getTagPolicies().getPolicies();
+							final List<RangerPolicy> newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(tagPolicies, servicePoliciesFromDb.getPolicyDeltas(), servicePoliciesFromDb.getTagPolicies().getServiceDef().getName());
+							servicePolicies.getTagPolicies().setPolicies(newTagPolicies);
+
 						} else {
-							servicePolicies.setPolicies(newPolicies);
-
-							// Rebuild tag-policies from original tag-policies and deltas
-							if (servicePoliciesFromDb.getTagPolicies() != null) {
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("This service has associated tag service. Will compute tagPolicies from corresponding policy-deltas");
-								}
-
-								final List<RangerPolicy> tagPolicies = (servicePolicies.getTagPolicies() == null || CollectionUtils.isEmpty(servicePolicies.getTagPolicies().getPolicies())) ? new ArrayList<>() : servicePolicies.getTagPolicies().getPolicies();
-								final List<RangerPolicy> newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(tagPolicies, servicePoliciesFromDb.getPolicyDeltas(), servicePoliciesFromDb.getTagPolicies().getServiceDef().getName());
-
-								isSanityCheckPassed = checkAndLoadCompleteSetOfPolicies(serviceName, servicePoliciesFromDb.getTagPolicies().getServiceName(), serviceStore, newTagPolicies);
-
-								if (!isSanityCheckPassed) {
-									isCacheReloadedByDQEvent = true;
-								} else {
-									servicePolicies.getTagPolicies().setPolicies(newTagPolicies);
-								}
-
-							} else {
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("This service has no associated tag service");
-								}
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("This service has no associated tag service");
 							}
 						}
 					}
@@ -359,40 +342,6 @@ public class RangerServicePoliciesCache {
 				LOG.debug("<== ServicePoliciesWrapper.getLatest(serviceName=" + serviceName + ", lastKnownVersion=" + lastKnownVersion + ") : " + isCacheReloadedByDQEvent);
 			}
 			return isCacheReloadedByDQEvent;
-		}
-
-		private boolean checkAndLoadCompleteSetOfPolicies(String serviceName, ServiceStore serviceStore, List<RangerPolicy> policiesFromIncrementalComputation) {
-			boolean ret = checkCacheSanity(serviceName, serviceStore, policiesFromIncrementalComputation);
-
-			if (!ret) {
-				loadCompleteSetOfPolicies(serviceName, serviceStore);
-			}
-
-			return ret;
-		}
-
-		private boolean checkAndLoadCompleteSetOfPolicies(String serviceName, String tagServiceName, ServiceStore serviceStore, List<RangerPolicy> policiesFromIncrementalComputation) {
-			boolean ret = checkCacheSanity(tagServiceName, serviceStore, policiesFromIncrementalComputation);
-
-			if (!ret) {
-				loadCompleteSetOfPolicies(serviceName, serviceStore);
-			}
-
-			return ret;
-		}
-
-		private boolean checkCacheSanity(String serviceName, ServiceStore serviceStore, List<RangerPolicy> policiesFromIncrementalComputation) {
-			return serviceStore.getPoliciesCount(serviceName) == (CollectionUtils.isEmpty(policiesFromIncrementalComputation) ? 0 : policiesFromIncrementalComputation.size());
-		}
-
-		private void loadCompleteSetOfPolicies(String serviceName, ServiceStore serviceStore) {
-			LOG.warn("Something went wrong doing incremental policies!! Loading all policies!!");
-			try {
-				servicePolicies = serviceStore.getServicePolicies(serviceName, -1L);
-				pruneUnusedAttributes();
-			} catch (Exception ex) {
-				LOG.warn("Could not get policies from database");
-			}
 		}
 
 		private void pruneUnusedAttributes() {

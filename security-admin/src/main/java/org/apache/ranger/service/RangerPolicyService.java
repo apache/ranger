@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.RangerPolicyRetriever;
@@ -75,8 +74,6 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
         public static final String POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME="validitySchedules";
         public static final String POLICY_PRIORITY_CLASS_FIELD_NAME="policyPriority";
         public static final String POLICY_CONDITION_CLASS_FIELD_NAME="conditions";
-        public static final String POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME="isDenyAllElse";
-        public static final String POLICY_ZONE_NAME_CLASS_FIELD_NAME="zoneName";
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	String actionCreate;
@@ -102,7 +99,6 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		trxLogAttrs.put("validitySchedules", new VTrxLogAttr("validitySchedules", "Validity Schedules", false));
 		trxLogAttrs.put("policyPriority", new VTrxLogAttr("policyPriority", "Priority", false));
 		trxLogAttrs.put("zoneName", new VTrxLogAttr("zoneName", "Zone Name", false));
-                trxLogAttrs.put("isDenyAllElse", new VTrxLogAttr("isDenyAllElse", "Deny All Other Accesses", false));
 	}
 	
 	public RangerPolicyService() {
@@ -194,28 +190,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		
 		return trxLogList;
 	}
-
-	public String restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(String fieldName, RangerPolicy vObj) {
-		if (logger.isDebugEnabled()) {
-			logger.debug("==> RangerPolicyService( Field Name : (" + fieldName +") RangerPolicy : ("+ vObj + ")");
-		}
-		String ret = "";
-		if (StringUtils.isNotBlank(fieldName)
-				&& StringUtils.equalsIgnoreCase(fieldName.trim(), POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME)
-				&& vObj != null) {
-			Integer policyType = vObj.getPolicyType();
-			if (policyType == null || policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
-				return ret;
-			} else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER
-						|| policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
-					ret = null;
-			}
-		}
-		if (logger.isDebugEnabled()) {
-			logger.debug("<== RangerPolicyService( Field Name : (" + fieldName +") RangerPolicy : ("+ vObj + ") ret : ( "+ret+" )");
-		}
-		return ret;
-	}
+	
 	private XXTrxLog processFieldToCreateTrxLog(Field field, String objectName,
 			RangerPolicy vObj, XXPolicy mObj, RangerPolicy oldPolicy, int action) {
 
@@ -281,35 +256,21 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
     				value = processPriorityClassFieldNameForTrxLog(field.get(vObj));
 				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					value = processIsAuditEnabledClassFieldNameForTrxLog(field.get(vObj));
-				} else if (POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					value = processIsAuditEnabledClassFieldNameForTrxLog(field.get(vObj));
-				} else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					value = processPolicyNameForTrxLog(field.get(vObj));
-				}
-                                else {
+    			} else {
     				value = "" + field.get(vObj);
     			}
 			}
 
 			if (action == OPERATION_CREATE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
-					return null;
-				}
 				if (stringUtil.isEmpty(value)) {
 					return null;
 				}
 				xTrxLog.setNewValue(value);
 				actionString = actionCreate;
 			} else if (action == OPERATION_DELETE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
-					return null;
-				}
 				xTrxLog.setPreviousValue(value);
 				actionString = actionDelete;
 			} else if (action == OPERATION_UPDATE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
-					return null;
-				}
 				actionString = actionUpdate;
 				String oldValue = null;
 				Field[] mFields = mObj.getClass().getDeclaredFields();
@@ -399,18 +360,15 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
                                                 oldValue = processPolicyItemsForTrxLog(oldPolicy.getConditions());
                                         }
                                 }
-				else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					oldValue = oldPolicy != null ? processPolicyNameForTrxLog(oldPolicy.getZoneName()) : "";
-
-				} else if (POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					oldValue = oldPolicy != null
-							? processIsAuditEnabledClassFieldNameForTrxLog(String.valueOf(oldPolicy.getIsDenyAllElse()))
-							: "";
-				}
-				//start comparing old and new values
-				if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				if (oldValue == null || oldValue.equalsIgnoreCase(value)) {
+                                        if (field.getName().equalsIgnoreCase("zoneName") && !(stringUtil.isEmpty(value))) {
+                                                oldValue=value;
+                                        }  else {
+					return null;
+                }
+				} else if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					// Compare old and new resources
-					if (compareTwoPolicyResources(value, oldValue)) {
+					if(compareTwoPolicyResources(value, oldValue)) {
 						return null;
 					}
 				} else if (POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
@@ -440,7 +398,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					}
 				} else if (POLICY_DESCRIPTION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					//compare old and new Description
-					if(StringUtils.equals(value, oldValue)) {
+					if(org.apache.commons.lang.StringUtils.equals(value, oldValue)) {
 						return null;
 					}
 				} else if (DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
@@ -453,9 +411,13 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if(compareTwoRowFilterPolicyItemList(value, oldValue)) {
 						return null;
 					}
-				}else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					if(compareTwoPolicyName(value, oldValue)) {
-					    return null;
+				} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					if (oldPolicy != null) {
+					    oldValue = processPolicyNameForTrxLog(String.valueOf(oldPolicy.getIsEnabled()));
+					}
+				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					if (oldPolicy != null) {
+					    oldValue = processPolicyNameForTrxLog(String.valueOf(oldPolicy.getIsAuditEnabled()));
 					}
 				} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if(compareTwoPolicyName(value, oldValue)) {
@@ -470,42 +432,17 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 						return null;
 					}
 				}
-				else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					if(StringUtils.isBlank(oldValue)) {
-						if (!(stringUtil.isEmpty(value) && compareTwoPolicyName(value, oldValue))) {
-							oldValue=value;
-						}else {
-							return null;
-						}
-					}
-				}
-				else if (POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					// comparing old and new value for isDenyAllElse
-					if (compareTwoPolicyName(value, oldValue)) {
-						return null;
-					}
-				}else if (POLICY_PRIORITY_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				 if(StringUtils.equals(value, oldValue)) {
-					 return null;
-				 }
-				}
 
 				xTrxLog.setPreviousValue(oldValue);
 				xTrxLog.setNewValue(value);
 			}
 			else if (action == OPERATION_IMPORT_CREATE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
-					return null;
-				}
 				if (stringUtil.isEmpty(value)) {
 					return null;
 				}
 				xTrxLog.setNewValue(value);
 				actionString = actionImportCreate;
 			} else if (action == OPERATION_IMPORT_DELETE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
-					return null;
-				}
 				xTrxLog.setPreviousValue(value);
 				actionString = actionImportDelete;
 			}
@@ -686,7 +623,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	}
 
 	private boolean compareTwoPolicyName(String value, String oldValue) {
-		return StringUtils.equals(value, oldValue);
+		return org.apache.commons.lang.StringUtils.equals(value, oldValue);
 	}
 
 	private String processPolicyNameForTrxLog(Object value) {

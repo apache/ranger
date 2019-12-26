@@ -55,6 +55,7 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.wal.WALEdit;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -533,7 +534,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			perf = RangerPerfTracer.getPerfTracer(PERF_HBASEAUTH_REQUEST_LOG, "RangerAuthorizationCoprocessor.authorizeAccess(request=Operation[" + operation + "]");
 
 			ColumnFamilyAccessResult accessResult = evaluateAccess(ctx, operation, action, env, familyMap);
-			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
+			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 			if (accessResult._everythingIsAccessible) {
 				auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
 				auditHandler.logAuthzAudits(accessResult._familyLevelAccessEvents);
@@ -576,7 +577,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				perf = RangerPerfTracer.getPerfTracer(PERF_HBASEAUTH_REQUEST_LOG, "RangerAuthorizationCoprocessor.requirePermission(request=Operation[" + operation + "]");
 			}
 			ColumnFamilyAccessResult accessResult = evaluateAccess(ctx, operation, action, regionServerEnv, familyMap);
-			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
+			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 			if (accessResult._everythingIsAccessible) {
 				auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
 				auditHandler.logAuthzAudits(accessResult._familyLevelAccessEvents);
@@ -1100,7 +1101,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 					plugin.init();
 
-					UpdateRangerPoliciesOnGrantRevoke = plugin.getConfig().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
+					UpdateRangerPoliciesOnGrantRevoke = RangerConfiguration.getInstance().getBoolean(RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 
 					hbasePlugin = plugin;
 				}
@@ -1236,7 +1237,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 				if(plugin != null) {
 
-					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
+					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 					plugin.grantAccess(grData, auditHandler);
 
@@ -1276,7 +1277,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 				if(plugin != null) {
 
-					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
+					RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
 					plugin.revokeAccess(grData, auditHandler);
 
@@ -1336,7 +1337,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					@Override
 					public List<UserPermission> run() throws Exception {
 						return getUserPrermissions(
-								hbasePlugin.getResourceACLs(rangerAccessrequest),
+								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest),
 								table.getNameAsString(), false);
 					}
 				});
@@ -1349,7 +1350,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					@Override
 					public List<UserPermission> run() throws Exception {
 						return getUserPrermissions(
-								hbasePlugin.getResourceACLs(rangerAccessrequest),
+								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest),
 								namespace, true);
 					}
 				});
@@ -1359,7 +1360,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					@Override
 					public List<UserPermission> run() throws Exception {
 						return getUserPrermissions(
-								hbasePlugin.getResourceACLs(rangerAccessrequest), null,
+								hbasePlugin.getCurrentRangerAuthContext().getResourceACLs(rangerAccessrequest), null,
 								false);
 					}
 				});
@@ -1494,9 +1495,6 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		ret.setReplaceExistingPermissions(Boolean.TRUE);
 		ret.setResource(mapResource);
 		ret.setClientIPAddress(getRemoteAddress());
-		ret.setForwardedAddresses(null);//TODO: Need to check with Knox proxy how they handle forwarded add.
-		ret.setRemoteIPAddress(getRemoteAddress());
-		ret.setRequestData(up.toString());
 
 		if(userName.startsWith(GROUP_PREFIX)) {
 			ret.getGroups().add(userName.substring(GROUP_PREFIX.length()));
@@ -1602,10 +1600,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		ret.setReplaceExistingPermissions(Boolean.TRUE);
 		ret.setResource(mapResource);
 		ret.setClientIPAddress(getRemoteAddress());
-		ret.setForwardedAddresses(null);//TODO: Need to check with Knox proxy how they handle forwarded add.
-		ret.setRemoteIPAddress(getRemoteAddress());
-		ret.setRequestData(up.toString());
-		
+
 		if(userName.startsWith(GROUP_PREFIX)) {
 			ret.getGroups().add(userName.substring(GROUP_PREFIX.length()));
 		} else {

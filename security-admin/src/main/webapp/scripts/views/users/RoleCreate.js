@@ -128,7 +128,7 @@ define(function(require){
                     XAUtil.blockUI('unblock');
                     XAUtil.allowNavigation();
                     Backbone.fetchCache._cache = {}
-                    var msg = that.editRole ? 'Role updated successfully' :'Role created successfully';
+                    var msg = that.editGroup ? 'Role updated successfully' :'Role created successfully';
                     XAUtil.notifySuccess('Success', msg);
                     App.usersGroupsListing = {'showLastPage' : true}
                     App.appRouter.navigate("#!/users/Roletab",{trigger: true});

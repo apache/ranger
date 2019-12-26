@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.policyengine;
 
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -46,11 +45,6 @@ public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 		RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
 		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
 
-		String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
-
-		if (StringUtils.isNotEmpty(owner)) {
-			RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
-		}
 		super.setContext(requestContext);
 
 		super.setClientType(request.getClientType());

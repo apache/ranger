@@ -1694,7 +1694,7 @@ public class TestServiceDBStore {
 
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
 
-		Mockito.when(policyService.create(rangerPolicy, true)).thenReturn(
+		Mockito.when(policyService.create(rangerPolicy)).thenReturn(
 				rangerPolicy);
 
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
@@ -1846,7 +1846,7 @@ public class TestServiceDBStore {
 		Mockito.when(factory.createPolicyResourceSignature(rangerPolicy))
 				.thenReturn(signature);
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);
+        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy, true)).thenReturn(true);
 
 
         RangerPolicy dbRangerPolicy = serviceDBStore.updatePolicy(rangerPolicy);
@@ -1975,6 +1975,9 @@ public class TestServiceDBStore {
 		serviceConfigDefObj.setId(Id);
 		xServiceConfigDefList.add(serviceConfigDefObj);
 
+		Mockito.when(policyService.read(rangerPolicy.getId())).thenReturn(
+				rangerPolicy);
+
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(name)).thenReturn(xService);
 		Mockito.when(svcService.getPopulatedViewObject(xService)).thenReturn(
@@ -1990,9 +1993,9 @@ public class TestServiceDBStore {
 		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy)).thenReturn(true);
+        Mockito.when(policyRefUpdater.cleanupRefTables(rangerPolicy, true)).thenReturn(true);
 
-		serviceDBStore.deletePolicy(rangerPolicy);
+		serviceDBStore.deletePolicy(Id);
 	}
 
 	@Test

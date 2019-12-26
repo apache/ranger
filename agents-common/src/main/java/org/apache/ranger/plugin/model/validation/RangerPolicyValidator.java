@@ -94,7 +94,7 @@ public class RangerPolicyValidator extends RangerValidator {
 					.becauseOf(error.getMessage("id"))
 					.build());
 			valid = false;
-		} else if (policyExists(id)) {
+		} else if (getPolicy(id) == null) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No policy found for id[" + id + "]! ok!");
 			}

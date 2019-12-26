@@ -150,7 +150,7 @@ class RangerKylinPlugin extends RangerBasePlugin {
 	public void init() {
 		super.init();
 
-		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(getConfig());
+		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
 
 		super.setResultProcessor(auditHandler);
 	}

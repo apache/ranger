@@ -145,11 +145,7 @@ define(function(require) {
 								//show only required resources in acccess policy in order to show their access types
 								if(!_.isUndefined(v.parent) && !_.isEmpty(v.parent)
 										&& parentResource.isValidLeaf){
-                                                                        if(form.model && form.model.isNew()) {
-                                                                                optionsAttrs.push({'level':v.level, name:'none',label:'none'});
-                                                                        } else {
-                                                                                optionsAttrs.unshift({'level':v.level, name:'none',label:'none'});
-                                                                        }
+									optionsAttrs.unshift({'level':v.level, name:'none',label:'none'});
 								}
 								if(optionsAttrs.length > 1){
 									var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});
@@ -232,11 +228,7 @@ define(function(require) {
                                                                 //show only required resources in acccess policy in order to show their access types
                                                                 if(!_.isUndefined(v.parent) && !_.isEmpty(v.parent)
                                                                                 && parentResource.isValidLeaf){
-                                                                    if(form.model && form.model.isNew()) {
-                                                                        optionsAttrs.push({'level':v.level, name:'none',label:'none'});
-                                                                    } else {
-									optionsAttrs.unshift({'level':v.level, name:'none',label:'none'});
-                                                                    }
+                                                                        optionsAttrs.unshift({'level':v.level, name:'none',label:'none'});
                                                                 }
                                                                 if(optionsAttrs.length > 1){
                                                                         var optionsTitle = _.map(optionsAttrs,function(field){ return field.name;});

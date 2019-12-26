@@ -1,7 +1,6 @@
 {
 	"id":7,
 	"name": "kms",
-	"displayName": "kms",
 	"implClass": "org.apache.ranger.services.kms.RangerServiceKMS",
 	"label": "KMS",
 	"description": "KMS",

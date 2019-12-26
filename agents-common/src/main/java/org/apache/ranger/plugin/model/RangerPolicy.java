@@ -266,33 +266,33 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.isAuditEnabled = isAuditEnabled == null ? Boolean.TRUE : isAuditEnabled;
 	}
 
-	public String getServiceType() {
-		return serviceType;
-	}
+        public String getServiceType() {
+                return serviceType;
+        }
 
-	public void setServiceType(String serviceType) {
-		this.serviceType = serviceType;
-	}
+        public void setServiceType(String serviceType) {
+                this.serviceType = serviceType;
+        }
 
-	public List<String> getPolicyLabels() {
-		return policyLabels;
-	}
+        public List<String> getPolicyLabels() {
+                return policyLabels;
+        }
 
-	public void setPolicyLabels(List<String> policyLabels) {
-		if (this.policyLabels == null) {
-			this.policyLabels = new ArrayList<>();
-		}
+        public void setPolicyLabels(List<String> policyLabels) {
+                if (this.policyLabels == null) {
+                        this.policyLabels = new ArrayList<>();
+                }
 
-		if (this.policyLabels == policyLabels) {
-			return;
-		}
+                if (this.policyLabels == policyLabels) {
+                        return;
+                }
 
-		this.policyLabels.clear();
+                this.policyLabels.clear();
 
-		if (policyLabels != null) {
-			this.policyLabels.addAll(policyLabels);
-		}
-	}
+                if (policyLabels != null) {
+                        this.policyLabels.addAll(policyLabels);
+                }
+        }
 
 	/**
 	 * @return the resources

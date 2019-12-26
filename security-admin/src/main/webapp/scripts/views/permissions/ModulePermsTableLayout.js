@@ -81,7 +81,7 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a ModulePermsTableLayout Layout");
 			
-                _.extend(this, _.pick(options, 'urlQueryParams'));
+			_.extend(this, _.pick(options));
 			this.bindEvents();
 		},
 
@@ -97,11 +97,9 @@ define(function(require){
 		/** on render callback */
 		onRender: function() {
 			//this.initializePlugins();
+			this.addVisualSearch();
 			this.renderTable();
-                        this.addVisualSearch();
-                        if(_.isUndefined(this.urlQueryParams)) {
-                                this.initializeModulePerms();
-                        }
+			this.initializeModulePerms();
 		},
 		/** all post render plugin initialization */
 		initializePlugins: function(){
@@ -222,30 +220,20 @@ define(function(require){
 			$td.find('[data-id="showMore"]['+attrName+'="'+id+'"]').parents('div[data-id="groupsDiv"]').removeClass('set-height-groups');
 		},
 		addVisualSearch : function(){
-                        var that = this, query = '';
-            var searchOpt = ['Module Name','Group Name','User Name'];
-            var serverAttrName  = [{text : "Module Name", label :"module", urlLabel : "moduleName"},
-                                    {text : "Group Name", label :"groupName", urlLabel : "groupName"},
-                                    {text : "User Name", label :"userName", urlLabel : "userName"}
-                                ];
-            if(!_.isUndefined(this.urlQueryParams)) {
-                var urlQueryParams = XAUtil.changeUrlToSearchQuery(this.urlQueryParams);
-                _.map(urlQueryParams, function(val , key) {
-                    query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
-                });
-                    // query += XAUtil.changeUrlToVSSearchQuery(this.urlQueryParams);
-            }
-            var pluginAttr = {
-                                placeholder :localization.tt('h.searchForPermissions'),
-                                container : this.ui.visualSearch,
-                                query     : query,
-                                callbacks :  {
-                                        valueMatches :function(facet, searchTerm, callback) {
-                                                switch (facet) {
-                                                }
-                                        }
-                                }
-                        };
+			var that = this;
+			var searchOpt = ['Module Name','Group Name','User Name'];
+			var serverAttrName  = [{text : "Module Name", label :"module"},{text : "Group Name", label :"groupName"},{text : "User Name", label :"userName"}];
+			var pluginAttr = {
+				      placeholder :localization.tt('h.searchForPermissions'),
+				      container : this.ui.visualSearch,
+				      query     : '',
+				      callbacks :  {
+					  valueMatches :function(facet, searchTerm, callback) {
+								switch (facet) {
+								}
+							}
+				      }
+				};
 			window.vs = XAUtil.addVisualSearch(searchOpt,serverAttrName, this.collection,pluginAttr);
 		},
 		getActiveStatusNVList : function() {

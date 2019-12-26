@@ -83,7 +83,6 @@
 
 		<properties>
 			<property name="eclipselink.logging.level" value="WARNING"/>
-			<property name="eclipselink.jdbc.batch-writing" value="jdbc"/>
 		</properties>
 	</persistence-unit>
 	<persistence-unit name="loggingPU">
@@ -93,7 +92,6 @@
 
 		<properties>
 			<property name="eclipselink.logging.level" value="WARNING"/>
-			<property name="eclipselink.jdbc.batch-writing" value="jdbc"/>
 		</properties>
 	</persistence-unit>
 

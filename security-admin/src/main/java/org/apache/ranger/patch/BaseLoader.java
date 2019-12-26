@@ -25,7 +25,6 @@ package org.apache.ranger.patch;
 import java.text.DecimalFormat;
 
 import org.apache.log4j.Logger;
-import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.util.CLIUtil;
 import org.springframework.transaction.annotation.Propagation;
@@ -46,10 +45,8 @@ public abstract class BaseLoader {
     boolean firstCall = true;
     int batchSize = -1;
     DecimalFormat twoDForm = new DecimalFormat("#.00");
-    protected final RangerAdminConfig config;
 
     public BaseLoader() {
-        this.config = RangerAdminConfig.getInstance();
     }
 
     public void init(int batchSize) throws Exception {

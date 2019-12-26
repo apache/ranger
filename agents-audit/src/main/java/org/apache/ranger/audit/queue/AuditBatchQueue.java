@@ -245,8 +245,8 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 						// not in drain mode, lets wait and retry
 						if (nextDispatchDuration > 0) {
 							Thread.sleep(nextDispatchDuration);
+							lastDispatchTime = System.currentTimeMillis();
 						}
-						lastDispatchTime = System.currentTimeMillis();
 						continue;
 					}
 					isToSpool = true;

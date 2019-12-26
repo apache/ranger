@@ -77,7 +77,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 	@Override
     public void init() {
 		 if (isDebugEnabled) {
-            LOG.debug("==> RangerAtlasAuthorizer.init");
+            LOG.debug("gautam init <===");
         }
 
         try {
@@ -89,7 +89,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 		}
 
         if (isDebugEnabled) {
-            LOG.debug("<== RangerAtlasAuthorizer.init()");
+            LOG.debug("gautam init ===> " );
         }
 
 	}

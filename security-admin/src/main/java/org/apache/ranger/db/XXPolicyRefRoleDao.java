@@ -96,25 +96,5 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
         return ret;
     }
 
-	public Long findRoleRefPolicyCount(String roleName) {
-		Long ret = -1L;
-
-		try {
-			ret = getEntityManager().createNamedQuery("XXPolicyRefRole.findRoleRefPolicyCount", Long.class)
-					.setParameter("roleName", roleName).getSingleResult();
-		} catch (Exception e) {
-		}
-
-		return ret;
-	}
-
-	public void deleteByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return;
-		}
-		getEntityManager()
-			.createNamedQuery("XXPolicyRefRole.deleteByPolicyId", tClass)
-			.setParameter("policyId", policyId).executeUpdate();
-	}
 }
 

@@ -1,7 +1,6 @@
 {
 	"id":6,
 	"name": "storm",
-	"displayName": "storm",
 	"implClass": "org.apache.ranger.services.storm.RangerServiceStorm",
 	"label": "Storm",
 	"description": "Storm",

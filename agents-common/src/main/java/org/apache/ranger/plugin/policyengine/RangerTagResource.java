@@ -22,7 +22,7 @@ package org.apache.ranger.plugin.policyengine;
 
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
-public class RangerTagResource extends RangerAccessResourceImpl {
+class RangerTagResource extends RangerAccessResourceImpl {
 	private static final String KEY_TAG = "tag";
 
 

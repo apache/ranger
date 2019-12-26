@@ -180,19 +180,17 @@ public class SessionMgr {
 			resetUserModulePermission(userSession);
 
 			Calendar cal = Calendar.getInstance();
-			if(logger.isDebugEnabled()) {
-				if (details != null) {
-					logger.debug("Login Success: loginId=" + currentLoginId
-							+ ", sessionId=" + gjAuthSession.getId()
-							+ ", sessionId=" + details.getSessionId()
-							+ ", requestId=" + details.getRemoteAddress()
-							+ ", epoch=" + cal.getTimeInMillis());
-				} else {
-					logger.debug("Login Success: loginId=" + currentLoginId
-							+ ", sessionId=" + gjAuthSession.getId()
-							+ ", details is null"
-							+ ", epoch=" + cal.getTimeInMillis());
-				}
+			if (details != null) {
+				logger.info("Login Success: loginId=" + currentLoginId
+						+ ", sessionId=" + gjAuthSession.getId()
+						+ ", sessionId=" + details.getSessionId()
+						+ ", requestId=" + details.getRemoteAddress()
+						+ ", epoch=" + cal.getTimeInMillis());
+			} else {
+				logger.info("Login Success: loginId=" + currentLoginId
+						+ ", sessionId=" + gjAuthSession.getId()
+						+ ", details is null"
+						+ ", epoch=" + cal.getTimeInMillis());
 			}
 
 		}
@@ -231,9 +229,7 @@ public class SessionMgr {
 			rangerUserPermission.setUserPermissions(userPermissions);
 			rangerUserPermission.setLastUpdatedTime(Calendar.getInstance().getTimeInMillis());
 			userSession.setRangerUserPermission(rangerUserPermission);
-			if (logger.isDebugEnabled()) {
-				logger.debug("UserSession Updated to set new Permissions to User: " + userSession.getLoginId());
-			}
+			logger.info("UserSession Updated to set new Permissions to User: " + userSession.getLoginId());
 		} else {
 			logger.error("No XUser found with username: " + userSession.getLoginId() + "So Permission is not set for the user");
 		}
@@ -318,7 +314,7 @@ public class SessionMgr {
 				.equalsIgnoreCase(userSession.getXXPortalUser().getLoginId())) {
 			return true;
 		} else {
-			logger.warn(
+			logger.info(
 					"loginId doesn't match loginId from HTTPSession. Will create new session. loginId="
 							+ currentLoginId + ", userSession=" + userSession,
 					new Exception());
@@ -446,9 +442,7 @@ public class SessionMgr {
 			logger.error("Error getting user for loginId=" + loginId);
 			return false;
 		} else {
-			if(logger.isDebugEnabled()) {
-				logger.debug(loginId + " is a valid user");
-			}
+			logger.info(loginId+" is a valid user");
 			return true;
 		}
 		

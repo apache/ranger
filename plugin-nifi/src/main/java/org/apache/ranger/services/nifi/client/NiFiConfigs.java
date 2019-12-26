@@ -34,6 +34,4 @@ public interface NiFiConfigs {
     String NIFI_SSL_TRUSTSTORE_TYPE = "nifi.ssl.truststoreType";
     String NIFI_SSL_TRUSTSTORE_PASSWORD = "nifi.ssl.truststorePassword";
 
-    String NIFI_SSL_USER_DEFAULT_CONTEXT = "nifi.ssl.use.default.context";
-
 }

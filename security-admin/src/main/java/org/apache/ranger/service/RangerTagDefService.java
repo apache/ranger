@@ -52,6 +52,15 @@ public class RangerTagDefService extends RangerTagDefServiceBase<XXTagDef, Range
 
 	}
 
+	@Override
+	public RangerTagDef postUpdate(XXTagDef tagDef) {
+		RangerTagDef ret = super.postUpdate(tagDef);
+
+		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagDefUpdate(tagDef.getId(), tagDef.getUpdateTime());
+
+		return ret;
+	}
+
 	public RangerTagDef getPopulatedViewObject(XXTagDef xObj) {
 		return populateViewBean(xObj);
 	}

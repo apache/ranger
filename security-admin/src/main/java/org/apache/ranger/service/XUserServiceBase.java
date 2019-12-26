@@ -46,7 +46,6 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		mObj.setIsVisible(vObj.getIsVisible());
 		mObj.setDescription( vObj.getDescription());
 		mObj.setCredStoreId( vObj.getCredStoreId());
-		mObj.setOtherAttributes(vObj.getOtherAttributes());
 		return mObj;
 	}
 
@@ -57,7 +56,6 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		vObj.setIsVisible(mObj.getIsVisible());
 		vObj.setDescription( mObj.getDescription());
 		vObj.setCredStoreId( mObj.getCredStoreId());
-		vObj.setOtherAttributes(mObj.getOtherAttributes());
 		return vObj;
 	}
 

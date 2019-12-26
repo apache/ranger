@@ -96,12 +96,4 @@ public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup>{
         return ret;
     }
 
-	public void deleteByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return;
-		}
-		getEntityManager()
-			.createNamedQuery("XXPolicyRefGroup.deleteByPolicyId", tClass)
-			.setParameter("policyId", policyId).executeUpdate();
-	}
 }

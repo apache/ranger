@@ -23,13 +23,31 @@ import java.nio.file.Files;
 
 import org.apache.ranger.admin.client.AbstractRangerAdminClient;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 /**
  * A test implementation of the RangerAdminClient interface that just reads
  * policies in from a file and returns them
  */
 public class RangerAdminClientImpl extends AbstractRangerAdminClient {
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminClientImpl.class);
 	private static final String cacheFilename = "sqoop-policies.json";
+	private Gson gson;
+
+	@Override
+	public void init(String serviceName, String appId, String configPropertyPrefix) {
+		Gson gson = null;
+		try {
+			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+		} catch (Throwable excp) {
+			LOG.error("RangerAdminClientImpl: failed to create GsonBuilder object", excp);
+		}
+		this.gson = gson;
+	}
 
 	@Override
 	public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis)

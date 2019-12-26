@@ -46,7 +46,7 @@ public class TestRangerDataHistService {
 		String action = "create";
 		RangerBaseModelObject baseModelObj = new RangerBaseModelObject();
 		Mockito.when(daoMgr.getXXDataHist()).thenReturn(XXDataHistDao);
-		rangerDataHistService.createObjectDataHistory(baseModelObj, action);
+		rangerDataHistService.createObjectDataHistory(baseModelObj, action, true);
 
 	}
 }

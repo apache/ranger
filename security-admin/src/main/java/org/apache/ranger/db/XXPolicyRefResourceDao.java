@@ -62,15 +62,6 @@ public class XXPolicyRefResourceDao extends BaseDao<XXPolicyRefResource>{
 		}
 	}
 
-	public void deleteByPolicyId(Long policyId) {
-		if(policyId == null) {
-			return;
-		}
-		getEntityManager()
-			.createNamedQuery("XXPolicyRefResource.deleteByPolicyId", tClass)
-			.setParameter("policyId", policyId).executeUpdate();
-	}
-
 	 @SuppressWarnings("unchecked")
 	    public List<RangerPolicyRetriever.PolicyTextNameMap> findUpdatedResourceNamesByPolicy(Long policyId) {
 	        List<RangerPolicyRetriever.PolicyTextNameMap> ret = new ArrayList<>();

@@ -112,24 +112,9 @@ public class XXAuthSession extends XXDBBase implements java.io.Serializable {
 	public static final int AUTH_TYPE_PASSWORD = 1;
 
 	/**
-	 * AUTH_TYPE_KERBEROS is an element of enum AuthType. Its value is "AUTH_TYPE_KERBEROS".
-	 */
-	public static final int AUTH_TYPE_KERBEROS = 2;
-
-	/**
-	 * AUTH_TYPE_SSO is an element of enum AuthType. Its value is "AUTH_TYPE_SSO".
-	 */
-	public static final int AUTH_TYPE_SSO = 3;
-
-	/**
-	 * AUTH_TYPE_TRUSTED_PROXY is an element of enum AuthType. Its value is "AUTH_TYPE_TRUSTED_PROXY".
-	 */
-	public static final int AUTH_TYPE_TRUSTED_PROXY = 4;
-
-	/**
 	 * Max value for enum AuthType_MAX
 	 */
-	public static final int AuthType_MAX = 4;
+	public static final int AuthType_MAX = 1;
 
 
 

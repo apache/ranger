@@ -1,7 +1,6 @@
 {
 	"id":16,
 	"name": "elasticsearch",
-	"displayName": "elasticsearch",
 	"implClass": "org.apache.ranger.services.elasticsearch.RangerServiceElasticsearch",
 	"label": "ELASTICSEARCH",
 	"description": "ELASTICSEARCH",

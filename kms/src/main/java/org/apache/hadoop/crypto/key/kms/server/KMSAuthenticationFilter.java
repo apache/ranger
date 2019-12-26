@@ -19,14 +19,14 @@ package org.apache.hadoop.crypto.key.kms.server;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.crypto.key.kms.KMSDelegationToken;
+import org.apache.hadoop.crypto.key.kms.KMSClientProvider;
 import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHandler;
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticationFilter;
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticationHandler;
 import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticationHandler;
 import org.apache.hadoop.security.token.delegation.web.PseudoDelegationTokenAuthenticationHandler;
-import org.apache.hadoop.http.HtmlQuoting;
+
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
@@ -72,7 +72,7 @@ public class KMSAuthenticationFilter
           KerberosDelegationTokenAuthenticationHandler.class.getName());
     }
     props.setProperty(DelegationTokenAuthenticationHandler.TOKEN_KIND,
-        KMSDelegationToken.TOKEN_KIND.toString());
+        KMSClientProvider.TOKEN_KIND.toString());
     return props;
   }
 
@@ -105,7 +105,7 @@ public class KMSAuthenticationFilter
     public void sendError(int sc, String msg) throws IOException {
       statusCode = sc;
       this.msg = msg;
-      super.sendError(sc, HtmlQuoting.quoteHtmlChars(msg));
+      super.sendError(sc, msg);
     }
 
     @Override
@@ -145,13 +145,10 @@ public class KMSAuthenticationFilter
         requestURL.append("?").append(queryString);
       }
 
-      if (!method.equals("OPTIONS")) {
-        // an HTTP OPTIONS request is made as part of the SPNEGO authentication
-        // sequence. We do not need to audit log it, since it doesn't belong
-        // to KMS context. KMS server doesn't handle OPTIONS either.
-        KMSWebApp.getKMSAudit().unauthenticated(request.getRemoteHost(), method,
-          requestURL.toString(), kmsResponse.msg);
-      }
+      KMSWebApp.getKMSAudit().unauthenticated(
+          request.getRemoteHost(), method, requestURL.toString(),
+          kmsResponse.msg);
     }
   }
+
 }

@@ -19,7 +19,6 @@ package org.apache.ranger.db;
 
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -41,14 +40,6 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
 
     private static final Log LOG = LogFactory.getLog(XXPolicyChangeLogDao.class);
 
-    private static final int POLICY_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER             = 0;
-    private static final int POLICY_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER    = 1;
-    private static final int POLICY_CHANGE_LOG_RECORD_POLICY_VERSION_COLUMN_NUMBER = 2;
-    private static final int POLICY_CHANGE_LOG_RECORD_SERVICE_TYPE_COLUMN_NUMBER   = 3;
-    private static final int POLICY_CHANGE_LOG_RECORD_POLICY_TYPE_COLUMN_NUMBER    = 4;
-    private static final int POLICY_CHANGE_LOG_RECORD_POLICY_ID_COLUMN_NUMBER      = 5;
-    private static final int POLICY_CHANGE_LOG_RECORD_ZONE_NAME_COLUMN_NUMBER      = 6;
-
     /**
      * Default Constructor
      */
@@ -64,23 +55,12 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                     .setParameter("version", version)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
-
-            // Ensure that first record has the same version as the base-version from where the records are fetched
+            // Ensure that the first record has the same version as the base-version from where the records are fetched
             if (CollectionUtils.isNotEmpty(logs)) {
-                Iterator<Object[]> iter = logs.iterator();
-                boolean foundAndRemoved = false;
-
-                while (iter.hasNext()) {
-                    Object[] record = iter.next();
-                    Long recordVersion = (Long) record[POLICY_CHANGE_LOG_RECORD_POLICY_VERSION_COLUMN_NUMBER];
-                    if (version.equals(recordVersion)) {
-                        iter.remove();
-                        foundAndRemoved = true;
-                    } else {
-                        break;
-                    }
-                }
-                if (foundAndRemoved) {
+                Object[] firstRecord = logs.get(0);
+                Long versionOfFirstRecord = (Long) firstRecord[2];
+                if (version.equals(versionOfFirstRecord)) {
+                    logs.remove(0);
                     ret = convert(policyService, logs);
                 } else {
                     ret = null;
@@ -131,11 +111,10 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
             for (Object[] log : queryResult) {
 
                 RangerPolicy policy;
-
-                Long    logRecordId      = (Long) log[POLICY_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER];
-                Integer policyChangeType = (Integer) log[POLICY_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER];
-                String  serviceType      = (String) log[POLICY_CHANGE_LOG_RECORD_SERVICE_TYPE_COLUMN_NUMBER];
-                Long    policyId         = (Long) log[POLICY_CHANGE_LOG_RECORD_POLICY_ID_COLUMN_NUMBER];
+                Long logRecordId = (Long) log[0];
+                Integer policyChangeType = (Integer) log[1];
+                String serviceType = (String) log[3];
+                Long policyId = (Long) log[5];
 
                 if (policyId != null) {
                     XXPolicy xxPolicy = daoManager.getXXPolicy().getById(policyId);
@@ -156,16 +135,16 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                         // Create a dummy policy as the policy cannot be found - probably already deleted
                         policy = new RangerPolicy();
                         policy.setId(policyId);
-                        policy.setVersion((Long) log[POLICY_CHANGE_LOG_RECORD_POLICY_VERSION_COLUMN_NUMBER]);
-                        policy.setPolicyType((Integer) log[POLICY_CHANGE_LOG_RECORD_POLICY_TYPE_COLUMN_NUMBER]);
-                        policy.setZoneName((String) log[POLICY_CHANGE_LOG_RECORD_ZONE_NAME_COLUMN_NUMBER]);
+                        policy.setVersion((Long) log[2]);
+                        policy.setPolicyType((Integer) log[4]);
+                        policy.setZoneName((String) log[6]);
                     }
                     policy.setServiceType(serviceType);
 
                     ret.add(new RangerPolicyDelta(logRecordId, policyChangeType, policy));
                 } else {
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("policyId is null! log-record-id:[" + logRecordId + ", service-type:[" + log[POLICY_CHANGE_LOG_RECORD_SERVICE_TYPE_COLUMN_NUMBER] + "], policy-change-type:[" + log[POLICY_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER] + "]");
+                        LOG.debug("policyId is null! log-record-id:[" + logRecordId + ", service-type:[" + log[3] + "], policy-change-type:[" + log[1] + "]");
                     }
                     ret.clear();
                     ret.add(new RangerPolicyDelta(logRecordId, policyChangeType, null));

@@ -612,7 +612,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                         // More matchers than resource-values
                         if (resourceKeysSize > lastNonAnyMatcherIndex) {
                             // all remaining matchers which matched resource value of null are of type Any
-                            ret = MatchType.SELF_AND_ALL_DESCENDANTS;
+                            ret = MatchType.ANCESTOR_WITH_WILDCARDS;
                         } else {
                             ret = MatchType.DESCENDANT;
                         }
@@ -727,23 +727,23 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         final boolean ret;
         switch (scope) {
             case SELF: {
-                ret = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS;
+                ret = matchType == MatchType.SELF;
                 break;
             }
-            case ANCESTOR: {
-                ret = matchType == MatchType.ANCESTOR;
+            case SELF_OR_DESCENDANT: {
+                ret = matchType == MatchType.SELF || matchType == MatchType.DESCENDANT;
+                break;
+            }
+            case SELF_OR_ANCESTOR: {
+                ret = matchType == MatchType.SELF || matchType == MatchType.ANCESTOR;
                 break;
             }
             case DESCENDANT: {
                 ret = matchType == MatchType.DESCENDANT;
                 break;
             }
-            case SELF_OR_ANCESTOR: {
-                ret = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS || matchType == MatchType.ANCESTOR;
-                break;
-            }
-            case SELF_OR_DESCENDANT: {
-                ret = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS || matchType == MatchType.DESCENDANT;
+            case ANCESTOR: {
+                ret = matchType == MatchType.ANCESTOR;
                 break;
             }
             default: {

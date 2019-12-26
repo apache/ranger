@@ -130,28 +130,18 @@ public class ChangePasswordUtil extends BaseLoader {
 		if (xPortalUser != null) {
 			String dbPassword = xPortalUser.getPassword();
 			String currentEncryptedPassword = null;
-			String md5EncryptedPassword = null;
 			try {
 				currentEncryptedPassword = userMgr.encrypt(userLoginId, currentPassword);
 				if (currentEncryptedPassword.equals(dbPassword)) {
 					validatePassword(newPassword);
 					userMgr.updatePasswordInSHA256(userLoginId, newPassword, true);
 					logger.info("User '" + userLoginId + "' Password updated sucessfully.");
-				}
-				else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest) {
-					logger.info("current encryped password is not equal to dbpassword , trying with md5 now");
-					md5EncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginId, currentPassword);
-					if (md5EncryptedPassword.equals(dbPassword)) {
-						validatePassword(newPassword);
-						userMgr.updatePasswordInSHA256(userLoginId, newPassword, true);
-						logger.info("User '" + userLoginId + "' Password updated sucessfully.");
-					} else {
-						System.out.println(
-								"Skipping default password change request as provided password doesn't match with existing password.");
-						logger.error(
-								"Skipping default password change request as provided password doesn't match with existing password.");
-						System.exit(2);
-					}
+				} else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest) {
+					System.out.println(
+							"Skipping default password change request as provided password doesn't match with existing password.");
+					logger.error(
+							"Skipping default password change request as provided password doesn't match with existing password.");
+					System.exit(2);
 				} else {
 					System.out.println("Invalid user password");
 					logger.error("Invalid user password");
@@ -195,7 +185,6 @@ public class ChangePasswordUtil extends BaseLoader {
 			if (xPortalUser != null) {
 				String dbPassword = xPortalUser.getPassword();
 				String currentEncryptedPassword = null;
-				String md5EncryptedPassword = null;
 				try {
 					currentEncryptedPassword = userMgr.encrypt(userLoginIdTemp, currentPasswordTemp);
 					if (currentEncryptedPassword.equals(dbPassword)) {
@@ -203,19 +192,11 @@ public class ChangePasswordUtil extends BaseLoader {
 						userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
 						logger.info("User '" + userLoginIdTemp + "' Password updated sucessfully.");
 					} else if (!currentEncryptedPassword.equals(dbPassword) && defaultPwdChangeRequest) {
-						logger.info("current encryped password is not equal to dbpassword , trying with md5 now");
-						md5EncryptedPassword = userMgr.encryptWithOlderAlgo(userLoginIdTemp, currentPasswordTemp);
-						if (md5EncryptedPassword.equals(dbPassword)) {
-							validatePassword(newPasswordTemp);
-							userMgr.updatePasswordInSHA256(userLoginIdTemp, newPasswordTemp, true);
-							logger.info("User '" + userLoginIdTemp + "' Password updated sucessfully.");
-						} else {
-							System.out.println(
-									"Skipping default password change request as provided password doesn't match with existing password.");
-							logger.error(
-									"Skipping default password change request as provided password doesn't match with existing password.");
-							System.exit(2);
-						}
+						System.out.println(
+								"Skipping default password change request as provided password doesn't match with existing password.");
+						logger.error(
+								"Skipping default password change request as provided password doesn't match with existing password.");
+						System.exit(2);
 					} else {
 						System.out.println("Invalid user password");
 						logger.error("Invalid user password");

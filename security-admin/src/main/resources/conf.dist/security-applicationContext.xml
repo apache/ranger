@@ -35,8 +35,8 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/fonts/**" security="none" />
 	<security:http pattern="/scripts/prelogin/XAPrelogin.js" security="none" />
         <security:http pattern="/libs/bower/jquery/js/jquery-3.4.1.js" security="none" />
-  <security:http pattern="/images/ranger_logo.png" security="none" />
-	<security:http pattern="/images/favicon.ico" security="none"/>
+	<security:http pattern="/images/logo.png" security="none" />
+	<security:http pattern="/favicon.ico" security="none" />
 	<security:http pattern="/service/assets/policyList/*" security="none"/>
 	<security:http pattern="/service/assets/resources/grant" security="none"/>
 	<security:http pattern="/service/assets/resources/revoke" security="none"/>
@@ -44,8 +44,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/service/plugins/services/grant/*" security="none"/>
 	<security:http pattern="/service/plugins/services/revoke/*" security="none"/>
 	<security:http pattern="/service/tags/download/*" security="none"/>
-	<security:http pattern="/service/roles/download/*" security="none"/>
-	<security:http pattern="/service/metrics/status" security="none" />
+
 	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
 		<csrf disabled="true"/>
 		<security:headers>

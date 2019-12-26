@@ -1,7 +1,6 @@
 {
 	"id":14,
 	"name": "sqoop",
-	"displayName": "sqoop",
 	"implClass": "org.apache.ranger.services.sqoop.RangerServiceSqoop",
 	"label": "SQOOP",
 	"description": "SQOOP",

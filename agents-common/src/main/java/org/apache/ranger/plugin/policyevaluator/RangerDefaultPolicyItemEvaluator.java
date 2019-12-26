@@ -160,9 +160,9 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 	}
 
 	@Override
-	public boolean matchUserGroupAndOwner(String user, Set<String> userGroups, Set<String> roles, String owner) {
+	public boolean matchUserGroup(String user, Set<String> userGroups, Set<String> roles) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyItemEvaluator.matchUserGroup(" + policyItem + ", " + user + ", " + userGroups + ", " + roles + ", " + owner + ")");
+			LOG.debug("==> RangerDefaultPolicyItemEvaluator.matchUserGroup(" + policyItem + ", " + user + ", " + userGroups + ", " + roles + ")");
 		}
 
 		boolean ret = false;
@@ -171,6 +171,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 			if(!ret && user != null && policyItem.getUsers() != null) {
 				ret = hasCurrentUser || policyItem.getUsers().contains(user);
 			}
+
 			if(!ret && userGroups != null && policyItem.getGroups() != null) {
 				ret = policyItem.getGroups().contains(RangerPolicyEngine.GROUP_PUBLIC) ||
 						!Collections.disjoint(policyItem.getGroups(), userGroups);
@@ -178,13 +179,10 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 			if (!ret && CollectionUtils.isNotEmpty(roles) && CollectionUtils.isNotEmpty(policyItem.getRoles())) {
 				ret = !Collections.disjoint(policyItem.getRoles(), roles);
 			}
-			if (!ret && hasResourceOwner) {
-				ret = user != null && user.equals(owner);
-			}
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyItemEvaluator.matchUserGroup(" + policyItem + ", " + user + ", " + userGroups + ", " + roles + ", " + owner + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyItemEvaluator.matchUserGroup(" + policyItem + ", " + user + ", " + userGroups + ", " + roles + "): " + ret);
 		}
 
 		return ret;
@@ -200,15 +198,20 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		String user = request.getUser();
 		Set<String> userGroups = request.getUserGroups();
 
-		RangerAccessResource accessedResource = request.getResource();
-		String resourceOwner = accessedResource != null ? accessedResource.getOwnerUser() : null;
+		if (hasResourceOwner) {
+			RangerAccessResource accessedResource = request.getResource();
+			String resourceOwner = accessedResource != null ? accessedResource.getOwnerUser() : null;
 
+			if (user != null && resourceOwner != null && user.equals(resourceOwner)) {
+				ret = true;
+			}
+		}
 		if (!ret) {
 			Set<String> roles = null;
 			if (CollectionUtils.isNotEmpty(policyItem.getRoles())) {
 				roles = RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext());
 			}
-			ret = matchUserGroupAndOwner(user, userGroups, roles, resourceOwner);
+			ret = matchUserGroup(user, userGroups, roles);
 		}
 
 		if(LOG.isDebugEnabled()) {
