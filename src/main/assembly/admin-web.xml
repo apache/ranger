@@ -463,6 +463,28 @@
           </includes>
       </moduleSet>
 
+<moduleSet>
+          <binaries>
+              <includeDependencies>true</includeDependencies>
+              <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/prestodb</outputDirectory>
+              <unpack>false</unpack>
+              <directoryMode>755</directoryMode>
+              <fileMode>644</fileMode>
+              <dependencySets>
+                  <dependencySet>
+                      <includes>
+		          <include>com.facebook.presto:presto-spi:jar:${prestodb.version}</include>
+                          <include>com.facebook.presto:presto-jdbc:jar:${prestodb.version}</include>
+                          <include>com.facebook.presto:presto-main:jar:${prestodb.version}</include>
+                      </includes>
+                  </dependencySet>
+              </dependencySets>
+          </binaries>
+          <includes>
+              <include>org.apache.ranger:ranger-prestodb-plugin</include>
+          </includes>
+      </moduleSet>
+
   </moduleSets>
 
   <fileSets>

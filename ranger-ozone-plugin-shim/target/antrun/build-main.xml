@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<project name="maven-antrun-" default="main"  >
+<target name="main">
+  <echo file="/Users/vasveena/Downloads/workspace/ranger-prestodb/ranger-ozone-plugin-shim/target/version" message="2.0.1-SNAPSHOT"/>
+</target>
+</project>

@@ -214,6 +214,8 @@ elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugins
 elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugin/ranger
+elif [ "${HCOMPONENT_NAME}" = "prestodb" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugin/ranger
     if [ ! -d "${HCOMPONENT_LIB_DIR}" ]; then
         echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
         mkdir -p ${HCOMPONENT_LIB_DIR}
@@ -247,6 +249,8 @@ elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
 	chown $CFG_OWNER_INF $HCOMPONENT_CONF_DIR
     fi
 elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
+    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
+elif [ "${HCOMPONENT_NAME}" = "prestodb" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
 fi
 
@@ -808,6 +812,32 @@ then
 	ln -sf ${HCOMPONENT_CONF_DIR} conf
 fi
 
+if [ "${HCOMPONENT_NAME}" = "prestodb" ]
+then
+        if [ "${action}" = "enable" ]
+        then
+                controlName="ranger"
+        else
+                controlName=""
+        fi
+        dt=`date '+%Y%m%d%H%M%S'`
+        fn=`ls ${HCOMPONENT_CONF_DIR}/access-control.properties 2> /dev/null`
+        if [ -f "${fn}" ]
+        then
+                dn=`dirname ${fn}`
+                bn=`basename ${fn}`
+                bf=${dn}/.${bn}.${dt}
+                echo "backup of ${fn} to ${bf} ..."
+                cp ${fn} ${bf}
+        else
+            fn=${HCOMPONENT_CONF_DIR}/access-control.properties
+        fi
+        echo "Add or Update properties file: [${fn}] ... "
+        addOrUpdatePropertyToFile access-control.name $controlName ${fn}
+        echo "Linking config files"
+        cd ${HCOMPONENT_LIB_DIR}/ranger-prestodb-plugin-impl/
+        ln -sf ${HCOMPONENT_CONF_DIR} conf
+fi
 
 #
 # Set notice to restart the ${HCOMPONENT_NAME}

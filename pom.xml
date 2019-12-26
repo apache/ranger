@@ -162,6 +162,7 @@
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
         <presto.version>310</presto.version>
+        <prestodb.version>0.220</prestodb.version>
         <poi.version>3.17</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
@@ -223,6 +224,7 @@
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
+                <module>plugin-prestodb</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -243,6 +245,7 @@
                 <module>ranger-atlas-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-presto-plugin-shim</module>
+                <module>ranger-prestodb-plugin-shim</module>
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
                 <module>plugin-atlas</module>
@@ -282,6 +285,7 @@
                                 <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                <descriptor>src/main/assembly/plugin-prestodb.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </plugin>
@@ -693,6 +697,33 @@
                 </plugins>
             </build>
         </profile>
+	<profile>
+            <id>ranger-prestodb-plugin</id>
+            <modules>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>ranger-plugin-classloader</module>
+                <module>ranger-util</module>
+                <module>plugin-prestodb</module>
+                <module>ranger-prestodb-plugin-shim</module>
+            </modules>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>2.2-beta-5</version>
+                        <configuration>
+                            <descriptors>
+                                <descriptor>src/main/assembly/plugin-prestodb.xml</descriptor>
+                            </descriptors>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>linux</id>
             <activation>
@@ -750,7 +781,9 @@
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>plugin-presto</module>
+                <module>plugin-prestodb</module>
                 <module>ranger-presto-plugin-shim</module>
+                <module>ranger-prestodb-plugin-shim</module>
                 <module>unixauthnative</module>
             </modules>
             <build>
@@ -782,6 +815,7 @@
                                 <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
                                 <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                <descriptor>src/main/assembly/plugin-prestodb.xml</descriptor>
                             </descriptors>
                         </configuration>
                     </plugin>

@@ -1,0 +1,120 @@
+On branch ranger-2.0
+Your branch is ahead of 'origin/ranger-2.0' by 1 commit.
+  (use "git push" to publish your local commits)
+
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+	modified:   build_ranger_using_docker.sh
+	modified:   dev-support/smart-apply-patch.sh
+	modified:   dev-support/test-patch.sh
+	modified:   embeddedwebserver/scripts/ranger-admin-initd
+	modified:   embeddedwebserver/scripts/ranger-admin-services.sh
+	modified:   embeddedwebserver/scripts/start-ranger-admin.sh
+	modified:   embeddedwebserver/scripts/stop-ranger-admin.sh
+	modified:   kms/config/kms-webapp/dbks-site.xml
+	modified:   kms/scripts/VerifyIsDBMasterkeyCorrect.sh
+	modified:   kms/scripts/VerifyIsHSMMasterkeyCorrect.sh
+	modified:   kms/scripts/db/postgres/kms_core_db_postgres.sql
+	modified:   kms/scripts/dba_script.py
+	modified:   kms/scripts/importJCEKSKeys.sh
+	modified:   kms/scripts/install.properties
+	modified:   kms/scripts/ranger-kms
+	modified:   kms/scripts/ranger-kms-initd
+	modified:   kms/scripts/setup.sh
+	modified:   kms/src/main/java/org/apache/hadoop/crypto/key/RangerKMSDB.java
+	modified:   kms/src/main/java/org/apache/hadoop/crypto/key/RangerKeyStoreProvider.java
+	modified:   kms/src/main/java/org/apache/hadoop/crypto/key/RangerMasterKey.java
+	modified:   kms/src/main/java/org/apache/hadoop/crypto/key/kms/server/KMSACLs.java
+	modified:   kms/src/main/java/org/apache/hadoop/crypto/key/kms/server/KMSConfiguration.java
+	modified:   kms/src/main/java/org/apache/hadoop/crypto/key/kms/server/KMSWebApp.java
+	modified:   kms/src/main/java/org/apache/hadoop/crypto/key/kms/server/KeyAuthorizationKeyProvider.java
+	modified:   kms/src/main/java/org/apache/ranger/entity/XXRangerKeyStore.java
+	modified:   kms/src/main/java/org/apache/ranger/entity/XXRangerMasterKey.java
+	modified:   kms/src/test/resources/kms/dbks-site.xml
+	modified:   migration-util/ambari2.0-hdp2.2-ranger0.40/bin/import_ranger_to_ambari.py
+	modified:   migration-util/ambari2.0-hdp2.2-ranger0.40/bin/ranger_admin_install.properties
+	modified:   migration-util/ambari2.0-hdp2.2-ranger0.40/doc/README.TXT
+	modified:   migration-util/ambari2.1-hdp2.3-ranger0.50/bin/import_ranger_to_ambari.py
+	modified:   migration-util/ambari2.1-hdp2.3-ranger0.50/bin/ranger_admin_install.properties
+	modified:   migration-util/ambari2.1-hdp2.3-ranger0.50/doc/README.TXT
+	modified:   plugin-kafka/conf/kafka-ranger-env.sh
+	modified:   plugin-kms/.gitignore
+	modified:   plugin-kms/bin/.gitignore
+	modified:   plugin-kms/conf/ranger-kms-audit.xml
+	modified:   plugin-kms/conf/ranger-kms-security.xml
+	modified:   plugin-kms/conf/ranger-policymgr-ssl.xml
+	modified:   plugin-kms/scripts/enable-kms-plugin.sh
+	modified:   plugin-kms/src/main/java/org/apache/ranger/authorization/kms/authorizer/RangerKmsAuthorizer.java
+	modified:   plugin-kms/src/main/java/org/apache/ranger/services/kms/client/KMSClient.java
+	modified:   plugin-kms/src/main/java/org/apache/ranger/services/kms/client/KMSConnectionMgr.java
+	modified:   plugin-kms/src/main/java/org/apache/ranger/services/kms/client/KMSResourceMgr.java
+	modified:   plugin-kms/src/test/resources/kms/dbks-site.xml
+	modified:   plugin-kms/src/test/resources/kms/kms-log4j.properties
+	modified:   plugin-ozone/conf/ozone-ranger-env.sh
+	modified:   plugin-yarn/disable-conf/yarn-site-changes.cfg
+	modified:   ranger-examples/sampleapp/scripts/run-sampleapp.sh
+	modified:   ranger-tools/scripts/ranger-perftester.sh
+	modified:   ranger-tools/scripts/ranger-plugin-perftester.sh
+	modified:   ranger-tools/scripts/summary.awk
+	modified:   security-admin/contrib/audit_hdfs_folders/create_hdfs_folders_for_audit_non_secure.sh
+	modified:   security-admin/contrib/audit_hdfs_folders/create_hdfs_folders_for_audit_secure.sh
+	modified:   security-admin/contrib/solr_for_audit_setup/conf/admin-extra.html
+	modified:   security-admin/contrib/solr_for_audit_setup/conf/admin-extra.menu-bottom.html
+	modified:   security-admin/contrib/solr_for_audit_setup/conf/admin-extra.menu-top.html
+	modified:   security-admin/contrib/solr_for_audit_setup/setup.sh
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_cloud/scripts/add_ranger_audits_conf_to_zk.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_cloud/scripts/create_ranger_audits_collection.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_cloud/scripts/solr.in.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_cloud/scripts/solr.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_cloud/scripts/start_solr.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_cloud/scripts/stop_solr.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_standalone/scripts/solr.in.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_standalone/scripts/solr.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_standalone/scripts/start_solr.sh.j2
+	modified:   security-admin/contrib/solr_for_audit_setup/solr_standalone/scripts/stop_solr.sh.j2
+	modified:   security-admin/db/mysql/create_dev_user.sh
+	modified:   security-admin/db/mysql/init/backup_mysql_db.sh
+	modified:   security-admin/db/mysql/init/create_dev_backup_mysql.sh
+	modified:   security-admin/db/mysql/init/create_dev_backup_mysql_loaded.sh
+	modified:   security-admin/db/mysql/init/create_xa_core_db.sh
+	modified:   security-admin/db/mysql/init/reset_db.sh
+	modified:   security-admin/db/mysql/init/reset_db_with_seed.sh
+	modified:   security-admin/db/mysql/reset_audit_mysql.sh
+	modified:   security-admin/db/mysql/reset_core_mysql.sh
+	modified:   security-admin/db/mysql/resetdb_dev_mysql.sh
+	modified:   security-admin/db/postgres/patches/030-policy-labels-schema.sql
+	modified:   security-admin/db/sqlserver/patches/030-policy-labels-schema.sql
+	modified:   security-admin/scripts/set_globals.sh
+	modified:   security-admin/scripts/setup.sh
+	modified:   security-admin/scripts/setup_authentication.sh
+	modified:   security-admin/scripts/upgrade_admin.py
+	modified:   security-admin/src/main/java/org/apache/ranger/biz/KmsKeyMgr.java
+	modified:   security-admin/src/main/java/org/apache/ranger/rest/XKeyREST.java
+	modified:   security-admin/src/main/java/org/apache/ranger/service/RangerServiceServiceBase.java
+	modified:   security-admin/src/main/java/org/apache/ranger/view/VXKmsKey.java
+	modified:   security-admin/src/main/resources/META-INF/jpa_named_queries.xml
+	modified:   security-admin/src/main/webapp/scripts/controllers/Controller.js
+	modified:   security-admin/src/main/webapp/scripts/modules/XALinks.js
+	modified:   security-admin/src/main/webapp/scripts/views/kms/KMSTableLayout.js
+	modified:   security-admin/src/main/webapp/scripts/views/kms/KmsKeyForm.js
+	modified:   security-admin/src/main/webapp/scripts/views/users/UserTableLayout.js
+	modified:   tagsync/scripts/ranger-tagsync-services.sh
+	modified:   tagsync/scripts/ranger-tagsync-upload.sh
+	modified:   tagsync/scripts/setup.py
+	modified:   tagsync/scripts/setup.sh
+	modified:   ugsync/ldapconfigchecktool/ldapconfigcheck/conf/input.properties
+	modified:   ugsync/ldapconfigchecktool/ldapconfigcheck/scripts/run.sh
+	modified:   unixauthservice/scripts/set_globals.sh
+	modified:   unixauthservice/scripts/setup.py
+	modified:   unixauthservice/scripts/setup.sh
+	modified:   unixauthservice/scripts/start.sh
+	modified:   unixauthservice/scripts/stop.sh
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+	file
+	plugin-ozone/target/
+	ranger-ozone-plugin-shim/target/
+
+no changes added to commit (use "git add" and/or "git commit -a")
