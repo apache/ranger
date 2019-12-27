@@ -854,10 +854,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				sessionId = null;
 				isValidRangerCookie = false;
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
-				cookieList = clientResp.getCookies();
-				for (NewCookie cookie : cookieList) {
+				List<NewCookie> respCookieList = clientResp.getCookies();
+				for (NewCookie cookie : respCookieList) {
 					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
-						sessionId = cookie.toCookie();
+						if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
+							sessionId = cookie.toCookie();
+						}
 						isValidRangerCookie = true;
 						break;
 					}
@@ -1345,10 +1347,12 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				sessionId = null;
 				isValidRangerCookie = false;
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
-				cookieList = clientResp.getCookies();
-				for (NewCookie cookie : cookieList) {
+				List<NewCookie> respCookieList = clientResp.getCookies();
+				for (NewCookie cookie : respCookieList) {
 					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
-						sessionId = cookie.toCookie();
+						if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
+							sessionId = cookie.toCookie();
+						}
 						isValidRangerCookie = true;
 						break;
 					}

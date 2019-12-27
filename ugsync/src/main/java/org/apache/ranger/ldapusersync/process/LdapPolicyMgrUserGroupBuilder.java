@@ -937,10 +937,12 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 				sessionId = null;
 				isValidRangerCookie = false;
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
-				cookieList = clientResp.getCookies();
-				for (NewCookie cookie : cookieList) {
+				List<NewCookie> respCookieList = clientResp.getCookies();
+				for (NewCookie cookie : respCookieList) {
 					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
-						sessionId = cookie.toCookie();
+						if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
+							sessionId = cookie.toCookie();
+						}
 						isValidRangerCookie = true;
 						break;
 					}
@@ -1084,10 +1086,12 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 				sessionId = null;
 				isValidRangerCookie = false;
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
-				cookieList = clientResp.getCookies();
-				for (NewCookie cookie : cookieList) {
+				List<NewCookie> respCookieList = clientResp.getCookies();
+				for (NewCookie cookie : respCookieList) {
 					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
-						sessionId = cookie.toCookie();
+						if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
+							sessionId = cookie.toCookie();
+						}
 						isValidRangerCookie = true;
 						break;
 					}

@@ -320,7 +320,16 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 				isValidRangerCookie = false;
 			} else if (response.getStatus() == HttpServletResponse.SC_NO_CONTENT
 					|| response.getStatus() == HttpServletResponse.SC_OK) {
-				isValidRangerCookie = true;
+				List<NewCookie> respCookieList = response.getCookies();
+				for (NewCookie respCookie : respCookieList) {
+					if (respCookie.getName().equalsIgnoreCase("RANGERADMINSESSIONID")) {
+						if (!(sessionId.getValue().equalsIgnoreCase(respCookie.toCookie().getValue()))) {
+							sessionId = respCookie.toCookie();
+						}
+						isValidRangerCookie = true;
+						break;
+					}
+				}
 			}
 
 		}
