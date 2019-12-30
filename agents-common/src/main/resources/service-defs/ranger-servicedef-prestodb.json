@@ -1,0 +1,197 @@
+{
+  "id": 18,
+  "name": "prestodb",
+  "implClass": "org.apache.ranger.services.prestodb.RangerServicePrestoDB",
+  "label": "PrestoDB",
+  "description": "PrestoDB",
+  "guid": "379a9fe5-1b6e-4091-a584-4890e245e6c1",
+  "resources": [
+    {
+      "itemId": 1,
+      "name": "catalog",
+      "type": "string",
+      "level": 10,
+      "parent": "",
+      "mandatory": true,
+      "isValidLeaf": true,
+      "lookupSupported": true,
+      "recursiveSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Presto Catalog",
+      "description": "Presto Catalog"
+    },
+    {
+      "itemId": 2,
+      "name": "schema",
+      "type": "string",
+      "level": 20,
+      "parent": "catalog",
+      "mandatory": true,
+      "isValidLeaf": true,
+      "lookupSupported": true,
+      "recursiveSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Presto Schema",
+      "description": "Presto Schema"
+    },
+    {
+      "itemId": 3,
+      "name": "table",
+      "type": "string",
+      "level": 30,
+      "parent": "schema",
+      "mandatory": true,
+      "isValidLeaf": true,
+      "lookupSupported": true,
+      "recursiveSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Presto Table",
+      "description": "Presto Table"
+    },
+    {
+      "itemId": 4,
+      "name": "column",
+      "type": "string",
+      "level": 40,
+      "parent": "table",
+      "mandatory": true,
+      "lookupSupported": true,
+      "recursiveSupported": false,
+      "excludesSupported": true,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Presto Column",
+      "description": "Presto Column"
+    }
+  ],
+  "accessTypes": [
+    {
+      "itemId": 1,
+      "name": "select",
+      "label": "Select"
+    },
+    {
+      "itemId": 2,
+      "name": "insert",
+      "label": "Insert"
+    },
+    {
+      "itemId": 3,
+      "name": "create",
+      "label": "Create"
+    },
+    {
+      "itemId": 4,
+      "name": "drop",
+      "label": "Drop"
+    },
+    {
+      "itemId": 5,
+      "name": "use",
+      "label": "Use"
+    },
+    {
+      "itemId": 6,
+      "name": "alter",
+      "label": "Alter"
+    },
+    {
+      "itemId": 7,
+      "name": "admin",
+      "label": "Admin"
+    },
+    {
+      "itemId": 8,
+      "name": "all",
+      "label": "All",
+      "impliedGrants": [
+        "select",
+        "insert",
+        "create",
+        "drop",
+        "use",
+        "alter",
+        "admin"
+      ]
+    }
+  ],
+  "configs": [
+    {
+      "itemId": 1,
+      "name": "username",
+      "type": "string",
+      "mandatory": true,
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Username"
+    },
+    {
+      "itemId": 2,
+      "name": "password",
+      "type": "password",
+      "mandatory": false,
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Password"
+    },
+    {
+      "itemId": 3,
+      "name": "jdbc.driverClassName",
+      "type": "string",
+      "mandatory": true,
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "defaultValue": "com.facebook.presto.jdbc.PrestoDriver"
+    },
+    {
+      "itemId": 4,
+      "name": "jdbc.url",
+      "type": "string",
+      "mandatory": true,
+      "defaultValue": "",
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": ""
+    }
+  ],
+  "enums": [
+  ],
+  "contextEnrichers": [
+  ],
+  "policyConditions":
+  [
+  ]
+}
