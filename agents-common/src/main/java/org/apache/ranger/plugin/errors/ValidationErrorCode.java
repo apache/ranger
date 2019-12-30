@@ -34,7 +34,9 @@ public enum ValidationErrorCode {
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_ID(1005, "No service found for id [{0}]"),
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_NAME(1006, "Missing service name"),
     SERVICE_VALIDATION_ERR_SERVICE_NAME_CONFICT(1007, "Duplicate service name: name=[{0}]"),
+    SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT(3051,"Display name [{0}] is already used by service [{1}]"),
     SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_NAME(3031, "Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space). : name=[{0}]"),
+    SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_DISPLAY_NAME(3050, "Invalid display name [{0}]. It should be not be longer than 256 characters, should not start with space, and should not include special characters (except underscore, hyphen and space)"),
     SERVICE_VALIDATION_ERR_ID_NAME_CONFLICT(1008, "Duplicate service name: name=[{0}], id=[{1}]"),
     SERVICE_VALIDATION_ERR_MISSING_SERVICE_DEF(1009, "Missing service def"),
     SERVICE_VALIDATION_ERR_INVALID_SERVICE_DEF(1010, "Service def not found: service-def-name=[{0}]"),
@@ -47,7 +49,9 @@ public enum ValidationErrorCode {
     SERVICE_DEF_VALIDATION_ERR_EMPTY_SERVICE_DEF_ID(2004, "Internal error: service def id was null/empty/blank"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_DEF_ID(2005, "No service def found for id [{0}]"),
     SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_DEF_NAME(2006, "Service def name[{0}] was null/empty/blank"),
+    SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_DEF_DISPLAY_NAME(2024, "Service def display name[{0}] was null/empty/blank"),
     SERVICE_DEF_VALIDATION_ERR_SERVICE_DEF_NAME_CONFICT(2007, "service def with the name[{0}] already exists"),
+    SERVICE_DEF_VALIDATION_ERR_SERVICE_DEF__DISPLAY_NAME_CONFICT(2025, "Display name [{0}] is already used by service def [{1}]"),
     SERVICE_DEF_VALIDATION_ERR_ID_NAME_CONFLICT(2008, "id/name conflict: another service def already exists with name[{0}], its id is [{1}]"),
     SERVICE_DEF_VALIDATION_ERR_IMPLIED_GRANT_UNKNOWN_ACCESS_TYPE(2009, "implied grant[{0}] contains an unknown access types[{1}]"),
     SERVICE_DEF_VALIDATION_ERR_IMPLIED_GRANT_IMPLIES_ITSELF(2010, "implied grants list [{0}] for access type[{1}] contains itself"),
@@ -116,6 +120,17 @@ public enum ValidationErrorCode {
     SECURITY_ZONE_VALIDATION_ERR_INTERNAL_ERROR(3045, "Internal Error:[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT(3046, "Multiple zones:[{0}] match resource:[{1}]"),
     SECURITY_ZONE_VALIDATION_ERR_UNEXPECTED_RESOURCES(3047, "Tag service [{0}], with non-empty resources, is associated with security zone"),
+
+    //RANGER ROLE Validations
+    ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_OBJECT(4001, "Internal error: RangerRole object passed in was null"),
+    ROLE_VALIDATION_ERR_MISSING_FIELD(4002, "Internal error: missing field[{0}]"),
+    ROLE_VALIDATION_ERR_NULL_RANGER_ROLE_NAME(4003, "Internal error: RangerRole name passed in was null/empty"),
+    ROLE_VALIDATION_ERR_MISSING_USER_OR_GROUPS_OR_ROLES(4004, "RangerRole should contain atleast one user or group or role"),
+    ROLE_VALIDATION_ERR_ROLE_NAME_CONFLICT(4005, "Another RangerRole already exists for this name: Role =[{0}]]"),
+    ROLE_VALIDATION_ERR_INVALID_ROLE_ID(4006, "No RangerRole found for id[{0}]"),
+    ROLE_VALIDATION_ERR_INVALID_ROLE_NAME(4007, "No RangerRole found for name[{0}]"),
+    ROLE_VALIDATION_ERR_UNSUPPORTED_ACTION(4008, "Internal error: method signature isValid(Long) is only supported for DELETE"),
+
 
     ;
 

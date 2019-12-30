@@ -265,6 +265,7 @@
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
+                    <include>org.apache.ranger:ranger-plugins-cred</include>
                 </includes>
                 <unpack>false</unpack>
             </dependencySet>
@@ -463,7 +464,7 @@
           </includes>
       </moduleSet>
 
-<moduleSet>
+      <moduleSet>
           <binaries>
               <includeDependencies>true</includeDependencies>
               <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/prestodb</outputDirectory>
@@ -473,7 +474,7 @@
               <dependencySets>
                   <dependencySet>
                       <includes>
-		          <include>com.facebook.presto:presto-spi:jar:${prestodb.version}</include>
+                          <include>com.facebook.presto:presto-spi:jar:${prestodb.version}</include>
                           <include>com.facebook.presto:presto-jdbc:jar:${prestodb.version}</include>
                           <include>com.facebook.presto:presto-main:jar:${prestodb.version}</include>
                       </includes>

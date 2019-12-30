@@ -100,6 +100,17 @@ KEYSECURE_HOSTNAME=$(get_prop 'KEYSECURE_HOSTNAME' $PROPFILE)
 KEYSECURE_MASTER_KEY_SIZE=$(get_prop 'KEYSECURE_MASTER_KEY_SIZE' $PROPFILE)
 KEYSECURE_LIB_CONFIG_PATH=$(get_prop 'KEYSECURE_LIB_CONFIG_PATH' $PROPFILE)
 
+AZURE_KEYVAULT_ENABLED=$(get_prop 'AZURE_KEYVAULT_ENABLED' $PROPFILE)
+AZURE_KEYVAULT_SSL_ENABLED=$(get_prop 'AZURE_KEYVAULT_SSL_ENABLED' $PROPFILE)
+AZURE_CLIENT_ID=$(get_prop 'AZURE_CLIENT_ID' $PROPFILE)
+AZURE_CLIENT_SECRET=$(get_prop 'AZURE_CLIENT_SECRET' $PROPFILE)
+AZURE_AUTH_KEYVAULT_CERTIFICATE_PATH=$(get_prop 'AZURE_AUTH_KEYVAULT_CERTIFICATE_PATH' $PROPFILE)
+AZURE_AUTH_KEYVAULT_CERTIFICATE_PASSWORD=$(get_prop 'AZURE_AUTH_KEYVAULT_CERTIFICATE_PASSWORD' $PROPFILE)
+AZURE_MASTERKEY_NAME=$(get_prop 'AZURE_MASTERKEY_NAME' $PROPFILE)
+AZURE_MASTER_KEY_TYPE=$(get_prop 'AZURE_MASTER_KEY_TYPE' $PROPFILE)
+ZONE_KEY_ENCRYPTION_ALGO=$(get_prop 'ZONE_KEY_ENCRYPTION_ALGO' $PROPFILE)
+AZURE_KEYVAULT_URL=$(get_prop 'AZURE_KEYVAULT_URL' $PROPFILE)
+
 kms_principal=$(get_prop 'kms_principal' $PROPFILE)
 kms_keytab=$(get_prop 'kms_keytab' $PROPFILE)
 hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
@@ -187,7 +198,7 @@ updatePropertyToFile(){
 #Update Properties to File
 #$1 -> propertyName $2 -> newPropertyValue $3 -> fileName
 updatePropertyToFilePy(){
-    python update_property.py $1 $2 $3
+    $PYTHON_COMMAND_INVOKER update_property.py $1 $2 $3
     check_ret_status $? "Update property failed for: {'$1'}"
 }
 
@@ -215,6 +226,16 @@ password_validation(){
 }
 
 password_validation_safenet_keysecure(){
+        if [ -z "$1" ]
+        then
+                log "[I] Blank password is not allowed for" $2". Please enter valid password."
+                exit 1
+        else
+                log "[I]" $2 "password validated."
+        fi
+}
+
+azure_client_secret_validation(){
         if [ -z "$1" ]
         then
                 log "[I] Blank password is not allowed for" $2". Please enter valid password."
@@ -298,7 +319,7 @@ run_dba_steps(){
 		log "[I] Setup mode is set to SeparateDBA. Not Running DBA steps. Please run dba_script.py before running setup..!";
 	else
 		log "[I] Setup mode is not set. Running DBA steps..";
-                python dba_script.py -q
+                $PYTHON_COMMAND_INVOKER dba_script.py -q
         fi
 }
 check_db_connector() {
@@ -571,9 +592,13 @@ update_properties() {
         KEYSECURE_PASSWD="ranger.kms.keysecure.login.password"
         KEYSECURE_PASSWORD_ALIAS="ranger.ks.login.password"
 
+	AZURE_CLIENT_SEC="ranger.kms.azure.client.secret"
+	AZURE_CLIENT_SECRET_ALIAS="ranger.ks.azure.client.secret"
+
 
         HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
         KEYSECURE_ENABLED=`echo $KEYSECURE_ENABLED | tr '[:lower:]' '[:upper:]'`
+	AZURE_KEYVAULT_ENABLED=`echo $AZURE_KEYVAULT_ENABLED | tr '[:lower:]' '[:upper:]'`
 
 	if [ "${keystore}" != "" ]
 	then
@@ -613,6 +638,20 @@ update_properties() {
                         updatePropertyToFilePy $propertyName $newPropertyValue $to_file
                 fi
 
+		if [ "${AZURE_KEYVAULT_ENABLED}" == "TRUE" ]
+                then
+                        azure_client_secret_validation "$AZURE_CLIENT_SECRET" "Azure Client Secret"
+                        $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${AZURE_CLIENT_SECRET_ALIAS}" -v "${AZURE_CLIENT_SECRET}" -c 1
+
+                        propertyName=ranger.kms.azure.client.secret.alias
+                        newPropertyValue="${AZURE_CLIENT_SECRET_ALIAS}"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                        propertyName=ranger.kms.azure.client.secret
+                        newPropertyValue="_"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+                fi
+
 
 		propertyName=ranger.ks.jpa.jdbc.credential.alias
 		newPropertyValue="${DB_CREDENTIAL_ALIAS}"
@@ -648,6 +687,10 @@ update_properties() {
 
                 propertyName="${KEYSECURE_PASSWD}"
                 newPropertyValue="${KEYSECURE_PASSWORD}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName="${AZURE_CLIENT_SEC}"
+                newPropertyValue="${AZURE_CLIENT_SECRET}"
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 	fi
@@ -752,6 +795,55 @@ update_properties() {
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
         fi
+
+	########### AZURE KEY VAULT #################
+
+
+        if [ "${AZURE_KEYVAULT_ENABLED}" != "TRUE" ]
+        then
+                propertyName=ranger.kms.azurekeyvault.enabled
+                newPropertyValue="false"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+        else
+                propertyName=ranger.kms.azurekeyvault.enabled
+                newPropertyValue="true"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.kms.azure.keyvault.ssl.enabled
+                newPropertyValue="${AZURE_KEYVAULT_SSL_ENABLED}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.azure.client.id
+                newPropertyValue="${AZURE_CLIENT_ID}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.kms.azure.keyvault.certificate.path
+                newPropertyValue="${AZURE_AUTH_KEYVAULT_CERTIFICATE_PATH}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.kms.azure.keyvault.certificate.password
+                newPropertyValue="${AZURE_AUTH_KEYVAULT_CERTIFICATE_PASSWORD}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+
+                propertyName=ranger.kms.azure.masterkey.name
+                newPropertyValue="${AZURE_MASTERKEY_NAME}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.kms.azure.masterkey.type
+                newPropertyValue="${AZURE_MASTER_KEY_TYPE}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.azure.zonekey.encryption.algorithm
+                newPropertyValue="${ZONE_KEY_ENCRYPTION_ALGO}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.azurekeyvault.url
+                newPropertyValue="${AZURE_KEYVAULT_URL}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+        fi
+
 
 	to_file_kms_site=$PWD/ews/webapp/WEB-INF/classes/conf/ranger-kms-site.xml
     if test -f $to_file_kms_site; then

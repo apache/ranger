@@ -30,8 +30,10 @@ import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceDao;
+import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -210,13 +212,17 @@ public class TestRangerPolicyServiceBase {
 	public void test3mapEntityToViewBean() {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
 		RangerPolicy rangerPolicy = rangerPolicy();
 		XXPolicy policy = policy();
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.getById(policy.getService())).thenReturn(
 				xService);
-
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(
+				xServiceDef);
 		RangerPolicy dbRangerPolicy = policyService.mapEntityToViewBean(
 				rangerPolicy, policy);
 

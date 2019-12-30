@@ -19,8 +19,10 @@
 package org.apache.ranger.services.nifi.registry.client;
 
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.client.BaseClient;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -77,35 +79,56 @@ public class NiFiRegistryConnectionMgr {
             final String keystoreType = configs.get(NiFiRegistryConfigs.NIFI_REG_SSL_KEYSTORE_TYPE);
             final String keystorePassword = configs.get(NiFiRegistryConfigs.NIFI_REG_SSL_KEYSTORE_PASSWORD);
 
-            validateNotBlank(keystore, "Keystore is required for " + serviceName + " with Authentication Type of SSL");
-            validateNotBlank(keystoreType, "Keystore Type is required for " + serviceName + " with Authentication Type of SSL");
-            validateNotBlank(keystorePassword, "Keystore Password is required for " + serviceName + " with Authentication Type of SSL");
-
             final String truststore = configs.get(NiFiRegistryConfigs.NIFI_REG_SSL_TRUSTSTORE);
             final String truststoreType = configs.get(NiFiRegistryConfigs.NIFI_REG_SSL_TRUSTSTORE_TYPE);
             final String truststorePassword = configs.get(NiFiRegistryConfigs.NIFI_REG_SSL_TRUSTSTORE_PASSWORD);
 
-            validateNotBlank(truststore, "Truststore is required for " + serviceName + " with Authentication Type of SSL");
-            validateNotBlank(truststoreType, "Truststore Type is required for " + serviceName + " with Authentication Type of SSL");
-            validateNotBlank(truststorePassword, "Truststore Password is required for " + serviceName + " with Authentication Type of SSL");
+            final String useDefaultSSLContext = configs.get(NiFiRegistryConfigs.NIFI_REG_SSL_USER_DEFAULT_CONTEXT);
 
-            LOG.debug("Creating SSLContext for NiFi Registry connection");
+            if (!StringUtils.isBlank(useDefaultSSLContext) && "true".equalsIgnoreCase(useDefaultSSLContext)) {
 
-            sslContext = createSslContext(
-                    keystore.trim(),
-                    keystorePassword.trim().toCharArray(),
-                    keystoreType.trim(),
-                    truststore.trim(),
-                    truststorePassword.trim().toCharArray(),
-                    truststoreType.trim(),
-                    "TLS");
+                if (!StringUtils.isBlank(keystore) || !StringUtils.isBlank(keystoreType) || !StringUtils.isBlank(keystorePassword)
+                        || !StringUtils.isBlank(truststore) || !StringUtils.isBlank(truststoreType) || !StringUtils.isBlank(truststorePassword)) {
+                    throw new IllegalArgumentException("Keystore and Truststore configuration cannot be provided when using default SSL context");
+                }
+
+                sslContext = SSLContext.getDefault();
+            } else {
+
+                validateNotBlank(keystore, "Keystore is required for " + serviceName + " with Authentication Type of SSL");
+                validateNotBlank(keystoreType, "Keystore Type is required for " + serviceName + " with Authentication Type of SSL");
+                validateNotBlank(keystorePassword, "Keystore Password is required for " + serviceName + " with Authentication Type of SSL");
+
+                validateNotBlank(truststore, "Truststore is required for " + serviceName + " with Authentication Type of SSL");
+                validateNotBlank(truststoreType, "Truststore Type is required for " + serviceName + " with Authentication Type of SSL");
+                validateNotBlank(truststorePassword, "Truststore Password is required for " + serviceName + " with Authentication Type of SSL");
+
+                LOG.debug("Creating SSLContext for NiFi Registry connection");
+
+                sslContext = createSslContext(
+                        keystore.trim(),
+                        keystorePassword.trim().toCharArray(),
+                        keystoreType.trim(),
+                        truststore.trim(),
+                        truststorePassword.trim().toCharArray(),
+                        truststoreType.trim(),
+                        "TLS");
+            }
         }
 
         return new NiFiRegistryClient(url.trim(), sslContext);
     }
 
     public static HashMap<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
-        NiFiRegistryClient client = getNiFiRegistryClient(serviceName, configs);
+        NiFiRegistryClient client;
+        try {
+            client = getNiFiRegistryClient(serviceName, configs);
+        } catch (Exception e) {
+            final HashMap<String,Object> ret = new HashMap<>();
+            BaseClient.generateResponseDataMap(false, "Error creating NiFi Registry client", e.getMessage(), null, null, ret);
+            return ret;
+        }
+
         return client.connectionTest();
     }
 

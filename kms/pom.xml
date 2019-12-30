@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger</artifactId>
-        <version>2.0.1-SNAPSHOT</version>
+        <version>2.1.0-SNAPSHOT</version>
     </parent>
     <dependencies>
         <dependency>
@@ -45,7 +45,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>${fasterxml.jackson.version}</version>
+			<version>${fasterxml.jackson.databind.version}</version>
 		</dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
@@ -121,6 +121,12 @@
             <artifactId>mockito-core</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.mockito</groupId>
+            <artifactId>mockito-all</artifactId>
+            <version>${mockito.all.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
             <groupId>javax.annotation</groupId>
             <artifactId>jsr250-api</artifactId>
             <scope>provided</scope>
@@ -130,6 +136,13 @@
             <artifactId>hadoop-auth</artifactId>
             <version>${hadoop.version}</version>
             <scope>compile</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-common</artifactId>
+            <version>${hadoop.version}</version>
+            <scope>test</scope>
+            <type>test-jar</type>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -270,6 +283,56 @@
             <artifactId>derby</artifactId>
             <version>${derby.version}</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+		    <groupId>com.microsoft.azure</groupId>
+		    <artifactId>azure</artifactId>
+		    <version>${com.microsoft.azure.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.microsoft.azure</groupId>
+			<artifactId>azure-keyvault</artifactId>
+			<version>${com.microsoft.azure.azure-keyvault.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.azure</groupId>
+		    <artifactId>azure-mgmt-keyvault</artifactId>
+		    <version>${com.microsoft.azure.azure-mgmt-keyvault.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.rest</groupId>
+		    <artifactId>client-runtime</artifactId>
+		    <version>${com.microsoft.rest.client-runtime.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.azure</groupId>
+		    <artifactId>azure-client-runtime</artifactId>
+		    <version>${com.microsoft.azure.azure-client-runtime.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.microsoft.azure</groupId>
+   			<artifactId>adal4j</artifactId>
+    		<version>${com.microsoft.azure.adal4j.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>io.reactivex</groupId>
+		    <artifactId>rxjava</artifactId>
+		    <version>${io.reactivex.rxjava.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>net.minidev</groupId>
+		    <artifactId>asm</artifactId>
+		    <version>${net.minidev.asm.version}</version>
+		</dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcprov-jdk15on</artifactId>
+            <version>${org.bouncycastle.bcprov-jdk15on}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>${org.bouncycastle.bcpkix-jdk15on}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.directory.api</groupId>

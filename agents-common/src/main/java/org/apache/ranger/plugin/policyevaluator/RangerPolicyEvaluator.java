@@ -80,14 +80,6 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 	int getEvalOrder();
 
-	long getUsageCount();
-
-	void incrementUsageCount(int number);
-
-	void setUsageCountImmutable();
-
-	void resetUsageCount();
-
 	int getCustomConditionsCount();
 
 	int getValidityScheduleEvaluatorsCount();
@@ -193,18 +185,14 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 		}
 
 		private int compareNormal(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
-			int result;
+			final int result;
 
 			if (me.hasDeny() && !other.hasDeny()) {
 				result = -1;
 			} else if (!me.hasDeny() && other.hasDeny()) {
 				result = 1;
 			} else {
-				result = Long.compare(other.getUsageCount(), me.getUsageCount());
-
-				if (result == 0) {
-					result = Integer.compare(me.getEvalOrder(), other.getEvalOrder());
-				}
+				result =  Integer.compare(me.getEvalOrder(), other.getEvalOrder());
 			}
 
 			return result;

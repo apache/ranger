@@ -364,7 +364,7 @@ CREATE TABLE [dbo].[x_service_resource_element_val](
 	[upd_by_id] [bigint] DEFAULT NULL NULL,
 	[res_element_id] [bigint] NOT NULL,
 	[value] [varchar](1024) NOT NULL,
-	[sort_order] [tinyint] DEFAULT 0 NULL,
+	[sort_order] [int] DEFAULT 0 NULL,
 	PRIMARY KEY CLUSTERED 
 (
 	[id] ASC

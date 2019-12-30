@@ -49,7 +49,6 @@ public class SecureClientLogin {
 			SecureClientLoginConfiguration loginConf = new SecureClientLoginConfiguration(true, user, path);
 			LoginContext login = new LoginContext("hadoop-keytab-kerberos", subject, null, loginConf);
 			subject.getPrincipals().add(new User(user, AuthenticationMethod.KERBEROS, login));
-			login.logout();
 			login.login();
 			return login.getSubject();
 		} catch (LoginException le) {
@@ -64,7 +63,6 @@ public class SecureClientLogin {
 			LoginContext login = new LoginContext("hadoop-keytab-kerberos", subject, null, loginConf);
 			KerberosName.setRules(nameRules);
 			subject.getPrincipals().add(new User(user, AuthenticationMethod.KERBEROS, login));
-			login.logout();
 			login.login();
 			return login.getSubject();
 		} catch (LoginException le) {
@@ -78,7 +76,6 @@ public class SecureClientLogin {
 			SecureClientLoginConfiguration loginConf = new SecureClientLoginConfiguration(false, user, password);
 			LoginContext login = new LoginContext("hadoop-keytab-kerberos", subject, null, loginConf);
 			subject.getPrincipals().add(new User(user, AuthenticationMethod.KERBEROS, login));
-			login.logout();
 			login.login();
 			return login.getSubject();
 		} catch (LoginException le) {

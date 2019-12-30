@@ -61,7 +61,7 @@
 		================================================== -->
 		<section id="signin-container" style="margin-top: 4.5px;">
 			<div class="l-logo">
-				<img src="images/logo.png" alt="Ranger logo">
+                                <img src="images/ranger_logo.png" alt="Ranger logo">
 			</div>
 			<form action="" method="post" accept-charset="utf-8">
 				<fieldset>

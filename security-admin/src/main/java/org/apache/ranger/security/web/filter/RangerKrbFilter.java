@@ -40,10 +40,13 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletRequestWrapper;
 import javax.servlet.http.HttpServletResponse;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import static com.google.common.io.ByteStreams.skipFully;
 
 @InterfaceAudience.Private
 @InterfaceStability.Unstable
@@ -429,6 +432,8 @@ public class RangerKrbFilter implements Filter {
     HttpServletResponse httpResponse = (HttpServletResponse) response;
     boolean isHttps = "https".equals(httpRequest.getScheme());
     boolean allowTrustedProxy = PropertiesUtil.getBooleanProperty(ALLOW_TRUSTED_PROXY, false);
+    long contentLength = httpRequest.getContentLength();
+
     try {
       boolean newToken = false;
       AuthenticationToken token;
@@ -442,6 +447,7 @@ public class RangerKrbFilter implements Filter {
         authenticationEx = ex;
         token = null;
       }
+
       if (authHandler.managementOperation(token, httpRequest, httpResponse)) {
         if (token == null) {
           if (LOG.isDebugEnabled()) {
@@ -496,6 +502,9 @@ public class RangerKrbFilter implements Filter {
     }
     if (unauthorizedResponse) {
       if (!httpResponse.isCommitted()) {
+        if (LOG.isDebugEnabled()) {
+          LOG.debug("create auth cookie");
+        }
         createAuthCookie(httpResponse, "", getCookieDomain(),
                 getCookiePath(), 0, isHttps);
         // If response code is 401. Then WWW-Authenticate Header should be
@@ -514,18 +523,45 @@ public class RangerKrbFilter implements Filter {
             if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) && !allowTrustedProxy){
         	  ((HttpServletResponse)response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
                 filterChain.doFilter(request, response);
-        	}else{
-                boolean chk = true;
-	            Collection<String> headerNames = httpResponse.getHeaderNames();
-	            for(String headerName : headerNames){
-	                String value = httpResponse.getHeader(headerName);
-	                if("Set-Cookie".equalsIgnoreCase(headerName) && value.startsWith("RANGERADMINSESSIONID")){
-	                    chk = false;
-	                    break;
-	                }
-	            }
-	            String authHeader = httpRequest.getHeader("Authorization");
-	            if(authHeader == null && chk){
+            }else{
+              if (allowTrustedProxy) {
+                String expectHeader = httpRequest.getHeader("Expect");
+                if (LOG.isDebugEnabled()) {
+                  LOG.debug("expect header in request = " + expectHeader);
+                  LOG.debug("http response code = " + httpResponse.getStatus());
+                }
+                if (expectHeader != null && expectHeader.startsWith("100")) {
+                  if (LOG.isDebugEnabled()) {
+                    LOG.debug("skipping 100 continue!!");
+                  }
+                  if (contentLength <= 0) {
+                    Integer maxContentLen = Integer.MAX_VALUE;
+                    contentLength = maxContentLen.longValue();
+                    try {
+                      if (LOG.isDebugEnabled()) {
+                        LOG.debug("Skipping content length of " + contentLength);
+                      }
+                      skipFully(request.getInputStream(), contentLength);
+                    } catch (EOFException ex) {
+                      LOG.info(ex.getMessage());
+                    }
+                  }
+                }
+              }
+              boolean chk = true;
+              Collection<String> headerNames = httpResponse.getHeaderNames();
+              if (LOG.isDebugEnabled()) {
+                LOG.debug("reponse header names = " + headerNames);
+              }
+              for(String headerName : headerNames){
+                String value = httpResponse.getHeader(headerName);
+                if("Set-Cookie".equalsIgnoreCase(headerName) && value.startsWith("RANGERADMINSESSIONID")){
+                  chk = false;
+                  break;
+                }
+              }
+              String authHeader = httpRequest.getHeader("Authorization");
+              if(authHeader == null && chk){
 	            	filterChain.doFilter(request, response);
 	            }else if(authHeader != null && authHeader.startsWith("Basic")){
 	                filterChain.doFilter(request, response);

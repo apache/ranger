@@ -215,7 +215,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -283,7 +283,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -293,7 +293,7 @@
         ,
         {
           "name": "MATCH for parent with wildcards ''",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {}
           },
@@ -427,7 +427,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -561,7 +561,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards ''",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {}
           },
@@ -590,7 +590,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance:tax'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
           },
@@ -600,7 +600,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -610,7 +610,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards ''",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {}
           },
@@ -756,7 +756,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance:tax'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
           },
@@ -766,7 +766,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -797,7 +797,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance:tax'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
           },
@@ -807,7 +807,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance"}
           },
@@ -917,7 +917,7 @@
       ,
         {
           "name": "MATCH for parent with wildcards 'finance:tax'",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "resource": {
             "elements": {"database": "finance","table": "tax"}
           },

@@ -77,7 +77,7 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a KmsTableLayout Layout");
-			_.extend(this, _.pick(options, 'tab','kmsServiceName','kmsManagePage'));
+                        _.extend(this, _.pick(options, 'tab','kmsServiceName','kmsManagePage', 'urlQueryParams'));
 			this.showKeyList = true;
 			this.isKnownKmsServicePage =  this.kmsManagePage == 'new' ? false : true;
 			this.initializeKMSServices();
@@ -248,7 +248,7 @@ define(function(require){
 				placeholder = localization.tt('h.searchForKeys');	
 				coll = this.collection;
 				searchOpt = ['Key Name'];
-				serverAttrName  = [	{text : "Key Name", label :"name"}];
+                                serverAttrName  = [	{text : "Key Name", label :"name", urlLabel : "keyName"}];
 			}
 			var query = (!_.isUndefined(coll.VSQuery)) ? coll.VSQuery : '';
 			var pluginAttr = {

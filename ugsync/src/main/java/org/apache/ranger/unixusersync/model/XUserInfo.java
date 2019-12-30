@@ -80,4 +80,25 @@ public class XUserInfo {
                 + description + ", groupNameList=" + groupNameList
                 + ", userRoleList=" + userRoleList + "]";
     }
+
+    @Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		XUserInfo userInfo = (XUserInfo) o;
+		if (name == null) {
+			if (userInfo.name != null)
+				return false;
+		} else if (!name.equals(userInfo.name))
+			return false;
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + ((name == null) ? 0 : name.hashCode());
+		return result;
+	}
 }

@@ -139,6 +139,7 @@ public class RangerServiceDefValidator extends RangerValidator {
 			Long id = serviceDef.getId();
 			valid = isValidServiceDefId(id, action, failures) && valid;
 			valid = isValidServiceDefName(serviceDef.getName(), id, action, failures) && valid;
+			valid = isValidServiceDefDisplayName(serviceDef.getDisplayName(), id, action, failures) && valid;
 			valid = isValidAccessTypes(serviceDef.getId(), serviceDef.getAccessTypes(), failures, action) && valid;
 			if (isValidResources(serviceDef, failures, action)) {
 				// Semantic check of resource graph can only be done if resources are "syntactically" valid
@@ -240,7 +241,59 @@ public class RangerServiceDefValidator extends RangerValidator {
 		}
 		return valid;
 	}
-	
+
+	/**
+	 * Performs all validations related to ServiceDef displayName.
+	 * @param displayName
+	 * @param id
+	 * @param action
+	 * @param failures
+	 * @return
+	 */
+	boolean isValidServiceDefDisplayName(final String displayName, Long id, final Action action, final List<ValidationFailureDetails> failures) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> RangerServiceDefValidator.isValidServiceDefDisplayName(%s, %s, %s, %s)", displayName, id, action, failures));
+		}
+		boolean valid = true;
+
+		if (StringUtils.isBlank(displayName)) {
+			ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_INVALID_SERVICE_DEF_DISPLAY_NAME;
+			failures.add(new ValidationFailureDetailsBuilder()
+					.field("displayName")
+					.isMissing()
+					.errorCode(error.getErrorCode())
+					.becauseOf(error.getMessage(displayName))
+					.build());
+			valid = false;
+		} else {
+			RangerServiceDef otherServiceDef = getServiceDefByDisplayName(displayName);
+			if (otherServiceDef != null && action == Action.CREATE) {
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_SERVICE_DEF__DISPLAY_NAME_CONFICT;
+				failures.add(new ValidationFailureDetailsBuilder()
+						.field("displayName")
+						.isSemanticallyIncorrect()
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(displayName, otherServiceDef.getName()))
+						.build());
+				valid = false;
+			} else if (otherServiceDef != null && !Objects.equals(id, otherServiceDef.getId())) {
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_DEF_VALIDATION_ERR_SERVICE_DEF__DISPLAY_NAME_CONFICT;
+				failures.add(new ValidationFailureDetailsBuilder()
+						.field("id/displayName")
+						.isSemanticallyIncorrect()
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(displayName, otherServiceDef.getName()))
+						.build());
+				valid = false;
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerServiceDefValidator.isValidServiceDefName(%s, %s, %s, %s): %s", displayName, id, action, failures, valid));
+		}
+		return valid;
+	}
+
 	boolean isValidAccessTypes(final Long serviceDefId, final List<RangerAccessTypeDef> accessTypeDefs,
 							   final List<ValidationFailureDetails> failures, final Action action) {
 		if(LOG.isDebugEnabled()) {

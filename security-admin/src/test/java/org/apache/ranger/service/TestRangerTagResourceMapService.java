@@ -61,14 +61,6 @@ public class TestRangerTagResourceMapService {
 	}
 
 	@Test
-	public void test2PostUpdate() {
-		Mockito.when(daoMgr.getXXPortalUser()).thenReturn(XXPortalUserDao);
-		Mockito.when(daoMgr.getXXServiceVersionInfo()).thenReturn(xXServiceVersionInfoDao);
-		rangerTagResourceMapService.postUpdate(xXTagResourceMap);
-
-	}
-
-	@Test
 	public void test3GetPopulatedViewObject() {
 		Mockito.when(daoMgr.getXXPortalUser()).thenReturn(XXPortalUserDao);
 		rangerTagResourceMapService.getPopulatedViewObject(xXTagResourceMap);

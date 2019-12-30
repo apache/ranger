@@ -40,6 +40,7 @@ import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.TagValidator;
+import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -384,7 +385,7 @@ public class TagREST {
             if (exist == null) {
                 ret = tagStore.createTag(tag);
             } else if (updateIfExists) {
-                ret = updateTag(exist.getId(), exist);
+                ret = updateTag(exist.getId(), tag);
             } else {
                 throw new Exception("tag with Id " + exist.getId() + " already exists");
             }
@@ -616,7 +617,7 @@ public class TagREST {
             if (exist == null) {
                 ret = tagStore.createServiceResource(resource);
             } else if (updateIfExists) {
-                ret = updateServiceResource(exist.getId(), exist);
+                ret = updateServiceResource(exist.getId(), resource);
             } else {
                 throw new Exception("resource with Id " + exist.getId() + " already exists");
             }
@@ -1106,9 +1107,11 @@ public class TagREST {
     public ServiceTags getServiceTagsIfUpdated(@PathParam("serviceName") String serviceName,
                                                    @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion,
                                                @DefaultValue("0") @QueryParam(TagRESTConstants.LAST_ACTIVATION_TIME) Long lastActivationTime, @QueryParam("pluginId") String pluginId,
+                                               @DefaultValue("false") @QueryParam(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS) Boolean supportsTagDeltas,
+                                               @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
                                                @Context HttpServletRequest request) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
+            LOG.debug("==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + supportsTagDeltas + ")");
         }
 
 		ServiceTags ret      = null;
@@ -1121,7 +1124,9 @@ public class TagREST {
 		}
 
         try {
-            ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
+            bizUtil.failUnauthenticatedIfNotAllowed();
+
+            ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, !supportsTagDeltas);
 
             if (ret == null) {
                 downloadedVersion = lastKnownVersion;
@@ -1139,7 +1144,7 @@ public class TagREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
         } finally {
-            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
+            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {
@@ -1148,7 +1153,7 @@ public class TagREST {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
+            LOG.debug("<== TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + supportsTagDeltas + ")");
         }
 
         return ret;
@@ -1160,10 +1165,12 @@ public class TagREST {
     public ServiceTags getSecureServiceTagsIfUpdated(@PathParam("serviceName") String serviceName,
                                                    @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion,
                                                      @DefaultValue("0") @QueryParam(TagRESTConstants.LAST_ACTIVATION_TIME) Long lastActivationTime, @QueryParam("pluginId") String pluginId,
+                                                     @DefaultValue("false") @QueryParam(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS) Boolean supportsTagDeltas,
+                                                     @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
                                                      @Context HttpServletRequest request) {
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
+            LOG.debug("==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + supportsTagDeltas + ")");
         }
 
 		ServiceTags ret      = null;
@@ -1202,7 +1209,7 @@ public class TagREST {
         		}
         	}
         	if (isAllowed) {
-	            ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion);
+	            ret = tagStore.getServiceTagsIfUpdated(serviceName, lastKnownVersion, !supportsTagDeltas);
 
 				if(ret == null) {
                     downloadedVersion = lastKnownVersion;
@@ -1225,7 +1232,7 @@ public class TagREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg   = excp.getMessage();
         }  finally {
-            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName);
+            assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {
@@ -1234,10 +1241,25 @@ public class TagREST {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ")");
+            LOG.debug("<== TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + supportsTagDeltas + ")");
         }
 
         return ret;
+    }
+
+    @DELETE
+    @Path("/server/tagdeltas")
+    @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+    public void deleteTagDeltas(@DefaultValue("3") @QueryParam("days") Integer olderThan, @Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ServiceREST.deleteTagDeltas(" + olderThan + ")");
+        }
+
+        svcStore.resetTagUpdateLog(olderThan, ServiceTags.TagsChangeType.INVALIDATE_TAG_DELTAS);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== ServiceREST.deleteTagDeltas(" + olderThan + ")");
+        }
     }
 
 }

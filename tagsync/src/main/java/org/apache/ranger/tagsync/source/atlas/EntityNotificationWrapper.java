@@ -90,7 +90,7 @@ public class EntityNotificationWrapper {
                 rangerAtlasEntity      = new RangerAtlasEntity(typeName, guid, atlasEntity.getAttributes());
                 entityTypeName         = atlasEntity.getTypeName();
                 isEntityActive         = atlasEntity.getStatus() == AtlasEntity.Status.ACTIVE;
-                isEntityTypeHandled    = isEntityActive && AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
+                isEntityTypeHandled    = AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
                 isEntityDeleteOp       = EntityNotificationV2.OperationType.ENTITY_DELETE == v2Notification.getOperationType();
                 isEntityCreateOp       = EntityNotificationV2.OperationType.ENTITY_CREATE == v2Notification.getOperationType();
                 isEmptyClassifications = CollectionUtils.isEmpty(atlasEntity.getClassifications());
@@ -163,7 +163,7 @@ public class EntityNotificationWrapper {
                 rangerAtlasEntity      = new RangerAtlasEntity(typeName, guid, atlasEntity.getValues());
                 entityTypeName         = atlasEntity.getTypeName();
                 isEntityActive         = atlasEntity.getId().getState() == Id.EntityState.ACTIVE;
-                isEntityTypeHandled    = isEntityActive && AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
+                isEntityTypeHandled    = AtlasResourceMapperUtil.isEntityTypeHandled(entityTypeName);
                 isEntityDeleteOp       = EntityNotificationV1.OperationType.ENTITY_DELETE == v1Notification.getOperationType();
                 isEntityCreateOp       = EntityNotificationV1.OperationType.ENTITY_CREATE == v1Notification.getOperationType();
                 isEmptyClassifications = CollectionUtils.isEmpty(v1Notification.getAllTraits());

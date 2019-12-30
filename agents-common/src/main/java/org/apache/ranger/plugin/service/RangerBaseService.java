@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,7 +36,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -64,6 +65,12 @@ public abstract class RangerBaseService {
 	protected Map<String, String>   configs;
 	protected String 			    serviceName;
 	protected String 				serviceType;
+
+	private final RangerAdminConfig config;
+
+	public RangerBaseService() {
+		this.config = RangerAdminConfig.getInstance();
+	}
 
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		this.serviceDef    = serviceDef;
@@ -110,6 +117,8 @@ public abstract class RangerBaseService {
 	public void setServiceType(String serviceType) {
 		this.serviceType = serviceType;
 	}
+
+	public RangerAdminConfig getConfig() { return config; }
 
 	public abstract Map<String, Object> validateConfig() throws Exception;
 	
@@ -325,7 +334,7 @@ public abstract class RangerBaseService {
 		RangerPolicy.RangerPolicyItem policyItem = new RangerPolicy.RangerPolicyItem();
 
 		policyItem.setUsers(getUserList());
-
+		policyItem.setGroups(getGroupList());
 		List<RangerPolicy.RangerPolicyItemAccess> accesses = getAllowedAccesses(policyResources);
 		policyItem.setAccesses(accesses);
 
@@ -400,29 +409,65 @@ public abstract class RangerBaseService {
 
 	private List<String> getUserList() {
 		List<String> ret = new ArrayList<>();
+
+		HashSet<String> uniqueUsers = new HashSet<String>();
+		String[] users = config.getStrings("ranger.default.policy.users");
+
+		if (users != null) {
+			for (String user : users) {
+				uniqueUsers.add(user);
+			}
+		}
+
 		Map<String, String> serviceConfig =  service.getConfigs();
 		if (serviceConfig != null ) {
                         String serviceConfigUser = serviceConfig.get("username");
                         if (StringUtils.isNotBlank(serviceConfigUser)){
-                                ret.add(serviceConfig.get("username"));
+                            uniqueUsers.add(serviceConfig.get("username"));
                         }
 			String defaultUsers = serviceConfig.get("default.policy.users");
 			if (!StringUtils.isEmpty(defaultUsers)) {
 				List<String> defaultUserList = new ArrayList<>(Arrays.asList(StringUtils.split(defaultUsers,",")));
 				if (!defaultUserList.isEmpty()) {
-					ret.addAll(defaultUserList);
+					uniqueUsers.addAll(defaultUserList);
 				}
 			}
 		}
-		String authType = RangerConfiguration.getInstance().get(RANGER_AUTH_TYPE,"simple");
-		String lookupPrincipal = RangerConfiguration.getInstance().get(LOOKUP_PRINCIPAL);
-		String lookupKeytab = RangerConfiguration.getInstance().get(LOOKUP_KEYTAB);
+		String authType = config.get(RANGER_AUTH_TYPE,"simple");
+		String lookupPrincipal = config.get(LOOKUP_PRINCIPAL);
+		String lookupKeytab = config.get(LOOKUP_KEYTAB);
 
 		String lookUpUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
 
 		if (StringUtils.isNotBlank(lookUpUser)) {
-			ret.add(lookUpUser);
+			uniqueUsers.add(lookUpUser);
 		}
+		ret.addAll(uniqueUsers);
+		return ret;
+	}
+	private List<String> getGroupList() {
+		List<String> ret = new ArrayList<>();
+
+		HashSet<String> uniqueGroups = new HashSet<String>();
+		String[] groups = config.getStrings("ranger.default.policy.groups");
+
+		if (groups != null) {
+			for (String group : groups) {
+				uniqueGroups.add(group);
+			}
+		}
+
+		Map<String, String> serviceConfig = service.getConfigs();
+		if (serviceConfig != null) {
+			String defaultGroups = serviceConfig.get("default.policy.groups");
+			if (!StringUtils.isEmpty(defaultGroups)) {
+				List<String> defaultGroupList = new ArrayList<>(Arrays.asList(StringUtils.split(defaultGroups, ",")));
+				if (!defaultGroupList.isEmpty()) {
+					uniqueGroups.addAll(defaultGroupList);
+				}
+			}
+		}
+		ret.addAll(uniqueGroups);
 
 		return ret;
 	}

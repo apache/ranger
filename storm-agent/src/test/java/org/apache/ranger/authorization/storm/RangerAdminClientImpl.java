@@ -22,6 +22,7 @@ import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.AbstractRangerAdminClient;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -40,7 +41,8 @@ public class RangerAdminClientImpl extends AbstractRangerAdminClient {
     private final static String tagFilename = "storm-policies-tag.json";
     private Gson gson;
 
-    public void init(String serviceName, String appId, String configPropertyPrefix) {
+    @Override
+    public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
         Gson gson = null;
         try {
             gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();

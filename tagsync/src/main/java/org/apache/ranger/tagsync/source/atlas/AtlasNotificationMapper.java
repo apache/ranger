@@ -46,8 +46,7 @@ public class AtlasNotificationMapper {
 
     private static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {
 
-        boolean skipLogging = entityNotification.getIsEntityCreateOp() && entityNotification.getIsEmptyClassifications()
-                || ! entityNotification.getIsEntityActive();
+        boolean skipLogging = entityNotification.getIsEntityCreateOp() && entityNotification.getIsEmptyClassifications();
 
         if (!skipLogging) {
             boolean loggingNeeded = false;
@@ -67,13 +66,15 @@ public class AtlasNotificationMapper {
             }
 
             if (loggingNeeded) {
-                LOG.warn("Did not process entity notification for [" + entityTypeName + "]");
+                if (!entityNotification.getIsEntityTypeHandled()) {
+                    LOG.warn("Tag-sync is not enabled to handle notifications for Entity-type:[" + entityNotification.getEntityTypeName() + "]");
+                }
+                LOG.warn("Dropped process entity notification for Atlas-Entity [" + entityNotification.getRangerAtlasEntity() + "]");
             }
 
         }
     }
 
-    @SuppressWarnings("unchecked")
     public static ServiceTags processEntityNotification(EntityNotificationWrapper entityNotification) {
 
         ServiceTags ret = null;
@@ -117,7 +118,7 @@ public class AtlasNotificationMapper {
         if (opType != null) {
             switch (opType) {
                 case ENTITY_CREATE:
-                    ret = ! entityNotification.getIsEmptyClassifications();
+                    ret = entityNotification.getIsEntityActive() && !entityNotification.getIsEmptyClassifications();
                     if (!ret) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("ENTITY_CREATE notification is ignored, as there are no traits associated with the entity. Ranger will get necessary information from any subsequent TRAIT_ADDED notification");
@@ -125,7 +126,7 @@ public class AtlasNotificationMapper {
                     }
                     break;
                 case ENTITY_UPDATE:
-                    ret = ! entityNotification.getIsEmptyClassifications();
+                    ret = entityNotification.getIsEntityActive() && !entityNotification.getIsEmptyClassifications();
                     if (!ret) {
                         if (LOG.isDebugEnabled()) {
                             LOG.debug("ENTITY_UPDATE notification is ignored, as there are no traits associated with the entity.");
@@ -133,10 +134,12 @@ public class AtlasNotificationMapper {
                     }
                     break;
                 case ENTITY_DELETE:
+                    ret = true;
+                    break;
                 case CLASSIFICATION_ADD:
                 case CLASSIFICATION_UPDATE:
                 case CLASSIFICATION_DELETE: {
-                    ret = true;
+                    ret = entityNotification.getIsEntityActive();
                     break;
                 }
                 default:

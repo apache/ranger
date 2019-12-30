@@ -39,7 +39,7 @@ public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator 
     private final String                                         securityZoneName;
     private final Map<String, RangerPolicy.RangerPolicyResource> policyResource;
     private final RangerPolicyResourceMatcher                    policyResourceMatcher;
-    private final Integer                                        leafResourceLevel;
+    private RangerServiceDef.RangerResourceDef                   leafResourceDef;
 
     public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDef serviceDef) {
 
@@ -77,7 +77,7 @@ public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator 
         this.securityZoneName      = securityZoneName;
         this.policyResourceMatcher = matcher;
         this.policyResource        = policyResource;
-        this.leafResourceLevel     = ServiceDefUtil.getLeafResourceLevel(serviceDef, policyResource);
+        this.leafResourceDef   = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
     }
 
     public String getSecurityZoneName() { return securityZoneName; }
@@ -101,8 +101,8 @@ public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator 
     }
 
     @Override
-    public Integer getLeafResourceLevel() {
-        return leafResourceLevel;
+    public boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef) {
+        return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
     }
 
     @Override

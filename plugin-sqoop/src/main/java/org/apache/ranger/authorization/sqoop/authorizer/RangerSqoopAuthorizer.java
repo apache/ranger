@@ -145,7 +145,7 @@ class RangerSqoopPlugin extends RangerBasePlugin {
 	public void init() {
 		super.init();
 
-		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler();
+		RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(getConfig());
 
 		super.setResultProcessor(auditHandler);
 	}

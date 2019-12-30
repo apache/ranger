@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -59,7 +60,7 @@ public class RangerPolicyDeltaUtil {
             for (RangerPolicyDelta delta : deltas) {
                 int changeType = delta.getChangeType();
                 if (!serviceType.equals(delta.getServiceType())) {
-                    if (!delta.getServiceType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+                    if (!serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) && !delta.getServiceType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
                         LOG.error("Found unexpected serviceType in policyDelta:[" + delta + "]. Was expecting serviceType:[" + serviceType + "]. Should NOT have come here!! Ignoring delta and continuing");
                     }
                     continue;
@@ -152,5 +153,45 @@ public class RangerPolicyDeltaUtil {
             LOG.debug("<== isValidDeltas(deltas=" + Arrays.toString(deltas.toArray()) + ", componentServiceType=" + componentServiceType +"): " + isValid);
         }
         return isValid;
+    }
+
+    public static Boolean hasPolicyDeltas(final ServicePolicies servicePolicies) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> hasPolicyDeltas(servicePolicies:[" + servicePolicies + "]");
+        }
+        final Boolean ret;
+
+        if (servicePolicies == null) {
+            LOG.error("ServicePolicies are null!");
+            ret = null;
+        } else {
+            Boolean isDeltasInSecurityZones = null;
+
+            if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
+                for (ServicePolicies.SecurityZoneInfo element : servicePolicies.getSecurityZones().values()) {
+                    if (CollectionUtils.isNotEmpty(element.getPolicies()) && CollectionUtils.isEmpty(element.getPolicyDeltas())) {
+                        isDeltasInSecurityZones = false;
+                        break;
+                    }
+                    if (CollectionUtils.isEmpty(element.getPolicies()) && CollectionUtils.isNotEmpty(element.getPolicyDeltas())) {
+                        isDeltasInSecurityZones = true;
+                        break;
+                    }
+                }
+            }
+
+            if (CollectionUtils.isNotEmpty(servicePolicies.getPolicies()) || (servicePolicies.getTagPolicies() != null && CollectionUtils.isNotEmpty(servicePolicies.getTagPolicies().getPolicies())) || (isDeltasInSecurityZones != null && isDeltasInSecurityZones.equals(Boolean.FALSE))) {
+                ret = false;
+            } else if (CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) || (isDeltasInSecurityZones != null && isDeltasInSecurityZones.equals(Boolean.TRUE))) {
+                ret = true;
+            } else {
+                LOG.warn("ServicePolicies contain either both policies and policy-deltas or contain neither policies nor policy-deltas!");
+                ret = null;
+            }
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== hasPolicyDeltas(servicePolicies:[" + servicePolicies + "], ret:[" + ret + "]");
+        }
+        return ret;
     }
 }

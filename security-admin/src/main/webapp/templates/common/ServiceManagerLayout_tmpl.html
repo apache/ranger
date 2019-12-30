@@ -29,7 +29,7 @@
             <button type="button" title="Export" class=" btn btn-small btn-right btn-import-export" data-id="exportBtn"> <i class="icon-external-link-sign"></i>
              Export
             </button>
-            <button type="button" title="Import" class="btn btn-success btn btn-small btn-import-export" data-id="importBtn" > <i class="icon-rotate-180 icon-external-link-sign"></i>
+            <button type="button" title="Import" class="btn btn btn-small btn-import-export" data-id="importBtn" > <i class="icon-rotate-180 icon-external-link-sign"></i>
              Import
             </button>
         {{/if}}
@@ -57,7 +57,7 @@
                                         <!-- Remove alt attribut from img tag -->
                                         <span>
                                             <img src="images/folder-grey.png">
-                                            {{./this.attributes.name}}
+                                            {{./this.attributes.displayName}}
                                         </span>
                                         {{#if ../operation}}
                                             <span>

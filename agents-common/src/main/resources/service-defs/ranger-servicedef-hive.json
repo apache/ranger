@@ -1,6 +1,7 @@
 {
 	"id":3,
 	"name": "hive",
+	"displayName": "Hadoop SQL",
 	"implClass": "org.apache.ranger.services.hive.RangerServiceHive",
 	"label": "Hive Server2",
 	"description": "Hive Server2",
@@ -23,7 +24,8 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Hive Database",
-			"description": "Hive Database"
+			"description": "Hive Database",
+			"isValidLeaf": true
 		},
 
 		{
@@ -42,7 +44,8 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Hive Table",
-			"description": "Hive Table"
+			"description": "Hive Table",
+			"isValidLeaf": true
 		},
 
 		{

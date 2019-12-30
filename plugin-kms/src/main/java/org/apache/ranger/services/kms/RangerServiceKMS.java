@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -103,9 +102,9 @@ public class RangerServiceKMS extends RangerBaseService {
 
 		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
 
-		String adminPrincipal = RangerConfiguration.getInstance().get(ADMIN_USER_PRINCIPAL);
-		String adminKeytab = RangerConfiguration.getInstance().get(ADMIN_USER_KEYTAB);
-		String authType = RangerConfiguration.getInstance().get(RANGER_AUTH_TYPE,"simple");
+		String adminPrincipal = getConfig().get(ADMIN_USER_PRINCIPAL);
+		String adminKeytab = getConfig().get(ADMIN_USER_KEYTAB);
+		String authType = getConfig().get(RANGER_AUTH_TYPE,"simple");
 
 		String adminUser = getLookupUser(authType, adminPrincipal, adminKeytab);
 
@@ -135,7 +134,7 @@ public class RangerServiceKMS extends RangerBaseService {
 				item.setUsers(users);
 			}
 
-			String hdfsUser = RangerConfiguration.getInstance().get("ranger.kms.service.user.hdfs", "hdfs");
+			String hdfsUser = getConfig().get("ranger.kms.service.user.hdfs", "hdfs");
 			if (hdfsUser != null && !hdfsUser.isEmpty()) {
 				LOG.info("Creating default KMS policy item for " + hdfsUser);
 				List<String> users = new ArrayList<String>();
@@ -145,7 +144,7 @@ public class RangerServiceKMS extends RangerBaseService {
 			}
 
 
-			String hiveUser = RangerConfiguration.getInstance().get("ranger.kms.service.user.hive", "hive");
+			String hiveUser = getConfig().get("ranger.kms.service.user.hive", "hive");
 
 			if (hiveUser != null && !hiveUser.isEmpty()) {
 				LOG.info("Creating default KMS policy item for " + hiveUser);

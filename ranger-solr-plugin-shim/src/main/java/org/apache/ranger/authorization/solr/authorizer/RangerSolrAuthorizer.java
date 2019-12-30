@@ -26,11 +26,14 @@ import java.util.Map;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.apache.solr.common.util.NamedList;
+import org.apache.solr.handler.component.ResponseBuilder;
+import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.security.AuthorizationContext;
 import org.apache.solr.security.AuthorizationPlugin;
 import org.apache.solr.security.AuthorizationResponse;
 
-public class RangerSolrAuthorizer implements AuthorizationPlugin {
+public class RangerSolrAuthorizer extends SearchComponent implements AuthorizationPlugin {
 	private static final Log LOG = LogFactory
 			.getLog(RangerSolrAuthorizer.class);
 
@@ -38,6 +41,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	private static final String   RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.solr.authorizer.RangerSolrAuthorizer";
 
 	private 		AuthorizationPlugin  	rangerSolrAuthorizerImpl 	  = null;
+	private			SearchComponent			rangerSearchComponentImpl	  = null;
 	private static	RangerPluginClassLoader rangerPluginClassLoader  	  = null;
 
 	public RangerSolrAuthorizer() {
@@ -65,7 +69,9 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 			activatePluginClassLoader();
 
-			rangerSolrAuthorizerImpl = cls.newInstance();
+			Object impl = cls.newInstance();
+			rangerSolrAuthorizerImpl = (AuthorizationPlugin)impl;
+			rangerSearchComponentImpl = (SearchComponent)impl;
 		} catch (Exception e) {
 			// check what need to be done
 			LOG.error("Error Enabling RangerSolrPlugin", e);
@@ -98,6 +104,24 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	}
 
 	@Override
+	public void init(NamedList args) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerSolrAuthorizer.init(" + args.toString() + ")");
+		}
+		try {
+			activatePluginClassLoader();
+
+			rangerSearchComponentImpl.init(args);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerSolrAuthorizer.init(" + args.toString() + ")");
+		}
+	}
+
+	@Override
 	public void close() throws IOException {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerSolrAuthorizer.close(Resource)");
@@ -119,7 +143,7 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	@Override
 	public AuthorizationResponse authorize(AuthorizationContext context) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerSolrAuthorizer.init(context)");
+			LOG.debug("==> RangerSolrAuthorizer.authorize(context)");
 		}
 		AuthorizationResponse ret = null;
 		try {
@@ -131,9 +155,69 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerSolrAuthorizer.init(context)");
+			LOG.debug("<== RangerSolrAuthorizer.authorize(context)");
 		}
 
+		return ret;
+	}
+
+	@Override
+	public void prepare(ResponseBuilder responseBuilder) throws IOException {
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerSolrAuthorizer.prepare()");
+		}
+
+		try {
+			activatePluginClassLoader();
+
+			rangerSearchComponentImpl.prepare(responseBuilder);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerSolrAuthorizer.prepare()");
+		}
+	}
+
+	@Override
+	public void process(ResponseBuilder responseBuilder) throws IOException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerSolrAuthorizer.process()");
+		}
+		try {
+			activatePluginClassLoader();
+
+			rangerSearchComponentImpl.process(responseBuilder);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerSolrAuthorizer.process()");
+		}
+
+	}
+
+	@Override
+	public String getDescription() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerSolrAuthorizer.getDescription()");
+		}
+
+		String ret = null;
+		try {
+			activatePluginClassLoader();
+
+			ret = rangerSearchComponentImpl.getDescription();
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerSolrAuthorizer.getDescription()");
+		}
 		return ret;
 	}
 

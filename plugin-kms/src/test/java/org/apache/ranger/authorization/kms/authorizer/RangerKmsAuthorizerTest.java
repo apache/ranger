@@ -24,7 +24,6 @@ import java.security.PrivilegedExceptionAction;
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-import javax.servlet.ServletContext;
 import javax.servlet.ServletContextEvent;
 
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
@@ -93,8 +92,6 @@ public class RangerKmsAuthorizerTest {
 
         // Start KMSWebApp
         ServletContextEvent servletContextEvent = Mockito.mock(ServletContextEvent.class);
-        ServletContext servletContext = Mockito.mock(ServletContext.class);
-        Mockito.when(servletContextEvent.getServletContext()).thenReturn(servletContext);
 
         kmsWebapp = new KMSWebApp();
         kmsWebapp.contextInitialized(servletContextEvent);

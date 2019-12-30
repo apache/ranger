@@ -77,6 +77,10 @@ public class TagValidator {
 			throw new Exception("Attempt to update nonexistant tag, id=" + id);
 		}
 
+		if (!StringUtils.equals(tag.getType(), existing.getType())) {
+			throw new Exception("Attempt to change the tag-type");
+		}
+
 		tag.setId(existing.getId());
 		tag.setGuid(existing.getGuid());
 	}
@@ -89,6 +93,10 @@ public class TagValidator {
 		RangerTag existing = tagStore.getTagByGuid(guid);
 		if (existing == null) {
 			throw new Exception("Attempt to update nonexistent tag, guid=" + guid);
+		}
+
+		if (!StringUtils.equals(tag.getType(), existing.getType())) {
+			throw new Exception("Attempt to change the tag-type");
 		}
 
 		tag.setId(existing.getId());
@@ -139,9 +147,10 @@ public class TagValidator {
 			ret = tagStore.getServiceResourceByGuid(guid);
 		}
 
-		RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
-
-		resource.setResourceSignature(serializer.getSignature());
+		if (ret == null) {
+			RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
+			resource.setResourceSignature(serializer.getSignature());
+		}
 
 		return ret;
 	}
@@ -160,6 +169,10 @@ public class TagValidator {
 			throw new Exception("Attempt to update nonexistent resource, id=" + id);
 		}
 
+		if (!StringUtils.equals(existing.getServiceName(), resource.getServiceName())) {
+			throw new Exception("Attempt to change service-name for existing service-resource");
+		}
+
 		RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
 
 		resource.setId(existing.getId());
@@ -175,6 +188,10 @@ public class TagValidator {
 		RangerServiceResource existing = tagStore.getServiceResourceByGuid(guid);
 		if (existing == null) {
 			throw new Exception("Attempt to update nonexistent resource, guid=" + guid);
+		}
+
+		if (!StringUtils.equals(existing.getServiceName(), resource.getServiceName())) {
+			throw new Exception("Attempt to change service-name for existing service-resource");
 		}
 
 		RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);

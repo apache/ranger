@@ -19,42 +19,36 @@
 
 package org.apache.ranger.tagsync.sink.tagadmin;
 
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
+import java.io.IOException;
+import java.security.PrivilegedAction;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Properties;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.collections.MapUtils;
+import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.NewCookie;
+
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
-import org.apache.ranger.tagsync.model.TagSink;
-import com.sun.jersey.api.client.Client;
-import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.NewCookie;
-import java.util.ArrayList;
-import java.util.List;
 import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
-import javax.servlet.http.HttpServletResponse;
 
-import java.io.IOException;
-import java.security.PrivilegedAction;
-import java.util.Map;
-import java.util.Properties;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import com.sun.jersey.api.client.ClientResponse;
 
 public class TagAdminRESTSink implements TagSink, Runnable {
 	private static final Log LOG = LogFactory.getLog(TagAdminRESTSink.class);
 
 	private static final String REST_PREFIX = "/service";
 	private static final String MODULE_PREFIX = "/tags";
-
-	private static final String REST_MIME_TYPE_JSON = "application/json";
 
 	private static final String REST_URL_IMPORT_SERVICETAGS_RESOURCE = REST_PREFIX + MODULE_PREFIX + "/importservicetags/";
 
@@ -102,7 +96,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		}
 
 		if (StringUtils.isNotBlank(restUrl)) {
-			tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile);
+			tagRESTClient = new RangerRESTClient(restUrl, sslConfigFile, TagSyncConfig.getInstance());
 			if (!isKerberized) {
 				tagRESTClient.setBasicAuthInfo(userName, password);
 			}
@@ -193,8 +187,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		if (isRangerCookieEnabled) {
 			response = uploadServiceTagsUsingCookie(serviceTags);
 		} else {
-			WebResource webResource = createWebResource(REST_URL_IMPORT_SERVICETAGS_RESOURCE);
-			response = webResource.accept(REST_MIME_TYPE_JSON).type(REST_MIME_TYPE_JSON).put(ClientResponse.class, tagRESTClient.toJson(serviceTags));
+			response = tagRESTClient.put(REST_URL_IMPORT_SERVICETAGS_RESOURCE, null, serviceTags);
 		}
 
 		if(response == null || response.getStatus() != HttpServletResponse.SC_NO_CONTENT) {
@@ -268,9 +261,13 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 	private synchronized ClientResponse uploadTagsWithCred(ServiceTags serviceTags) {
 			if (sessionId == null) {
 				tagRESTClient.resetClient();
-				WebResource webResource = createWebResource(REST_URL_IMPORT_SERVICETAGS_RESOURCE);
-				ClientResponse response = webResource.accept(REST_MIME_TYPE_JSON).type(REST_MIME_TYPE_JSON).put(ClientResponse.class,
-						tagRESTClient.toJson(serviceTags));
+
+				ClientResponse response = null;
+				try {
+					response = tagRESTClient.put(REST_URL_IMPORT_SERVICETAGS_RESOURCE, null, serviceTags);
+				} catch (Exception e) {
+					LOG.error("Failed to get response, Error is : "+e.getMessage());
+				}
 				if (response != null) {
 					if (!(response.toString().contains(REST_URL_IMPORT_SERVICETAGS_RESOURCE))) {
 						response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -306,10 +303,13 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> uploadTagsWithCookie");
 		}
-		WebResource webResource = createWebResourceForCookieAuth(REST_URL_IMPORT_SERVICETAGS_RESOURCE);
-		WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
-		ClientResponse response = br.accept(REST_MIME_TYPE_JSON).type(REST_MIME_TYPE_JSON).put(ClientResponse.class,
-				tagRESTClient.toJson(serviceTags));
+
+		ClientResponse response = null;
+		try {
+			response = tagRESTClient.put(REST_URL_IMPORT_SERVICETAGS_RESOURCE, serviceTags, sessionId);
+		} catch (Exception e) {
+			LOG.error("Failed to get response, Error is : "+e.getMessage());
+		}
 		if (response != null) {
 			if (!(response.toString().contains(REST_URL_IMPORT_SERVICETAGS_RESOURCE))) {
 				response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -329,32 +329,6 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 			LOG.debug("<== uploadTagsWithCookie");
 		}
 		return response;
-	}
-
-	private WebResource createWebResource(String url) {
-		return createWebResource(url, null);
-	}
-
-	private WebResource createWebResource(String url, SearchFilter filter) {
-		WebResource ret = tagRESTClient.getResource(url);
-
-		if(filter != null && !MapUtils.isEmpty(filter.getParams())) {
-			for(Map.Entry<String, String> e : filter.getParams().entrySet()) {
-				String name  = e.getKey();
-				String value = e.getValue();
-
-				ret.queryParam(name, value);
-			}
-		}
-
-		return ret;
-	}
-
-	private WebResource createWebResourceForCookieAuth(String url) {
-		Client cookieClient = tagRESTClient.getClient();
-		cookieClient.removeAllFilters();
-		WebResource ret = cookieClient.resource(tagRESTClient.getUrl() + url);
-		return ret;
 	}
 
 	@Override

@@ -130,10 +130,13 @@ public interface TagStore {
     PList<RangerTagResourceMap> getPaginatedTagResourceMaps(SearchFilter filter) throws Exception;
 
 
-    ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion) throws Exception;
-    ServiceTags getServiceTags(String serviceName) throws Exception;
+    ServiceTags getServiceTagsIfUpdated(String serviceName, Long lastKnownVersion, boolean needsBackwardCompatibility) throws Exception;
+    ServiceTags getServiceTags(String serviceName, Long lastKnownVersion) throws Exception;
+    ServiceTags getServiceTagsDelta(String serviceName, Long lastKnownVersion) throws Exception;
+
 
     Long getTagVersion(String serviceName);
 
     void deleteAllTagObjectsForService(String serviceName) throws Exception;
+
 }

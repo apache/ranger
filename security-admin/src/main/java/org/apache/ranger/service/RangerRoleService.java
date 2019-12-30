@@ -32,12 +32,18 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXServiceDao;
+import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXRole;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -126,6 +132,8 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
         }
         List<XXTrxLog> trxLogList = new ArrayList<>();
         Field[] fields = current.getClass().getDeclaredFields();
+        String users   = RangerConstants.MODULE_USER_GROUPS.split("/")[0];
+        String groups  = RangerConstants.MODULE_USER_GROUPS.split("/")[1];
 
         try {
             Field nameField = current.getClass().getDeclaredField("name");
@@ -147,6 +155,20 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                 xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
                 xTrxLog.setObjectName(objectName);
 
+                if(!StringUtils.isNotBlank(current.getCreatedByUser())){
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("Created User = " + current.getCreatedByUser());
+                    }
+                    XXPortalUser xXPortalUser = daoMgr.getXXPortalUser().findByLoginId(current.getCreatedByUser());
+                    if(xXPortalUser != null){
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("User Id for " + current.getCreatedByUser() + " = " + xXPortalUser.getId());
+                        }
+                        xTrxLog.setAddedByUserId(xXPortalUser.getId());
+                        xTrxLog.setUpdatedByUserId(xXPortalUser.getId());
+                    }
+                }
+
                 String value;
                 if (vTrxLogAttr.isEnum()) {
                     String enumName = XXUser.getEnumName(fieldName);
@@ -155,6 +177,18 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                     value = xaEnumUtil.getLabel(enumName, enumValue);
                 } else {
                     value = "" + field.get(current);
+                                        if (fieldName.equalsIgnoreCase(users) || fieldName.equalsIgnoreCase(groups)
+                                                        || fieldName.equalsIgnoreCase(RangerConstants.ROLE_FIELD)) {
+                                                if (fieldName.equalsIgnoreCase(users)) {
+                                                        value = JsonUtils.listToJson(current.getUsers());
+                                                }
+                                                else if (fieldName.equalsIgnoreCase(groups)) {
+                                                        value = JsonUtils.listToJson(current.getGroups());
+                                                }
+                                                else if (fieldName.equalsIgnoreCase(RangerConstants.ROLE_FIELD)) {
+                                                        value = JsonUtils.listToJson(current.getRoles());
+                                                }
+                                        }
                     if ((value == null || "null".equalsIgnoreCase(value))
                             && !"update".equalsIgnoreCase(action)) {
                         continue;
@@ -183,25 +217,40 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
                             }
                             else {
                                 formerValue = mField.get(former) + "";
+                                                                if (fieldName.equalsIgnoreCase(users) || fieldName.equalsIgnoreCase(groups)
+                                                                                || fieldName.equalsIgnoreCase(RangerConstants.ROLE_FIELD)) {
+                                                                        if (fieldName.equalsIgnoreCase(users)) {
+                                                                                formerValue = JsonUtils.listToJson(former.getUsers());
+                                                                        }
+                                                                        else if (fieldName.equalsIgnoreCase(groups)) {
+                                                                                formerValue = JsonUtils.listToJson(former.getGroups());
+                                                                        }
+                                                                        else if (fieldName.equalsIgnoreCase(RangerConstants.ROLE_FIELD)) {
+                                                                                formerValue = JsonUtils.listToJson(former.getRoles());
+                                                                        }
+                                                                }
                             }
                             break;
                         }
                     }
-                    if (formerValue == null || formerValue.equalsIgnoreCase(value)) {
+                    value = ((value == null) ? "" : value);
+                    formerValue = ((formerValue == null) ? "" : formerValue);
+                    if (formerValue.equalsIgnoreCase(value)) {
                         continue;
                     }
                     xTrxLog.setPreviousValue(formerValue);
                     xTrxLog.setNewValue(value);
                     trxLogList.add(xTrxLog);
                 }
+                if(logger.isDebugEnabled()) {
+                    logger.debug("AddedByUserId for " + xTrxLog.getObjectName() + " = " + xTrxLog.getAddedByUserId());
+                }
             }
             if (trxLogList.isEmpty()) {
-                XXTrxLog xTrxLog = new XXTrxLog();
-                xTrxLog.setAction(action);
-                xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
-                xTrxLog.setObjectId(current.getId());
-                xTrxLog.setObjectName(objectName);
-                trxLogList.add(xTrxLog);
+                if(logger.isDebugEnabled()) {
+                    logger.debug("trxLogList is empty!!");
+                }
+               trxLogList = null;
             }
         } catch (IllegalAccessException e) {
             logger.error("Transaction log failure.", e);
@@ -237,6 +286,23 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
         return ret;
     }
 
+    public void updateRoleVersions(Long roleId) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> updateRoleVersions(roleId=" + roleId + ")");
+        }
+        // Get all roles which include this role because change to this affects all these roles
+        Set<Long> containingRoles = getContainingRoles(roleId);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("All containing Roles for roleId:[" + roleId +"] are [" + containingRoles + "]");
+        }
+
+        updateRoleVersions(containingRoles);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== updateRoleVersions(roleId=" + roleId + ")");
+        }
+    }
 
     private void addContainingRoles(Long roleId, Set<Long> allRoles) {
         if (logger.isDebugEnabled()) {
@@ -282,5 +348,47 @@ public class RangerRoleService extends RangerRoleServiceBase<XXRole, RangerRole>
         }
     }
 
+    private void updateRoleVersions(Set<Long> roleIds) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> updatePolicyVersions(roleIds=" + roleIds + ")");
+        }
+
+        if (CollectionUtils.isNotEmpty(roleIds)) {
+            Set<Long> allAffectedServiceIds = new HashSet<>();
+
+            for (Long roleId : roleIds) {
+                List<Long> affectedServiceIds = daoMgr.getXXPolicy().findServiceIdsByRoleId(roleId);
+                allAffectedServiceIds.addAll(affectedServiceIds);
+            }
+
+            XXServiceDao serviceDao = daoMgr.getXXService();
+            if (CollectionUtils.isNotEmpty(allAffectedServiceIds)) {
+                for (final Long serviceId : allAffectedServiceIds) {
+                    Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoMgr, serviceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
+                    daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+                    XXService serviceDbObj = serviceDao.getById(serviceId);
+                    boolean   isTagService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getTagServiceDefId();
+                    if (isTagService) {
+                        updateRoleVersionOfAllServicesRefferingTag(daoMgr, serviceDao, serviceId);
+                    }
+                }
+            }
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== updatePolicyVersions(roleIds=" + roleIds + ")");
+        }
+    }
+
+    private void updateRoleVersionOfAllServicesRefferingTag(RangerDaoManager daoManager, XXServiceDao serviceDao, Long serviceId) {
+        List<XXService> referringServices = serviceDao.findByTagServiceId(serviceId);
+        if(CollectionUtils.isNotEmpty(referringServices)) {
+            for(XXService referringService : referringServices) {
+                final Long referringServiceId = referringService.getId();
+                Runnable   roleVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, referringServiceId, ServiceDBStore.VERSION_TYPE.ROLE_VERSION, null, RangerPolicyDelta.CHANGE_TYPE_ROLE_UPDATE, null);
+                daoMgr.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(roleVersionUpdater);
+            }
+        }
+    }
 }
 

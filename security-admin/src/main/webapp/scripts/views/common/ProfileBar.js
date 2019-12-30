@@ -25,6 +25,7 @@ define(function(require){
     var Backbone		= require('backbone');
 	var Communicator	= require('communicator');
 	var SessionMgr 		= require('mgrs/SessionMgr');
+	var vError 			= require('views/common/ErrorView');
 	
 	var ProfileBar_tmpl = require('hbs!tmpl/common/ProfileBar_tmpl'); 
 	
@@ -66,7 +67,9 @@ define(function(require){
 						if(checksso == 'false'){
 							window.location.replace('locallogin');
 						}else{
-							window.location.replace('');
+							App.rContent.show(new vError({
+								status : "checkSSOTrue"
+							}));
 						}
 					} else {
 						window.location.replace('login.jsp');

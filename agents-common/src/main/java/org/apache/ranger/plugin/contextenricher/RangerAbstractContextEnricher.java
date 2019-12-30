@@ -31,20 +31,23 @@ import java.util.Properties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.service.RangerAuthContext;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractContextEnricher.class);
 
 	protected RangerContextEnricherDef enricherDef;
-	protected String serviceName;
-	protected String appId;
-	protected RangerServiceDef serviceDef;
+	protected String                   serviceName;
+	protected String                   appId;
+	protected RangerServiceDef         serviceDef;
+	private   RangerPluginContext      pluginContext;
 
 	@Override
 	public void setEnricherDef(RangerContextEnricherDef enricherDef) {
@@ -71,14 +74,17 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}
-		Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
-		RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
-		if (plugin != null) {
-			RangerAuthContext currentAuthContext = plugin.getCurrentRangerAuthContext();
-			if (currentAuthContext != null) {
-				currentAuthContext.addOrReplaceRequestContextEnricher(this, null);
+
+		RangerAuthContext authContext = getAuthContext();
+
+		if (authContext != null) {
+			authContext.addOrReplaceRequestContextEnricher(this, null);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("authContext is null. This context-enricher is not added to authContext");
 			}
 		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractContextEnricher.init(" + enricherDef + ")");
 		}
@@ -94,14 +100,17 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAbstractContextEnricher.preCleanup(" + enricherDef + ")");
 		}
-		Map<String, RangerBasePlugin> servicePluginMap = RangerBasePlugin.getServicePluginMap();
-		RangerBasePlugin plugin = servicePluginMap != null ? servicePluginMap.get(getServiceName()) : null;
-		if (plugin != null) {
-			RangerAuthContext currentAuthContext = plugin.getCurrentRangerAuthContext();
-			if (currentAuthContext != null) {
-				currentAuthContext.cleanupRequestContextEnricher(this);
+
+		RangerAuthContext authContext = getAuthContext();
+
+		if (authContext != null) {
+			authContext.cleanupRequestContextEnricher(this);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("authContext is null. AuthContext need not be cleaned.");
 			}
 		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractContextEnricher.preCleanup(" + enricherDef + ")");
 		}
@@ -157,6 +166,66 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		return ret;
 	}
 
+	public RangerAuthContext getAuthContext() {
+		RangerPluginContext pluginContext = this.pluginContext;
+
+		return pluginContext != null ? pluginContext.getAuthContext() : null;
+	}
+
+	final public void setPluginContext(RangerPluginContext pluginContext) {
+		this.pluginContext = pluginContext;
+	}
+
+	public RangerPluginConfig getPluginConfig() {
+		RangerPluginContext pluginContext = this.pluginContext;
+
+		return pluginContext != null ? pluginContext.getConfig() : null;
+	}
+
+	public void notifyAuthContextChanged() {
+		RangerPluginContext pluginContext = this.pluginContext;
+
+		if (pluginContext != null) {
+			pluginContext.notifyAuthContextChanged();
+		}
+	}
+
+	public String getConfig(String configName, String defaultValue) {
+		RangerPluginContext pluginContext = this.pluginContext;
+		String              ret           = defaultValue;
+		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
+
+		if (config != null) {
+			ret = config.get(configName, defaultValue);
+		}
+
+		return ret;
+	}
+
+	public int getIntConfig(String configName, int defaultValue) {
+		RangerPluginContext pluginContext = this.pluginContext;
+		int                 ret           = defaultValue;
+		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
+
+		if (config != null) {
+			ret = config.getInt(configName, defaultValue);
+		}
+
+		return ret;
+	}
+
+	public boolean getBooleanConfig(String configName, boolean defaultValue) {
+		RangerPluginContext pluginContext = this.pluginContext;
+		boolean             ret           = defaultValue;
+		Configuration       config        = pluginContext != null ? pluginContext.getConfig() : null;
+
+		if (config != null) {
+			ret = config.getBoolean(configName, defaultValue);
+		}
+
+		return ret;
+	}
+
 	public String getOption(String name, String defaultValue) {
 		String ret = defaultValue;
 		String val = getOption(name);
@@ -191,8 +260,8 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	}
 
 	public long getLongOption(String name, long defaultValue) {
-		long ret = defaultValue;
-		String  val = getOption(name);
+		long   ret = defaultValue;
+		String val = getOption(name);
 
 		if(val != null) {
 			ret = Long.parseLong(val);
@@ -203,15 +272,13 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 	public Properties readProperties(String fileName) {
 		Properties  ret     = null;
-
 		InputStream inStr   = null;
 		URL         fileURL = null;
-
-		File f = new File(fileName);
+		File        f       = new File(fileName);
 
 		if (f.exists() && f.isFile() && f.canRead()) {
 			try {
-				inStr = new FileInputStream(f);
+				inStr   = new FileInputStream(f);
 				fileURL = f.toURI().toURL();
 			} catch (FileNotFoundException exception) {
 				LOG.error("Error processing input file:" + fileName + " or no privilege for reading file " + fileName, exception);
@@ -227,6 +294,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 
 			if (fileURL == null) {
 				fileURL = ClassLoader.getSystemClassLoader().getResource(fileName);
+
 				if (fileURL == null && !fileName.startsWith("/")) {
 					fileURL = ClassLoader.getSystemClassLoader().getResource("/" + fileName);
 				}

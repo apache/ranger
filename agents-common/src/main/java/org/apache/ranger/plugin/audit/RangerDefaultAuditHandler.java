@@ -27,10 +27,10 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.*;
@@ -41,18 +41,34 @@ import org.apache.ranger.plugin.util.RangerRESTUtils;
 
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
-
-	protected static final String RangerModuleName =  RangerConfiguration.getInstance().get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
-
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
+
 	static long sequenceNumber;
 
 	private static String UUID 	= MiscUtil.generateUniqueId();
 	private static AtomicInteger  counter =  new AtomicInteger(0);
 
+	protected String moduleName = RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME;
+
 	RangerRESTUtils restUtils = new RangerRESTUtils();
 
 	public RangerDefaultAuditHandler() {
+	}
+
+	public RangerDefaultAuditHandler(Configuration config) {
+		init(config);
+	}
+
+	public void init(Configuration config) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerDefaultAuditHandler.init()");
+		}
+
+		moduleName = config.get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerDefaultAuditHandler.init()");
+		}
 	}
 
 	@Override
@@ -119,7 +135,7 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setClientIP(request.getClientIPAddress());
 			ret.setClientType(request.getClientType());
 			ret.setSessionId(request.getSessionId());
-			ret.setAclEnforcer(RangerModuleName);
+			ret.setAclEnforcer(moduleName);
 			Set<String> tags = getTags(request);
 			if (tags != null) {
 				ret.setTags(tags);

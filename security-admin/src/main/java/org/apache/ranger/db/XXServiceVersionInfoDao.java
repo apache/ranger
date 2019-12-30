@@ -17,21 +17,25 @@
 
 package org.apache.ranger.db;
 
-import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceVersionInfo;
+import org.apache.ranger.plugin.util.ServiceTags;
 import org.springframework.stereotype.Service;
 
 /**
  */
 @Service
 public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
+
+	private static final Log LOG = LogFactory.getLog(XXServiceVersionInfoDao.class);
 
 	/**
 	 * Default Constructor
@@ -72,65 +76,88 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 				.getResultList();
 	}
 
-	public void updateServiceVersionInfoForServiceResourceUpdate(Long resourceId, Date updateTime) {
-		if (resourceId == null) {
+	public void updateServiceVersionInfoForTagResourceMapCreate(Long resourceId, Long tagId) {
+		if (resourceId == null || tagId == null) {
+			LOG.warn("Unexpected null value for resourceId and/or tagId");
 			return;
 		}
 
 		try {
 			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
 
-			updateTagVersionAndTagUpdateTime(serviceVersionInfos, updateTime);
+			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
 		} catch (NoResultException e) {
-			return;
 		}
 	}
 
-	public void updateServiceVersionInfoForTagUpdate(Long tagId, Date updateTime) {
-		if (tagId == null) {
+	public void updateServiceVersionInfoForTagResourceMapDelete(Long resourceId, Long tagId) {
+		if (resourceId == null || tagId == null) {
+			LOG.warn("Unexpected null value for resourceId and/or tagId");
 			return;
 		}
 
+		try {
+			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
+
+			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
+		} catch (NoResultException e) {
+		}
+	}
+	public void updateServiceVersionInfoForServiceResourceUpdate(Long resourceId) {
+		if (resourceId == null) {
+			LOG.warn("Unexpected null value for resourceId");
+			return;
+		}
+
+		Long tagId = null;
+
+		try {
+			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByServiceResourceId", tClass).setParameter("resourceId", resourceId).getResultList();
+
+			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
+		} catch (NoResultException e) {
+		}
+	}
+
+	public void updateServiceVersionInfoForTagUpdate(Long tagId) {
+		if (tagId == null) {
+			LOG.warn("Unexpected null value for tagId");
+			return;
+		}
+
+		Long resourceId = null;
 		try {
 			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByTagId", tClass).setParameter("tagId", tagId).getResultList();
 
-			updateTagVersionAndTagUpdateTime(serviceVersionInfos, updateTime);
+			updateTagVersionAndTagUpdateTime(serviceVersionInfos, resourceId, tagId);
 		} catch (NoResultException e) {
-			return;
 		}
 	}
 
-	public void updateServiceVersionInfoForTagDefUpdate(Long tagDefId, Date updateTime) {
-		if (tagDefId == null) {
-			return;
-		}
+	private void updateTagVersionAndTagUpdateTime(List<XXServiceVersionInfo> serviceVersionInfos, Long resourceId, Long tagId) {
 
-		try {
-			List<XXServiceVersionInfo> serviceVersionInfos = getEntityManager().createNamedQuery("XXServiceVersionInfo.findByTagDefId", tClass).setParameter("tagDefId", tagDefId).getResultList();
+		if(CollectionUtils.isNotEmpty(serviceVersionInfos) || (resourceId == null && tagId == null)) {
 
-			updateTagVersionAndTagUpdateTime(serviceVersionInfos, updateTime);
-		} catch (NoResultException e) {
-			return;
-		}
-	}
-
-	private void updateTagVersionAndTagUpdateTime(List<XXServiceVersionInfo> serviceVersionInfos, Date updateTime) {
-		if(CollectionUtils.isEmpty(serviceVersionInfos)) {
-			return;
-		}
-
-		if(updateTime == null) {
-			updateTime = new Date();
-		}
-
-		for(XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
-			final RangerDaoManager finaldaoManager 		  = daoManager;
-			final Long 		       finalServiceId  		  = serviceVersionInfo.getServiceId();
 			final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
+			final ServiceTags.TagsChangeType  tagChangeType;
 
-			Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(finaldaoManager, finalServiceId, versionType);
+			if (tagId == null) {
+				tagChangeType = ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE;
+			} else if (resourceId == null) {
+				tagChangeType = ServiceTags.TagsChangeType.TAG_UPDATE;
+			} else {
+				tagChangeType = ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE;
+			}
 
-			daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+			for (XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
+
+				final Long     serviceId             = serviceVersionInfo.getServiceId();
+				final Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, serviceId, versionType, tagChangeType, resourceId, tagId);
+
+				daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+			}
+		} else {
+			LOG.warn("Unexpected empty list of serviceVersionInfos and/or null value for resourceId and tagId");
 		}
 
 	}

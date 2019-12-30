@@ -29,6 +29,7 @@ import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.entity.XXPolicyBase;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -140,10 +141,11 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 	@Override
 	protected V mapEntityToViewBean(V vObj, T xObj) {
 		XXService xService = daoMgr.getXXService().getById(xObj.getService());
+		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
 		vObj.setGuid(xObj.getGuid());
 		vObj.setVersion(xObj.getVersion());
 		vObj.setService(xService.getName());
-		vObj.setServiceType(xService.getType().toString());
+		vObj.setServiceType(xServiceDef.getName());
 		vObj.setName(StringUtils.trim(xObj.getName()));
 		vObj.setPolicyType(xObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xObj.getPolicyType());
 		vObj.setPolicyPriority(xObj.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : xObj.getPolicyPriority());

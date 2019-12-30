@@ -47,7 +47,6 @@ public class RangerServiceValidator extends RangerValidator {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerServiceValidator.validate(%s, %s)", service, action));
 		}
-
 		List<ValidationFailureDetails> failures = new ArrayList<>();
 		boolean valid = isValid(service, action, failures);
 		String message = "";
@@ -184,6 +183,40 @@ public class RangerServiceValidator extends RangerValidator {
 					}
 				}
 			}
+			// Display name
+			String displayName = service.getDisplayName();
+			if(!validateString(VALIDATION_SERVICE_NAME, displayName)){
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_DISPLAY_NAME;
+				failures.add(new ValidationFailureDetailsBuilder()
+						.field("displayName")
+						.isSemanticallyIncorrect()
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(displayName))
+						.build());
+				valid = false;
+			}else{
+				RangerService otherService = getServiceByDisplayName(displayName);
+				if (otherService != null && action == Action.CREATE) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("displayName")
+							.isSemanticallyIncorrect()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(displayName, otherService.getName()))
+							.build());
+					valid = false;
+				} else if (otherService != null && otherService.getId() !=null && !otherService.getId().equals(id)) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("id/displayName")
+							.isSemanticallyIncorrect()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(displayName, otherService.getName()))
+							.build());
+					valid = false;
+				}
+			}
+
 			String type = service.getType();
 			boolean typeSpecified = StringUtils.isNotBlank(type);
 			if (!typeSpecified) {

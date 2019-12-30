@@ -62,10 +62,28 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 	}
 
 	@Override
+	public RangerTag postCreate(XXTag tag) {
+		RangerTag ret = super.postCreate(tag);
+
+		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagUpdate(tag.getId());
+
+		return ret;
+	}
+
+	@Override
 	public RangerTag postUpdate(XXTag tag) {
 		RangerTag ret = super.postUpdate(tag);
 
-		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagUpdate(tag.getId(), tag.getUpdateTime());
+		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagUpdate(tag.getId());
+
+		return ret;
+	}
+
+	@Override
+	protected XXTag preDelete(Long id) {
+		XXTag ret = super.preDelete(id);
+
+		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagUpdate(id);
 
 		return ret;
 	}

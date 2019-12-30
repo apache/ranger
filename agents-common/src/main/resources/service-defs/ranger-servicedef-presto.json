@@ -1,6 +1,7 @@
 {
   "id": 17,
   "name": "presto",
+  "displayName": "presto",
   "implClass": "org.apache.ranger.services.presto.RangerServicePresto",
   "label": "Presto",
   "description": "Presto",

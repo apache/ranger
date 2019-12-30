@@ -28,27 +28,50 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import com.google.common.base.Joiner;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
-import org.apache.ranger.plugin.audit.RangerMultiResourceAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.solr.common.SolrException;
+import org.apache.solr.common.params.ModifiableSolrParams;
+import org.apache.solr.common.params.SolrParams;
+import org.apache.solr.common.util.NamedList;
+import org.apache.solr.core.SolrCore;
+import org.apache.solr.handler.component.ResponseBuilder;
+import org.apache.solr.handler.component.SearchComponent;
+import org.apache.solr.request.LocalSolrQueryRequest;
+import org.apache.solr.request.SolrQueryRequest;
 import org.apache.solr.security.AuthorizationContext.RequestType;
 import org.apache.solr.security.AuthorizationPlugin;
 import org.apache.solr.security.AuthorizationResponse;
 import org.apache.solr.security.AuthorizationContext;
 import org.apache.solr.security.AuthorizationContext.CollectionRequest;
 
-public class RangerSolrAuthorizer implements AuthorizationPlugin {
+import javax.servlet.http.HttpServletRequest;
+
+public class RangerSolrAuthorizer extends SearchComponent implements AuthorizationPlugin {
 	private static final Log logger = LogFactory
 			.getLog(RangerSolrAuthorizer.class);
 	private static final Log PERF_SOLRAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("solrauth.request");
+	public static final String SUPERUSER = System.getProperty("solr.authorization.superuser", "solr");
+
+	public static final String AUTH_FIELD_PROP = "rangerAuthField";
+	public static final String DEFAULT_AUTH_FIELD = "ranger_auth";
+	public static final String ALL_ROLES_TOKEN_PROP = "allRolesToken";
+	public static final String ENABLED_PROP = "enabled";
+	public static final String MODE_PROP = "matchMode";
+	public static final String DEFAULT_MODE_PROP = MatchType.DISJUNCTIVE.toString();
+
+	public static final String ALLOW_MISSING_VAL_PROP = "allow_missing_val";
+	public static final String TOKEN_COUNT_PROP = "tokenCountField";
+	public static final String DEFAULT_TOKEN_COUNT_FIELD_PROP = "ranger_auth_count";
+	public static final String QPARSER_PROP = "qParser";
 
 	public static final String PROP_USE_PROXY_IP = "xasecure.solr.use_proxy_ip";
 	public static final String PROP_PROXY_IP_HEADER = "xasecure.solr.proxy_ip_header";
@@ -64,13 +87,45 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 
 	private static volatile RangerBasePlugin solrPlugin = null;
 
+	private RangerSolrAuditHandler auditHandler = null;
+
 	boolean useProxyIP = false;
 	String proxyIPHeader = "HTTP_X_FORWARDED_FOR";
 	String solrAppName = "Client";
 
+	private String authField;
+	private String allRolesToken;
+	private boolean enabled;
+	private MatchType matchMode;
+	private String tokenCountField;
+	private boolean allowMissingValue;
+	private String qParserName;
+
+	private enum MatchType {
+		DISJUNCTIVE,
+		CONJUNCTIVE
+	}
+
 	public RangerSolrAuthorizer() {
 		logger.info("RangerSolrAuthorizer()");
+	}
 
+	@Override
+	public void init(NamedList args) {
+		SolrParams params = args.toSolrParams();
+		this.authField = params.get(AUTH_FIELD_PROP, DEFAULT_AUTH_FIELD);
+		this.allRolesToken = params.get(ALL_ROLES_TOKEN_PROP, "");
+		this.enabled = params.getBool(ENABLED_PROP, false);
+		this.matchMode = MatchType.valueOf(params.get(MODE_PROP, DEFAULT_MODE_PROP).toUpperCase());
+
+		if (this.matchMode == MatchType.CONJUNCTIVE) {
+			this.qParserName = params.get(QPARSER_PROP, "subset").trim();
+			this.allowMissingValue = params.getBool(ALLOW_MISSING_VAL_PROP, false);
+			this.tokenCountField = params.get(TOKEN_COUNT_PROP, DEFAULT_TOKEN_COUNT_FIELD_PROP);
+		}
+		logger.info("RangerSolrAuthorizer.init(): authField={" + authField + "}, allRolesToken={" + allRolesToken +
+				"}, enabled={" + enabled + "}, matchType={" + matchMode + "}, qParserName={" + qParserName +
+				"}, allowMissingValue={" + allowMissingValue + "}, tokenCountField={" + tokenCountField + "}");
 	}
 
 	/*
@@ -81,29 +136,6 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 	@Override
 	public void init(Map<String, Object> initInfo) {
 		logger.info("init()");
-
-		try {
-			useProxyIP = RangerConfiguration.getInstance().getBoolean(
-					PROP_USE_PROXY_IP, useProxyIP);
-			proxyIPHeader = RangerConfiguration.getInstance().get(
-					PROP_PROXY_IP_HEADER, proxyIPHeader);
-			// First get from the -D property
-			solrAppName = System.getProperty("solr.kerberos.jaas.appname",
-					solrAppName);
-			// Override if required from Ranger properties
-			solrAppName = RangerConfiguration.getInstance().get(
-					PROP_SOLR_APP_NAME, solrAppName);
-
-			logger.info("init(): useProxyIP=" + useProxyIP);
-			logger.info("init(): proxyIPHeader=" + proxyIPHeader);
-			logger.info("init(): solrAppName=" + solrAppName);
-			logger.info("init(): KerberosName.rules="
-					+ MiscUtil.getKerberosNamesRules());
-			authToJAASFile();
-
-		} catch (Throwable t) {
-			logger.fatal("Error init", t);
-		}
 
 		try {
 			RangerBasePlugin me = solrPlugin;
@@ -117,17 +149,33 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 				}
 			}
 			solrPlugin.init();
+			auditHandler = new RangerSolrAuditHandler(solrPlugin.getConfig());
+			solrPlugin.setResultProcessor(auditHandler);
 		} catch (Throwable t) {
 			logger.fatal("Error creating and initializing RangerBasePlugin()");
 		}
-	}
 
-	private void authToJAASFile() {
 		try {
-			MiscUtil.setUGIFromJAASConfig(solrAppName);
-			logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
+			useProxyIP = solrPlugin.getConfig().getBoolean(
+					PROP_USE_PROXY_IP, useProxyIP);
+			proxyIPHeader = solrPlugin.getConfig().get(
+					PROP_PROXY_IP_HEADER, proxyIPHeader);
+			// First get from the -D property
+			solrAppName = System.getProperty("solr.kerberos.jaas.appname",
+					solrAppName);
+			// Override if required from Ranger properties
+			solrAppName = solrPlugin.getConfig().get(
+					PROP_SOLR_APP_NAME, solrAppName);
+
+			logger.info("init(): useProxyIP=" + useProxyIP);
+			logger.info("init(): proxyIPHeader=" + proxyIPHeader);
+			logger.info("init(): solrAppName=" + solrAppName);
+			logger.info("init(): KerberosName.rules="
+					+ MiscUtil.getKerberosNamesRules());
+			authToJAASFile();
+
 		} catch (Throwable t) {
-			logger.error("Error authenticating for appName=" + solrAppName, t);
+			logger.fatal("Error init", t);
 		}
 	}
 
@@ -169,8 +217,6 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 				logger.debug("==> RangerSolrAuthorizer.authorize()");
 				logAuthorizationConext(context);
 			}
-
-			RangerMultiResourceAuditHandler auditHandler = new RangerMultiResourceAuditHandler();
 
 			RangerPerfTracer perf = null;
 
@@ -262,6 +308,56 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 			logger.debug( "<== RangerSolrAuthorizer.authorize() result: " + isDenied + "Response : " + response.getMessage());
 		}
 		return response;
+	}
+
+	@Override
+	public void prepare(ResponseBuilder rb) throws IOException {
+		if (!enabled) {
+			return;
+		}
+
+		String userName = getUserName(rb.req);
+		if (SUPERUSER.equals(userName)) {
+			return;
+		}
+
+		Set<String> roles = getRolesForUser(userName);
+		if (roles != null && !roles.isEmpty()) {
+			String filterQuery;
+			if (matchMode == MatchType.DISJUNCTIVE) {
+				filterQuery = getDisjunctiveFilterQueryStr(roles);
+			} else {
+				filterQuery = getConjunctiveFilterQueryStr(roles);
+			}
+			ModifiableSolrParams newParams = new ModifiableSolrParams(rb.req.getParams());
+			newParams.add("fq", filterQuery);
+			rb.req.setParams(newParams);
+			if (logger.isDebugEnabled()) {
+				logger.debug("Adding filter query {" + filterQuery + "} for user {" + userName + "} with roles {" + roles + "}");
+			}
+
+		} else {
+			throw new SolrException(SolrException.ErrorCode.UNAUTHORIZED,
+					"Request from user: " + userName + " rejected because user is not associated with any roles");
+		}
+	}
+
+	@Override
+	public void process(ResponseBuilder rb) throws IOException {
+	}
+
+	@Override
+	public String getDescription() {
+		return "Handle Query Document Authorization";
+	}
+
+	private void authToJAASFile() {
+		try {
+			MiscUtil.setUGIFromJAASConfig(solrAppName);
+			logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
+		} catch (Throwable t) {
+			logger.error("Error authenticating for appName=" + solrAppName, t);
+		}
 	}
 
 	/**
@@ -423,4 +519,81 @@ public class RangerSolrAuthorizer implements AuthorizationPlugin {
 		return accessType;
 	}
 
+	private void addDisjunctiveRawClause(StringBuilder builder, String value) {
+		// requires a space before the first term, so the
+		// default lucene query parser will be used
+		builder.append(" {!raw f=").append(authField).append(" v=")
+				.append(value).append("}");
+	}
+
+	private String getDisjunctiveFilterQueryStr(Set<String> roles) {
+		if (roles != null && !roles.isEmpty()) {
+			StringBuilder builder = new StringBuilder();
+			for (String role : roles) {
+				addDisjunctiveRawClause(builder, role);
+			}
+			if (allRolesToken != null && !allRolesToken.isEmpty()) {
+				addDisjunctiveRawClause(builder, allRolesToken);
+			}
+			return builder.toString();
+		}
+		return null;
+	}
+
+	private String getConjunctiveFilterQueryStr(Set<String> roles) {
+		StringBuilder filterQuery = new StringBuilder();
+		filterQuery
+				.append(" {!").append(qParserName)
+				.append(" set_field=\"").append(authField).append("\"")
+				.append(" set_value=\"").append(Joiner.on(',').join(roles.iterator())).append("\"")
+				.append(" count_field=\"").append(tokenCountField).append("\"");
+		if (allRolesToken != null && !allRolesToken.equals("")) {
+			filterQuery.append(" wildcard_token=\"").append(allRolesToken).append("\"");
+		}
+		filterQuery.append(" allow_missing_val=").append(allowMissingValue).append(" }");
+
+		return filterQuery.toString();
+	}
+
+	private Set<String> getRolesForUser(String name) {
+		if (solrPlugin.getCurrentRangerAuthContext() != null) {
+			return solrPlugin.getRolesFromUserAndGroups(name, getGroupsForUser(name));
+		}
+		else {
+			logger.info("Current Ranger Auth Context is null!!");
+			return null;
+		}
+	}
+
+	/**
+	 * This method return the user name from the provided {@linkplain SolrQueryRequest}
+	 */
+	private final String getUserName(SolrQueryRequest req) {
+		// If a local request, treat it like a super user request; i.e. it is equivalent to an
+		// http request from the same process.
+		if (req instanceof LocalSolrQueryRequest) {
+			return SUPERUSER;
+		}
+
+		SolrCore solrCore = req.getCore();
+
+		HttpServletRequest httpServletRequest = (HttpServletRequest) req.getContext().get("httpRequest");
+		if (httpServletRequest == null) {
+			StringBuilder builder = new StringBuilder("Unable to locate HttpServletRequest");
+			if (solrCore != null && !solrCore.getSolrConfig().getBool("requestDispatcher/requestParsers/@addHttpRequestToContext", true)) {
+				builder.append(", ensure requestDispatcher/requestParsers/@addHttpRequestToContext is set to true in solrconfig.xml");
+			}
+			throw new SolrException(SolrException.ErrorCode.UNAUTHORIZED, builder.toString());
+		}
+
+		String userName = httpServletRequest.getRemoteUser();
+		if (userName == null) {
+			userName = MiscUtil.getShortNameFromPrincipalName(httpServletRequest.getUserPrincipal().getName());
+		}
+		if (userName == null) {
+			throw new SolrException(SolrException.ErrorCode.UNAUTHORIZED, "This request is not authenticated.");
+		}
+
+		return userName;
+	}
 }
