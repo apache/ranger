@@ -104,7 +104,9 @@ ln -sf /etc/ranger/admin/conf ews/webapp/WEB-INF/classes/conf
 if [ ! -d /var/log/ranger/admin ]; then
 	mkdir -p /var/log/ranger/admin
 	if [ -d ews/logs ]; then
-		cp -r ews/logs/* /var/log/ranger/admin
+		if [ -n "$(ls ews/logs/ 2>/dev/null)" ]; then
+			cp -r ews/logs/* /var/log/ranger/admin
+		fi
 	fi
 fi
 

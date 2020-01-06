@@ -97,7 +97,9 @@ ln -sf /etc/ranger/usersync/conf conf
 if [ ! -d /var/log/ranger/usersync ]; then
 	mkdir -p /var/log/ranger/usersync
 	if [ -d ews/logs ]; then
-		cp -r ews/logs/* /var/log/ranger/usersync
+		if [ -n "$(ls ews/logs/ 2>/dev/null)" ]; then
+			cp -r ews/logs/* /var/log/ranger/usersync
+		fi
 	fi
 fi
 
