@@ -107,7 +107,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 			_supportsTagDeltas = "false";
 		}
 
-		configURLs = RangerRESTClient.getURLs(tmpUrl);
+		configURLs = StringUtil.getURLs(tmpUrl);
 		this.lastKnownActiveUrlIndex = new Random().nextInt(configURLs.size());
 		_baseUrl = configURLs.get(this.lastKnownActiveUrlIndex);
 		_isSSL = _utils.isSsl(_baseUrl);

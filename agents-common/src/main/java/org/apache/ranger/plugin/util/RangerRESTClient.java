@@ -31,7 +31,6 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.UnrecoverableKeyException;
 import java.security.cert.CertificateException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -52,6 +51,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 import com.google.gson.Gson;
@@ -115,7 +115,7 @@ public class RangerRESTClient {
 	public RangerRESTClient(String url, String sslConfigFileName, Configuration config) {
 		mUrl               = url;
 		mSslConfigFileName = sslConfigFileName;
-		configuredURLs     = getURLs(mUrl);
+		configuredURLs     = StringUtil.getURLs(mUrl);
 
 		setLastKnownActiveUrlIndex((new Random()).nextInt(getConfiguredURLs().size()));
 
@@ -553,23 +553,6 @@ public class RangerRESTClient {
 			}
 		}
 		return response;
-	}
-
-
-	public static List<String> getURLs(String configURLs) {
-		List<String> configuredURLs = new ArrayList<>();
-		if(configURLs!=null) {
-			String[] urls = configURLs.split(",");
-			for (String strUrl : urls) {
-				if (StringUtils.isNotEmpty(StringUtils.trimToEmpty(strUrl))) {
-					if (strUrl.endsWith("/")) {
-						strUrl = strUrl.substring(0, strUrl.length() - 1);
-					}
-					configuredURLs.add(strUrl);
-				}
-			}
-		}
-		return configuredURLs;
 	}
 
 	protected static WebResource setQueryParams(WebResource webResource, Map<String, String> params) {

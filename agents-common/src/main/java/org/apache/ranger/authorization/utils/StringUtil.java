@@ -19,6 +19,7 @@
 
  package org.apache.ranger.authorization.utils;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -306,4 +307,19 @@ public class StringUtil {
 		return values;
 	}
 
+	public static List<String> getURLs(String configURLs) {
+		List<String> configuredURLs = new ArrayList<>();
+		if(configURLs!=null) {
+			String[] urls = configURLs.split(",");
+			for (String strUrl : urls) {
+				if (StringUtils.isNotEmpty(StringUtils.trimToEmpty(strUrl))) {
+					if (strUrl.endsWith("/")) {
+						strUrl = strUrl.substring(0, strUrl.length() - 1);
+					}
+					configuredURLs.add(strUrl);
+				}
+			}
+		}
+		return configuredURLs;
+	}
 }
