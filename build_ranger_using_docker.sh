@@ -67,6 +67,7 @@ RUN yum install -y wget
 RUN yum install -y git
 RUN yum install -y gcc
 RUN yum install -y bzip2 fontconfig
+RUN yum install -y diffutils
 
 #Download and install JDK8 from AWS s3's docker-assets 
 RUN wget https://s3.eu-central-1.amazonaws.com/docker-assets/dist/jdk-8u101-linux-x64.rpm
@@ -78,7 +79,7 @@ ENV  PATH $JAVA_HOME/bin:$PATH
 
 ADD https://www.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz.sha512 /tools
 ADD http://www-us.apache.org/dist/maven/maven-3/3.5.4/binaries/apache-maven-3.5.4-bin.tar.gz /tools
-RUN sha512sum  apache-maven-3.5.4-bin.tar.gz | cut -f 1 -d " " > tmp.sha1
+RUN sha512sum  apache-maven-3.5.4-bin.tar.gz > tmp.sha1
 
 RUN diff -w tmp.sha1 apache-maven-3.5.4-bin.tar.gz.sha512
 
