@@ -82,18 +82,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			}
 
 			if (hiveAccessType == HiveAccessType.SERVICEADMIN) {
-				String hiveOperationType = request.getAction();
 				String commandStr = request.getRequestData();
-				if ("KILL_QUERY".equalsIgnoreCase(hiveOperationType)) {
-					String queryId = getServiceAdminQueryId(commandStr);
-					if (!StringUtils.isEmpty(queryId)) {
-						auditEvent.setRequestData(queryId);
-					}
-					commandStr = getServiceAdminCmd(commandStr);
-					if (StringUtils.isEmpty(commandStr)) {
-						commandStr = hiveAccessType.name();
-					}
-				}
 				auditEvent.setAccessType(commandStr);
 			}
 

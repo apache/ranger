@@ -718,22 +718,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					RangerHiveResource resource = new RangerHiveResource(HiveObjectType.DATABASE, null);
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.USE, context, sessionContext);
 					requests.add(request);
-				} else if ( hiveOpType.name().equals("REPLDUMP")) {
-					// This happens when REPL DUMP command with null inputHObjs is sent in checkPrivileges()
-					// following parsing is done for Audit info
-					RangerHiveResource resource  = null;
-					HiveObj hiveObj  = new HiveObj(context);
-					String dbName    = hiveObj.getDatabaseName();
-					String tableName = hiveObj.getTableName();
-					LOG.debug("Database: " + dbName + " Table: " + tableName);
-					if (!StringUtil.isEmpty(tableName)) {
-						resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
-					} else {
-						resource = new RangerHiveResource(HiveObjectType.DATABASE, dbName, null);
-					}
-					//
-					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.REPLADMIN, context, sessionContext);
-					requests.add(request);
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerHiveAuthorizer.checkPrivileges: Unexpected operation type[" + hiveOpType + "] received with empty input objects list!");
@@ -773,23 +757,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 						requests.add(request);
 					}
-				}
-			} else {
-				if (hiveOpType.name().equals("REPLLOAD")) {
-					// This happens when REPL LOAD command with null inputHObjs is sent in checkPrivileges()
-					// following parsing is done for Audit info
-					RangerHiveResource resource = null;
-					HiveObj hiveObj = new HiveObj(context);
-					String dbName = hiveObj.getDatabaseName();
-					String tableName = hiveObj.getTableName();
-					LOG.debug("Database: " + dbName + " Table: " + tableName);
-					if (!StringUtil.isEmpty(tableName)) {
-						resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
-					} else {
-						resource = new RangerHiveResource(HiveObjectType.DATABASE, dbName, null);
-					}
-					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, hiveOpType.name(), HiveAccessType.REPLADMIN, context, sessionContext);
-					requests.add(request);
 				}
 			}
 
