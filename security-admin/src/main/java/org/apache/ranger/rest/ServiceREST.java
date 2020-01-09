@@ -4193,6 +4193,7 @@ public class ServiceREST {
 			RangerService tagService = new RangerService();
 
 			tagService.setName(context.tagServiceName);
+			tagService.setDisplayName(context.tagServiceName);//set DEFAULT display name
 			tagService.setType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
 			LOG.info("creating tag-service [" + context.tagServiceName + "]");
