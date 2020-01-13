@@ -49,7 +49,7 @@
     "validitySchedules": [
       {
         "startTime": "",
-        "endTime": "2020/01/12 14:30:00"
+        "endTime": "2050/01/12 14:30:00"
       }
     ],
     "accessTime": "20180112-14:32:27.000-0800",
@@ -371,7 +371,7 @@
     "validitySchedules": [
       {
         "startTime": "2018/01/01 00:00:00",
-        "endTime": "2050/02/03 12:16:00",
+        "endTime": "2020/02/03 12:16:00",
         "recurrences": [
           {
             "schedule": {
