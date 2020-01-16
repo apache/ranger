@@ -787,7 +787,7 @@ then
 	then
 		controlName="ranger"
 	else
-		controlName="allow-all"
+		controlName=""
 	fi
 	dt=`date '+%Y%m%d%H%M%S'`
 	fn=`ls ${HCOMPONENT_CONF_DIR}/access-control.properties 2> /dev/null`
