@@ -56,7 +56,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
 	public static final String KEY_TOPIC = "topic";
 	public static final String KEY_CLUSTER = "cluster";
-	public static final String KEY_CONSUMER_GROUP = "consumer_group";
+	public static final String KEY_CONSUMER_GROUP = "consumergroup";
 	public static final String KEY_TRANSACTIONALID = "transactionalid";
 	public static final String KEY_DELEGATIONTOKEN = "delegationtoken";
 
@@ -66,10 +66,10 @@ public class RangerKafkaAuthorizer implements Authorizer {
 	public static final String ACCESS_TYPE_DELETE = "delete";
 	public static final String ACCESS_TYPE_CONFIGURE = "configure";
 	public static final String ACCESS_TYPE_DESCRIBE = "describe";
-	public static final String ACCESS_TYPE_KAFKA_ADMIN = "kafka_admin";
 	public static final String ACCESS_TYPE_DESCRIBE_CONFIGS = "describe_configs";
 	public static final String ACCESS_TYPE_ALTER_CONFIGS    = "alter_configs";
 	public static final String ACCESS_TYPE_IDEMPOTENT_WRITE = "idempotent_write";
+	public static final String ACCESS_TYPE_CLUSTER_ACTION   = "cluster_action";
 
 	private static volatile RangerBasePlugin rangerPlugin = null;
 	RangerKafkaAuditHandler auditHandler = null;
@@ -140,14 +140,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
 			MiscUtil.logErrorMessageByInterval(logger,
 					"Authorizer is still not initialized");
 			return false;
-		}
-
-		// TODO: If resource type is consumer group, then allow it by default
-		if (resource.resourceType().equals(Group$.MODULE$)) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("If resource type is consumer group, then we allow it by default!  Returning true");
-			}
-			return true;
 		}
 
 		RangerPerfTracer perf = null;
@@ -332,7 +324,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		} else if (operation.equals(Describe$.MODULE$)) {
 			return ACCESS_TYPE_DESCRIBE;
 		} else if (operation.equals(ClusterAction$.MODULE$)) {
-			return ACCESS_TYPE_KAFKA_ADMIN;
+			return ACCESS_TYPE_CLUSTER_ACTION;
 		} else if (operation.equals(Create$.MODULE$)) {
 			return ACCESS_TYPE_CREATE;
 		} else if (operation.equals(Delete$.MODULE$)) {
