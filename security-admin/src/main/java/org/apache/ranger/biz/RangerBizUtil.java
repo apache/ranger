@@ -65,6 +65,7 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.rest.ServiceREST;
 import org.apache.ranger.security.context.RangerAdminOpContext;
 import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResource;
 import org.apache.ranger.view.VXResponse;
@@ -89,6 +90,9 @@ public class RangerBizUtil {
 
 	@Autowired
 	UserMgr userMgr;
+
+	@Autowired
+	XUserService xUserService;
 
 	@Autowired
 	GUIDUtil guidUtil;
@@ -1413,6 +1417,19 @@ public class RangerBizUtil {
 	public boolean isUserAllowedForGrantRevoke(RangerService rangerService, String userName) {
 		return isUserInConfigParameter(rangerService, ServiceREST.Allowed_User_List_For_Grant_Revoke, userName);
 	}
+
+	public boolean isUserRangerAdmin(String username) {
+		boolean isAdmin = false;
+		try {
+			VXUser vxUser = xUserService.getXUserByUserName(username);
+			if (vxUser != null && (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN))) {
+				isAdmin = true;
+			}
+		} catch (Exception ex) {
+		}
+		return isAdmin;
+	}
+
 	public boolean isUserServiceAdmin(RangerService rangerService, String userName) {
 		return isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_USERS, userName);
 	}
@@ -1517,4 +1534,5 @@ public class RangerBizUtil {
 			}
 		}
 	}
+
 }

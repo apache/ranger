@@ -1281,7 +1281,10 @@ public class ServiceREST {
 						vXResponse.setMsgDesc("Operation denied. LoggedInUser=" + vxUser.getId() + " is not permitted to perform the action.");
 						throw restErrorUtil.generateRESTException(vXResponse);
 					}
-					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+					RangerService rangerService = svcStore.getServiceByName(serviceName);
+
+					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, userName, userGroups, resource);
+
 
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
@@ -1397,7 +1400,7 @@ public class ServiceREST {
 							isAllowed = true;
 						}
 					} else {
-						isAllowed = hasAdminPrivilege || hasAdminAccess(serviceName, userName, userGroups, resource);
+						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, userName, userGroups, resource);
 					}
 
 					if (isAllowed) {
@@ -1511,7 +1514,9 @@ public class ServiceREST {
 						vXResponse.setMsgDesc("Operation denied. LoggedInUser=" + vxUser.getId() + " is not permitted to perform the action.");
 						throw restErrorUtil.generateRESTException(vXResponse);
 					}
-					boolean isAdmin = hasAdminAccess(serviceName, userName, userGroups, resource);
+					RangerService rangerService = svcStore.getServiceByName(serviceName);
+
+					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, userName, userGroups, resource);
 
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
@@ -1591,7 +1596,7 @@ public class ServiceREST {
 							isAllowed = true;
 						}
 					} else {
-						isAllowed = hasAdminPrivilege || hasAdminAccess(serviceName, userName, userGroups, resource);
+						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, userName, userGroups, resource);
 					}
 
 					if (isAllowed) {
@@ -2265,7 +2270,9 @@ public class ServiceREST {
 										if (CollectionUtils.isNotEmpty(serviceNameList) && serviceNameList.contains(serviceName) && !sourceServices.contains(serviceName) && !destinationServices.contains(serviceName)) {
 											sourceServices.add(serviceName);
 											destinationServices.add(serviceName);
-										} else if (CollectionUtils.isEmpty(serviceNameList) && !sourceServices.contains(serviceName) && !destinationServices.contains(serviceName)) {
+										} else if (CollectionUtils.isEmpty(serviceNameList)
+												&& !sourceServices.contains(serviceName)
+												&& !destinationServices.contains(serviceName)) {
 											sourceServices.add(serviceName);
 											destinationServices.add(serviceName);
 										}
@@ -3608,6 +3615,7 @@ public class ServiceREST {
 						if(userGroups == null) {
 							userGroups = daoManager.getXXGroupUser().findGroupNamesByUserName(userName);
 						}
+
 						Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
 						for (RangerPolicy policy : listToFilter) {

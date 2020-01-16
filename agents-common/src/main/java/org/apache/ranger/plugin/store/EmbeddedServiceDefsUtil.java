@@ -300,6 +300,11 @@ public class EmbeddedServiceDefsUtil {
 
 		ret = gsonBuilder.fromJson(reader, RangerServiceDef.class);
 
+		//Set DEFAULT displayName if missing
+		if (ret != null && StringUtils.isBlank(ret.getDisplayName())) {
+		    ret.setDisplayName(ret.getName());
+		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> EmbeddedServiceDefsUtil.loadEmbeddedServiceDef(" + serviceType + ")");
 		}

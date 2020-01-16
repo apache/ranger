@@ -47,7 +47,6 @@ import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.db.RangerDaoManager;
@@ -67,7 +66,6 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
-import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -879,7 +877,7 @@ public class RoleREST {
         UserSessionBase usb = ContextUtil.getCurrentUserSession();
         String loggedInUser = usb != null ? usb.getLoginId() : null;
         if (!StringUtil.equals(userName, loggedInUser)) {
-            if (!userIsRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
+            if (!bizUtil.isUserRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
                 throw new Exception("User does not have permission for this operation");
             }
             effectiveUser = userName != null ? userName : loggedInUser;
@@ -887,7 +885,7 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
 
-        if (!userIsRangerAdmin(effectiveUser)) {
+        if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
             throw new Exception("User " + effectiveUser + " does not have permission for this operation");
         }
     }
@@ -906,7 +904,7 @@ public class RoleREST {
         UserSessionBase usb = ContextUtil.getCurrentUserSession();
         String loggedInUser = usb != null ? usb.getLoginId() : null;
         if (!StringUtil.equals(userName, loggedInUser)) {
-            if (!userIsRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
+            if (!bizUtil.isUserRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
                 LOG.error("User does not have permission for this operation");
                 return null;
             }
@@ -915,7 +913,7 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
         try {
-            if (!userIsRangerAdmin(effectiveUser)) {
+            if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
                 existingRole = roleStore.getRole(roleName);
                 ensureRoleAccess(effectiveUser, userGroups, existingRole);
 
@@ -928,19 +926,6 @@ public class RoleREST {
         }
 
         return existingRole;
-    }
-
-    private boolean userIsRangerAdmin(String username) {
-        boolean isAdmin = false;
-        try {
-            VXUser vxUser = xUserService.getXUserByUserName(username);
-            if (vxUser != null && (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN))) {
-                isAdmin = true;
-            }
-        } catch (Exception ex) {
-            LOG.error("User " + username + " does not have permissions for this operation" + ex.getMessage());
-        }
-        return isAdmin;
     }
 
     private boolean userIsSrvAdmOrSrvUser(String serviceName, String username) {
@@ -1300,4 +1285,3 @@ public class RoleREST {
         }
     }
 }
-
