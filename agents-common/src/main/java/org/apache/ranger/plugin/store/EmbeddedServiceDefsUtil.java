@@ -61,6 +61,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_YARN_NAME  = "yarn";
 	public static final String EMBEDDED_SERVICEDEF_KAFKA_NAME = "kafka";
 	public static final String EMBEDDED_SERVICEDEF_SOLR_NAME  = "solr";
+	public static final String EMBEDDED_SERVICEDEF_SCHEMA_REGISTRY_NAME  = "schema-registry";
 	public static final String EMBEDDED_SERVICEDEF_NIFI_NAME  = "nifi";
 	public static final String EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME  = "nifi-registry";
 	public static final String EMBEDDED_SERVICEDEF_ATLAS_NAME  = "atlas";
@@ -84,6 +85,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String YARN_IMPL_CLASS_NAME  = "org.apache.ranger.services.yarn.RangerServiceYarn";
 	public static final String KAFKA_IMPL_CLASS_NAME = "org.apache.ranger.services.kafka.RangerServiceKafka";
 	public static final String SOLR_IMPL_CLASS_NAME  = "org.apache.ranger.services.solr.RangerServiceSolr";
+	public static final String SCHEMA_REGISTRY_IMPL_CLASS_NAME  = "org.apache.ranger.services.schemaregistry.RangerServiceSchemaRegistry";
 	public static final String NIFI_IMPL_CLASS_NAME  = "org.apache.ranger.services.nifi.RangerServiceNiFi";
 	public static final String ATLAS_IMPL_CLASS_NAME  = "org.apache.ranger.services.atlas.RangerServiceAtlas";
 	public static final String PRESTO_IMPL_CLASS_NAME  = "org.apache.ranger.services.presto.RangerServicePresto";
@@ -102,6 +104,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef yarnServiceDef;
 	private RangerServiceDef kafkaServiceDef;
 	private RangerServiceDef solrServiceDef;
+	private RangerServiceDef schemaRegistryServiceDef;
 	private RangerServiceDef nifiServiceDef;
 	private RangerServiceDef nifiRegistryServiceDef;
 	private RangerServiceDef atlasServiceDef;
@@ -149,6 +152,7 @@ public class EmbeddedServiceDefsUtil {
 			yarnServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_YARN_NAME);
 			kafkaServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KAFKA_NAME);
 			solrServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SOLR_NAME);
+			schemaRegistryServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SCHEMA_REGISTRY_NAME);
 			nifiServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_NAME);
 			nifiRegistryServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME);
 			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME);
@@ -206,6 +210,10 @@ public class EmbeddedServiceDefsUtil {
 
 	public long getSolrServiceDefId() {
 		return getId(solrServiceDef);
+	}
+
+	public long getSchemaRegistryServiceDefId() {
+		return getId(schemaRegistryServiceDef);
 	}
 
 	public long getNiFiServiceDefId() {
