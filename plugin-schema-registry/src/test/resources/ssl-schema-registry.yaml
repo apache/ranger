@@ -1,0 +1,157 @@
+# registries configuration
+modules:
+#  - name: tag-registry
+#    className: com.hortonworks.iotas.registries.tag.service.TagRegistryModule
+  - name: schema-registry
+    className: com.hortonworks.registries.schemaregistry.webservice.SchemaRegistryModule
+    config:
+      schemaProviders:
+        - providerClass: "com.hortonworks.registries.schemaregistry.avro.AvroSchemaProvider"
+          defaultSerializerClass: "com.hortonworks.registries.schemaregistry.serdes.avro.AvroSnapshotSerializer"
+          defaultDeserializerClass: "com.hortonworks.registries.schemaregistry.serdes.avro.AvroSnapshotDeserializer"
+      # schema cache properties
+      # inmemory schema versions cache size
+      schemaCacheSize: 10000
+      # inmemory schema version cache entry expiry interval after access
+      schemaCacheExpiryInterval: 3600
+
+
+servletFilters:
+# - className: "com.hortonworks.registries.auth.server.AuthenticationFilter"
+#   params:
+#     type: "kerberos"
+#     kerberos.principal: "HTTP/streamline-ui-host.com"
+#     kerberos.keytab: "/vagrant/keytabs/http.keytab"
+#     kerberos.name.rules: "RULE:[2:$1@$0]([jt]t@.*EXAMPLE.COM)s/.*/$MAPRED_USER/ RULE:[2:$1@$0]([nd]n@.*EXAMPLE.COM)s/.*/$HDFS_USER/DEFAULT"
+ - className: "com.hortonworks.registries.schemaregistry.webservice.RewriteUriFilter"
+   params:
+     # value format is [<targetpath>,<paths-should-be-redirected-to>,*|]*
+     # below /subjects and /schemas/ids are forwarded to /api/v1/confluent
+     forwardPaths: "/api/v1/confluent,/subjects/*,/schemas/ids/*"
+     redirectPaths: "/ui/,/"
+
+# HA configuration
+#haConfig:
+#  className: com.hortonworks.registries.ha.zk.ZKLeadershipParticipant
+#  config:
+#    # This url is a list of ZK servers separated by ,
+#    connect.url: "localhost:2181"
+#    # root node prefix in ZK for this instance
+#    root: "/registry"
+#    session.timeout.ms: 30000
+#    connection.timeout.ms: 20000
+#    retry.limit: 5
+#    retry.base.sleep.time.ms: 1000
+#    retry.max.sleep.time.ms: 5000
+
+fileStorageConfiguration:
+  className: "com.hortonworks.registries.common.util.LocalFileSystemStorage"
+  properties:
+    directory: "/tmp/storage"
+
+# storage provider configuration
+# providerClass can be inmemory and jdbc.
+#
+# Example configuration for inmemory is:
+#storageProviderConfiguration:
+#  providerClass: "com.hortonworks.registries.storage.impl.memory.InMemoryStorageManager"
+#
+# Example configuration for phoenix based JDBC driver
+#storageProviderConfiguration:
+# providerClass: "com.hortonworks.registries.storage.impl.jdbc.JdbcStorageManager"
+# properties:
+#   db.type: "phoenix"
+#   queryTimeoutInSecs: 30
+#   db.properties:
+#     jdbcDriverClass: "com.hortonworks.phoenix.jdbc.PhoenixDriver"
+#     jdbcUrl: "jdbc:phoenix:localhost:2181"
+#
+# MySQL based jdbc provider configuration is:
+#storageProviderConfiguration:
+#  providerClass: "com.hortonworks.registries.storage.impl.jdbc.JdbcStorageManager"
+#  properties:
+#    db.type: "mysql"
+#    queryTimeoutInSecs: 30
+#    db.properties:
+#      dataSourceClassName: "com.mysql.cj.jdbc.MysqlDataSource"
+#      dataSource.url: "jdbc:mysql://localhost:3307/test"
+
+storageProviderConfiguration:
+  providerClass: "com.hortonworks.registries.storage.impl.memory.InMemoryStorageManager"
+
+#enable CORS, may want to disable in production
+enableCors: true
+
+## swagger configuration
+swagger:
+  resourcePackage: com.hortonworks.registries.schemaregistry.webservice
+
+# use the simple server factory if you only want to run on a single port
+#server:
+#  type: simple
+#  connector:
+#    type: http
+#    port: 8080
+
+server:
+  applicationConnectors:
+    - type: https
+      port: 0
+      keyStorePath: ./src/test/resources/keystore.jks
+      keyStorePassword: password
+      trustStorePath: ./src/test/resources/truststore.jks
+      trustStorePassword: password
+      needClientAuth: true
+      validateCerts: false
+      validatePeers: false
+  adminConnectors:
+    - type: https
+      port: 0
+      keyStorePath: ./src/test/resources/keystore.jks
+      keyStorePassword: password
+      trustStorePath: ./src/test/resources/truststore.jks
+      trustStorePassword: password
+      needClientAuth: true
+      validateCerts: false
+      validatePeers: false
+
+# Logging settings.
+logging:
+
+  # The default level of all loggers. Can be OFF, ERROR, WARN, INFO, DEBUG, TRACE, or ALL.
+  level: INFO
+
+  # Logger-specific levels.
+  loggers:
+
+    # Sets the level for 'com.example.app' to DEBUG.
+    com.hortonworks.registries: DEBUG
+
+
+  appenders:
+    - type: console
+#    - type: file
+#      threshold: DEBUG
+#      logFormat: "%-6level [%d{HH:mm:ss.SSS}] [%t] %logger{5} - %X{code} %msg %n"
+#      currentLogFilename: /tmp/application.log
+#      archivedLogFilenamePattern: /tmp/application-%d{yyyy-MM-dd}-%i.log.gz
+#      archivedFileCount: 7
+#      timeZone: UTC
+#      maxFileSize: 10MB
+
+#jerseyClient:
+#  minThreads: 1
+#  maxThreads: 16
+#  workQueueSize: 1000
+#  gzipEnabled: true
+#  gzipEnabledForRequests: true
+#  chunkedEncodingEnabled: true
+#  timeout: 1000ms
+#  connectionTimeout: 1000ms
+#  timeToLive: 1h
+#  cookiesEnabled: false
+#  maxConnections: 10
+#  maxConnectionsPerRoute: 1024
+#  keepAlive: 0ms
+#  retries: 10
+#  userAgent: Storm-Client
