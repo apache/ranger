@@ -27,18 +27,7 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXAccessTypeDef;
-import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXPolicyItem;
-import org.apache.ranger.entity.XXPolicyItemAccess;
-import org.apache.ranger.entity.XXPolicyItemUserPerm;
-import org.apache.ranger.entity.XXPolicyResource;
-import org.apache.ranger.entity.XXPolicyResourceMap;
-import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXResourceDef;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -66,6 +55,7 @@ public class PatchForKafkaServiceDefUpdate_J10033 extends BaseLoader {
 	private static final String LOGIN_ID_ADMIN = "admin";
 
 	private static final List<String> DEFAULT_POLICY_USERS = new ArrayList<>(Arrays.asList("kafka","rangerlookup"));
+	private static final List<String> DEFAULT_POLICY_GROUP = new ArrayList<>(Arrays.asList("public"));
 
 	public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_KAFKA_NAME = "kafka";
 	public static final String CONSUMERGROUP_RESOURCE_NAME = "consumergroup";
@@ -343,6 +333,25 @@ public class PatchForKafkaServiceDefUpdate_J10033 extends BaseLoader {
 				daoMgr.getXXPolicyItemUserPerm().create(xUserPerm);
 			}
 
+			for (int i = 0; i < DEFAULT_POLICY_GROUP.size(); i++) {
+				String group = DEFAULT_POLICY_GROUP.get(i);
+				if (StringUtils.isBlank(group)) {
+					continue;
+				}
+				XXGroup xxGroup = daoMgr.getXXGroup().findByGroupName(group);
+				if (xxGroup == null) {
+					throw new RuntimeException(group + ": group does not exist. policy='" + xxPolicy.getName()
+							+ "' service='" + xxPolicy.getService() + "' group='" + group + "'");
+				}
+				XXPolicyItemGroupPerm xGroupPerm = new XXPolicyItemGroupPerm();
+				xGroupPerm.setGroupId(xxGroup.getId());
+				xGroupPerm.setPolicyItemId(createdXXPolicyItem.getId());
+				xGroupPerm.setOrder(i);
+				xGroupPerm.setAddedByUserId(currentUserId);
+				xGroupPerm.setUpdatedByUserId(currentUserId);
+				daoMgr.getXXPolicyItemGroupPerm().create(xGroupPerm);
+			}
+
 
 			String policyResourceName = CONSUMERGROUP_RESOURCE_NAME;
 
@@ -382,7 +391,7 @@ public class PatchForKafkaServiceDefUpdate_J10033 extends BaseLoader {
 
 		List<RangerPolicy.RangerPolicyItemAccess> accesses = getPolicyItemAccesses();
 		List<String> users = new ArrayList<>(DEFAULT_POLICY_USERS);
-		List<String> groups = new ArrayList<>();
+		List<String> groups = new ArrayList<>(DEFAULT_POLICY_GROUP);
 		List<RangerPolicy.RangerPolicyItemCondition> conditions = new ArrayList<>();
 		List<RangerPolicy.RangerPolicyItem> policyItems = new ArrayList<>();
 		RangerPolicy.RangerPolicyItem rangerPolicyItem = new RangerPolicy.RangerPolicyItem();
