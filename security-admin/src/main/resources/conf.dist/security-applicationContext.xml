@@ -65,7 +65,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 		<security:custom-filter position="LAST" ref="userContextFormationFilter"/>
 
 		<security:access-denied-handler error-page="/login.jsp"/>
-		<security:logout delete-cookies="RANGERADMINSESSIONID,xa_rmc" logout-url="/logout" success-handler-ref="customLogoutSuccessHandler" />
+		<security:logout delete-cookies="${ranger.admin.cookie.name}" logout-url="/logout" success-handler-ref="customLogoutSuccessHandler" />
 		<http-basic entry-point-ref="authenticationProcessingFilterEntryPoint"/>
 	</security:http>
 

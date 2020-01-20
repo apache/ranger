@@ -69,4 +69,8 @@
 		<name>ranger.usersync.cookie.enabled</name>
 		<value>true</value>
 	</property>
+	<property>
+		<name>ranger.usersync.dest.ranger.session.cookie.name</name>
+		<value>RANGERADMINSESSIONID</value>
+	</property>
 </configuration>

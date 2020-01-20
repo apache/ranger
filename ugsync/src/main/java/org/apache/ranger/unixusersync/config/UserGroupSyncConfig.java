@@ -26,8 +26,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
@@ -235,6 +237,8 @@ public class UserGroupSyncConfig  {
     private static final String GROUP_BASED_ROLE_ASSIGNMENT_RULES = "ranger.usersync.group.based.role.assignment.rules";
 
     private static final String USERSYNC_RANGER_COOKIE_ENABLED_PROP = "ranger.usersync.cookie.enabled";
+
+	private static final String RANGER_ADMIN_COOKIE_NAME_PROPS = "ranger.usersync.dest.ranger.session.cookie.name";
 
     private Properties prop = new Properties();
 
@@ -939,6 +943,14 @@ public class UserGroupSyncConfig  {
 		return val == null || Boolean.valueOf(val.trim());
 	}
 
+	public String getRangerAdminCookieName() {
+		String ret = RangerCommonConstants.DEFAULT_COOKIE_NAME;
+		String val = prop.getProperty(RANGER_ADMIN_COOKIE_NAME_PROPS);
+		if (StringUtils.isNotBlank(val)) {
+			ret = val;
+		}
+		return ret;
+	}
 
     public String getRoleDelimiter() {
         if (prop != null && prop.containsKey(ROLE_ASSIGNMENT_LIST_DELIMITER)) {

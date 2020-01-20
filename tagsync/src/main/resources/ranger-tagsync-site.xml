@@ -97,6 +97,10 @@
 		<name>ranger.tagsync.cookie.enabled</name>
 		<value>true</value>
 	</property>
+	<property>
+		<name>ranger.tagsync.dest.ranger.session.cookie.name</name>
+		<value>RANGERADMINSESSIONID</value>
+	</property>
 
     <!-- Ranger-tagsync uses the following two properties to derive name of Ranger Service in a Federated or non-Federated HDFS setup -->
 

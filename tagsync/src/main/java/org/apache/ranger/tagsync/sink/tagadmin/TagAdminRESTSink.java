@@ -61,6 +61,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 	List<NewCookie> cookieList=new ArrayList<>();
 
 	private boolean isRangerCookieEnabled;
+	private String rangerAdminCookieName;
 
 	private RangerRESTClient tagRESTClient = null;
 
@@ -85,6 +86,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		rangerAdminConnectionCheckInterval = TagSyncConfig.getTagAdminConnectionCheckInterval(properties);
 		isKerberized = TagSyncConfig.getTagsyncKerberosIdentity(properties) != null;
 		isRangerCookieEnabled = TagSyncConfig.isTagSyncRangerCookieEnabled(properties);
+		rangerAdminCookieName=TagSyncConfig.getRangerAdminCookieName(properties);
 		sessionId=null;
 
 		if (LOG.isDebugEnabled()) {
@@ -278,7 +280,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 						cookieList = response.getCookies();
 						// save cookie received from credentials session login
 						for (NewCookie cookie : cookieList) {
-							if (cookie.getName().equalsIgnoreCase("RANGERADMINSESSIONID")) {
+							if (cookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
 								sessionId = cookie.toCookie();
 								isValidRangerCookie = true;
 								break;
@@ -322,7 +324,7 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 					|| response.getStatus() == HttpServletResponse.SC_OK) {
 				List<NewCookie> respCookieList = response.getCookies();
 				for (NewCookie respCookie : respCookieList) {
-					if (respCookie.getName().equalsIgnoreCase("RANGERADMINSESSIONID")) {
+					if (respCookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
 						if (!(sessionId.getValue().equalsIgnoreCase(respCookie.toCookie().getValue()))) {
 							sessionId = respCookie.toCookie();
 						}

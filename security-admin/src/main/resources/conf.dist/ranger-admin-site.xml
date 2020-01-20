@@ -328,4 +328,8 @@
 				<value></value>
 				<description>Maximum no. of retry to setup solr</description>
 		</property>
+		<property>
+			<name>ranger.admin.cookie.name</name>
+			<value>RANGERADMINSESSIONID</value>
+		</property>
 </configuration>

@@ -35,6 +35,7 @@ import java.util.Enumeration;
 import java.util.Properties;
 
 import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 
 public class TagSyncConfig extends Configuration {
 	private static final Logger LOG = Logger.getLogger(TagSyncConfig.class);
@@ -84,6 +85,8 @@ public class TagSyncConfig extends Configuration {
 	private static final String TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL_PROP = "ranger.tagsync.source.retry.initialization.interval.millis";
 
 	public static final String TAGSYNC_RANGER_COOKIE_ENABLED_PROP = "ranger.tagsync.cookie.enabled";
+	public static final String TAGSYNC_TAGADMIN_COOKIE_NAME_PROP = "ranger.tagsync.dest.ranger.session.cookie.name";
+
 	private static final String DEFAULT_TAGADMIN_USERNAME = "rangertagsync";
 	private static final String DEFAULT_ATLASREST_USERNAME = "admin";
 	private static final String DEFAULT_ATLASREST_PASSWORD = "admin";
@@ -211,6 +214,15 @@ public class TagSyncConfig extends Configuration {
 	static public boolean isTagSyncRangerCookieEnabled(Properties prop) {
 		String val = prop.getProperty(TAGSYNC_RANGER_COOKIE_ENABLED_PROP);
 		return val == null || Boolean.valueOf(val.trim());
+	}
+
+	static public String getRangerAdminCookieName(Properties prop) {
+		String ret = RangerCommonConstants.DEFAULT_COOKIE_NAME;
+		String val = prop.getProperty(TAGSYNC_TAGADMIN_COOKIE_NAME_PROP);
+		if (StringUtils.isNotBlank(val)) {
+			ret = val;
+		}
+		return ret;
 	}
 
 	static public String getTagSyncLogdir(Properties prop) {

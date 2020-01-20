@@ -225,4 +225,8 @@
           <name>ranger.usersync.group.based.role.assignment.rules</name>
       <value></value>
     </property>
+    <property>
+		<name>ranger.usersync.dest.ranger.session.cookie.name</name>
+		<value>RANGERADMINSESSIONID</value>
+	</property>
 </configuration>

@@ -103,4 +103,8 @@
 		<name>ranger.tagsync.source.atlasrest.ssl.config.filename</name>
 		<value></value>
 	</property>
+	<property>
+		<name>ranger.tagsync.dest.ranger.session.cookie.name</name>
+		<value>RANGERADMINSESSIONID</value>
+	</property>
 </configuration>

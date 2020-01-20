@@ -80,7 +80,6 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	private static final String GROUP_SOURCE_EXTERNAL ="1";
 
-	private static final String RANGER_ADMIN_COOKIE_NAME = "RANGERADMINSESSIONID";
 	private static String LOCAL_HOSTNAME = "unknown";
 	private String recordsToPullPerCall = "1000";
 	private boolean isMockRun = false;
@@ -104,7 +103,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
     Map<String, String> userMap = new LinkedHashMap<String, String>();
     Map<String, String> groupMap = new LinkedHashMap<String, String>();
     private boolean isRangerCookieEnabled;
-
+    private String rangerCookieName;
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -118,6 +117,8 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
 		isMockRun = config.isMockRunEnabled();
 		isRangerCookieEnabled = config.isUserSyncRangerCookieEnabled();
+		rangerCookieName = config.getRangerAdminCookieName();
+
 		if (isMockRun) {
 			LOG.setLevel(Level.DEBUG);
 		}
@@ -623,7 +624,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 								|| response.getStatus() == HttpServletResponse.SC_OK) {
 							cookieList = response.getCookies();
 							for (NewCookie cookie : cookieList) {
-								if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+								if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
 									sessionId = cookie.toCookie();
 									isValidRangerCookie = true;
 									break;
@@ -939,7 +940,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
 				List<NewCookie> respCookieList = clientResp.getCookies();
 				for (NewCookie cookie : respCookieList) {
-					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+					if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
 						if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
 							sessionId = cookie.toCookie();
 						}
@@ -990,7 +991,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_OK || clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
 				cookieList = clientResp.getCookies();
 				for (NewCookie cookie : cookieList) {
-					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+					if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
 						sessionId = cookie.toCookie();
 						isValidRangerCookie = true;
 						LOG.info("valid cookie saved ");
@@ -1037,7 +1038,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_OK || clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
 				cookieList = clientResp.getCookies();
 				for (NewCookie cookie : cookieList) {
-					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+					if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
 						sessionId = cookie.toCookie();
 						isValidRangerCookie = true;
 						LOG.info("valid cookie saved ");
@@ -1088,7 +1089,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
 				List<NewCookie> respCookieList = clientResp.getCookies();
 				for (NewCookie cookie : respCookieList) {
-					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+					if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
 						if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
 							sessionId = cookie.toCookie();
 						}

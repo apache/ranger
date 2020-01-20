@@ -36,6 +36,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -302,6 +303,16 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 			}
 		}
 	}
+
+	if (propertiesMap != null && propertiesMap.containsKey(RangerCommonConstants.PROP_COOKIE_NAME)) {
+		String cookieName = propertiesMap.get(RangerCommonConstants.PROP_COOKIE_NAME);
+		if (StringUtils.isBlank(cookieName)) {
+			cookieName = RangerCommonConstants.DEFAULT_COOKIE_NAME;
+		}
+		propertiesMap.put(RangerCommonConstants.PROP_COOKIE_NAME, cookieName);
+		props.put(RangerCommonConstants.PROP_COOKIE_NAME, cookieName);
+	}
+
 	super.processProperties(beanFactory, props);
     }
 
