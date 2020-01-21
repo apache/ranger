@@ -99,8 +99,6 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 	private boolean userNameLowerCaseFlag;
 	private boolean groupNameLowerCaseFlag;
 
-	private boolean groupUserMapSyncEnabled;
-
 	private Map<String, UserInfo> userGroupMap;
     //private Set<String> firstGroupDNs;
 	private Set<String> allUsers;
@@ -248,7 +246,6 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 		if (!groupSearchFirstEnabled) {
 			extendedGroupSearchFilter =  "(&"  + extendedGroupSearchFilter + "(|(" + groupMemberAttributeName + "={0})(" + groupMemberAttributeName + "={1})))";
 		}
-		groupUserMapSyncEnabled = config.isGroupUserMapSyncEnabled();
 
 		groupSearchControls = new SearchControls();
 		groupSearchControls.setSearchScope(groupSearchScope);
@@ -287,7 +284,6 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 					+ ",  groupMemberAttributeName: " + groupMemberAttributeName
 					+ ",  groupNameAttribute: " + groupNameAttribute
 					+ ", groupSearchAttributes: " + groupSearchAttributes
-					+ ",  groupUserMapSyncEnabled: " + groupUserMapSyncEnabled
 					+ ", groupSearchFirstEnabled: " + groupSearchFirstEnabled
 					+ ", userSearchEnabled: " + userSearchEnabled
 					+ ",  ldapReferral: " + ldapReferral

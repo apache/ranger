@@ -54,10 +54,6 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.usersync.group.usermapsyncenabled</name>
-		<value></value>
-	</property>
-	<property>
 		<name>ranger.usersync.ldap.binddn</name>
 		<value></value>
 	</property>

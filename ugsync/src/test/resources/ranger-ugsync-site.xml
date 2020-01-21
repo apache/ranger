@@ -59,11 +59,6 @@
     </property>
     
     <property>
-      <name>ranger.usersync.group.usermapsyncenabled</name>
-      <value>true</value>
-    </property>
-    
-    <property>
       <name>ranger.usersync.group.search.first.enabled</name>
       <value>false</value>
     </property>

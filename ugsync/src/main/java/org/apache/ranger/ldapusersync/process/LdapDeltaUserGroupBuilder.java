@@ -119,10 +119,6 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 	private boolean userNameLowerCaseFlag = false;
 	private boolean groupNameLowerCaseFlag = false;
 
-  private boolean  groupUserMapSyncEnabled = false;
-
-  //private Map<String, UserInfo> userGroupMap;
-
   private Table<String, String, String> groupUserTable;
   private Map<String, String> userNameMap;
 	private HashSet<String> groupNames;
@@ -297,7 +293,6 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		groupHierarchyLevels = config.getGroupHierarchyLevels();
 
     extendedGroupSearchFilter =  "(&"  + extendedGroupSearchFilter + "(|(" + groupMemberAttributeName + "={0})(" + groupMemberAttributeName + "={1})))";
-    groupUserMapSyncEnabled = config.isGroupUserMapSyncEnabled();
 
     groupSearchControls = new SearchControls();
     groupSearchControls.setSearchScope(groupSearchScope);
@@ -343,7 +338,6 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
           + ",  groupMemberAttributeName: " + groupMemberAttributeName
           + ",  groupNameAttribute: " + groupNameAttribute
           + ", groupSearchAttributes: " + groupSearchAttributes
-          + ",  groupUserMapSyncEnabled: " + groupUserMapSyncEnabled
           + ", groupSearchFirstEnabled: " + groupSearchFirstEnabled
           + ", userSearchEnabled: " + userSearchEnabled
           + ",  ldapReferral: " + ldapReferral

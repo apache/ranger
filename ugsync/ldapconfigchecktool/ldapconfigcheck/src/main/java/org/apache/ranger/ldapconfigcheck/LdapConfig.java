@@ -79,9 +79,6 @@ public class LdapConfig {
     private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ranger.usersync.group.searchenabled";
     private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = false;
 
-    private static final String LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = "ranger.usersync.group.usermapsyncenabled";
-    private static final boolean DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = false;
-
     private static final String LGSYNC_GROUP_SEARCH_BASE = "ranger.usersync.group.searchbase";
 
     private static final String LGSYNC_GROUP_SEARCH_SCOPE = "ranger.usersync.group.searchscope";
@@ -313,17 +310,6 @@ public class LdapConfig {
             groupSearchEnabled = Boolean.valueOf(val);
         }
         return groupSearchEnabled;
-    }
-
-    public boolean isGroupUserMapSyncEnabled() {
-        boolean groupUserMapSyncEnabled;
-        String val = prop.getProperty(LGSYNC_GROUP_USER_MAP_SYNC_ENABLED);
-        if (val == null || val.trim().isEmpty()) {
-            groupUserMapSyncEnabled = DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED;
-        } else {
-            groupUserMapSyncEnabled = Boolean.valueOf(val);
-        }
-        return groupUserMapSyncEnabled;
     }
 
     public String getGroupSearchBase() {
