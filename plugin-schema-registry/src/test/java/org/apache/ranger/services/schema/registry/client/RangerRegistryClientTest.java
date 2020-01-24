@@ -1,7 +1,7 @@
 package org.apache.ranger.services.schema.registry.client;
 
 import org.apache.ranger.services.schema.registry.client.srclient.SRClient;
-import org.apache.ranger.services.schema.registry.client.util.DefaultSRClientForTests;
+import org.apache.ranger.services.schema.registry.client.util.DefaultSRClientForTesting;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -19,7 +19,7 @@ public class RangerRegistryClientTest {
 
     @Test
     public void connectionTest() {
-        SRClient client = new DefaultSRClientForTests();
+        SRClient client = new DefaultSRClientForTesting();
 
         RangerRegistryClient rangerRegistryClient =
                 new RangerRegistryClient("schema-registry", client);
@@ -32,9 +32,8 @@ public class RangerRegistryClientTest {
         assertNull(res.get("fieldName"));
 
 
-        client = new DefaultSRClientForTests() {
-            @Override
-            public void testConnection() throws Exception {
+        client = new DefaultSRClientForTesting() {
+            public void checkConnection() throws Exception {
                 throw new Exception("Cannot connect to the SR server");
             }
         };
@@ -55,8 +54,7 @@ public class RangerRegistryClientTest {
 
     @Test
     public void getSchemaGroupList() {
-        SRClient client = new DefaultSRClientForTests(){
-            @Override
+        SRClient client = new DefaultSRClientForTesting(){
             public List<String> getSchemaGroups() {
                 List<String> groups = new ArrayList<>();
                 groups.add("testGroup");
@@ -107,8 +105,8 @@ public class RangerRegistryClientTest {
 
     @Test
     public void getSchemaMetadataList() {
-        SRClient client = new DefaultSRClientForTests(){
-            @Override
+        SRClient client = new DefaultSRClientForTesting(){
+
             public List<String> getSchemaNames(List<String> schemaGroup) {
                 if(!schemaGroup.contains("Group1")) {
                     return new ArrayList<>();
@@ -137,8 +135,8 @@ public class RangerRegistryClientTest {
 
     @Test
     public void getBranchList() {
-        SRClient client = new DefaultSRClientForTests(){
-            @Override
+        SRClient client = new DefaultSRClientForTesting(){
+
             public List<String> getSchemaBranches(String schemaMetadataName) {
                 if(!schemaMetadataName.equals("Schema1")) {
                     return new ArrayList<>();
@@ -148,7 +146,7 @@ public class RangerRegistryClientTest {
                 return branches;
             }
 
-            @Override
+
             public List<String> getSchemaNames(List<String> schemaGroup) {
                 if(!schemaGroup.contains("Group1")) {
                     return new ArrayList<>();

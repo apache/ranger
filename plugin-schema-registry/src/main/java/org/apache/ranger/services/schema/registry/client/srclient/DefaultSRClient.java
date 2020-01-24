@@ -248,31 +248,31 @@ public class DefaultSRClient implements SRClient {
     }
 
     @Override
-    public void testConnection() throws Exception {
+    public void checkConnection() throws Exception {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> DefaultSRClient.testConnection(): trying to connect to the SR server... ");
+            LOG.debug("==> DefaultSRClient.checkConnection(): trying to connect to the SR server... ");
         }
 
         WebTarget webTarget = currentSchemaRegistryTargets().schemaRegistryVersion;
         Response responce = login.doAction(() ->
                 webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
         if(LOG.isDebugEnabled()) {
-            LOG.debug("DefaultSRClient.testConnection(): response statusCode = " + responce.getStatus());
+            LOG.debug("DefaultSRClient.checkConnection(): response statusCode = " + responce.getStatus());
         }
         if(responce.getStatus() != Response.Status.OK.getStatusCode()) {
-            LOG.error("DefaultSRClient.testConnection(): Connection failed. Response StatusCode = "
+            LOG.error("DefaultSRClient.checkConnection(): Connection failed. Response StatusCode = "
                     + responce.getStatus());
             throw new Exception("Connection failed. StatusCode = " + responce.getStatus());
         }
 
         String respStr = responce.readEntity(String.class);
         if (!(respStr.contains("version") && respStr.contains("revision"))) {
-            LOG.error("DefaultSRClient.testConnection(): Connection failed. Bad response body.");
+            LOG.error("DefaultSRClient.checkConnection(): Connection failed. Bad response body.");
             throw new Exception("Connection failed. Bad response body.");
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== DefaultSRClient.testConnection(): connection test successfull ");
+            LOG.debug("<== DefaultSRClient.checkConnection(): connection test successfull ");
         }
     }
 

@@ -34,7 +34,7 @@ public class DefaultSRClientTest {
     private static SRClient srClient;
 
     @BeforeClass
-    public static void setUp() throws Exception {
+    public static void init() throws Exception {
         localSchemaRegistryServer =
                 new LocalSchemaRegistryServer(getFilePath("ssl-schema-registry.yaml"));
 
@@ -159,14 +159,16 @@ public class DefaultSRClientTest {
     }
 
     @Test
-    public void testConnection() throws Exception {
-        srClient.testConnection();
-
+    public void checkConnection() {
         try {
-            new DefaultSRClient(new HashMap<>()).testConnection();
-            fail("Exception should be thrown");
+            srClient.checkConnection();
         } catch (Exception e) {
-
+            fail("No Exception should be thrown");
         }
+    }
+
+    @Test(expected = Exception.class)
+    public void checkConnection2() throws Exception {
+        new DefaultSRClient(new HashMap<>()).checkConnection();
     }
 }

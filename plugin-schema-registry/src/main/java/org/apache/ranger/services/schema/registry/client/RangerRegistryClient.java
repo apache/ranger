@@ -40,7 +40,7 @@ public class RangerRegistryClient {
         HashMap<String, Object> responseData = new HashMap<String, Object>();
 
         try {
-            srClient.testConnection();
+            srClient.checkConnection();
             // If it doesn't throw exception, then assume the instance is
             // reachable
             BaseClient.generateResponseDataMap(true, successMsg,

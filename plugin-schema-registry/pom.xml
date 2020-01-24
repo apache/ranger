@@ -6,18 +6,16 @@
     <artifactId>ranger-schema-registry-plugin</artifactId>
     <name>SchemaRegistry Security Plugin</name>
     <description>SchemaRegistry Security Plugin</description>
+    <packaging>jar</packaging>
 
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger</artifactId>
-        <version>2.0.0.7.0.1.0-SNAPSHOT</version>
+        <version>2.0.0.7.1.0.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
 
     <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <ranger.version>2.0.0.7.0.3.0-79</ranger.version> <!-- TODO: temporary -->
-
         <hadoop.version>3.1.1</hadoop.version>
         <kafka.version>2.1.0</kafka.version>
         <kafkaArtifact>kafka_2.11</kafkaArtifact>
@@ -27,21 +25,6 @@
         <jettison.version>1.1</jettison.version>
         <servlet-api.version>3.0.1</servlet-api.version>
     </properties>
-
-
-    <repositories> <!-- TODO: temporary -->
-        <repository>
-            <id>hortonworks.public.https</id>
-            <name>Apache Development Snapshot Repository</name>
-            <url>https://repo.hortonworks.com/content/groups/public/</url>
-        </repository>
-        <repository>
-            <id>cloudera.public.https</id>
-            <name>Apache Development Snapshot Repository</name>
-            <url>https://repository.cloudera.com/artifactory/libs-release-local/</url>
-        </repository>
-    </repositories>
-
 
     <dependencyManagement>
         <dependencies>
@@ -170,7 +153,7 @@
         <dependency>
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-plugins-common</artifactId>
-            <version>${ranger.version}</version> <!-- TODO: temporary -->
+            <version>${project.version}</version>
             <exclusions>
                 <exclusion>
                     <groupId>javax.servlet</groupId>
@@ -227,26 +210,4 @@
             <scope>test</scope>
         </dependency>
     </dependencies>
-    <build>
-        <plugins>
-
-            <plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration combine.self="override">
-                            <descriptorRefs>
-                                <descriptorRef>jar-with-dependencies</descriptorRef>
-                            </descriptorRefs>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-        </plugins>
-    </build>
-
 </project>

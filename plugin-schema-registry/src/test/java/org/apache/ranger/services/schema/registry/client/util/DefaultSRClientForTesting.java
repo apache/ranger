@@ -5,7 +5,7 @@ import org.apache.ranger.services.schema.registry.client.srclient.SRClient;
 import java.util.ArrayList;
 import java.util.List;
 
-public class DefaultSRClientForTests implements SRClient {
+public class DefaultSRClientForTesting implements SRClient {
 
     @Override
     public List<String> getSchemaGroups() {
@@ -23,7 +23,7 @@ public class DefaultSRClientForTests implements SRClient {
     }
 
     @Override
-    public void testConnection() throws Exception {
+    public void checkConnection() throws Exception {
 
     }
 }
