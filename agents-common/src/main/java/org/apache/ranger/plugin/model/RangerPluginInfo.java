@@ -72,12 +72,15 @@ public class RangerPluginInfo implements Serializable {
 	private Date    updateTime;
 
 	private String serviceName;
-        private String serviceType;
+	private String serviceDisplayName;
+	private String serviceType;
+	private String serviceTypeDisplayName;
 	private String hostName;
 	private String appType;
 	private String ipAddress;
 	private Map<String, String> info;
 
+	//FIXME UNUSED
 	public RangerPluginInfo(Long id, Date createTime, Date updateTime, String serviceName, String appType, String hostName, String ipAddress, Map<String, String> info) {
 		super();
 
@@ -91,6 +94,7 @@ public class RangerPluginInfo implements Serializable {
 		setInfo(info);
 	}
 
+	//FIXME UNUSED
 	public RangerPluginInfo() {
 		this(null, null, null, null, null, null, null, null);
 	}
@@ -119,13 +123,21 @@ public class RangerPluginInfo implements Serializable {
 		this.updateTime = updateTime;
 	}
 
-        public String getServiceType() {
-                return serviceType;
-        }
+	public String getServiceType() {
+		return serviceType;
+	}
 
-        public void setServiceType(String serviceType) {
-                this.serviceType = serviceType;
-        }
+	public void setServiceType(String serviceType) {
+		this.serviceType = serviceType;
+	}
+
+	public String getServiceTypeDisplayName() {
+		return serviceTypeDisplayName;
+	}
+
+	public void setServiceTypeDisplayName(String serviceTypeDisplayName) {
+		this.serviceTypeDisplayName = serviceTypeDisplayName;
+	}
 
 	public String getServiceName() {
 		return serviceName;
@@ -133,6 +145,14 @@ public class RangerPluginInfo implements Serializable {
 
 	public void setServiceName(String serviceName) {
 		this.serviceName = serviceName;
+	}
+
+	public String getServiceDisplayName() {
+		return serviceDisplayName;
+	}
+
+	public void setServiceDisplayName(String serviceDisplayName) {
+		this.serviceDisplayName = serviceDisplayName;
 	}
 
 	public String getHostName() {
@@ -370,7 +390,9 @@ public class RangerPluginInfo implements Serializable {
 		sb.append("createTime={").append(createTime).append("} ");
 		sb.append("updateTime={").append(updateTime).append("} ");
 		sb.append("serviceName={").append(serviceName).append("} ");
-                sb.append("serviceType={").append(serviceType).append("} ");
+		sb.append("serviceType={").append(serviceType).append("} ");
+		sb.append("serviceTypeDisplayName{").append(serviceTypeDisplayName).append("} ");
+		sb.append("serviceDisplayName={").append(serviceDisplayName).append("} ");
 		sb.append("hostName={").append(hostName).append("} ");
 		sb.append("appType={").append(appType).append("} ");
 		sb.append("ipAddress={").append(ipAddress).append("} ");

@@ -40,6 +40,7 @@ import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.view.VXAccessAudit;
@@ -294,6 +295,11 @@ public class SolrAccessAuditsService {
 		value = doc.getFieldValue("repo");
 		if (value != null) {
 			accessAudit.setRepoName(value.toString());
+			XXService xxService = daoManager.getXXService().findByName(accessAudit.getRepoName());
+
+			if(xxService != null) {
+				accessAudit.setRepoDisplayName(xxService.getDisplayName());
+			}
 		}
 		value = doc.getFieldValue("sess");
 		if (value != null) {
@@ -334,6 +340,7 @@ public class SolrAccessAuditsService {
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
 			if (xServiceDef != null) {
 				accessAudit.setServiceType(xServiceDef.getName());
+				accessAudit.setServiceTypeDisplayName(xServiceDef.getDisplayName());
 			}
 		}
 		value = doc.getFieldValue("resType");

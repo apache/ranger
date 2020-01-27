@@ -83,6 +83,10 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	 */
 	protected String repoName;
 	/**
+	 * Repository Display Name
+	 */
+	protected String repoDisplayName;
+	/**
 	 * Repository Type
 	 */
 	protected int repoType;
@@ -90,6 +94,10 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	 * Service Type ~~ repoType
 	 */
 	protected String serviceType;
+	/**
+	 * Service Type Display Name
+	 */
+	protected String serviceTypeDisplayName;
 	/**
 	 * Reason of result
 	 */
@@ -305,6 +313,23 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b>repoDisplayName</b>.
+	 * You cannot set null to the attribute.
+	 * @param repoDisplayName Value to set member attribute <b>repoDisplayName</b>
+	 */
+	public void setRepoDisplayName(String repoDisplayName) {
+		this.repoDisplayName = repoDisplayName;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>repoDisplayName</b>
+	 * @return String - value of member attribute <b>repoDisplayName</b>.
+	 */
+	public String getRepoDisplayName() {
+		return repoDisplayName;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b>repoType</b>.
 	 * You cannot set null to the attribute.
 	 * @param repoType Value to set member attribute <b>repoType</b>
@@ -333,6 +358,20 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	 */
 	public void setServiceType(String serviceType) {
 		this.serviceType = serviceType;
+	}
+
+	/**
+	 * @return the serviceTypeDisplayName
+	 */
+	public String getServiceTypeDisplayName() {
+		return serviceTypeDisplayName;
+	}
+
+	/**
+	 * @param serviceTypeDisplayName the serviceTypeDisplayName to set
+	 */
+	public void setServiceTypeDisplayName(String serviceTypeDisplayName) {
+		this.serviceTypeDisplayName = serviceTypeDisplayName;
 	}
 
 	/**
@@ -583,8 +622,10 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "policyId={" + policyId + "} ";
 		str += "policyVersion={" + policyVersion + "} ";
 		str += "repoName={" + repoName + "} ";
+		str += "repoDisplayName={" + repoDisplayName + "} ";
 		str += "repoType={" + repoType + "} ";
 		str += "serviceType={" + serviceType + "} ";
+		str += "serviceTypeDisplayName={" + serviceTypeDisplayName + "} ";
 		str += "resultReason={" + resultReason + "} ";
 		str += "sessionId={" + sessionId + "} ";
 		str += "eventTime={" + eventTime + "} ";
