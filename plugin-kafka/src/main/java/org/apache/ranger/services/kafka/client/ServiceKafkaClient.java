@@ -27,16 +27,16 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import kafka.utils.ZkUtils;
-import kafka.utils.ZkUtils$;
-import org.I0Itec.zkclient.*;
+import org.apache.kafka.common.utils.Time;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
 
+import kafka.zk.KafkaZkClient;
+import kafka.zookeeper.ZooKeeperClient;
+import scala.Option;
 import scala.collection.Iterator;
-import scala.collection.Seq;
 
 public class ServiceKafkaClient {
 	private static final Logger LOG = Logger.getLogger(ServiceKafkaClient.class);
@@ -82,41 +82,17 @@ public class ServiceKafkaClient {
 	private List<String> getTopicList(List<String> ignoreTopicList) throws Exception {
 		List<String> ret = new ArrayList<String>();
 
-		int          sessionTimeout    = 5000;
-        int          connectionTimeout = 10000;
-		ZkClient     zkClient          = null;
-		ZkConnection zkConnection      = null;
-
-		try {
-	        zkClient     = ZkUtils$.MODULE$.createZkClient(zookeeperConnect, sessionTimeout, connectionTimeout);
-	        zkConnection = new ZkConnection(zookeeperConnect, sessionTimeout);
-
-	        ZkUtils      zkUtils           = new ZkUtils(zkClient, zkConnection, true);
-	        Seq<String>  topicList         = zkUtils.getChildrenParentMayNotExist(ZkUtils.BrokerTopicsPath());
-
-			Iterator<String> iter = topicList.iterator();
+		int sessionTimeout = 5000;
+		int connectionTimeout = 10000;
+		ZooKeeperClient zookeeperClient = new ZooKeeperClient(zookeeperConnect, sessionTimeout, connectionTimeout,
+				1, Time.SYSTEM, "kafka.server", "SessionExpireListener", Option.empty());
+		try (KafkaZkClient kafkaZkClient = new KafkaZkClient(zookeeperClient, true, Time.SYSTEM)) {
+			Iterator<String> iter = kafkaZkClient.getAllTopicsInCluster().iterator();
 			while (iter.hasNext()) {
 				String topic = iter.next();
 				if (ignoreTopicList == null || !ignoreTopicList.contains(topic)) {
 					ret.add(topic);
 				}
-			}
-		} finally {
-			try {
-				if(zkClient != null) {
-					zkClient.close();
-				}
-			} catch (Exception ex) {
-				LOG.error("Error closing zkClient", ex);
-			}
-			
-			try {
-				if(zkConnection != null) {
-					zkConnection.close();
-				}
-				
-			} catch(Exception ex) {
-				LOG.error("Error closing zkConnection", ex);
 			}
 		}
 		return ret;
