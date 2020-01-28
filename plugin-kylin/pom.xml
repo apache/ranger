@@ -87,5 +87,11 @@
             <artifactId>httpcore</artifactId>
             <version>${httpcomponents.httpcore.version}</version>
         </dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${fasterxml.jackson.databind.version}</version>
+			<scope>test</scope>
+		</dependency>
     </dependencies>
 </project>
