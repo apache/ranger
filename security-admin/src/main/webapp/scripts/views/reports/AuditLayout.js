@@ -126,7 +126,7 @@ define(function(require) {
 		initialize : function(options) {
 			console.log("initialized a AuditLayout Layout");
 
-			_.extend(this, _.pick(options, 'accessAuditList','tab'));
+            _.extend(this, _.pick(options, 'accessAuditList','tab'));
                         var that = this;
 			this.bindEvents();
                         this.currentTab = '#'+this.tab.split('?')[0];
@@ -178,7 +178,13 @@ define(function(require) {
 				async:false,
 				data :{'pageSource':'Audit'}
 			});
-			return this.serviceDefList;
+            this.serviceList = new RangerServiceList();
+            this.serviceList.setPageSize(100)
+            this.serviceList.fetch({
+                cache : false,
+                async:false,
+                data :{'pageSource':'Audit'}
+            });
 		},
 		/** on render callback */
 		onRender : function() {
@@ -393,7 +399,12 @@ define(function(require) {
 		},
 		addSearchForBigDataTab :function(){
             var that = this , query = '';
-			var serverListForRepoType =  this.serviceDefList.map(function(serviceDef){ return {'label' : serviceDef.get('name').toUpperCase(), 'value' : serviceDef.get('id')}; })
+            var serviceListForRepoType =  this.serviceDefList.map(function(serviceDef){
+                return {'label' : serviceDef.get('displayName').toUpperCase(), 'value' : serviceDef.get('id')}
+            });
+            var serviceNameForRepoName = this.serviceList.map(function(service){
+                return {'label' : service.get('displayName'), 'value' : service.get('name')}
+            })
             var serviceUser = [{'label' : 'True' , 'value' : true},{'label' : 'False' , 'value' : false}]
             var serverAttrName = [{text : 'Start Date', label :'startDate', urlLabel : 'startDate'},
                                     {text : 'End Date', label :'endDate', urlLabel : 'endDate'},
@@ -401,9 +412,9 @@ define(function(require) {
                                     {text : 'User', label :'requestUser', 'addMultiple': true, urlLabel : 'user'},
                                     {text : 'Exclude User', label :'excludeUser', 'addMultiple': true, urlLabel : 'excludeUser'},
                                     {text : 'Resource Name',label :'resourcePath', urlLabel : 'resourceName'},
-                                    {text : 'Service Name', label :'repoName', urlLabel : 'serviceName'},
+                                    {text : 'Service Name', label :'repoName', urlLabel : 'serviceName', 'optionsArr' : serviceNameForRepoName, 'multiple' : true},
                                     {text : 'Policy ID', label :'policyId', urlLabel : 'policyID'},
-                                    {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serverListForRepoType, urlLabel : 'serviceType'},
+                                    {text : 'Service Type',label :'repoType','multiple' : true, 'optionsArr' : serviceListForRepoType, urlLabel : 'serviceType'},
                                     {text : 'Result', label :'accessResult', 'multiple' : true, 'optionsArr' : XAUtils.enumToSelectLabelValuePairs(XAEnums.AccessResult), urlLabel : 'result'},
                                     {text : 'Access Type', label :'accessType', urlLabel : 'accessType'},
                                     {text : 'Access Enforcer',label :'aclEnforcer', urlLabel : 'accessEnforcer'},
@@ -465,35 +476,32 @@ define(function(require) {
 						
 						switch (facet) {
 							case 'Service Name':
-								var serviceList 	= new RangerServiceList() , serviceNameVal = [];
-								serviceList.setPageSize(100);
-								serviceList.fetch().done(function(){
-								serviceList.each(function(m){
-                                                                        if(SessionMgr.isKeyAdmin() || SessionMgr.isKMSAuditor()){
-                                                                                if(m.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label){
-                                                                                        serviceNameVal.push(m.get('name'));
-                                                                                }
-                                                                        }else{
-                                                                                if(m.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label && m.get('type') !== XAEnums.ServiceType.Service_KMS.label){
-                                                                                        serviceNameVal.push(m.get('name'));
-                                                                                }
-                                                                        }
+                                                                var serviceNameVal = [];
+                                                                that.serviceList.each(function(m){
+                                    if(SessionMgr.isKeyAdmin() || SessionMgr.isKMSAuditor()){
+                                        if(m.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label){
+                                            serviceNameVal.push({ 'label' : m.get('displayName'), 'value' : m.get('displayName')});
+                                        }
+                                    }else{
+                                        if(m.get('type') !== XAEnums.ServiceType.SERVICE_TAG.label && m.get('type') !== XAEnums.ServiceType.Service_KMS.label){
+                                            serviceNameVal.push({ 'label' : m.get('displayName'), 'value' : m.get('displayName')});
+                                        }
+                                    }
 								});
 								callback(serviceNameVal);
-								});
 								break;
 							case 'Service Type':
 								var serviveDefs = [];
 								that.serviceDefList.each(function(m){
-                                                                        if(SessionMgr.isKeyAdmin() || SessionMgr.isKMSAuditor()){
-                                                                                if(m.get('name').toUpperCase() != (XAEnums.ServiceType.SERVICE_TAG.label).toUpperCase()){
-                                                                                        serviveDefs.push({ 'label' : m.get('name').toUpperCase(), 'value' : m.get('name').toUpperCase() });
-                                                                                }
-                                                                        }else{
-                                                                                if(m.get('name').toUpperCase() != (XAEnums.ServiceType.SERVICE_TAG.label).toUpperCase() && m.get('name') !== XAEnums.ServiceType.Service_KMS.label){
-                                                                                        serviveDefs.push({ 'label' : m.get('name').toUpperCase(), 'value' : m.get('name').toUpperCase() });
-                                                                                }
-									}
+                                    if(SessionMgr.isKeyAdmin() || SessionMgr.isKMSAuditor()){
+                                        if(m.get('name').toUpperCase() != (XAEnums.ServiceType.SERVICE_TAG.label).toUpperCase()){
+                                            serviveDefs.push({ 'label' : m.get('displayName').toUpperCase(), 'value' : m.get('displayName').toUpperCase() });
+                                        }
+                                    }else{
+                                        if(m.get('name').toUpperCase() != (XAEnums.ServiceType.SERVICE_TAG.label).toUpperCase() && m.get('name') !== XAEnums.ServiceType.Service_KMS.label){
+                                            serviveDefs.push({ 'label' : m.get('displayName').toUpperCase(), 'value' : m.get('displayName').toUpperCase() });
+                                        }
+                                    }
 								});
 								callback(serviveDefs);
 								break;
@@ -676,10 +684,13 @@ define(function(require) {
 		},
 		addSearchForAgentTab : function(){
                         var that = this , query = '';
+                        var serviceNameForRepoName = this.serviceList.map(function(service){
+                            return {'label' : service.get('displayName'), 'value' : service.get('name')}
+                        })
                         var searchOpt = ["Service Name", "Plugin ID", "Plugin IP", "Http Response Code", "Start Date","End Date", "Cluster Name"];
                         var serverAttrName  = [{text : "Plugin ID", label :"agentId", urlLabel : 'pluginID'},
                                                 {text : "Plugin IP", label :"clientIP", urlLabel : 'pluginIP'},
-                                                {text : "Service Name", label :"repositoryName", urlLabel : 'serviceName'},
+                                                {text : "Service Name", label :"repositoryName", urlLabel : 'serviceName','optionsArr' : serviceNameForRepoName, 'multiple' : true},
                                                 {text : "Http Response Code", label :"httpRetCode", urlLabel : 'httpResponseCode'},
                                                 {text : "Export Date", label :"createDate", urlLabel : 'exportDate'},
                                                 {text : 'Start Date',label :'startDate', urlLabel : 'startDate'},
@@ -697,16 +708,11 @@ define(function(require) {
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 								    case 'Service Name':
-										var serviceList 	= new RangerServiceList();
-										serviceList.setPageSize(100);
-										serviceList.fetch().done(function(){
-											callback(serviceList.map(function(model){return model.get('name');}));
-										});
+                                                                                callback(that.serviceList.map(function(model){
+                                            return { 'label' : model.get('displayName'), 'value' : model.get('displayName')}
+                                        }));
 										break;
-								    case 'Audit Type':
-										callback([]);
-										break;
-									case 'Start Date' :
+                                                                    case 'Start Date' :
 											var endDate, models = that.visualSearch.searchQuery.where({category:"End Date"});
 											if(models.length > 0){
 												var tmpmodel = models[0];
@@ -732,13 +738,19 @@ define(function(require) {
 		},
 		addSearchForPluginStatusTab : function(){
                         var that = this , query = '';
+                        var serviceNameForRepoName = this.serviceList.map(function(service){
+                            return {'label' : service.get('displayName'), 'value' : service.get('name')}
+                        });
+                        var serviceListForRepoType =  this.serviceDefList.map(function(serviceDef){
+                            return {'label' : serviceDef.get('displayName').toUpperCase(), 'value' : serviceDef.get('id')}
+                        });
                         var searchOpt = [localization.tt("lbl.serviceName"), localization.tt("lbl.serviceType"),localization.tt("lbl.applicationType"),
-			                 localization.tt("lbl.agentIp"), localization.tt("lbl.hostName"), localization.tt("lbl.clusterName")];
-                        var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName", urlLabel : 'serviceName'},
+                             localization.tt("lbl.agentIp"), localization.tt("lbl.hostName"), localization.tt("lbl.clusterName")];
+                        var serverAttrName  = [{text : localization.tt("lbl.serviceName"), label :"serviceName", urlLabel : 'serviceName', 'optionsArr' : serviceNameForRepoName, 'multiple' : true},
                                                 {text : localization.tt("lbl.applicationType"), label :"pluginAppType", urlLabel : 'applicationType'},
                                                 {text : localization.tt("lbl.agentIp"), label :"pluginIpAddress", urlLabel : 'agentIp'},
                                                 {text : localization.tt("lbl.hostName"), label :"pluginHostName", urlLabel : 'hostName'},
-                                                {text : localization.tt("lbl.serviceType"), label :"serviceType", urlLabel : 'serviceType'},
+                                                {text : localization.tt("lbl.serviceType"), label :"serviceType", urlLabel : 'serviceType', 'optionsArr' : serviceListForRepoType, 'multiple' : true},
                                                 {text : localization.tt("lbl.clusterName"),label :'clusterName', urlLabel : 'clusterName'}];
                         _.map(App.vsHistory.pluginStatus, function(m) {
                             query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, m.get('category'))+'":"'+m.get('value')+'"';
@@ -752,23 +764,21 @@ define(function(require) {
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 								    case 'Service Name':
-										var serviceList 	= new RangerServiceList();
-										serviceList.setPageSize(100);
-										serviceList.fetch().done(function(){
-											callback(serviceList.map(function(model){return model.get('name');}));
-										});
+                                                                                callback(that.serviceList.map(function(model){
+                                            return { 'label' : model.get('displayName'), 'value' : model.get('displayName')}}
+                                        ));
 										break;
 
-                                                                        case 'Service Type':
-                                                                                var serviveType = [];
-                                                                                that.serviceDefList.each(function(m){
-                                                                                        serviveType.push({ 'label' : m.get('name') , 'value' : m.get('name') });
-                                                                                });
-                                                                                callback(serviveType);
-                                                                                break;
-                                                                }
-							}
-                                        }
+                                    case 'Service Type':
+                                        var serviveType = [];
+                                        that.serviceDefList.each(function(m){
+                                                serviveType.push({ 'label' : m.get('displayName') , 'value' : m.get('displayName') });
+                                        });
+                                        callback(serviveType);
+                                        break;
+                                }
+                        }
+                    }
 			}
 			this.visualSearch = XAUtils.addVisualSearch(searchOpt, serverAttrName, this.pluginInfoList, pluginAttr);
                         this.setEventsToFacets(this.visualSearch, App.vsHistory.pluginStatus);
@@ -1298,8 +1308,8 @@ define(function(require) {
 						editable:false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
-								return '<div title="'+rawValue+'">'+_.escape(rawValue)+'</div>\
-                                                                <div title="'+model.get('serviceType')+'" style="border-top: 1px solid #ddd;">'+_.escape(model.get('serviceType'))+'</div>';
+                                                                return '<div title="'+model.get('repoDisplayName')+'">'+_.escape(model.get('repoDisplayName'))+'</div>\
+                                    <div title="'+model.get('serviceTypeDisplayName')+'" style="border-top: 1px solid #ddd;">'+_.escape(model.get('serviceTypeDisplayName'))+'</div>';
 							}
 						})
 					},
@@ -1403,11 +1413,15 @@ define(function(require) {
 						cell: "html",
 						click: false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-                                    fromRaw: function (rawValue, model) {
-                                            rawValue = _.escape(rawValue);
-                                            return '<span class="label label-inverse" title="'+rawValue+'">'+rawValue+'</span>';
-                                    }
-                            }),
+                            fromRaw: function (rawValue, model) {
+                                rawValue = _.escape(rawValue);
+                                if (_.isUndefined(rawValue) || _.isEmpty(rawValue)) {
+                                    '--'
+                                } else {
+                                    return '<span class="label label-inverse" title="'+rawValue+'">'+rawValue+'</span>';
+                                }
+                            }
+                        }),
 						drag: false,
 						sortable: false,
 						editable: false,
@@ -1608,8 +1622,8 @@ define(function(require) {
 						sortable:false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
-								rawValue = _.escape(rawValue);
-								return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                                var repoName = _.escape(model.get('repositoryDisplayName'));
+                                                                return '<span title="'+repoName+'">'+repoName+'</span>';
 							}
 						}),
 						
@@ -1697,8 +1711,8 @@ define(function(require) {
                                         sortable:true,
                                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                                 fromRaw: function (rawValue, model) {
-                                                        rawValue = _.escape(rawValue);
-                                                        return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                        var repoName = _.escape(model.get('serviceDisplayName'));
+                                                        return '<span title="'+repoName+'">'+repoName+'</span>';
                                                 }
                                         }),
                                 },
@@ -1712,8 +1726,8 @@ define(function(require) {
                                                         if(_.isEmpty(rawValue) || _.isUndefined(rawValue)){
                                                                 return '<center>--</center>';
                                                         }
-                                                        rawValue = _.escape(rawValue);
-                                                        return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                                        var repoType = _.escape(model.get('serviceTypeDisplayName'));
+                                                        return '<span title="'+repoType+'">'+repoType+'</span>';
                                                 }
                                         }),
 				},
