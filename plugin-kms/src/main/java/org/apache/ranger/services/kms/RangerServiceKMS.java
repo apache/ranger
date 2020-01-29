@@ -18,6 +18,7 @@
 package org.apache.ranger.services.kms;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,6 +26,8 @@ import java.util.Map;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.kms.client.KMSResourceMgr;
@@ -39,6 +42,7 @@ public class RangerServiceKMS extends RangerBaseService {
 	public static final String ACCESS_TYPE_DECRYPT_EEK    = "decrypteek";
 	public static final String ACCESS_TYPE_GENERATE_EEK   = "generateeek";
 	public static final String ACCESS_TYPE_GET_METADATA   = "getmetadata";
+	public static final String ACCESS_TYPE_GET  = "get";
 
 	public RangerServiceKMS() {
 		super();
@@ -124,6 +128,13 @@ public class RangerServiceKMS extends RangerBaseService {
 		}
 
 		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_GET)));
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
 
 			List<RangerPolicy.RangerPolicyItem> policyItems = defaultPolicy.getPolicyItems();
 			for (RangerPolicy.RangerPolicyItem item : policyItems) {

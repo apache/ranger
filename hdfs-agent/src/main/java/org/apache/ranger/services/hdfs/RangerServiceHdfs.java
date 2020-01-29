@@ -19,6 +19,7 @@
 package org.apache.ranger.services.hdfs;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -43,6 +46,7 @@ public class RangerServiceHdfs extends RangerBaseService {
 	private static final Log LOG = LogFactory.getLog(RangerServiceHdfs.class);
         private static final String AUDITTOHDFS_KMS_PATH = "/ranger/audit/kms";
         private static final String AUDITTOHDFS_POLICY_NAME = "kms-audit-path";
+        public static final String ACCESS_TYPE_READ  = "read";
 	
 	public RangerServiceHdfs() {
 		super();
@@ -116,6 +120,14 @@ public class RangerServiceHdfs extends RangerBaseService {
 
 		for (RangerPolicy defaultPolicy : ret) {
 			if(defaultPolicy.getName().contains("all")){
+				if (StringUtils.isNotBlank(lookUpUser)) {
+					RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+					policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+					policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_READ)));
+					policyItemForLookupUser.setDelegateAdmin(false);
+					defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+				}
+
 				RangerPolicy.RangerPolicyResource pathPolicyResource = defaultPolicy.getResources().get(pathResourceName);
 				if (pathPolicyResource != null) {
 					List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();

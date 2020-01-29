@@ -19,17 +19,21 @@
 
 package org.apache.ranger.services.ozone;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.ozone.client.OzoneResourceMgr;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -37,6 +41,13 @@ import java.util.Map;
 public class RangerServiceOzone extends RangerBaseService {
 
     private static final Log LOG = LogFactory.getLog(RangerServiceOzone.class);
+    public static final String ACCESS_TYPE_READ  = "read";
+    public static final String ACCESS_TYPE_WRITE  = "write";
+    public static final String ACCESS_TYPE_CREATE  = "create";
+    public static final String ACCESS_TYPE_LIST  = "list";
+    public static final String ACCESS_TYPE_DELETE  = "delete";
+    public static final String ACCESS_TYPE_ALL  = "all";
+
 
     public RangerServiceOzone() {
         super();
@@ -101,6 +112,23 @@ public class RangerServiceOzone extends RangerBaseService {
         }
 
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+
+		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+					RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+					List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
+					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_WRITE));
+					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
+					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_LIST));
+					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_DELETE));
+					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_ALL));
+					policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+					policyItemForLookupUser.setAccesses(accessListForLookupUser);
+					policyItemForLookupUser.setDelegateAdmin(false);
+					defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+		}
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerServiceOzone.getDefaultRangerPolicies() : " + ret);

@@ -19,21 +19,27 @@
 package org.apache.ranger.services.knox;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.knox.client.KnoxResourceMgr;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class RangerServiceKnox extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceKnox.class);
+	public static final String ACCESS_TYPE_ALLOW  = "allow";
 	
 	public RangerServiceKnox() {
 		super();
@@ -61,6 +67,29 @@ public class RangerServiceKnox extends RangerBaseService {
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerServiceKnox.validateConfig Response : (" + ret + " )");
+		}
+		return ret;
+	}
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceKnox.getDefaultRangerPolicies()");
+		}
+
+		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALLOW)));
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServiceKnox.getDefaultRangerPolicies()");
 		}
 		return ret;
 	}

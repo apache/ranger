@@ -65,11 +65,16 @@ public abstract class RangerBaseService {
 	protected Map<String, String>   configs;
 	protected String 			    serviceName;
 	protected String 				serviceType;
+	protected String 				lookUpUser;
 
-	private final RangerAdminConfig config;
+	protected final RangerAdminConfig config;
 
 	public RangerBaseService() {
 		this.config = RangerAdminConfig.getInstance();
+		String authType = config.get(RANGER_AUTH_TYPE,"simple");
+		String lookupPrincipal = config.get(LOOKUP_PRINCIPAL);
+		String lookupKeytab = config.get(LOOKUP_KEYTAB);
+		lookUpUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
 	}
 
 	public void init(RangerServiceDef serviceDef, RangerService service) {
@@ -433,15 +438,7 @@ public abstract class RangerBaseService {
 				}
 			}
 		}
-		String authType = config.get(RANGER_AUTH_TYPE,"simple");
-		String lookupPrincipal = config.get(LOOKUP_PRINCIPAL);
-		String lookupKeytab = config.get(LOOKUP_KEYTAB);
 
-		String lookUpUser = getLookupUser(authType, lookupPrincipal, lookupKeytab);
-
-		if (StringUtils.isNotBlank(lookUpUser)) {
-			uniqueUsers.add(lookUpUser);
-		}
 		ret.addAll(uniqueUsers);
 		return ret;
 	}

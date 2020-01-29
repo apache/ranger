@@ -19,22 +19,28 @@
 
 package org.apache.ranger.services.solr;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.solr.client.ServiceSolrClient;
 import org.apache.ranger.services.solr.client.ServiceSolrConnectionMgr;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class RangerServiceSolr extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceSolr.class);
+	public static final String ACCESS_TYPE_QUERY  = "query";
 
 	public RangerServiceSolr() {
 		super();
@@ -43,6 +49,29 @@ public class RangerServiceSolr extends RangerBaseService {
 	@Override
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		super.init(serviceDef, service);
+	}
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceSolr.getDefaultRangerPolicies()");
+		}
+
+		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_QUERY)));
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerServiceSolr.getDefaultRangerPolicies()");
+        }
+		return ret;
 	}
 
 	@Override

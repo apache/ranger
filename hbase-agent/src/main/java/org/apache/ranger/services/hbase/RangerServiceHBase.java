@@ -19,22 +19,29 @@
 package org.apache.ranger.services.hbase;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.hbase.client.HBaseResourceMgr;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class RangerServiceHBase extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceHBase.class);
+	public static final String ACCESS_TYPE_READ  = "read";
+	public static final String ACCESS_TYPE_CREATE  = "create";
 	
 	public RangerServiceHBase() {
 		super();
@@ -44,6 +51,33 @@ public class RangerServiceHBase extends RangerBaseService {
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		super.init(serviceDef, service);
 	}
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceHbase.getDefaultRangerPolicies()");
+		}
+
+		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(accessListForLookupUser);
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerServiceHbase.getDefaultRangerPolicies()");
+        }
+		return ret;
+	}
+
 
 	@Override
 	public Map<String,Object> validateConfig() throws Exception {

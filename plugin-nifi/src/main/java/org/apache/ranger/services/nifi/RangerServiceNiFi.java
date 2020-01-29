@@ -18,13 +18,19 @@
  */
 package org.apache.ranger.services.nifi;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.nifi.client.NiFiClient;
 import org.apache.ranger.services.nifi.client.NiFiConnectionMgr;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 
@@ -34,6 +40,37 @@ import java.util.List;
 public class RangerServiceNiFi extends RangerBaseService {
 
     private static final Log LOG = LogFactory.getLog(RangerServiceNiFi.class);
+    public static final String ACCESS_TYPE_READ  = "read";
+    public static final String ACCESS_TYPE_WRITE  = "write";
+    public static final String ACCESS_TYPE_DELETE = "delete";
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceNiFi.getDefaultRangerPolicies()");
+		}
+
+		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_WRITE));
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_DELETE));
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(accessListForLookupUser);
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerServiceNiFi.getDefaultRangerPolicies()");
+        }
+
+		return ret;
+	}
 
     @Override
     public HashMap<String, Object> validateConfig() throws Exception {
