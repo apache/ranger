@@ -56,7 +56,7 @@ define(function(require) {
         },
 	   
 	   //************** Analytics(reports)  Related *********************/
-	   userAccessReportAction : function(){
+           userAccessReportAction : function(tab){
 		   MAppState.set({ 'currentTab' : XAGlobals.AppTabs.AccessManager.value });
 		   var view				= require('views/reports/UserAccessLayout');
 		   var RangerPolicyList = require('collections/RangerPolicyList');
@@ -67,7 +67,8 @@ define(function(require) {
 		   App.rContent.show(new view({
 			   collection : new RangerPolicyList(),
 			   groupList : new VXGroupList(),
-			   userList : new VXUserList()
+                           userList : new VXUserList(),
+                           urlQueryParams : tab.indexOf("?") !== -1 ? tab.substring(tab.indexOf("?") + 1) : undefined,
 		   }));
 	   },
 	   auditReportAction : function(tab){

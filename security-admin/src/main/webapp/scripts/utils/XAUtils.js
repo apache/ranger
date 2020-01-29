@@ -790,12 +790,6 @@ define(function(require) {
                 var serverParamName = _.findWhere(serverAttrName, {
                         text : m.attributes.category
                 });
-                //  pass label in url params
-                // if(_.isUndefined(serverParamName)) {
-                // 	var serverParamName = _.findWhere(serverAttrName, {
-                // 		label : m.attributes.category
-                // 	});
-                // }
                 var extraParam = {};
                 if (serverParamName && _.has(serverParamName, 'multiple') && serverParamName.multiple) {
                         extraParam[serverParamName.label] = XAUtils.enumLabelToValue(serverParamName.optionsArr, m.get('value'));
@@ -830,6 +824,21 @@ define(function(require) {
                     }
                 })
             })
+
+            if(!_.contains(["vXUsers","vXGroups","roles","vXModuleDef"], collection.modelAttrName)) {
+                //set sortBy value to url
+                if(!_.isUndefined(collection.queryParams) && collection.queryParams.sortBy && !_.isNull(collection.queryParams.sortBy)) {
+                    var sortparams = _.pick(collection.queryParams, 'sortBy');
+                    collection.state.order == 1 ? sortparams['sortType'] = "descending" : sortparams['sortType'] = "ascending";
+                    urlLabelParam = _.extend(urlLabelParam, sortparams)
+                }
+                //set sortKey value to url
+                if(!_.isUndefined(collection.state) && collection.state.sortKey && !_.isNull(collection.state.sortKey) && !_.contains(urlLabelParam, 'sortBy')) {
+                    var sortparams = _.pick(collection.state, 'sortKey');
+                    collection.state.order == 1 ? sortparams['sortType'] = "descending" : sortparams['sortType'] = "ascending";
+                    urlLabelParam = _.extend(urlLabelParam, sortparams)
+                }
+            }
             XAUtils.changeParamToUrlFragment(urlLabelParam, collection.modelName);
 			collection.fetch({
 				reset : true,
@@ -1741,16 +1750,33 @@ define(function(require) {
     }
 
     //remove sort caret on grids
-    XAUtils.backgirdSort = function(col){
+    XAUtils.backgridSort = function(col){
+        if(!_.isUndefined(col.queryParams) && col.queryParams.sortBy && !_.isNull(col.queryParams.sortBy)) {
+                var sortparams = _.pick(col.queryParams, 'sortBy');
+            col.state.order == 1 ? sortparams['sortType'] = "descending" : sortparams['sortType'] = "ascending";
+            XAUtils.changeParamToUrlFragment(sortparams);
+        }
         col.on('backgrid:sort', function(model) {
             // No ids so identify model with CID
-            var cid = model.cid;
+            var cid = model.cid, urlObj = {};
             var filtered = model.collection.filter(function(model) {
                 return model.cid !== cid;
             });
             _.each(filtered, function(model) {
                model.set('direction', null);
             });
+            if(Backbone.history.fragment.indexOf("?") !== -1) {
+                var urlFragment = Backbone.history.fragment.substring(Backbone.history.fragment.indexOf("?") + 1);
+                urlObj = XAUtils.changeUrlToSearchQuery(decodeURIComponent(urlFragment));
+            }
+            urlObj['sortBy'] = model.get('name');
+            if(_.isNull(model.get('direction'))) {
+                delete urlObj.sortType;
+                delete urlObj.sortBy;
+            } else {
+                urlObj['sortType'] = model.get('direction');
+            }
+            XAUtils.changeParamToUrlFragment(urlObj);
         });
     }
 
@@ -1818,11 +1844,6 @@ define(function(require) {
         return query_string;
     }
 
-    //convert URL to visual search query parameter
-    XAUtils.changeUrlToVSSearchQuery = function(urlQuery) {
-        return '"'+decodeURIComponent(urlQuery.replace(/"/g, '\\"').replace(/&/g, '""').replace(/=/g, '":"'))+'"'
-    }
-
     //Return key from serverAttrName for vsSearch
     XAUtils.filterKeyForVSQuery = function(list, key) {
         var value = _.filter(list, function(m) {
@@ -1841,6 +1862,23 @@ define(function(require) {
         return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
             return index == 0 ? word.toLowerCase() : word.toUpperCase();
         }).replace(/\s+/g, '');
+    }
+
+    //Set backgrid table sorting direction
+    XAUtils.backgridSortType = function(collection, column) {
+        _.filter(column, function(val, key){
+            if(key == collection.queryParams.sortBy) {
+                val['direction'] =  collection.state.order == 1 ? "descending" : "ascending"
+            }
+        })
+    }
+
+    //Set default sort by and sort order in collection
+    XAUtils.setSorting = function(collectin, sortParams) {
+        _.extend(collectin.queryParams,{ 'sortBy'  :  sortParams.sortBy });
+        if(sortParams.sortType) {
+            sortParams.sortType == "ascending" ? collectin.setSorting(sortParams.sortBy,-1) : collectin.setSorting(sortParams.sortBy,1);
+        }
     }
 
 	return XAUtils;

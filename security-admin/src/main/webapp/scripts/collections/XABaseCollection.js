@@ -45,7 +45,8 @@ define(function(require) {
 		 */
 		state : {
 			firstPage: 0,
-			pageSize : XAGlobals.settings.PAGE_SIZE
+                        pageSize : XAGlobals.settings.PAGE_SIZE,
+                        order : 1
 		},
 		mode : 'server',
 		/**

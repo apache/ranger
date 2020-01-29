@@ -231,9 +231,10 @@ define(function(require){
             if(!_.isUndefined(this.urlQueryParams)) {
                 var urlQueryParams = XAUtil.changeUrlToSearchQuery(this.urlQueryParams);
                 _.map(urlQueryParams, function(val , key) {
-                    query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
+                    if (_.some(serverAttrName, function(m){return m.urlLabel == key})) {
+                        query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
+                    }
                 });
-                    // query += XAUtil.changeUrlToVSSearchQuery(this.urlQueryParams);
             }
             var pluginAttr = {
                                 placeholder :localization.tt('h.searchForPermissions'),

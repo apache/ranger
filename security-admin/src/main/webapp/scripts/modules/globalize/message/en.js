@@ -277,8 +277,13 @@ define(function(require) {
                 roles                           : 'Roles',
                 userWithGrantRolePrivilege      : 'Users (Grant privilege)',
                 groupWithGrantRolePrivilege      : 'Groups (Grant privilege)',
-                applicationType					: 'Application',
-                displayName						: 'Display Name',
+                applicationType                 : 'Application',
+                displayName                     : 'Display Name',
+                auditAccessDetail               : 'Audit Access Log Detail',
+                hiveQuery                       : 'Hive Query',
+                clientIP                        : 'Client IP',
+                eventCount                      : 'Event Count',
+                tags                            : 'Tags',
 
 			},
 			btn : {
@@ -454,6 +459,7 @@ define(function(require) {
                 plsSelectUserToSetVisibility :' Please select user to set visibility or selected user is already visible/hidden.',
                 plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
                 activationTimeDelayMsg       : 'Policy is updated but not yet used for any enforcement.',
+                downloadTimeDelayMsg       : 'Policy is updated but not yet downloaded(sync-up with Ranger).',
                 pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.',
                 addUserOrGroupOrRoleForDelegateAdmin      : 'Please select user/group/role for the selected permission(s)',
                 policyLabelsinfo		: 'Enter label of policy',

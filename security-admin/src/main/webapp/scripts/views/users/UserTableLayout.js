@@ -386,6 +386,7 @@ define(function(require){
 					},
 					editable:false,
 					sortable:false,
+                                        sortType: 'toggle',
 					cell :'uri'						
 				},
 				emailAddress : {
@@ -567,6 +568,7 @@ define(function(require){
                     cell  : Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
                     drag  : false,
                     editable  : false,
+                    sortable : false,
                     formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw : function (rawValue,model) {
                             return ('<div align="center"><button class="userViewicon" title = "View Users" data-js="showUserList" data-name="' + model.get('name')
@@ -998,9 +1000,10 @@ define(function(require){
             if(!_.isUndefined(this.urlQueryParams) && !_.isEmpty(this.urlQueryParams)) {
                 var urlQueryParams = XAUtil.changeUrlToSearchQuery(this.urlQueryParams);
                 _.map(urlQueryParams, function(val , key) {
-                    query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
+                    if (_.some(serverAttrName, function(m){return m.urlLabel == key})) {
+                        query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
+                    }
                 });
-                // query += XAUtil.changeUrlToVSSearchQuery(this.urlQueryParams);
             }
 			var pluginAttr = {
 				      placeholder :placeholder,

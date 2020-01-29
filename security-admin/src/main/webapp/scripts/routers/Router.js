@@ -35,7 +35,7 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/policymanager/:tag"				: "serviceManagerAction",
 
 			/****** Analytics Report related **********************/
-			"!/reports/userAccess"		: "userAccessReportAction",
+                        "!/reports/:userAccess"		: "userAccessReportAction",
 			
 			/****** Audit Report related **********************/
 			"!/reports/audit/:tab"					: "auditReportAction",

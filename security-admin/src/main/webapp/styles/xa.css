@@ -2807,6 +2807,13 @@ div#zoneServiceAccordion table thead {
   border-right: 1px solid #ddd;
 }
 
+.text-muted {
+  opacity: 0.7;
+}
+
+.center {
+  text-align: center;
+}
 /*Overriden styles - Use later for bootstrap 3*/
 
 a{

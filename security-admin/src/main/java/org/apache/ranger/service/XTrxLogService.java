@@ -179,6 +179,8 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 		VXTrxLogList vxTrxLogList = new VXTrxLogList();
 		vxTrxLogList.setStartIndex(startIndex);
 		vxTrxLogList.setPageSize(pageSize);
+                vxTrxLogList.setSortBy(searchCriteria.getSortBy());
+                vxTrxLogList.setSortType(searchCriteria.getSortType());
                 if (session != null && (session.isKeyAdmin() || session.isAuditKeyAdmin()) ) {
 			vxTrxLogList.setVXTrxLogs(keyAdminTrxLogList);
 		} else {

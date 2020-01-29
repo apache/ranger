@@ -48,6 +48,7 @@ define(function(require) {
 	var vPlugableServiceDiffDetail	= require('views/reports/PlugableServiceDiffDetail');
     var vLoginSessionDetail         = require('views/reports/LoginSessionDetail');
     var RangerZoneList              = require('collections/RangerZoneList');
+    var AuditAccessLogDetail        = require('views/reports/AuditAccessLogDetailView');
 
 	var moment = require('moment');
 	require('bootstrap-datepicker');
@@ -137,21 +138,23 @@ define(function(require) {
             }
             //Add url params to vsHistory
             if(!_.isUndefined(this.tab.split('?')[1])) {
-		App.vsHistory[that.tab.split('?')[0]] = [];
+                App.vsHistory[that.tab.split('?')[0]] = [];
                 var searchFregment = XAUtils.changeUrlToSearchQuery(decodeURIComponent(this.tab.substring(this.tab.indexOf("?") + 1)));
                 _.map (searchFregment, function(val, key) {
-                    if (_.isArray(val)) {
-                        _.map(val, function (v) {
-                            App.vsHistory[that.tab.split('?')[0]].push(new Backbone.Model( {'category': key, 'value' : v}));
-                        })
-                    } else {
-                        App.vsHistory[that.tab.split('?')[0]].push(new Backbone.Model( {'category': key, 'value' : val}));
+                    if (key !== "sortBy" && key !== "sortType" && key !== "sortKey") {
+                        if (_.isArray(val)) {
+                            _.map(val, function (v) {
+                                App.vsHistory[that.tab.split('?')[0]].push(new Backbone.Model( {'category': key, 'value' : v}));
+                            })
+                        } else {
+                            App.vsHistory[that.tab.split('?')[0]].push(new Backbone.Model( {'category': key, 'value' : val}));
+                        }
                     }
                 } )
             }
             //if url params are not present then set a default value in Audit assecc vsHistory
             if(_.isEmpty(App.vsHistory.bigData)){
-                var startDateModel = new Backbone.Model({'category':'startDate', value:Globalize.format(new Date(),"MM/dd/yyyy")});
+                var startDateModel = new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")});
                 App.vsHistory['bigData'].push(startDateModel);
             }
         },
@@ -184,6 +187,14 @@ define(function(require) {
 				this.ui.tab.find('li[class="active"]').removeClass();
 				this.ui.tab.find('[href="'+this.currentTab+'"]').parent().addClass('active');
 			} else {
+                var sortObj = {};
+                if(Backbone.history.fragment.indexOf("?") !== -1) {
+                    var sortFragment = Backbone.history.fragment.substring(Backbone.history.fragment.indexOf("?") + 1);
+                    sortObj = _.pick(XAUtils.changeUrlToSearchQuery(decodeURIComponent(sortFragment)), 'sortType','sortBy');
+                }
+                if(!_.isEmpty(sortObj)) {
+                    XAUtils.setSorting(this.accessAuditList, sortObj);
+                }
 				this.renderBigDataTable();
 				this.addSearchForBigDataTab();
 				this.modifyTableForSubcolumns();
@@ -235,12 +246,16 @@ define(function(require) {
         },
 
 		onTabChange : function(e){
-			var that = this, tab;
+                        var that = this, tab, sortObj = {};
 			tab = !_.isUndefined(e) ? $(e.currentTarget).attr('href') : this.currentTab;
 			this.$el.parents('body').find('.datepicker').remove();
             if (!_.isUndefined(e)) {
                     Backbone.history.navigate("!/reports/audit/"+ tab.slice(1), false)
             }
+            if(Backbone.history.fragment.indexOf("?") !== -1) {
+                var sortFragment = Backbone.history.fragment.substring(Backbone.history.fragment.indexOf("?") + 1);
+                sortObj = _.pick(XAUtils.changeUrlToSearchQuery(decodeURIComponent(sortFragment)), 'sortType','sortBy');
+                        }
             switch (tab) {
 				case "#bigData":
 					this.currentTab = '#bigData';
@@ -259,8 +274,11 @@ define(function(require) {
 				case "#admin":
 					this.currentTab = '#admin';
                     App.vsHistory.admin = XAUtils.removeEmptySearchValue(App.vsHistory.admin);
-					this.trxLogList = new VXTrxLogList();
-					this.renderAdminTable();
+                    this.trxLogList = new VXTrxLogList();
+                    if(!_.isEmpty(sortObj)) {
+                        XAUtils.setSorting(this.trxLogList, sortObj);
+                    }
+                    this.renderAdminTable();
 					if(_.isEmpty(App.vsHistory.admin) && _.isUndefined(App.sessionId)){
 			     	    this.trxLogList.fetch({
 							   cache : false
@@ -277,9 +295,14 @@ define(function(require) {
 					this.currentTab = '#loginSession';
                     App.vsHistory.loginSession = XAUtils.removeEmptySearchValue(App.vsHistory.loginSession);
 					this.authSessionList = new VXAuthSession();
-					this.renderLoginSessionTable();
+                    if(!_.isEmpty(sortObj)) {
+                        XAUtils.setSorting(this.authSessionList, sortObj);
+                    } else {
+                        _.extend(this.authSessionList.queryParams,{ 'sortBy'  :  'id' });
 					//Setting SortBy as id and sortType as desc = 1
-					this.authSessionList.setSorting('id',1); 
+                                        this.authSessionList.setSorting('id',1);
+                    }
+                                        this.renderLoginSessionTable();
                     if(_.isEmpty(App.vsHistory.loginSession)){
                         this.authSessionList.fetch({
                         	cache:false,
@@ -294,11 +317,16 @@ define(function(require) {
 					break;
 				case "#agent":
 					this.currentTab = '#agent';
-                                        App.vsHistory.agent = XAUtils.removeEmptySearchValue(App.vsHistory.agent);
+                    App.vsHistory.agent = XAUtils.removeEmptySearchValue(App.vsHistory.agent);
 					this.policyExportAuditList = new VXPolicyExportAuditList();	
 					var params = { priAcctId : 1 };
-					that.renderAgentTable();
+                    if(!_.isEmpty(sortObj)) {
+                        XAUtils.setSorting(this.policyExportAuditList, sortObj);
+                    } else {
+                        _.extend(this.policyExportAuditList.queryParams,{ 'sortBy'  :  'createDate' });
 					this.policyExportAuditList.setSorting('createDate',1);
+                    }
+                    that.renderAgentTable();
                     if(_.isEmpty(App.vsHistory.agent)){
                     this.policyExportAuditList.fetch({
 	                    cache : false,
@@ -317,6 +345,9 @@ define(function(require) {
                      App.vsHistory.pluginStatus = XAUtils.removeEmptySearchValue(App.vsHistory.pluginStatus);
 					 this.ui.visualSearch.show();
 					 this.pluginInfoList = new VXPolicyExportAuditList();
+                     if(!_.isEmpty(sortObj)){
+                        XAUtils.setSorting(this.pluginInfoList, sortObj);
+                     }
                      this.renderPluginInfoTable();
 					 this.modifyPluginStatusTableSubcolumns();
                      XAUtils.customPopover(this.$el.find('[data-id ="policyTimeDetails"]'),'Policy (Time details)',localization.tt('msg.policyTimeDetails'),'left');
@@ -339,12 +370,17 @@ define(function(require) {
                      this.currentTab = '#userSync';
                      this.ui.visualSearch.show();
                      this.userSyncAuditList = new VXUserList();
+                     if(!_.isEmpty(sortObj)) {
+                        XAUtils.setSorting(this.userSyncAuditList, sortObj);
+                     } else {
+                        _.extend(this.userSyncAuditList.queryParams,{ 'sortBy'  :  'eventTime' });
+                        this.userSyncAuditList.setSorting('eventTime',1);
+                     }
                      this.renderUserSyncTable();
                      this.modifyUserSyncTableSubcolumns();
                      //To use existing collection
                      this.userSyncAuditList.url = 'service/assets/ugsyncAudits';
                      this.userSyncAuditList.modelAttrName = 'vxUgsyncAuditInfoList';
-                     this.userSyncAuditList.setSorting('id',1);
                      this.addSearchForUserSyncTab();
                      this.listenTo(this.userSyncAuditList, "request", that.updateLastRefresh);
                      this.listenTo(this.userSyncAuditList, "sync reset", that.showPageDetail);
@@ -768,7 +804,7 @@ define(function(require) {
                                     {text : 'Start Date',label :'startDate', urlLabel : 'startDate'},
                                     {text : 'End Date',label :'endDate', urlLabel : 'endDate'}];
             if(_.isEmpty(App.vsHistory.userSync)){
-                query = '"startDate": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
+                query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
                 App.vsHistory.userSync.push(new Backbone.Model({'category':'startDate', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
             }else{
                 _.map(App.vsHistory.userSync, function(a) {
@@ -902,7 +938,6 @@ define(function(require) {
 					});
 				}
 			});
-			this.ui.tableList.addClass("clickable");
 			this.rTableList.show(new XATableLayout({
 				columns: this.getAdminTableColumns(),
 				collection:this.trxLogList,
@@ -912,7 +947,9 @@ define(function(require) {
 					header : XABackgrid,
 					emptyText : 'No service found!!'
 				}
-			}));	
+                        }));
+            //Trigger backgrid sort event
+            XAUtils.backgridSort(this.trxLogList);
 		},
 		getExportImportTemplate : function(trxLogs){
 			var log = trxLogs.models[0],fields = '', values = '', infoJson = {};
@@ -1027,12 +1064,10 @@ define(function(require) {
 				createDate : {
 					label : localization.tt("lbl.date") + '  ( '+this.timezone+' )',
 					cell: "String",
-					click : false,
-					drag : false,
 					editable:false,
                     sortType: 'toggle',
-                    direction: 'descending',
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                    sortable : true,
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							return Globalize.format(new Date(model.get('createDate')),  "MM/dd/yyyy hh:mm:ss tt");
 						}
@@ -1085,6 +1120,9 @@ define(function(require) {
                     })
                 }
 			};
+            if (this.trxLogList.queryParams.sortBy && !_.isEmpty(this.trxLogList.queryParams.sortBy)) {
+                XAUtils.backgridSortType(this.trxLogList, cols);
+            }
 			return this.trxLogList.constructor.getTableCols(cols, this.trxLogList);
 		},
 
@@ -1102,51 +1140,66 @@ define(function(require) {
 				},
 				onClick: function (e) {
                     var self = this ;
-                    if($(e.target).hasClass('tagsColumn') || $(e.target).closest('td').hasClass("tagsColumn")){
-                            return;
+                    if($(e.target).hasClass('policyIdColumn') || $(e.target).closest('td').hasClass("policyIdColumn")) {
+                        if(this.model.get('repoType')){
+                                    var repoType =  this.model.get('repoType');
+                                }
+                                                var policyId = this.model.get('policyId');
+                                                if(policyId == -1){
+                                                        return;
+                                                }
+                                var eventTime = this.model.get('eventTime');
+
+                                var policyVersion = this.model.get('policyVersion');
+
+                                var application = this.model.get('agentId');
+
+                                                var policy = new RangerPolicy({
+                                                        id: policyId,
+                                                        version:policyVersion
+                                                });
+                                                var policyVersionList = policy.fetchVersions();
+                                                var view = new RangerPolicyRO({
+                                                        policy: policy,
+                                                        policyVersionList : policyVersionList,
+                                    serviceDefList: that.serviceDefList,
+                                    eventTime : eventTime,
+                                    repoType : repoType
+                                                });
+                                                var modal = new Backbone.BootstrapModal({
+                                                        animate : true,
+                                                        content		: view,
+                                                        title: localization.tt("h.policyDetails"),
+                                                        okText :localization.tt("lbl.ok"),
+                                    allowCancel : true,
+                                                        escape : true
+                                                }).open();
+                                modal.$el.find('.cancel').hide();
+                                                var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
+                                                policyVerEl.append('<i id="preVer" class="icon-chevron-left '+ ((policy.get('version')>1) ? 'active' : '') +'"></i><text>Version '+ policy.get('version') +'</text>').find('#preVer').click(function(e){
+                                                        view.previousVer(e);
+                                                });
+                                                    var policyVerIndexAt = policyVersionList.indexOf(policy.get('version'));
+                                                policyVerEl.append('<i id="nextVer" class="icon-chevron-right '+ (!_.isUndefined(policyVersionList[++policyVerIndexAt])? 'active' : '')+'"></i>').find('#nextVer').click(function(e){
+                                                        view.nextVer(e);
+                                                });
+                    } else {
+                        if($(e.target).hasClass('tagsColumn') || $(e.target).closest('td').hasClass("tagsColumn")) {
+                                return;
+                        }
+                        var view = new AuditAccessLogDetail({
+                            auditaccessDetail : this.model.attributes,
+                        });
+                        var modal = new Backbone.BootstrapModal({
+                            animate : true,
+                            content     : view,
+                            title: localization.tt("lbl.auditAccessDetail"),
+                            okText :localization.tt("lbl.ok"),
+                            allowCancel : true,
+                            escape : true,
+                        }).open();
+                        modal.$el.find('.cancel').hide();
                     }
-                    if(this.model.get('repoType')){
-                        var repoType =  this.model.get('repoType');
-                    }
-					var policyId = this.model.get('policyId');
-					if(policyId == -1){
-						return;
-					}
-                    var eventTime = this.model.get('eventTime');
-
-                    var policyVersion = this.model.get('policyVersion');
-
-                    var application = this.model.get('agentId');
-
-					var policy = new RangerPolicy({
-						id: policyId,
-						version:policyVersion
-					});
-					var policyVersionList = policy.fetchVersions();
-					var view = new RangerPolicyRO({
-						policy: policy,
-						policyVersionList : policyVersionList,
-                        serviceDefList: that.serviceDefList,
-                        eventTime : eventTime,
-                        repoType : repoType
-					});
-					var modal = new Backbone.BootstrapModal({
-						animate : true, 
-						content		: view,
-						title: localization.tt("h.policyDetails"),
-						okText :localization.tt("lbl.ok"),
-                        allowCancel : true,
-						escape : true
-					}).open();
-                    modal.$el.find('.cancel').hide();
-					var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
-					policyVerEl.append('<i id="preVer" class="icon-chevron-left '+ ((policy.get('version')>1) ? 'active' : '') +'"></i><text>Version '+ policy.get('version') +'</text>').find('#preVer').click(function(e){
-						view.previousVer(e);
-					});
-                                        var policyVerIndexAt = policyVersionList.indexOf(policy.get('version'));
-					policyVerEl.append('<i id="nextVer" class="icon-chevron-right '+ (!_.isUndefined(policyVersionList[++policyVerIndexAt])? 'active' : '')+'"></i>').find('#nextVer').click(function(e){
-						view.nextVer(e);
-					});
 				}
 			});
 
@@ -1161,14 +1214,17 @@ define(function(require) {
 					emptyText : 'No Access Audit found!'
 				}
 			}));
-		
+            XAUtils.backgridSort(this.accessAuditList);
 		},
 
 		getColumns : function(){
 			var that = this;
 			var cols = {
 					policyId : {
-						cell : "html",
+                                                // cell : "html",
+                                                cell: Backgrid.HtmlCell.extend({
+                                                        className : 'policyIdColumn'
+                                                }),
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
 								if(rawValue == -1){
@@ -1187,15 +1243,19 @@ define(function(require) {
 						sortable : false
 					},
                     policyVersion: {
-                          label : localization.tt("lbl.policyVersion"),
-                          cell: "html",
-                          click: false,
-                          formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-                                      fromRaw: function (rawValue, model) {
-                                              rawValue = _.escape(rawValue);
-                                              return '<span title="'+rawValue+'">'+rawValue+'</span>';
-                                      }
-                              }),
+                        label : localization.tt("lbl.policyVersion"),
+                        cell: "html",
+                        click: false,
+                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                            fromRaw: function (rawValue, model) {
+                                rawValue = _.escape(rawValue);
+                                    if(_.isUndefined(rawValue) || _.isEmpty(rawValue)) {
+                                        return '--'
+                                    } else {
+                                        return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                    }
+                                }
+                            }),
                           drag: false,
                           sortable: false,
                           editable: false,
@@ -1207,8 +1267,7 @@ define(function(require) {
 						drag : false,
 						editable:false,
                         sortType: 'toggle',
-                        direction: 'descending',
-						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
 								return Globalize.format(new Date(rawValue),  "MM/dd/yyyy hh:mm:ss tt");
 							}
@@ -1219,14 +1278,16 @@ define(function(require) {
 					cell: "String",
 					click : false,
 					drag : false,
-					editable:false
+                                        editable:false,
+                    sortable : false,
 				},
 					requestUser : {
 						label : 'User',
 						cell: "String",
 						click : false,
 						drag : false,
-						editable:false
+                                                editable:false,
+                        sortable : false,
 					},
 					repoName : {
 						label : 'Name / Type',
@@ -1269,6 +1330,7 @@ define(function(require) {
 						click : false,
 						drag : false,
 						editable:false,
+                        sortable : false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue) {
 								var label = '', html = '';
@@ -1318,19 +1380,23 @@ define(function(require) {
 						sortable:false,
 						editable:false
 					},
-                                        clusterName : {
-                                                label : localization.tt("lbl.clusterName"),
-                                                cell: 'html',
-						click : false,
-						drag : false,
-						sortable:false,
-                                                editable:false,
-                                                formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-                                                        fromRaw: function (rawValue, model) {
-                                                                rawValue = _.escape(rawValue);
-                                                                return '<span title="'+rawValue+'">'+rawValue+'</span>';
-                                                        }
-                                                }),
+                    clusterName : {
+                        label : localization.tt("lbl.clusterName"),
+                        cell: 'html',
+                        click : false,
+                        drag : false,
+                        sortable:false,
+                        editable:false,
+                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                                fromRaw: function (rawValue, model) {
+                                    rawValue = _.escape(rawValue);
+                                    if (_.isUndefined(rawValue) || _.isEmpty(rawValue)) {
+                                        '--'
+                                    } else {
+                                        return '<span title="'+rawValue+'">'+rawValue+'</span>';
+                                    }
+                                }
+                        }),
 					},
                     zoneName: {
 						label : localization.tt("lbl.zoneName"),
@@ -1373,7 +1439,10 @@ define(function(require) {
 							}
 						}),
 					},
-                                };
+            };
+            if (this.accessAuditList.queryParams.sortBy && !_.isEmpty(this.accessAuditList.queryParams.sortBy)) {
+                XAUtils.backgridSortType(this.accessAuditList, cols);
+            }
 			return this.accessAuditList.constructor.getTableCols(cols, this.accessAuditList);
 		},
 		renderLoginSessionTable : function(){
@@ -1388,7 +1457,8 @@ define(function(require) {
 					header : XABackgrid,
 					emptyText : 'No login session found!!'
 				}
-			}));	
+                        }));
+            XAUtils.backgridSort(this.authSessionList);
 		},
 		getLoginSessionColumns : function(){
 			var authStatusList = [],authTypeList = [];
@@ -1407,7 +1477,7 @@ define(function(require) {
                     cell : "html",
                     editable:false,
                     sortType: 'toggle',
-                    direction: 'descending',
+                    sortable : true,
                     formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw: function (rawValue, model) {
                             var sessionId = model.get('id');
@@ -1490,6 +1560,7 @@ define(function(require) {
 					label : localization.tt("lbl.loginTime")+ '   ( '+this.timezone+' )',
 					cell: "String",
 					editable:false,
+                    sortable : false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							return Globalize.format(new Date(model.get('authTime')),  "MM/dd/yyyy hh:mm:ss tt");
@@ -1497,6 +1568,9 @@ define(function(require) {
 					})
 				}
 			};
+            if (this.authSessionList.queryParams.sortBy && !_.isEmpty(this.authSessionList.queryParams.sortBy)) {
+                XAUtils.backgridSortType(this.authSessionList, cols);
+            }
 			return this.authSessionList.constructor.getTableCols(cols, this.authSessionList);
 		},
 		renderAgentTable : function(){
@@ -1510,7 +1584,8 @@ define(function(require) {
 					header : XABackgrid,
 					emptyText : 'No plugin found!'
 				}
-			}));	
+                        }));
+            XAUtils.backgridSort(this.policyExportAuditList);
 		},
 		getAgentColumns : function(){
 			var cols = {
@@ -1524,7 +1599,7 @@ define(function(require) {
 						label : localization.tt('lbl.createDate')+ '   ( '+this.timezone+' )',
 						editable:false,
 						sortType: 'toggle',
-						direction: 'descending'
+                        sortable : true,
 					},
 					repositoryName : {
 						cell : 'html',
@@ -1593,6 +1668,9 @@ define(function(require) {
 
 					
 			};
+            if (this.policyExportAuditList.queryParams.sortBy && !_.isEmpty(this.policyExportAuditList.queryParams.sortBy)) {
+                XAUtils.backgridSortType(this.policyExportAuditList, cols);
+            }
 			return this.policyExportAuditList.constructor.getTableCols(cols, this.policyExportAuditList);
 		},
 		renderPluginInfoTable : function(){
@@ -1608,7 +1686,7 @@ define(function(require) {
                                                 emptyText : 'No plugin status found!'
                                 }
                         }));
-            XAUtils.backgirdSort(this.pluginInfoList);
+            XAUtils.backgridSort(this.pluginInfoList);
                 },
                 getPluginInfoColums : function(){
                         var that = this, cols ={
@@ -1716,6 +1794,20 @@ define(function(require) {
 								|| _.isNull(model.get('info').policyDownloadTime)){
 								return '<center>--</center>';
 							}
+                                                        var downloadDate = new Date(parseInt(model.get('info')['policyDownloadTime']));
+                                                        if(!_.isUndefined(model.get('info')['lastPolicyUpdateTime'])){
+                                                                var lastUpdateDate = new Date(parseInt(model.get('info')['lastPolicyUpdateTime']));
+                                                                if(that.isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)){
+                                                                        if(moment(downloadDate).diff(moment(lastUpdateDate),'minutes') >= -2) {
+                                                                                return '<span class="text-warning"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
+                                                                                + that.setTimeStamp(downloadDate , moment) +'</span>';
+                                                                        } else {
+                                                                                return '<span class="text-error"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
+                                                                                + that.setTimeStamp(downloadDate , moment)+'</span>';
+                                                                        }
+
+                                                                }
+                                                        }
                                                         return that.setTimeStamp(new Date(parseInt(model.get('info')['policyDownloadTime'])) , moment);
 						}
 					})
@@ -1739,8 +1831,14 @@ define(function(require) {
 							if(!_.isUndefined(model.get('info')['lastPolicyUpdateTime'])){
 								var lastUpdateDate = new Date(parseInt(model.get('info')['lastPolicyUpdateTime']));
 								if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
-									return '<i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
-                                                                                + that.setTimeStamp(activeDate , moment);
+                                                                        if(moment(activeDate).diff(moment(lastUpdateDate),'minutes') >= -2) {
+                                                                                return '<span class="text-warning"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
+                                                                                + that.setTimeStamp(activeDate , moment) +'</span>';
+                                                                        } else {
+                                                                                return '<span class="text-error"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
+                                                                                + that.setTimeStamp(activeDate , moment)+'</span>';
+                                                                        }
+
 								}
 							}
                                                         return that.setTimeStamp(activeDate , moment);
@@ -1783,6 +1881,20 @@ define(function(require) {
 								|| _.isNull(model.get('info').tagDownloadTime)){
 								return '<center>--</center>';
 							}
+                                                        var downloadTagDate = new Date(parseInt(model.get('info')['tagDownloadTime']));
+                                                        if(!_.isUndefined(model.get('info')['lastTagUpdateTime'])){
+                                                                var lastUpdateDate = new Date(parseInt(model.get('info')['lastTagUpdateTime']));
+                                                                if(that.isDateDifferenceMoreThanHr(downloadTagDate, lastUpdateDate)){
+                                                                        if(moment(downloadTagDate).diff(moment(lastUpdateDate),'minutes') >= -2) {
+                                                                                return '<span class="text-warning"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
+                                                                                + that.setTimeStamp(downloadTagDate , moment) +'</span>';
+                                                                        } else {
+                                                                                return '<span class="text-error"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
+                                                                                + that.setTimeStamp(downloadTagDate , moment)+'</span>';
+                                                                        }
+
+                                                                }
+                                                        }
                                                         return that.setTimeStamp(new Date(parseInt(model.get('info')['tagDownloadTime'])) , moment);
 
 						}
@@ -1806,16 +1918,24 @@ define(function(require) {
 								if(!_.isUndefined(model.get('info')['lastTagUpdateTime'])){
 									var lastUpdateDate = new Date(parseInt(model.get('info')['lastTagUpdateTime']));
 									if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
-										return '<i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
-                                                                                        + that.setTimeStamp(activeDate , moment);
+                                                                                if(moment(activeDate).diff(moment(lastUpdateDate),'minutes') >= -2) {
+                                                                                        return '<span class="text-warning"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
+                                                                                        + that.setTimeStamp(activeDate , moment) +'</span>';
+                                                                                } else {
+                                                                                        return '<span class="text-error"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
+                                                                                        + that.setTimeStamp(activeDate , moment)+'</span>';
+                                                                                }
 									}
 								}
-                                                        return that.setTimeStamp(activeDate , moment);
+                                                                return that.setTimeStamp(activeDate , moment);
 
 						}
 					})
 				},
 			}
+            if (this.pluginInfoList.queryParams.sortBy && !_.isEmpty(this.pluginInfoList.queryParams.sortBy)) {
+                XAUtils.backgridSortType(this.pluginInfoList, cols);
+            }
 			return this.pluginInfoList.constructor.getTableCols(cols, this.pluginInfoList);
 		},
         renderUserSyncTable : function(){
@@ -1831,6 +1951,7 @@ define(function(require) {
                     emptyText : 'No user sync audit found!'
                 }
             }));
+            XAUtils.backgridSort(this.userSyncAuditList);
         },
         getUserSyncColums : function(){
             var cols ={
@@ -1882,8 +2003,8 @@ define(function(require) {
                     click : false,
                     drag : false,
                     editable:false,
+                    sortable : true,
                     sortType: 'toggle',
-                    direction: 'descending',
                     formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw: function (rawValue, model) {
                             return Globalize.format(new Date(rawValue),  "MM/dd/yyyy hh:mm:ss tt");
@@ -1901,6 +2022,9 @@ define(function(require) {
                         }
                     }),
                 }
+            }
+            if (this.userSyncAuditList.queryParams.sortBy && !_.isEmpty(this.userSyncAuditList.queryParams.sortBy)) {
+                XAUtils.backgridSortType(this.userSyncAuditList, cols);
             }
             return this.userSyncAuditList.constructor.getTableCols(cols, this.userSyncAuditList);
 
@@ -1934,14 +2058,14 @@ define(function(require) {
         },
 
         isDateDifferenceMoreThanHr : function(date1, date2){
-                var diff = date1 - date2 / 36e5;
-                return parseInt(diff) < 0 ? true : false;
+                var diff = (date1 - date2) / 36e5;
+                return diff < 0 ? true : false;
         },
 
         //Time stamp
         setTimeStamp : function(time, moment) {
             return '<span title="'+Globalize.format(time,  "MM/dd/yyyy hh:mm:ss tt")+'">'+Globalize.format(time,  "MM/dd/yyyy hh:mm:ss tt")
-            + '<div><small style="color : #8c8c8c">'+moment(time).fromNow()+'</small></div></span>'
+            + '<div class="text-muted"><small>'+moment(time).fromNow()+'</small></div></span>'
         },
 
 		onRefresh : function(){

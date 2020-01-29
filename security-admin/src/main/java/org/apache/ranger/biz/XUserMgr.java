@@ -1752,8 +1752,10 @@ public class XUserMgr extends XUserMgrBase {
 		} catch (Exception e){
 			logger.error("Error getting the exact match of user =>"+e);
 		}
-		if(vXUserList.getVXUsers().isEmpty()) {
-			searchCriteria.setSortBy("id");
+		if (vXUserList.getVXUsers().isEmpty()) {
+			if (StringUtils.isBlank(searchCriteria.getSortBy())) {
+				searchCriteria.setSortBy("id");
+			}
 			vXUserList = xUserService.searchXUsers(searchCriteria);
 		}
 		if(vXUserList!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
@@ -1861,7 +1863,9 @@ public class XUserMgr extends XUserMgrBase {
 			logger.error("Error getting the exact match of group =>"+e);
 		}
 		if(vXGroupList.getList().isEmpty()) {
-			searchCriteria.setSortBy("id");
+			if(StringUtils.isBlank(searchCriteria.getSortBy())) {
+				searchCriteria.setSortBy("id");
+			}
 			vXGroupList=xGroupService.searchXGroups(searchCriteria);
 		}
 		

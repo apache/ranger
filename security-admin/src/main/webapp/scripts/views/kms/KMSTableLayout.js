@@ -251,6 +251,14 @@ define(function(require){
                                 serverAttrName  = [	{text : "Key Name", label :"name", urlLabel : "keyName"}];
 			}
 			var query = (!_.isUndefined(coll.VSQuery)) ? coll.VSQuery : '';
+                        if(!_.isUndefined(this.urlQueryParams)) {
+                                var urlQueryParams = XAUtil.changeUrlToSearchQuery(this.urlQueryParams);
+                                _.map(urlQueryParams, function(val , key) {
+                    if (_.some(serverAttrName, function(m){return m.urlLabel == key})) {
+                        query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
+                    }
+                                });
+                        }
 			var pluginAttr = {
 				      placeholder :placeholder,
 				      container : this.ui.visualSearch,
