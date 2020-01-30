@@ -26,7 +26,7 @@ import java.util.Objects;
 @Cacheable
 @XmlRootElement
 @Table(name = "x_policy_ref_access_type")
-public class XXPolicyRefAccessType extends XXDBBase implements
+public class XXPolicyRefAccessType implements
 		java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**
