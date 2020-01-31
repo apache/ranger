@@ -99,7 +99,7 @@ define(function(require){
 				allowClear: true,
 				initSelection : function (element, callback) {
                                         var rangerService = new RangerService()
-                                        rangerService.url = '/service/plugins/services/name/'+element.val();
+                                        rangerService.url = XAUtils.getServiceByName(element.val());
                                         rangerService.fetch( {
                                                 cache : false,
                                                 async : false,

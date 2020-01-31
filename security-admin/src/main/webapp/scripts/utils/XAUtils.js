@@ -1791,7 +1791,7 @@ define(function(require) {
 
     //Get service details By Service name
     XAUtils.getServiceByName = function(name) {
-        return "/service/plugins/services/name/" + name
+        return "service/plugins/services/name/" + name
     };
 
     //Add visual search query parameter to URL
