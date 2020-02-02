@@ -968,6 +968,8 @@
                         <exclude>**/test/resources/**/*.json</exclude>
                         <exclude>**/test/resources/**/*.txt</exclude>
                         <exclude>**/test/resources/**/*.csv</exclude>
+                        <exclude>**/test/resources/**/*.yaml</exclude>
+                        <exclude>**/test/resources/**/*.avcs</exclude>
                         <exclude>**/main/resources/**/*.json</exclude>
                         <exclude>**/samples/**/*.json</exclude>
                         <exclude>**/.externalToolBuilders/*</exclude>
