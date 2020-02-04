@@ -43,6 +43,9 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
+        <include>org.apache.ranger:ranger-plugins-audit</include>
+        <include>org.apache.ranger:ranger-plugins-cred</include>
+        <include>org.apache.ranger:ranger-plugins-common</include>
         <include>org.apache.ranger:ranger-atlas-plugin</include>
       </includes>
       <binaries>
@@ -64,9 +67,6 @@
           <include>org.codehaus.jackson:jackson-core-asl</include>
           <include>org.codehaus.jackson:jackson-mapper-asl</include>
           <include>org.codehaus.jackson:jackson-xc</include>
-          <include>org.apache.ranger:ranger-plugins-audit</include>
-          <include>org.apache.ranger:ranger-plugins-cred</include>
-          <include>org.apache.ranger:ranger-plugins-common</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -87,7 +87,8 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
-        <include>org.apache.ranger:ranger-atlas-plugin</include>
+        <include>org.apache.ranger:ranger-plugins-installer</include>
+        <include>org.apache.ranger:credentialbuilder</include>
       </includes>
       <binaries>
         <outputDirectory>install/lib</outputDirectory>
