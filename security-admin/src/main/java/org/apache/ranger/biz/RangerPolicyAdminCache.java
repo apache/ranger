@@ -139,8 +139,8 @@ public class RangerPolicyAdminCache {
 					ret = addPolicyAdmin(policies, roles, options);
 				}
 			} else {
-				LOG.warn("ServicePolicies contain neither policies nor policy-deltas !");
-				ret = null;
+				LOG.warn("ServicePolicies contain neither policies nor policy-deltas. Will create policy engine with no policies!");
+				ret = addPolicyAdmin(policies, roles, options);
 			}
 
 			if (ret != null) {
