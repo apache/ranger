@@ -29,7 +29,7 @@ Build Process
 
 2. On the root folder, please execute the following Maven command:
 
-   $ mvn clean compile package install assembly:assembly
+   $ mvn clean compile package install
    $ mvn eclipse:eclipse
 
    (Ranger Admin UI tests depend on PhantomJS. If the build fails with npm or Karma errors you can either

@@ -22,12 +22,12 @@
 #5. To delete the image, run "[sudo] docker rmi ranger_dev"
 
 #Usage: [sudo] ./build_ranger_using_docker.sh [-build_image] mvn  <build params>
-#Example 1 (default no param): (mvn -Pall -DskipTests=true clean compile package install assembly:assembly)
+#Example 1 (default no param): (mvn -Pall -DskipTests=true clean compile package install)
 #Example 2 (Regular build): ./build_ranger_using_docker.sh mvn -Pall clean install -DskipTests=true
 #Example 3 (Recreate Docker image): ./build_ranger_using_docker.sh mvn -Pall -build_image clean install -DskipTests=true 
 #Notes: To remove build image manually, run "docker rmi ranger_dev" or "sudo docker rmi ranger_dev"
 
-default_command="mvn -Pall -DskipTests=true clean compile package install assembly:assembly"
+default_command="mvn -Pall -DskipTests=true clean compile package install"
 build_image=0
 if [ "$1" = "-build_image" ]; then
     build_image=1
