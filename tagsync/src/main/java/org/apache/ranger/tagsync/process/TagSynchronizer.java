@@ -19,6 +19,13 @@
 
 package org.apache.ranger.tagsync.process;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.StringTokenizer;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -27,13 +34,6 @@ import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.model.TagSource;
-
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.StringTokenizer;
 
 public class TagSynchronizer {
 
@@ -53,7 +53,6 @@ public class TagSynchronizer {
 	private volatile boolean isShutdownInProgress = false;
 
 	public static void main(String[] args) {
-
 		TagSynchronizer tagSynchronizer = new TagSynchronizer();
 
 		TagSyncConfig config = TagSyncConfig.getInstance();
@@ -134,6 +133,20 @@ public class TagSynchronizer {
 		try {
 			boolean threadsStarted = tagSink.start();
 
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> starting TagSyncMetricsProducer with default metrics location : "+System.getProperty("logdir"));
+			}
+			//Start the tag sync metrics
+			boolean isTagSyncMetricsEnabled = TagSyncConfig.isTagSyncMetricsEnabled(properties);
+			if (isTagSyncMetricsEnabled) {
+				TagSyncMetricsProducer tagSyncMetricsProducer = new TagSyncMetricsProducer();
+				Thread tagSyncMetricsProducerThread = new Thread(tagSyncMetricsProducer);
+				tagSyncMetricsProducerThread.setName("TagSyncMetricsProducerThread");
+				tagSyncMetricsProducerThread.setDaemon(true);
+				tagSyncMetricsProducerThread.start();
+			} else {
+				LOG.info(" Ranger tagsync metrics is not enabled");
+			}
 			for (TagSource tagSource : tagSources) {
 				threadsStarted = threadsStarted && tagSource.start();
 			}

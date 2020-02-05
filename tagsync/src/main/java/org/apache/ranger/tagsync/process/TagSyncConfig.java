@@ -31,6 +31,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import java.net.UnknownHostException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.Properties;
 
@@ -104,6 +106,14 @@ public class TagSyncConfig extends Configuration {
 	public static final String TAGSYNC_KERBEROS_IDENTITY = "tagsync.kerberos.identity";
 
 	private static String LOCAL_HOSTNAME = "unknown";
+
+    private static final String  TAGSYNC_METRICS_FILEPATH =   "ranger.tagsync.metrics.filepath";
+    private static final String  DEFAULT_TAGSYNC_METRICS_FILEPATH =   "/tmp/";
+    private static final String  TAGSYNC_METRICS_FILENAME =   "ranger.tagsync.metrics.filename";
+    private static final String  DEFAULT_TAGSYNC_METRICS_FILENAME =   "ranger_tagsync_metric.json";
+    private static final String  TAGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM = "ranger.tagsync.metrics.frequencytimeinmillis";
+    private static final long    DEFAULT_TAGSYNC_METRICS_FREQUENCY__TIME_IN_MILLIS = 10000L;
+    private static final String  TAGSYNC_METRICS_ENABLED_PROP = "ranger.tagsync.metrics.enabled";
 
 	private Properties props;
 
@@ -458,6 +468,50 @@ public class TagSyncConfig extends Configuration {
 		} else {
 			LOG.error("Configuration fileName is null");
 		}
+	}
+
+	public String getTagSyncMetricsFileName() {
+		String val = getProperties().getProperty(TAGSYNC_METRICS_FILEPATH);
+		if (StringUtils.isBlank(val)) {
+			if (StringUtils.isBlank(System.getProperty("logdir"))) {
+				val = DEFAULT_TAGSYNC_METRICS_FILEPATH;
+			} else {
+				val = System.getProperty("logdir");
+			}
+		}
+
+		if (Files.notExists(Paths.get(val))) {
+				return null;
+		}
+
+		StringBuilder pathAndFileName = new StringBuilder(val);
+		if (!val.endsWith("/")) {
+			pathAndFileName.append("/");
+		}
+		String fileName = getProperties().getProperty(TAGSYNC_METRICS_FILENAME);
+		if (StringUtils.isBlank(fileName)) {
+			fileName = DEFAULT_TAGSYNC_METRICS_FILENAME;
+		}
+		pathAndFileName.append(fileName);
+		return pathAndFileName.toString();
+	}
+
+	public long getTagSyncMetricsFrequency() {
+		long ret = DEFAULT_TAGSYNC_METRICS_FREQUENCY__TIME_IN_MILLIS;
+		String val = getProperties().getProperty(TAGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM);
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Long.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+		return ret;
+	}
+
+	public static boolean isTagSyncMetricsEnabled(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_METRICS_ENABLED_PROP);
+		return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
 	}
 
 }

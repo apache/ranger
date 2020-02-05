@@ -19,6 +19,10 @@
 
 package org.apache.ranger.unixusersync.config;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -239,6 +243,14 @@ public class UserGroupSyncConfig  {
     private static final String USERSYNC_RANGER_COOKIE_ENABLED_PROP = "ranger.usersync.cookie.enabled";
 
 	private static final String RANGER_ADMIN_COOKIE_NAME_PROPS = "ranger.usersync.dest.ranger.session.cookie.name";
+
+    private static final String  UGSYNC_METRICS_FILEPATH =   "ranger.usersync.metrics.filepath";
+    private static final String  DEFAULT_UGSYNC_METRICS_FILEPATH =   "/tmp/";
+    private static final String  UGSYNC_METRICS_FILENAME =   "ranger.usersync.metrics.filename";
+    private static final String  DEFAULT_UGSYNC_METRICS_FILENAME =   "ranger_usersync_metric.json";
+    private static final String  UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM = "ranger.usersync.metrics.frequencytimeinmillis";
+    private static final long    DEFAULT_UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS = 10000L;
+    public static final String   UGSYNC_METRICS_ENABLED_PROP = "ranger.usersync.metrics.enabled";
 
     private Properties prop = new Properties();
 
@@ -1056,6 +1068,59 @@ public class UserGroupSyncConfig  {
 
 	/* Used only for unit testing */
 	public void setGroupHierarchyLevel(int groupHierarchyLevel) {
-        	prop.setProperty(LGSYNC_GROUP_HIERARCHY_LEVELS, String.valueOf(groupHierarchyLevel));
-        }
+		prop.setProperty(LGSYNC_GROUP_HIERARCHY_LEVELS, String.valueOf(groupHierarchyLevel));
+	}
+
+	public String getUserSyncMetricsFileName() throws IOException {
+		String val = prop.getProperty(UGSYNC_METRICS_FILEPATH);
+		if (StringUtils.isBlank(val)) {
+			if (StringUtils.isBlank(prop.getProperty("ranger.usersync.logdir"))) {
+				if (StringUtils.isBlank(System.getProperty("logdir"))) {
+					val = DEFAULT_UGSYNC_METRICS_FILEPATH;
+				} else {
+					val = System.getProperty("logdir");
+				}
+			} else {
+				val = prop.getProperty("ranger.usersync.logdir");
+			}
+		}
+
+		if (Files.notExists(Paths.get(val))) {
+			String current = new File(".").getCanonicalPath();
+			val = current + "/" + val;
+			if (Files.notExists(Paths.get(val))) {
+				return null;
+			}
+		}
+
+		StringBuilder pathAndFileName = new StringBuilder(val);
+		if (!val.endsWith("/")) {
+			pathAndFileName.append("/");
+		}
+
+		String fileName = prop.getProperty(UGSYNC_METRICS_FILENAME);
+		if (StringUtils.isBlank(fileName)) {
+			fileName = DEFAULT_UGSYNC_METRICS_FILENAME;
+		}
+		pathAndFileName.append(fileName);
+		return pathAndFileName.toString();
+	}
+
+	public long getUserSyncMetricsFrequency() {
+		long ret = DEFAULT_UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS;
+		String val = prop.getProperty(UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM);
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Long.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+		return ret;
+	}
+
+	public boolean isUserSyncMetricsEnabled() {
+		String val = prop.getProperty(UGSYNC_METRICS_ENABLED_PROP);
+		return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
+	}
 }
