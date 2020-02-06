@@ -462,6 +462,23 @@
         </includes>
       </binaries>
     </moduleSet>
+
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
+        <include>org.apache.ranger:ranger-kudu-plugin</include>
+      </includes>
+      <binaries>
+        <outputDirectory>/ews/webapp/WEB-INF/classes/ranger-plugins/kudu</outputDirectory>
+        <includeDependencies>true</includeDependencies>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <includes>
+          <include>org.apache.ranger:ranger-kudu-plugin</include>
+        </includes>
+      </binaries>
+    </moduleSet>
   </moduleSets>
 
   <fileSets>
