@@ -98,7 +98,7 @@ public abstract class BaseDao<T> {
 
 		for (int n = 0; n < obj.size(); ++n) {
 			em.persist(obj.get(n));
-			if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.policyBatchSize == 0)) {
+			if (!RangerBizUtil.isBulkMode() && (n % RangerBizUtil.batchPersistSize == 0)) {
 				em.flush();
 			}
 		}
