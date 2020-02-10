@@ -92,6 +92,8 @@
         <bouncycastle.version>1.55</bouncycastle.version>
         <c3p0.version>0.9.5.3</c3p0.version>
         <cglib.version>2.2.0-b23</cglib.version>
+        <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
+        <checkstyle.version>8.29</checkstyle.version>
         <codehaus.jackson.version>1.9.13</codehaus.jackson.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.cli.version>1.2</commons.cli.version>
@@ -212,8 +214,6 @@
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <org.bouncycastle.bcprov-jdk15on>1.59</org.bouncycastle.bcprov-jdk15on>
         <org.bouncycastle.bcpkix-jdk15on>1.59</org.bouncycastle.bcpkix-jdk15on>
-        <checkstyle.plugin.version>2.17</checkstyle.plugin.version>
-        <checkstyle.version>6.11.2</checkstyle.version>
     </properties>
     <profiles>
         <profile>
@@ -1041,7 +1041,6 @@
                             <consoleOutput>true</consoleOutput>
                             <includeTestSourceDirectory>true</includeTestSourceDirectory>
                             <configLocation>./dev-support/checkstyle.xml</configLocation>
-                            <headerLocation>./dev-support/checkstyle-java-header.txt</headerLocation>
                             <suppressionsLocation>./dev-support/checkstyle-suppressions.xml</suppressionsLocation>
                             <failOnViolation>true</failOnViolation>
                         </configuration>
