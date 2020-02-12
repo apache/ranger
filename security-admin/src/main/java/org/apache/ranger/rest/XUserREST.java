@@ -290,6 +290,14 @@ public class XUserREST {
 	public VXUser createXUser(VXUser vXUser) {
 		return xUserMgr.createXUserWithOutLogin(vXUser);
 	}
+
+	@POST
+	@Path("/users/external")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public VXUser createExternalUser(VXUser vXUser) {
+		return xUserMgr.createExternalUser(vXUser.getName());
+	}
 	
 	@POST
 	@Path("/users/userinfo")

@@ -19,7 +19,6 @@
 package org.apache.ranger.biz;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -28,6 +27,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
@@ -54,7 +54,6 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXGroup;
-import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -75,6 +74,9 @@ public class PolicyRefUpdater {
 
 	 @Autowired
 	 RoleDBStore roleStore;
+
+	@Autowired
+	RangerBizUtil rangerBizUtil;
 
 	public void createNewPolMappingForRefTable(RangerPolicy policy, XXPolicy xPolicy, XXServiceDef xServiceDef) throws Exception {
 		if(policy == null) {
@@ -285,20 +287,14 @@ public class PolicyRefUpdater {
 
 	private Long createUserForPolicy(String user) {
 		LOG.warn("User specified in policy does not exist in ranger admin, creating new user, User = " + user);
-		VXUser vxUser = new VXUser();
-		vxUser.setName(user);
-		vxUser.setDescription(user);
-		vxUser.setUserSource(1);
-		vxUser.setPassword(user+"12345");
-		vxUser.setUserRoleList(Arrays.asList("ROLE_USER"));
-		VXUser createdXUser= xUserMgr.createXUser(vxUser);
-		return createdXUser.getId();
+		return xUserMgr.createExternalUser(user).getId();
 	}
 
 	private Long createGroupForPolicy(String group) {
 		LOG.warn("Group specified in policy does not exist in ranger admin, creating new group, Group = " + group);
 		VXGroup vxGroup = new VXGroup();
 		vxGroup.setName(group);
+		vxGroup.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
 		VXGroup vxGroupCreated= xUserMgr.createXGroup(vxGroup);
 		return vxGroupCreated.getId();
 	}

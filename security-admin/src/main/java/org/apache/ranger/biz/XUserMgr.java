@@ -702,6 +702,12 @@ public class XUserMgr extends XUserMgrBase {
 		return xUserService.createXUserWithOutLogin(vXUser);
 	}
 
+	public VXUser createExternalUser(String userName) {
+		checkAdminAccess();
+		xaBizUtil.blockAuditorRoleUser();
+		return createServiceConfigUser(userName);
+	}
+
 	public VXGroup createXGroup(VXGroup vXGroup) {
 		checkAdminAccess();
                 xaBizUtil.blockAuditorRoleUser();
