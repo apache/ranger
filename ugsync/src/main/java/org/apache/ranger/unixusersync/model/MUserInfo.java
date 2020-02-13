@@ -26,6 +26,7 @@ public class MUserInfo {
 	private String lastName;
 	private String emailAddress;
 	private String[] userRoleList = { "ROLE_USER" };
+	private String otherAttributes;
 	
 	
 	public String getLoginId() {
@@ -58,5 +59,12 @@ public class MUserInfo {
 	public void setUserRoleList(String[] userRoleList) {
 		this.userRoleList = userRoleList;
 	}
-	
+
+	public String getOtherAttributes() {
+		return otherAttributes;
+	}
+
+	public void setOtherAttributes(String otherAttributes) {
+		this.otherAttributes = otherAttributes;
+	}
 }

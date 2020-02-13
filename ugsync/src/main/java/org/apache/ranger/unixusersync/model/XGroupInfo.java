@@ -26,6 +26,7 @@ public class XGroupInfo {
 	private String description;
 	private String groupType;
 	private String groupSource;
+	private String otherAttributes;
 	public String getId() {
 		return id;
 	}
@@ -57,7 +58,15 @@ public class XGroupInfo {
 	public void setGroupSource(String groupSource) {
 		this.groupSource = groupSource;
 	}
-	
+
+	public String getOtherAttributes() {
+		return otherAttributes;
+	}
+
+	public void setOtherAttributes(String otherAttributes) {
+		this.otherAttributes = otherAttributes;
+	}
+
 	@Override
 	public boolean equals(Object o) {
 		if (this == o) return true;

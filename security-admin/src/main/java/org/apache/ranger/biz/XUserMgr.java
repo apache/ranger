@@ -31,28 +31,21 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.common.ContextUtil;
-import org.apache.ranger.common.GUIDUtil;
-import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.*;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXUserPermission;
+import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.UserInfo;
+import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.security.context.RangerAPIMapping;
 import org.apache.ranger.service.*;
 import org.apache.ranger.view.*;
 import org.apache.log4j.Logger;
-import org.apache.ranger.common.AppConstants;
-import org.apache.ranger.common.MessageEnums;
-import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.common.RangerConstants;
-import org.apache.ranger.common.RangerServicePoliciesCache;
-import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.common.StringUtil;
-import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAuditMapDao;
 import org.apache.ranger.db.XXAuthSessionDao;
@@ -92,6 +85,8 @@ import org.apache.ranger.entity.XXPortalUserRole;
 
 @Component
 public class XUserMgr extends XUserMgrBase {
+
+	private static final String RANGER_USER_GROUP_GLOBAL_STATE_NAME = "RangerUserStore";
 
 	@Autowired
 	XUserService xUserService;
@@ -584,7 +579,11 @@ public class XUserMgr extends XUserMgrBase {
             assignPermissionToUser(vXPortalUser, true);
         }
 		vxUGInfo.setXgroupInfo(vxg);
-
+        try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error("createXUserGroupFromMap(" + vXUser.getName() + ") failed", excp);
+		}
 		return vxUGInfo;
 	}
 	
@@ -641,6 +640,12 @@ public class XUserMgr extends XUserMgrBase {
 		}
 
 		vxGUInfo.setXuserInfo(vxu);
+
+		try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error("createXGroupUserFromMap(" + vXGroup.getName() + ") failed", excp);
+		}
 
 		return vxGUInfo;
 	}
@@ -2544,4 +2549,34 @@ public class XUserMgr extends XUserMgrBase {
 		return vxUgsyncAuditInfo;
 	}
 
+	public Long getUserStoreVersion() {
+		return daoManager.getXXGlobalState().getAppDataVersion(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+	}
+
+	public Set<UserInfo> getUsers() {
+		return new HashSet<>(xUserService.getUsers());
+	}
+
+	public Set<GroupInfo> getGroups() {
+		return  new HashSet<>(xGroupService.getGroups());
+	}
+
+	public RangerUserStore getRangerUserStore(Long lastKnownUserStoreVersion) throws Exception {
+		RangerUserStore ret                   = null;
+		Long        rangerUserStoreVersionInDB = getUserStoreVersion();
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> XUserMgr.getRangerUserStore() lastKnownUserStoreVersion= " + lastKnownUserStoreVersion + " rangerUserStoreVersionInDB= " + rangerUserStoreVersionInDB);
+		}
+
+		if (rangerUserStoreVersionInDB != null) {
+			ret = RangerUserStoreCache.getInstance().getLatestRangerUserStoreOrCached(this, lastKnownUserStoreVersion, rangerUserStoreVersionInDB);
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<= XUserMgr.getRangerUserStore() lastKnownUserStoreVersion= " + lastKnownUserStoreVersion + " rangerUserStoreVersionInDB= " + rangerUserStoreVersionInDB + " RangerRoles= " + ret);
+		}
+
+		return ret;
+	}
 }

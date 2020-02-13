@@ -33,6 +33,7 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.HashMap;
+import java.util.UUID;
 
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
@@ -51,6 +52,7 @@ import javax.naming.ldap.StartTlsResponse;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.LdapSyncSourceInfo;
@@ -65,6 +67,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 	
 	private static final Logger LOG = Logger.getLogger(LdapDeltaUserGroupBuilder.class);
 	
+	private static final String DATA_TYPE_BYTEARRAY = "byte[]";
 	private static final int PAGE_SIZE = 500;
 	private static long deltaSyncUserTime = 0; // Used for AD uSNChanged 
 	private static long deltaSyncGroupTime = 0; // Used for AD uSNChanged
@@ -80,12 +83,14 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 
   private String[] userSearchBase;
 	private String userNameAttribute;
+	private String userCloudIdAttribute;
   private int    userSearchScope;
   private String userObjectClass;
   private String userSearchFilter;
   private String extendedUserSearchFilter;
   private SearchControls userSearchControls;
   private Set<String> userGroupNameAttributeSet;
+  private Set<String> otherUserAttributes;
 
   private boolean pagedResultsEnabled = true;
   private int pagedResultsSize = PAGE_SIZE;
@@ -102,6 +107,8 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
   private SearchControls groupSearchControls;
   private String groupMemberAttributeName;
   private String groupNameAttribute;
+	private String groupCloudIdAttribute;
+	private Set<String> otherGroupAttributes;
 	private int groupHierarchyLevels;
 
 	private LdapContext ldapContext;
@@ -126,6 +133,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 	int noOfNewGroups;
 	int noOfModifiedUsers;
 	int noOfModifiedGroups;
+	private Map<String, Map<String, String>> groupInfoMap;
 
 	public static void main(String[] args) throws Throwable {
 		LdapDeltaUserGroupBuilder  ugBuilder = new LdapDeltaUserGroupBuilder();
@@ -188,6 +196,32 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 			env.put("java.naming.ldap.factory.socket", "org.apache.ranger.ldapusersync.process.CustomSSLSocketFactory");
 		}
 
+		if (StringUtils.isNotEmpty(userCloudIdAttribute)) {
+			if (config.getUserCloudIdAttributeDataType().equals(DATA_TYPE_BYTEARRAY)) {
+				env.put("java.naming.ldap.attributes.binary", userCloudIdAttribute);
+			}
+		}
+
+		if (StringUtils.isNotEmpty(groupCloudIdAttribute)) {
+			if (config.getGroupCloudIdAttributeDataType().equals(DATA_TYPE_BYTEARRAY)) {
+				env.put("java.naming.ldap.attributes.binary", groupCloudIdAttribute);
+			}
+		}
+
+		for (String otherUserAttribute : otherUserAttributes) {
+			String attrType = config.getOtherUserAttributeDataType(otherUserAttribute);
+			if (attrType.equals(DATA_TYPE_BYTEARRAY)) {
+				env.put("java.naming.ldap.attributes.binary", otherUserAttribute);
+			}
+		}
+
+		for (String otherGroupAttribute : otherGroupAttributes) {
+			String attrType = config.getOtherGroupAttributeDataType(otherGroupAttribute);
+			if (attrType.equals(DATA_TYPE_BYTEARRAY)) {
+				env.put("java.naming.ldap.attributes.binary", otherGroupAttribute);
+			}
+		}
+
 		ldapContext = new InitialLdapContext(env, null);
 		if (!ldapUrl.startsWith("ldaps")) {
 			if (config.isStartTlsEnabled()) {
@@ -227,15 +261,21 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		userSearchFilter = config.getUserSearchFilter();
 
 		userNameAttribute = config.getUserNameAttribute();
+		userCloudIdAttribute = config.getUserCloudIdAttribute();
 
 		Set<String> userSearchAttributes = new HashSet<String>();
 		userSearchAttributes.add(userNameAttribute);
+		userSearchAttributes.add(userCloudIdAttribute);
 		// For Group based search, user's group name attribute should not be added to the user search attributes
 		if (!groupSearchFirstEnabled && !groupSearchEnabled) {
 			userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
 			for (String useGroupNameAttribute : userGroupNameAttributeSet) {
 				userSearchAttributes.add(useGroupNameAttribute);
 			}
+		}
+		otherUserAttributes = config.getOtherUserAttributes();
+		for (String otherUserAttribute : otherUserAttributes) {
+			userSearchAttributes.add(otherUserAttribute);
 		}
 		userSearchAttributes.add("uSNChanged");
 		userSearchAttributes.add("modifytimestamp");
@@ -253,6 +293,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
     groupSearchFilter = config.getGroupSearchFilter();
     groupMemberAttributeName =  config.getUserGroupMemberAttributeName();
     groupNameAttribute = config.getGroupNameAttribute();
+    groupCloudIdAttribute = config.getGroupCloudIdAttribute();
 		groupHierarchyLevels = config.getGroupHierarchyLevels();
 
     extendedGroupSearchFilter =  "(&"  + extendedGroupSearchFilter + "(|(" + groupMemberAttributeName + "={0})(" + groupMemberAttributeName + "={1})))";
@@ -263,9 +304,14 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 
     Set<String> groupSearchAttributes = new HashSet<String>();
     groupSearchAttributes.add(groupNameAttribute);
+    groupSearchAttributes.add(groupCloudIdAttribute);
     groupSearchAttributes.add(groupMemberAttributeName);
     groupSearchAttributes.add("uSNChanged");
     groupSearchAttributes.add("modifytimestamp");
+    otherGroupAttributes = config.getOtherGroupAttributes();
+    for (String otherGroupAttribute : otherGroupAttributes) {
+		groupSearchAttributes.add(otherGroupAttribute);
+    }
     groupSearchControls.setReturningAttributes(groupSearchAttributes.toArray(
 			new String[groupSearchAttributes.size()]));
 
@@ -284,6 +330,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 					+ ",  userNameAttribute: " + userNameAttribute
 					+ ",  userSearchAttributes: " + userSearchAttributes
           + ",  userGroupNameAttributeSet: " + userGroupNameAttributeSet
+			+ ",  otherUserAttributes: " + otherUserAttributes
           + ",  pagedResultsEnabled: " + pagedResultsEnabled
           + ",  pagedResultsSize: " + pagedResultsSize
           + ",  groupSearchEnabled: " + groupSearchEnabled
@@ -325,6 +372,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		LOG.info("LdapDeltaUserGroupBuilder updateSink started");
 		groupUserTable = HashBasedTable.create();
         groupNameMap = new DualHashBidiMap();
+		groupInfoMap = new HashMap<>();
 		noOfNewUsers = 0;
 		noOfNewGroups = 0;
 		noOfModifiedUsers = 0;
@@ -386,7 +434,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 			String transformGroupName = groupNameTransform(groupName);
 			LOG.debug("addOrUpdateGroup(): group = " + groupName + " users = " + userList);
 			try {
-				sink.addOrUpdateGroup(transformGroupName, userList);
+				sink.addOrUpdateGroup(transformGroupName, groupInfoMap.get(groupName), userList);
 			} catch (Throwable t) {
 				LOG.error("sink.addOrUpdateGroup failed with exception: " + t.getMessage()
 				+ ", for group: " + transformGroupName
@@ -519,10 +567,22 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 							}
 						}
 
+						Map<String, String> userAttrMap = new HashMap<>();
+						Attribute userCloudIdAttr = attributes.get(userCloudIdAttribute);
+						if (userCloudIdAttr != null) {
+							addToAttrMap(userAttrMap, "cloud_id", userCloudIdAttr, config.getUserCloudIdAttributeDataType());
+						}
+						for (String otherUserAttribute : otherUserAttributes) {
+							if (attributes.get(otherUserAttribute) != null) {
+								String attrType = config.getOtherUserAttributeDataType(otherUserAttribute);
+								addToAttrMap(userAttrMap, otherUserAttribute, attributes.get(otherUserAttribute), attrType);
+							}
+						}
+
 						if (!groupSearchFirstEnabled) {
 							String transformUserName = userNameTransform(userName);
 							try {
-								sink.addOrUpdateUser(transformUserName);
+								sink.addOrUpdateUser(transformUserName, userAttrMap, null);
 							} catch (Throwable t) {
 								LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
 								+ ", for user: " + transformUserName);
@@ -554,7 +614,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 
 							List<String> groupList = new ArrayList<String>(groups);
 							try {
-								sink.addOrUpdateUser(transformUserName, groupList);
+								sink.addOrUpdateUser(transformUserName, userAttrMap, groupList);
 
 							} catch (Throwable t) {
 								LOG.error("sink.addOrUpdateUserGroups failed with exception: " + t.getMessage()
@@ -569,7 +629,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								if (!userNameMap.containsKey(userFullName)) {
 									String transformUserName = userNameTransform(userName);
 									try {
-										sink.addOrUpdateUser(transformUserName);
+										sink.addOrUpdateUser(transformUserName, userAttrMap, null);
 									} catch (Throwable t) {
 										LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
 												+ ", for user: " + transformUserName);
@@ -640,7 +700,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 				LOG.info("LdapDeltaUserGroupBuilder.getUsers() completed with user count: "
 						+ counter);
 				} catch (Exception t) {
-					LOG.error("LdapDeltaUserGroupBuilder.getUsers() failed with exception: " + t);
+					LOG.error("LdapDeltaUserGroupBuilder.getUsers() failed with exception: ", t);
 					LOG.info("LdapDeltaUserGroupBuilder.getUsers() user count: "
 							+ counter);
 				}
@@ -704,7 +764,8 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								continue;
 							}
 							counter++;
-							Attribute groupNameAttr = groupEntry.getAttributes().get(groupNameAttribute);
+							Attributes attributes =   groupEntry.getAttributes();
+							Attribute groupNameAttr = attributes.get(groupNameAttribute);
 							if (groupNameAttr == null) {
 								if (LOG.isInfoEnabled())  {
 									LOG.info(groupNameAttribute + " empty for entry " + groupEntry.getNameInNamespace() +
@@ -714,15 +775,27 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 							}
 							String gName = (String) groupNameAttr.get();
 							String transformGroupName = groupNameTransform(gName);
+							Map<String, String> groupAttrMap = new HashMap<>();
+							Attribute groupCloudIdAttr = attributes.get(groupCloudIdAttribute);
+							if (groupCloudIdAttr != null) {
+								addToAttrMap(groupAttrMap, "cloud_id", groupCloudIdAttr, config.getGroupCloudIdAttributeDataType());
+							}
+							for (String otherGroupAttribute : otherGroupAttributes) {
+								if (attributes.get(otherGroupAttribute) != null) {
+									String attrType = config.getOtherGroupAttributeDataType(otherGroupAttribute);
+									addToAttrMap(groupAttrMap, otherGroupAttribute, attributes.get(otherGroupAttribute), attrType);
+								}
+							}
+							groupInfoMap.put(gName, groupAttrMap);
 							// If group based search is enabled, then
 							// update the group name to ranger admin
 							// check for group members and populate userInfo object with user's full name and group mapping
 							if (groupSearchFirstEnabled) {
 								LOG.debug("Update Ranger admin with " + transformGroupName);
-								sink.addOrUpdateGroup(transformGroupName);
+								sink.addOrUpdateGroup(transformGroupName, groupAttrMap);
 							}
 
-							Attribute timeStampAttr  = groupEntry.getAttributes().get("uSNChanged");
+							Attribute timeStampAttr  = attributes.get("uSNChanged");
 							if (timeStampAttr != null) {
 								String uSNChangedVal = (String) timeStampAttr.get();
 								long currentDeltaSyncTime = Long.parseLong(uSNChangedVal);
@@ -730,7 +803,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 									highestdeltaSyncGroupTime = currentDeltaSyncTime;
 								}
 							} else {
-								timeStampAttr = groupEntry.getAttributes().get("modifytimestamp");
+								timeStampAttr = attributes.get("modifytimestamp");
 								if (timeStampAttr != null) {
 									String timeStampVal = (String) timeStampAttr.get();
 									Date parseDate = dateFormat.parse(timeStampVal);
@@ -742,7 +815,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 									}
 								}
 							}
-							Attribute groupMemberAttr = groupEntry.getAttributes().get(groupMemberAttributeName);
+							Attribute groupMemberAttr = attributes.get(groupMemberAttributeName);
 							int userCount = 0;
 							if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
 								LOG.info("No members available for " + gName);
@@ -769,7 +842,8 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								if (groupSearchFirstEnabled && !userSearchEnabled) {
 									String transformUserName = userNameTransform(userName);
 									try {
-										sink.addOrUpdateUser(transformUserName);
+										Map<String, String> userAttrMap = new HashMap<>();
+										sink.addOrUpdateUser(transformUserName, userAttrMap, null);
 									} catch (Throwable t) {
 										LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
 										+ ", for user: " + transformUserName);
@@ -789,6 +863,8 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								}
                                 groupNameMap.put(groupEntry.getNameInNamespace().toLowerCase(), gName);
 							}
+
+
 							if (groupNames.contains(gName)) {
 								noOfModifiedGroups++;
 							} else {
@@ -1021,6 +1097,15 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 								continue;
 							}
 
+							Map<String, String> groupAttrMap = new HashMap<>();
+							for (String otherGroupAttribute : otherGroupAttributes) {
+								Attribute otherGroupAttr = groupEntry.getAttributes().get(otherGroupAttribute);
+								if (otherGroupAttr != null) {
+									groupAttrMap.put(otherGroupAttribute, (String) otherGroupAttr.get());
+								}
+							}
+							groupInfoMap.put(gName, groupAttrMap);
+
 							NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
 							while (userEnum.hasMore()) {
 								String originalUserFullName = (String) userEnum.next();
@@ -1035,6 +1120,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
                                     groupUserTable.put(gName, originalUserFullName, originalUserFullName);
                                 }
 								groupNameMap.put(groupEntry.getNameInNamespace().toLowerCase(), gName);
+
 							}
 							LOG.info("No. of members in the group " + gName + " = " + userCount);
 						}
@@ -1086,5 +1172,22 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		}
 		goUpGroupHierarchyLdap(nextLevelGroups, groupHierarchyLevels-1);
 	}
-}
 
+	private void addToAttrMap(Map<String, String> userAttrMap, String attrName, Attribute attr, String attrType) throws Throwable{
+		if (attrType.equals(DATA_TYPE_BYTEARRAY)) {
+			try {
+				byte[] otherUserAttrBytes = (byte[]) attr.get();
+				//Convert objectGUID into string and add to userAttrMap
+				String attrVal = UUID.nameUUIDFromBytes(otherUserAttrBytes).toString();
+				userAttrMap.put(attrName, attrVal);
+			} catch (ClassCastException e) {
+				LOG.error(attrName + " type is not set properly " + e.getMessage());
+			}
+		} else if (attrType.equals("String")) {
+			userAttrMap.put(attrName, (String) attr.get());
+		} else {
+			// This should not be reached.
+			LOG.warn("Attribute Type " + attrType + " not supported for " + attrName);
+		}
+	}
+}

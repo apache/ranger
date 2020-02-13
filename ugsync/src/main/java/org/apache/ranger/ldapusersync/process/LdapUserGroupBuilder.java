@@ -721,10 +721,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 									int userCount = 0;
 									if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
 										LOG.info("No members available for " + gName);
-										sink.addOrUpdateGroup(gName, null);
+										sink.addOrUpdateGroup(gName, new HashMap<String, String>(), null);
 										continue;
 									}
-									sink.addOrUpdateGroup(gName);
+									sink.addOrUpdateGroup(gName, new HashMap<String, String>());
 									NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
 									while (userEnum.hasMore()) {
 										String originalUserFullName = (String) userEnum.next();

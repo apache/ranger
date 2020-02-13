@@ -3487,7 +3487,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				// get the LatestRoleVersion from the GlobalTable and update ServiceInfo for a service
 				XXGlobalStateDao xxGlobalStateDao = daoMgr.getXXGlobalState();
 				if (xxGlobalStateDao != null) {
-					Long roleVersion = xxGlobalStateDao.getRoleVersion("RangerRole");
+					Long roleVersion = xxGlobalStateDao.getAppDataVersion("RangerRole");
 					if (roleVersion != null) {
 						serviceVersionInfoDbObj.setRoleVersion(roleVersion);
 						serviceVersionInfoDbObj.setRoleUpdateTime(now);

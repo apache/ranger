@@ -152,25 +152,14 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	@Override
 	public void addOrUpdateUser(String userName, List<String> groups) throws Throwable {
-		//* Add user to groups mapping in the x_user table. 
-		//* Here the assumption is that the user already exists in x_portal_user table.
-		if ( ! isMockRun ) {
-			// If the rest call to ranger admin fails, 
-			// propagate the failure to the caller for retry in next sync cycle.
-			if (addUserGroupInfo(userName, groups) == null ) {
-				String msg = "Failed to add addorUpdate user group info";
-				LOG.error(msg);
-				throw new Exception(msg);
-			}
-		}
 
 	}
 
 	@Override
-	public void addOrUpdateGroup(String groupName) throws Throwable {
+	public void addOrUpdateGroup(String groupName, Map<String, String> groupAttrs) throws Throwable {
 		//* Build the group info object and do the rest call
 			if ( ! isMockRun ) {
-				if ( addGroupInfo(groupName) == null) {
+				if ( addGroupInfo(groupName, groupAttrs) == null) {
 					String msg = "Failed to add addorUpdate group info";
 					LOG.error(msg);
 					throw new Exception(msg);
@@ -179,13 +168,13 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	}
 	
-	private XGroupInfo addGroupInfo(final String groupName){
+	private XGroupInfo addGroupInfo(final String groupName, Map<String, String> groupAttrs){
 		XGroupInfo ret = null;
 		XGroupInfo group = null;
 		
 		LOG.debug("INFO: addPMXAGroup(" + groupName + ")");
 		if (! isMockRun) {
-			group = addXGroupInfo(groupName);
+			group = addXGroupInfo(groupName, groupAttrs);
 		}
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal,keytab)) {
 			try {
@@ -213,7 +202,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}	
 	}
 	
-	private XGroupInfo addXGroupInfo(String aGroupName) {
+	private XGroupInfo addXGroupInfo(String aGroupName, Map<String, String> groupAttrs) {
 		
 		XGroupInfo addGroup = new XGroupInfo();
 		
@@ -224,6 +213,8 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		addGroup.setGroupType("1");
 
 		addGroup.setGroupSource(GROUP_SOURCE_EXTERNAL);
+		Gson gson = new Gson();
+		addGroup.setOtherAttributes(gson.toJson(groupAttrs));
 		groupuserInfo.setXgroupInfo(addGroup);
 
 		return addGroup;
@@ -272,30 +263,33 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	@Override
 	public void addOrUpdateUser(String userName) throws Throwable {
+
+	}
+
+	@Override
+	public void addOrUpdateUser(String userName, Map<String, String> userAttrs, List<String> groups) throws Throwable {
 		// First add to x_portal_user
 		LOG.debug("INFO: addPMAccount(" + userName + ")" );
 		if (! isMockRun) {
-			if (addMUser(userName) == null) {
-		        String msg = "Failed to add portal user";
-		        LOG.error(msg);
-		        throw new Exception(msg);
+			if (addMUser(userName, userAttrs) == null) {
+				String msg = "Failed to add portal user";
+				LOG.error(msg);
+				throw new Exception(msg);
 			}
 		}
-		List<String> groups = new ArrayList<String>();
 		//* Build the user group info object with empty groups and do the rest call
 		if ( ! isMockRun ) {
-			// If the rest call to ranger admin fails, 
+			// If the rest call to ranger admin fails,
 			// propagate the failure to the caller for retry in next sync cycle.
-			if (addUserGroupInfo(userName, groups) == null ) {
+			if (addUserGroupInfo(userName, userAttrs, groups) == null ) {
 				String msg = "Failed to add addorUpdate user group info";
 				LOG.error(msg);
 				throw new Exception(msg);
 			}
 		}
-		
 	}
-	
-	private UserGroupInfo addUserGroupInfo(String userName, List<String> groups){
+
+	private UserGroupInfo addUserGroupInfo(String userName, Map<String, String> userAttrs, List<String> groups){
 		if(LOG.isDebugEnabled()) {
 	 		LOG.debug("==> LdapPolicyMgrUserGroupBuilder.addUserGroupInfo " + userName + " and groups");
 	 	}
@@ -304,7 +298,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		LOG.debug("INFO: addPMXAUser(" + userName + ")");
 		
 		if (! isMockRun) {
-			user = addXUserInfo(userName);
+			user = addXUserInfo(userName, userAttrs);
 		}
 		for(String g : groups) {
 				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" );
@@ -337,13 +331,15 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 	}
 	
-	private XUserInfo addXUserInfo(String aUserName) {
+	private XUserInfo addXUserInfo(String aUserName, Map<String, String> userAttrs) {
 		
 		XUserInfo xuserInfo = new XUserInfo();
 
 		xuserInfo.setName(aUserName);
 		
 		xuserInfo.setDescription(aUserName + " - add from Unix box");
+		Gson gson = new Gson();
+		xuserInfo.setOtherAttributes(gson.toJson(userAttrs));
         if (userMap.containsKey(aUserName)) {
             List<String> roleList = new ArrayList<String>();
             roleList.add(userMap.get(aUserName));
@@ -359,7 +355,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		List<XGroupInfo> xGroupInfoList = new ArrayList<XGroupInfo>();
 		
 		for(String groupName : aGroupList) {
-			XGroupInfo group = addXGroupInfo(groupName);
+			XGroupInfo group = addXGroupInfo(groupName, null);
 			xGroupInfoList.add(group);
 			addXUserGroupInfo(aUserInfo, group);
 		}
@@ -421,6 +417,10 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	@Override
 	public void addOrUpdateGroup(String groupName, List<String> users) throws Throwable {
+	}
+
+	@Override
+	public void addOrUpdateGroup(String groupName, Map<String, String> groupAttrs, List<String> users) throws Throwable {
 		// First get the existing group user mappings from Ranger admin.
 		// Then compute the delta and send the updated group user mappings to ranger admin.
 		LOG.debug("addOrUpdateGroup for " + groupName + " with users: " + users);
@@ -484,7 +484,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		if ( ! isMockRun ) {
 			// If the rest call to ranger admin fails, 
 			// propagate the failure to the caller for retry in next sync cycle.
-			if (addGroupUserInfo(groupName, addUsers) == null ) {
+			if (addGroupUserInfo(groupName, groupAttrs, addUsers) == null ) {
 				String msg = "Failed to add addorUpdate group user info";
 				LOG.error(msg);
 				throw new Exception(msg);
@@ -654,7 +654,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 	}
 	
-	private GroupUserInfo addGroupUserInfo(String groupName, List<String> users){
+	private GroupUserInfo addGroupUserInfo(String groupName, Map<String, String> groupAttrs, List<String> users){
 		if(LOG.isDebugEnabled()) {
 	 		LOG.debug("==> LdapPolicyMgrUserGroupBuilder.addGroupUserInfo " + groupName + " and " + users);
 	 	}
@@ -663,7 +663,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		
 		LOG.debug("INFO: addPMXAGroup(" + groupName + ")" );
 		if (! isMockRun) {
-			group = addXGroupInfo(groupName);
+			group = addXGroupInfo(groupName, groupAttrs);
 		}
 		for(String u : users) {
 				LOG.debug("INFO: addPMXAGroupToUser(" + groupName + "," + u + ")" );
@@ -701,7 +701,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		List<XUserInfo> xUserInfoList = new ArrayList<XUserInfo>();
 
 		for(String userName : aUserList) {
-			XUserInfo user = addXUserInfo(userName);
+			XUserInfo user = addXUserInfo(userName, null);
 			xUserInfoList.add(user);
 			addXUserGroupInfo(user, aGroupInfo);
 		}
@@ -772,13 +772,15 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	}
 
 	
-	private MUserInfo addMUser(String aUserName) {
+	private MUserInfo addMUser(String aUserName, Map<String, String> userAttrs) {
 		MUserInfo ret = null;
 		MUserInfo userInfo = new MUserInfo();
 
 		userInfo.setLoginId(aUserName);
 		userInfo.setFirstName(aUserName);
         userInfo.setLastName(aUserName);
+		Gson gson = new Gson();
+        userInfo.setOtherAttributes(gson.toJson(userAttrs));
         String str[] = new String[1];
         if (userMap.containsKey(aUserName)) {
             str[0] = userMap.get(aUserName);

@@ -1374,7 +1374,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 	}
 
 	@Override
-	public void addOrUpdateGroup(String groupName) throws Throwable{
+	public void addOrUpdateGroup(String groupName, Map<String, String> groupAttrs) throws Throwable{
 		XGroupInfo group = groupName2XGroupInfoMap.get(groupName);
 
 		if (group == null) {    // Does not exists
@@ -1478,7 +1478,7 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				newGroupList.add(groupName);
 			}
 		}
-		addOrUpdateGroup(groupName);
+		addOrUpdateGroup(groupName, new HashMap<String, String>());
 
 	}
 
@@ -1657,4 +1657,14 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
             }
         }
     }
+
+	@Override
+	public void addOrUpdateUser(String user, Map<String, String> userAttrs, List<String> groups) throws Throwable {
+
+	}
+
+	@Override
+	public void addOrUpdateGroup(String group, Map<String, String> groupAttrs, List<String> users) throws Throwable {
+
+	}
 }

@@ -146,6 +146,15 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_USER_GROUP_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.groupnameattribute";
 	private static final String DEFAULT_USER_GROUP_NAME_ATTRIBUTE = "memberof,ismemberof";
 
+	private static final String LGSYNC_USER_CLOUDID_ATTRIBUTE = "ranger.usersync.ldap.user.cloudid.attribute";
+	private static final String DEFAULT_USER_CLOUDID_ATTRIBUTE = "objectid";
+
+	private static final String LGSYNC_USER_CLOUDID_ATTRIBUTE_DATATYPE = "ranger.usersync.ldap.user.cloudid.attribute.datatype";
+	private static final String DEFAULT_USER_CLOUDID_ATTRIBUTE_DATATYPE = "byte[]";
+
+	private static final String LGSYNC_OTHER_USER_ATTRIBUTES = "ranger.usersync.ldap.user.otherattributes";
+	private static final String DEFAULT_OTHER_USER_ATTRIBUTES = "userurincipaluame,";
+
 	public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none";
 	public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower";
 	public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE = "upper";
@@ -194,6 +203,15 @@ public class UserGroupSyncConfig  {
 
 	private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ranger.usersync.group.memberattributename";
 	private static final String DEFAULT_LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "member";
+
+	private static final String LGSYNC_GROUP_CLOUDID_ATTRIBUTE = "ranger.usersync.ldap.group.cloudid.attribute";
+	private static final String DEFAULT_GROUP_CLOUDID_ATTRIBUTE = "objectid";
+
+	private static final String LGSYNC_GROUP_CLOUDID_ATTRIBUTE_DATATYPE = "ranger.usersync.ldap.group.cloudid.attribute.datatype";
+	private static final String DEFAULT_GROUP_CLOUDID_ATTRIBUTE_DATATYPE = "byte[]";
+
+	private static final String LGSYNC_OTHER_GROUP_ATTRIBUTES = "ranger.usersync.ldap.group.otherattributes";
+	private static final String DEFAULT_OTHER_GROUP_ATTRIBUTES = "displayname,";
 
 	private static final String LGSYNC_GROUP_HIERARCHY_LEVELS = "ranger.usersync.ldap.grouphierarchylevels";
 	private static final int DEFAULT_LGSYNC_GROUP_HIERARCHY_LEVELS = 0;
@@ -648,6 +666,43 @@ public class UserGroupSyncConfig  {
 		return userGroupNameAttributeSet;
 	}
 
+	public Set<String> getOtherUserAttributes() {
+		String otherAttributes =  prop.getProperty(LGSYNC_OTHER_USER_ATTRIBUTES);
+		if(otherAttributes == null || otherAttributes.trim().isEmpty()) {
+			otherAttributes = DEFAULT_OTHER_USER_ATTRIBUTES;
+		}
+		StringTokenizer st = new StringTokenizer(otherAttributes, ",");
+		Set<String> otherUserAttributes = new HashSet<String>();
+		while (st.hasMoreTokens()) {
+			otherUserAttributes.add(st.nextToken().trim());
+		}
+		return otherUserAttributes;
+	}
+
+	public String getUserCloudIdAttribute() {
+		String val =  prop.getProperty(LGSYNC_USER_CLOUDID_ATTRIBUTE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_USER_CLOUDID_ATTRIBUTE;
+		}
+		return val;
+	}
+
+	public String getUserCloudIdAttributeDataType() {
+		String val =  prop.getProperty(LGSYNC_USER_CLOUDID_ATTRIBUTE_DATATYPE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_USER_CLOUDID_ATTRIBUTE_DATATYPE;
+		}
+		return val;
+	}
+
+	public String getOtherUserAttributeDataType(String attrName) {
+		String attrType =  prop.getProperty(LGSYNC_OTHER_USER_ATTRIBUTES + "." + attrName + "datatype");
+		if (attrType == null || attrType.isEmpty()) {
+			attrType = "String";
+		}
+		return attrType.trim();
+	}
+
 	public String getUserNameCaseConversion() {
 		String ret = prop.getProperty(UGSYNC_USERNAME_CASE_CONVERSION_PARAM, DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE);
 		return ret.trim().toLowerCase();
@@ -788,6 +843,43 @@ public class UserGroupSyncConfig  {
 		}
 		return val;
 	}
+
+	public String getGroupCloudIdAttribute() {
+		String val =  prop.getProperty(LGSYNC_GROUP_CLOUDID_ATTRIBUTE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_GROUP_CLOUDID_ATTRIBUTE;
+		}
+		return val;
+	}
+
+	public String getGroupCloudIdAttributeDataType() {
+		String val =  prop.getProperty(LGSYNC_GROUP_CLOUDID_ATTRIBUTE_DATATYPE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_GROUP_CLOUDID_ATTRIBUTE_DATATYPE;
+		}
+		return val;
+	}
+
+	public Set<String> getOtherGroupAttributes() {
+		String otherAttributes =  prop.getProperty(LGSYNC_OTHER_GROUP_ATTRIBUTES);
+		if(otherAttributes == null || otherAttributes.trim().isEmpty()) {
+			otherAttributes = DEFAULT_OTHER_GROUP_ATTRIBUTES;
+		}
+		StringTokenizer st = new StringTokenizer(otherAttributes, ",");
+		Set<String> otherGroupAttributes = new HashSet<String>();
+		while (st.hasMoreTokens()) {
+			otherGroupAttributes.add(st.nextToken().trim());
+		}
+		return otherGroupAttributes;
+	}
+
+	public String getOtherGroupAttributeDataType(String attrName) {
+                String attrType =  prop.getProperty(LGSYNC_OTHER_GROUP_ATTRIBUTES + "." + attrName + "datatype");
+                if (attrType == null || attrType.isEmpty()) {
+                        attrType = "String";
+                }
+                return attrType.trim();
+        }
 
 	public int getGroupHierarchyLevels() {
         	int groupHierarchyLevels;

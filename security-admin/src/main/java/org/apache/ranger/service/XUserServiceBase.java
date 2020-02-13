@@ -25,15 +25,20 @@
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import com.google.gson.Gson;
 
+import com.google.gson.GsonBuilder;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 
 public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		extends AbstractBaseResourceService<T, V> {
 	public static final String NAME = "XUser";
+	private static final Gson gsonBuilder = new GsonBuilder().create();
 
 	public XUserServiceBase() {
 
@@ -81,6 +86,21 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		}
 
 		returnList.setVXUsers(xUserList);
+		return returnList;
+	}
+
+	public List<UserInfo> getUsers() {
+		List<UserInfo> returnList = new ArrayList<>();
+
+		@SuppressWarnings("unchecked")
+		List<XXUser> resultList = daoManager.getXXUser().getAll();
+
+		// Iterate over the result list and create the return list
+		for (XXUser gjXUser : resultList) {
+			UserInfo userInfo = new UserInfo(gjXUser.getName(), gjXUser.getDescription(), gsonBuilder.fromJson(gjXUser.getOtherAttributes(), Map.class));
+			returnList.add(userInfo);
+		}
+
 		return returnList;
 	}
 

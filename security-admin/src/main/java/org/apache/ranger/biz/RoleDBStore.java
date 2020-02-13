@@ -293,7 +293,7 @@ public class RoleDBStore implements RoleStore {
             XXServiceVersionInfo xxServiceVersionInfo = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
             ret = (xxServiceVersionInfo != null) ? xxServiceVersionInfo.getRoleVersion() : null;
         } else {
-            ret = daoMgr.getXXGlobalState().getRoleVersion(RANGER_ROLE_GLOBAL_STATE_NAME);
+            ret = daoMgr.getXXGlobalState().getAppDataVersion(RANGER_ROLE_GLOBAL_STATE_NAME);
         }
 
         return ret;

@@ -35,7 +35,7 @@ import java.util.Map;
 public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
     private static final Logger logger = Logger.getLogger(XXGlobalStateDao.class);
 
-    final static String APP_DATA_ENTRY_ROLE_VERSION = "RangerRoleVersion";
+    final static String APP_DATA_ENTRY_VERSION = "Version";
 
     public void onGlobalStateChange(String stateName) throws Exception {
 
@@ -74,9 +74,9 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
             try {
                 XXGlobalState globalState = findByStateName(stateName);
                 if (globalState == null) {
-                    createGlobalStateForRoleVersion(stateName);
+                    createGlobalStateForAppDataVersion(stateName);
                 } else {
-                    updateGlobalStateForRoleVersion(globalState, stateName);
+                    updateGlobalStateForAppDataVersion(globalState, stateName);
                 }
             } catch (Exception exception) {
                 logger.error("Cannot create/update GlobalState for state:[" + stateName + "]", exception);
@@ -85,21 +85,21 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         }
     }
 
-    public Long getRoleVersion(String stateName) {
+    public Long getAppDataVersion(String stateName) {
         Long ret = null;
         try {
             XXGlobalState       globalState     = findByStateName(stateName);
             if (globalState != null) {
-                Map<String, String> roleVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
-                if (MapUtils.isNotEmpty(roleVersionJson)) {
-                    ret = Long.valueOf(roleVersionJson.get(APP_DATA_ENTRY_ROLE_VERSION));
+                Map<String, String> appDataVersionJson = new Gson().fromJson(globalState.getAppData(), Map.class);
+                if (MapUtils.isNotEmpty(appDataVersionJson)) {
+                    ret = Long.valueOf(appDataVersionJson.get(APP_DATA_ENTRY_VERSION));
                 } else {
                     ret = 1L;
                 }
             }
         } catch (Exception exception) {
             if (logger.isDebugEnabled()) {
-                logger.debug("Unable to find the role version in Ranger Database", exception);
+                logger.debug("Unable to find the version for " + stateName + " in Ranger Database", exception);
             }
         }
         return ret;
@@ -140,25 +140,25 @@ public class XXGlobalStateDao extends BaseDao<XXGlobalState> {
         }
     }
 
-    private void createGlobalStateForRoleVersion(String stateName) {
+    private void createGlobalStateForAppDataVersion(String stateName) {
         XXGlobalState globalState = new XXGlobalState();
         globalState.setStateName(stateName);
-        Map<String,String> roleVersion = new HashMap<>();
-        roleVersion.put(APP_DATA_ENTRY_ROLE_VERSION,new String(Long.toString(1L)));
-        globalState.setAppData(new Gson().toJson(roleVersion));
+        Map<String,String> appDataVersion = new HashMap<>();
+        appDataVersion.put(APP_DATA_ENTRY_VERSION,new String(Long.toString(1L)));
+        globalState.setAppData(new Gson().toJson(appDataVersion));
         create(globalState);
     }
 
-    private void updateGlobalStateForRoleVersion(XXGlobalState globalState, String stateName) {
-        Map<String,String> roleVersionJson = new Gson().fromJson(globalState.getAppData(),Map.class);
-        if (MapUtils.isNotEmpty(roleVersionJson)) {
-            Long roleVersion = Long.valueOf(roleVersionJson.get(APP_DATA_ENTRY_ROLE_VERSION)) + 1L;
-            roleVersionJson.put(APP_DATA_ENTRY_ROLE_VERSION, new String(Long.toString(roleVersion)));
-            globalState.setAppData(new Gson().toJson(roleVersionJson));
+    private void updateGlobalStateForAppDataVersion(XXGlobalState globalState, String stateName) {
+        Map<String,String> appDataVersionJson = new Gson().fromJson(globalState.getAppData(),Map.class);
+        if (MapUtils.isNotEmpty(appDataVersionJson)) {
+            Long appDataVersion = Long.valueOf(appDataVersionJson.get(APP_DATA_ENTRY_VERSION)) + 1L;
+            appDataVersionJson.put(APP_DATA_ENTRY_VERSION, new String(Long.toString(appDataVersion)));
+            globalState.setAppData(new Gson().toJson(appDataVersionJson));
             update(globalState);
         } else {
-            //if not present create Global State for Role Version.
-            createGlobalStateForRoleVersion(stateName);
+            //if not present create Global State for state name Version.
+            createGlobalStateForAppDataVersion(stateName);
         }
     }
 }

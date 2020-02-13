@@ -19,9 +19,7 @@
 
 package org.apache.ranger.usergroupsync;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder;
 
@@ -43,13 +41,13 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
         }
 
         @Override
-        public void addOrUpdateGroup(String group) {
+        public void addOrUpdateGroup(String group, Map<String, String> groupAttrs ) {
                 allGroups.add(group);
         }
 
         @Override
         public void addOrUpdateGroup(String group, List<String> users) {
-                addOrUpdateGroup(group);
+                addOrUpdateGroup(group, new HashMap<String, String>());
         }
 
         public int getTotalUsers() {
