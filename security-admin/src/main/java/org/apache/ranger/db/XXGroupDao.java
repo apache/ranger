@@ -21,15 +21,21 @@
 
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
+import javax.persistence.NoResultException;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroup;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXGroupDao extends BaseDao<XXGroup> {
-
 	public XXGroupDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
 	}
@@ -67,4 +73,22 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 		return null;
 	}
 
+	public Map<String, Long> getIdsByGroupNames(Collection<String> groupNames) {
+		Map<String, Long> ret = Collections.emptyMap();
+		if (!CollectionUtils.isEmpty(groupNames)) {
+			try {
+				Collection<Object[]> result = getEntityManager()
+						.createNamedQuery("XXGroup.getIdsByGroupNames", Object[].class)
+						.setParameter("names", groupNames)
+						.getResultList();
+				ret = result.stream().collect(
+						Collectors.toMap(
+								object -> (String)(object[1]),
+								object -> (Long)(object[0])));
+			} catch (NoResultException e) {
+				// ignore
+			}
+		}
+		return ret;
+	}
 }

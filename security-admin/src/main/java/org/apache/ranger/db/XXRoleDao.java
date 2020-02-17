@@ -17,6 +17,7 @@
 
 package org.apache.ranger.db;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
@@ -25,7 +26,11 @@ import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class XXRoleDao extends BaseDao<XXRole> {
@@ -63,6 +68,24 @@ public class XXRoleDao extends BaseDao<XXRole> {
             return null;
         }
     }
+	public Map<String, Long> getIdsByRoleNames(Collection<String> roleNames) {
+		Map<String, Long> ret = Collections.emptyMap();
+		if (!CollectionUtils.isEmpty(roleNames)) {
+			try {
+				Collection<Object[]> result = getEntityManager()
+						.createNamedQuery("XXRole.getIdsByRoleNames", Object[].class)
+						.setParameter("roleNames", roleNames)
+						.getResultList();
+				ret = result.stream().collect(
+						Collectors.toMap(
+								object -> (String)(object[1]),
+								object -> (Long)(object[0])));
+			} catch (NoResultException e) {
+				// ignore
+			}
+		}
+		return ret;
+	}
     public List<XXRole> findByServiceId(Long serviceId) {
         List<XXRole> ret;
         try {

@@ -19,8 +19,14 @@
 
 package org.apache.ranger.db;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUser;
@@ -28,7 +34,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class XXUserDao extends BaseDao<XXUser> {
-	private static final Logger logger = Logger.getLogger(XXResourceDao.class);
+	private static final Logger logger = Logger.getLogger(XXUserDao.class);
 
 	public XXUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -48,6 +54,27 @@ public class XXUserDao extends BaseDao<XXUser> {
 			// ignore
 		}
 		return null;
+	}
+
+	public Map<String, Long> getIdsByUserNames(Collection<String> names) {
+		Map<String, Long> ret = Collections.emptyMap();
+		if (CollectionUtils.isEmpty(names)) {
+			logger.debug("names is null or empty");
+		} else {
+			try {
+				Collection<Object[]> result = getEntityManager()
+						.createNamedQuery("XXUser.getIdsByUserNames", Object[].class)
+						.setParameter("names", names)
+						.getResultList();
+				ret = result.stream().collect(
+						Collectors.toMap(
+								object -> (String)(object[1]),
+								object -> (Long)(object[0])));
+			} catch (NoResultException e) {
+				// ignore
+			}
+		}
+		return ret;
 	}
 
 	public XXUser findByPortalUserId(Long portalUserId) {
