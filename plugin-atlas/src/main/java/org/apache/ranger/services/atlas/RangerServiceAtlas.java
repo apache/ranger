@@ -63,6 +63,8 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String RESOURCE_ENTITY_TYPE                   = "entity-type";
 	public static final String RESOURCE_ENTITY_CLASSIFICATION         = "entity-classification";
 	public static final String RESOURCE_ENTITY_ID                     = "entity";
+	public static final String RESOURCE_ENTITY_LABEL                  = "entity-label";
+	public static final String RESOURCE_ENTITY_NAMESPACE              = "entity-namespace";
 	public static final String RESOURCE_ENTITY_OWNER                  = "owner";
 	public static final String RESOURCE_RELATIONSHIP_TYPE             = "relationship-type";
 	public static final String RESOURCE_END_ONE_ENTITY_TYPE           = "end-one-entity-type";
