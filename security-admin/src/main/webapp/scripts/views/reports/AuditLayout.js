@@ -448,8 +448,8 @@ define(function(require) {
                         XAUtils.searchInfoPopover(this.searchInfoArr , this.ui.iconSearchInfo , 'bottom');
                         //Set query(search filter values in query)
                         if(_.isEmpty(App.vsHistory.bigData)){
-                            query = '"startDate": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
-                            App.vsHistory.bigData.push(new Backbone.Model({'category':'startDate', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
+                            query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
+                            App.vsHistory.bigData.push(new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
                         }else{
                             _.map(App.vsHistory.bigData, function(a) {
                                 query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, a.get('category'))+'":"'+a.get('value')+'"';
@@ -703,7 +703,7 @@ define(function(require) {
 				      placeholder :localization.tt('h.searchForYourAgent'),
 				      container : this.ui.visualSearch,
                                       query     : query,
-                                      type		: 'plugin',
+                                      type		: 'agent',
 				      callbacks :  { 
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
@@ -742,7 +742,7 @@ define(function(require) {
                             return {'label' : service.get('displayName'), 'value' : service.get('name')}
                         });
                         var serviceListForRepoType =  this.serviceDefList.map(function(serviceDef){
-                            return {'label' : serviceDef.get('displayName').toUpperCase(), 'value' : serviceDef.get('id')}
+                            return {'label' : serviceDef.get('displayName').toUpperCase(), 'value' : serviceDef.get('name')}
                         });
                         var searchOpt = [localization.tt("lbl.serviceName"), localization.tt("lbl.serviceType"),localization.tt("lbl.applicationType"),
                              localization.tt("lbl.agentIp"), localization.tt("lbl.hostName"), localization.tt("lbl.clusterName")];
@@ -772,7 +772,7 @@ define(function(require) {
                                     case 'Service Type':
                                         var serviveType = [];
                                         that.serviceDefList.each(function(m){
-                                                serviveType.push({ 'label' : m.get('displayName') , 'value' : m.get('displayName') });
+                                                serviveType.push({ 'label' : m.get('displayName').toUpperCase() , 'value' : m.get('displayName').toUpperCase() });
                                         });
                                         callback(serviveType);
                                         break;
@@ -815,7 +815,7 @@ define(function(require) {
                                     {text : 'End Date',label :'endDate', urlLabel : 'endDate'}];
             if(_.isEmpty(App.vsHistory.userSync)){
                 query = '"Start Date": "'+Globalize.format(new Date(),"MM/dd/yyyy")+'"';
-                App.vsHistory.userSync.push(new Backbone.Model({'category':'startDate', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
+                App.vsHistory.userSync.push(new Backbone.Model({'category':'Start Date', value:Globalize.format(new Date(),"MM/dd/yyyy")}));
             }else{
                 _.map(App.vsHistory.userSync, function(a) {
                     query += '"'+XAUtils.filterKeyForVSQuery(serverAttrName, a.get('category'))+'":"'+a.get('value')+'"';
