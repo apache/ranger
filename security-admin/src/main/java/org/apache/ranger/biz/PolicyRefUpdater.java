@@ -52,6 +52,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXGroup;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,7 +68,11 @@ public class PolicyRefUpdater {
 	RangerDaoManager daoMgr;
 
 	@Autowired
+	RangerAuditFields<?> rangerAuditFields;
+
+	@Autowired
 	XUserMgr xUserMgr;
+
 
 	@Autowired
 	XUserService xUserService;
@@ -139,7 +144,7 @@ public class PolicyRefUpdater {
 				throw new Exception(resource + ": is not a valid resource-type. policy='"+  policy.getName() + "' service='"+ policy.getService() + "'");
 			}
 
-			XXPolicyRefResource xPolRes = new XXPolicyRefResource();
+			XXPolicyRefResource xPolRes = rangerAuditFields.populateAuditFields(new XXPolicyRefResource(), xPolicy);
 
 			xPolRes.setPolicyId(policy.getId());
 			xPolRes.setResourceDefId(xResDef.getId());
@@ -164,7 +169,7 @@ public class PolicyRefUpdater {
 				RangerBizUtil.setBulkMode(false);
 				roleId = createRoleForPolicy(role);
 			}
-			XXPolicyRefRole xPolRole = new XXPolicyRefRole();
+			XXPolicyRefRole xPolRole = rangerAuditFields.populateAuditFields(new XXPolicyRefRole(), xPolicy);
 
 			xPolRole.setPolicyId(policy.getId());
 			xPolRole.setRoleId(roleId);
@@ -191,7 +196,7 @@ public class PolicyRefUpdater {
 				groupId = createGroupForPolicy(group);
 			}
 
-			XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
+			XXPolicyRefGroup xPolGroup = rangerAuditFields.populateAuditFields(new XXPolicyRefGroup(), xPolicy);
 
 			xPolGroup.setPolicyId(policy.getId());
 			xPolGroup.setGroupId(groupId);
@@ -219,7 +224,7 @@ public class PolicyRefUpdater {
 				userId = createUserForPolicy(user);
 			}
 
-			XXPolicyRefUser xPolUser = new XXPolicyRefUser();
+			XXPolicyRefUser xPolUser = rangerAuditFields.populateAuditFields(new XXPolicyRefUser(), xPolicy);
 
 			xPolUser.setPolicyId(policy.getId());
 			xPolUser.setUserId(userId);
@@ -238,7 +243,7 @@ public class PolicyRefUpdater {
 				throw new Exception(accessType + ": is not a valid access-type. policy='" + policy.getName() + "' service='" + policy.getService() + "'");
 			}
 
-			XXPolicyRefAccessType xPolAccess = new XXPolicyRefAccessType();
+			XXPolicyRefAccessType xPolAccess = rangerAuditFields.populateAuditFields(new XXPolicyRefAccessType(), xPolicy);
 
 			xPolAccess.setPolicyId(policy.getId());
 			xPolAccess.setAccessDefId(xAccTypeDef.getId());
@@ -256,7 +261,7 @@ public class PolicyRefUpdater {
 				throw new Exception(condition + ": is not a valid condition-type. policy='"+  xPolicy.getName() + "' service='"+ xPolicy.getService() + "'");
 			}
 
-			XXPolicyRefCondition xPolCond = new XXPolicyRefCondition();
+			XXPolicyRefCondition xPolCond = rangerAuditFields.populateAuditFields(new XXPolicyRefCondition(), xPolicy);
 
 			xPolCond.setPolicyId(policy.getId());
 			xPolCond.setConditionDefId(xPolCondDef.getId());

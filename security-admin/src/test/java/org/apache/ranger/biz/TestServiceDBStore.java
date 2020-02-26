@@ -832,21 +832,32 @@ public class TestServiceDBStore {
 		policyRefAccessType.setId(Id);
 		policyRefAccessType.setAccessTypeName("myAccessType");
 		policyRefAccessType.setPolicyId(Id);
+		policyRefAccessType.setCreateTime(new Date());
+		policyRefAccessType.setUpdateTime(new Date());
+		policyRefAccessType.setAddedByUserId(Id);
+		policyRefAccessType.setUpdatedByUserId(Id);
 		policyRefAccessTypeList.add(policyRefAccessType);
 
 		List<XXPolicyRefCondition> policyRefConditionsList = new ArrayList<XXPolicyRefCondition>();
 		XXPolicyRefCondition policyRefCondition = new XXPolicyRefCondition();
 		policyRefCondition.setId(Id);
+		policyRefCondition.setAddedByUserId(Id);
 		policyRefCondition.setConditionDefId(Id);
 		policyRefCondition.setConditionName("myConditionName");
 		policyRefCondition.setPolicyId(Id);
+		policyRefCondition.setUpdatedByUserId(Id);
+		policyRefCondition.setCreateTime(new Date());
+		policyRefCondition.setUpdateTime(new Date());
 		policyRefConditionsList.add(policyRefCondition);
 
 		List<XXPolicyRefResource> policyRefResourcesList = new ArrayList<XXPolicyRefResource>();
 		XXPolicyRefResource policyRefResource = new XXPolicyRefResource();
+		policyRefResource.setAddedByUserId(Id);
+		policyRefResource.setCreateTime(new Date());
 		policyRefResource.setId(Id);
 		policyRefResource.setPolicyId(Id);
 		policyRefResource.setResourceDefId(Id);
+		policyRefResource.setUpdateTime(new Date());
 		policyRefResource.setResourceName("myresourceName");
 		policyRefResourcesList.add(policyRefResource);
 

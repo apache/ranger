@@ -26,7 +26,7 @@ import java.util.Objects;
 @Cacheable
 @XmlRootElement
 @Table(name = "x_policy_ref_datamask_type")
-public class XXPolicyRefDataMaskType implements
+public class XXPolicyRefDataMaskType extends XXDBBase implements
 		java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**

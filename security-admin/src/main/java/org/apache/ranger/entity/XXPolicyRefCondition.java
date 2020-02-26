@@ -26,7 +26,7 @@ import java.util.Objects;
 @Cacheable
 @XmlRootElement
 @Table(name = "x_policy_ref_condition")
-public class XXPolicyRefCondition implements
+public class XXPolicyRefCondition extends XXDBBase implements
 		java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	/**
