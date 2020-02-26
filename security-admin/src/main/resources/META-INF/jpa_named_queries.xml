@@ -198,21 +198,9 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXUser.getIdsByUserNames">
-		<query>SELECT Obj.id, Obj.name FROM XXUser obj
-			   WHERE obj.name IN :names
-		</query>
-	</named-query>
-
 	<named-query name="XXGroup.findByGroupName">
 		<query>SELECT Obj FROM XXGroup obj
 			   WHERE obj.name=:name
-		</query>
-	</named-query>
-
-	<named-query name="XXGroup.getIdsByGroupNames">
-		<query>SELECT Obj.id, Obj.name FROM XXGroup obj
-			   WHERE obj.name IN :names
 		</query>
 	</named-query>
 
@@ -1550,12 +1538,6 @@
 
 	<named-query name="XXRole.findByRoleName">
 		<query>select obj from XXRole obj where obj.name = :roleName</query>
-	</named-query>
-
-	<named-query name="XXRole.getIdsByRoleNames">
-		<query>SELECT Obj.id, Obj.name FROM XXRole obj
-			   WHERE obj.name IN :roleNames
-		</query>
 	</named-query>
 
 	<named-query name="XXRole.findByServiceId">

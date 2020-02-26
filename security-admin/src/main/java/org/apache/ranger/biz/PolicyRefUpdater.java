@@ -21,9 +21,7 @@ package org.apache.ranger.biz;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -33,6 +31,7 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAccessTypeDef;
 import org.apache.ranger.entity.XXDataMaskTypeDef;
+import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyConditionDef;
 import org.apache.ranger.entity.XXPolicyRefAccessType;
@@ -43,7 +42,9 @@ import org.apache.ranger.entity.XXPolicyRefResource;
 import org.apache.ranger.entity.XXPolicyRefRole;
 import org.apache.ranger.entity.XXPolicyRefUser;
 import org.apache.ranger.entity.XXResourceDef;
+import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -148,27 +149,25 @@ public class PolicyRefUpdater {
 		}
 		daoMgr.getXXPolicyRefResource().batchCreate(xPolResources);
 
-		final Set<String> filteredRoleNames = roleNames.stream()
-				.filter(str -> !StringUtils.isBlank(str)).collect(Collectors.toSet());
-		Map<String, Long> roleNameIdMap = daoMgr.getXXRole().getIdsByRoleNames(filteredRoleNames);
-		if (roleNameIdMap.size() != filteredRoleNames.size()) {
-			RangerBizUtil.setBulkMode(false);
-			for (String roleName : filteredRoleNames) {
-				if (roleNameIdMap.containsKey(roleName)) {
-					continue;
-				}
-
-				Long roleId = createRoleForPolicy(roleName);
-				roleNameIdMap.put(roleName, roleId);
-			}
-		}
-
 		List<XXPolicyRefRole> xPolRoles = new ArrayList<>();
 		for (String role : roleNames) {
+			if (StringUtils.isBlank(role)) {
+				continue;
+			}
+
+			XXRole xRole = daoMgr.getXXRole().findByRoleName(role);
+			Long roleId = null;
+			if (xRole != null) {
+				roleId = xRole.getId();
+			}
+			else {
+				RangerBizUtil.setBulkMode(false);
+				roleId = createRoleForPolicy(role);
+			}
 			XXPolicyRefRole xPolRole = new XXPolicyRefRole();
 
 			xPolRole.setPolicyId(policy.getId());
-			xPolRole.setRoleId(roleNameIdMap.get(role));
+			xPolRole.setRoleId(roleId);
 			xPolRole.setRoleName(role);
 
 			xPolRoles.add(xPolRole);
@@ -176,27 +175,26 @@ public class PolicyRefUpdater {
 		RangerBizUtil.setBulkMode(oldBulkMode);
 		daoMgr.getXXPolicyRefRole().batchCreate(xPolRoles);
 
-		final Set<String> filteredGroupNames = groupNames.stream()
-				.filter(str -> !StringUtils.isBlank(str)).collect(Collectors.toSet());
-		Map<String, Long> groupNameIdMap = daoMgr.getXXGroup().getIdsByGroupNames(filteredGroupNames);
-		if (groupNameIdMap.size() != filteredGroupNames.size()) {
-			RangerBizUtil.setBulkMode(false);
-			for (String groupName : filteredGroupNames) {
-				if (groupNameIdMap.containsKey(groupName)) {
-					continue;
-				}
-
-				Long groupId = createGroupForPolicy(groupName);
-				groupNameIdMap.put(groupName, groupId);
-			}
-		}
-
 		List<XXPolicyRefGroup> xPolGroups = new ArrayList<>();
-		for (String group : filteredGroupNames) {
+		for (String group : groupNames) {
+			if (StringUtils.isBlank(group)) {
+				continue;
+			}
+
+			XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(group);
+			Long groupId = null;
+			if (xGroup != null) {
+				groupId = xGroup.getId();
+			}
+			else {
+				RangerBizUtil.setBulkMode(false);
+				groupId = createGroupForPolicy(group);
+			}
+
 			XXPolicyRefGroup xPolGroup = new XXPolicyRefGroup();
 
 			xPolGroup.setPolicyId(policy.getId());
-			xPolGroup.setGroupId(groupNameIdMap.get(group));
+			xPolGroup.setGroupId(groupId);
 			xPolGroup.setGroupName(group);
 
 			xPolGroups.add(xPolGroup);
@@ -204,27 +202,27 @@ public class PolicyRefUpdater {
 		RangerBizUtil.setBulkMode(oldBulkMode);
 		daoMgr.getXXPolicyRefGroup().batchCreate(xPolGroups);
 
-		final Set<String> filteredUserNames = userNames.stream()
-				.filter(str -> !StringUtils.isBlank(str)).collect(Collectors.toSet());
-		Map<String, Long> userNameIdMap = daoMgr.getXXUser().getIdsByUserNames(filteredUserNames);
-		if (userNameIdMap.size() != filteredUserNames.size()) {
-			RangerBizUtil.setBulkMode(false);
-			for (String userName : filteredUserNames) {
-				if (userNameIdMap.containsKey(userName)) {
-					continue;
-				}
-
-				Long userId = createUserForPolicy(userName);
-				userNameIdMap.put(userName, userId);
-			}
-		}
-
 		List<XXPolicyRefUser> xPolUsers = new ArrayList<>();
-		for (String user : filteredUserNames) {
+		for (String user : userNames) {
+			if (StringUtils.isBlank(user)) {
+				continue;
+			}
+
+			XXUser xUser = daoMgr.getXXUser().findByUserName(user);
+			Long userId = null;
+			if(xUser != null){
+				userId = xUser.getId();
+			}
+			else {
+				RangerBizUtil.setBulkMode(false);
+
+				userId = createUserForPolicy(user);
+			}
+
 			XXPolicyRefUser xPolUser = new XXPolicyRefUser();
 
 			xPolUser.setPolicyId(policy.getId());
-			xPolUser.setUserId(userNameIdMap.get(user));
+			xPolUser.setUserId(userId);
 			xPolUser.setUserName(user);
 
 			xPolUsers.add(xPolUser);
