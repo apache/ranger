@@ -56,7 +56,7 @@ import com.google.common.io.Files;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-
+import java.security.SecureRandom;
 /**
  * Factory for creating and wiring the object graph of {@link ServicePolicies} and {@link RangerAccessRequest}.
  */
@@ -64,7 +64,7 @@ public class RangerPolicyFactory {
 
 	private static final double SUCCESSFUL_ACCESS_RATE = 0.7d;
 
-	private static final Random RANDOM = new Random();
+	private static final SecureRandom RANDOM = new SecureRandom();
 
 	private static final List<String> KNOWN_DATABASES = createList("database", 10);
 
