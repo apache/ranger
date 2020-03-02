@@ -49,7 +49,7 @@ public class SchemaRegistryResourceMgr {
     public static List<String> getSchemaRegistryResources(String serviceName,
                                                           Map<String, String> configs,
                                                           ResourceLookupContext context,
-                                                          RangerRegistryClient registryClient) throws Exception {
+                                                          AutocompletionAgent registryClient) throws Exception {
 
         String userInput = context.getUserInput();
         String resource = context.getResourceName();

@@ -17,8 +17,8 @@
 
 package org.apache.ranger.services.schema.registry.client;
 
-import org.apache.ranger.services.schema.registry.client.srclient.SRClient;
-import org.apache.ranger.services.schema.registry.client.util.DefaultSRClientForTesting;
+import org.apache.ranger.services.schema.registry.client.connection.Client;
+import org.apache.ranger.services.schema.registry.client.util.DefaultClientForTesting;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -31,17 +31,17 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 
-public class RangerRegistryClientTest {
+public class AutocompletionAgentTest {
 
 
     @Test
     public void connectionTest() {
-        SRClient client = new DefaultSRClientForTesting();
+        Client client = new DefaultClientForTesting();
 
-        RangerRegistryClient rangerRegistryClient =
-                new RangerRegistryClient("schema-registry", client);
+        AutocompletionAgent autocompletionAgent =
+                new AutocompletionAgent("schema-registry", client);
 
-        HashMap<String, Object> res = rangerRegistryClient.connectionTest();
+        HashMap<String, Object> res = autocompletionAgent.connectionTest();
         assertEquals(res.get("connectivityStatus"), true);
         assertEquals(res.get("message"), "ConnectionTest Successful");
         assertEquals(res.get("description"), "ConnectionTest Successful");
@@ -49,15 +49,15 @@ public class RangerRegistryClientTest {
         assertNull(res.get("fieldName"));
 
 
-        client = new DefaultSRClientForTesting() {
+        client = new DefaultClientForTesting() {
             public void checkConnection() throws Exception {
                 throw new Exception("Cannot connect to the SR server");
             }
         };
-        rangerRegistryClient =
-                new RangerRegistryClient("schema-registry", client);
+        autocompletionAgent =
+                new AutocompletionAgent("schema-registry", client);
 
-        res = rangerRegistryClient.connectionTest();
+        res = autocompletionAgent.connectionTest();
         String errMessage = "You can still save the repository and start creating "
                 + "policies, but you would not be able to use autocomplete for "
                 + "resource names. Check server logs for more info.";
@@ -71,7 +71,7 @@ public class RangerRegistryClientTest {
 
     @Test
     public void getSchemaGroupList() {
-        SRClient client = new DefaultSRClientForTesting(){
+        Client client = new DefaultClientForTesting(){
             public List<String> getSchemaGroups() {
                 List<String> groups = new ArrayList<>();
                 groups.add("testGroup");
@@ -79,39 +79,39 @@ public class RangerRegistryClientTest {
             }
         };
 
-        RangerRegistryClient rangerRegistryClient =
-                new RangerRegistryClient("schema-registry", client);
+        AutocompletionAgent autocompletionAgent =
+                new AutocompletionAgent("schema-registry", client);
 
-        // Empty initialGroups and the list of groups returned by SRClient
+        // Empty initialGroups and the list of groups returned by Client
         // doesn't contain any groups that starts with 'tesSome'
         List<String> initialGroups = new ArrayList<>();
-        List<String> res = rangerRegistryClient.getSchemaGroupList("tesSome", initialGroups);
+        List<String> res = autocompletionAgent.getSchemaGroupList("tesSome", initialGroups);
         assertEquals(0, res.size());
 
-        // Empty initialGroups and the list of groups returned by SRClient
+        // Empty initialGroups and the list of groups returned by Client
         // contains a group that starts with 'tes'
         initialGroups = new ArrayList<>();
-        res = rangerRegistryClient.getSchemaGroupList("tes", initialGroups);
+        res = autocompletionAgent.getSchemaGroupList("tes", initialGroups);
         List<String>  expected = new ArrayList<>();
         expected.add("testGroup");
         assertEquals(1, res.size());
         assertThat(res, is(expected));
 
-        // initialGroups contains one element, list of the groups returned by SRClient
+        // initialGroups contains one element, list of the groups returned by Client
         // contains the same values that are already present in initialGroups
         initialGroups = new ArrayList<>();
         initialGroups.add("testGroup");
-        res = rangerRegistryClient.getSchemaGroupList("tes", initialGroups);
+        res = autocompletionAgent.getSchemaGroupList("tes", initialGroups);
         expected = new ArrayList<>();
         expected.add("testGroup");
         assertEquals(1, res.size());
         assertThat(res, is(expected));
 
-        // initialGroups contains one element, list of the groups returned by SRClient
+        // initialGroups contains one element, list of the groups returned by Client
         // contains one element too, that is not equal to the element in initialGroups
         initialGroups = new ArrayList<>();
         initialGroups.add("testGroup2");
-        res = rangerRegistryClient.getSchemaGroupList("tes", initialGroups);
+        res = autocompletionAgent.getSchemaGroupList("tes", initialGroups);
         expected = new ArrayList<>();
         expected.add("testGroup2");
         expected.add("testGroup");
@@ -122,7 +122,7 @@ public class RangerRegistryClientTest {
 
     @Test
     public void getSchemaMetadataList() {
-        SRClient client = new DefaultSRClientForTesting(){
+        Client client = new DefaultClientForTesting(){
 
             public List<String> getSchemaNames(List<String> schemaGroup) {
                 if(!schemaGroup.contains("Group1")) {
@@ -134,25 +134,25 @@ public class RangerRegistryClientTest {
             }
         };
 
-        RangerRegistryClient rangerRegistryClient =
-                new RangerRegistryClient("schema-registry", client);
+        AutocompletionAgent autocompletionAgent =
+                new AutocompletionAgent("schema-registry", client);
 
         List<String> groupList = new ArrayList<>();
         groupList.add("Group1");
         groupList.add("Group2");
-        List<String> res = rangerRegistryClient.getSchemaMetadataList("tes", groupList, new ArrayList<>());
+        List<String> res = autocompletionAgent.getSchemaMetadataList("tes", groupList, new ArrayList<>());
         List<String> expected = new ArrayList<>();
         expected.add("testSchema");
         assertEquals(1, res.size());
         assertThat(res, is(expected));
 
-        res = rangerRegistryClient.getSchemaMetadataList("tesSome", groupList, new ArrayList<>());
+        res = autocompletionAgent.getSchemaMetadataList("tesSome", groupList, new ArrayList<>());
         assertEquals(0, res.size());
     }
 
     @Test
     public void getBranchList() {
-        SRClient client = new DefaultSRClientForTesting(){
+        Client client = new DefaultClientForTesting(){
 
             public List<String> getSchemaBranches(String schemaMetadataName) {
                 if(!schemaMetadataName.equals("Schema1")) {
@@ -174,21 +174,21 @@ public class RangerRegistryClientTest {
             }
         };
 
-        RangerRegistryClient rangerRegistryClient =
-                new RangerRegistryClient("schema-registry", client);
+        AutocompletionAgent autocompletionAgent =
+                new AutocompletionAgent("schema-registry", client);
 
         List<String> schemaList = new ArrayList<>();
         schemaList.add("Schema1");
         schemaList.add("Schema2");
         List<String> groups = new ArrayList<>();
         groups.add("Group1");
-        List<String> res = rangerRegistryClient.getBranchList("tes", groups, schemaList, new ArrayList<>());
+        List<String> res = autocompletionAgent.getBranchList("tes", groups, schemaList, new ArrayList<>());
         List<String> expected = new ArrayList<>();
         expected.add("testBranch");
         assertEquals(1, res.size());
         assertThat(res, is(expected));
 
-        res = rangerRegistryClient.getSchemaMetadataList("tesSome", schemaList, new ArrayList<>());
+        res = autocompletionAgent.getSchemaMetadataList("tesSome", schemaList, new ArrayList<>());
         assertEquals(0, res.size());
     }
 }

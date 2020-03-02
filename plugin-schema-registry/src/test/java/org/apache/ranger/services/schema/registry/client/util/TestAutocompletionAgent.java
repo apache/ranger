@@ -17,14 +17,14 @@
 
 package org.apache.ranger.services.schema.registry.client.util;
 
-import org.apache.ranger.services.schema.registry.client.RangerRegistryClient;
+import org.apache.ranger.services.schema.registry.client.AutocompletionAgent;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-public class TestRangerRegistryClient extends RangerRegistryClient {
-    public TestRangerRegistryClient(String serviceName, Map<String, String> configs) {
+public class TestAutocompletionAgent extends AutocompletionAgent {
+    public TestAutocompletionAgent(String serviceName, Map<String, String> configs) {
         super(serviceName, configs);
     }
 

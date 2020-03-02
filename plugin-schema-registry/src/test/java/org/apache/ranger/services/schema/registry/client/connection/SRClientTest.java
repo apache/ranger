@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.services.schema.registry.client.srclient;
+package org.apache.ranger.services.schema.registry.client.connection;
 
 import com.google.common.io.Resources;
 import com.hortonworks.registries.schemaregistry.SchemaMetadata;
@@ -42,13 +42,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-public class DefaultSRClientTest {
+public class SRClientTest {
 
     private static final String V1_API_PATH = "api/v1";
 
     private static LocalSchemaRegistryServer localSchemaRegistryServer;
 
-    private static SRClient srClient;
+    private static Client client;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -111,7 +111,7 @@ public class DefaultSRClientTest {
         conf.put("trustStorePassword", trustStorePassword);
         conf.put("trustStoreType", trustStoreType);
 
-        srClient = new DefaultSRClient(conf);
+        SRClientTest.client = new SRClient(conf);
 
     }
 
@@ -148,7 +148,7 @@ public class DefaultSRClientTest {
 
     @Test
     public void getSchemaGroups() {
-        List<String> groups = srClient.getSchemaGroups();
+        List<String> groups = client.getSchemaGroups();
         assertThat(groups.size(), is(3));
         assertTrue(groups.contains("Group1"));
         assertTrue(groups.contains("Group2"));
@@ -160,7 +160,7 @@ public class DefaultSRClientTest {
         List<String> groups = new ArrayList<>();
         groups.add("Group1");
         groups.add("Group2");
-        List<String> schemas = srClient.getSchemaNames(groups);
+        List<String> schemas = client.getSchemaNames(groups);
         assertThat(schemas.size(), is(2));
         assertTrue(schemas.contains("Schema1"));
         assertTrue(schemas.contains("Schema2"));
@@ -168,9 +168,9 @@ public class DefaultSRClientTest {
 
     @Test
     public void getSchemaBranches() {
-        List<String> branches = srClient.getSchemaBranches("Schema1");
+        List<String> branches = client.getSchemaBranches("Schema1");
         assertTrue(branches.isEmpty());
-        branches = srClient.getSchemaBranches("Schema3");
+        branches = client.getSchemaBranches("Schema3");
         assertThat(branches.size(), is(1));
         assertThat(branches.get(0), is("MASTER"));
     }
@@ -178,7 +178,7 @@ public class DefaultSRClientTest {
     @Test
     public void checkConnection() {
         try {
-            srClient.checkConnection();
+            client.checkConnection();
         } catch (Exception e) {
             fail("No Exception should be thrown");
         }
@@ -186,6 +186,6 @@ public class DefaultSRClientTest {
 
     @Test(expected = Exception.class)
     public void checkConnection2() throws Exception {
-        new DefaultSRClient(new HashMap<>()).checkConnection();
+        new SRClient(new HashMap<>()).checkConnection();
     }
 }

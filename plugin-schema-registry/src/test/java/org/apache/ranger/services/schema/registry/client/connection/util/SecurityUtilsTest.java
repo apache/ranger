@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.services.schema.registry.client.srclient.util;
+package org.apache.ranger.services.schema.registry.client.connection.util;
 
 import org.junit.Test;
 

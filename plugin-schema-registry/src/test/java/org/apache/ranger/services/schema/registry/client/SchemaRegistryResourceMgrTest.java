@@ -18,7 +18,7 @@
 package org.apache.ranger.services.schema.registry.client;
 
 import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.services.schema.registry.client.util.TestRangerRegistryClient;
+import org.apache.ranger.services.schema.registry.client.util.TestAutocompletionAgent;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ public class SchemaRegistryResourceMgrTest {
         String serviceName = "schema-registry";
         Map<String, String> configs = new HashMap<>();
         configs.put("schema.registry.url", "http://dummyname:8081");
-        RangerRegistryClient client = new TestRangerRegistryClient("schema-registry", configs);
+        AutocompletionAgent client = new TestAutocompletionAgent("schema-registry", configs);
 
 
         ResourceLookupContext lookupContext = new ResourceLookupContext();

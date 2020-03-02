@@ -17,8 +17,7 @@
 
 package org.apache.ranger.services.schema.registry;
 
-import org.apache.ranger.services.schema.registry.client.RangerRegistryClient;
-import org.apache.ranger.services.schema.registry.client.SchemaRegistryConnectionMgr;
+import org.apache.ranger.services.schema.registry.client.AutocompletionAgent;
 import org.apache.ranger.services.schema.registry.client.SchemaRegistryResourceMgr;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -51,7 +50,8 @@ public class RangerServiceSchemaRegistry extends RangerBaseService {
 
         if (configs != null) {
             try {
-                ret = SchemaRegistryConnectionMgr.connectionTest(serviceName, configs);
+                AutocompletionAgent autocompletionAgent = new AutocompletionAgent(serviceName, configs);
+                ret = autocompletionAgent.connectionTest();
             } catch (Exception e) {
                 LOG.error("<== RangerServiceSchemaRegistry.validateConfig Error:" + e);
                 throw e;
@@ -74,8 +74,8 @@ public class RangerServiceSchemaRegistry extends RangerBaseService {
         }
 
         if (configs != null) {
-            final RangerRegistryClient registryClient = SchemaRegistryConnectionMgr.getSchemaRegistryClient(serviceName, configs);
-            ret = SchemaRegistryResourceMgr.getSchemaRegistryResources(serviceName, configs, context, registryClient);
+            AutocompletionAgent autocompletionAgent = new AutocompletionAgent(serviceName, configs);
+            ret = SchemaRegistryResourceMgr.getSchemaRegistryResources(serviceName, configs, context, autocompletionAgent);
         }
 
         if (LOG.isDebugEnabled()) {

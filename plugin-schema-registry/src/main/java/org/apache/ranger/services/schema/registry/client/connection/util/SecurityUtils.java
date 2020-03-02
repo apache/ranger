@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.services.schema.registry.client.srclient.util;
+package org.apache.ranger.services.schema.registry.client.connection.util;
 
 import com.hortonworks.registries.auth.KerberosLogin;
 import com.hortonworks.registries.auth.Login;
@@ -61,11 +61,8 @@ public class SecurityUtils {
     }
 
     public static SSLContext createSSLContext(Map<String, ?> sslConfigurations, String sslAlgorithm) throws Exception {
-
         SSLContext context = SSLContext.getInstance(sslAlgorithm);
-
         KeyManager[] km = null;
-
         String keyStorePath = (String)sslConfigurations.get("keyStorePath");
         if (keyStorePath == null || keyStorePath.isEmpty()) {
             keyStorePath = System.getProperty("javax.net.ssl.keyStore");
@@ -99,9 +96,7 @@ public class SecurityUtils {
             KeyStore ks = KeyStore.getInstance(keyStoreType != null ?
                     keyStoreType : KeyStore.getDefaultType());
 
-            InputStream in;
-
-            in = getFileInputStream(keyStorePath);
+            InputStream in = getFileInputStream(keyStorePath);
 
             try {
                 ks.load(in, keyStorePassword.toCharArray());
@@ -115,24 +110,17 @@ public class SecurityUtils {
             kmf.init(ks, keyStorePassword.toCharArray());
             km = kmf.getKeyManagers();
         }
-
         TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-
         TrustManager[] tm = null;
-
         if (serverCertValidation) {
             if (trustStorePath != null) {
-                KeyStore trustStoreKeyStore = KeyStore.getInstance(trustStoreType != null ?
+                KeyStore trustStore = KeyStore.getInstance(trustStoreType != null ?
                         trustStoreType : KeyStore.getDefaultType());
-
-                InputStream in;
-
-                in = getFileInputStream(trustStorePath);
-
+                InputStream in = getFileInputStream(trustStorePath);
                 try {
-                    trustStoreKeyStore.load(in, trustStorePassword.toCharArray());
+                    trustStore.load(in, trustStorePassword.toCharArray());
 
-                    trustManagerFactory.init(trustStoreKeyStore);
+                    trustManagerFactory.init(trustStore);
 
                     tm = trustManagerFactory.getTrustManagers();
 
@@ -161,21 +149,15 @@ public class SecurityUtils {
 
             tm  = new TrustManager[] {ignoreValidationTM};
         }
-
         SecureRandom random = new SecureRandom();
-
         context.init(km, tm, random);
 
         return context;
-
     }
 
     static private InputStream getFileInputStream(String path) throws FileNotFoundException {
-
         InputStream ret;
-
         File f = new File(path);
-
         if (f.exists()) {
             ret = new FileInputStream(f);
         } else {
@@ -196,7 +178,6 @@ public class SecurityUtils {
                 }
             }
         }
-
         return ret;
     }
 
@@ -244,5 +225,4 @@ public class SecurityUtils {
                 && rangerAuthType.equals(HADOOP_SECURITY_AUTHENTICATION_METHOD)
                 && pluginAuthType.equalsIgnoreCase(HADOOP_SECURITY_AUTHENTICATION_METHOD);
     }
-
 }

@@ -15,32 +15,14 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.services.schema.registry.client.util;
+package org.apache.ranger.services.schema.registry.client.connection;
 
-import org.apache.ranger.services.schema.registry.client.srclient.SRClient;
-
-import java.util.ArrayList;
 import java.util.List;
 
-public class DefaultSRClientForTesting implements SRClient {
-
-    @Override
-    public List<String> getSchemaGroups() {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public List<String> getSchemaNames(List<String> schemaGroup) {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public List<String> getSchemaBranches(String schemaMetadataName) {
-        return new ArrayList<>();
-    }
-
-    @Override
-    public void checkConnection() throws Exception {
-
-    }
+public interface Client {
+    List<String> getSchemaGroups();
+    List<String> getSchemaNames(List<String> schemaGroup);
+    List<String> getSchemaBranches(String schemaMetadataName);
+    void checkConnection() throws Exception;
 }
+

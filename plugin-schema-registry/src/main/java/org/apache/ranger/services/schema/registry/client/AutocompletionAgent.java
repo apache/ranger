@@ -20,8 +20,8 @@ package org.apache.ranger.services.schema.registry.client;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
-import org.apache.ranger.services.schema.registry.client.srclient.DefaultSRClient;
-import org.apache.ranger.services.schema.registry.client.srclient.SRClient;
+import org.apache.ranger.services.schema.registry.client.connection.Client;
+import org.apache.ranger.services.schema.registry.client.connection.SRClient;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -30,10 +30,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class RangerRegistryClient {
-    private static final Log LOG = LogFactory.getLog(RangerRegistryClient.class);
+/**
+ * The class that is used to get needed information for auto completion feature.
+ */
+public class AutocompletionAgent {
+    private static final Log LOG = LogFactory.getLog(AutocompletionAgent.class);
 
-    private SRClient srClient;
+    private Client client;
     private String serviceName;
 
     private static final String errMessage = "You can still save the repository and start creating "
@@ -43,21 +46,20 @@ public class RangerRegistryClient {
     private static final String successMsg = "ConnectionTest Successful";
 
 
-    public RangerRegistryClient(String serviceName, Map<String, String> configs) {
-        this(serviceName, new DefaultSRClient(configs));
+    public AutocompletionAgent(String serviceName, Map<String, String> configs) {
+        this(serviceName, new SRClient(configs));
     }
 
-    public RangerRegistryClient(String serviceName, SRClient srClient) {
+    public AutocompletionAgent(String serviceName, Client client) {
         this.serviceName = serviceName;
-        this.srClient = srClient;
+        this.client = client;
     }
 
     public HashMap<String, Object> connectionTest() {
-        String errMsg = errMessage;
         HashMap<String, Object> responseData = new HashMap<String, Object>();
 
         try {
-            srClient.checkConnection();
+            client.checkConnection();
             // If it doesn't throw exception, then assume the instance is
             // reachable
             BaseClient.generateResponseDataMap(true, successMsg,
@@ -76,7 +78,7 @@ public class RangerRegistryClient {
 
     public List<String> getSchemaGroupList(String lookupGroupName, List<String> groupList) {
         List<String> res = groupList;
-        Collection<String> schemaGroups = srClient.getSchemaGroups();
+        Collection<String> schemaGroups = client.getSchemaGroups();
         schemaGroups.forEach(gName -> {
             if (!res.contains(gName) && gName.contains(lookupGroupName)) {
                 res.add(gName);
@@ -91,7 +93,7 @@ public class RangerRegistryClient {
                                               List<String> schemaMetadataList) {
         List<String> res = schemaMetadataList;
 
-        Collection<String> schemas = srClient.getSchemaNames(schemaGroupList);
+        Collection<String> schemas = client.getSchemaNames(schemaGroupList);
         schemas.forEach(sName -> {
             if (!res.contains(sName) && sName.contains(lookupSchemaMetadataName)) {
                 res.add(sName);
@@ -110,7 +112,7 @@ public class RangerRegistryClient {
                 schemaName -> expandSchemaMetadataNameRegex(groupList, schemaName).stream())
                 .collect(Collectors.toList());
         expandedSchemaList.forEach(schemaMetadataName -> {
-            Collection<String> branches = srClient.getSchemaBranches(schemaMetadataName);
+            Collection<String> branches = client.getSchemaBranches(schemaMetadataName);
             branches.forEach(bName -> {
                 if (!res.contains(bName) && bName.contains(lookupBranchName)) {
                     res.add(bName);
@@ -124,7 +126,7 @@ public class RangerRegistryClient {
     List<String> expandSchemaMetadataNameRegex(List<String> schemaGroupList, String lookupSchemaMetadataName) {
         List<String> res = new ArrayList<>();
 
-        Collection<String> schemas = srClient.getSchemaNames(schemaGroupList);
+        Collection<String> schemas = client.getSchemaNames(schemaGroupList);
         schemas.forEach(sName -> {
             if (sName.matches(lookupSchemaMetadataName)) {
                 res.add(sName);
@@ -136,7 +138,7 @@ public class RangerRegistryClient {
 
     @Override
     public String toString() {
-        return "ServiceKafkaClient [serviceName=" + serviceName + "]";
+        return "AutocompletionAgent [serviceName=" + serviceName + "]";
     }
 
 }

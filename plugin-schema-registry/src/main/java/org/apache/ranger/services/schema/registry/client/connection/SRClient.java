@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.services.schema.registry.client.srclient;
+package org.apache.ranger.services.schema.registry.client.connection;
 
 import com.hortonworks.registries.auth.Login;
 import com.hortonworks.registries.schemaregistry.client.LoadBalancedFailoverUrlSelector;
@@ -23,7 +23,7 @@ import com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient;
 import com.hortonworks.registries.schemaregistry.client.UrlSelector;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.services.schema.registry.client.srclient.util.SecurityUtils;
+import org.apache.ranger.services.schema.registry.client.connection.util.SecurityUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.glassfish.jersey.client.ClientConfig;
@@ -31,7 +31,6 @@ import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.JerseyClientBuilder;
 
 import javax.net.ssl.SSLContext;
-import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.MediaType;
@@ -49,21 +48,22 @@ import static com.hortonworks.registries.schemaregistry.client.SchemaRegistryCli
 import static com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient.Configuration.DEFAULT_READ_TIMEOUT;
 import static com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient.Configuration.SCHEMA_REGISTRY_URL;
 
-public class DefaultSRClient implements SRClient {
 
-    private static final Log LOG = LogFactory.getLog(DefaultSRClient.class);
+public class SRClient implements Client {
+
+    private static final Log LOG = LogFactory.getLog(SRClient.class);
 
     private static final String SCHEMA_REGISTRY_PATH = "/api/v1/schemaregistry";
     private static final String SCHEMAS_PATH = SCHEMA_REGISTRY_PATH + "/schemas/";
     private static final String SCHEMA_REGISTRY_VERSION_PATH = SCHEMA_REGISTRY_PATH + "/version";
     private static final String SSL_ALGORITHM = "TLS";
-    private final Client client;
+    private final javax.ws.rs.client.Client client;
     private final Login login;
     private final UrlSelector urlSelector;
     private final Map<String, SchemaRegistryTargets> urlWithTargets;
     private final SchemaRegistryClient.Configuration configuration;
 
-    public DefaultSRClient(Map<String, ?> conf) {
+    public SRClient(Map<String, ?> conf) {
         configuration = new SchemaRegistryClient.Configuration(conf);
         login = SecurityUtils.initializeSecurityContext(conf);
         ClientConfig config = createClientConfig(conf);
@@ -147,7 +147,7 @@ public class DefaultSRClient implements SRClient {
     @Override
     public List<String> getSchemaGroups() {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> DefaultSRClient.getSchemaGroups()");
+            LOG.debug("==> SRClient.getSchemaGroups()");
         }
 
         ArrayList<String> res = new ArrayList<>();
@@ -157,7 +157,7 @@ public class DefaultSRClient implements SRClient {
                     webResource.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
 
             if(LOG.isDebugEnabled()) {
-                LOG.debug("DefaultSRClient.getSchemaGroups(): response statusCode = " + response.getStatus());
+                LOG.debug("SRClient.getSchemaGroups(): response statusCode = " + response.getStatus());
             }
 
             JSONArray mDataList = new JSONObject(response.readEntity(String.class)).getJSONArray("entities");
@@ -173,7 +173,7 @@ public class DefaultSRClient implements SRClient {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== DefaultSRClient.getSchemaGroups(): "
+            LOG.debug("<== SRClient.getSchemaGroups(): "
                     + res.size()
                     + " schemaGroups found");
         }
@@ -184,7 +184,7 @@ public class DefaultSRClient implements SRClient {
     @Override
     public List<String> getSchemaNames(List<String> schemaGroups) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> DefaultSRClient.getSchemaNames( " + schemaGroups + " )");
+            LOG.debug("==> SRClient.getSchemaNames( " + schemaGroups + " )");
         }
 
         ArrayList<String> res = new ArrayList<>();
@@ -194,7 +194,7 @@ public class DefaultSRClient implements SRClient {
                     webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
 
             if(LOG.isDebugEnabled()) {
-                LOG.debug("DefaultSRClient.getSchemaNames(): response statusCode = " + response.getStatus());
+                LOG.debug("SRClient.getSchemaNames(): response statusCode = " + response.getStatus());
             }
 
             JSONArray mDataList = new JSONObject(response.readEntity(String.class)).getJSONArray("entities");
@@ -215,7 +215,7 @@ public class DefaultSRClient implements SRClient {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== DefaultSRClient.getSchemaNames( " + schemaGroups + " ): "
+            LOG.debug("<== SRClient.getSchemaNames( " + schemaGroups + " ): "
                     + res.size()
                     + " schemaNames found");
         }
@@ -226,7 +226,7 @@ public class DefaultSRClient implements SRClient {
     @Override
     public List<String> getSchemaBranches(String schemaMetadataName) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> DefaultSRClient.getSchemaBranches( " + schemaMetadataName + " )");
+            LOG.debug("==> SRClient.getSchemaBranches( " + schemaMetadataName + " )");
         }
 
         ArrayList<String> res = new ArrayList<>();
@@ -236,7 +236,7 @@ public class DefaultSRClient implements SRClient {
                     target.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
 
             if(LOG.isDebugEnabled()) {
-                LOG.debug("DefaultSRClient.getSchemaBranches(): response statusCode = " + response.getStatus());
+                LOG.debug("SRClient.getSchemaBranches(): response statusCode = " + response.getStatus());
             }
 
             JSONArray mDataList = new JSONObject(response.readEntity(String.class)).getJSONArray("entities");
@@ -256,7 +256,7 @@ public class DefaultSRClient implements SRClient {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== DefaultSRClient.getSchemaBranches( " + schemaMetadataName + " ): "
+            LOG.debug("<== SRClient.getSchemaBranches( " + schemaMetadataName + " ): "
                     + res.size()
                     + " branches found.");
         }
@@ -267,29 +267,29 @@ public class DefaultSRClient implements SRClient {
     @Override
     public void checkConnection() throws Exception {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> DefaultSRClient.checkConnection(): trying to connect to the SR server... ");
+            LOG.debug("==> SRClient.checkConnection(): trying to connect to the SR server... ");
         }
 
         WebTarget webTarget = currentSchemaRegistryTargets().schemaRegistryVersion;
         Response responce = login.doAction(() ->
                 webTarget.request(MediaType.APPLICATION_JSON_TYPE).get(Response.class));
         if(LOG.isDebugEnabled()) {
-            LOG.debug("DefaultSRClient.checkConnection(): response statusCode = " + responce.getStatus());
+            LOG.debug("SRClient.checkConnection(): response statusCode = " + responce.getStatus());
         }
         if(responce.getStatus() != Response.Status.OK.getStatusCode()) {
-            LOG.error("DefaultSRClient.checkConnection(): Connection failed. Response StatusCode = "
+            LOG.error("SRClient.checkConnection(): Connection failed. Response StatusCode = "
                     + responce.getStatus());
             throw new Exception("Connection failed. StatusCode = " + responce.getStatus());
         }
 
         String respStr = responce.readEntity(String.class);
         if (!(respStr.contains("version") && respStr.contains("revision"))) {
-            LOG.error("DefaultSRClient.checkConnection(): Connection failed. Bad response body.");
+            LOG.error("SRClient.checkConnection(): Connection failed. Bad response body.");
             throw new Exception("Connection failed. Bad response body.");
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== DefaultSRClient.checkConnection(): connection test successfull ");
+            LOG.debug("<== SRClient.checkConnection(): connection test successfull ");
         }
     }
 

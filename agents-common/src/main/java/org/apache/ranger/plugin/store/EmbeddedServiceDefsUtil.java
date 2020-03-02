@@ -213,7 +213,7 @@ public class EmbeddedServiceDefsUtil {
 		return getId(solrServiceDef);
 	}
 
-	public long getSolrSchemaRegistryDefId() {
+	public long getSchemaRegistryServiceDefId() {
 		return getId(schemaRegistryServiceDef);
 	}
 
