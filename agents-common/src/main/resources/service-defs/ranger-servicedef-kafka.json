@@ -25,7 +25,7 @@
 			"uiHint":"",
 			"label":"Topic",
 			"description":"Topic",
-			"accessTypeRestrictions": ["create", "delete", "configure", "alter_configs", "describe", "describe_configs", "consume", "publish"]
+			"accessTypeRestrictions": ["create", "delete", "configure", "alter", "alter_configs", "describe", "describe_configs", "consume", "publish"]
 		},
 		{
 			"itemId":2,
@@ -57,7 +57,7 @@
 			},
 			"label":"Cluster",
 			"description":"Cluster",
-			"accessTypeRestrictions": ["create", "configure", "alter_configs", "describe", "describe_configs", "kafka_admin", "idempotent_write", "cluster_action"]
+			"accessTypeRestrictions": ["create", "configure", "alter", "alter_configs", "describe", "describe_configs", "kafka_admin", "idempotent_write", "cluster_action"]
 		},
 		{
 			"itemId":4,
@@ -135,6 +135,7 @@
 				"delete",
 				"describe_configs",
 				"alter_configs",
+				"alter",
 				"idempotent_write",
 				"cluster_action"
 			]
@@ -174,6 +175,11 @@
 			"itemId":13,
 			"name":"cluster_action",
 			"label":"Cluster Action"
+		},
+		{
+			"itemId":14,
+			"name":"alter",
+			"label":"Alter"
 		}
 	],
 	"configs":[
