@@ -103,7 +103,7 @@ public class CustomSSLSocketFactory extends SSLSocketFactory{
 					}
 				}
 			}
-
+			/** TLS is not secure */
 			sslContext = SSLContext.getInstance("TLS");
 
 			sslContext.init(kmList, tmList, new SecureRandom());
