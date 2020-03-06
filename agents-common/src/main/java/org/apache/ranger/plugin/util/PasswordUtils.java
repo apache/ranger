@@ -51,6 +51,7 @@ public class PasswordUtils {
 
     public static final String DEFAULT_CRYPT_ALGO = "PBEWithMD5AndDES";
     public static final String DEFAULT_ENCRYPT_KEY = "tzL1AKl5uc4NKYaoQ4P3WLGIBFPXWPWdu1fRm9004jtQiV";
+    /**For security concern, salt shoud not be static value, the DEFAULT_ITERATION_COUNT should larger than 1000 */
     public static final String DEFAULT_SALT = "f77aLYLo";
     public static final int DEFAULT_ITERATION_COUNT = 17;
     public static final byte[] DEFAULT_INITIAL_VECTOR = new byte[16];
