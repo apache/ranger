@@ -20,7 +20,6 @@ package org.apache.ranger.services.schema.registry.client.connection;
 import com.google.common.io.Resources;
 import com.hortonworks.registries.schemaregistry.SchemaMetadata;
 import com.hortonworks.registries.schemaregistry.SchemaVersion;
-import com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient;
 import com.hortonworks.registries.schemaregistry.webservice.LocalSchemaRegistryServer;
 import org.apache.commons.io.IOUtils;
 import org.junit.BeforeClass;
@@ -42,13 +41,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
-public class SRClientTest {
+public class DefaultSchemaRegistryClientTest {
 
     private static final String V1_API_PATH = "api/v1";
 
     private static LocalSchemaRegistryServer localSchemaRegistryServer;
 
-    private static Client client;
+    private static ISchemaRegistryClient client;
 
     @BeforeClass
     public static void init() throws Exception {
@@ -83,7 +82,7 @@ public class SRClientTest {
                 .description("description")
                 .build();
 
-        SchemaRegistryClient client = getClient("ssl-schema-registry-client.yaml");
+        com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient client = getClient("ssl-schema-registry-client.yaml");
 
         client.registerSchemaMetadata(schemaMetadata1);
         client.registerSchemaMetadata(schemaMetadata2);
@@ -111,7 +110,7 @@ public class SRClientTest {
         conf.put("trustStorePassword", trustStorePassword);
         conf.put("trustStoreType", trustStoreType);
 
-        SRClientTest.client = new SRClient(conf);
+        DefaultSchemaRegistryClientTest.client = new DefaultSchemaRegistryClient(conf);
 
     }
 
@@ -132,7 +131,7 @@ public class SRClientTest {
                 .getAbsolutePath();
     }
 
-    private static SchemaRegistryClient getClient(String clientYAMLFileName) throws Exception {
+    private static com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient getClient(String clientYAMLFileName) throws Exception {
         String registryURL = localSchemaRegistryServer.getLocalURL() + V1_API_PATH;
         Map<String, Object> conf = new HashMap<>();
         try (FileInputStream fis = new FileInputStream(getFilePath(clientYAMLFileName))) {
@@ -141,9 +140,9 @@ public class SRClientTest {
         } catch(Exception e) {
             throw new Exception("Failed to export schema client configuration for yaml : " + getFilePath(clientYAMLFileName), e);
         }
-        conf.put(SchemaRegistryClient.Configuration.SCHEMA_REGISTRY_URL.name(), registryURL);
+        conf.put(SCHEMA_REGISTRY_URL.name(), registryURL);
 
-        return new SchemaRegistryClient(conf);
+        return new com.hortonworks.registries.schemaregistry.client.SchemaRegistryClient(conf);
     }
 
     @Test
@@ -186,6 +185,6 @@ public class SRClientTest {
 
     @Test(expected = Exception.class)
     public void checkConnection2() throws Exception {
-        new SRClient(new HashMap<>()).checkConnection();
+        new DefaultSchemaRegistryClient(new HashMap<>()).checkConnection();
     }
 }

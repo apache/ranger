@@ -97,20 +97,6 @@ public class SchemaRegistryResourceMgrTest {
                 client);
         assertThat(res, is(expected));
 
-        lookupContext.setResourceName("none-sb");
-        res = SchemaRegistryResourceMgr.getSchemaRegistryResources(serviceName,
-                configs,
-                lookupContext,
-                client);
-        assertThat(res, is(expected));
-
-        lookupContext.setResourceName("none-sv");
-        res = SchemaRegistryResourceMgr.getSchemaRegistryResources(serviceName,
-                configs,
-                lookupContext,
-                client);
-        assertThat(res, is(expected));
-
         lookupContext.setResourceName("registry-service");
         res = SchemaRegistryResourceMgr.getSchemaRegistryResources(serviceName,
                 configs,

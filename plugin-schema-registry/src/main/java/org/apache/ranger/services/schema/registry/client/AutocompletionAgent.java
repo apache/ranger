@@ -20,8 +20,8 @@ package org.apache.ranger.services.schema.registry.client;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
-import org.apache.ranger.services.schema.registry.client.connection.Client;
-import org.apache.ranger.services.schema.registry.client.connection.SRClient;
+import org.apache.ranger.services.schema.registry.client.connection.DefaultSchemaRegistryClient;
+import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
 public class AutocompletionAgent {
     private static final Log LOG = LogFactory.getLog(AutocompletionAgent.class);
 
-    private Client client;
+    private ISchemaRegistryClient client;
     private String serviceName;
 
     private static final String errMessage = "You can still save the repository and start creating "
@@ -47,10 +47,10 @@ public class AutocompletionAgent {
 
 
     public AutocompletionAgent(String serviceName, Map<String, String> configs) {
-        this(serviceName, new SRClient(configs));
+        this(serviceName, new DefaultSchemaRegistryClient(configs));
     }
 
-    public AutocompletionAgent(String serviceName, Client client) {
+    public AutocompletionAgent(String serviceName, ISchemaRegistryClient client) {
         this.serviceName = serviceName;
         this.client = client;
     }

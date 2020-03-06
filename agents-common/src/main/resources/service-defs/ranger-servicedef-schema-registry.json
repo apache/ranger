@@ -69,30 +69,10 @@
       "validationMessage": "",
       "uiHint":"",
       "label": "Schema Name",
-      "description": "Schema Name"
+      "description": "Schema Name",
+      "isValidLeaf": "true"
     },
 
-    {
-      "itemId": 31,
-      "name": "none-sb",
-      "type": "string",
-      "level": 30,
-      "parent": "schema-metadata",
-      "mandatory": true,
-      "lookupSupported": true,
-      "recursiveSupported": false,
-      "excludesSupported": false,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard":true,
-        "ignoreCase":true
-      },
-      "validationRegEx": "^\\*$",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "None",
-      "description": "None"
-    },
 
     {
       "itemId": 32,
@@ -113,29 +93,8 @@
       "validationMessage": "",
       "uiHint":"",
       "label": "Schema Branch",
-      "description": "Schema Branch"
-    },
-
-    {
-      "itemId": 41,
-      "name": "none-sv",
-      "type": "string",
-      "level": 40,
-      "parent": "schema-branch",
-      "mandatory": true,
-      "lookupSupported": true,
-      "recursiveSupported": false,
-      "excludesSupported": false,
-      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
-      "matcherOptions": {
-        "wildCard":true,
-        "ignoreCase":true
-      },
-      "validationRegEx": "^\\*$",
-      "validationMessage": "",
-      "uiHint":"",
-      "label": "None",
-      "description": "None"
+      "description": "Schema Branch",
+      "isValidLeaf": "true"
     },
 
     {

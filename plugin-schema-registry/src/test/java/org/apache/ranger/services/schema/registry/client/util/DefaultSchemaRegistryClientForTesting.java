@@ -15,14 +15,32 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.services.schema.registry.client.connection;
+package org.apache.ranger.services.schema.registry.client.util;
 
+import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
+
+import java.util.ArrayList;
 import java.util.List;
 
-public interface Client {
-    List<String> getSchemaGroups();
-    List<String> getSchemaNames(List<String> schemaGroup);
-    List<String> getSchemaBranches(String schemaMetadataName);
-    void checkConnection() throws Exception;
-}
+public class DefaultSchemaRegistryClientForTesting implements ISchemaRegistryClient {
 
+    @Override
+    public List<String> getSchemaGroups() {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<String> getSchemaNames(List<String> schemaGroup) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public List<String> getSchemaBranches(String schemaMetadataName) {
+        return new ArrayList<>();
+    }
+
+    @Override
+    public void checkConnection() throws Exception {
+
+    }
+}

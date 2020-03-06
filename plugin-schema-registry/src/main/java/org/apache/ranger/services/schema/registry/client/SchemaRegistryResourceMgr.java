@@ -37,9 +37,7 @@ public class SchemaRegistryResourceMgr {
     private static final String SCHEMA_GROUP = "schema-group";
     private static final String SCHEMA_METADATA = "schema-metadata";
     private static final String SCHEMA_BRANCH = "schema-branch";
-    private static final String NONE_SCHEMA_BRANCH = "none-sb";
     private static final String SCHEMA_VERSION = "schema-version";
-    private static final String NONE_SCHEMA_VERSION = "none-sv";
 
     private static final List<String> asteriskList = Collections.singletonList("*");
 
@@ -102,7 +100,6 @@ public class SchemaRegistryResourceMgr {
                                     branchList);
                             break;
                         }
-                        case NONE_SCHEMA_BRANCH: case NONE_SCHEMA_VERSION:
                         case SCHEMA_VERSION: case SERDE: case REGISTRY_SERVICE: {
                             return asteriskList;
                         }

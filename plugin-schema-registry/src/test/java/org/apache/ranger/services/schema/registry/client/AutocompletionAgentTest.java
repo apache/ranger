@@ -17,8 +17,8 @@
 
 package org.apache.ranger.services.schema.registry.client;
 
-import org.apache.ranger.services.schema.registry.client.connection.Client;
-import org.apache.ranger.services.schema.registry.client.util.DefaultClientForTesting;
+import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
+import org.apache.ranger.services.schema.registry.client.util.DefaultSchemaRegistryClientForTesting;
 import org.junit.Test;
 
 import java.util.ArrayList;
@@ -36,7 +36,7 @@ public class AutocompletionAgentTest {
 
     @Test
     public void connectionTest() {
-        Client client = new DefaultClientForTesting();
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting();
 
         AutocompletionAgent autocompletionAgent =
                 new AutocompletionAgent("schema-registry", client);
@@ -49,7 +49,7 @@ public class AutocompletionAgentTest {
         assertNull(res.get("fieldName"));
 
 
-        client = new DefaultClientForTesting() {
+        client = new DefaultSchemaRegistryClientForTesting() {
             public void checkConnection() throws Exception {
                 throw new Exception("Cannot connect to the SR server");
             }
@@ -71,7 +71,7 @@ public class AutocompletionAgentTest {
 
     @Test
     public void getSchemaGroupList() {
-        Client client = new DefaultClientForTesting(){
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting(){
             public List<String> getSchemaGroups() {
                 List<String> groups = new ArrayList<>();
                 groups.add("testGroup");
@@ -82,13 +82,13 @@ public class AutocompletionAgentTest {
         AutocompletionAgent autocompletionAgent =
                 new AutocompletionAgent("schema-registry", client);
 
-        // Empty initialGroups and the list of groups returned by Client
+        // Empty initialGroups and the list of groups returned by ISchemaRegistryClient
         // doesn't contain any groups that starts with 'tesSome'
         List<String> initialGroups = new ArrayList<>();
         List<String> res = autocompletionAgent.getSchemaGroupList("tesSome", initialGroups);
         assertEquals(0, res.size());
 
-        // Empty initialGroups and the list of groups returned by Client
+        // Empty initialGroups and the list of groups returned by ISchemaRegistryClient
         // contains a group that starts with 'tes'
         initialGroups = new ArrayList<>();
         res = autocompletionAgent.getSchemaGroupList("tes", initialGroups);
@@ -97,7 +97,7 @@ public class AutocompletionAgentTest {
         assertEquals(1, res.size());
         assertThat(res, is(expected));
 
-        // initialGroups contains one element, list of the groups returned by Client
+        // initialGroups contains one element, list of the groups returned by ISchemaRegistryClient
         // contains the same values that are already present in initialGroups
         initialGroups = new ArrayList<>();
         initialGroups.add("testGroup");
@@ -107,7 +107,7 @@ public class AutocompletionAgentTest {
         assertEquals(1, res.size());
         assertThat(res, is(expected));
 
-        // initialGroups contains one element, list of the groups returned by Client
+        // initialGroups contains one element, list of the groups returned by ISchemaRegistryClient
         // contains one element too, that is not equal to the element in initialGroups
         initialGroups = new ArrayList<>();
         initialGroups.add("testGroup2");
@@ -122,7 +122,7 @@ public class AutocompletionAgentTest {
 
     @Test
     public void getSchemaMetadataList() {
-        Client client = new DefaultClientForTesting(){
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting(){
 
             public List<String> getSchemaNames(List<String> schemaGroup) {
                 if(!schemaGroup.contains("Group1")) {
@@ -152,7 +152,7 @@ public class AutocompletionAgentTest {
 
     @Test
     public void getBranchList() {
-        Client client = new DefaultClientForTesting(){
+        ISchemaRegistryClient client = new DefaultSchemaRegistryClientForTesting(){
 
             public List<String> getSchemaBranches(String schemaMetadataName) {
                 if(!schemaMetadataName.equals("Schema1")) {
