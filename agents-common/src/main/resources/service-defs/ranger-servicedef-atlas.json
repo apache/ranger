@@ -273,7 +273,7 @@
 		},
 		{
 			"itemId": 15,
-			"name": "entity-namespace",
+			"name": "entity-business-metadata",
 			"type": "string",
 			"level": 40,
 			"mandatory": true,
@@ -287,10 +287,10 @@
 				"wildCard": "true",
 				"ignoreCase": "true"
 			},
-			"label": "Namespace",
-			"description": "Namespace",
+			"label": "Business Metadata",
+			"description": "Business Metadata",
 			"accessTypeRestrictions": [
-				"entity-update-namespace"
+				"entity-update-business-metadata"
 			]
 		}
 	],
@@ -387,8 +387,8 @@
 		},
 		{
 			"itemId": 19,
-			"name": "entity-update-namespace",
-			"label": "Update Namespace"
+			"name": "entity-update-business-metadata",
+			"label": "Update Business Metadata"
 		}
 	],
 	"configs": [

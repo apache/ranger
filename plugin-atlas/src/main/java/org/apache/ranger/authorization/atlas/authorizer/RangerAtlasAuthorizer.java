@@ -354,8 +354,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
             if (AtlasPrivilege.ENTITY_ADD_LABEL.equals(request.getAction()) || AtlasPrivilege.ENTITY_REMOVE_LABEL.equals(request.getAction())) {
                 rangerResource.setValue(RESOURCE_ENTITY_LABEL, request.getLabel());
-            } else if (AtlasPrivilege.ENTITY_UPDATE_NAMESPACE.equals(request.getAction())) {
-                rangerResource.setValue(RESOURCE_ENTITY_NAMESPACE, request.getNamespaceName());
+            } else if (AtlasPrivilege.ENTITY_UPDATE_BUSINESS_METADATA.equals(request.getAction())) {
+                rangerResource.setValue(RESOURCE_ENTITY_BUSINESS_METADATA, request.getBusinessMetadata());
             }
 
             if (StringUtils.isNotEmpty(classification)) {
@@ -468,8 +468,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
             if (AtlasPrivilege.ENTITY_ADD_LABEL.equals(request.getAction()) || AtlasPrivilege.ENTITY_REMOVE_LABEL.equals(request.getAction())) {
                 rangerResource.setValue(RESOURCE_ENTITY_LABEL, "label=" + request.getLabel());
-            } else if (AtlasPrivilege.ENTITY_UPDATE_NAMESPACE.equals(request.getAction())) {
-                rangerResource.setValue(RESOURCE_ENTITY_NAMESPACE, "namespace=" + request.getNamespaceName());
+            } else if (AtlasPrivilege.ENTITY_UPDATE_BUSINESS_METADATA.equals(request.getAction())) {
+                rangerResource.setValue(RESOURCE_ENTITY_BUSINESS_METADATA, "business-metadata=" + request.getBusinessMetadata());
             }
 
             auditEvents  = new HashMap<>();
