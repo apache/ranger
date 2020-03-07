@@ -869,7 +869,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 						result.setIsAllowed(false);
 						result.setPolicyId(rowFilterResult.getPolicyId());
-						result.setReason("User does not have acces to all rows of the table");
+						result.setReason("User does not have access to all rows of the table");
 					} else {
 						// check if masking is enabled for any column in the table/view
 						request.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS);
