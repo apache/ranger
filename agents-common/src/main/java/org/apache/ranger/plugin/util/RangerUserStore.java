@@ -32,10 +32,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
@@ -54,11 +51,12 @@ public class RangerUserStore implements Serializable {
     private Map<String, String>              userCloudIdMapping;
     private Map<String, String>              groupCloudIdMapping;
 
-    public RangerUserStore() {this(-1L, null, null);}
+    public RangerUserStore() {this(-1L, null, null, null);}
 
-    public RangerUserStore(Long userStoreVersion, Set<UserInfo> users, Set<GroupInfo> groups ) {
+    public RangerUserStore(Long userStoreVersion, Set<UserInfo> users, Set<GroupInfo> groups, Map<String, Set<String>> userGroups) {
         setUserStoreVersion(userStoreVersion);
         setUserStoreUpdateTime(new Date());
+        setUserGroupMapping(userGroups);
         buildMap(users, groups);
     }
     public Long getUserStoreVersion() {
@@ -153,7 +151,6 @@ public class RangerUserStore implements Serializable {
         if (CollectionUtils.isNotEmpty(users)) {
             userAttrMapping = new HashMap<>();
             userCloudIdMapping = new HashMap<>();
-            userGroupMapping = new HashMap<>();
             for (UserInfo user : users) {
                 String username = user.getName();
                 Map<String, String> userAttrs = user.getOtherAttributes();
@@ -164,7 +161,6 @@ public class RangerUserStore implements Serializable {
                         userCloudIdMapping.put(cloudId, username);
                     }
                 }
-                userGroupMapping.put(username, user.getGroups());
             }
         }
         if (CollectionUtils.isNotEmpty(groups)) {

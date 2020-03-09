@@ -26,6 +26,8 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUser;
 import org.springframework.stereotype.Service;
 
+import java.util.*;
+
 @Service
 public class XXUserDao extends BaseDao<XXUser> {
 	private static final Logger logger = Logger.getLogger(XXResourceDao.class);
@@ -60,6 +62,30 @@ public class XXUserDao extends BaseDao<XXUser> {
 		} catch (NoResultException e) {
 			return null;
 		}
+	}
+
+	public Map<String, Set<String>> findGroupsByUserIds() {
+		Map<String, Set<String>> userGroups = new HashMap<>();
+
+		try {
+			List<Object[]> rows = (List<Object[]>) getEntityManager()
+					.createNamedQuery("XXUser.findGroupsByUserIds")
+					.getResultList();
+			if (rows != null) {
+				for (Object[] row : rows) {
+					if (userGroups.containsKey((String)row[0])) {
+						userGroups.get((String)row[0]).add((String)row[1]);
+					} else {
+						Set<String> groups = new HashSet<>();
+						groups.add((String)row[1]);
+						userGroups.put((String)row[0], groups);
+					}
+				}
+			}
+		} catch (NoResultException e) {
+			//Ignore
+		}
+		return userGroups;
 	}
 
 }
