@@ -2567,10 +2567,6 @@ public class XUserMgr extends XUserMgrBase {
 		return  new HashSet<>(xGroupService.getGroups());
 	}
 
-	public Map<String, Set<String>> getUserGroups() {
-		return daoManager.getXXUser().findGroupsByUserIds();
-	}
-
 	public RangerUserStore getRangerUserStore(Long lastKnownUserStoreVersion) throws Exception {
 		RangerUserStore ret                   = null;
 		Long        rangerUserStoreVersionInDB = getUserStoreVersion();

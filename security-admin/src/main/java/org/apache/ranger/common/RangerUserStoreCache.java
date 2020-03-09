@@ -19,6 +19,7 @@
 
 package org.apache.ranger.common;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
@@ -89,20 +90,14 @@ public class RangerUserStoreCache {
 			if (lockResult) {
 				final Set<UserInfo> rangerUsersInDB = xUserMgr.getUsers();
 				final Set<GroupInfo> rangerGroupsInDB = xUserMgr.getGroups();
-				final Map<String, Set<String>> userGroups = xUserMgr.getUserGroups();
-				/*if (CollectionUtils.isNotEmpty(rangerUsersInDB)) {
+				if (CollectionUtils.isNotEmpty(rangerUsersInDB)) {
 					for (UserInfo userInfo : rangerUsersInDB) {
 						//Get user group mapping from DB and update userInfo object.
 						userInfo.setGroups(xUserMgr.getGroupsForUser(userInfo.getName()));
 					}
-				}*/
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No. of users from DB = " + rangerUsersInDB.size() + " and no. of groups from DB = " + rangerGroupsInDB.size());
-					LOG.debug("No. of userGroupMappings = " + userGroups.size());
 				}
 
-				ret = new RangerUserStore(rangerUserStoreVersionInDB, rangerUsersInDB, rangerGroupsInDB, userGroups);
+				ret = new RangerUserStore(rangerUserStoreVersionInDB, rangerUsersInDB, rangerGroupsInDB);
 				rangerUserStore = ret;
 			} else {
 				if (LOG.isDebugEnabled()) {
