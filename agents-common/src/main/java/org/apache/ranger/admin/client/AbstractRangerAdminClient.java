@@ -111,4 +111,9 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
     public List<String> getTagTypes(String tagTypePattern) throws Exception {
         return null;
     }
+
+    @Override
+    public RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception {
+        return null;
+    }
 }

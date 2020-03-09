@@ -76,6 +76,9 @@ public class RangerRESTUtils {
 
 	public static final String REST_PARAM_LAST_KNOWN_ROLE_VERSION = "lastKnownRoleVersion";
 
+	public static final String REST_PARAM_LAST_KNOWN_USERSTORE_VERSION = "lastKnownUserStoreVersion";
+	public static final String REST_URL_SERVICE_SERCURE_GET_USERSTORE = "/service/xusers/secure/download/";
+
 	private static final int MAX_PLUGIN_ID_LEN = 255;
 	
 	public static final String REST_PARAM_CLUSTER_NAME   = "clusterName";
