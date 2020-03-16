@@ -311,7 +311,7 @@ public class PolicyRefUpdater {
 
 		xUserMgr.checkAdminAccess();
 
-		RangerRole createdRole= roleStore.createRole(rRole);
+		RangerRole createdRole= roleStore.createRole(rRole, false);
 		return createdRole.getId();
 	}
 

@@ -561,10 +561,12 @@ public class PublicAPIsv2 {
 	@POST
 	@Path("/api/roles")
 	@Produces({ "application/json", "application/xml" })
-	public RangerRole createRole(@QueryParam("serviceName") String serviceName, RangerRole role, @Context HttpServletRequest request) {
+	public RangerRole createRole(@QueryParam("serviceName") String serviceName, RangerRole role
+			, @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
+			, @Context HttpServletRequest request) {
 		logger.info("==> PublicAPIsv2.createRole");
 		RangerRole ret;
-		ret = roleREST.createRole(serviceName, role);
+		ret = roleREST.createRole(serviceName, role, createNonExistUserGroup);
 		logger.info("<== PublicAPIsv2.createRole" + ret.getName());
 		return ret;
 	}
@@ -575,8 +577,10 @@ public class PublicAPIsv2 {
 	@PUT
 	@Path("/api/roles/{id}")
 	@Produces({ "application/json", "application/xml" })
-	public RangerRole updateRole(@PathParam("id") Long roleId, RangerRole role, @Context HttpServletRequest request) {
-		return roleREST.updateRole(roleId, role);
+	public RangerRole updateRole(@PathParam("id") Long roleId, RangerRole role
+			, @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
+			, @Context HttpServletRequest request) {
+		return roleREST.updateRole(roleId, role, createNonExistUserGroup);
 	}
 
 	@DELETE

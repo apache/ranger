@@ -24,8 +24,11 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXRoleRefGroupDao;
 import org.apache.ranger.db.XXRoleRefRoleDao;
@@ -38,11 +41,18 @@ import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.service.RangerAuditFields;
+import org.apache.ranger.service.XGroupService;
+import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.VXGroup;
+import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+
 @Component
 public class RoleRefUpdater {
+	private static final Log LOG = LogFactory.getLog(RoleRefUpdater.class);
+
 	@Autowired
 	RangerDaoManager daoMgr;
 
@@ -52,7 +62,16 @@ public class RoleRefUpdater {
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
-	public void createNewRoleMappingForRefTable(RangerRole rangerRole) throws Exception {
+	@Autowired
+    XUserMgr xUserMgr;
+
+    @Autowired
+    XUserService xUserService;
+
+    @Autowired
+    XGroupService xGroupService;
+
+	public void createNewRoleMappingForRefTable(RangerRole rangerRole, Boolean createNonExistUserGroup) throws Exception {
 		if (rangerRole == null) {
 			return;
 		}
@@ -80,18 +99,26 @@ public class RoleRefUpdater {
 				if (StringUtils.isBlank(roleUser)) {
 					continue;
 				}
-
+				VXUser vXUser = null;
 				XXUser xUser = daoMgr.getXXUser().findByUserName(roleUser);
 
 				if (xUser == null) {
-					throw restErrorUtil.createRESTException("user with name: " + roleUser + " does not exist ",
-							MessageEnums.INVALID_INPUT_DATA);
+					if (createNonExistUserGroup) {
+						LOG.warn("User specified in role does not exist in ranger admin, creating new user, User = "
+								+ roleUser);
+						vXUser = xUserMgr.createExternalUser(roleUser);
+					} else {
+						throw restErrorUtil.createRESTException("user with name: " + roleUser + " does not exist ",
+								MessageEnums.INVALID_INPUT_DATA);
+					}
+				}else {
+					 vXUser = xUserService.populateViewBean(xUser);
 				}
 
 				XXRoleRefUser xRoleRefUser = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefUser());
 
 				xRoleRefUser.setRoleId(roleId);
-				xRoleRefUser.setUserId(xUser.getId());
+				xRoleRefUser.setUserId(vXUser.getId());
 				xRoleRefUser.setUserName(roleUser);
 				xRoleRefUser.setUserType(0);
 				daoMgr.getXXRoleRefUser().create(xRoleRefUser);
@@ -104,18 +131,29 @@ public class RoleRefUpdater {
 				if (StringUtils.isBlank(roleGroup)) {
 					continue;
 				}
-
+				VXGroup vXGroup = null;
 				XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(roleGroup);
 
 				if (xGroup == null) {
-					throw restErrorUtil.createRESTException("group with name: " + roleGroup + " does not exist ",
-							MessageEnums.INVALID_INPUT_DATA);
+					if (createNonExistUserGroup) {
+						LOG.warn("Group specified in role does not exist in ranger admin, creating new group, Group = "
+								+ roleGroup);
+						VXGroup vxGroupNew = new VXGroup();
+						vxGroupNew.setName(roleGroup);
+						vxGroupNew.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
+						vXGroup = xUserMgr.createXGroup(vxGroupNew);
+					} else {
+						throw restErrorUtil.createRESTException("group with name: " + roleGroup + " does not exist ",
+								MessageEnums.INVALID_INPUT_DATA);
+					}
+				}else {
+					vXGroup = xGroupService.populateViewBean(xGroup);
 				}
 
 				XXRoleRefGroup xRoleRefGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefGroup());
 
 				xRoleRefGroup.setRoleId(roleId);
-				xRoleRefGroup.setGroupId(xGroup.getId());
+				xRoleRefGroup.setGroupId(vXGroup.getId());
 				xRoleRefGroup.setGroupName(roleGroup);
 				xRoleRefGroup.setGroupType(0);
 				daoMgr.getXXRoleRefGroup().create(xRoleRefGroup);

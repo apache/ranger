@@ -172,7 +172,10 @@ public class RangerRoleValidator extends RangerValidator {
 			}
 
 			Long id = rangerRole.getId();
-			RangerRole existingRangerRole = getRangerRole(id);
+			RangerRole existingRangerRole = null;
+			if (null != id) {
+				existingRangerRole = getRangerRole(id);
+			}
 
 			if (action == Action.CREATE) {
 				if (existingRangerRole != null) {

@@ -29,9 +29,9 @@ public interface RoleStore {
 
     void             init() throws Exception;
 
-    RangerRole       createRole(RangerRole role) throws Exception;
+    RangerRole       createRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
 
-    RangerRole       updateRole(RangerRole role) throws Exception;
+    RangerRole       updateRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception;
 
     void             deleteRole(String roleName) throws Exception;
 

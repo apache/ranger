@@ -132,7 +132,9 @@ public class RoleREST {
 
     @POST
     @Path("/roles")
-    public RangerRole createRole(@QueryParam("serviceName") String serviceName,  RangerRole role) {
+    public RangerRole createRole(@QueryParam("serviceName") String serviceName,  RangerRole role
+           , @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
+           ) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> createRole("+ role + ")");
         }
@@ -147,7 +149,7 @@ public class RoleREST {
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
-            ret = roleStore.createRole(role);
+            ret = roleStore.createRole(role, createNonExistUserGroup);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -167,8 +169,10 @@ public class RoleREST {
 
     @PUT
     @Path("/roles/{id}")
-    public RangerRole updateRole(@PathParam("id") Long roleId,
-                                                 RangerRole role) {
+    public RangerRole updateRole(@PathParam("id") Long roleId
+                                , RangerRole role
+                                , @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
+                                ) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> updateRole(id=" + roleId +", " + role + ")");
         }
@@ -187,7 +191,7 @@ public class RoleREST {
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
-            ret = roleStore.updateRole(role);
+            ret = roleStore.updateRole(role, createNonExistUserGroup);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -429,7 +433,7 @@ public class RoleREST {
             role.setUsers(new ArrayList<>(roleUsers));
             role.setGroups(new ArrayList<>(roleGroups));
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role,false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -483,7 +487,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -529,7 +533,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1105,7 +1109,7 @@ public class RoleREST {
             role.setGroups(new ArrayList<>(roleGroups));
             role.setRoles(new ArrayList<>(roleRoles));
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1162,7 +1166,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1207,7 +1211,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;

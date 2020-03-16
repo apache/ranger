@@ -94,7 +94,7 @@ public class RoleDBStore implements RoleStore {
     }
 
     @Override
-    public RangerRole createRole(RangerRole role) throws Exception {
+    public RangerRole createRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RoleDBStore.createRole()");
         }
@@ -112,7 +112,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot create role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(createdRole);
+        roleRefUpdater.createNewRoleMappingForRefTable(createdRole, createNonExistUserGroup);
 
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(createdRole, null, "create");
         bizUtil.createTrxLog(trxLogList);
@@ -120,7 +120,7 @@ public class RoleDBStore implements RoleStore {
     }
 
     @Override
-    public RangerRole updateRole(RangerRole role) throws Exception {
+    public RangerRole updateRole(RangerRole role, Boolean createNonExistUserGroup) throws Exception {
         XXRole xxRole = daoMgr.getXXRole().findByRoleId(role.getId());
         if (xxRole == null) {
             throw restErrorUtil.createRESTException("role with id: " + role.getId() + " does not exist");
@@ -140,7 +140,7 @@ public class RoleDBStore implements RoleStore {
             throw new Exception("Cannot update role:[" + role + "]");
         }
 
-        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole);
+        roleRefUpdater.createNewRoleMappingForRefTable(updatedRole, createNonExistUserGroup);
 
         roleService.updatePolicyVersions(updatedRole.getId());
 
