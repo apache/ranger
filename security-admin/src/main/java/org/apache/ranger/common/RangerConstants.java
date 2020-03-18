@@ -188,5 +188,6 @@ public class RangerConstants extends RangerCommonEnums {
 		ALLOW_WRITE,
 		ALLOW_DELETE
 	}
-
+	//HTTP STATUS code for authentication timeout
+		public static final int SC_AUTHENTICATION_TIMEOUT = 419;
 }

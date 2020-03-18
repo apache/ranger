@@ -631,7 +631,14 @@ define(function(require) {
 				status : error.status
 			}));
 		} else if (error.status == 419) {
-			window.location = 'login.jsp?sessionTimeout=true';
+			if(!_.isNull(error.getResponseHeader("X-Rngr-Redirect-Url"))) {
+				XAUtils.notifyError('error', 'Session Timeout')
+				setTimeout( function(){
+					window.location = error.getResponseHeader("X-Rngr-Redirect-Url");
+				}, 4000);
+			} else {
+				window.location = 'login.jsp?sessionTimeout=true';
+			}
 		}
 	};
 	XAUtils.select2Focus = function(event) {
