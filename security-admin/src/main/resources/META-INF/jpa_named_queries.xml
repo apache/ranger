@@ -127,6 +127,13 @@
 		</query>
 	</named-query>
 
+	<!-- XXGroup -->
+	<named-query name="XXUser.findGroupsByUserIds">
+		<query>SELECT user.name, group.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
+			WHERE user.id=groupUser.userId and group.id=groupUser.parentGroupId
+		</query>
+	</named-query>
+
 	<!-- XXPermMap -->
 	<named-query name="XXPermMap.findByResourceId">
 		<query>SELECT obj FROM XXPermMap obj WHERE obj.resourceId = :resourceId
