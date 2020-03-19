@@ -261,4 +261,8 @@ public class RangerAccessResourceImpl implements RangerMutableResource {
 
 		return sb;
 	}
+
+	protected String getStringifiedValue() { return stringifiedValue; }
+
+	protected void setStringifiedValue(String val) { this.stringifiedValue = val; }
 }
