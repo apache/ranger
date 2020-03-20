@@ -523,7 +523,9 @@ public class RangerKrbFilter implements Filter {
               agents = RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT;
             }
             parseBrowserUserAgents(agents);
-            if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) && !allowTrustedProxy){
+            String doAsUser = request.getParameter("doAs");
+            if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) &&
+                    (!allowTrustedProxy || (allowTrustedProxy && StringUtils.isEmpty(doAsUser))) ){
         	  ((HttpServletResponse)response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
                 filterChain.doFilter(request, response);
             }else{

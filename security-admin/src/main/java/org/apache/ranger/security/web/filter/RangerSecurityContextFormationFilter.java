@@ -125,11 +125,6 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 						authType, userAgent, httpRequest);
 
 				if (userSession != null) {
-
-					Object ssoEnabledObj = request.getAttribute("ssoEnabled");
-					Boolean ssoEnabled = ssoEnabledObj != null ? Boolean.valueOf(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
-					userSession.setSSOEnabled(ssoEnabled);
-
 					if (userSession.getClientTimeOffsetInMinute() == 0) {
 						userSession.setClientTimeOffsetInMinute(clientTimeOffset);
 					}
@@ -158,8 +153,11 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 		if (ssoEnabled) {
 			authType = XXAuthSession.AUTH_TYPE_SSO;
-		} else if (request.getAttribute("spnegoEnabled") != null && (boolean)request.getAttribute("spnegoEnabled")){
-			if (request.getAttribute("trustedProxyEnabled") != null && (boolean)request.getAttribute("trustedProxyEnabled")) {
+		} else if (request.getAttribute("spnegoEnabled") != null && Boolean.valueOf(String.valueOf(request.getAttribute("spnegoEnabled")))){
+			if (request.getAttribute("trustedProxyEnabled") != null && Boolean.valueOf(String.valueOf(request.getAttribute("trustedProxyEnabled")))) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("Setting auth type as trusted proxy");
+				}
 				authType = XXAuthSession.AUTH_TYPE_TRUSTED_PROXY;
 			} else {
 				authType = XXAuthSession.AUTH_TYPE_KERBEROS;

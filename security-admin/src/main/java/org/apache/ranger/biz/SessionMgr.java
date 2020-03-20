@@ -176,6 +176,19 @@ public class SessionMgr {
 				userSession.setSpnegoEnabled(true);
 			}
 
+			Boolean ssoEnabled;
+			if (authType == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+				ssoEnabled = true;
+			} else {
+				Object ssoEnabledObj = httpRequest.getAttribute("ssoEnabled");
+				ssoEnabled = ssoEnabledObj != null ? Boolean.valueOf(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+			}
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("session id = " + userSession.getLoginId() + " ssoenabled = " + ssoEnabled);
+			}
+			userSession.setSSOEnabled(ssoEnabled);
+
 			resetUserSessionForProfiles(userSession);
 			resetUserModulePermission(userSession);
 
