@@ -96,6 +96,11 @@
 				"write",
 				"create"
 			]
+		},
+		{
+			"itemId": 5,
+			"name": "execute",
+			"label": "Execute"
 		}
 	],
 

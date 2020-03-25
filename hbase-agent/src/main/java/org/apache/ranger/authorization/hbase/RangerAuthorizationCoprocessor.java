@@ -23,6 +23,7 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.security.PrivilegedExceptionAction;
 
+import com.google.protobuf.Message;
 import com.google.protobuf.Service;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
@@ -85,6 +86,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	private UserProvider userProvider;
     private RegionCoprocessorEnvironment regionEnv;
 	private Map<InternalScanner, String> scannerOwners = new MapMaker().weakKeys().makeMap();
+	/** if we should check EXEC permissions */
+	private boolean shouldCheckExecPermission;
 	
 	/*
 	 * These are package level only for testability and aren't meant to be exposed outside via getters/setters or made available to derived classes.
@@ -1071,6 +1074,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	public void start(CoprocessorEnvironment env) throws IOException {
 		String appType = "unknown";
 
+		shouldCheckExecPermission = env.getConfiguration().getBoolean(
+				AccessControlConstants.EXEC_PERMISSION_CHECKS_KEY,
+				AccessControlConstants.DEFAULT_EXEC_PERMISSION_CHECKS);
 		if (env instanceof MasterCoprocessorEnvironment) {
 			coprocessorType = MASTER_COPROCESSOR_TYPE;
 			appType = "hbaseMaster";
@@ -1221,7 +1227,23 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 		requirePermission(ctx, "preCleanupBulkLoad", Permission.Action.WRITE, ctx.getEnvironment(), cfs);
 	}
-	
+
+	/* ---- EndpointObserver implementation ---- */
+
+	@Override
+	public Message preEndpointInvocation(ObserverContext<RegionCoprocessorEnvironment> ctx,
+										 Service service, String methodName, Message request) throws IOException {
+		// Don't intercept calls to our own AccessControlService, we check for
+		// appropriate permissions in the service handlers
+		if (shouldCheckExecPermission && !(service instanceof AccessControlService)) {
+			requirePermission(ctx,
+					"invoke(" + service.getDescriptorForType().getName() + "." + methodName + ")",
+					getTableName(ctx.getEnvironment()), null, null,
+					Action.EXEC);
+		}
+		return request;
+	}
+
 	@Override
 	public void grant(RpcController controller, AccessControlProtos.GrantRequest request, RpcCallback<AccessControlProtos.GrantResponse> done) {
 		boolean isSuccess = false;

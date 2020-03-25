@@ -39,6 +39,8 @@ public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
 				return ACCESS_TYPE_CREATE;
 			case ADMIN:
 				return ACCESS_TYPE_ADMIN;
+			case EXEC:
+				return ACCESS_TYPE_EXECUTE;
 			default:
 				return action.name().toLowerCase();
 		}
@@ -52,6 +54,11 @@ public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
 	@Override
 	public boolean isWriteAccess(String access) {
 		return getAccess(Action.WRITE).equals(access);
+	}
+
+	@Override
+	public boolean isExecuteAccess(String access) {
+		return getAccess(Action.EXEC).equals(access);
 	}
 
 	@Override
