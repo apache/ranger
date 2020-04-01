@@ -401,6 +401,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(conditionsTestResourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_superUserGroups() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_super_user_groups.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
@@ -421,6 +428,7 @@ public class TestPolicyEngine {
 		servicePolicies.setServiceDef(testCase.serviceDef);
 		servicePolicies.setPolicies(testCase.policies);
 		servicePolicies.setSecurityZones(testCase.securityZones);
+		servicePolicies.setServiceConfig(testCase.serviceConfig);
 
 		if (StringUtils.isNotBlank(testCase.auditMode)) {
 			servicePolicies.setAuditMode(testCase.auditMode);
@@ -486,14 +494,14 @@ public class TestPolicyEngine {
 
         policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
 
-        RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
+        RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles, testCase.superUsers, testCase.superGroups);
 
         policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
         policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 
         policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
 
-		RangerPolicyEngineImpl policyEngineForEvaluatingWithACLs = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
+		RangerPolicyEngineImpl policyEngineForEvaluatingWithACLs = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles, testCase.superUsers, testCase.superGroups);
 
 		policyEngineForEvaluatingWithACLs.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngineForEvaluatingWithACLs.setTrustedProxyAddresses(trustedProxyAddresses);
@@ -666,9 +674,11 @@ public class TestPolicyEngine {
 		public Map<String, Set<String>> groupRoles;
 		public String             auditMode;
 		public List<TestData>     tests;
-
+		public Map<String, String> serviceConfig;
 		public UpdatedPolicies    updatedPolicies;
 		public List<TestData>     updatedTests;
+		public Set<String>        superUsers;
+		public Set<String>        superGroups;
 		
 		class TestData {
 			public String              name;

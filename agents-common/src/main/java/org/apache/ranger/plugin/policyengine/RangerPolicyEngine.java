@@ -38,9 +38,11 @@ public interface RangerPolicyEngine {
 	String AUDIT_NONE     = "audit-none";
 	String AUDIT_DEFAULT  = "audit-default";
 
-	String PLUGIN_AUDIT_EXCLUDE_USERS = "ranger.plugin.audit.exclude.users";
+	String PLUGIN_AUDIT_EXCLUDE_USERS  = "ranger.plugin.audit.exclude.users";
 	String PLUGIN_AUDIT_EXCLUDE_GROUPS = "ranger.plugin.audit.exclude.groups";
-	String PLUGIN_AUDIT_EXCLUDE_ROLES = "ranger.plugin.audit.exclude.roles";
+	String PLUGIN_AUDIT_EXCLUDE_ROLES  = "ranger.plugin.audit.exclude.roles";
+	String PLUGIN_SUPER_USERS          = "ranger.plugin.super.users";
+	String PLUGIN_SUPER_GROUPS         = "ranger.plugin.super.groups";
 
 	String USER_CURRENT   = "{" + RangerAccessRequestUtil.KEY_USER + "}";
 	String RESOURCE_OWNER = "{OWNER}";
@@ -48,6 +50,10 @@ public interface RangerPolicyEngine {
 	void setUseForwardedIPAddress(boolean useForwardedIPAddress);
 
 	void setTrustedProxyAddresses(String[] trustedProxyAddresses);
+
+	void setSuperUsersAndGroups(Set<String> users, Set<String> groups);
+
+	boolean isSuperUser(String userName, Set<String> userGroups);
 
 	RangerServiceDef getServiceDef();
 
