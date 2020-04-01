@@ -72,6 +72,11 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 			LOG.error("RangerScriptConditionEvaluator.init() failed with exception=" + exp);
 		}
 
+		if (scriptEngine == null) {
+			String conditionType = condition != null ? condition.getType() : null;
+			LOG.error("failed to initialize condition '" + conditionType + "': script engine '" + engineName + "' was not created");
+		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerScriptConditionEvaluator.init(" + condition + ")");
 		}
@@ -123,8 +128,14 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 					LOG.error("RangerScriptConditionEvaluator.isMatched(): failed to evaluate script," +
 							" exception=" + exception);
 				}
+			} else {
+				String conditionType = condition != null ? condition.getType() : null;
+				LOG.error("failed to evaluate condition '" + conditionType + "': script is empty");
 			}
 
+		} else {
+			String conditionType = condition != null ? condition.getType() : null;
+			LOG.error("failed to evaluate condition '" + conditionType + "': script engine not found");
 		}
 
 		if (LOG.isDebugEnabled()) {
