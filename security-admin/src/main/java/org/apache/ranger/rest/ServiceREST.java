@@ -1660,7 +1660,8 @@ public class ServiceREST {
 					deleteExactMatchPolicyForResource(policies, request.getRemoteUser(), null);
 				}
 				boolean updateIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)))) ? true : false ;
-				if(updateIfExists) {
+				boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
+				if(updateIfExists || mergeIfExists) {
 					RangerPolicy existingPolicy = null;
 					String serviceName = request.getParameter(PARAM_SERVICE_NAME);
 					if (serviceName == null) {
@@ -1698,11 +1699,20 @@ public class ServiceREST {
 					}
 					try {
 						if (existingPolicy != null) {
-							policy.setId(existingPolicy.getId());
-							ret = updatePolicy(policy);
+							if (updateIfExists) {
+								policy.setId(existingPolicy.getId());
+								ret = updatePolicy(policy);
+							} else if(mergeIfExists){
+								ServiceRESTUtil.mergeExactMatchPolicyForResource(existingPolicy, policy);
+								ret = updatePolicy(existingPolicy);
+							}
 						}
 					} catch (Exception excp){
-						LOG.error("updatePolicy(" + policy + ") failed", excp);
+						if(updateIfExists) {
+							LOG.error("updatePolicy(" + policy + ") failed", excp);
+						}else if(mergeIfExists) {
+							LOG.error("updatePolicy for merge (" + existingPolicy + ") failed", excp);
+						}
 						throw restErrorUtil.createRESTException(excp.getMessage());
 					}
 				}
