@@ -413,23 +413,36 @@ define(function(require) {
 	        return accessTypeByResource;
 		},
 		//if parent isValidLeaf is false than check child isvalidLeaf
-		childRscDef:function(resChild , rscName){
-			var childResourcs = _.filter(resChild, function(m){ 
+		childRscDef:function(resChild , rscName, rscDef){
+			var childResourcs = _.filter(resChild, function(m){
 				return m.parent == rscName 
 			});
-			var rscDef , someVal;
-			someVal = _.some(childResourcs,function(obj){
-//				help of this we separate specified(selected) child resource from all childResourcs 
-				var $html = $('[data-name="field-'+obj.name+'"]');
-				if($html.length > 0){
-					rscName = obj.name;
-					rscDef = obj;
-					return true;
+			if(!_.isEmpty(childResourcs)){
+				var someVal;
+				someVal = _.some(childResourcs,function(obj){
+				//help of this we separate specified(selected) child resource from all childResourcs
+					var $html = $('[data-name="field-'+obj.name+'"]');
+					if($html.length > 0){
+						rscName = obj.name;
+						rscDef = obj;
+						return true;
+					}
+				});
+				if(!someVal){
+					rscDef = childResourcs[0];
+					rscName = childResourcs[0].name;
 				}
-			});
-			if(!someVal){
-				rscDef = childResourcs[0];
-				rscName = childResourcs[0].name;
+			}
+			// resource-node have isValidLeaf is true and resource have child node then render that child node permission
+			if(rscDef && rscDef.isValidLeaf && !this.model.has('editMode')) {
+				var hasChiled = _.filter(resChild, function(m){
+					return m.parent == rscName
+				});
+				if(!_.isEmpty(hasChiled)) {
+					rscDef = hasChiled[0];
+					rscName = hasChiled[0].name;
+					this.childRscDef(resChild , rscName, rscDef);
+				}
 			}
 			return  ((rscDef.isValidLeaf) ? _.findWhere(resChild, {'name':rscName }) : this.childRscDef(resChild , rscName))
 		},

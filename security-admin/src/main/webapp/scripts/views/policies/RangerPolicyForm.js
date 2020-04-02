@@ -487,9 +487,9 @@ define(function(require){
 	                	var resorceFieldName = _.pick(this.schema ,this.selectedFields[key]);
 	                	if(resorceFieldName[this.selectedFields[key]].sameLevelOpts && _.contains(resorceFieldName[this.selectedFields[key]].sameLevelOpts , 'none') 
 	                			&& formDiv.find(selector).find('select').val() != 'none' && onChangeOfSameLevelType){
-//	                		change trigger and set value to none
-	                		$(rsrc).find('select').val("none").trigger('change',"onChangeResources");
-	                	}
+						//change trigger and set value to selected node
+							$(rsrc).find('select').val($(rsrc).find('select option:nth-child(1)').text()).trigger('change',"onChangeResources");
+		                }
 	                }else{
 	                    if($(rsrc).find('select').val() == 'none'){
 	                    		$(rsrc).find('input[data-js="resource"]').select2('disable');
