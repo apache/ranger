@@ -26,7 +26,6 @@ import java.net.UnknownHostException;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import com.kstruct.gethostname4j.Hostname;
 
 /**
@@ -44,9 +43,6 @@ public class RangerRESTUtils {
 	public static final String REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED = "/service/plugins/secure/policies/download/";
 	public static final String REST_URL_SECURE_SERVICE_GRANT_ACCESS              = "/service/plugins/secure/services/grant/";
 	public static final String REST_URL_SECURE_SERVICE_REVOKE_ACCESS             = "/service/plugins/secure/services/revoke/";
-
-	public static final String REST_URL_ROLE_GET_FOR_SECURE_SERVICE_IF_UPDATED   = "/service/roles/secure/download/";
-	public static final String REST_URL_ROLE_GET_FOR_SERVICE_IF_UPDATED          = "/service/roles/download/";
 
 	public static final String REST_URL_SERVICE_CREATE_ROLE              = "/service/public/v2/api/roles/";
 	public static final String REST_URL_SERVICE_DROP_ROLE         = "/service/public/v2/api/roles/name/";
@@ -102,75 +98,6 @@ public class RangerRESTUtils {
 		}
 	}
 
-	public String getPolicyRestUrl(String propertyPrefix, Configuration config) {
-		String url = config.get(propertyPrefix + ".policy.rest.url");
-		
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerRESTUtils.getPolicyRestUrl(" + url + ")");
-		}
-
-		return url;
-	}
-	
-	public String getSsslConfigFileName(String propertyPrefix, Configuration config) {
-		String sslConfigFileName = config.get(propertyPrefix + ".policy.rest.ssl.config.file");
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerRESTUtils.getSsslConfigFileName(" + sslConfigFileName + ")");
-		}
-
-		return sslConfigFileName;
-	}
-	
-	public String getUrlForPolicyUpdate(String baseUrl, String serviceName) {
-		String url = baseUrl + REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED + serviceName;
-		
-		return url;
-	}
-
-	public String getUrlForRoleUpdate(String baseUrl, String serviceName) {
-		String url = baseUrl + REST_URL_ROLE_GET_FOR_SERVICE_IF_UPDATED + serviceName;
-
-		return url;
-	}
-
-
-	public String getSecureUrlForPolicyUpdate(String baseUrl, String serviceName) {
-		String url = baseUrl + REST_URL_POLICY_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName;
-		return url;
-	}
-
-	public String getSecureUrlForRoleUpdate(String baseUrl, String serviceName) {
-		String url = baseUrl + REST_URL_ROLE_GET_FOR_SECURE_SERVICE_IF_UPDATED + serviceName;
-		return url;
-	}
-
-	public String getUrlForTagUpdate(String baseUrl, String serviceName) {
-		String url = baseUrl + REST_URL_GET_SERVICE_TAGS_IF_UPDATED + serviceName;
-
-		return url;
-	}
-
-	public String getSecureUrlForTagUpdate(String baseUrl, String serviceName) {
-		String url = baseUrl + REST_URL_GET_SECURE_SERVICE_TAGS_IF_UPDATED + serviceName;
-		return url;
-	}
-
-	public boolean isSsl(String _baseUrl) {
-		return !StringUtils.isEmpty(_baseUrl) && _baseUrl.toLowerCase().startsWith("https");
-	}
-
-	public String getUrlForGrantAccess(String baseUrl, String serviceName) {
-		String url = baseUrl + REST_URL_SERVICE_GRANT_ACCESS + serviceName;
-		
-		return url;
-	}
-
-	public String getUrlForRevokeAccess(String baseUrl, String serviceName) {
-		String url = baseUrl + REST_URL_SERVICE_REVOKE_ACCESS + serviceName;
-		
-		return url;
-	}
     public String getPluginId(String serviceName, String appId) {
         String hostName = null;
 

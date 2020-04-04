@@ -20,6 +20,8 @@
 package org.apache.ranger.admin.client;
 
 import java.lang.reflect.Type;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.security.PrivilegedAction;
 import java.util.Date;
 import java.util.HashMap;
@@ -61,13 +63,11 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 	// none of the members are public -- this is only for testability.  None of these is meant to be accessible
 	private static final Log LOG = LogFactory.getLog(RangerAdminJersey2RESTClient.class);
-	RangerRESTUtils _utils = new RangerRESTUtils();
-	
+
 	boolean _isSSL = false;
 	volatile Client _client = null;
 	SSLContext _sslContext = null;
 	HostnameVerifier _hv;
-	String _baseUrl = "";
 	String _sslConfigFileName = null;
 	String _serviceName = null;
 	String _clusterName = null;
@@ -79,6 +79,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	private int lastKnownActiveUrlIndex;
 	private List<String> configURLs;
 	private final String   pluginCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
+	private static final int MAX_PLUGIN_ID_LEN = 255;
 
 	@Override
 	public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
@@ -88,13 +89,13 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 		super.init(serviceName, appId, configPropertyPrefix, config);
 
-		_serviceName = serviceName;
-		_pluginId = _utils.getPluginId(serviceName, appId);
-		String tmpUrl = _utils.getPolicyRestUrl(configPropertyPrefix, config);
-		_sslConfigFileName = _utils.getSsslConfigFileName(configPropertyPrefix, config);
+		_serviceName             = serviceName;
+		_pluginId 		         = getPluginId(serviceName, appId);
+		String tmpUrl 		     = config.get(configPropertyPrefix + ".policy.rest.url");
+		_sslConfigFileName 		 = config.get(configPropertyPrefix + ".policy.rest.ssl.config.file");
 		_restClientConnTimeOutMs = config.getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		_restClientReadTimeOutMs = config.getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
-		_clusterName = config.get(configPropertyPrefix + ".access.cluster.name", "");
+		_clusterName             = config.get(configPropertyPrefix + ".access.cluster.name", "");
 		if(StringUtil.isEmpty(_clusterName)){
 			_clusterName =config.get(configPropertyPrefix + ".ambari.cluster.name", "");
 		}
@@ -109,9 +110,9 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 		configURLs = StringUtil.getURLs(tmpUrl);
 		this.lastKnownActiveUrlIndex = new Random().nextInt(configURLs.size());
-		_baseUrl = configURLs.get(this.lastKnownActiveUrlIndex);
-		_isSSL = _utils.isSsl(_baseUrl);
-		LOG.info("Init params: " + String.format("Base URL[%s], SSL Config filename[%s], ServiceName=[%s], SupportsPolicyDeltas=[%s], ConfigURLs=[%s]", _baseUrl, _sslConfigFileName, _serviceName, _supportsPolicyDeltas, _supportsTagDeltas, configURLs));
+		String url = configURLs.get(this.lastKnownActiveUrlIndex);
+		_isSSL = isSsl(url);
+		LOG.info("Init params: " + String.format("Base URL[%s], SSL Config filename[%s], ServiceName=[%s], SupportsPolicyDeltas=[%s], ConfigURLs=[%s]", url, _sslConfigFileName, _serviceName, _supportsPolicyDeltas, _supportsTagDeltas, configURLs));
 		
 		_client = getClient();
 		_client.property(ClientProperties.CONNECT_TIMEOUT, _restClientConnTimeOutMs);
@@ -234,7 +235,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				LOG.debug("Checking Roles if updated as user : " + user);
 			}
 
-			relativeURL = _utils.getSecureUrlForRoleUpdate(_baseUrl, _serviceName);
+			relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USER_GROUP_ROLES + _serviceName;
 			final String secureRelativeUrl = relativeURL;
 			PrivilegedAction<Response> action = new PrivilegedAction<Response>() {
 				public Response run() {
@@ -247,7 +248,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				LOG.debug("Checking Roles if updated with old api call");
 			}
 
-			relativeURL = _utils.getUrlForRoleUpdate(_baseUrl, _serviceName);
+			relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USER_GROUP_ROLES + _serviceName;
 			response = get(queryParams, relativeURL);
 		}
 
@@ -537,7 +538,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configURLs.get(currentIndex));
 				if (index == configURLs.size() - 1) {
 					throw new ClientHandlerException(
-							"Failed to communicate with all Ranger Admin's URL's : [ " + configURLs + " ]");
+							"Failed to communicate with all Ranger Admin's URL's : [ " + configURLs + " ]", e);
 				}
 			}
 		}
@@ -557,5 +558,32 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 	private void setLastKnownActiveUrlIndex(int lastKnownActiveUrlIndex) {
 		this.lastKnownActiveUrlIndex = lastKnownActiveUrlIndex;
+	}
+
+	private boolean isSsl(String url) {
+		return !StringUtils.isEmpty(url) && url.toLowerCase().startsWith("https");
+	}
+
+	private String getPluginId(String serviceName, String appId) {
+		String hostName = null;
+
+		try {
+			hostName = InetAddress.getLocalHost().getHostName();
+		} catch (UnknownHostException e) {
+			LOG.error("ERROR: Unable to find hostname for the agent ", e);
+			hostName = "unknownHost";
+		}
+
+		String ret  = hostName + "-" + serviceName;
+
+		if(! StringUtils.isEmpty(appId)) {
+			ret = appId + "@" + ret;
+		}
+
+		if (ret.length() > MAX_PLUGIN_ID_LEN ) {
+			ret = ret.substring(0,MAX_PLUGIN_ID_LEN);
+		}
+
+		return ret ;
 	}
 }
