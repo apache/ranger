@@ -90,6 +90,8 @@ public class AtlasResourceMapperUtil {
 		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper");
 		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasKafkaResourceMapper");
 
+		mapperNames.add(AtlasAdlsResourceMapper.class.getName());
+
 		if (StringUtils.isNotBlank(customMapperNames)) {
 			for (String customMapperName : customMapperNames.split(MAPPER_NAME_DELIMITER)) {
 				mapperNames.add(customMapperName.trim());
