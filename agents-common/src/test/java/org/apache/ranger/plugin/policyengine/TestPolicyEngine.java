@@ -408,6 +408,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_auditExcludeUsersGroupsRoles() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_audit_exclude_users_groups_roles.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
@@ -462,6 +469,7 @@ public class TestPolicyEngine {
 
 		Map<String, Set<String>> userRoleMapping = testCase.userRoles;
 		Map<String, Set<String>> groupRoleMapping = testCase.groupRoles;
+		Map<String, Set<String>> roleRoleMapping = testCase.roleRoles;
 		if (userRoleMapping != null) {
 			for (Map.Entry<String, Set<String>> userRole : userRoleMapping.entrySet()) {
 				String user = userRole.getKey();
@@ -482,8 +490,21 @@ public class TestPolicyEngine {
 				RangerRole.RoleMember groupRoleMember = new RangerRole.RoleMember(group, true);
 				List<RangerRole.RoleMember> groupRoleMembers = Arrays.asList(groupRoleMember);
 				for (String grpRole : groupRoles) {
-					RangerRole rangerGroupRole = new RangerRole(grpRole, grpRole, null, groupRoleMembers, null);
+					RangerRole rangerGroupRole = new RangerRole(grpRole, grpRole, null, null, groupRoleMembers);
 					rolesSet.add(rangerGroupRole);
+				}
+			}
+		}
+
+		if (roleRoleMapping != null) {
+			for (Map.Entry<String, Set<String>> roleRole : roleRoleMapping.entrySet()) {
+				String role = roleRole.getKey();
+				Set<String> roleRoles = roleRole.getValue();
+				RangerRole.RoleMember roleRoleMember = new RangerRole.RoleMember(role, true);
+				List<RangerRole.RoleMember> roleRoleMembers = Arrays.asList(roleRoleMember);
+				for (String rleRole : roleRoles) {
+					RangerRole rangerRoleRole = new RangerRole(rleRole, rleRole, null, null, null, roleRoleMembers);
+					rolesSet.add(rangerRoleRole);
 				}
 			}
 		}
@@ -494,14 +515,17 @@ public class TestPolicyEngine {
 
         policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
 
-        RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles, testCase.superUsers, testCase.superGroups);
+        pluginContext.getConfig().setSuperUsersGroups(testCase.superUsers,  testCase.superGroups);
+		pluginContext.getConfig().setAuditExcludedUsersGroupsRoles(testCase.auditExcludedUsers,  testCase.auditExcludedGroups, testCase.auditExcludedRoles);
+
+        RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 
         policyEngine.setUseForwardedIPAddress(useForwardedIPAddress);
         policyEngine.setTrustedProxyAddresses(trustedProxyAddresses);
 
         policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = false;
 
-		RangerPolicyEngineImpl policyEngineForEvaluatingWithACLs = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles, testCase.superUsers, testCase.superGroups);
+		RangerPolicyEngineImpl policyEngineForEvaluatingWithACLs = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 
 		policyEngineForEvaluatingWithACLs.setUseForwardedIPAddress(useForwardedIPAddress);
 		policyEngineForEvaluatingWithACLs.setTrustedProxyAddresses(trustedProxyAddresses);
@@ -672,6 +696,7 @@ public class TestPolicyEngine {
 		public Map<String, ServicePolicies.SecurityZoneInfo> securityZones;
 		public Map<String, Set<String>> userRoles;
 		public Map<String, Set<String>> groupRoles;
+		public Map<String, Set<String>> roleRoles;
 		public String             auditMode;
 		public List<TestData>     tests;
 		public Map<String, String> serviceConfig;
@@ -679,7 +704,10 @@ public class TestPolicyEngine {
 		public List<TestData>     updatedTests;
 		public Set<String>        superUsers;
 		public Set<String>        superGroups;
-		
+		public Set<String>        auditExcludedUsers;
+		public Set<String>        auditExcludedGroups;
+		public Set<String>        auditExcludedRoles;
+
 		class TestData {
 			public String              name;
 			public RangerAccessRequest request;

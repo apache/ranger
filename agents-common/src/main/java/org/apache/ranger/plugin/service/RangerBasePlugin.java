@@ -56,7 +56,6 @@ import org.apache.ranger.plugin.util.*;
 public class RangerBasePlugin {
 	private static final Log LOG = LogFactory.getLog(RangerBasePlugin.class);
 
-
 	private final RangerPluginConfig          pluginConfig;
 	private final RangerPluginContext         pluginContext;
 	private final Map<String, LogHistory>     logHistoryList = new Hashtable<>();
@@ -67,8 +66,6 @@ public class RangerBasePlugin {
 	private       RangerAuthContext           currentAuthContext;
 	private       RangerAccessResultProcessor resultProcessor;
 	private       RangerRoles                 roles;
-	private       Set<String>                 superUsers  = Collections.emptySet();
-	private       Set<String>                 superGroups = Collections.emptySet();
 
 
 	public RangerBasePlugin(String serviceType, String appId) {
@@ -130,15 +127,12 @@ public class RangerBasePlugin {
 		pluginContext.notifyAuthContextChanged();
 	}
 
+	public void setAuditExcludedUsersGroupsRoles(Set<String> users, Set<String> groups, Set<String> roles) {
+		pluginConfig.setAuditExcludedUsersGroupsRoles(users, groups, roles);
+	}
+
 	public void setSuperUsersAndGroups(Set<String> users, Set<String> groups) {
-		this.superUsers  = users == null ? Collections.emptySet() : users;
-		this.superGroups = groups == null ? Collections.emptySet() : groups;
-
-		RangerPolicyEngine policyEngine = this.policyEngine;
-
-		if (policyEngine != null) {
-			policyEngine.setSuperUsersAndGroups(this.superUsers, this.superGroups);
-		}
+		pluginConfig.setSuperUsersGroups(users, groups);
 	}
 
 	public RangerServiceDef getServiceDef() {
@@ -230,7 +224,7 @@ public class RangerBasePlugin {
 						LOG.debug("Creating engine from policies");
 					}
 
-					newPolicyEngine = new RangerPolicyEngineImpl(policies, pluginContext, roles, superUsers, superGroups);
+					newPolicyEngine = new RangerPolicyEngineImpl(policies, pluginContext, roles);
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("policy-deltas are not null");
@@ -259,7 +253,7 @@ public class RangerBasePlugin {
 								LOG.debug("Creating new engine from servicePolicies:[" + servicePolicies + "]");
 							}
 
-							newPolicyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles, superUsers, superGroups);
+							newPolicyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 						}
 					} else {
 						if (LOG.isDebugEnabled()) {

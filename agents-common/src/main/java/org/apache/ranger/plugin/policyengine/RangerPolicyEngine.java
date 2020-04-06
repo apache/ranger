@@ -51,10 +51,6 @@ public interface RangerPolicyEngine {
 
 	void setTrustedProxyAddresses(String[] trustedProxyAddresses);
 
-	void setSuperUsersAndGroups(Set<String> users, Set<String> groups);
-
-	boolean isSuperUser(String userName, Set<String> userGroups);
-
 	RangerServiceDef getServiceDef();
 
 	long getPolicyVersion();

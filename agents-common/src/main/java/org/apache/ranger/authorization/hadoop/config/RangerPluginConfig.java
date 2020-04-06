@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
@@ -27,6 +28,9 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 
 import java.io.File;
 import java.net.URL;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 
 
 public class RangerPluginConfig extends RangerConfiguration {
@@ -43,6 +47,11 @@ public class RangerPluginConfig extends RangerConfiguration {
     private final boolean                   useForwardedIPAddress;
     private final String[]                  trustedProxyAddresses;
     private final String                    propertyPrefix;
+    private       Set<String>               auditExcludedUsers  = Collections.emptySet();
+    private       Set<String>               auditExcludedGroups = Collections.emptySet();
+    private       Set<String>               auditExcludedRoles  = Collections.emptySet();
+    private       Set<String>               superUsers          = Collections.emptySet();
+    private       Set<String>               superGroups         = Collections.emptySet();
 
 
     public RangerPluginConfig(String serviceType, String serviceName, String appId, String clusterName, String clusterType, RangerPolicyEngineOptions policyEngineOptions) {
@@ -143,6 +152,36 @@ public class RangerPluginConfig extends RangerConfiguration {
         return policyEngineOptions;
     }
 
+    public void setAuditExcludedUsersGroupsRoles(Set<String> users, Set<String> groups, Set<String> roles) {
+        auditExcludedUsers  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
+        auditExcludedGroups = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(groups);
+        auditExcludedRoles  = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(roles);
+    }
+
+    public void setSuperUsersGroups(Set<String> users, Set<String> groups) {
+        superUsers  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
+        superGroups = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(groups);
+    }
+
+    public boolean isAuditExcludedUser(String userName) {
+        return auditExcludedUsers.contains(userName);
+    }
+
+    public boolean hasAuditExcludedGroup(Set<String> userGroups) {
+        return userGroups != null && userGroups.size() > 0 && auditExcludedGroups.size() > 0 && CollectionUtils.containsAny(userGroups, auditExcludedGroups);
+    }
+
+    public boolean hasAuditExcludedRole(Set<String> userRoles) {
+        return userRoles != null && userRoles.size() > 0 && auditExcludedRoles.size() > 0 && CollectionUtils.containsAny(userRoles, auditExcludedRoles);
+    }
+
+    public boolean isSuperUser(String userName) {
+        return superUsers.contains(userName);
+    }
+
+    public boolean hasSuperGroup(Set<String> userGroups) {
+        return userGroups != null && userGroups.size() > 0 && superGroups.size() > 0 && CollectionUtils.containsAny(userGroups, superGroups);
+    }
 
     private void addResourcesForServiceType(String serviceType) {
         String auditCfg    = "ranger-" + serviceType + "-audit.xml";
