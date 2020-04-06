@@ -2094,7 +2094,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					return false;
 				}
 
-				if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())) {
+				if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles())) {
 					return false;
 				}
 
@@ -2103,6 +2103,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 
 				if (policyItem.getGroups() != null && (policyItem.getGroups().contains(null) || policyItem.getGroups().contains(""))) {
+					return false;
+				}
+
+				if (policyItem.getRoles() != null && (policyItem.getRoles().contains(null) || policyItem.getRoles().contains(""))) {
 					return false;
 				}
 

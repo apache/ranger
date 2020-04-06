@@ -59,6 +59,10 @@ public abstract class RangerBaseService {
 
 	protected static final String KERBEROS_TYPE        = "kerberos";
 
+	private static final String PROP_DEFAULT_POLICY_PREFIX      = "default-policy.";
+	private static final String PROP_DEFAULT_POLICY_NAME_SUFFIX = "name";
+
+
 	protected RangerServiceDef serviceDef;
 	protected RangerService    service;
 
@@ -133,7 +137,7 @@ public abstract class RangerBaseService {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBaseService.getDefaultRangerPolicies() ");
 		}
-		final Boolean additionalDefaultPolicySetup = Boolean.valueOf(configs.get("setup.additional.default.policies"));
+
 		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 
 		try {
@@ -148,43 +152,55 @@ public abstract class RangerBaseService {
 		} catch (Exception e) {
 			LOG.error("Error getting default polcies for Service: " + service.getName(), e);
 		}
-		if (additionalDefaultPolicySetup) {
-			final String PROP_POLICY_NAME_PREFIX = "default-policy.";
-			final String PROP_POLICY_NAME_SUFFIX = ".name";
 
-			TreeSet<String> policyIndexes = new TreeSet<>();
+		final Boolean additionalDefaultPolicySetup = Boolean.valueOf(configs.get("setup.additional.default.policies"));
+
+		if (additionalDefaultPolicySetup) {
+			LOG.info(getServiceName() + ": looking for additional default policies in service-config");
+
+			Set<String> policyIndexes = new TreeSet<>();
 
 			for (String configName : configs.keySet()) {
-			    if (configName.startsWith(PROP_POLICY_NAME_PREFIX) && configName.endsWith(PROP_POLICY_NAME_SUFFIX)) {
-			      policyIndexes.add(configName.substring(PROP_POLICY_NAME_PREFIX.length(), configName.length() - PROP_POLICY_NAME_SUFFIX.length()));
+			    if (configName.startsWith(PROP_DEFAULT_POLICY_PREFIX) && configName.endsWith(PROP_DEFAULT_POLICY_NAME_SUFFIX)) {
+			    	policyIndexes.add(configName.substring(PROP_DEFAULT_POLICY_PREFIX.length(), configName.length() - PROP_DEFAULT_POLICY_NAME_SUFFIX.length() - 1));
 			    }
 			}
+
+			LOG.info(getServiceName() + ": found " + policyIndexes.size() + " additional default policies in service-config");
 
 			for (String policyIndex : policyIndexes) {
-			    String                            resourcePropertyPrefix  = "default-policy." + policyIndex + ".resource.";
-			    Map<String, RangerPolicyResource> policyResources = getResourcesForPrefix(resourcePropertyPrefix);
+				String                            policyPropertyPrefix   = PROP_DEFAULT_POLICY_PREFIX + policyIndex + ".";
+			    String                            resourcePropertyPrefix = policyPropertyPrefix + "resource.";
+			    Map<String, RangerPolicyResource> policyResources        = getResourcesForPrefix(resourcePropertyPrefix);
 
-			    if(MapUtils.isNotEmpty(policyResources)){
-			    	addCustomRangerDefaultPolicies(ret, policyResources,policyIndex);
+			    if (MapUtils.isNotEmpty(policyResources)) {
+			    	addCustomRangerDefaultPolicies(ret, policyResources, policyPropertyPrefix);
+			    } else {
+			    	LOG.warn(getServiceName() + ": no resources specified for default policy with prefix '" + policyPropertyPrefix + "'. Ignored");
 			    }
-
 			}
-
 		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerBaseService.getDefaultRangerPolicies(): " + ret);
 		}
+
 		return ret;
 	}
 
 	private Map<String, RangerPolicyResource> getResourcesForPrefix(String resourcePropertyPrefix) {
 		Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap = new HashMap<String, RangerPolicy.RangerPolicyResource>();
+
 		if (configs != null) {
 			for (Map.Entry<String, String> entry : configs.entrySet()) {
-				if(entry.getKey().indexOf(resourcePropertyPrefix) > -1 && StringUtils.isNotBlank(entry.getValue())){
-					RangerPolicyResource rPolRes=new RangerPolicyResource();
-					String resourceKey = entry.getKey().substring(resourcePropertyPrefix.length());
-					List<String> resourceList = new ArrayList<String>(Arrays.asList(entry.getValue().split(",")));
+				String configName  = entry.getKey();
+				String configValue = entry.getValue();
+
+				if(configName.startsWith(resourcePropertyPrefix) && StringUtils.isNotBlank(configValue)){
+					RangerPolicyResource rPolRes      = new RangerPolicyResource();
+					String               resourceKey  = configName.substring(resourcePropertyPrefix.length());
+					List<String>         resourceList = new ArrayList<String>(Arrays.asList(configValue.split(",")));
+
 					rPolRes.setIsExcludes(false);
 					rPolRes.setIsRecursive(false);
 					rPolRes.setValues(resourceList);
@@ -192,111 +208,73 @@ public abstract class RangerBaseService {
 				}
 			}
 		}
+
 		return policyResourceMap;
 	}
 
+	private void addCustomRangerDefaultPolicies(List<RangerPolicy> ret, Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap, String policyPropertyPrefix) throws Exception {
+		String policyName  = configs.get(policyPropertyPrefix + PROP_DEFAULT_POLICY_NAME_SUFFIX);
+		String description = configs.get(policyPropertyPrefix + "description");
 
-	private void addCustomRangerDefaultPolicies(List<RangerPolicy> ret, Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap, String policyIndex) throws Exception {
+		if (StringUtils.isEmpty(description)) {
+			description = "Policy for " + policyName;
+		}
 
-		LOG.info("Setting additional default policies");
-		String startConfigName = "default-policy.";
-		RangerPolicy addDefaultPolicy1 = null;
-		String policyName = configs.get(startConfigName+policyIndex+".name");
-		if(policyResourceMap!= null && StringUtils.isNotBlank(policyName)){
-			String polItem1Users = configs.get(startConfigName+policyIndex+".policyItem.1.users");
-			String polItem2Users = configs.get(startConfigName+policyIndex+".policyItem.2.users");
-			String polItem1group = configs.get(startConfigName+policyIndex+".policyItem.1.groups");
-			String polItem2group = configs.get(startConfigName+policyIndex+".policyItem.2.groups");
-			String polItem1AccessTypes = configs.get(startConfigName+policyIndex+".policyItem.1.accessTypes");
-			String polItem2AccessTypes = configs.get(startConfigName+policyIndex+".policyItem.2.accessTypes");
-			if((StringUtils.isNotBlank(polItem1Users) && StringUtils.isNotBlank(polItem1AccessTypes)) || (StringUtils.isNotBlank(polItem2Users) && StringUtils.isNotBlank(polItem2AccessTypes)) ){
-				addDefaultPolicy1 = getRangerCustomPolicy(policyName,policyResourceMap,polItem1Users,polItem2Users,polItem1group,polItem2group,polItem1AccessTypes,polItem2AccessTypes);
-				if(addDefaultPolicy1 != null){
-				ret.add(addDefaultPolicy1);
+		RangerPolicy policy = new RangerPolicy();
+
+		policy.setName(policyName);
+		policy.setIsEnabled(true);
+		policy.setVersion(1L);
+		policy.setIsAuditEnabled(true);
+		policy.setService(serviceName);
+		policy.setDescription(description);
+		policy.setName(policyName);
+		policy.setResources(policyResourceMap);
+
+		for (int i = 1; ; i++) {
+			String policyItemPropertyPrefix = policyPropertyPrefix + "policyItem." + i + ".";
+			String policyItemUsers          = configs.get(policyItemPropertyPrefix + "users");
+			String policyItemGroups         = configs.get(policyItemPropertyPrefix + "groups");
+			String policyItemRoles          = configs.get(policyItemPropertyPrefix + "roles");
+			String policyItemAccessTypes    = configs.get(policyItemPropertyPrefix + "accessTypes");
+			String isDelegateAdmin          = configs.get(policyItemPropertyPrefix + "isDelegateAdmin");
+
+			if (StringUtils.isEmpty(policyItemAccessTypes) ||
+				(StringUtils.isEmpty(policyItemUsers) && StringUtils.isEmpty(policyItemGroups) && StringUtils.isEmpty(policyItemRoles))) {
+
+				break;
+			}
+
+			RangerPolicyItem policyItem = new RangerPolicyItem();
+
+			policyItem.setDelegateAdmin(Boolean.parseBoolean(isDelegateAdmin));
+
+			if (StringUtils.isNotBlank(policyItemUsers)) {
+				policyItem.setUsers(Arrays.asList(policyItemUsers.split(",")));
+			}
+
+			if (StringUtils.isNotBlank(policyItemGroups)) {
+				policyItem.setGroups(Arrays.asList(policyItemGroups.split(",")));
+			}
+
+			if (StringUtils.isNotBlank(policyItemRoles)) {
+				policyItem.setRoles(Arrays.asList(policyItemRoles.split(",")));
+			}
+
+			if (StringUtils.isNotBlank(policyItemAccessTypes)) {
+				for (String accessType : Arrays.asList(policyItemAccessTypes.split(","))) {
+					RangerPolicyItemAccess polAccess = new RangerPolicyItemAccess(accessType, true);
+
+					policyItem.getAccesses().add(polAccess);
 				}
 			}
-		}
-	}
 
-	public RangerPolicy getRangerCustomPolicy(String policyName, Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap, String polItem1Users, String polItem2Users, String polItem1Group, String polItem2Group, String polItem1AccessTypes, String polItem2AccessTypes) throws Exception {
-
-		if(LOG.isDebugEnabled()){
-			LOG.debug("==> RangerBaseService.getAtlasTopicPolicy(). resourcenames" + policyResourceMap + "policy users = " + polItem1Users + polItem2Users + "policy groups = " + polItem1Group + polItem2Group + "accessLists ");
-		}
-		RangerPolicy rPolicy = new RangerPolicy();
-		List<RangerPolicyItem> policyItemList =new ArrayList<RangerPolicyItem>();
-
-		List<String> policyItem1UserList = new ArrayList<String>();
-		List<String> policyItem2UserList = new ArrayList<String>();
-		List<String> pol1Item1AccessTypeList = new ArrayList<String>();
-		List<String> pol1Item2AccessTypeList = new ArrayList<String>();
-		List<String> policyItem1GroupList = new ArrayList<String>();
-		List<String> policyItem2GroupList = new ArrayList<String>();
-
-		if(StringUtils.isNotBlank(polItem1Group)){
-			policyItem1GroupList.addAll(Arrays.asList(polItem1Group.split(",")));
-		}
-		if(StringUtils.isNotBlank(polItem2Group)){
-			policyItem2GroupList.addAll(Arrays.asList(polItem2Group.split(",")));
-		}
-		if(StringUtils.isNotBlank(polItem1Users)){
-			policyItem1UserList.addAll(Arrays.asList(polItem1Users.split(",")));
-		}
-		if(StringUtils.isNotBlank(polItem2Users)){
-			policyItem2UserList.addAll(Arrays.asList(polItem2Users.split(",")));
-		}
-		if(StringUtils.isNotBlank(polItem1AccessTypes)){
-			pol1Item1AccessTypeList.addAll(Arrays.asList(polItem1AccessTypes.split(",")));
-		}
-		if(StringUtils.isNotBlank(polItem2AccessTypes)){
-			pol1Item2AccessTypeList.addAll(Arrays.asList(polItem2AccessTypes.split(",")));
+			policy.getPolicyItems().add(policyItem);
 		}
 
-		if((CollectionUtils.isNotEmpty(policyItem1UserList)||CollectionUtils.isNotEmpty(policyItem1GroupList)) && CollectionUtils.isNotEmpty(pol1Item1AccessTypeList)){
-		RangerPolicyItem policyItem1 = setCustomPolItem(policyItem1UserList,pol1Item1AccessTypeList,policyItem1GroupList);
-		policyItemList.add(policyItem1);
-		}
-		if((CollectionUtils.isNotEmpty(policyItem2UserList)||CollectionUtils.isNotEmpty(policyItem2GroupList)) && CollectionUtils.isNotEmpty(pol1Item2AccessTypeList)){
-		RangerPolicy.RangerPolicyItem policyItem2 = setCustomPolItem(policyItem2UserList,pol1Item2AccessTypeList,policyItem2GroupList);
-		policyItemList.add(policyItem2);
-		}
-		rPolicy.setPolicyItems(policyItemList);
-		rPolicy.setIsEnabled(true);
-		rPolicy.setVersion(1L);
-		rPolicy.setIsAuditEnabled(true);
-		rPolicy.setService(serviceName);
-		rPolicy.setDescription("Policy for " + policyName);
-		rPolicy.setName(policyName);
-		rPolicy.setResources(policyResourceMap);
+		LOG.info(getServiceName() + ": adding default policy: name=" +  policy.getName());
 
-		if(LOG.isDebugEnabled()){
-			LOG.debug("<== RangerBaseService.getAtlasTopicPolicy() ");
-		}
-		return rPolicy;
-	}
-
-	private RangerPolicyItem setCustomPolItem(List<String> userList, List<String> pol1Item1AccessTypeList, List<String> groupList) {
-		RangerPolicyItem polItem = new RangerPolicyItem();
-		if(LOG.isDebugEnabled()){
-			LOG.debug("==> RangerServiceKafka.setCustomPolItem(). userlist = " + userList + " accessType" + pol1Item1AccessTypeList);
-		}
-
-		List<RangerPolicyItemAccess> polAccesslist =new ArrayList<RangerPolicyItemAccess>();
-		polItem.setDelegateAdmin(false);
-		for(String pol1Item1AccessType : pol1Item1AccessTypeList){
-			RangerPolicyItemAccess polAccess = new RangerPolicyItemAccess();
-			polAccess.setIsAllowed(true);
-			polAccess.setType(pol1Item1AccessType);
-			polAccesslist.add(polAccess);
-		}
-		polItem.setAccesses(polAccesslist );
-		polItem.setUsers(userList);
-		polItem.setGroups(groupList);
-		if(LOG.isDebugEnabled()){
-			LOG.debug("<== RangerServiceKafka.setCustomPolItem()");
-		}
-
-		return  polItem;
+		ret.add(policy);
 	}
 
 	private RangerPolicy getDefaultPolicy(List<RangerServiceDef.RangerResourceDef> resourceHierarchy) throws Exception {
