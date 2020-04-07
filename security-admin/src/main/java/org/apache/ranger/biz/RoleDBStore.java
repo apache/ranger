@@ -43,6 +43,7 @@ import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerRoleService;
+import org.apache.ranger.view.RangerRoleList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -268,6 +269,20 @@ public class RoleDBStore implements RoleStore {
         return ret;
     }
 
+    public RangerRoleList getRoles(SearchFilter filter, RangerRoleList rangerRoleList) throws Exception {
+    	List<RangerRole> roles = new ArrayList<RangerRole>();
+    	List<XXRole> xxRoles = (List<XXRole>)roleService.searchResources(filter, roleService.searchFields, roleService.sortFields, rangerRoleList);
+
+    	if (CollectionUtils.isNotEmpty(xxRoles)) {
+    		for (XXRole xxRole : xxRoles) {
+    			roles.add(roleService.read(xxRole.getId()));
+    		}
+    	}
+
+    	rangerRoleList.setRoleList(roles);
+    	return rangerRoleList;
+    }
+    
     @Override
     public List<String> getRoleNames(SearchFilter filter) throws Exception {
         return daoMgr.getXXRole().getAllNames();

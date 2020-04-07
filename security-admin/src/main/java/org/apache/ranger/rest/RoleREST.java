@@ -330,17 +330,9 @@ public class RoleREST {
             LOG.debug("==> getAllRoles()");
         }
         SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
-        List<RangerRole> roles;
         try {
             ensureAdminAccess(null, null);
-            roles = roleStore.getRoles(filter);
-            ret.setRoleList(roles);
-            if (roles != null) {
-                ret.setTotalCount(roles.size());
-                ret.setSortBy(filter.getSortBy());
-                ret.setSortType(filter.getSortType());
-                ret.setResultSize(roles.size());
-            }
+            roleStore.getRoles(filter,ret);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
