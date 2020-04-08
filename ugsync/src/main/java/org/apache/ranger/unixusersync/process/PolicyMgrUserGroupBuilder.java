@@ -347,7 +347,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					newGroupList.add(group);
 				}
 			}
-			LOG.debug("INFO: addPMAccount(" + userName + ")" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("INFO: addPMAccount(" + userName + ")");
+			}
 			if (! isMockRun) {
 				if (addMUser(userName) == null) {
 					String msg = "Failed to add portal user";
@@ -560,7 +562,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					LOG.error("Failed to get response, Error is : " + e.getMessage());
 				}
 			}
-			LOG.debug("RESPONSE: [" + response + "]");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("RESPONSE: [" + response + "]");
+			}
 			GetXGroupListResponse groupList = gson.fromJson(response, GetXGroupListResponse.class);
             LOG.info("Group List : "+groupList);
 			totalCount = groupList.getTotalCount();
@@ -570,8 +574,10 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				retrievedCount = xgroupList.size();
 
 				for (XGroupInfo g : groupList.getXgroupInfoList()) {
-					LOG.debug("GROUP:  Id:" + g.getId() + ", Name: " + g.getName() + ", Description: "
-							+ g.getDescription());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("GROUP:  Id:" + g.getId() + ", Name: " + g.getName() + ", Description: "
+								+ g.getDescription());
+					}
 				}
 			}
 		}
@@ -609,7 +615,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					LOG.error("Failed to get response, Error is : "+e.getMessage());
 				}
 			}
-			LOG.debug("RESPONSE: [" + response + "]");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("RESPONSE: [" + response + "]");
+			}
 			GetXUserListResponse userList = gson.fromJson(response, GetXUserListResponse.class);
 
 			totalCount = userList.getTotalCount();
@@ -619,8 +627,10 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				retrievedCount = xuserList.size();
 
 				for (XUserInfo u : userList.getXuserInfoList()) {
-					LOG.debug("USER: Id:" + u.getId() + ", Name: " + u.getName() + ", Description: "
-							+ u.getDescription());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("USER: Id:" + u.getId() + ", Name: " + u.getName() + ", Description: "
+								+ u.getDescription());
+					}
 				}
 			}
 		}
@@ -658,7 +668,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 					LOG.error("Failed to get response, Error is : " + e.getMessage());
 				}
 			}
-			LOG.debug("RESPONSE: [" + response + "]");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("RESPONSE: [" + response + "]");
+			}
 
 			GetXUserGroupListResponse usergroupList = gson.fromJson(response, GetXUserGroupListResponse.class);
 
@@ -669,7 +681,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 				retrievedCount = xusergroupList.size();
 
 				for (XUserGroupInfo ug : usergroupList.getXusergroupInfoList()) {
-					LOG.debug("USER_GROUP: UserId:" + ug.getUserId() + ", Name: " + ug.getGroupName());
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("USER_GROUP: UserId:" + ug.getUserId() + ", Name: " + ug.getGroupName());
+					}
 				}
 			}
 		}
@@ -685,7 +699,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		UserGroupInfo ret = null;
 		XUserInfo user = null;
 
-		LOG.debug("INFO: addPMXAUser(" + userName + ")" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("INFO: addPMXAUser(" + userName + ")");
+		}
 		if (! isMockRun) {
 			user = addXUserInfo(userName);
             if (!groups.isEmpty() && user != null) {
@@ -708,7 +724,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
         }
 
 		for(String g : groups) {
-				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")");
+			}
 		}
 		if (! isMockRun ) {
 			addXUserGroupInfo(user, groups);
@@ -1055,7 +1073,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 			if (group != null) {
 				if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
 					try {
-						LOG.debug("Using principal = " + principal + " and keytab = " + keytab);
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Using principal = " + principal + " and keytab = " + keytab);
+						}
 						Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
 						Subject.doAs(sub, new PrivilegedAction<Void>() {
 							@Override
@@ -1397,7 +1417,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		XGroupInfo ret = null;
 		XGroupInfo group = null;
 
-		LOG.debug("INFO: addPMXAGroup(" + groupName + ")" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("INFO: addPMXAGroup(" + groupName + ")");
+		}
 		if (! isMockRun) {
 			group = addXGroupInfo(groupName);
 		}
@@ -1516,9 +1538,11 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		auditInfo.setNoOfModifiedUsers(Integer.toUnsignedLong(noOfModifiedUsers));
 		auditInfo.setNoOfModifiedGroups(Integer.toUnsignedLong(noOfModifiedGroups));
 		auditInfo.setSessionId("");
-		LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfNewUsers() + ", " + auditInfo.getNoOfNewGroups()
-				+ ", " + auditInfo.getNoOfModifiedUsers() + ", " + auditInfo.getNoOfModifiedGroups()
-				+ ", " + auditInfo.getSyncSource() + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfNewUsers() + ", " + auditInfo.getNoOfNewGroups()
+					+ ", " + auditInfo.getNoOfModifiedUsers() + ", " + auditInfo.getNoOfModifiedGroups()
+					+ ", " + auditInfo.getSyncSource() + ")");
+		}
 
 		if (authenticationType != null
 				&& AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
@@ -1578,7 +1602,9 @@ public class PolicyMgrUserGroupBuilder implements UserGroupSink {
 		}
 		UgsyncAuditInfo ret = gson.fromJson(response, UgsyncAuditInfo.class);
 
-		LOG.debug("AuditInfo Creation successful ");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("AuditInfo Creation successful ");
+		}
 
 		if(LOG.isDebugEnabled()){
 			LOG.debug("<== PolicyMgrUserGroupBuilder.getUserGroupAuditInfo()");

@@ -28,11 +28,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.StringTokenizer;
+import java.util.NoSuchElementException;
 
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
@@ -44,7 +45,10 @@ import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.LdapSyncSourceInfo;
@@ -317,7 +321,9 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 		if (!groupSearchFirstEnabled) {
 			LOG.info("Performing user search first");
 			getUsers(sink);
-			LOG.debug("Total No. of users saved = " + userGroupMap.size());
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Total No. of users saved = " + userGroupMap.size());
+			}
 			if (!groupSearchEnabled && groupHierarchyLevels > 0) {
 				getRootDN();
 			}
@@ -331,13 +337,19 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 					getGroups(sink, userInfo);
 				}
                 if (groupHierarchyLevels > 0) {
-                    LOG.debug("Going through group hierarchy for nested group evaluation");
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Going through group hierarchy for nested group evaluation");
+					}
                     goUpGroupHierarchyLdap(userInfo.getGroupDNs(), groupHierarchyLevels - 1, userInfo);
-                    LOG.debug("Completed group hierarchy computation");
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Completed group hierarchy computation");
+					}
                 }
 				List<String> groupList = userInfo.getGroups();
 				allGroups.addAll(groupList);
-                LOG.debug("updateSink(): group list for " + userName + " = " + groupList);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("updateSink(): group list for " + userName + " = " + groupList);
+				}
 				if (userNameCaseConversionFlag) {
 					if (userNameLowerCaseFlag) {
 						userName = userName.toLowerCase();
@@ -373,8 +385,10 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 			getGroups(sink, null);
 			 // Go through the userInfo map and update ranger admin.
             for (UserInfo userInfo : userGroupMap.values()) {
-				LOG.debug("userName from map = " + userInfo.getUserFullName());
-                String userName = getShortUserName(userInfo.getUserFullName());
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("userName from map = " + userInfo.getUserFullName());
+				}
+                String userName = getShortName(userInfo.getUserFullName());
                 if (groupHierarchyLevels > 0) {
                     //System.out.println("Going through group hierarchy for nested group evaluation");
                     goUpGroupHierarchyLdap(userInfo.getGroupDNs(), groupHierarchyLevels - 1, userInfo);
@@ -496,9 +510,11 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 											NamingEnumeration<?> groupEnum = userGroupfAttribute.getAll();
 											while (groupEnum.hasMore()) {
                                                 String groupDN = (String) groupEnum.next();
-                                                LOG.debug("Adding " + groupDN + " to " + userName);
+												if (LOG.isDebugEnabled()) {
+													LOG.debug("Adding " + groupDN + " to " + userName);
+												}
                                                 userInfo.addGroupDN(groupDN);
-												String gName = getShortGroupName(groupDN);
+												String gName = getShortName(groupDN);
 												if (groupNameCaseConversionFlag) {
 													if (groupNameLowerCaseFlag) {
 														gName = gName.toLowerCase();
@@ -554,7 +570,9 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 								// then update user name in the userInfo map with the value from the search result
 								// and update ranger admin.
 								String userFullName = (userEntry.getNameInNamespace()).toLowerCase();
-								LOG.debug("Checking if the user " + userFullName + " is part of the retrieved groups");
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Checking if the user " + userFullName + " is part of the retrieved groups");
+								}
 
 								userInfo = userGroupMap.get(userFullName);
 								if (userInfo == null) {
@@ -600,19 +618,27 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 											(PagedResultsResponseControl)control;
 									total = prrc.getResultSize();
 									if (total != 0) {
-										LOG.debug("END-OF-PAGE total : " + total);
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : " + total);
+										}
 									} else {
-										LOG.debug("END-OF-PAGE total : unknown");
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : unknown");
+										}
 									}
 									cookie = prrc.getCookie();
 								}
 							}
 						} else {
-							LOG.debug("No controls were sent from the server");
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("No controls were sent from the server");
+							}
 						}
 						// Re-activate paged results
 						if (pagedResultsEnabled)   {
-							LOG.debug(String.format("Fetched paged results round: %s", ++paged));
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(String.format("Fetched paged results round: %s", ++paged));
+							}
 							ldapContext.setRequestControls(new Control[]{
 									new PagedResultsControl(pagedResultsSize, cookie, Control.CRITICAL) });
 						}
@@ -713,7 +739,9 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 									// update the group name to ranger admin
 									// check for group members and populate userInfo object with user's full name and group mapping
 									Attribute groupMemberAttr = groupEntry.getAttributes().get(groupMemberAttributeName);
-									LOG.debug("Update Ranger admin with " + gName);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("Update Ranger admin with " + gName);
+									}
 									int userCount = 0;
 									if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
 										LOG.info("No members available for " + gName);
@@ -752,19 +780,27 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 											(PagedResultsResponseControl)control;
 									total = prrc.getResultSize();
 									if (total != 0) {
-										LOG.debug("END-OF-PAGE total : " + total);
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : " + total);
+										}
 									} else {
-										LOG.debug("END-OF-PAGE total : unknown");
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : unknown");
+										}
 									}
 									cookie = prrc.getCookie();
 								}
 							}
 						} else {
-							LOG.debug("No controls were sent from the server");
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("No controls were sent from the server");
+							}
 						}
 						// Re-activate paged results
 						if (pagedResultsEnabled)   {
-							LOG.debug(String.format("Fetched paged results round: %s", ++paged));
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(String.format("Fetched paged results round: %s", ++paged));
+							}
 							ldapContext.setRequestControls(new Control[]{
 									new PagedResultsControl(pagedResultsSize, cookie, Control.CRITICAL) });
 						}
@@ -787,40 +823,53 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 	}
 
 
-	private static String getShortGroupName(String longGroupName) throws InvalidNameException {
-		if (longGroupName == null) {
+	private static String getShortName(String longName) {
+		if (StringUtils.isEmpty(longName)) {
 			return null;
 		}
-		StringTokenizer stc = new StringTokenizer(longGroupName, ",");
-		String firstToken = stc.nextToken();
-		StringTokenizer ste = new StringTokenizer(firstToken, "=");
-		String groupName =  ste.nextToken();
-		if (ste.hasMoreTokens()) {
-			groupName = ste.nextToken();
+		String shortName = "";
+		try {
+			LdapName subjectDN = new LdapName(longName);
+			List<Rdn> rdns = subjectDN.getRdns();
+			for (int i = rdns.size() - 1; i >= 0; i--) {
+				if (StringUtils.isNotEmpty(shortName)) {
+					break;
+				}
+				Rdn rdn = rdns.get(i);
+				Attributes attributes = rdn.toAttributes();
+				try {
+					Attribute uid = attributes.get("uid");
+					if (uid != null) {
+						Object value = uid.get();
+						if (value != null) {
+							shortName = value.toString();
+						}
+					} else {
+						Attribute cn = attributes.get("cn");
+						if (cn != null) {
+							Object value = cn.get();
+							if (value != null) {
+								shortName = value.toString();
+							}
+						}
+					}
+				} catch (NoSuchElementException ignore) {
+					shortName = longName;
+				} catch (NamingException ignore) {
+					shortName = longName;
+				}
+			}
+		} catch (InvalidNameException ex) {
+			shortName = longName;
 		}
-		groupName = groupName.trim();
-		LOG.info("longGroupName: " + longGroupName + ", groupName: " + groupName);
-		return groupName;
-	}
-
-	private static String getShortUserName(String longUserName) throws InvalidNameException {
-		if (longUserName == null) {
-			return null;
-		}
-		StringTokenizer stc = new StringTokenizer(longUserName, ",");
-		String firstToken = stc.nextToken();
-		StringTokenizer ste = new StringTokenizer(firstToken, "=");
-		String userName =  ste.nextToken();
-		if (ste.hasMoreTokens()) {
-			userName = ste.nextToken();
-		}
-		userName = userName.trim();
-		LOG.info("longUserName: " + longUserName + ", userName: " + userName);
-		return userName;
+		LOG.info("longName: " + longName + ", userName: " + shortName);
+		return shortName;
 	}
 
 	private void goUpGroupHierarchyLdap(Set<String> groupDNs, int groupHierarchyLevels, UserInfo userInfo) throws Throwable {
-        LOG.debug("goUpGroupHierarchyLdap(): Incoming groups " + groupDNs);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("goUpGroupHierarchyLdap(): Incoming groups " + groupDNs);
+		}
 		if (groupHierarchyLevels <= 0 || groupDNs.isEmpty()) {
 			return;
 		}
@@ -852,7 +901,9 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 			filter.append("))");
             groupFilter += filter;
 
-			LOG.debug("extendedAllGroupsSearchFilter = " + groupFilter);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("extendedAllGroupsSearchFilter = " + groupFilter);
+			}
 			for (String ou : groupSearchBase) {
 				byte[] cookie = null;
 				int counter = 0;
@@ -904,15 +955,21 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 											(PagedResultsResponseControl)control;
 									total = prrc.getResultSize();
 									if (total != 0) {
-										LOG.debug("END-OF-PAGE total : " + total);
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : " + total);
+										}
 									} else {
-										LOG.debug("END-OF-PAGE total : unknown");
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : unknown");
+										}
 									}
 									cookie = prrc.getCookie();
 								}
 							}
 						} else {
-							LOG.debug("No controls were sent from the server");
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("No controls were sent from the server");
+							}
 						}
 						// Re-activate paged results
 						if (pagedResultsEnabled)   {
@@ -959,7 +1016,9 @@ public class LdapUserGroupBuilder extends AbstractUserGroupSource {
 
 				Attributes attrs = result1.getAttributes();
 				Attribute attr = attrs.get("namingContexts");
-				LOG.debug("namingContexts = " + attr);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("namingContexts = " + attr);
+				}
 				groupSearchBase = new String[] {attr.get(0).toString()};
 				LOG.info("RootDN = " + Arrays.toString(groupSearchBase));
 			}

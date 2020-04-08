@@ -31,13 +31,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
-import java.util.StringTokenizer;
 import java.util.HashMap;
 import java.util.UUID;
+import java.util.NoSuchElementException;
 
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
@@ -49,6 +50,8 @@ import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
+import javax.naming.ldap.LdapName;
+import javax.naming.ldap.Rdn;
 
 import org.apache.commons.collections.BidiMap;
 import org.apache.commons.collections.bidimap.DualHashBidiMap;
@@ -426,7 +429,9 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		    }
 			List<String> userList = new ArrayList<>(userSet);
 			String transformGroupName = groupNameTransform(groupName);
-			LOG.debug("addOrUpdateGroup(): group = " + groupName + " users = " + userList);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("addOrUpdateGroup(): group = " + groupName + " users = " + userList);
+			}
 			try {
 				sink.addOrUpdateGroup(transformGroupName, groupInfoMap.get(groupName), userList);
 			} catch (Throwable t) {
@@ -435,7 +440,9 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 				+ ", users: " + userList);
 			}
 		}
-		LOG.debug("postUserGroupAuditInfo(): noOfUsers = " + noOfNewUsers + " noOfGroups = " + noOfNewGroups);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("postUserGroupAuditInfo(): noOfUsers = " + noOfNewUsers + " noOfGroups = " + noOfNewGroups);
+		}
 
 		ugsyncAuditInfo.setNoOfNewUsers(Integer.toUnsignedLong(noOfNewUsers));
 		ugsyncAuditInfo.setNoOfNewGroups(Integer.toUnsignedLong(noOfNewGroups));
@@ -597,7 +604,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 									if (userGroupfAttribute != null) {
 										NamingEnumeration<?> groupEnum = userGroupfAttribute.getAll();
 										while (groupEnum.hasMore()) {
-											String gName = getShortGroupName((String) groupEnum
+											String gName = getShortName((String) groupEnum
 													.next());
 											String transformGroupName = groupNameTransform(gName);
 											groups.add(transformGroupName);
@@ -618,7 +625,9 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 						} else {
 							// If the user from the search result is present in the group user table,
 							// then addorupdate user to ranger admin.
-							LOG.debug("Chekcing if the user " + userFullName + " is part of the retrieved groups");
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Chekcing if the user " + userFullName + " is part of the retrieved groups");
+							}
 							if ((groupUserTable.containsColumn(userFullName) || groupUserTable.containsColumn(userName))) {
 								if (!userNameMap.containsKey(userFullName)) {
 									String transformUserName = userNameTransform(userName);
@@ -632,7 +641,9 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 									//Also update the username in the groupUserTable with the one from username attribute.
 									Map<String, String> userMap = groupUserTable.column(userFullName);
 									for (Map.Entry<String, String> entry : userMap.entrySet()) {
-										LOG.debug("Updating groupUserTable " + entry.getValue() + " with: " + transformUserName + " for " + entry.getKey());
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("Updating groupUserTable " + entry.getValue() + " with: " + transformUserName + " for " + entry.getKey());
+										}
 										groupUserTable.put(entry.getKey(), userFullName, transformUserName);
 									}
 									counter++;
@@ -674,19 +685,27 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 										(PagedResultsResponseControl)controls[i];
 								total = prrc.getResultSize();
 								if (total != 0) {
-									LOG.debug("END-OF-PAGE total : " + total);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("END-OF-PAGE total : " + total);
+									}
 								} else {
-									LOG.debug("END-OF-PAGE total : unknown");
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("END-OF-PAGE total : unknown");
+									}
 								}
 								cookie = prrc.getCookie();
 							}
 						}
 					} else {
-						LOG.debug("No controls were sent from the server");
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("No controls were sent from the server");
+						}
 					}
 					// Re-activate paged results
 					if (pagedResultsEnabled)   {
-						LOG.debug(String.format("Fetched paged results round: %s", ++paged));
+						if (LOG.isDebugEnabled()) {
+							LOG.debug(String.format("Fetched paged results round: %s", ++paged));
+						}
 						ldapContext.setRequestControls(new Control[]{
 								new PagedResultsControl(pagedResultsSize, cookie, Control.CRITICAL) });
 					}
@@ -785,7 +804,9 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 							// update the group name to ranger admin
 							// check for group members and populate userInfo object with user's full name and group mapping
 							if (groupSearchFirstEnabled) {
-								LOG.debug("Update Ranger admin with " + transformGroupName);
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Update Ranger admin with " + transformGroupName);
+								}
 								sink.addOrUpdateGroup(transformGroupName, groupAttrMap);
 							}
 
@@ -831,7 +852,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 									continue;
 								}
 								userCount++;
-								String userName = getShortUserName(originalUserFullName);
+								String userName = getShortName(originalUserFullName);
 								originalUserFullName = originalUserFullName.toLowerCase();
 								if (groupSearchFirstEnabled && !userSearchEnabled) {
 									String transformUserName = userNameTransform(userName);
@@ -876,19 +897,27 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 											(PagedResultsResponseControl)controls[i];
 									total = prrc.getResultSize();
 									if (total != 0) {
-										LOG.debug("END-OF-PAGE total : " + total);
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : " + total);
+										}
 									} else {
-										LOG.debug("END-OF-PAGE total : unknown");
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : unknown");
+										}
 									}
 									cookie = prrc.getCookie();
 								}
 							}
 						} else {
-							LOG.debug("No controls were sent from the server");
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("No controls were sent from the server");
+							}
 						}
 						// Re-activate paged results
 						if (pagedResultsEnabled)   {
-							LOG.debug(String.format("Fetched paged results round: %s", ++paged));
+							if (LOG.isDebugEnabled()) {
+								LOG.debug(String.format("Fetched paged results round: %s", ++paged));
+							}
 							ldapContext.setRequestControls(new Control[]{
 									new PagedResultsControl(pagedResultsSize, cookie, Control.CRITICAL) });
 						}
@@ -910,7 +939,9 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 		}
 
         if (groupHierarchyLevels > 0) {
-			LOG.debug("deltaSyncGroupTime = " + deltaSyncGroupTime);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("deltaSyncGroupTime = " + deltaSyncGroupTime);
+			}
             if (deltaSyncGroupTime > 0) {
 				LOG.info("LdapDeltaUserGroupBuilder.getGroups(): Going through group hierarchy for nested group evaluation for deltasync");
 				goUpGroupHierarchyLdap(groupNameMap.keySet(), groupHierarchyLevels-1);
@@ -925,37 +956,47 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
         }
 	}
 
-
-	private static String getShortGroupName(String longGroupName) throws InvalidNameException {
-		if (longGroupName == null) {
+	private static String getShortName(String longName) {
+		if (StringUtils.isEmpty(longName)) {
 			return null;
 		}
-		StringTokenizer stc = new StringTokenizer(longGroupName, ",");
-		String firstToken = stc.nextToken();
-		StringTokenizer ste = new StringTokenizer(firstToken, "=");
-		String groupName =  ste.nextToken();
-		if (ste.hasMoreTokens()) {
-			groupName = ste.nextToken();
+		String shortName = "";
+		try {
+			LdapName subjectDN = new LdapName(longName);
+			List<Rdn> rdns = subjectDN.getRdns();
+			for (int i = rdns.size() - 1; i >= 0; i--) {
+				if (StringUtils.isNotEmpty(shortName)) {
+					break;
+				}
+				Rdn rdn = rdns.get(i);
+				Attributes attributes = rdn.toAttributes();
+				try {
+					Attribute uid = attributes.get("uid");
+					if (uid != null) {
+						Object value = uid.get();
+						if (value != null) {
+							shortName = value.toString();
+						}
+					} else {
+						Attribute cn = attributes.get("cn");
+						if (cn != null) {
+							Object value = cn.get();
+							if (value != null) {
+								shortName = value.toString();
+							}
+						}
+					}
+				} catch (NoSuchElementException ignore) {
+					shortName = longName;
+				} catch (NamingException ignore) {
+					shortName = longName;
+				}
+			}
+		} catch (InvalidNameException ex) {
+			shortName = longName;
 		}
-		groupName = groupName.trim();
-		LOG.info("longGroupName: " + longGroupName + ", groupName: " + groupName);
-		return groupName;
-	}
-
-	private static String getShortUserName(String longUserName) throws InvalidNameException {
-		if (longUserName == null) {
-			return null;
-		}
-		StringTokenizer stc = new StringTokenizer(longUserName, ",");
-		String firstToken = stc.nextToken();
-		StringTokenizer ste = new StringTokenizer(firstToken, "=");
-		String userName =  ste.nextToken();
-		if (ste.hasMoreTokens()) {
-			userName = ste.nextToken();
-		}
-		userName = userName.trim();
-		LOG.info("longUserName: " + longUserName + ", userName: " + userName);
-		return userName;
+		LOG.info("longName: " + longName + ", userName: " + shortName);
+		return shortName;
 	}
 
 	private String userNameTransform(String userName) {
@@ -1008,7 +1049,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 			Set<String> allMembers = groupUserTable.row(groupSName).keySet();
 			LOG.info("members of " + groupSName + " = " + allMembers);
 			for(String member : allMembers) {
-				String memberName = getShortGroupName(member);
+				String memberName = getShortName(member);
 				if (!groupUserTable.containsRow(memberName)) { //Check if the member of a group is in turn a group
 					LOG.info("Adding " + member + " to " + group);
 					String userSName = groupUserTable.get(groupSName, member);
@@ -1127,15 +1168,21 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 											(PagedResultsResponseControl)controls[i];
 									total = prrc.getResultSize();
 									if (total != 0) {
-										LOG.debug("END-OF-PAGE total : " + total);
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : " + total);
+										}
 									} else {
-										LOG.debug("END-OF-PAGE total : unknown");
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("END-OF-PAGE total : unknown");
+										}
 									}
 									cookie = prrc.getCookie();
 								}
 							}
 						} else {
-							LOG.debug("No controls were sent from the server");
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("No controls were sent from the server");
+							}
 						}
 						// Re-activate paged results
 						if (pagedResultsEnabled)   {
