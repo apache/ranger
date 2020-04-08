@@ -329,8 +329,8 @@ public class ServiceRESTUtil {
 
 			// Split existing policyItems for users and groups extracted from appliedPolicyItem into userPolicyItems and groupPolicyItems
 			splitExistingPolicyItems(existingPolicy, users, userPolicyItems, groups, groupPolicyItems, roles, rolePolicyItems);
-			// Apply policyItems of given type in appliedPolicy to policyItems extracted from existingPolicy
-			mergePolicyItems(appliedPolicyItems, policyItemType, userPolicyItems, groupPolicyItems);
+			// Apply policyItems of given type in appliedPlicy to policyItems extracted from existingPolicy
+			mergePolicyItems(appliedPolicyItems, policyItemType, userPolicyItems, groupPolicyItems, rolePolicyItems);
 			// Add modified/new policyItems back to existing policy
 			mergeProcessedPolicyItems(existingPolicy, userPolicyItems, groupPolicyItems, rolePolicyItems);
 			compactPolicy(existingPolicy);
@@ -422,7 +422,6 @@ public class ServiceRESTUtil {
 			policyItem = splitAndGetConsolidatedPolicyItemForGroup(denyExceptionItems, group);
 			value[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()] = policyItem;
 		}
-
 		for (String role : roles) {
 			RangerPolicy.RangerPolicyItem value[] = rolePolicyItems.get(role);
 			if (value == null) {
@@ -666,7 +665,8 @@ public class ServiceRESTUtil {
 
 	static private void mergePolicyItems(List<RangerPolicy.RangerPolicyItem> appliedPolicyItems,
 			POLICYITEM_TYPE policyItemType, Map<String, RangerPolicy.RangerPolicyItem[]> existingUserPolicyItems,
-			Map<String, RangerPolicy.RangerPolicyItem[]> existingGroupPolicyItems) {
+			Map<String, RangerPolicy.RangerPolicyItem[]> existingGroupPolicyItems,
+			Map<String, RangerPolicy.RangerPolicyItem[]> existingRolePolicyItems ) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.mergePolicyItems()");
 		}
@@ -696,6 +696,20 @@ public class ServiceRESTUtil {
 				addPolicyItemForGroup(items, policyItemType.ordinal(), group, policyItem);
 			}
 		}
+
+		for (RangerPolicy.RangerPolicyItem policyItem : appliedPolicyItems) {
+			List<String> roles = policyItem.getRoles();
+			for (String role : roles) {
+				RangerPolicy.RangerPolicyItem[] items = existingRolePolicyItems.get(role);
+				if (items == null) {
+					// Should not get here
+					items = new RangerPolicy.RangerPolicyItem[4];
+					existingRolePolicyItems.put(role, items);
+				}
+				addPolicyItemForRole(items, policyItemType.ordinal(), role, policyItem);
+			}
+		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.mergePolicyItems()");
 		}

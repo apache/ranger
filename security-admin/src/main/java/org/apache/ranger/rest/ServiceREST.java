@@ -1687,12 +1687,12 @@ public class ServiceREST {
 						}
 						if (StringUtils.isNotBlank(zoneName)) {
 							existingPolicy = getPolicyByNameAndZone(policy.getService(), policy.getName(), policy.getZoneName());
-							if(existingPolicy==null) {
+							if (existingPolicy == null && policy.getGuid() != null) {
 								existingPolicy = getPolicyByGuid(policy.getGuid(), policy.getService(), policy.getZoneName());
 							}
 						} else {
 							existingPolicy = getPolicyByName(policy.getService(), policy.getName());
-							if(existingPolicy==null) {
+							if (existingPolicy == null && policy.getGuid() != null) {
 								existingPolicy = getPolicyByGuid(policy.getGuid(), policy.getService(), null);
 							}
 						}
