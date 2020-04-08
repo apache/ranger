@@ -51,9 +51,10 @@
                 <includeDependencies>true</includeDependencies>
                 <unpack>false</unpack>
                 <includes>
+		    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+                    <include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-collections:commons-collections</include>
-                    <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
                     <include>commons-io:commons-io:jar:${commons.io.version}</include>
                     <include>commons-lang:commons-lang</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
@@ -65,7 +66,6 @@
                     <include>org.apache.hadoop:hadoop-hdds:jar:0.4.0.3.0.100.0-SNAPSHOT</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
-                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration2.version}</include>
                     <include>com.sun.jersey:jersey-core</include>
                     <include>com.sun.jersey:jersey-client</include>
                     <include>com.sun.jersey:jersey-bundle</include>
@@ -92,6 +92,8 @@
                 <directoryMode>755</directoryMode>
                 <fileMode>644</fileMode>
                 <includes>
+		    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+                    <include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
@@ -101,7 +103,6 @@
                     <include>org.apache.solr:solr-solrj</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
-                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration2.version}</include>
                     <include>com.sun.jersey:jersey-core</include>
                     <include>com.sun.jersey:jersey-client</include>
                     <include>com.sun.jersey:jersey-bundle</include>
