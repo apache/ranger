@@ -40,7 +40,6 @@ public class AtlasAdlsResourceMapper extends AtlasResourceMapper {
 
 	private static final String SEP_PROTOCOL               = "://";
 	private static final String SEP_CONTAINER              = "@";
-	private static final String SEP_ACCOUNT                = ".";
 	private static final String SEP_RELATIVE_PATH          = "/";
 	private static final int    IDX_RESOURCE_ACCOUNT       = 0;
 	private static final int    IDX_RESOURCE_CONTAINER     = 1;
