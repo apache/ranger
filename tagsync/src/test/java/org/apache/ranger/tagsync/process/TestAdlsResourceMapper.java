@@ -32,12 +32,15 @@ import static org.apache.ranger.tagsync.source.atlas.AtlasResourceMapper.ENTITY_
 
 
 public class TestAdlsResourceMapper {
-    private static final String ACCOUNT_QUALIFIED_NAME       = "abfs://myaccount@cl1";
-    private static final String CONTAINER_QUALIFIED_NAME     = "abfs://mycontainer@myaccount.dfs.core.windows.net@cl1";
-    private static final String RELATIVE_PATH_QUALIFIED_NAME = "abfs://mycontainer@myaccount.dfs.core.windows.net/tmp@cl1";
+    private static final String ACCOUNT_QUALIFIED_NAME        = "abfs://myaccount@cl1";
+    private static final String CONTAINER_QUALIFIED_NAME      = "abfs://mycontainer@myaccount@cl1";
+    private static final String RELATIVE_PATH_QUALIFIED_NAME  = "abfs://mycontainer@myaccount/tmp@cl1";
+    private static final String CONTAINER2_QUALIFIED_NAME     = "abfs://mycontainer@myaccount.dfs.core.windows.net@cl1";
+    private static final String RELATIVE_PATH2_QUALIFIED_NAME = "abfs://mycontainer@myaccount.dfs.core.windows.net/tmp@cl1";
 
     private static final String SERVICE_NAME                 = "cl1_adls";
     private static final String ACCOUNT_NAME                 = "myaccount";
+    private static final String ACCOUNT2_NAME                = "myaccount.dfs.core.windows.net";
     private static final String CONTAINER_NAME               = "mycontainer";
     private static final String RELATIVE_PATH_NAME           = "/tmp";
 
@@ -77,6 +80,29 @@ public class TestAdlsResourceMapper {
     }
 
     @Test
+    public void testContainer2Entity() throws Exception {
+        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_ADLS_GEN2_CONTAINER, CONTAINER2_QUALIFIED_NAME);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
+
+        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 2);
+        assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_ACCOUNT, ACCOUNT2_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_CONTAINER, CONTAINER_NAME);
+    }
+
+    @Test
+    public void testDirectory2Entity() throws Exception {
+        RangerAtlasEntity     entity   = getEntity(ENTITY_TYPE_ADLS_GEN2_DIRECTORY, RELATIVE_PATH2_QUALIFIED_NAME);
+        RangerServiceResource resource = resourceMapper.buildResource(entity);
+
+        Assert.assertEquals(SERVICE_NAME, resource.getServiceName());
+        assertResourceElementCount(resource, 3);
+        assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_ACCOUNT, ACCOUNT2_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_CONTAINER, CONTAINER_NAME);
+        assertResourceElementValue(resource, RANGER_TYPE_ADLS_GEN2_RELATIVE_PATH, RELATIVE_PATH_NAME);
+    }
+
+    @Test
     public void testInvalidEntityType() {
         assertException(getEntity("Unknown", RELATIVE_PATH_QUALIFIED_NAME), "unrecognized entity-type");
     }
@@ -96,7 +122,6 @@ public class TestAdlsResourceMapper {
         assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_CONTAINER, "test"), "cluster-name not found");
         assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_CONTAINER, "test@cl1"), "account-name not found");
         assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_CONTAINER, "abfs://test@cl1"), "container-name not found");
-        assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_CONTAINER, "abfs://a@test@cl1"), "account-name not found");
     }
 
     @Test
@@ -106,7 +131,6 @@ public class TestAdlsResourceMapper {
         assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_DIRECTORY, "test"), "cluster-name not found");
         assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_DIRECTORY, "test@cl1"), "account-name not found");
         assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_DIRECTORY, "abfs://test@cl1"), "container-name not found");
-        assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_DIRECTORY, "abfs://a@test@cl1"), "account-name not found");
         assertException(getEntity(ENTITY_TYPE_ADLS_GEN2_DIRECTORY, "abfs://a@test.dfs.core.windows.net@cl1"), "relative-path not found");
     }
 

@@ -127,33 +127,26 @@ public class AtlasAdlsResourceMapper extends AtlasResourceMapper {
 
 			if (idxClusterNameSep != -1) {
 				ret[IDX_CLUSTER_NAME] = qualifiedName.substring(idxClusterNameSep + CLUSTER_DELIMITER.length());
-			}
 
-			int idxProtocolStart = qualifiedName.indexOf(SEP_PROTOCOL);
+				int idxProtocolSep = qualifiedName.indexOf(SEP_PROTOCOL);
 
-			if (idxProtocolStart != -1) {
-				int idxResourceStart = idxProtocolStart + SEP_PROTOCOL.length();
-				int idxContainerSep  = qualifiedName.indexOf(SEP_CONTAINER, idxResourceStart);
+				if (idxProtocolSep != -1) {
+					int idxResourceStart       = idxProtocolSep + SEP_PROTOCOL.length();
+					int idxContainerAccountSep = qualifiedName.indexOf(SEP_CONTAINER, idxResourceStart);
 
-				if (idxContainerSep != -1) {
-					if (idxContainerSep == idxClusterNameSep) { // this is adls_gen2_account, so no containerName
-						ret[IDX_RESOURCE_ACCOUNT] = qualifiedName.substring(idxResourceStart, idxContainerSep);
-					} else {
-						ret[IDX_RESOURCE_CONTAINER] = qualifiedName.substring(idxResourceStart, idxContainerSep);
+					if (idxContainerAccountSep != -1) {
+						if (idxContainerAccountSep == idxClusterNameSep) { // this is adls_gen2_account, so no containerName
+							ret[IDX_RESOURCE_ACCOUNT] = qualifiedName.substring(idxResourceStart, idxClusterNameSep);
+						} else {
+							ret[IDX_RESOURCE_CONTAINER] = qualifiedName.substring(idxResourceStart, idxContainerAccountSep);
 
-						int idxAccountSep = qualifiedName.indexOf(SEP_ACCOUNT, idxContainerSep + SEP_CONTAINER.length());
+							int idxRelativePath = qualifiedName.indexOf(SEP_RELATIVE_PATH, idxContainerAccountSep + SEP_CONTAINER.length());
 
-						if (idxAccountSep != -1) {
-							ret[IDX_RESOURCE_ACCOUNT] = qualifiedName.substring(idxContainerSep + SEP_CONTAINER.length(), idxAccountSep);
-
-							int idxRelativePath = qualifiedName.indexOf(SEP_RELATIVE_PATH, idxAccountSep + SEP_ACCOUNT.length());
-
-							if (idxRelativePath != -1) {
-								if (idxClusterNameSep == -1) {
-									ret[IDX_RESOURCE_RELATIVE_PATH] = qualifiedName.substring(idxRelativePath);
-								} else {
-									ret[IDX_RESOURCE_RELATIVE_PATH] = qualifiedName.substring(idxRelativePath, idxClusterNameSep);
-								}
+							if (idxRelativePath == -1) { // this is adls_gen2_container, so no relativePath
+								ret[IDX_RESOURCE_ACCOUNT] = qualifiedName.substring(idxContainerAccountSep + SEP_CONTAINER.length(), idxClusterNameSep);
+							} else {
+								ret[IDX_RESOURCE_ACCOUNT]       = qualifiedName.substring(idxContainerAccountSep + SEP_CONTAINER.length(), idxRelativePath);
+								ret[IDX_RESOURCE_RELATIVE_PATH] = qualifiedName.substring(idxRelativePath, idxClusterNameSep);
 							}
 						}
 					}
