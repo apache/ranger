@@ -94,9 +94,9 @@ public class XTrxLogService extends XTrxLogServiceBase<XXTrxLog, VXTrxLog> {
 
 		selectCQ.where(predicate);
 		if ("asc".equalsIgnoreCase(searchCriteria.getSortType())) {
-			selectCQ.orderBy(criteriaBuilder.asc(rootEntityType.get("createTime")));
+			selectCQ.orderBy(criteriaBuilder.asc(rootEntityType.get("id")));
 		} else {
-			selectCQ.orderBy(criteriaBuilder.desc(rootEntityType.get("createTime")));
+			selectCQ.orderBy(criteriaBuilder.desc(rootEntityType.get("id")));
 		}
 		int startIndex = searchCriteria.getStartIndex();
 		int pageSize = searchCriteria.getMaxRows();
