@@ -236,6 +236,8 @@
                     <excludes>
                         <exclude>**/src/test/resources/**/*.yaml</exclude>
                         <exclude>**/src/test/resources/**/*.avcs</exclude>
+                        <exclude>**/src/test/*.iml</exclude>
+                        <exclude>**/src/main/*.iml</exclude>
                     </excludes>
                 </configuration>
             </plugin>
