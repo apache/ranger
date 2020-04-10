@@ -71,6 +71,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 	private static final Logger LOG = Logger.getLogger(LdapDeltaUserGroupBuilder.class);
 	
 	private static final String DATA_TYPE_BYTEARRAY = "byte[]";
+	private static final String DATE_FORMAT = "yyyyMMddHHmmss";
 	private static final int PAGE_SIZE = 500;
 	private static long deltaSyncUserTime = 0; // Used for AD uSNChanged 
 	private static long deltaSyncGroupTime = 0; // Used for AD uSNChanged
@@ -168,7 +169,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 	public void init() throws Throwable{
 		deltaSyncUserTime = 0;
 		deltaSyncGroupTime = 0;
-		DateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmmss");
+		DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 		deltaSyncUserTimeStamp = dateFormat.format(new Date(0));
 		deltaSyncGroupTimeStamp = dateFormat.format(new Date(0));
 		userNameMap = new HashMap<String, String>();
@@ -471,7 +472,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 				ldapContext.setRequestControls(new Control[]{
 						new PagedResultsControl(pagedResultsSize, Control.NONCRITICAL) });
 			}
-			DateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmmss");
+			DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 			if (groupSearchFirstEnabled && groupUserTable.rowKeySet().size() != 0) {
 				// Fix RANGER-1957: Perform full sync when group search is enabled and when there are updates to the groups
 				deltaSyncUserTime = 0;
@@ -737,7 +738,7 @@ public class LdapDeltaUserGroupBuilder extends AbstractUserGroupSource {
 
 	private void getGroups(UserGroupSink sink) throws Throwable {
 		NamingEnumeration<SearchResult> groupSearchResultEnum = null;
-        DateFormat dateFormat = new SimpleDateFormat("yyyyMMddhhmmss");
+        DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         long highestdeltaSyncGroupTime = deltaSyncGroupTime;
 		try {
 			createLdapContext();
