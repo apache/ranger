@@ -224,6 +224,11 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroupUser.findAllXXGroupUser">
+		<query>SELECT obj FROM XXGroupUser obj
+		</query>
+	</named-query>
+
 	<named-query name="XXGroupUser.findGroupIdListByUserId">
 		<query>SELECT obj.parentGroupId FROM XXGroupUser obj WHERE obj.userId=:xUserId		   
 		</query>

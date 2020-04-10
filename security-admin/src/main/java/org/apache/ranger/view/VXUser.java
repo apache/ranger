@@ -305,6 +305,28 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 		this.otherAttributes = otherAttributes;
 	}
 
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+
+		VXUser vxUser = (VXUser) o;
+
+		if (status != vxUser.status) return false;
+		if (name != null ? !name.equals(vxUser.name) : vxUser.name != null) return false;
+		if (description != null ? !description.equals(vxUser.description) : vxUser.description != null) return false;
+		return credStoreId != null ? credStoreId.equals(vxUser.credStoreId) : vxUser.credStoreId == null;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = name != null ? name.hashCode() : 0;
+		result = 31 * result + (description != null ? description.hashCode() : 0);
+		result = 31 * result + (credStoreId != null ? credStoreId.hashCode() : 0);
+		result = 31 * result + status;
+		return result;
+	}
+
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr

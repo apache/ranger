@@ -66,6 +66,17 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 		return null;
 	}
 
+	public List<XXGroupUser> findAllXXGroupUser() {
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXGroupUser.findAllXXGroupUser", XXGroupUser.class)
+					.getResultList();
+		} catch (NoResultException e) {
+			logger.debug(e.getMessage());
+		}
+		return null;
+	}
+
 	/**
 	 * @param xUserId
 	 *            -- Id of X_USER table
