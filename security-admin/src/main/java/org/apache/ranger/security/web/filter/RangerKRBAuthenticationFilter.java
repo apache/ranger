@@ -108,6 +108,8 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 	static final String HOST_NAME = "ranger.service.host";
 	static final String ALLOW_TRUSTED_PROXY = "ranger.authentication.allow.trustedproxy";
 	static final String PROXY_PREFIX = "ranger.proxyuser.";
+	static final String RULES_MECHANISM = "hadoop.security.rules.mechanism";
+	static final String RULES_MECHANISM_PARAM = "kerberos.name.rules.mechanism";
 
 	private static final String KERBEROS_TYPE = "kerberos";
 	private static final String S_USER = "suser";
@@ -130,6 +132,7 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 		params.put(COOKIE_DOMAIN_PARAM, PropertiesUtil.getProperty(COOKIE_DOMAIN, PropertiesUtil.getProperty(HOST_NAME, "localhost")));
 		params.put(COOKIE_PATH_PARAM, PropertiesUtil.getProperty(COOKIE_PATH, "/"));
 		params.put(ALLOW_TRUSTED_PROXY, PropertiesUtil.getProperty(ALLOW_TRUSTED_PROXY, "false"));
+		params.put(RULES_MECHANISM_PARAM, PropertiesUtil.getProperty(RULES_MECHANISM, "hadoop"));
 		try {
 			params.put(PRINCIPAL_PARAM, SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(PRINCIPAL,""), PropertiesUtil.getProperty(HOST_NAME)));
 		} catch (IOException ignored) {
