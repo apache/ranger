@@ -2944,5 +2944,15 @@ a:focus,a:hover,a.active,a:active{
   background-color:#2996ba;
 }
 
+.modal-dialog-size {
+  width: 750px;
+  height: 625px;
+  margin-left: 0px;
+  left: 30%
+}
+
+.modal-body-size {
+  max-height: 525px;
+}
 
 /*End of Overriden styles*/

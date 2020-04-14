@@ -219,6 +219,7 @@ define(function(require) {
 					<th class="renderable name">Resource</th>\
 					<th class="renderable cip"></th>\
 					<th class="renderable cip"></th>\
+					<th class="renderable cip"></th>\
 					<th class="renderable cip"> </th>\
 					<th class="renderable aip" > </th>\
 					<th class="renderable aip" > </th>\
@@ -423,10 +424,11 @@ define(function(require) {
                                     {text : 'Resource Type',label : 'resourceType', urlLabel : 'resourceType'},
                                     {text : 'Cluster Name',label : 'cluster', urlLabel : 'clusterName'},
                                     {text : 'Zone Name',label : 'zoneName', urlLabel : 'zoneName'},
-                                    {text : localization.tt("lbl.agentHost"), label :"agentHost", urlLabel : 'agentHost'}
+                                    {text : localization.tt("lbl.agentHost"), label :"agentHost", urlLabel : 'agentHost'},
+                                   //{text : localization.tt("lbl.permission"), label :'action', urlLabel : 'permission'}
                                 ];
             var searchOpt = ['Resource Type','Start Date','End Date','Application','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
-            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude User', localization.tt("lbl.agentHost")];//,'Policy ID'
+            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude User', localization.tt("lbl.agentHost")];//, localization.tt("lbl.permission")];//,'Policy ID'
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
@@ -443,7 +445,8 @@ define(function(require) {
                                             {text :'User' 			, info :localization.tt('h.userMsg')},
                                             {text :'Exclude User' 	, info :localization.tt('h.userMsg')},
                                             {text :'Application' 	, info :localization.tt('h.application')},
-                                            {text :'Tags' 			, info :localization.tt('h.tagsMsg')} ];
+                                            {text :'Tags' 			, info :localization.tt('h.tagsMsg')},
+                                            {text : localization.tt("lbl.permission"), info : localization.tt("lbl.permission")},];
                         //initilize info popover
                         XAUtils.searchInfoPopover(this.searchInfoArr , this.ui.iconSearchInfo , 'bottom');
                         //Set query(search filter values in query)
@@ -1209,6 +1212,8 @@ define(function(require) {
                             escape : true,
                         }).open();
                         modal.$el.find('.cancel').hide();
+                        modal.$el.addClass('modal-dialog-size');
+                        modal.$el.find('.modal-body').addClass('modal-body-size');
                     }
 				}
 			});
@@ -1333,6 +1338,24 @@ define(function(require) {
 						drag : false,
 						sortable:false,
 						editable:false
+					},
+					action : {
+						label : localization.tt("lbl.permission"),
+						cell: "html",
+						click : false,
+						drag : false,
+						editable:false,
+						sortable : false,
+						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+							fromRaw : function (rawValue, model) {
+								rawValue = _.escape(rawValue);
+								if(_.isUndefined(rawValue) || _.isEmpty(rawValue)){
+									return '<center>--</center>';
+								}else{
+									return '<span  class="label label-info" title="'+rawValue+'">'+rawValue+'</span>';
+								}
+							}
+						})
 					},
 					accessResult : {
 						label : localization.tt("lbl.result"),

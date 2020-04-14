@@ -15,9 +15,6 @@
   limitations under the License.
 --}}
 <div id="serviceDetails" class="row-fluid">
-    <p class="formHeader">
-        {{tt 'lbl.auditAccessDetail'}} :
-    </p>
     <table class="table table-bordered table-condensed">
         <tbody>
            <tr>
@@ -127,6 +124,18 @@
                 </td>
                 <td>
                     {{auditaccessDetail.accessType}}
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    {{tt 'lbl.permission'}}
+                </td>
+                <td>
+                    {{#if auditaccessDetail.action}}
+                        {{auditaccessDetail.action}}
+                    {{else}}
+                        --
+                    {{/if}}
                 </td>
             </tr>
             <tr>
