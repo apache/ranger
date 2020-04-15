@@ -4689,6 +4689,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		RangerPolicyList retList = new RangerPolicyList();
 		Map<Long,RangerPolicy> policyMap=new HashMap<Long,RangerPolicy>();
 		Set<Long> processedServices=new HashSet<Long>();
+		Set<Long> processedServicesForGroup=new HashSet<Long>();
 		Set<Long> processedPolicies=new HashSet<Long>();
 		Comparator<RangerPolicy> comparator = new Comparator<RangerPolicy>() {
 			public int compare(RangerPolicy c1, RangerPolicy c2) {
@@ -4718,8 +4719,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 						for (XXPolicy xPol2 : xPolList2) {
 							if(xPol2!=null){
 								if(!processedPolicies.contains(xPol2.getId())){
-									if(!processedServices.contains(xPol2.getService())){
-										loadRangerPolicies(xPol2.getService(),processedServices,policyMap,searchFilter);
+									if(!processedServicesForGroup.contains(xPol2.getService())){
+										loadRangerPolicies(xPol2.getService(),processedServicesForGroup,policyMap,searchFilter);
 									}
 									if(policyMap.containsKey(xPol2.getId())){
 										policyList.add(policyMap.get(xPol2.getId()));
