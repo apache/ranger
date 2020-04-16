@@ -188,8 +188,10 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                     }
                 });
             } catch (Exception e) {
-                LOG.error("Failed to commit TransactionService transaction", e);
-                LOG.error("Ignoring...");
+            	if(LOG.isDebugEnabled()) {
+            		LOG.debug("Failed to commit TransactionService transaction", e);
+            	}
+                LOG.warn("Failed to commit TransactionService transaction. Ignoring...");
             }
         } else {
             if (LOG.isDebugEnabled()) {
