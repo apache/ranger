@@ -22,14 +22,10 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGlobalState;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.util.CLIUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 @Component
