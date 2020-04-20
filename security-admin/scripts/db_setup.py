@@ -808,7 +808,19 @@ class OracleConf(BaseDB):
 		return ret
 
 	def get_check_table_query(self, TABLE_NAME):
+		CT=self.commandTerminator
+		get_cmd = self.get_jisql_cmd(self.db_user, self.db_password, self.db_name)
+		if is_unix:
+			query = get_cmd + CT + " -query 'select default_tablespace from user_users;'"
+		elif os_name == "WINDOWS":
+			query = get_cmd + " -query \"select default_tablespace from user_users;\" -c ;"
+		jisql_log(query, self.db_password)
+		output = check_output(query).strip()
+		output = output.strip(' |')
 		db_name=self.db_name.upper()
+		if (db_name =='' and output is not None and output != ''):
+			db_name = output
+		#db_name could be given db_name or user's default tablespace name
 		return "select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');" %(db_name ,TABLE_NAME)
 
 	def get_unstale_patch_query(self, version, isActive, client_host,stalePatchEntryHoldTimeInMinutes):
