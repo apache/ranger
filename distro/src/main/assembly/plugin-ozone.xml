@@ -32,7 +32,7 @@
                 <include>org.apache.ranger:ranger-plugin-classloader</include>
             </includes>
             <binaries>
-                <outputDirectory>lib</outputDirectory>
+                <outputDirectory>lib/libext</outputDirectory>
                 <includeDependencies>false</includeDependencies>
                 <unpack>false</unpack>
                 <directoryMode>755</directoryMode>
@@ -86,7 +86,7 @@
                 <include>org.apache.ranger:ranger-ozone-plugin</include>
             </includes>
             <binaries>
-                <outputDirectory>lib/ranger-ozone-plugin-impl</outputDirectory>
+                <outputDirectory>lib/libext/ranger-ozone-plugin-impl</outputDirectory>
                 <includeDependencies>true</includeDependencies>
                 <unpack>false</unpack>
                 <directoryMode>755</directoryMode>
@@ -99,6 +99,8 @@
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
                     <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
+		    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+		    <include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>org.apache.solr:solr-solrj</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
@@ -106,6 +108,8 @@
                     <include>com.sun.jersey:jersey-core</include>
                     <include>com.sun.jersey:jersey-client</include>
                     <include>com.sun.jersey:jersey-bundle</include>
+		    <include>org.codehaus.jackson:jackson-jaxrs</include>
+		    <include>com.sun.xml.bind:jaxb-impl</include>
                     <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>commons-lang:commons-lang</include>
                     <include>com.kstruct:gethostname4j</include>
