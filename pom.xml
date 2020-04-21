@@ -168,7 +168,7 @@
         <noggit.version>0.8</noggit.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
-        <presto.version>310</presto.version>
+        <presto.version>331</presto.version>
         <poi.version>3.17</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
@@ -197,11 +197,12 @@
         <jna.version>5.2.0</jna.version>
         <jna-platform.version>5.2.0</jna-platform.version>
         <!-- presto plugin deps -->
-        <presto.airlift.version>0.178</presto.airlift.version>
+        <presto.airlift.version>0.192</presto.airlift.version>
         <presto.bval-jsr.version>2.0.0</presto.bval-jsr.version>
         <presto.guice.version>4.2.2</presto.guice.version>
         <presto.guava.version>26.0-jre</presto.guava.version>
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
+        <presto.re2j.version>1.1</presto.re2j.version>
 
     <!-- Azure Key Vault dependencies -->
         <com.microsoft.azure.version>1.22.0</com.microsoft.azure.version>

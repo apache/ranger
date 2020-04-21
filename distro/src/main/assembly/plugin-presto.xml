@@ -32,7 +32,7 @@
             </includes>
             <binaries>
                 <outputDirectory>lib</outputDirectory>
-                <includeDependencies>false</includeDependencies>
+                <includeDependencies>true</includeDependencies>
                 <unpack>false</unpack>
                 <directoryMode>755</directoryMode>
                 <fileMode>644</fileMode>
@@ -84,8 +84,13 @@
                     <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
                     <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>com.google.guava:guava:jar:${google.guava.version}</include>
+                    <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
+                    <include>com.google.re2j:re2j:jar:${presto.re2j.version}</include>
+                    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.ranger:ranger-plugins-cred</include>
                     <include>org.apache.ranger:credentialbuilder</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
