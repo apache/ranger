@@ -26,9 +26,14 @@ import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.Enumeration;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
+import javax.script.ScriptEngineManager;
 
 public class RangerPluginClassLoader extends URLClassLoader {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoader.class);
@@ -54,7 +59,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
 	    if ( ret == null) {
 		  synchronized(RangerPluginClassLoader.class) {
 		  ret = me;
-		  if ( ret == null){
+		  if (ret == null && pluginClass != null) {
 			  me = ret = AccessController.doPrivileged(
 							new PrivilegedExceptionAction<RangerPluginClassLoader>(){
 								public RangerPluginClassLoader run() throws Exception {
@@ -311,5 +316,48 @@ public class RangerPluginClassLoader extends URLClassLoader {
 			}
 			return ret;
 		}
+    }
+
+    public ScriptEngine getScriptEngine(String engineName) {
+
+	    final ScriptEngine ret;
+
+        ClassLoader classLoader = preActivateClassLoader.get();
+
+        if (classLoader == null) {
+            MyClassLoader savedClassLoader = getComponentClassLoader();
+            if (savedClassLoader != null && savedClassLoader.getParent() != null) {
+                classLoader = savedClassLoader.getParent();
+            }
+        }
+
+        ScriptEngineManager manager = classLoader != null ? new ScriptEngineManager(classLoader) : new ScriptEngineManager();
+
+        if (LOG.isDebugEnabled()) {
+
+            List<ScriptEngineFactory> factories = manager.getEngineFactories();
+
+            if (factories == null || factories.size() == 0) {
+                LOG.debug("List of scriptEngineFactories is empty!!");
+
+            } else {
+                for (ScriptEngineFactory factory : factories) {
+                    LOG.debug("engineName=" + factory.getEngineName() + ", language=" + factory.getLanguageName());
+
+                }
+            }
+        }
+
+        ret = manager.getEngineByName(engineName);
+
+        if (ret == null) {
+            LOG.error("scriptEngine for JavaScript is null!!");
+        } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("scriptEngine for JavaScript:[" + ret + "]");
+            }
+        }
+
+        return ret;
     }
 }
