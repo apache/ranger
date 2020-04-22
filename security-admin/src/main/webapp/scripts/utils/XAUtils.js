@@ -1675,10 +1675,16 @@ define(function(require) {
                 url: searchUrl,
                 dataType: 'json',
                 data: function(term, page) {
-                    return {
-                        name: term,
-                        isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value,
-                    };
+                    if($select === 'roles') {
+                        return {
+                            roleNamePartial: term
+                        }
+                    } else {
+                        return {
+                            name: term,
+                            isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value,
+                        }
+                    }
                 },
                 results: function(data, page) {
                     var results = [],

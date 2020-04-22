@@ -224,13 +224,22 @@ define(function(require) {
 				initSelection : function (element, callback) {
 					callback(tags);
 				},
-				ajax: { 
+				ajax: {
 					url: searchUrl,
 					dataType: 'json',
 					data: function (term, page) {
-						return {name : term, isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value};
+						if(type === 'roles') {
+							return {
+								roleNamePartial: term
+							}
+						} else {
+							return {
+								name: term,
+								isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value,
+							}
+						}
 					},
-					results: function (data, page) { 
+					results: function (data, page) {
 						var results = [] , selectedVals = [];
 						//Get selected values of groups/users dropdown
                                                 selectedVals = that.getSelectedValues($select, type);

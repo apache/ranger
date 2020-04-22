@@ -991,9 +991,9 @@ define(function(require){
                 placeholder = localization.tt('h.searchForYourRole');
                 coll = this.roleList;
                 searchOpt = ['Role Name','User Name', 'Group Name', /*Role ID*/];//,'Start Date','End Date','Today'];
-                serverAttrName  = [{text : "Role Name", label :"roleName", urlLabel : "roleName"},
-                                   {text : "User Name", label :"userName", urlLabel : "userName"},
-                                   {text : "Group Name", label :"groupName", urlLabel : "groupName"},
+                serverAttrName  = [{text : "Role Name", label :"roleNamePartial", urlLabel : "roleName"},
+                                   {text : "User Name", label :"userNamePartial", urlLabel : "userName"},
+                                   {text : "Group Name", label :"groupNamePartial", urlLabel : "groupName"},
                                 ];
             }
             var query = '';
