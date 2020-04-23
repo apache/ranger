@@ -81,6 +81,7 @@ public class EmbeddedServer {
 
 	private static final String ADMIN_NAME_RULES = "hadoop.security.auth_to_local";
 	private static final String ADMIN_SERVER_NAME = "rangeradmin";
+	private static final String KMS_SERVER_NAME   = "rangerkms";
 	
 	private Properties serverConfigProperties = new Properties();
 	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = "jks";
@@ -200,8 +201,9 @@ public class EmbeddedServer {
 		valve.setFileDateFormat(getConfig("ranger.accesslog.dateformat", "yyyy-MM-dd.HH"));
 		valve.setDirectory(logDirectory.getAbsolutePath());
 		valve.setSuffix(".log");
-		
-		String logPattern = getConfig("ranger.accesslog.pattern", "%h %l %u %t \"%r\" %s %b");
+
+		String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b" : "%h %l %u %t \"%r\" %s %b";
+		String logPattern = getConfig("ranger.accesslog.pattern", defaultAccessLogPattern);
 		valve.setPattern(logPattern);	
 				
 		server.getHost().getPipeline().addValve(valve);
