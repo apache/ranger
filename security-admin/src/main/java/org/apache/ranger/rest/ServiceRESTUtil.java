@@ -215,14 +215,52 @@ public class ServiceRESTUtil {
 			LOG.debug("==> ServiceRESTUtil.processApplyPolicy()");
 		}
 
-		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
-		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
-		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
-		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY_EXCEPTIONS);
+		// Check if applied policy or existing policy contains any conditions
+		if (ServiceRESTUtil.containsRangerCondition(existingPolicy) || ServiceRESTUtil.containsRangerCondition(appliedPolicy)) {
+			LOG.info("Applied policy [" + appliedPolicy + "] or existing policy [" + existingPolicy + "] contains condition(s). Combining two policies.");
+			combinePolicy(existingPolicy, appliedPolicy);
+
+		} else {
+
+			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
+			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
+			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
+			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY_EXCEPTIONS);
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.processApplyPolicy()");
 		}
+	}
+
+	static private void combinePolicy(RangerPolicy existingPolicy, RangerPolicy appliedPolicy) {
+
+		List<RangerPolicy.RangerPolicyItem> appliedPolicyItems;
+
+		// Combine allow policy-items
+		appliedPolicyItems = appliedPolicy.getPolicyItems();
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+			existingPolicy.getPolicyItems().addAll(appliedPolicyItems);
+		}
+
+		// Combine deny policy-items
+		appliedPolicyItems = appliedPolicy.getDenyPolicyItems();
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+			existingPolicy.getDenyPolicyItems().addAll(appliedPolicyItems);
+		}
+
+		// Combine allow-exception policy-items
+		appliedPolicyItems = appliedPolicy.getAllowExceptions();
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+			existingPolicy.getAllowExceptions().addAll(appliedPolicyItems);
+		}
+
+		// Combine deny-exception policy-items
+		appliedPolicyItems = appliedPolicy.getDenyExceptions();
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+			existingPolicy.getDenyExceptions().addAll(appliedPolicyItems);
+		}
+
 	}
 
 	static private void processApplyPolicyForItemType(RangerPolicy existingPolicy, RangerPolicy appliedPolicy, POLICYITEM_TYPE policyItemType) {
@@ -1029,17 +1067,21 @@ public class ServiceRESTUtil {
 		}
 
 		if (policy != null) {
-			List<RangerPolicy.RangerPolicyItem> allItems = new ArrayList<RangerPolicy.RangerPolicyItem>();
+			if (CollectionUtils.isNotEmpty(policy.getConditions())) {
+				ret = true;
+			} else {
+				List<RangerPolicy.RangerPolicyItem> allItems = new ArrayList<RangerPolicy.RangerPolicyItem>();
 
-			allItems.addAll(policy.getPolicyItems());
-			allItems.addAll(policy.getDenyPolicyItems());
-			allItems.addAll(policy.getAllowExceptions());
-			allItems.addAll(policy.getDenyExceptions());
+				allItems.addAll(policy.getPolicyItems());
+				allItems.addAll(policy.getDenyPolicyItems());
+				allItems.addAll(policy.getAllowExceptions());
+				allItems.addAll(policy.getDenyExceptions());
 
-			for (RangerPolicy.RangerPolicyItem policyItem : allItems) {
-				if (!policyItem.getConditions().isEmpty()) {
-					ret = true;
-					break;
+				for (RangerPolicy.RangerPolicyItem policyItem : allItems) {
+					if (!policyItem.getConditions().isEmpty()) {
+						ret = true;
+						break;
+					}
 				}
 			}
 		}

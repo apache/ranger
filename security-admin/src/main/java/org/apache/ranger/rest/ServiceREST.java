@@ -83,6 +83,7 @@ import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyExportAudit;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefService;
@@ -97,6 +98,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -1661,7 +1663,13 @@ public class ServiceREST {
 				}
 				boolean updateIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)))) ? true : false ;
 				boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
-				if(updateIfExists || mergeIfExists) {
+
+				if (mergeIfExists && updateIfExists) {
+					LOG.warn("Cannot use both updateIfExists and mergeIfExists for a createPolicy. mergeIfExists will override updateIfExists for policy :[" + policy.getName() + "]");
+				}
+				if (mergeIfExists) {
+					ret = applyPolicy(policy, request);
+				} else if(updateIfExists) {
 					RangerPolicy existingPolicy = null;
 					String serviceName = request.getParameter(PARAM_SERVICE_NAME);
 					if (serviceName == null) {
@@ -1699,20 +1707,11 @@ public class ServiceREST {
 					}
 					try {
 						if (existingPolicy != null) {
-							if (updateIfExists) {
-								policy.setId(existingPolicy.getId());
-								ret = updatePolicy(policy);
-							} else if(mergeIfExists){
-								ServiceRESTUtil.mergeExactMatchPolicyForResource(existingPolicy, policy);
-								ret = updatePolicy(existingPolicy);
-							}
+							policy.setId(existingPolicy.getId());
+							ret = updatePolicy(policy);
 						}
 					} catch (Exception excp){
-						if(updateIfExists) {
-							LOG.error("updatePolicy(" + policy + ") failed", excp);
-						}else if(mergeIfExists) {
-							LOG.error("updatePolicy for merge (" + existingPolicy + ") failed", excp);
-						}
+						LOG.error("updatePolicy(" + policy + ") failed", excp);
 						throw restErrorUtil.createRESTException(excp.getMessage());
 					}
 				}
@@ -1775,17 +1774,31 @@ public class ServiceREST {
 		RangerPolicy ret = null;
 
 		if (policy != null && StringUtils.isNotBlank(policy.getService())) {
+
 			try {
-				// Check if applied policy contains any conditions
-				if (ServiceRESTUtil.containsRangerCondition(policy)) {
-					LOG.error("Applied policy contains condition(s); not supported:" + policy);
-					throw new Exception("Applied policy contains condition(s); not supported:" + policy);
+
+				final              RangerPolicy existingPolicy;
+				String             signature                     = (new RangerPolicyResourceSignature(policy)).getSignature();
+				List<RangerPolicy> policiesWithMatchingSignature = svcStore.getPoliciesByResourceSignature(policy.getService(), signature, true);
+
+				if (CollectionUtils.isNotEmpty(policiesWithMatchingSignature)) {
+					if (policiesWithMatchingSignature.size() == 1) {
+						existingPolicy = policiesWithMatchingSignature.get(0);
+					} else {
+						throw new Exception("Multiple policies with matching policy-signature are found. Cannot determine target for applying policy");
+					}
+				} else {
+					existingPolicy = null;
 				}
 
-				String user = request.getRemoteUser();
-				RangerPolicy existingPolicy = getExactMatchPolicyForResource(policy, StringUtils.isNotBlank(user) ? user :"admin");
-
 				if (existingPolicy == null) {
+					if (StringUtils.isNotEmpty(policy.getName())) {
+						XXPolicy dbPolicy = daoManager.getXXPolicy().findByPolicyName(policy.getName());
+						if (dbPolicy != null) {
+							policy.setName(policy.getName() + System.currentTimeMillis());
+						}
+					}
+
 					ret = createPolicy(policy, null);
 				} else {
 					ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
