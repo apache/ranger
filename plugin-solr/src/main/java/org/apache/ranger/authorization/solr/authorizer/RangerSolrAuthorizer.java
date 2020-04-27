@@ -198,18 +198,16 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 					me = solrPlugin;
 					logger.info("RangerSolrAuthorizer(): init called");
 					if (me == null) {
+						authToJAASFile();
+						logger.info("Creating RangerSolrPlugin");
 						me = solrPlugin = new RangerBasePlugin("solr", "solr");
 					}
 				}
 			}
+			logger.info("Calling solrPlugin.init()");
 			solrPlugin.init();
 			auditHandler = new RangerSolrAuditHandler(solrPlugin.getConfig());
 			solrPlugin.setResultProcessor(auditHandler);
-		} catch (Throwable t) {
-			logger.fatal("Error creating and initializing RangerBasePlugin()");
-		}
-
-		try {
 			useProxyIP = solrPlugin.getConfig().getBoolean(
 					PROP_USE_PROXY_IP, useProxyIP);
 			proxyIPHeader = solrPlugin.getConfig().get(
@@ -226,10 +224,8 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 			logger.info("init(): solrAppName=" + solrAppName);
 			logger.info("init(): KerberosName.rules="
 					+ MiscUtil.getKerberosNamesRules());
-			authToJAASFile();
-
 		} catch (Throwable t) {
-			logger.fatal("Error init", t);
+			logger.fatal("Error creating and initializing RangerBasePlugin()");
 		}
 	}
 
