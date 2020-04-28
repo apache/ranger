@@ -19,6 +19,7 @@ DECLARE
 	v_count_1 number:=0;
 	v_count_2 number:=0;
 	v_count_3 number:=0;
+	sql_stmt VARCHAR(1024);
 	state_name_1 varchar(255):='RangerRole';
 	state_name_2 varchar(255):='RangerUserStore';
 	state_name_3 varchar(255):='RangerSecurityZone';
@@ -28,21 +29,21 @@ BEGIN
 	select count(*) into t_count from user_tables where table_name = 'x_ranger_global_state';
 	if (t_count > 0) then
 		
-		select count(*) into v_count_1 from x_ranger_global_state where state_name='RangerRole'
+		select count(*) into v_count_1 from x_ranger_global_state where state_name='RangerRole';
 		if (v_count_1 = 0) then
 			sql_stmt := 'INSERT INTO x_ranger_global_state (id,create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (X_RANGER_GLOBAL_STATE_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),:1,:2,1,:3,:4)';
 			EXECUTE IMMEDIATE sql_stmt USING x_portal_user_id,x_portal_user_id,state_name_1,app_data_1;
 			commit;
 		end if;
 		
-		select count(*) into v_count_2 from x_ranger_global_state where state_name='RangerUserStore'
+		select count(*) into v_count_2 from x_ranger_global_state where state_name='RangerUserStore';
 		if (v_count_2 = 0) then
 			sql_stmt := 'INSERT INTO x_ranger_global_state (id,create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (X_RANGER_GLOBAL_STATE_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),:1,:2,1,:3,:4)';
 			EXECUTE IMMEDIATE sql_stmt USING x_portal_user_id,x_portal_user_id,state_name_2,app_data_1;
 			commit;
 		end if;
 		
-		select count(*) into v_count_3 from x_ranger_global_state where state_name='RangerSecurityZone'
+		select count(*) into v_count_3 from x_ranger_global_state where state_name='RangerSecurityZone';
 		if (v_count_3 = 0) then
 			sql_stmt := 'INSERT INTO x_ranger_global_state (id,create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (X_RANGER_GLOBAL_STATE_SEQ.nextval,sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),:1,:2,1,:3,:4)';
 			EXECUTE IMMEDIATE sql_stmt USING x_portal_user_id,x_portal_user_id,state_name_3,app_data_1;

@@ -52,9 +52,6 @@ primary key (id)
 );
 CREATE INDEX x_tag_chng_log_IDX_service_id ON x_tag_change_log(service_id);
 CREATE INDEX x_tag_chng_log_IDX_tag_ver ON x_tag_change_log(service_tags_version);
-COMMIT;
 
-GRANT ALL ON x_tag_change_log TO rangeradmin;
-GRANT ALL ON X_TAG_CHANGE_LOG_SEQ TO rangeradmin;
 COMMIT;
 

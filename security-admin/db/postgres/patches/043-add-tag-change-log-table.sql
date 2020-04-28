@@ -32,8 +32,3 @@ commit;
 CREATE INDEX x_tag_change_log_IDX_service_id ON x_tag_change_log(service_id);
 CREATE INDEX x_tag_change_log_IDX_tag_version ON x_tag_change_log(service_tags_version);
 commit;
-
--- grant all privileges on x_tag_change_log to rangeradmin;
--- grant all privileges on x_tag_change_log_seq to rangeradmin;
-
--- commit;
