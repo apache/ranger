@@ -81,7 +81,8 @@ public class SolrCollectionBootstrapper extends Thread {
 	public static final String DEFAULT_CONFIG_NAME = "ranger_audits";
 	public static final String DEFAULT_SERVICE_NAME = "rangeradmin";
 	public static final long DEFAULT_SOLR_TIME_INTERVAL_MS = 60000L;
-	public static final int DEFAULT_SOLR_BOOTSTRP_MAX_RETRY  = 30;
+	private static final int TRY_UNTIL_SUCCESS  = -1;
+	public static final int DEFAULT_SOLR_BOOTSTRP_MAX_RETRY  = TRY_UNTIL_SUCCESS;
 	private static final String CONFIG_FILE = "ranger-admin-site.xml";
 	private static final String CORE_SITE_CONFIG_FILENAME = "core-site.xml";
 	private static final String DEFAULT_CONFIG_FILENAME = "ranger-admin-default-site.xml";
@@ -190,7 +191,7 @@ public class SolrCollectionBootstrapper extends Thread {
 						h -> h.equalsIgnoreCase("none"))) {
 			logger.info("Solr zkHosts=" + zkHosts + ", collectionName="
 					+ solr_collection_name);
-			while (!is_completed && retry_counter < max_retry) {
+			while (!is_completed && (max_retry == TRY_UNTIL_SUCCESS || retry_counter < max_retry)) {
 				try {
 					if (connect(zookeeperHosts)) {
 						if (solr_cloud_mode) {
@@ -331,11 +332,14 @@ public class SolrCollectionBootstrapper extends Thread {
 
 	private void logErrorMessageAndWait(String msg, Exception exception) {
 		retry_counter++;
-		String attempMessage = (retry_counter == max_retry) ? ("Maximum attempts reached for setting up Solr.")
-				: ("[retrying after " + time_interval
-						+ " ms]. No. of attempts left : "
-						+ (max_retry - retry_counter)
-						+ " . Maximum attempts : " + max_retry);
+		String attempMessage;
+		if (max_retry != TRY_UNTIL_SUCCESS) {
+			attempMessage = (retry_counter == max_retry) ? ("Maximum attempts reached for setting up Solr.")
+					: ("[retrying after " + time_interval + " ms]. No. of attempts left : "
+							+ (max_retry - retry_counter) + " . Maximum attempts : " + max_retry);
+		} else {
+			attempMessage = "[retrying after " + time_interval + " ms]";
+		}
 		StringBuilder errorBuilder = new StringBuilder();
 		errorBuilder.append(msg);
 		if (exception != null) {
