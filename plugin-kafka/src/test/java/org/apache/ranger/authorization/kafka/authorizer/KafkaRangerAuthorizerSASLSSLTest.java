@@ -92,6 +92,11 @@ public class KafkaRangerAuthorizerSASLSSLTest {
     	
     	// Create a truststore
     	KeyStore keystore = KeyStore.getInstance(KeyStore.getDefaultType());
+        /*
+        * use plaintext as keystore password may not secure.
+        * password should store in another file and load here for security concern
+        * 
+        */
     	keystore.load(null, "security".toCharArray());
     	
     	serviceKeystorePath = 
