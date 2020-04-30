@@ -788,6 +788,7 @@ class PostgresConf(BaseDB):
 			sys.exit(1)
 
 	def create_rangerdb_user(self, root_user, db_user, db_password, db_root_password,dryMode):
+		db_user = db_user.partition("@")[0]
 		if self.check_connection('postgres', root_user, db_root_password):
 			if self.verify_user(root_user, db_root_password, db_user,dryMode):
 				if dryMode == False:
@@ -856,6 +857,7 @@ class PostgresConf(BaseDB):
 				logFile("CREATE DATABASE %s WITH OWNER %s;" %(db_name, db_user))
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password , is_revoke,dryMode):
+		db_user = db_user.partition("@")[0]
 		if dryMode == False:
 			log("[I] Granting privileges TO user '"+db_user+"' on db '"+db_name+"'" , "info")
 			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
