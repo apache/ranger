@@ -23,6 +23,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URI;
+import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
 
@@ -188,21 +189,13 @@ public class HDFSAuditDestination extends AuditDestination {
 	@Override
 	public void flush() {
 		logger.info("Flush called. name=" + getName());
-		if (ostream != null) {
-			try {
-				synchronized (this) {
-					if (ostream != null)
-						// 1) PrinterWriter does not have bufferring of its own so
-						// we need to flush its underlying stream
-						// 2) HDFS flush() does not really flush all the way to disk.
-						ostream.hflush();
-						logger.info("Flush HDFS audit logs completed.....");
-				}
-			} catch (IOException e) {
-				logger.error("Error on flushing log writer: " + e.getMessage() +
-				 "\nException will be ignored. name=" + getName() + ", fileName=" + currentFileName);
+		MiscUtil.executePrivilegedAction(new PrivilegedAction<Void>() {
+			@Override
+			public Void run() {
+				hflush();
+				return null;
 			}
-		}
+		});
 	}
 
 	/*
@@ -369,6 +362,24 @@ public class HDFSAuditDestination extends AuditDestination {
 				}
 			} else {
 				nextRollOverTime = rollOverByDuration();
+			}
+		}
+	}
+
+	private void hflush() {
+		if (ostream != null) {
+			try {
+				synchronized (this) {
+					if (ostream != null)
+						// 1) PrinterWriter does not have bufferring of its own so
+						// we need to flush its underlying stream
+						// 2) HDFS flush() does not really flush all the way to disk.
+						ostream.hflush();
+					logger.info("Flush HDFS audit logs completed.....");
+				}
+			} catch (IOException e) {
+				logger.error("Error on flushing log writer: " + e.getMessage() +
+						"\nException will be ignored. name=" + getName() + ", fileName=" + currentFileName);
 			}
 		}
 	}
