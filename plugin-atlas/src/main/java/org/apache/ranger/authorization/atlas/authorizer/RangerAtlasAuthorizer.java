@@ -107,7 +107,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
             String                   action         = request.getAction() != null ? request.getAction().getType() : null;
             RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl(Collections.singletonMap(RESOURCE_SERVICE, "*"));
-            RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups());
+            RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
 
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
@@ -183,7 +183,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             rangerResource.setValue(RESOURCE_TYPE_NAME, typeName);
             rangerResource.setValue(RESOURCE_TYPE_CATEGORY, typeCategory);
 
-            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups());
+            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setAction(action);
@@ -229,7 +229,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
             RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
 
-            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups());
+            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setAction(action);

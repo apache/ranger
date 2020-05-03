@@ -189,7 +189,7 @@ public class AuthorizationSession {
 		resource.setValue(RangerHBaseResource.KEY_COLUMN, _column);
 		
 		String user = _userUtils.getUserAsString(_user);
-		RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, _access, user, _groups);
+		RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, _access, user, _groups, null);
 		request.setAction(_operation);
 		request.setRequestData(_otherInformation);
 		request.setClientIPAddress(_remoteAddress);

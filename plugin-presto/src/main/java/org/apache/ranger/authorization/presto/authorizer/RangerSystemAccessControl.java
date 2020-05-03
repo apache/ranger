@@ -833,7 +833,7 @@ class RangerPrestoAccessRequest
                                    String user,
                                    Set<String> userGroups,
                                    PrestoAccessType prestoAccessType) {
-    super(resource, prestoAccessType.name().toLowerCase(ENGLISH), user, userGroups);
+    super(resource, prestoAccessType.name().toLowerCase(ENGLISH), user, userGroups, null);
     setAccessTime(new Date());
   }
 }

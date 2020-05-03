@@ -169,7 +169,7 @@ public class RangerCustomConditionMatcherTest {
 
 	RangerAccessRequest createRequest(List<String> resourceTags) {
 		RangerAccessResource                  resource          = mock(RangerAccessResource.class);
-		RangerAccessRequest                   request           = new RangerAccessRequestImpl(resource,"dummy","test", null);
+		RangerAccessRequest                   request           = new RangerAccessRequestImpl(resource,"dummy","test", null, null);
 		Set<RangerTagForEval>                 rangerTagForEvals = new HashSet<>();
 		RangerPolicyResourceMatcher.MatchType matchType         = RangerPolicyResourceMatcher.MatchType.NONE;
 

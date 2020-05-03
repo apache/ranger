@@ -608,7 +608,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Using ACL Summary for access evaluation. PolicyId=[" + getId() + "]");
 			}
-			Integer accessResult = lookupPolicyACLSummary(request.getUser(), request.getUserGroups(), request.getAccessType());
+			Integer accessResult = lookupPolicyACLSummary(request.getUser(), request.getUserGroups(), request.getUserRoles(),  request.getAccessType());
 			if (accessResult != null) {
 				updateAccessResult(result, matchType, accessResult.equals(RangerPolicyEvaluator.ACCESS_ALLOWED), null);
 			}
@@ -631,7 +631,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
-	private Integer lookupPolicyACLSummary(String user, Set<String> userGroups, String accessType) {
+	private Integer lookupPolicyACLSummary(String user, Set<String> userGroups, Set<String> userRoles, String accessType) {
 		Integer accessResult = null;
 
 		Map<String, PolicyACLSummary.AccessResult> accesses = aclSummary.getUsersAccessInfo().get(user);
@@ -649,6 +649,16 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				accessResult = lookupAccess(userGroup, accessType, accesses);
 				if (accessResult != null) {
 					break;
+				}
+			}
+
+			if (userRoles !=null) {
+				for (String userRole : userRoles) {
+					accesses = aclSummary.getRolesAccessInfo().get(userRole);
+					accessResult = lookupAccess(userRole, accessType, accesses);
+					if (accessResult != null) {
+						break;
+					}
 				}
 			}
 		}
@@ -810,7 +820,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				LOG.debug("Using ACL Summary for checking if access is allowed. PolicyId=[" + getId() +"]");
 			}
 
-			Integer accessResult = lookupPolicyACLSummary(user, userGroups, accessType);
+			Integer accessResult = lookupPolicyACLSummary(user, userGroups, roles, accessType);
 			if (accessResult != null && accessResult.equals(RangerPolicyEvaluator.ACCESS_ALLOWED)) {
 				ret = true;
 			}

@@ -53,7 +53,7 @@ public class RangerAuthorizer implements IAuthorizer {
         RangerAccessResourceImpl resource = new RangerAccessResourceImpl();
         resource.setValue("path", fileName); // "path" must be a value resource name in servicedef JSON
 
-        RangerAccessRequest request = new RangerAccessRequestImpl(resource, accessType, user, userGroups);
+        RangerAccessRequest request = new RangerAccessRequestImpl(resource, accessType, user, userGroups, null);
 
         RangerAccessResult result = plugin.isAccessAllowed(request);
 

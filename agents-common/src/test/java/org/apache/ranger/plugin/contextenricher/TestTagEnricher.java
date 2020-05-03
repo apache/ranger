@@ -102,7 +102,7 @@ public class TestTagEnricher {
         List<String> resultTags   = new ArrayList<>();
 
         for (TestData test : testCase.tests) {
-            RangerAccessRequestImpl request = new RangerAccessRequestImpl(test.resource, test.accessType, "testUser", null);
+            RangerAccessRequestImpl request = new RangerAccessRequestImpl(test.resource, test.accessType, "testUser", null, null);
 
             tagEnricher.enrich(request);
 

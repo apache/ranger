@@ -63,7 +63,10 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
             RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
         }
 
-        Set<String> roles = policyEngine.getPluginContext().getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
+        Set<String> roles = request.getUserRoles();
+        if (CollectionUtils.isEmpty(roles)) {
+            roles = policyEngine.getPluginContext().getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
+        }
 
         if (CollectionUtils.isNotEmpty(roles)) {
             RangerAccessRequestUtil.setCurrentUserRolesInContext(request.getContext(), roles);

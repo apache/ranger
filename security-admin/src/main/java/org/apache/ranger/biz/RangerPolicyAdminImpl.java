@@ -319,7 +319,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         }
 
         List<RangerPolicy>      ret     = new ArrayList<>();
-        RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, accessType, null, null);
+        RangerAccessRequestImpl request = new RangerAccessRequestImpl(resource, accessType, null, null, null);
 
         requestProcessor.preProcess(request);
 

@@ -31,6 +31,7 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 	// Cached here for reducing access overhead
 	private final RangerAccessResource resource;
 	private final Set<String> userGroups;
+	private final Set<String> userRoles;
 	private final List<String> forwardedAddresses;
 	private final Map<String, Object> context;
 
@@ -38,6 +39,7 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 		this.source = source;
 		this.resource = source.getResource().getReadOnlyCopy();
 		this.userGroups = Collections.unmodifiableSet(source.getUserGroups());
+		this.userRoles = Collections.unmodifiableSet(source.getUserRoles());
 		this.context = Collections.unmodifiableMap(source.getContext());
 		this.forwardedAddresses = Collections.unmodifiableList(source.getForwardedAddresses());
 	}
@@ -59,6 +61,9 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 
 	@Override
 	public Set<String> getUserGroups() { return userGroups; }
+
+	@Override
+	public Set<String> getUserRoles() { return userRoles; }
 
 	@Override
 	public Date getAccessTime() { return source.getAccessTime(); }

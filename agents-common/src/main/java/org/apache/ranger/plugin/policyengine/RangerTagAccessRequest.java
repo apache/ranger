@@ -35,6 +35,7 @@ public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 		super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef));
 		super.setUser(request.getUser());
 		super.setUserGroups(request.getUserGroups());
+		super.setUserRoles(request.getUserRoles());
 		super.setAction(request.getAction());
 		super.setAccessType(request.getAccessType());
 		super.setAccessTime(request.getAccessTime());

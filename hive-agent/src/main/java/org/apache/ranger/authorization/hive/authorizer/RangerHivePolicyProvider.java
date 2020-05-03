@@ -97,7 +97,7 @@ public class RangerHivePolicyProvider implements HivePolicyProvider {
 	public HiveResourceACLs getResourceACLs(RangerHiveResource hiveResource) {
 	    HiveResourceACLs ret;
 
-	    RangerAccessRequestImpl request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null);
+	    RangerAccessRequestImpl request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
 
 	    RangerResourceACLs acls = rangerPlugin.getResourceACLs(request);
 

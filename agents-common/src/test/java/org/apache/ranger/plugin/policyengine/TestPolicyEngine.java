@@ -567,7 +567,7 @@ public class TestPolicyEngine {
 				// Create a new AccessRequest
 				RangerAccessRequestImpl newRequest =
 						new RangerAccessRequestImpl(request.getResource(), request.getAccessType(),
-								request.getUser(), request.getUserGroups());
+								request.getUser(), request.getUserGroups(), null);
 
 				newRequest.setClientType(request.getClientType());
 				newRequest.setAccessTime(request.getAccessTime());

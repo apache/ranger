@@ -99,7 +99,7 @@ public class TestPolicyACLs {
 				if(oneTest == null) {
 					continue;
 				}
-				RangerAccessRequestImpl request = new RangerAccessRequestImpl(oneTest.resource, RangerPolicyEngine.ANY_ACCESS, null, null);
+				RangerAccessRequestImpl request = new RangerAccessRequestImpl(oneTest.resource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
 				RangerResourceACLs acls = policyEngine.getResourceACLs(request);
 
 				boolean userACLsMatched = true, groupACLsMatched = true, roleACLsMatched = true;

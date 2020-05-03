@@ -38,6 +38,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private String               accessType;
 	private String               user;
 	private Set<String>          userGroups;
+	private Set<String>          userRoles;
 	private Date                 accessTime;
 	private String               clientIPAddress;
 	private List<String>         forwardedAddresses;
@@ -55,14 +56,15 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private ResourceMatchingScope resourceMatchingScope = ResourceMatchingScope.SELF;
 
 	public RangerAccessRequestImpl() {
-		this(null, null, null, null);
+		this(null, null, null, null, null);
 	}
 
-	public RangerAccessRequestImpl(RangerAccessResource resource, String accessType, String user, Set<String> userGroups) {
+	public RangerAccessRequestImpl(RangerAccessResource resource, String accessType, String user, Set<String> userGroups, Set<String> userRoles) {
 		setResource(resource);
 		setAccessType(accessType);
 		setUser(user);
 		setUserGroups(userGroups);
+		setUserRoles(userRoles);
 		setForwardedAddresses(null);
 
 		// set remaining fields to default value
@@ -94,6 +96,11 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	@Override
 	public Set<String> getUserGroups() {
 		return userGroups;
+	}
+
+	@Override
+	public Set<String> getUserRoles() {
+		return userRoles;
 	}
 
 	@Override
@@ -172,6 +179,10 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 
 	public void setUserGroups(Set<String> userGroups) {
 		this.userGroups = (userGroups == null) ? new HashSet<String>() : userGroups;
+	}
+
+	public void setUserRoles(Set<String> userRoles) {
+		this.userRoles = (userRoles == null) ? new HashSet<String>() : userRoles;
 	}
 
 	public void setAccessTime(Date accessTime) {
@@ -286,6 +297,14 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		if(userGroups != null) {
 			for(String userGroup : userGroups) {
 				sb.append(userGroup).append(" ");
+			}
+		}
+		sb.append("} ");
+
+		sb.append("userRoles={");
+		if(userRoles != null) {
+			for(String role : userRoles) {
+				sb.append(role).append(" ");
 			}
 		}
 		sb.append("} ");

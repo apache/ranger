@@ -1345,7 +1345,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				}
 			}
 			RangerAccessRequestImpl rangerAccessrequest = new RangerAccessRequestImpl(resource, null,
-					_userUtils.getUserAsString(user), groups);
+					_userUtils.getUserAsString(user), groups, null);
 			rangerAccessrequest.setAction(operation);
 			rangerAccessrequest.setClientIPAddress(getRemoteAddress());
 			rangerAccessrequest.setResourceMatchingScope(RangerAccessRequest.ResourceMatchingScope.SELF);
