@@ -1357,7 +1357,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
 					@Override
 					public List<UserPermission> run() throws Exception {
-						return getUserPrermissions(
+						return getUserPermissions(
 								hbasePlugin.getResourceACLs(rangerAccessrequest),
 								table.getNameAsString(), false);
 					}
@@ -1370,7 +1370,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
 					@Override
 					public List<UserPermission> run() throws Exception {
-						return getUserPrermissions(
+						return getUserPermissions(
 								hbasePlugin.getResourceACLs(rangerAccessrequest),
 								namespace, true);
 					}
@@ -1380,7 +1380,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				perms = User.runAsLoginUser(new PrivilegedExceptionAction<List<UserPermission>>() {
 					@Override
 					public List<UserPermission> run() throws Exception {
-						return getUserPrermissions(
+						return getUserPermissions(
 								hbasePlugin.getResourceACLs(rangerAccessrequest), null,
 								false);
 					}
@@ -1398,8 +1398,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		done.run(response);
 	}
 
-	private List<UserPermission> getUserPrermissions(RangerResourceACLs rangerResourceACLs, String resource,
-			boolean isNamespace) {
+	private List<UserPermission> getUserPermissions(RangerResourceACLs rangerResourceACLs, String resource,
+                                                    boolean isNamespace) {
 		List<UserPermission> userPermissions = new ArrayList<UserPermission>();
 		Action[] hbaseActions = Action.values();
 		List<String> hbaseActionsList = new ArrayList<String>();
@@ -1419,7 +1419,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			String user = !isGroup ? userAcls.getKey() : AuthUtil.toGroupEntry(userAcls.getKey());
 			List<Action> allowedPermissions = new ArrayList<Action>();
 			for (Entry<String, AccessResult> permissionAccess : userAcls.getValue().entrySet()) {
-				String permission = permissionAccess.getKey().toUpperCase();
+				String permission = _authUtils.getActionName(permissionAccess.getKey());
 				if (hbaseActionsList.contains(permission)
 						&& permissionAccess.getValue().getResult() == RangerPolicyEvaluator.ACCESS_ALLOWED) {
 					allowedPermissions.add(Action.valueOf(permission));
@@ -1544,7 +1544,9 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_ADMIN);
 					ret.setDelegateAdmin(Boolean.TRUE);
 				break;
-
+				case 'X':
+					ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_EXECUTE);
+				break;
 				default:
 					LOG.warn("grant(): ignoring action '" + action.name() + "' for user '" + userName + "'");
 			}
@@ -1639,6 +1641,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_WRITE);
 		ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_CREATE);
 		ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_ADMIN);
+		ret.getAccessTypes().add(HbaseAuthUtils.ACCESS_TYPE_EXECUTE);
 
 		return ret;
 	}

@@ -169,6 +169,10 @@
             {
               "type": "write",
               "isAllowed": true
+            },
+            {
+              "type": "execute",
+              "isAllowed": true
             }
           ],
           "users": [],

@@ -72,4 +72,22 @@ public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
 		}
 		return tableNameStr;
 	}
+
+	@Override
+	public String getActionName(String access) {
+		switch(access) {
+			case ACCESS_TYPE_READ:
+				return Action.READ.name();
+			case ACCESS_TYPE_WRITE:
+				return Action.WRITE.name();
+			case ACCESS_TYPE_CREATE:
+				return Action.CREATE.name();
+			case ACCESS_TYPE_ADMIN:
+				return Action.ADMIN.name();
+			case ACCESS_TYPE_EXECUTE:
+				return Action.EXEC.name();
+			default:
+				return access.toUpperCase();
+		}
+	}
 }

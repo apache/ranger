@@ -30,6 +30,8 @@ public interface HbaseAuthUtils {
 
 	String getAccess(Action action);
 
+	String getActionName(String access);
+
 	boolean isReadAccess(String access);
 	
 	boolean isWriteAccess(String access);
