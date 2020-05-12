@@ -629,7 +629,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					if (ret.getPolicyPriority() >= evaluator.getPolicyPriority()) {
 						ret.setIsAccessDetermined(true);
 					}
-				} else if (isAllowedByTags) {
+				} else if (ret.getIsAllowed()) {
 					if (ret.getPolicyPriority() > evaluator.getPolicyPriority()) {
 						ret.setIsAccessDetermined(true);
 					}
