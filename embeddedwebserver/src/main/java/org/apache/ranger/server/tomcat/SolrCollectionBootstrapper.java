@@ -19,10 +19,8 @@
 package org.apache.ranger.server.tomcat;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -37,7 +35,6 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -57,7 +54,6 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.cloud.SolrZkClient;
 import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.solr.common.cloud.ZkConfigManager;
-import org.apache.zookeeper.CreateMode;
 import org.noggit.JSONParser;
 import org.noggit.ObjectBuilder;
 
@@ -75,11 +71,9 @@ public class SolrCollectionBootstrapper extends Thread {
 	final static String SOLR_NO_REPLICA = "ranger.audit.solr.no.replica";
 	final static String SOLR_TIME_INTERVAL = "ranger.audit.solr.time.interval";
 	final static String SOLR_BOOTSTRP_MAX_RETRY = "ranger.audit.solr.max.retry";
-	final static String SOLR_ACL_USER_LIST_SASL = "ranger.audit.solr.acl.user.list.sasl";
 	final static String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 	public static final String DEFAULT_COLLECTION_NAME = "ranger_audits";
 	public static final String DEFAULT_CONFIG_NAME = "ranger_audits";
-	public static final String DEFAULT_SERVICE_NAME = "rangeradmin";
 	public static final long DEFAULT_SOLR_TIME_INTERVAL_MS = 60000L;
 	private static final int TRY_UNTIL_SUCCESS  = -1;
 	public static final int DEFAULT_SOLR_BOOTSTRP_MAX_RETRY  = TRY_UNTIL_SUCCESS;
@@ -90,7 +84,6 @@ public class SolrCollectionBootstrapper extends Thread {
 	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
 	private static final String RANGER_SERVICE_HOSTNAME = "ranger.service.host";
 	private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
-	private static final String SOLR_CONFIG_FILE = "solrconfig.xml";
   private static final String SSL_ENABLED_PARAM = "ranger.service.https.attrib.ssl.enabled";
 	private File configSetFolder = null;
 
@@ -466,7 +459,6 @@ public class SolrCollectionBootstrapper extends Thread {
 	}
 
 	private String getConfig(String key) {
-
 		String value = serverConfigProperties.getProperty(key);
 		if (value == null || value.trim().isEmpty()) {
 			// Value not found in properties file, let's try to get from
@@ -476,29 +468,8 @@ public class SolrCollectionBootstrapper extends Thread {
 		return value;
 	}
 
-	private void uploadFileToZk(SolrZkClient zkClient, Path filePath,
-			Path configsPath) throws FileNotFoundException {
-		InputStream is = new FileInputStream(filePath.toString());
-		try {
-			if (zkClient.exists(configsPath.toString(), true)) {
-				zkClient.setData(configsPath.toString(),
-						IOUtils.toByteArray(is), true);
-			} else {
-				zkClient.create(configsPath.toString(),
-						IOUtils.toByteArray(is), CreateMode.PERSISTENT, true);
-			}
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		} finally {
-			IOUtils.closeQuietly(is);
-		}
-	}
-
 	private File getConfigSetFolder() {
 		return configSetFolder;
 	}
 
-	private String getConfigFileName() {
-		return SOLR_CONFIG_FILE;
-	}
 }
