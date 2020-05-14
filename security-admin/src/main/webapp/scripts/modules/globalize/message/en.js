@@ -527,6 +527,7 @@ define(function(require) {
                 nameValidationMsg      :'Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space).',
                 roleNameValidationMsg :'1. Role name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
                 policyNameValidationMsg   :'Please avoid these characters (&, <, >, \', ", `) for policy name.',
+                serviceNameValidationMsg :'Service name should be less than 256 characters and special characters are not allowed (except _ and -)',
 			},
 			serverMsg : {
 
