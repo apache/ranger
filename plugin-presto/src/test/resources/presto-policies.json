@@ -54,6 +54,59 @@
     },
     {
       "service": "cl1_presto",
+      "name": "checkFunction",
+      "policyType": 0,
+      "policyPriority": 0,
+      "description": "",
+      "isAuditEnabled": true,
+      "resources": {
+        "function": {
+          "values": [
+            "function"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "execute",
+              "isAllowed": true
+            },
+            {
+              "type": "grant",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "alice"
+          ],
+          "groups": [],
+          "roles": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "serviceType": "presto",
+      "options": {},
+      "validitySchedules": [],
+      "policyLabels": [],
+      "zoneName": "",
+      "isDenyAllElse": false,
+      "id": 51,
+      "guid": "7ab96b62-6fd3-4193-bf49-af462c25784d",
+      "isEnabled": true,
+      "version": 1
+    },
+    {
+      "service": "cl1_presto",
       "name": "alice-schema",
       "policyType": 0,
       "policyPriority": 0,
@@ -100,6 +153,10 @@
             },
             {
               "type": "show",
+              "isAllowed": true
+            },
+            {
+              "type": "grant",
               "isAllowed": true
             }
           ],
@@ -261,6 +318,69 @@
             },
             {
               "type": "revoke",
+              "isAllowed": true
+            }
+          ],
+          "users": [
+            "alice"
+          ],
+          "groups": [],
+          "roles": [],
+          "conditions": [],
+          "delegateAdmin": false
+        }
+      ],
+      "denyPolicyItems": [],
+      "allowExceptions": [],
+      "denyExceptions": [],
+      "dataMaskPolicyItems": [],
+      "rowFilterPolicyItems": [],
+      "serviceType": "presto",
+      "options": {},
+      "validitySchedules": [],
+      "policyLabels": [],
+      "zoneName": "",
+      "isDenyAllElse": false,
+      "id": 55,
+      "guid": "b47e1c19-a05f-41f8-94ef-f86c14076ad9",
+      "isEnabled": true,
+      "version": 2
+    },
+    {
+      "service": "cl1_presto",
+      "name": "alice-procedure",
+      "policyType": 0,
+      "policyPriority": 0,
+      "description": "",
+      "isAuditEnabled": true,
+      "resources": {
+        "schema": {
+          "values": [
+            "schema"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "catalog": {
+          "values": [
+            "alice-catalog"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        },
+        "procedure": {
+          "values": [
+            "procedure"
+          ],
+          "isExcludes": false,
+          "isRecursive": false
+        }
+      },
+      "policyItems": [
+        {
+          "accesses": [
+            {
+              "type": "execute",
               "isAllowed": true
             }
           ],
@@ -734,7 +854,8 @@
         "validationMessage": "",
         "uiHint": "",
         "label": "Presto User",
-        "description": "Presto User"
+        "description": "Presto User",
+        "accessTypeRestrictions": ["impersonate"]
       },
       {
         "itemId": 6,
@@ -755,7 +876,8 @@
         "validationMessage": "",
         "uiHint": "",
         "label": "System Property",
-        "description": "Presto System Property"
+        "description": "Presto System Property",
+        "accessTypeRestrictions": ["alter"]
       },
       {
         "itemId": 7,
@@ -776,7 +898,52 @@
         "validationMessage": "",
         "uiHint": "",
         "label": "Catalog Session Property",
-        "description": "Presto Catalog Session Property"
+        "description": "Presto Catalog Session Property",
+        "accessTypeRestrictions": ["alter"]
+      },
+      {
+        "itemId": 8,
+        "name": "function",
+        "type": "string",
+        "level": 10,
+        "parent": "",
+        "mandatory": true,
+        "lookupSupported": false,
+        "recursiveSupported": false,
+        "excludesSupported": false,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": true,
+          "ignoreCase": true
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Presto Function",
+        "description": "Presto Function",
+        "accessTypeRestrictions": ["execute", "grant"]
+      },
+      {
+        "itemId": 9,
+        "name": "procedure",
+        "type": "string",
+        "level": 30,
+        "parent": "schema",
+        "mandatory": true,
+        "lookupSupported": false,
+        "recursiveSupported": false,
+        "excludesSupported": false,
+        "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+        "matcherOptions": {
+          "wildCard": true,
+          "ignoreCase": true
+        },
+        "validationRegEx": "",
+        "validationMessage": "",
+        "uiHint": "",
+        "label": "Schema Procedure",
+        "description": "Schema Procedure",
+        "accessTypeRestrictions": ["execute", "grant"]
       }
     ],
     "accessTypes": [
@@ -837,6 +1004,11 @@
       },
       {
         "itemId": 12,
+        "name": "execute",
+        "label": "execute"
+      },
+      {
+        "itemId": 13,
         "name": "all",
         "label": "All",
         "impliedGrants": [
@@ -850,7 +1022,8 @@
           "grant",
           "revoke",
           "show",
-          "impersonate"
+          "impersonate",
+          "execute"
         ]
       }
     ],
@@ -900,7 +1073,8 @@
     ],
     "contextEnrichers": [
     ],
-    "policyConditions": [
+    "policyConditions":
+    [
     ],
     "dataMaskDef": {
       "accessTypes": [
@@ -912,34 +1086,34 @@
         {
           "name": "catalog",
           "matcherOptions": {
-            "wildCard": "false"
+            "wildCard": "true"
           },
           "lookupSupported": true,
-          "uiHint": "{ \"singleValue\":true }"
+          "uiHint":"{ \"singleValue\":true }"
         },
         {
           "name": "schema",
           "matcherOptions": {
-            "wildCard": "false"
+            "wildCard": "true"
           },
           "lookupSupported": true,
-          "uiHint": "{ \"singleValue\":true }"
+          "uiHint":"{ \"singleValue\":true }"
         },
         {
           "name": "table",
           "matcherOptions": {
-            "wildCard": "false"
+            "wildCard": "true"
           },
           "lookupSupported": true,
-          "uiHint": "{ \"singleValue\":true }"
+          "uiHint":"{ \"singleValue\":true }"
         },
         {
           "name": "column",
           "matcherOptions": {
-            "wildCard": "false"
+            "wildCard": "true"
           },
           "lookupSupported": true,
-          "uiHint": "{ \"singleValue\":true }"
+          "uiHint":"{ \"singleValue\":true }"
         }
       ],
       "maskTypes": [
@@ -948,7 +1122,7 @@
           "name": "MASK",
           "label": "Redact",
           "description": "Replace lowercase with 'x', uppercase with 'X', digits with '0'",
-          "transformer": "cast(regexp_replace(regexp_replace(regexp_replace({col},'([A-Z])', 'X'),'([a-z])','x'),'([0-9])','0') as {type}",
+          "transformer": "cast(regexp_replace(regexp_replace(regexp_replace({col},'([A-Z])', 'X'),'([a-z])','x'),'([0-9])','0') as {type})",
           "dataMaskOptions": {
           }
         },
@@ -1010,7 +1184,7 @@
         {
           "name": "catalog",
           "matcherOptions": {
-            "wildCard": "false"
+            "wildCard": "true"
           },
           "lookupSupported": true,
           "mandatory": true,
@@ -1019,7 +1193,7 @@
         {
           "name": "schema",
           "matcherOptions": {
-            "wildCard": "false"
+            "wildCard": "true"
           },
           "lookupSupported": true,
           "mandatory": true,
@@ -1028,7 +1202,7 @@
         {
           "name": "table",
           "matcherOptions": {
-            "wildCard": "false"
+            "wildCard": "true"
           },
           "lookupSupported": true,
           "mandatory": true,

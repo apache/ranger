@@ -19,6 +19,7 @@ package org.apache.ranger.authorization.presto.authorizer;
 
 import com.google.common.collect.ImmutableSet;
 import io.prestosql.spi.connector.CatalogSchemaName;
+import io.prestosql.spi.connector.CatalogSchemaRoutineName;
 import io.prestosql.spi.connector.CatalogSchemaTableName;
 import io.prestosql.spi.connector.SchemaTableName;
 import io.prestosql.spi.security.AccessDeniedException;
@@ -60,6 +61,8 @@ public class RangerSystemAccessControlTest {
   private static final CatalogSchemaTableName aliceTable = new CatalogSchemaTableName("alice-catalog", "schema","table");
   private static final CatalogSchemaTableName aliceView = new CatalogSchemaTableName("alice-catalog", "schema","view");
 
+  private static final CatalogSchemaRoutineName aliceProcedure = new CatalogSchemaRoutineName("alice-catalog", "schema", "procedure");
+  private static final String functionName = new String("function");
 
   @BeforeClass
   public static void setUpBeforeClass() throws Exception {
@@ -116,6 +119,9 @@ public class RangerSystemAccessControlTest {
       accessControlManager.checkCanCreateSchema(context(bob), aliceSchema);
     } catch (AccessDeniedException expected) {
     }
+
+    accessControlManager.checkCanSetSchemaAuthorization(context(alice), aliceSchema, new PrestoPrincipal(USER, "principal"));
+    accessControlManager.checkCanShowCreateSchema(context(alice), aliceSchema);
   }
 
   @Test
@@ -177,9 +183,13 @@ public class RangerSystemAccessControlTest {
 
     ret = accessControlManager.getRowFilter(context(alice), aliceTable);
     assertFalse(ret.isPresent());
+
+    accessControlManager.checkCanExecuteFunction(context(alice), functionName);
+    accessControlManager.checkCanGrantExecuteFunctionPrivilege(context(alice), functionName, new PrestoPrincipal(USER, "grantee"), true);
+    accessControlManager.checkCanExecuteProcedure(context(alice), aliceProcedure);
   }
 
   private SystemSecurityContext context(Identity id) {
-    return new SystemSecurityContext(id);
+    return new SystemSecurityContext(id, Optional.empty());
   }
 }

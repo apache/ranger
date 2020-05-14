@@ -113,7 +113,8 @@
       "validationMessage": "",
       "uiHint": "",
       "label": "Presto User",
-      "description": "Presto User"
+      "description": "Presto User",
+      "accessTypeRestrictions": ["impersonate"]
     },
     {
       "itemId": 6,
@@ -134,7 +135,8 @@
       "validationMessage": "",
       "uiHint": "",
       "label": "System Property",
-      "description": "Presto System Property"
+      "description": "Presto System Property",
+      "accessTypeRestrictions": ["alter"]
     },
     {
       "itemId": 7,
@@ -155,7 +157,52 @@
       "validationMessage": "",
       "uiHint": "",
       "label": "Catalog Session Property",
-      "description": "Presto Catalog Session Property"
+      "description": "Presto Catalog Session Property",
+      "accessTypeRestrictions": ["alter"]
+    },
+    {
+      "itemId": 8,
+      "name": "function",
+      "type": "string",
+      "level": 10,
+      "parent": "",
+      "mandatory": true,
+      "lookupSupported": false,
+      "recursiveSupported": false,
+      "excludesSupported": false,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Presto Function",
+      "description": "Presto Function",
+      "accessTypeRestrictions": ["execute", "grant"]
+    },
+    {
+      "itemId": 9,
+      "name": "procedure",
+      "type": "string",
+      "level": 30,
+      "parent": "schema",
+      "mandatory": true,
+      "lookupSupported": false,
+      "recursiveSupported": false,
+      "excludesSupported": false,
+      "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+      "matcherOptions": {
+        "wildCard": true,
+        "ignoreCase": true
+      },
+      "validationRegEx": "",
+      "validationMessage": "",
+      "uiHint": "",
+      "label": "Schema Procedure",
+      "description": "Schema Procedure",
+      "accessTypeRestrictions": ["execute", "grant"]
     }
   ],
   "accessTypes": [
@@ -229,8 +276,14 @@
         "grant",
         "revoke",
         "show",
-        "impersonate"
+        "impersonate",
+        "execute"
       ]
+    },
+    {
+      "itemId": 13,
+      "name": "execute",
+      "label": "execute"
     }
   ],
   "configs": [

@@ -14,6 +14,7 @@
 package org.apache.ranger.authorization.presto.authorizer;
 
 import io.prestosql.spi.connector.CatalogSchemaName;
+import io.prestosql.spi.connector.CatalogSchemaRoutineName;
 import io.prestosql.spi.connector.CatalogSchemaTableName;
 import io.prestosql.spi.connector.ColumnMetadata;
 import io.prestosql.spi.connector.SchemaTableName;
@@ -470,6 +471,56 @@ public class RangerSystemAccessControl
     try {
       activatePluginClassLoader();
       systemAccessControlImpl.checkCanSetUser(principal, userName);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+  }
+
+  @Override
+  public void checkCanGrantExecuteFunctionPrivilege(SystemSecurityContext context, String functionName, PrestoPrincipal grantee, boolean grantOption) {
+    try {
+      activatePluginClassLoader();
+      systemAccessControlImpl.checkCanGrantExecuteFunctionPrivilege(context, functionName, grantee, grantOption);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+  }
+
+  @Override
+  public void checkCanSetSchemaAuthorization(SystemSecurityContext context, CatalogSchemaName schema, PrestoPrincipal principal) {
+    try {
+      activatePluginClassLoader();
+      systemAccessControlImpl.checkCanSetSchemaAuthorization(context, schema, principal);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+  }
+
+  @Override
+  public void checkCanShowCreateSchema(SystemSecurityContext context, CatalogSchemaName schemaName) {
+    try {
+      activatePluginClassLoader();
+      systemAccessControlImpl.checkCanShowCreateSchema(context, schemaName);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+  }
+
+  @Override
+  public void checkCanExecuteProcedure(SystemSecurityContext systemSecurityContext, CatalogSchemaRoutineName procedure) {
+    try {
+      activatePluginClassLoader();
+      systemAccessControlImpl.checkCanExecuteProcedure(systemSecurityContext, procedure);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+  }
+
+  @Override
+  public void checkCanExecuteFunction(SystemSecurityContext systemSecurityContext, String functionName) {
+    try {
+      activatePluginClassLoader();
+      systemAccessControlImpl.checkCanExecuteFunction(systemSecurityContext, functionName);
     } finally {
       deactivatePluginClassLoader();
     }
