@@ -243,6 +243,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public static Integer RETENTION_PERIOD_IN_DAYS = 7;
 	public static Integer TAG_RETENTION_PERIOD_IN_DAYS = 3;
 
+	private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
+
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -1657,7 +1659,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
 
 		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
-		boolean hasExcludedUGRConfigChanged = hasExcludedUGRConfigChanged(dbConfigMaps, validConfigs);
+		boolean hasServiceConfigForPluginChanged = hasServiceConfigForPluginChanged(dbConfigMaps, validConfigs);
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, existing, RangerServiceService.OPERATION_UPDATE_CONTEXT);
 
@@ -1671,7 +1673,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setVersion(existing.getVersion());
 			service = svcService.update(service);
 
-			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasExcludedUGRConfigChanged) {
+			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
 				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null, false);
 			}
 		}
@@ -5375,7 +5377,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<XXServiceConfigMap> xxServiceConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(serviceId);
 		if (CollectionUtils.isNotEmpty(xxServiceConfigMaps)) {
 			for (XXServiceConfigMap svcConfMap : xxServiceConfigMaps) {
-				if (StringUtils.startsWith(svcConfMap.getConfigkey(), "ranger.plugin.")) {
+				if (StringUtils.startsWith(svcConfMap.getConfigkey(), RANGER_PLUGIN_CONFIG_PREFIX)) {
 					configs.put(svcConfMap.getConfigkey(), svcConfMap.getConfigvalue());
 				}
 			}
@@ -5383,23 +5385,31 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return configs;
 	}
 
-	private boolean hasExcludedUGRConfigChanged(List<XXServiceConfigMap> dbConfigMaps, Map<String, String> validConfigs) {
+	boolean hasServiceConfigForPluginChanged(List<XXServiceConfigMap> dbConfigMaps, Map<String, String> validConfigs) {
 		boolean ret = false;
-		String auditExcludeUsers = null;
-		String auditExcludeGroups = null;
-		String auditExcludeRoles = null;
-		for (XXServiceConfigMap dbConfigMap : dbConfigMaps) {
-			if (StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_USERS)) {
-				auditExcludeUsers = StringUtils.trimToEmpty(dbConfigMap.getConfigvalue());
-			} else if (StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_GROUPS)) {
-				auditExcludeGroups = StringUtils.trimToEmpty(dbConfigMap.getConfigvalue());
-			} else if (StringUtils.equalsIgnoreCase(dbConfigMap.getConfigkey(), RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_ROLES)) {
-				auditExcludeRoles = StringUtils.trimToEmpty(dbConfigMap.getConfigvalue());
+		Map<String, String> configs = new HashMap<String, String>();
+		if (CollectionUtils.isNotEmpty(dbConfigMaps)) {
+			for (XXServiceConfigMap dbConfigMap : dbConfigMaps) {
+				if (StringUtils.startsWith(dbConfigMap.getConfigkey(), RANGER_PLUGIN_CONFIG_PREFIX)) {
+					configs.put(dbConfigMap.getConfigkey(), dbConfigMap.getConfigvalue());
+				}
 			}
 		}
-		ret = !StringUtils.equals(auditExcludeUsers, validConfigs.get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_USERS))
-				|| !StringUtils.equals(auditExcludeGroups, validConfigs.get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_GROUPS))
-				|| !StringUtils.equals(auditExcludeRoles, validConfigs.get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_ROLES));
+		if (MapUtils.isNotEmpty(validConfigs)) {
+			for (String key : validConfigs.keySet()) {
+				if (StringUtils.startsWith(key, RANGER_PLUGIN_CONFIG_PREFIX)) {
+					if (!StringUtils.equals(configs.get(key), validConfigs.get(key))) {
+						return true;
+					} else {
+						configs.remove(key);
+					}
+				}
+			}
+		}
+		if (configs.size() > 0) {
+			return true;
+		}
+
 		return ret;
 	}
 
