@@ -156,11 +156,19 @@ public class RangerPluginConfig extends RangerConfiguration {
         auditExcludedUsers  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
         auditExcludedGroups = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(groups);
         auditExcludedRoles  = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(roles);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("auditExcludedUsers=" + auditExcludedUsers + ", auditExcludedGroups=" + auditExcludedGroups + ", auditExcludedRoles=" + auditExcludedRoles);
+        }
     }
 
     public void setSuperUsersGroups(Set<String> users, Set<String> groups) {
         superUsers  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
         superGroups = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(groups);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("superUsers=" + superUsers + ", superGroups=" + superGroups);
+        }
     }
 
     public boolean isAuditExcludedUser(String userName) {

@@ -80,6 +80,15 @@ public class RangerBasePlugin {
 		this.pluginConfig  = pluginConfig;
 		this.pluginContext = new RangerPluginContext(pluginConfig);
 
+		Set<String> superUsers         = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".super.users"));
+		Set<String> superGroups        = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".super.groups"));
+		Set<String> auditExcludeUsers  = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".audit.exclude.users"));
+		Set<String> auditExcludeGroups = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".audit.exclude.groups"));
+		Set<String> auditExcludeRoles  = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".audit.exclude.roles"));
+
+		setSuperUsersAndGroups(superUsers, superGroups);
+		setAuditExcludedUsersGroupsRoles(auditExcludeUsers, auditExcludeGroups, auditExcludeRoles);
+
 		RangerScriptExecutionContext.init(pluginConfig);
 	}
 
@@ -690,6 +699,10 @@ public class RangerBasePlugin {
 			log.counter++;
 		}
 		return false;
+	}
+
+	private Set<String> toSet(String value) {
+		return StringUtils.isNotBlank(value) ? StringUtil.toSet(value) : Collections.emptySet();
 	}
 
 	static private final class LogHistory {
