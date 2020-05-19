@@ -254,7 +254,9 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             TRACE_LOG.trace("==> copyTrieSubtree(" + sb + ")");
         }
         TrieNode<T> dest = new TrieNode<>(source.str);
-        dest.setParent(parent);
+        if (parent != null) {
+            parent.addChild(dest);
+        }
 
         synchronized (source.children) {
             dest.isSetup = source.isSetup;
