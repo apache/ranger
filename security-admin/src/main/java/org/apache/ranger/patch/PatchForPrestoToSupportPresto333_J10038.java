@@ -34,11 +34,13 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+@Component
 public class PatchForPrestoToSupportPresto333_J10038 extends BaseLoader {
   private static final Logger logger = Logger.getLogger(PatchForPrestoToSupportPresto333_J10038.class);
 

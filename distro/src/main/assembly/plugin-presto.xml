@@ -47,6 +47,7 @@
                     <include>javax.inject:javax.inject:jar:${javax-inject.version}</include>
                     <include>org.apache.bval:bval-jsr:jar:${presto.bval-jsr.version}</include>
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
+                    <include>javax.annotation:javax.annotation-api</include>
                 </includes>
             </binaries>
         </moduleSet>
