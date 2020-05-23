@@ -2544,10 +2544,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			boolean useLegacyResourceSearch = true;
 
+			Map<String, String> paramsCopy  = new HashMap<>(filter.getParams());
+			SearchFilter       searchFilter = new SearchFilter(paramsCopy);
+
 			if (MapUtils.isNotEmpty(filterResources) && resourceMatchScope != null) {
 				useLegacyResourceSearch = false;
 				for (Map.Entry<String, String> entry : filterResources.entrySet()) {
-					filter.removeParam(SearchFilter.RESOURCE_PREFIX + entry.getKey());
+					searchFilter.removeParam(SearchFilter.RESOURCE_PREFIX + entry.getKey());
 				}
 			}
 
@@ -2556,7 +2559,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 
 			ret = new ArrayList<>(policies);
-			predicateUtil.applyFilter(ret, filter);
+			predicateUtil.applyFilter(ret, searchFilter);
 
 			if (!useLegacyResourceSearch && CollectionUtils.isNotEmpty(ret)) {
 				RangerPolicyResourceMatcher.MatchScope scope;
@@ -2593,7 +2596,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						break;
 				}
 
-				ret = applyResourceFilter(serviceDef, ret, filterResources, filter, scope);
+				ret = applyResourceFilter(serviceDef, ret, filterResources, searchFilter, scope);
 			}
 		} else {
 			ret = policies;
@@ -4691,7 +4694,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		RangerPolicyList retList = new RangerPolicyList();
 		Map<Long,RangerPolicy> policyMap=new HashMap<Long,RangerPolicy>();
 		Set<Long> processedServices=new HashSet<Long>();
-		Set<Long> processedServicesForGroup=new HashSet<Long>();
 		Set<Long> processedPolicies=new HashSet<Long>();
 		Comparator<RangerPolicy> comparator = new Comparator<RangerPolicy>() {
 			public int compare(RangerPolicy c1, RangerPolicy c2) {
@@ -4699,11 +4701,27 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		};
 
-		List<XXPolicy> xPolList = (List<XXPolicy>) policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
-		if (!CollectionUtils.isEmpty(xPolList)) {
-			for (XXPolicy xXPolicy : xPolList) {
-				if(!processedServices.contains(xXPolicy.getService())){
-					loadRangerPolicies(xXPolicy.getService(),processedServices,policyMap,searchFilter);
+		List<XXPolicy> xPolList    = null;
+		Long           serviceId   = null;
+		String         serviceName = searchFilter.getParam(ServiceREST.PARAM_SERVICE_NAME);
+
+		if (StringUtils.isNotBlank(serviceName)) {
+			serviceId = getRangerServiceByName(serviceName.trim());
+			if (serviceId != null) {
+				loadRangerPolicies(serviceId, processedServices, policyMap, searchFilter);
+			}
+		} else  {
+			xPolList = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+			if (!CollectionUtils.isEmpty(xPolList)) {
+				if (isSearchQuerybyResource(searchFilter)) {
+					XXPolicy xXPolicy = xPolList.get(0);
+					loadRangerPolicies(xXPolicy.getService(), processedServices, policyMap, searchFilter);
+				} else {
+					for (XXPolicy xXPolicy : xPolList) {
+						if (!processedServices.contains(xXPolicy.getService())) {
+							loadRangerPolicies(xXPolicy.getService(), processedServices, policyMap, searchFilter);
+						}
+					}
 				}
 			}
 		}
@@ -4712,11 +4730,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			searchFilter.removeParam("user");
 			Set<String> groupNames = daoMgr.getXXGroupUser().findGroupNamesByUserName(userName);
 			if (!CollectionUtils.isEmpty(groupNames)) {
-				List<XXPolicy> xPolList2 = null;
+				Set<Long> processedServicesForGroup=new HashSet<Long>();
+				List<XXPolicy> xPolList2;
 				for (String groupName : groupNames) {
-					xPolList2 = new ArrayList<XXPolicy>();
 					searchFilter.setParam("group", groupName);
-					xPolList2 = (List<XXPolicy>) policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+					xPolList2 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
 					if (!CollectionUtils.isEmpty(xPolList2)) {
 						for (XXPolicy xPol2 : xPolList2) {
 							if(xPol2!=null){
@@ -4736,23 +4754,66 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 		if (!CollectionUtils.isEmpty(xPolList)) {
-			for (XXPolicy xPol : xPolList) {
-				if(xPol!=null){
-					if(!processedPolicies.contains(xPol.getId())){
-						if(!processedServices.contains(xPol.getService())){
-							loadRangerPolicies(xPol.getService(),processedServices,policyMap,searchFilter);
-						}
-						if(policyMap.containsKey(xPol.getId())){
-							policyList.add(policyMap.get(xPol.getId()));
-							processedPolicies.add(xPol.getId());
+			if (isSearchQuerybyResource(searchFilter)) {
+				if (MapUtils.isNotEmpty(policyMap)) {
+					for(Entry<Long,RangerPolicy> entry:policyMap.entrySet()) {
+						policyList.add(entry.getValue());
+						processedPolicies.add(entry.getKey());
+					}
+				}
+			} else {
+				for (XXPolicy xPol : xPolList) {
+					if (xPol != null) {
+						if (!processedPolicies.contains(xPol.getId())) {
+							if (!processedServices.contains(xPol.getService())) {
+								loadRangerPolicies(xPol.getService(), processedServices, policyMap, searchFilter);
+							}
+							if (policyMap.containsKey(xPol.getId())) {
+								policyList.add(policyMap.get(xPol.getId()));
+								processedPolicies.add(xPol.getId());
+							}
 						}
 					}
 				}
 			}
+		} else {
+			if (MapUtils.isNotEmpty(policyMap)) {
+				for(Entry<Long,RangerPolicy> entry:policyMap.entrySet()) {
+					policyList.add(entry.getValue());
+					processedPolicies.add(entry.getKey());
+				}
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(policyList)) {
 			Collections.sort(policyList, comparator);
 		}
 		retList.setPolicies(policyList);
 		return retList;
+	}
+
+	private boolean isSearchQuerybyResource(SearchFilter searchFilter) {
+		boolean ret = false;
+		Map<String, String> filterResourcesPrefix = searchFilter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
+		if(MapUtils.isNotEmpty(filterResourcesPrefix)) {
+			ret = true;
+		}
+		if(!ret) {
+			Map<String, String> filterResourcesPolResource = searchFilter.getParamsWithPrefix(SearchFilter.POL_RESOURCE, true);
+			if (MapUtils.isNotEmpty(filterResourcesPolResource)) {
+				ret = true;
+			}
+		}
+		return ret;
+	}
+
+	private  Long getRangerServiceByName(String name) {
+		XXService    xxService    = null;
+		XXServiceDao xxServiceDao = daoMgr.getXXService();
+		if (xxServiceDao != null ) {
+			xxService = xxServiceDao.findByName(name);
+		}
+		return xxService == null ? null : xxService.getId();
 	}
 
 	private void loadRangerPolicies(Long serviceId,Set<Long> processedServices,Map<Long,RangerPolicy> policyMap,SearchFilter searchFilter){

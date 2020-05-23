@@ -2145,7 +2145,6 @@ public class TestServiceDBStore {
 
 		//PList<RangerPolicy> dbRangerPolicyList =
         serviceDBStore.getPaginatedServicePolicies(rangerService.getId(), filter);
-		Mockito.verify(daoManager).getXXService();
 	}
 
 	@Test
