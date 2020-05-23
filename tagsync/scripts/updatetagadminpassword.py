@@ -29,6 +29,8 @@ from os.path import basename
 from subprocess import Popen,PIPE
 from datetime import date
 from datetime import datetime
+try: input = raw_input
+except NameError: pass
 globalDict = {}
 
 os_name = platform.system()
@@ -55,7 +57,7 @@ def log(msg,type):
 		logging.error(" %s",msg)
 
 def import_properties_from_xml(xml_path, properties_from_xml=None):
-	print('getting values from file : ' + str(xml_path))
+	log('[I] Getting values from file : ' + str(xml_path), "info")
 	if os.path.isfile(xml_path):
 		xml = ET.parse(xml_path)
 		root = xml.getroot()
@@ -66,7 +68,7 @@ def import_properties_from_xml(xml_path, properties_from_xml=None):
 			value = child.find("value").text.strip() if child.find("value").text is not None  else ""
 			properties_from_xml[name] = value
 	else:
-		print('XML file not found at path : ' + str(xml_path))
+		log('[E] XML file not found at path : ' + str(xml_path), "error")
 	return properties_from_xml
 
 def write_properties_to_xml(xml_path, property_name='', property_value=''):
@@ -105,7 +107,7 @@ def main(argv):
 	else:
 		while os.path.isfile(JAVA_BIN) == False:
 			log("Enter java executable path: :","info")
-			JAVA_BIN=raw_input()
+			JAVA_BIN=input()
 	log("[I] Using Java:" + str(JAVA_BIN),"info")
 
 	globalDict=import_properties_from_xml(CFG_FILE,globalDict)
@@ -118,14 +120,15 @@ def main(argv):
 	PASSWORD=''
 	USERNAME_PROPERTY_NAME=''
 	FILENAME_PROPERTY_NAME=''
-        if len(argv) == 4:
-                ENDPOINT=argv[1]
-                USERNAME=argv[2]
-                PASSWORD=argv[3]
+	if len(argv) == 4:
+		ENDPOINT=argv[1]
+		USERNAME=argv[2]
+		PASSWORD=argv[3]
+
 	while ENDPOINT == "" or not (ENDPOINT == "ATLAS" or ENDPOINT == "RANGER"):
 		sys.stdout.write('Enter Destination NAME (Ranger/Atlas):')
 		sys.stdout.flush()
-		ENDPOINT=raw_input()
+		ENDPOINT=input()
 		ENDPOINT = ENDPOINT.upper()
 
 	if ENDPOINT == "ATLAS":

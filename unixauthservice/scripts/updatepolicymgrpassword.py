@@ -29,6 +29,8 @@ from os.path import basename
 from subprocess import Popen,PIPE
 from datetime import date
 from datetime import datetime
+try: input = raw_input
+except NameError: pass
 globalDict = {}
 installglobalDict={}
 
@@ -37,12 +39,12 @@ os_name = os_name.upper()
 
 RANGER_USERSYNC_HOME = os.getenv("RANGER_USERSYNC_HOME")
 if RANGER_USERSYNC_HOME is None:
-    RANGER_USERSYNC_HOME = os.getcwd()
+	RANGER_USERSYNC_HOME = os.getcwd()
 
 def check_output(query):
 	if os_name == "LINUX":
 		p = subprocess.Popen(shlex.split(query), stdout=subprocess.PIPE)
-	elif os_name == "WINDOWS":	
+	elif os_name == "WINDOWS":
 		p = subprocess.Popen(query, stdout=subprocess.PIPE, shell=True)
 	output = p.communicate ()[0]
 	return output
@@ -116,7 +118,7 @@ def main(argv):
 	else:
 		while os.path.isfile(JAVA_BIN) == False:
 			log("Enter java executable path: :","info")
-			JAVA_BIN=raw_input()
+			JAVA_BIN=input()
 	log("[I] Using Java:" + str(JAVA_BIN),"info")
 
 	globalDict=import_properties_from_xml(CFG_FILE,globalDict)
@@ -128,13 +130,13 @@ def main(argv):
 	unix_user = installglobalDict['unix_user']
 	unix_group = installglobalDict['unix_group']
 
-        if len(argv) == 3:
-                SYNC_POLICY_MGR_USERNAME=argv[1]
-                SYNC_POLICY_MGR_PASSWORD=argv[2]
+	if len(argv) == 3:
+		SYNC_POLICY_MGR_USERNAME=argv[1]
+		SYNC_POLICY_MGR_PASSWORD=argv[2]
 
 	while SYNC_POLICY_MGR_USERNAME == "":
-		print "Enter policymgr user name:"
-		SYNC_POLICY_MGR_USERNAME=raw_input()
+		print("Enter policymgr user name:")
+		SYNC_POLICY_MGR_USERNAME=input()
 
 	while SYNC_POLICY_MGR_PASSWORD == "":
 		SYNC_POLICY_MGR_PASSWORD=getpass.getpass("Enter policymgr user password:")

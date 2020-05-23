@@ -55,7 +55,7 @@ def check_output(query):
 	elif os_name == "WINDOWS":
 		p = subprocess.Popen(query, stdout=subprocess.PIPE, shell=True)
 	output = p.communicate ()[0]
-	return output
+	return output.decode()
 
 def log(msg,type):
 	if type == 'info':
@@ -423,7 +423,7 @@ class BaseDB(object):
 						key3 = int(version.strip("J"))
 						my_dict[key3] = filename
 
-			keylist = my_dict.keys()
+			keylist = list(my_dict)
 			keylist.sort()
 			for key in keylist:
 				#print "%s: %s" % (key, my_dict[key])
@@ -1047,20 +1047,20 @@ def main(argv):
 		lib_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp","WEB-INF","lib","*")
 		get_ranger_version_cmd="%s -cp %s org.apache.ranger.common.RangerVersionInfo"%(JAVA_BIN,lib_home)
 		ranger_version = check_output(get_ranger_version_cmd).split("\n")[1]
-	except Exception, error:
+	except Exception as error:
 		ranger_version=''
 
 	try:
 		if ranger_version=="" or ranger_version=="ranger-admin - None":
 			script_path = os.path.join(RANGER_ADMIN_HOME,"ews","ranger-admin-services.sh")
 			ranger_version=check_output(script_path +" version").split("\n")[1]
-	except Exception, error:
+	except Exception as error:
 		ranger_version=''
 
 	try:
 		if ranger_version=="" or ranger_version=="ranger-admin - None":
 			ranger_version=check_output("ranger-admin version").split("\n")[1]
-	except Exception, error:
+	except Exception as error:
 		ranger_version=''
 
 	if ranger_version=="" or ranger_version is None:

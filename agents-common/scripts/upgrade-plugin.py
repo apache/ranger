@@ -18,7 +18,10 @@ import xml.etree.ElementTree as ET
 import os,errno,sys
 from os import listdir
 from os.path import isfile, join, dirname
-from urlparse import urlparse
+try:
+	from urllib.parse import urlparse
+except ImportError:
+	from urlparse import urlparse
 
 debugLevel = 1
 
@@ -31,9 +34,9 @@ SUPPORTED_COMPONENTS = [ "hdfs", "hive", "hbase", "knox", "storm" ]
 xmlTemplateDirectory = './install/conf.templates/enable'
 
 def showUsage():
-	print "This script must be run with a <componentName> as parameter"
-	print "USAGE: upgrade-plugin.py <componentName>"
-	print " <componentName> could be any one of the following: %s" % (SUPPORTED_COMPONENTS)
+	print("This script must be run with a <componentName> as parameter")
+	print("USAGE: upgrade-plugin.py <componentName>")
+	print(" <componentName> could be any one of the following: %s" % (SUPPORTED_COMPONENTS))
 
 if (len(sys.argv) == 1):
 	showUsage()
@@ -42,7 +45,7 @@ if (len(sys.argv) == 1):
 componentName = sys.argv[1]
 
 if (componentName not in SUPPORTED_COMPONENTS):
-	print "Invalid componentName passed as parameter: %s" % (componentName)
+	print("Invalid componentName passed as parameter: %s" % (componentName))
 	showUsage()
 	sys.exit(1)
 
@@ -92,8 +95,8 @@ def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
 
 def rewriteConfig(props,newProps):
 	if (debugLevel > 0):
-		for k,v in props.iteritems():
-			print "old config[%s] = [%s]" % (k,v)
+		for k,v in props.items():
+			print("old config[%s] = [%s]" % (k,v))
 	#
 	# Derived fields
 	#
@@ -137,10 +140,10 @@ def main():
 			r = getXMLConfigMap(file)
 			props.update(r)
 	if (len(foundFiles) == 0):
-		print "INFO: Previous version of ranger is not enabled/configured for component [%s]" % (componentName) 
+		print("INFO: Previous version of ranger is not enabled/configured for component [%s]" % (componentName))
 		sys.exit(0)
 	if (len(foundFiles) != 3):
-		print "ERROR: Expected to find three files matching xasecure-*.xml files under the folder (%s) - found %s" % (configDirectory,foundFiles) 
+		print("ERROR: Expected to find three files matching xasecure-*.xml files under the folder (%s) - found %s" % (configDirectory,foundFiles))
 		sys.exit(1)
 	for fn in listdir(xmlTemplateDirectory):
 		file = join(xmlTemplateDirectory,fn)
@@ -149,7 +152,7 @@ def main():
 			newProps.update(r)
 			newConfigFile = join(configDirectory,fn)
 			if isfile(newConfigFile):
-				print "ERROR: new config file [%s] already exists. Upgrade script can not overwrite an existing config file." % (newConfigFile)
+				print("ERROR: new config file [%s] already exists. Upgrade script can not overwrite an existing config file." % (newConfigFile))
 				sys.exit(1)
 	rewriteConfig(props,newProps)
 

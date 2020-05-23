@@ -28,6 +28,8 @@ from os.path import basename
 from subprocess import Popen,PIPE
 from datetime import date
 from datetime import datetime
+try: input = raw_input
+except NameError: pass
 
 os_name = platform.system()
 os_name = os_name.upper()
@@ -73,7 +75,7 @@ def main(argv):
         else:
                 while os.path.isfile(JAVA_BIN) == False:
                         log("Enter java executable path: :","info")
-                        JAVA_BIN=raw_input()
+                        JAVA_BIN=input()
         log("[I] Using Java:" + str(JAVA_BIN),"info")
 
         USERNAME = ''
@@ -90,8 +92,8 @@ def main(argv):
                 sys.exit(1)
 
         while userName == "":
-                print "Enter user name:"
-                userName=raw_input()
+                print("Enter user name:")
+                userName=input()
 
         while oldPassword == "":
                 oldPassword=getpass.getpass("Enter current password:")

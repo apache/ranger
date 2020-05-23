@@ -28,6 +28,8 @@ from os.path import basename
 from subprocess import Popen,PIPE
 from datetime import date
 from datetime import datetime
+try: input = raw_input
+except NameError: pass
 
 os_name = platform.system()
 os_name = os_name.upper()
@@ -72,7 +74,7 @@ def main(argv):
 	else:
 		while os.path.isfile(JAVA_BIN) == False:
 			log("Enter java executable path: :","info")
-			JAVA_BIN=raw_input()
+			JAVA_BIN=input()
 	log("[I] Using Java:" + str(JAVA_BIN),"info")
 
 	if os_name == "LINUX":

@@ -44,7 +44,7 @@ def check_output(query):
 	elif os_name == "WINDOWS":
 		p = subprocess.Popen(query, stdout=subprocess.PIPE, shell=True)
 	output = p.communicate ()[0]
-	return output
+	return output.decode()
 
 def log(msg,type):
 	if type == 'info':

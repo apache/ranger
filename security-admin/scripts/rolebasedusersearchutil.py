@@ -29,7 +29,8 @@ from subprocess import Popen,PIPE
 from datetime import date
 from datetime import datetime
 from operator import contains
-
+try: input = raw_input
+except NameError: pass
 
 os_name = platform.system()
 os_name = os_name.upper()
@@ -77,7 +78,7 @@ def main(argv):
     else:
         while os.path.isfile(JAVA_BIN) == False:
             log("Enter java executable path: :","info")
-            JAVA_BIN=raw_input()
+            JAVA_BIN=input()
     log("[I] Using Java:" + str(JAVA_BIN),"info")
     userName = ""
     password = ""
@@ -88,10 +89,10 @@ def main(argv):
     userroleFlag = False
 
     if len(argv) == 1:
-        print msgPrompt + " or \n" + msgCommand + "\n " +msgRoleList
-        userName = raw_input('Enter a user name: ')
+        log("[I] " +msgPrompt + " or \n" + msgCommand + "\n " +msgRoleList, "info")
+        userName = input('Enter a user name: ')
         password = getpass.getpass('Enter a user password:')
-        userRole = raw_input('Enter a role: ')
+        userRole = input('Enter a role: ')
     elif len(argv) > 1 and len(argv) < 8 :
         for i in range(1, len(sys.argv)) :
             if sys.argv[i] == "-u" :
@@ -128,13 +129,13 @@ def main(argv):
             if userRole.lower() == "-p" or userRole.lower() == "-r" or userRole.lower() == "-u":
                 userRoleMsgFlag = True
     if userNameMsgFlag == True or  passwordMsgFlag == True or userRoleMsgFlag == True :
-         print msgPrompt + " or \n" + msgCommand + "\n  " +msgRoleList
+        log("[I] "+msgPrompt + " or \n" + msgCommand + "\n  " +msgRoleList, "info")
     if userNameMsgFlag == True :
-        userName = raw_input('Enter a user name: ')
+        userName = input('Enter a user name: ')
     if passwordMsgFlag == True :
         password = getpass.getpass("Enter user password:")
     if userRoleMsgFlag == True :
-        userRole = raw_input('Enter a role: ')
+        userRole = input('Enter a role: ')
     if userName != "" and password != "" :
         if os_name == "LINUX":
             path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s/*")%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home,ews_lib)

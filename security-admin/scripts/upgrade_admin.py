@@ -13,9 +13,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import StringIO
+from __future__ import print_function
+try:
+	from StringIO import StringIO
+except ImportError:
+	from io import StringIO
+try:
+	from ConfigParser import ConfigParser
+except ImportError:
+	from configparser import ConfigParser
 import xml.etree.ElementTree as ET
-import ConfigParser
 import os,sys,getopt
 from os import listdir
 from os.path import isfile, join, dirname, basename
@@ -29,10 +36,10 @@ installPropFileName = 'install.properties'
 tempLibFolder = "./upgrade-temp"
 
 def showUsage():
-	print "upgrade_admin.py [-g] [-h]"
-	print "This script will generate %s based on currently installed ranger (v0.4.*) configuration." % (installPropFileName)
-	print " -g option will generate ranger-admin-site.xml in the current directory."
-	print " -h will display help text."
+	print("upgrade_admin.py [-g] [-h]")
+	print("This script will generate %s based on currently installed ranger (v0.4.*) configuration." % (installPropFileName))
+	print(" -g option will generate ranger-admin-site.xml in the current directory.")
+	print(" -h will display help text.")
 
 try:
 	opts, args = getopt.getopt(sys.argv[1:],"gh")
@@ -130,16 +137,16 @@ def archiveFile(originalFileName):
 		archiveDir = dirname(originalFileName)
 		archiveFileName = "." + basename(originalFileName) + "." + (strftime("%d%m%Y%H%M%S", localtime()))
 		movedFileName = join(archiveDir,archiveFileName)
-		print "INFO: moving [%s] to [%s] ......." % (originalFileName,movedFileName)
+		print("INFO: moving [%s] to [%s] ......." % (originalFileName,movedFileName))
 		os.rename(originalFileName, movedFileName)
 
 def getPropertiesConfigMap(configFileName):
 	ret = {}
-	config = StringIO.StringIO()
+	config = StringIO()
 	config.write('[dummysection]\n')
 	config.write(open(configFileName).read())
 	config.seek(0,os.SEEK_SET)
-	fcp = ConfigParser.ConfigParser()
+	fcp = ConfigParser()
 	fcp.optionxform = str
 	fcp.readfp(config)
 	for k,v in fcp.items('dummysection'):
@@ -148,11 +155,11 @@ def getPropertiesConfigMap(configFileName):
 
 def getPropertiesKeyList(configFileName):
 	ret = []
-	config = StringIO.StringIO()
+	config = StringIO()
 	config.write('[dummysection]\n')
 	config.write(open(configFileName).read())
 	config.seek(0,os.SEEK_SET)
-	fcp = ConfigParser.ConfigParser()
+	fcp = ConfigParser()
 	fcp.optionxform = str
 	fcp.readfp(config)
 	for k,v in fcp.items('dummysection'):
@@ -171,10 +178,10 @@ def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
 	root = tree.getroot()
 	for config in root.iter('property'):
 		name = config.find('name').text
-		if (name in prop.keys()):
+		if (name in list(prop)):
 			config.find('value').text = prop[name]
 		else:
-			print "ERROR: key not found: %s" % (name)
+			print("ERROR: key not found: %s" % (name))
 	if isfile(xmlOutputFileName):
 		archiveFile(xmlOutputFileName)
 	tree.write(xmlOutputFileName)
@@ -196,15 +203,15 @@ def main():
 	webserverConfigFileName = join(configDirectory, webserverConfigFile)
 	webconfig = getPropertiesConfigMap(webserverConfigFileName)
 
-	for k in config2xmlMAP.keys():
+	for k in list(config2xmlMAP):
 		xmlKey = config2xmlMAP[k]
-		if (k in xaSysProps.keys()):
+		if (k in list(xaSysProps)):
 			xmlVal = xaSysProps[k]
-		elif (k in xaLdapProps.keys()):
+		elif (k in list(xaLdapProps)):
 			xmlVal = xaLdapProps[k]
-		elif (k in unixauthProps.keys()):
+		elif (k in list(unixauthProps)):
 			xmlVal = unixauthProps[k]
-		elif (k in webconfig.keys()):
+		elif (k in list(webconfig)):
 			xmlVal = webconfig[k]
 		else:
 			xmlVal = 'Unknown'
@@ -255,7 +262,7 @@ def main():
 		installProps['db_name'] = ''
 		installProps['audit_db_name'] = ''
 	else:
-		print "ERROR: Unable to determine the DB_FLAVOR from url [%]" % (jdbcUrl)
+		print("ERROR: Unable to determine the DB_FLAVOR from url [%]" % (jdbcUrl))
 		sys.exit(1)
 
 	installProps['db_user'] = xaSysProps['jdbc.user']
@@ -300,13 +307,13 @@ def main():
 	defValMap = getPropertiesConfigMap(installFileName)
 
 
-	for wk,wv in webconfig.iteritems():
+	for wk,wv in webconfig.items():
 		nk = "ranger." + wk
-		nk = nk.replace('.','_')  
+		nk = nk.replace('.','_')
 		installProps[nk] = wv
 		keylist.append(nk)
 
-	writeToFile(keylist,defValMap,installProps,installPropFileName) 
+	writeToFile(keylist,defValMap,installProps,installPropFileName)
 
 	if (generateXML == 1):
 		writeXMLUsingProperties(join(templateDirectoryName,rangerSiteTemplateXMLFile), rangerprops, rangerSiteXMLFile)
@@ -315,22 +322,22 @@ def writeToFile(keyList, defValMap, props, outFileName):
 
 	if (isfile(outFileName)):
 		archiveFile(outFileName)
-	
+
 	outf = open(outFileName, 'w')
 
-	print >> outf, "#"
-	print >> outf, "# -----------------------------------------------------------------------------------"
-	print >> outf, "# This file is generated as part of upgrade script and should be deleted after upgrade"
-	print >> outf, "# Generated at %s " % (strftime("%d/%m/%Y %H:%M:%S", localtime()))
-	print >> outf, "# -----------------------------------------------------------------------------------"
-	print >> outf, "#"
+	print("#", file=outf)
+	print("# -----------------------------------------------------------------------------------", file=outf)
+	print("# This file is generated as part of upgrade script and should be deleted after upgrade", file=outf)
+	print("# Generated at %s " % (strftime("%d/%m/%Y %H:%M:%S", localtime())), file=outf)
+	print("# -----------------------------------------------------------------------------------", file=outf)
+	print("#", file=outf)
 
 	for key in keyList:
 		if (key in props):
-			print >> outf, "%s=%s" % (key,props[key])
+			print("%s=%s" % (key,props[key]), file=outf)
 		else:
-			print >> outf,  "# Default value for [%s] is used\n%s=%s\n#---" % (key, key,defValMap[key])
-			
+			print("# Default value for [%s] is used\n%s=%s\n#---" % (key, key,defValMap[key]), file=outf)
+
 	outf.flush()
 	outf.close()
 

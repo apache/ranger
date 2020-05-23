@@ -25,6 +25,8 @@ import getpass
 from os.path import basename
 from subprocess import Popen,PIPE
 from datetime import date
+try: input = raw_input
+except NameError: pass
 globalDict = {}
 
 os_name = platform.system()
@@ -44,7 +46,7 @@ def check_output(query):
 	elif os_name == "WINDOWS":
 		p = subprocess.Popen(query, stdout=subprocess.PIPE, shell=True)
 	output = p.communicate ()[0]
-	return output
+	return output.decode()
 
 def log(msg,type):
 	if type == 'info':
@@ -90,13 +92,13 @@ def logFile(msg):
 						f.write(msg+"\n")
 						f.close()
 				else:
-					print("Unable to open file "+logFileName+" in write mode, Check file permissions.")
+					log("[E] Unable to open file "+logFileName+" in write mode, Check file permissions.", "error")
 					sys.exit()
 			else:
-				print(logFileName+" is Invalid input file name! Provide valid file path to write DBA scripts:")
+				log("[E] "+logFileName+" is Invalid input file name! Provide valid file path to write DBA scripts:", "error")
 				sys.exit()
 		else:
-			print("Invalid input! Provide file path to write DBA scripts:")
+			log("[E] Invalid input! Provide file path to write DBA scripts:", "error")
 			sys.exit()
 
 def password_validation(password, userType):
@@ -1283,7 +1285,7 @@ def main(argv):
 			else :
 				while os.path.isfile(JAVA_BIN) == False:
 					log("Enter java executable path: :","info")
-					JAVA_BIN=raw_input()
+					JAVA_BIN=input()
 			log("[I] Using Java:" + str(JAVA_BIN),"info")
 
 	if (quiteMode):
@@ -1292,7 +1294,7 @@ def main(argv):
 		XA_DB_FLAVOR=''
 		while XA_DB_FLAVOR == "":
 			log("Enter db flavour{MYSQL|ORACLE|POSTGRES|MSSQL|SQLA} :","info")
-			XA_DB_FLAVOR=raw_input()
+			XA_DB_FLAVOR=input()
 
 	XA_DB_FLAVOR = XA_DB_FLAVOR.upper()
 	log("[I] DB FLAVOR:" + str(XA_DB_FLAVOR),"info")
@@ -1304,10 +1306,10 @@ def main(argv):
 		if not dryMode:
 			if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "ORACLE" or XA_DB_FLAVOR == "POSTGRES" or XA_DB_FLAVOR == "MSSQL":
 				log("Enter JDBC connector file for :"+XA_DB_FLAVOR,"info")
-				CONNECTOR_JAR=raw_input()
+				CONNECTOR_JAR=input()
 				while os.path.isfile(CONNECTOR_JAR) == False:
 					log("JDBC connector file "+CONNECTOR_JAR+" does not exist, Please enter connector path :","error")
-					CONNECTOR_JAR=raw_input()
+					CONNECTOR_JAR=input()
 			else:
 				log("[E] ---------- NO SUCH SUPPORTED DB FLAVOUR.. ----------", "error")
 				sys.exit(1)
@@ -1322,7 +1324,7 @@ def main(argv):
 			xa_db_host=''
 			while xa_db_host == "":
 				log("Enter DB Host :","info")
-				xa_db_host=raw_input()
+				xa_db_host=input()
 
 	if (quiteMode):
 		xa_db_root_user = globalDict['db_root_user']
@@ -1335,7 +1337,7 @@ def main(argv):
 			xa_db_root_user=''
 			while xa_db_root_user == "":
 				log("Enter db root user:","info")
-				xa_db_root_user=raw_input()
+				xa_db_root_user=input()
 				log("Enter db root password:","info")
 				xa_db_root_password = getpass.getpass("Enter db root password:")
 
@@ -1348,7 +1350,7 @@ def main(argv):
 			db_name = ''
 			while db_name == "":
 				log("Enter DB Name :","info")
-				db_name=raw_input()
+				db_name=input()
 
 	if (quiteMode):
 		db_user = globalDict['db_user']
@@ -1359,7 +1361,7 @@ def main(argv):
 			db_user=''
 			while db_user == "":
 				log("Enter db user name:","info")
-				db_user=raw_input()
+				db_user=input()
 
 	if (quiteMode):
 		db_password = globalDict['db_password']
