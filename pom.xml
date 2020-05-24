@@ -993,6 +993,7 @@
                         <exclude>**/node_modules/**</exclude>
                         <exclude>**/package.json</exclude>
                         <exclude>**/package-lock.json</exclude>
+                        <exclude>**/ranger_es_schema.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>

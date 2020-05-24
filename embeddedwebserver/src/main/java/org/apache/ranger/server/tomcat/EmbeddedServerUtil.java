@@ -19,9 +19,14 @@
 
 package org.apache.ranger.server.tomcat;
 
+
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
+import java.util.StringTokenizer;
 import java.util.logging.Logger;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.util.XMLUtils;
 
 public class EmbeddedServerUtil {
@@ -91,6 +96,27 @@ public class EmbeddedServerUtil {
 			value = System.getProperty(key);
 		}
 		return value;
+	}
+
+	public static String getHosts(String urls) {
+		if (urls != null) {
+			urls = urls.trim();
+			if ("NONE".equalsIgnoreCase(urls)) {
+				urls = null;
+			}
+		}
+		return urls;
+	}
+
+	public static List<String> toArray(String destListStr, String delim) {
+		List<String> list = new ArrayList<String>();
+		if (StringUtils.isNotBlank(destListStr)) {
+			StringTokenizer tokenizer = new StringTokenizer(destListStr, delim.trim());
+			while (tokenizer.hasMoreTokens()) {
+				list.add(tokenizer.nextToken());
+			}
+		}
+		return list;
 	}
 
 }
