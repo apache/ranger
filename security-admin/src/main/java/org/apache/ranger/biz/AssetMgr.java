@@ -48,6 +48,7 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.elasticsearch.ElasticSearchAccessAuditsService;
 import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPluginInfo;
 import org.apache.ranger.entity.XXPolicyExportAudit;
@@ -108,6 +109,9 @@ public class AssetMgr extends AssetMgrBase {
 
 	@Autowired
 	SolrAccessAuditsService solrAccessAuditsService;
+
+	@Autowired
+	ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
 
 	@Autowired
 	XPolicyService xPolicyService;
@@ -1122,6 +1126,8 @@ public class AssetMgr extends AssetMgrBase {
 
         if (RangerBizUtil.AUDIT_STORE_SOLR.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+            return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {
             return xAccessAuditService.searchXAccessAudits(searchCriteria);
         }
