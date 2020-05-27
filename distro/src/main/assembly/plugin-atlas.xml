@@ -80,6 +80,18 @@
           <include>org.apache.knox:gateway-shell</include>
           <include>org.apache.knox:gateway-i18n</include>
           <include>org.wildfly.openssl:wildfly-openssl:jar:${wildfly.version}</include>
+          <include>org.elasticsearch:elasticsearch</include>
+          <include>org.elasticsearch:elasticsearch-core</include>
+          <include>org.elasticsearch:elasticsearch-x-content</include>
+          <include>org.elasticsearch.client:elasticsearch-rest-client</include>
+          <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
+          <include>org.elasticsearch.plugin:rank-eval-client</include>
+          <include>org.elasticsearch.plugin:lang-mustache-client</include>
+          <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
+          <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
+          <include>org.apache.lucene:lucene-core</include>
+          <include>joda-time:joda-time</include>
+          <include>com.carrotsearch:hppc</include>
         </includes>
       </binaries>
     </moduleSet>

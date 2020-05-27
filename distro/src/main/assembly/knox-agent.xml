@@ -71,6 +71,18 @@
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
+          <include>org.elasticsearch:elasticsearch</include>
+          <include>org.elasticsearch:elasticsearch-core</include>
+          <include>org.elasticsearch:elasticsearch-x-content</include>
+          <include>org.elasticsearch.client:elasticsearch-rest-client</include>
+          <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
+          <include>org.elasticsearch.plugin:rank-eval-client</include>
+          <include>org.elasticsearch.plugin:lang-mustache-client</include>
+          <include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
+          <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
+          <include>org.apache.lucene:lucene-core</include>
+          <include>joda-time:joda-time</include>
+          <include>com.carrotsearch:hppc</include>
         </includes>
       </binaries>
     </moduleSet>
