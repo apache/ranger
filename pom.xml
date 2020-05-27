@@ -113,7 +113,7 @@
         <curator.test.version>2.12.0</curator.test.version>
         <derby.version>10.11.1.1</derby.version>
         <eclipse.jpa.version>2.5.2</eclipse.jpa.version>
-        <elasticsearch.version>6.2.2</elasticsearch.version>
+        <elasticsearch.version>7.6.0</elasticsearch.version>
         <enunciate.version>2.11.1</enunciate.version>
         <findbugs.plugin.version>3.0.3</findbugs.plugin.version>
         <google.guava.version>25.1-jre</google.guava.version>
@@ -217,7 +217,10 @@
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <org.bouncycastle.bcprov-jdk15on>1.59</org.bouncycastle.bcprov-jdk15on>
         <org.bouncycastle.bcpkix-jdk15on>1.59</org.bouncycastle.bcpkix-jdk15on>
-        <lucene.version>7.2.1</lucene.version>
+        <lucene.version>8.4.0</lucene.version>
+        <hppc.version>0.8.0</hppc.version>
+        <joda.time.version>2.10.5</joda.time.version>
+        <log4j.core.version>2.11.1</log4j.core.version>
     </properties>
     <profiles>
         <profile>

@@ -26,6 +26,7 @@ import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.get.MultiGetRequest;
 import org.elasticsearch.action.search.SearchRequest;
 import org.elasticsearch.action.search.SearchResponse;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -143,7 +144,7 @@ public class ElasticSearchUtil {
         SearchRequest query = new SearchRequest();
         query.indices(index);
         query.source(searchSourceBuilder.query(boolQueryBuilder));
-        return client.search(query);
+        return client.search(query, RequestOptions.DEFAULT);
     }
 
     public void setSortClause(SearchCriteria searchCriteria,
@@ -230,7 +231,7 @@ public class ElasticSearchUtil {
             item.fetchSourceContext(FetchSourceContext.FETCH_SOURCE);
             multiGetRequest.add(item);
         }
-        return client.multiGet(multiGetRequest).getResponses();
+        return client.multiGet(multiGetRequest, RequestOptions.DEFAULT).getResponses();
     }
 
     private class QueryAccumulator {

@@ -42,6 +42,7 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
 
@@ -121,7 +122,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                 addFailedCount(eventList.size());
                 logFailedEvent(eventList, ex);
             }
-            BulkResponse response = client.bulk(bulkRequest);
+            BulkResponse response = client.bulk(bulkRequest, RequestOptions.DEFAULT);
             if (response.status().getStatus() >= 400) {
                 addFailedCount(eventList.size());
                 logFailedEvent(eventList, "HTTP " + response.status().getStatus());
@@ -197,7 +198,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
             LOG.debug("Initialized client");
             boolean exits = false;
             try {
-                exits = restHighLevelClient.indices().open(new OpenIndexRequest(this.index)).isShardsAcknowledged();
+                exits = restHighLevelClient.indices().open(new OpenIndexRequest(this.index), RequestOptions.DEFAULT).isShardsAcknowledged();
             } catch (Exception e) {
                 LOG.warn("Error validating index " + this.index);
             }

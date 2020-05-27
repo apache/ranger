@@ -44,7 +44,7 @@ public class RequestUtils {
 	public static final String CLIENT_IP_ADDRESS = "ClientIPAddress";
 
 	public static String getClientIPAddress(RestRequest request) {
-		SocketAddress socketAddress = request.getRemoteAddress();
+		SocketAddress socketAddress = request.getHttpChannel().getRemoteAddress();
 		if (socketAddress instanceof InetSocketAddress) {
 			return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
 		}
@@ -98,8 +98,7 @@ public class RequestUtils {
 		}
 
 		if (request instanceof BulkRequest) {
-			@SuppressWarnings("rawtypes")
-			List<DocWriteRequest> requests = ((BulkRequest) request).requests();
+			@SuppressWarnings("rawtypes") List<DocWriteRequest<?>> requests = ((BulkRequest) request).requests();
 
 			if (CollectionUtils.isNotEmpty(requests)) {
 				for (DocWriteRequest<?> docWriteRequest : requests) {

@@ -22,7 +22,6 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
@@ -30,13 +29,14 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.services.elasticsearch.client.ElasticsearchResourceMgr;
 import org.apache.ranger.services.elasticsearch.privilege.IndexPrivilegeUtils;
-import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
 public class RangerElasticsearchAuthorizer implements RangerElasticsearchAccessControl {
 
-	private static final Logger LOG = ESLoggerFactory.getLogger(RangerElasticsearchAuthorizer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerElasticsearchAuthorizer.class);
 
 	private static volatile RangerElasticsearchInnerPlugin elasticsearchPlugin = null;
 
