@@ -286,7 +286,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	}
 
 	private void populateGroupList(Map<Long, VXUser> xUserIdVObjMap) {
-		List<XXGroupUser> allXXGroupUsers = daoManager.getXXGroupUser().findAllXXGroupUser();
+		List<XXGroupUser> allXXGroupUsers = daoManager.getXXGroupUser().getAll();
 		if (MapUtils.isNotEmpty(xUserIdVObjMap) && CollectionUtils.isNotEmpty(allXXGroupUsers)) {
 			Map<Long, List<XXGroupUser>> userIdXXGroupUserMap = new HashMap<>(xUserIdVObjMap.size());
 			for (Map.Entry<Long, VXUser> xUserIdVXUserEntry : xUserIdVObjMap.entrySet()) {

@@ -37,6 +37,8 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 
+import java.util.Objects;
+
 
 @Entity
 @Table(name="x_user")
@@ -287,11 +289,6 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 
 	@Override
 	public int hashCode() {
-		int result = super.hashCode();
-		result = 31 * result + (name != null ? name.hashCode() : 0);
-		result = 31 * result + (description != null ? description.hashCode() : 0);
-		result = 31 * result + status;
-		result = 31 * result + (credStoreId != null ? credStoreId.hashCode() : 0);
-		return result;
+		return Objects.hash(super.hashCode(), name, description, status, credStoreId);
 	}
 }
