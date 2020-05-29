@@ -19,8 +19,6 @@
 
 package org.apache.ranger.plugin.contextenricher;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -31,13 +29,7 @@ import org.apache.ranger.plugin.util.DownloadTrigger;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
-import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
-
 import java.io.File;
-import java.io.Reader;
-import java.io.Writer;
-import java.io.FileWriter;
-import java.io.FileReader;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -106,7 +98,7 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
                 userStoreRetriever.setPluginConfig(getPluginConfig());
                 userStoreRetriever.init(enricherDef.getEnricherOptions());
 
-                userStoreRefresher = new RangerUserStoreRefresher(userStoreRetriever, this, -1L, userStoreDownloadQueue, cacheFile);
+                userStoreRefresher = new RangerUserStoreRefresher(userStoreRetriever, this, null, -1L, userStoreDownloadQueue, cacheFile);
 
                 try {
                     userStoreRefresher.populateUserStoreInfo();
@@ -178,6 +170,10 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
         }
     }
 
+    public boolean isDisableCacheIfServiceNotFound() {
+        return disableCacheIfServiceNotFound;
+    }
+
     public RangerUserStore getRangerUserStore() {return this.rangerUserStore;}
 
     public void setRangerUserStore(final RangerUserStore rangerUserStore) {
@@ -246,259 +242,6 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== setRangerUserStoreInPlugin()");
-        }
-    }
-
-    static class RangerUserStoreRefresher extends Thread {
-        private static final Log LOG = LogFactory.getLog(RangerUserStoreRefresher.class);
-        private static final Log PERF_REFRESHER_INIT_LOG = RangerPerfTracer.getPerfLogger("userstore.init");
-
-        //private final RangerAdminClient adminClient;
-        private final RangerUserStoreRetriever userStoreRetriever;
-        private final RangerUserStoreEnricher userStoreEnricher;
-        private long lastKnownVersion;
-        private final BlockingQueue<DownloadTrigger> userStoreDownloadQueue;
-        private long lastActivationTimeInMillis;
-
-        private final String cacheFile;
-        private boolean hasProvidedUserStoreToReceiver;
-        private Gson gson;
-
-        RangerUserStoreRefresher(RangerUserStoreRetriever userStoreRetriever, RangerUserStoreEnricher userStoreEnricher,
-                                 long lastKnownVersion, BlockingQueue<DownloadTrigger> userStoreDownloadQueue,
-                                 String cacheFile) {
-            this.userStoreRetriever = userStoreRetriever;
-            this.userStoreEnricher = userStoreEnricher;
-            this.lastKnownVersion = lastKnownVersion;
-            this.userStoreDownloadQueue = userStoreDownloadQueue;
-            this.cacheFile = cacheFile;
-            try {
-                gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-            } catch(Throwable excp) {
-                LOG.fatal("failed to create GsonBuilder object", excp);
-            }
-        }
-
-        public long getLastActivationTimeInMillis() {
-            return lastActivationTimeInMillis;
-        }
-
-        public void setLastActivationTimeInMillis(long lastActivationTimeInMillis) {
-            this.lastActivationTimeInMillis = lastActivationTimeInMillis;
-        }
-
-        @Override
-        public void run() {
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> RangerUserStoreRefresher().run()");
-            }
-
-            while (true) {
-
-                try {
-                    RangerPerfTracer perf = null;
-
-                    if(RangerPerfTracer.isPerfTraceEnabled(PERF_REFRESHER_INIT_LOG)) {
-                        perf = RangerPerfTracer.getPerfTracer(PERF_REFRESHER_INIT_LOG,
-                                "RangerUserStoreRefresher.run(lastKnownVersion=" + lastKnownVersion + ")");
-                    }
-                    DownloadTrigger trigger = userStoreDownloadQueue.take();
-                    populateUserStoreInfo();
-                    trigger.signalCompletion();
-
-                    RangerPerfTracer.log(perf);
-
-                } catch (InterruptedException excp) {
-                    LOG.debug("RangerUserStoreRefresher().run() : interrupted! Exiting thread", excp);
-                    break;
-                }
-            }
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== RangerUserStoreRefresher().run()");
-            }
-        }
-
-        private void populateUserStoreInfo() throws InterruptedException {
-
-            RangerUserStore rangerUserStore = null;
-            if (userStoreEnricher != null) {
-                try {
-                    rangerUserStore = userStoreRetriever.retrieveUserStoreInfo(lastKnownVersion, lastActivationTimeInMillis);
-
-                    if (rangerUserStore == null) {
-                        if (!hasProvidedUserStoreToReceiver) {
-                            rangerUserStore = loadFromCache();
-                        }
-                    }
-
-                    if (rangerUserStore != null) {
-                        userStoreEnricher.setRangerUserStore(rangerUserStore);
-                        if (rangerUserStore.getUserStoreVersion() != -1L) {
-                            saveToCache(rangerUserStore);
-                        }
-                        LOG.info("RangerUserStoreRefresher.populateUserStoreInfo() - Updated userstore-cache to new version, lastKnownVersion=" + lastKnownVersion + "; newVersion="
-                                + (rangerUserStore.getUserStoreVersion() == null ? -1L : rangerUserStore.getUserStoreVersion()));
-                        hasProvidedUserStoreToReceiver = true;
-                        lastKnownVersion = rangerUserStore.getUserStoreVersion() == null ? -1L : rangerUserStore.getUserStoreVersion();
-                        setLastActivationTimeInMillis(System.currentTimeMillis());
-                    } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("RangerUserStoreRefresher.populateUserStoreInfo() - No need to update userstore-cache. lastKnownVersion=" + lastKnownVersion);
-                        }
-                    }
-                } catch (RangerServiceNotFoundException snfe) {
-                    LOG.error("Caught ServiceNotFound exception :", snfe);
-
-                    // Need to clean up local userstore cache
-                    if (userStoreEnricher.disableCacheIfServiceNotFound) {
-                        disableCache();
-                        setLastActivationTimeInMillis(System.currentTimeMillis());
-                        lastKnownVersion = -1L;
-                    }
-                } catch (InterruptedException interruptedException) {
-                    throw interruptedException;
-                } catch (Exception e) {
-                    LOG.error("Encountered unexpected exception. Ignoring", e);
-                }
-            } else {
-                LOG.error("RangerUserStoreRefresher.populateUserStoreInfo() - no userstore receiver to update userstore-cache");
-            }
-        }
-
-        public void cleanup() {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> RangerUserStoreRefresher.cleanup()");
-            }
-
-            stopRefresher();
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== RangerUserStoreRefresher.cleanup()");
-            }
-        }
-
-        public void startRefresher() {
-            try {
-                super.start();
-            } catch (Exception excp) {
-                LOG.error("RangerUserStoreRefresher.startRetriever() - failed to start, exception=" + excp);
-            }
-        }
-
-        public void stopRefresher() {
-
-            if (super.isAlive()) {
-                super.interrupt();
-
-                try {
-                    super.join();
-                } catch (InterruptedException excp) {
-                    LOG.error("RangerUserStoreRefresher.stopRefresher(): error while waiting for thread to exit", excp);
-                }
-            }
-        }
-
-
-        private RangerUserStore loadFromCache() {
-            RangerUserStore rangerUserStore = null;
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> RangerUserStoreRefreher.loadFromCache()");
-            }
-
-            File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
-
-            if (cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
-                Reader reader = null;
-
-                try {
-                    reader = new FileReader(cacheFile);
-
-                    rangerUserStore = gson.fromJson(reader, RangerUserStore.class);
-
-                } catch (Exception excp) {
-                    LOG.error("failed to load userstore information from cache file " + cacheFile.getAbsolutePath(), excp);
-                } finally {
-                    if (reader != null) {
-                        try {
-                            reader.close();
-                        } catch (Exception excp) {
-                            LOG.error("error while closing opened cache file " + cacheFile.getAbsolutePath(), excp);
-                        }
-                    }
-                }
-            } else {
-                LOG.warn("cache file does not exist or not readable '" + (cacheFile == null ? null : cacheFile.getAbsolutePath()) + "'");
-            }
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== RangerUserStoreRefreher.loadFromCache()");
-            }
-
-            return rangerUserStore;
-        }
-
-        public void saveToCache(RangerUserStore rangerUserStore) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> RangerUserStoreRefreher.saveToCache()");
-            }
-
-            if (rangerUserStore != null) {
-                File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
-
-                if (cacheFile != null) {
-                    Writer writer = null;
-
-                    try {
-                        writer = new FileWriter(cacheFile);
-
-                        gson.toJson(rangerUserStore, writer);
-                    } catch (Exception excp) {
-                        LOG.error("failed to save userstore information to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
-                    } finally {
-                        if (writer != null) {
-                            try {
-                                writer.close();
-                            } catch (Exception excp) {
-                                LOG.error("error while closing opened cache file '" + cacheFile.getAbsolutePath() + "'", excp);
-                            }
-                        }
-                    }
-                }
-            } else {
-                LOG.info("userstore information is null. Nothing to save in cache");
-            }
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== RangerUserStoreRefreher.saveToCache()");
-            }
-        }
-
-        private void disableCache() {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("==> RangerUserStoreRefreher.disableCache()");
-            }
-
-            File cacheFile = StringUtils.isEmpty(this.cacheFile) ? null : new File(this.cacheFile);
-            if (cacheFile != null && cacheFile.isFile() && cacheFile.canRead()) {
-                LOG.warn("Cleaning up local userstore cache");
-                String renamedCacheFile = cacheFile.getAbsolutePath() + "_" + System.currentTimeMillis();
-                if (!cacheFile.renameTo(new File(renamedCacheFile))) {
-                    LOG.error("Failed to move " + cacheFile.getAbsolutePath() + " to " + renamedCacheFile);
-                } else {
-                    LOG.warn("moved " + cacheFile.getAbsolutePath() + " to " + renamedCacheFile);
-                }
-            } else {
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("No local userstore cache found. No need to disable it!");
-                }
-            }
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("<== RangerUserStoreRefreher.disableCache()");
-            }
         }
     }
 
