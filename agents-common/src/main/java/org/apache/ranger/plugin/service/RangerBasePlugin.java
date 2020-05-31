@@ -177,6 +177,7 @@ public class RangerBasePlugin {
 		}
 
 		refresher = new PolicyRefresher(this);
+		LOG.info("Created PolicyRefresher Thread(" + refresher.getName() + ")");
 		refresher.setDaemon(true);
 		refresher.startRefresher();
 	}
@@ -283,7 +284,7 @@ public class RangerBasePlugin {
 					pluginContext.notifyAuthContextChanged();
 
 					if (oldPolicyEngine != null) {
-						((RangerPolicyEngineImpl) oldPolicyEngine).releaseResources();
+						((RangerPolicyEngineImpl) oldPolicyEngine).releaseResources(!isPolicyEngineShared);
 					}
 
 					if (this.refresher != null) {
@@ -305,12 +306,17 @@ public class RangerBasePlugin {
 
 	public void cleanup() {
 		PolicyRefresher refresher = this.refresher;
-
-		this.policyEngine = null;
 		this.refresher    = null;
+
+		RangerPolicyEngine policyEngine = this.policyEngine;
+		this.policyEngine    = null;
 
 		if (refresher != null) {
 			refresher.stopRefresher();
+		}
+
+		if (policyEngine != null) {
+			((RangerPolicyEngineImpl) policyEngine).releaseResources(true);
 		}
 	}
 
@@ -614,7 +620,7 @@ public class RangerBasePlugin {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.info("<== refreshPoliciesAndTags()");
+			LOG.debug("<== refreshPoliciesAndTags()");
 		}
 	}
 

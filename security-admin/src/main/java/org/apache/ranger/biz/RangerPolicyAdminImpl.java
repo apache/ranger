@@ -307,9 +307,9 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         return ret;
     }
 
-    void releaseResources() {
+    void releaseResources(boolean isForced) {
         if (policyEngine != null) {
-            policyEngine.preCleanup();
+            policyEngine.preCleanup(isForced);
         }
     }
 

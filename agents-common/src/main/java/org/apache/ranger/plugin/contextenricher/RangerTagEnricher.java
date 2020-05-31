@@ -133,6 +133,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				tagRetriever.init(enricherDef.getEnricherOptions());
 
 				tagRefresher = new RangerTagRefresher(tagRetriever, this, -1L, tagDownloadQueue, cacheFile);
+				LOG.info("Created RangerTagRefresher Thread(" + tagRefresher.getName() + ")");
 
 				try {
 					tagRefresher.populateTags();
@@ -212,7 +213,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	 * combinations in a service-def will be much smaller than the number of service-resources.
 	 */
 
-	static private class ResourceHierarchies {
+	static class ResourceHierarchies {
 		private final Map<Collection<String>, Boolean> accessHierarchies    = new HashMap<>();
 		private final Map<Collection<String>, Boolean> dataMaskHierarchies  = new HashMap<>();
 		private final Map<Collection<String>, Boolean> rowFilterHierarchies = new HashMap<>();
@@ -323,14 +324,18 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		super.preCleanup();
 
+		Timer tagDownloadTimer = this.tagDownloadTimer;
+		this.tagDownloadTimer = null;
+
 		if (tagDownloadTimer != null) {
 			tagDownloadTimer.cancel();
-			tagDownloadTimer = null;
 		}
+
+		RangerTagRefresher tagRefresher = this.tagRefresher;
+		this.tagRefresher = null;
 
 		if (tagRefresher != null) {
 			tagRefresher.cleanup();
-			tagRefresher = null;
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -525,7 +530,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	private RangerServiceResourceMatcher createRangerServiceResourceMatcher(RangerServiceResource serviceResource, RangerServiceDefHelper serviceDefHelper, ResourceHierarchies hierarchies) {
+	static public RangerServiceResourceMatcher createRangerServiceResourceMatcher(RangerServiceResource serviceResource, RangerServiceDefHelper serviceDefHelper, ResourceHierarchies hierarchies) {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> createRangerServiceResourceMatcher(serviceResource=" + serviceResource + ")");
@@ -554,12 +559,12 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			if (isValidHierarchy) {
 				RangerDefaultPolicyResourceMatcher matcher = new RangerDefaultPolicyResourceMatcher();
 
-				matcher.setServiceDef(this.serviceDef);
+				matcher.setServiceDef(serviceDefHelper.getServiceDef());
 				matcher.setPolicyResources(serviceResource.getResourceElements(), policyType);
 
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerTagEnricher.setServiceTags() - Initializing matcher with (resource=" + serviceResource
-							+ ", serviceDef=" + this.serviceDef.getName() + ")");
+							+ ", serviceDef=" + serviceDefHelper.getServiceDef() + ")");
 
 				}
 				matcher.setServiceDefHelper(serviceDefHelper);
@@ -833,6 +838,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			} catch(Throwable excp) {
 				LOG.fatal("failed to create GsonBuilder object", excp);
 			}
+			setName("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ")-" + getId());
 		}
 
 		public long getLastActivationTimeInMillis() {
@@ -851,22 +857,26 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			}
 
 			while (true) {
+				DownloadTrigger trigger = null;
 
 				try {
 					RangerPerfTracer perf = null;
 
 					if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_INIT_LOG)) {
-						perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_INIT_LOG, "RangerTagRefresher.populateTags(serviceName=" + tagRetriever.getServiceName() + ",lastKnownVersion=" + lastKnownVersion + ")");
+						perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_INIT_LOG, "RangerTagRefresher(" + getName() + ").populateTags(lastKnownVersion=" + lastKnownVersion + ")");
 					}
-					DownloadTrigger trigger = tagDownloadQueue.take();
+					trigger = tagDownloadQueue.take();
 					populateTags();
-					trigger.signalCompletion();
 
 					RangerPerfTracer.log(perf);
 
 				} catch (InterruptedException excp) {
-					LOG.debug("RangerTagRefresher().run() : interrupted! Exiting thread", excp);
+					LOG.info("RangerTagRefresher(" + getName() + ").run(): Interrupted! Exiting thread", excp);
 					break;
+				} finally {
+					if (trigger != null) {
+						trigger.signalCompletion();
+					}
 				}
 			}
 
@@ -896,14 +906,14 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						if (serviceTags.getIsDelta() && serviceTags.getTagVersion() != -1L) {
 							saveToCache(tagEnricher.enrichedServiceTags.serviceTags);
 						}
-						LOG.info("RangerTagRefresher.populateTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion="
+						LOG.info("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ").populateTags() - Updated tags-cache to new version of tags, lastKnownVersion=" + lastKnownVersion + "; newVersion="
 								+ (serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion()));
 						hasProvidedTagsToReceiver = true;
 						lastKnownVersion = serviceTags.getTagVersion() == null ? -1L : serviceTags.getTagVersion();
 						setLastActivationTimeInMillis(System.currentTimeMillis());
 					} else {
 						if (LOG.isDebugEnabled()) {
-							LOG.debug("RangerTagRefresher.populateTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
+							LOG.debug("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ").populateTags() - No need to update tags-cache. lastKnownVersion=" + lastKnownVersion);
 						}
 					}
 				} catch (RangerServiceNotFoundException snfe) {
@@ -919,11 +929,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				} catch (InterruptedException interruptedException) {
 					throw interruptedException;
 				} catch (Exception e) {
-					LOG.error("Encountered unexpected exception. Ignoring", e);
+					LOG.error("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ").populateTags(): Encountered unexpected exception. Ignoring", e);
 				}
 
 			} else {
-				LOG.error("RangerTagRefresher.populateTags() - no tag receiver to update tag-cache");
+				LOG.error("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ".populateTags() - no tag receiver to update tag-cache");
 			}
 		}
 
@@ -943,7 +953,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			try {
 				super.start();
 			} catch (Exception excp) {
-				LOG.error("RangerTagRefresher.startRetriever() - failed to start, exception=" + excp);
+				LOG.error("RangerTagRefresher(" + getName() + ").startRetriever(): Failed to start, exception=" + excp);
 			}
 		}
 
@@ -952,10 +962,21 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			if (super.isAlive()) {
 				super.interrupt();
 
-				try {
-					super.join();
-				} catch (InterruptedException excp) {
-					LOG.error("RangerTagRefresher(): error while waiting for thread to exit", excp);
+				boolean setInterrupted = false;
+				boolean isJoined = false;
+
+				while (!isJoined) {
+					try {
+						super.join();
+						isJoined = true;
+					} catch (InterruptedException excp) {
+						LOG.warn("RangerTagRefresher(" + getName() + ").stopRefresher(): Error while waiting for thread to exit", excp);
+						LOG.warn("Retrying Thread.join(). Current thread will be marked as 'interrupted' after Thread.join() returns");
+						setInterrupted = true;
+					}
+				}
+				if (setInterrupted) {
+					Thread.currentThread().interrupt();
 				}
 			}
 		}
@@ -1033,7 +1054,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					}
 				}
 			} else {
-				LOG.info("service-tags is null. Nothing to save in cache");
+				LOG.info("service-tags is null for service=" + tagRetriever.getServiceName() + ". Nothing to save in cache");
 			}
 
 			if (LOG.isDebugEnabled()) {

@@ -96,6 +96,8 @@ public class PolicyRefresher extends Thread {
 		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
 		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 
+		setName("PolicyRefresher(serviceName=" + serviceName + ")-" + getId());
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").PolicyRefresher()");
 		}
@@ -161,20 +163,34 @@ public class PolicyRefresher extends Thread {
 	}
 
 	public void stopRefresher() {
-		super.interrupt();
-
-	    try {
-	        super.join();
-		} catch (InterruptedException excp) {
-			LOG.warn("PolicyRefresher(serviceName=" + serviceName + "): error while waiting for thread to exit", excp);
-		}
 
 		Timer policyDownloadTimer = this.policyDownloadTimer;
 
-        this.policyDownloadTimer = null;
+		this.policyDownloadTimer = null;
 
 		if (policyDownloadTimer != null) {
 			policyDownloadTimer.cancel();
+		}
+
+		if (super.isAlive()) {
+			super.interrupt();
+
+			boolean setInterrupted = false;
+			boolean isJoined = false;
+
+			while (!isJoined) {
+				try {
+					super.join();
+					isJoined = true;
+				} catch (InterruptedException excp) {
+					LOG.warn("PolicyRefresher(serviceName=" + serviceName + "): error while waiting for thread to exit", excp);
+					LOG.warn("Retrying Thread.join(). Current thread will be marked as 'interrupted' after Thread.join() returns");
+					setInterrupted = true;
+				}
+			}
+			if (setInterrupted) {
+				Thread.currentThread().interrupt();
+			}
 		}
 	}
 
@@ -185,14 +201,18 @@ public class PolicyRefresher extends Thread {
 		}
 
 		while(true) {
+			DownloadTrigger trigger = null;
 			try {
-				DownloadTrigger trigger = policyDownloadQueue.take();
+				trigger = policyDownloadQueue.take();
 				loadRoles();
 				loadPolicy();
-				trigger.signalCompletion();
 			} catch(InterruptedException excp) {
 				LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
 				break;
+			} finally {
+				if (trigger != null) {
+					trigger.signalCompletion();
+				}
 			}
 		}
 

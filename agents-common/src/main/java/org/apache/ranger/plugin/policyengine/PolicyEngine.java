@@ -62,8 +62,6 @@ public class PolicyEngine {
     private final Map<String, String>                 zoneTagServiceMap = new HashMap<>();
     private       boolean                             useForwardedIPAddress;
     private       String[]                            trustedProxyAddresses;
-    private       boolean                             isPreCleaned = false;
-
 
     public boolean getUseForwardedIPAddress() {
         return useForwardedIPAddress;
@@ -374,35 +372,27 @@ public class PolicyEngine {
         return ret;
     }
 
-    public void preCleanup() {
+    public void preCleanup(boolean isForced) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> PolicyEngine.preCleanup()");
+            LOG.debug("==> PolicyEngine.preCleanup(isForced=" + isForced + ")");
         }
 
-        if (!isPreCleaned) {
-            if (policyRepository != null) {
-                policyRepository.preCleanup();
-            }
+        if (policyRepository != null) {
+            policyRepository.preCleanup(isForced);
+        }
 
-            if (tagPolicyRepository != null) {
-                tagPolicyRepository.preCleanup();
-            }
+        if (tagPolicyRepository != null) {
+            tagPolicyRepository.preCleanup(isForced);
+        }
 
-            if (MapUtils.isNotEmpty(this.zonePolicyRepositories)) {
-                for (Map.Entry<String, RangerPolicyRepository> entry : this.zonePolicyRepositories.entrySet()) {
-                    entry.getValue().preCleanup();
-                }
-            }
-
-            isPreCleaned = true;
-        } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("No preCleanup() necessary, policy-engine is already precleaned");
+        if (MapUtils.isNotEmpty(this.zonePolicyRepositories)) {
+            for (Map.Entry<String, RangerPolicyRepository> entry : this.zonePolicyRepositories.entrySet()) {
+                entry.getValue().preCleanup(isForced);
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== PolicyEngine.preCleanup()");
+            LOG.debug("<== PolicyEngine.preCleanup(isForced=" + isForced + ")");
         }
     }
 
@@ -793,7 +783,7 @@ public class PolicyEngine {
             perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "RangerPolicyEngine.cleanUp(hashCode=" + Integer.toHexString(System.identityHashCode(this)) + ")");
         }
 
-        preCleanup();
+        preCleanup(false);
 
         if (policyRepository != null) {
             policyRepository.cleanup();

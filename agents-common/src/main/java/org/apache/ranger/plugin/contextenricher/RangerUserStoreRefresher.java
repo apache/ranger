@@ -75,6 +75,7 @@ public class RangerUserStoreRefresher extends Thread {
         } catch(Throwable excp) {
             LOG.fatal("failed to create GsonBuilder object", excp);
         }
+        setName("RangerUserStoreRefresher(serviceName=" + userStoreRetriever.getServiceName() + ")-" + getId());
     }
 
     public long getLastActivationTimeInMillis() {
@@ -93,6 +94,7 @@ public class RangerUserStoreRefresher extends Thread {
         }
 
         while (true) {
+            DownloadTrigger trigger = null;
 
             try {
                 RangerPerfTracer perf = null;
@@ -101,15 +103,18 @@ public class RangerUserStoreRefresher extends Thread {
                     perf = RangerPerfTracer.getPerfTracer(PERF_REFRESHER_INIT_LOG,
                             "RangerUserStoreRefresher.run(lastKnownVersion=" + lastKnownVersion + ")");
                 }
-                DownloadTrigger trigger = userStoreDownloadQueue.take();
+                trigger = userStoreDownloadQueue.take();
                 populateUserStoreInfo();
-                trigger.signalCompletion();
 
                 RangerPerfTracer.log(perf);
 
             } catch (InterruptedException excp) {
                 LOG.debug("RangerUserStoreRefresher().run() : interrupted! Exiting thread", excp);
                 break;
+            } finally {
+                if (trigger != null) {
+                    trigger.signalCompletion();
+                }
             }
         }
 
@@ -225,10 +230,21 @@ public class RangerUserStoreRefresher extends Thread {
         if (super.isAlive()) {
             super.interrupt();
 
-            try {
-                super.join();
-            } catch (InterruptedException excp) {
-                LOG.error("RangerUserStoreRefresher.stopRefresher(): error while waiting for thread to exit", excp);
+            boolean setInterrupted = false;
+            boolean isJoined = false;
+
+            while (!isJoined) {
+                try {
+                    super.join();
+                    isJoined = true;
+                } catch (InterruptedException excp) {
+                    LOG.warn("RangerUserStoreRefresher(): Error while waiting for thread to exit", excp);
+                    LOG.warn("Retrying Thread.join(), interrupted flag will be set after Thread.join() succeeds");
+                    setInterrupted = true;
+                }
+            }
+            if (setInterrupted) {
+                Thread.currentThread().interrupt();
             }
         }
     }

@@ -445,12 +445,14 @@ public class RangerPolicyRepository {
         isContextEnrichersShared = true;
     }
 
-    void preCleanup() {
+    void preCleanup(boolean isForced) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> preCleanup()");
+            LOG.debug("==> preCleanup(isForced=" + isForced + " )");
+            LOG.debug("Repository holds [" + (CollectionUtils.isEmpty(this.contextEnrichers) ? 0 : this.contextEnrichers.size()) + "] enrichers. isPreCleaned=" + isPreCleaned);
         }
         if (!isPreCleaned) {
-            if (CollectionUtils.isNotEmpty(this.contextEnrichers) && !isContextEnrichersShared) {
+            if (CollectionUtils.isNotEmpty(this.contextEnrichers) && (!isContextEnrichersShared || isForced)) {
+                isPreCleaned = true;
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("preCleaning context-enrichers");
                 }
@@ -459,17 +461,16 @@ public class RangerPolicyRepository {
                 }
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("No preCleaning of context-enrichers; Context-enrichers are " + (CollectionUtils.isNotEmpty(contextEnrichers) ? " not empty " : "empty ") + ", isContextEnrichersShared=" + isContextEnrichersShared);
+                    LOG.debug("No preCleaning of context-enrichers; Context-enrichers are " + (CollectionUtils.isNotEmpty(contextEnrichers) ? " not empty " : "empty ") + ", isContextEnrichersShared=" + isContextEnrichersShared + ", isForced=" + isForced + ")");
                 }
             }
-            isPreCleaned = true;
         } else {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("preCleanup() already done. No need to do it again");
             }
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== preCleanup()");
+            LOG.debug("<== preCleanup(isForced=" + isForced + " )");
         }
     }
 
@@ -477,7 +478,7 @@ public class RangerPolicyRepository {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> cleanup()");
         }
-        preCleanup();
+        preCleanup(false);
 
         if (CollectionUtils.isNotEmpty(this.contextEnrichers) && !isContextEnrichersShared) {
             for (RangerContextEnricher enricher : this.contextEnrichers) {
@@ -1025,39 +1026,45 @@ public class RangerPolicyRepository {
 
         RangerContextEnricher ret = null;
 
-        RangerPerfTracer perf = null;
+        Map<String, String> enricherDefOptions = enricherDef.getEnricherOptions();
 
-        if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_INIT_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_INIT_LOG, "RangerContextEnricher.init(appId=" + appId + ",name=" + enricherDef.getName() + ")");
-        }
+        String isEnabledAsString = enricherDefOptions.get("IsEnabled");
 
-        String name    = enricherDef != null ? enricherDef.getName()     : null;
-        String clsName = enricherDef != null ? enricherDef.getEnricher() : null;
+        if (!StringUtils.equalsIgnoreCase(isEnabledAsString, "false")) {
+            RangerPerfTracer perf = null;
 
-        if(! StringUtils.isEmpty(clsName)) {
-            try {
-                @SuppressWarnings("unchecked")
-                Class<RangerContextEnricher> enricherClass = (Class<RangerContextEnricher>)Class.forName(clsName);
-
-                ret = enricherClass.newInstance();
-            } catch(Exception excp) {
-                LOG.error("failed to instantiate context enricher '" + clsName + "' for '" + name + "'", excp);
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_INIT_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_INIT_LOG, "RangerContextEnricher.init(appId=" + appId + ",name=" + enricherDef.getName() + ")");
             }
-        }
 
-        if(ret != null) {
-            ret.setEnricherDef(enricherDef);
-            ret.setServiceName(componentServiceName);
-            ret.setServiceDef(componentServiceDef);
-            ret.setAppId(appId);
-            if (ret instanceof RangerAbstractContextEnricher) {
-                RangerAbstractContextEnricher abstractContextEnricher = (RangerAbstractContextEnricher) ret;
-                abstractContextEnricher.setPluginContext(pluginContext);
+            String name = enricherDef != null ? enricherDef.getName() : null;
+            String clsName = enricherDef != null ? enricherDef.getEnricher() : null;
+
+            if (!StringUtils.isEmpty(clsName)) {
+                try {
+                    @SuppressWarnings("unchecked")
+                    Class<RangerContextEnricher> enricherClass = (Class<RangerContextEnricher>) Class.forName(clsName);
+
+                    ret = enricherClass.newInstance();
+                } catch (Exception excp) {
+                    LOG.error("failed to instantiate context enricher '" + clsName + "' for '" + name + "'", excp);
+                }
             }
-            ret.init();
-        }
 
-        RangerPerfTracer.log(perf);
+            if (ret != null) {
+                ret.setEnricherDef(enricherDef);
+                ret.setServiceName(componentServiceName);
+                ret.setServiceDef(componentServiceDef);
+                ret.setAppId(appId);
+                if (ret instanceof RangerAbstractContextEnricher) {
+                    RangerAbstractContextEnricher abstractContextEnricher = (RangerAbstractContextEnricher) ret;
+                    abstractContextEnricher.setPluginContext(pluginContext);
+                }
+                ret.init();
+            }
+
+            RangerPerfTracer.log(perf);
+        }
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyRepository.buildContextEnricher(" + enricherDef + "): " + ret);

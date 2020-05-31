@@ -515,15 +515,15 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return tagPolicyRepository == null ? ListUtils.EMPTY_LIST : tagPolicyRepository.getPolicies();
 	}
 
-	public void releaseResources() {
+	public void releaseResources(boolean isForced) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.releaseResources()");
+			LOG.debug("==> RangerPolicyEngineImpl.releaseResources(isForced=" + isForced + ")");
 		}
 
 		PolicyEngine policyEngine = this.policyEngine;
 
 		if (policyEngine != null) {
-			policyEngine.preCleanup();
+			policyEngine.preCleanup(isForced);
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Cannot preCleanup policy-engine as it is null!");
@@ -531,7 +531,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.releaseResources()");
+			LOG.debug("<== RangerPolicyEngineImpl.releaseResources(isForced=" + isForced + ")");
 		}
 	}
 

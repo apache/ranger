@@ -123,6 +123,7 @@ public class RangerPolicyAdminCache {
 
 		synchronized(this) {
 			Boolean hasPolicyDeltas = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
+			boolean isPolicyEngineShared = false;
 
 			if (hasPolicyDeltas != null) {
 				if (hasPolicyDeltas.equals(Boolean.TRUE)) {
@@ -130,6 +131,7 @@ public class RangerPolicyAdminCache {
 						ret = RangerPolicyAdminImpl.getPolicyAdmin(oldPolicyAdmin, policies);
 						if (ret != null) {
 							ret.setRoles(roles);
+							isPolicyEngineShared = true;
 						}
 					} else {
 						LOG.error("Old policy engine is null! Cannot apply deltas without old policy engine!");
@@ -153,7 +155,7 @@ public class RangerPolicyAdminCache {
 				}
 				policyAdminCache.put(policies.getServiceName(), ret);
 				if (oldPolicyAdmin != null) {
-					oldPolicyAdmin.releaseResources();
+					oldPolicyAdmin.releaseResources(!isPolicyEngineShared);
 				}
 			} else {
 				LOG.warn("Could not build new policy-engine. Continuing with the old policy-engine, if any");

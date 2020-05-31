@@ -163,6 +163,10 @@ public class RangerServiceDefHelper {
 		_delegate = delegate;
 	}
 
+	public RangerServiceDef getServiceDef() {
+		return _delegate._serviceDef;
+	}
+
 	public void patchServiceDefWithDefaultValues() {
 		_delegate.patchServiceDefWithDefaultValues();
 	}
@@ -285,6 +289,7 @@ public class RangerServiceDefHelper {
 	 * Not designed for public access.  Package level only for testability.
 	 */
 	static class Delegate {
+		final RangerServiceDef _serviceDef;
 		final Map<Integer, Set<List<RangerResourceDef>>> _hierarchies = new HashMap<>();
 		final Date _serviceDefFreshnessDate;
 		final String _serviceName;
@@ -295,6 +300,7 @@ public class RangerServiceDefHelper {
 
 		public Delegate(RangerServiceDef serviceDef, boolean checkForCycles) {
 			// NOTE: we assume serviceDef, its name and update time are can never by null.
+			_serviceDef = serviceDef;
 			_serviceName = serviceDef.getName();
 			_serviceDefFreshnessDate = serviceDef.getUpdateTime();
 			_checkForCycles = checkForCycles;
