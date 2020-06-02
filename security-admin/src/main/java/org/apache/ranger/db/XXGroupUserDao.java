@@ -24,9 +24,11 @@ import java.util.*;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupUser;
+import org.apache.ranger.entity.XXPortalUser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -179,5 +181,41 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 		}
 
 		return users;
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<XXPortalUser> findByLoginIdList(List<String> loginIdList) {
+		if (CollectionUtils.isEmpty(loginIdList)) {
+			return new ArrayList<>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPortalUser.findByLoginIdList").setParameter("loginIdList", loginIdList).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<>();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<XXPortalUser> findByIdList(List<Long> idList) {
+		if (CollectionUtils.isEmpty(idList)) {
+			return new ArrayList<>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPortalUser.findByIdList").setParameter("idList", idList).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<>();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<XXGroupUser> findByUserIdList(List<Long> userIdList) {
+		if (CollectionUtils.isEmpty(userIdList)) {
+			return new ArrayList<>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXGroupUser.findByUserIdList").setParameter("userIdList", userIdList).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<>();
+		}
 	}
 }

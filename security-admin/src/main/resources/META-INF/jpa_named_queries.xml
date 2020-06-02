@@ -297,6 +297,11 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroupUser.findByUserIdList">
+		<query>SELECT obj FROM XXGroupUser obj where obj.userId IN :userIdList
+		</query>
+	</named-query>
+
 	<named-query name="XXTrxLog.findByTrxId">
 		<query>SELECT obj FROM XXTrxLog obj WHERE obj.transactionId = :transactionId
 		</query>
@@ -1213,6 +1218,16 @@
 
 	<named-query name="XXPortalUser.findById">
 		<query>SELECT obj.firstName, obj.lastName, obj.publicScreenName, obj.loginId FROM XXPortalUser obj WHERE obj.id=:id</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.findByLoginIdList">
+		<query>SELECT obj FROM XXPortalUser obj where obj.loginId IN :loginIdList
+		</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.findByIdList">
+		<query>SELECT obj FROM XXPortalUser obj where obj.id IN :idList
+		</query>
 	</named-query>
 
 	<!-- VXModuleDef -->
