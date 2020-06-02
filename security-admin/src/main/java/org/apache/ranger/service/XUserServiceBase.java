@@ -24,16 +24,26 @@
  */
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
+
 import com.google.gson.Gson;
 
 import com.google.gson.GsonBuilder;
+import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.SearchCriteria;
+import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
+
+import static java.util.stream.Collectors.toMap;
 
 public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		extends AbstractBaseResourceService<T, V> {
@@ -64,6 +74,126 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		vObj.setCredStoreId( mObj.getCredStoreId());
 		vObj.setOtherAttributes(mObj.getOtherAttributes());
 		return vObj;
+	}
+
+	protected List<VXUser> mapEntityToViewBeans(Map<VXUser, XXUser> vxUserXXUserMap) {
+		List<VXUser> vxUsers = new ArrayList<>();
+		if (MapUtils.isNotEmpty(vxUserXXUserMap)) {
+			for (Map.Entry<VXUser, XXUser> vxUserXXUserEntry : vxUserXXUserMap.entrySet()) {
+				VXUser vObj = vxUserXXUserEntry.getKey();
+				XXUser mObj = vxUserXXUserEntry.getValue();
+				vObj.setName(mObj.getName());
+				vObj.setIsVisible(mObj.getIsVisible());
+				vObj.setDescription(mObj.getDescription());
+				vObj.setCredStoreId(mObj.getCredStoreId());
+				vObj.setOtherAttributes(mObj.getOtherAttributes());
+				vxUsers.add(vObj);
+			}
+		}
+		return vxUsers;
+	}
+
+	public List<VXUser> populateViewBeans(List<XXUser> resources) {
+		List<VXUser> viewBeans = new ArrayList<>();
+		if (CollectionUtils.isNotEmpty(resources)) {
+			Map<XXUser, VXUser> resourceViewBeanMap = new HashMap<>(resources.size());
+			Map<VXUser, XXUser> viewBeanResourceMap = new HashMap<>(resources.size());
+			for (XXUser resource : resources) {
+				VXUser viewBean = createViewObject();
+				viewBean.setCredStoreId(resource.getCredStoreId());
+				viewBean.setDescription(resource.getDescription());
+				viewBean.setName(resource.getName());
+				viewBean.setStatus(resource.getStatus());
+				resourceViewBeanMap.put(resource, viewBean);
+				viewBeanResourceMap.put(viewBean, resource);
+				viewBeans.add(viewBean);
+			}
+			populateViewBeans(resourceViewBeanMap);
+			mapEntityToViewBeans(viewBeanResourceMap);
+		}
+		return viewBeans;
+	}
+
+	protected void populateViewBeans(Map<XXUser, VXUser> resourceViewBeanMap) {
+		mapBaseAttributesToViewBeans(resourceViewBeanMap);
+	}
+
+	private void mapBaseAttributesToViewBeans(Map<XXUser, VXUser> resourceViewBeanMap) {
+		List<XXPortalUser> allXPortalUsers = daoManager.getXXPortalUser().findAllXPortalUser();
+		if (MapUtils.isNotEmpty(resourceViewBeanMap) && CollectionUtils.isNotEmpty(allXPortalUsers)) {
+			Map<Long, XXPortalUser> idXXPortalUserMap = allXPortalUsers
+					.stream()
+					.collect(toMap(XXPortalUser::getId, Function.identity()));
+			resourceViewBeanMap.forEach((resource, viewBean) -> {
+				viewBean.setId(resource.getId());
+
+				// TBD: Need to review this change later
+				viewBean.setMObj(resource);
+				viewBean.setCreateDate(resource.getCreateTime());
+				viewBean.setUpdateDate(resource.getUpdateTime());
+
+				Long ownerId = resource.getAddedByUserId();
+				UserSessionBase currentUserSession = ContextUtil
+						.getCurrentUserSession();
+
+				if (currentUserSession == null) {
+					return;
+				}
+
+				if (ownerId != null) {
+					XXPortalUser tUser = idXXPortalUserMap.get(
+							resource.getAddedByUserId());
+					if (tUser != null) {
+						if (tUser.getPublicScreenName() != null
+								&& !tUser.getPublicScreenName().trim().isEmpty()
+								&& !"null".equalsIgnoreCase(tUser.getPublicScreenName().trim())) {
+							viewBean.setOwner(tUser.getPublicScreenName());
+						} else {
+							if (tUser.getFirstName() != null
+									&& !tUser.getFirstName().trim().isEmpty()
+									&& !"null".equalsIgnoreCase(tUser.getFirstName().trim())) {
+								if (tUser.getLastName() != null
+										&& !tUser.getLastName().trim().isEmpty()
+										&& !"null".equalsIgnoreCase(tUser.getLastName().trim())) {
+									viewBean.setOwner(tUser.getFirstName() + " "
+											+ tUser.getLastName());
+								} else {
+									viewBean.setOwner(tUser.getFirstName());
+								}
+							} else {
+								viewBean.setOwner(tUser.getLoginId());
+							}
+						}
+					}
+				}
+				if (resource.getUpdatedByUserId() != null) {
+					XXPortalUser tUser = idXXPortalUserMap.get(
+							resource.getUpdatedByUserId());
+					if (tUser != null) {
+						if (tUser.getPublicScreenName() != null
+								&& !tUser.getPublicScreenName().trim().isEmpty()
+								&& !"null".equalsIgnoreCase(tUser.getPublicScreenName().trim())) {
+							viewBean.setUpdatedBy(tUser.getPublicScreenName());
+						} else {
+							if (tUser.getFirstName() != null
+									&& !tUser.getFirstName().trim().isEmpty()
+									&& !"null".equalsIgnoreCase(tUser.getFirstName().trim())) {
+								if (tUser.getLastName() != null
+										&& !tUser.getLastName().trim().isEmpty()
+										&& !"null".equalsIgnoreCase(tUser.getLastName().trim())) {
+									viewBean.setUpdatedBy(tUser.getFirstName() + " "
+											+ tUser.getLastName());
+								} else {
+									viewBean.setUpdatedBy(tUser.getFirstName());
+								}
+							} else {
+								viewBean.setUpdatedBy(tUser.getLoginId());
+							}
+						}
+					}
+				}
+			});
+		}
 	}
 
 	/**
