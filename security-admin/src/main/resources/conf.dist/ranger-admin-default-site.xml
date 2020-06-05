@@ -201,7 +201,14 @@
 
 
 <!-- Embedded Web-Server properties  -->
-
+	<property>
+		<name>ranger.valve.errorreportvalve.showserverinfo</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.valve.errorreportvalve.showreport</name>
+		<value>false</value>
+	</property>
 <!--
 #
 # Service Information
