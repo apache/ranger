@@ -871,7 +871,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					RangerPerfTracer.log(perf);
 
 				} catch (InterruptedException excp) {
-					LOG.info("RangerTagRefresher(" + getName() + ").run(): Interrupted! Exiting thread", excp);
+					LOG.debug("RangerTagRefresher(" + getName() + ").run(): Interrupted! Exiting thread", excp);
 					break;
 				} finally {
 					if (trigger != null) {

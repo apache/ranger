@@ -239,7 +239,7 @@ public class RangerUserStoreRefresher extends Thread {
                     isJoined = true;
                 } catch (InterruptedException excp) {
                     LOG.warn("RangerUserStoreRefresher(): Error while waiting for thread to exit", excp);
-                    LOG.warn("Retrying Thread.join(), interrupted flag will be set after Thread.join() succeeds");
+                    LOG.warn("Retrying Thread.join(). Current thread will be marked as 'interrupted' after Thread.join() returns");
                     setInterrupted = true;
                 }
             }

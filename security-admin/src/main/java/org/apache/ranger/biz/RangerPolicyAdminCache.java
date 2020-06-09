@@ -198,12 +198,14 @@ public class RangerPolicyAdminCache {
 		if (MapUtils.isNotEmpty(securityZones)) {
 			ret = new ServicePolicies();
 
-			ret.setServiceDef(servicePolicies.getServiceDef());
-			ret.setServiceId(servicePolicies.getServiceId());
 			ret.setServiceName(servicePolicies.getServiceName());
-			ret.setAuditMode(servicePolicies.getAuditMode());
+			ret.setServiceId(servicePolicies.getServiceId());
 			ret.setPolicyVersion(servicePolicies.getPolicyVersion());
 			ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
+			ret.setServiceDef(servicePolicies.getServiceDef());
+			ret.setAuditMode(servicePolicies.getAuditMode());
+			ret.setTagPolicies(servicePolicies.getTagPolicies());
+			ret.setServiceConfig(servicePolicies.getServiceConfig());
 
 			Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
 
@@ -227,7 +229,6 @@ public class RangerPolicyAdminCache {
 				}
 
 				ret.setPolicies(allPolicies);
-				ret.setTagPolicies(servicePolicies.getTagPolicies());
 			} else {
 				List<RangerPolicyDelta> allPolicyDeltas = new ArrayList<>(servicePolicies.getPolicyDeltas());
 

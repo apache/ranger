@@ -207,7 +207,7 @@ public class PolicyRefresher extends Thread {
 				loadRoles();
 				loadPolicy();
 			} catch(InterruptedException excp) {
-				LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
+				LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
 				break;
 			} finally {
 				if (trigger != null) {
