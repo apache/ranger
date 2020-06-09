@@ -561,6 +561,7 @@ public class KmsKeyMgr {
 		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
 		if (StringUtils.isEmpty(nameRules)) {
 			KerberosName.setRules("DEFAULT");
+			nameRules = "DEFAULT";
 		} else {
 			KerberosName.setRules(nameRules);
 		}
