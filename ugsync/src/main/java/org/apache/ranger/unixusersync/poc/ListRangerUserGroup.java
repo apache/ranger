@@ -139,4 +139,3 @@ public class ListRangerUserGroup
         return (sb.toString());
     }
 }
-

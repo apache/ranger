@@ -555,27 +555,27 @@ public class KmsKeyMgr {
 		return providers;
 	}
 	
-	private Subject getSubjectForKerberos(String provider) throws Exception{
+	private Subject getSubjectForKerberos(String provider) throws Exception {
 		String userName = getKMSUserName(provider);
 		String password = getKMSPassword(provider);
 		String nameRules = PropertiesUtil.getProperty(NAME_RULES);
-	    if (StringUtils.isEmpty(nameRules)) {
-        	KerberosName.setRules("DEFAULT");
-    	}else{
-    		KerberosName.setRules(nameRules);
-    	}
-	    Subject sub = new Subject();
-	    String rangerPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
-	    if (checkKerberos()) {
-	    	if(SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, PropertiesUtil.getProperty(ADMIN_USER_KEYTAB))){
-	    		sub = SecureClientLogin.loginUserFromKeytab(rangerPrincipal, PropertiesUtil.getProperty(ADMIN_USER_KEYTAB), nameRules);
-	    	}else{
-	    		sub = SecureClientLogin.loginUserWithPassword(userName, password);
-	    	}
+		if (StringUtils.isEmpty(nameRules)) {
+			KerberosName.setRules("DEFAULT");
+		} else {
+			KerberosName.setRules(nameRules);
+		}
+		Subject sub = new Subject();
+		String rangerPrincipal = SecureClientLogin.getPrincipal(PropertiesUtil.getProperty(ADMIN_USER_PRINCIPAL), PropertiesUtil.getProperty(HOST_NAME));
+		if (checkKerberos()) {
+			if (SecureClientLogin.isKerberosCredentialExists(rangerPrincipal, PropertiesUtil.getProperty(ADMIN_USER_KEYTAB))) {
+				sub = SecureClientLogin.loginUserFromKeytab(rangerPrincipal, PropertiesUtil.getProperty(ADMIN_USER_KEYTAB), nameRules);
+			} else {
+				sub = SecureClientLogin.loginUserWithPassword(userName, password);
+			}
 		} else {
 			sub = SecureClientLogin.login(userName);
 		}
-        return sub;
+		return sub;
 	}
 
 	private String getKMSPassword(String srvName) throws Exception {

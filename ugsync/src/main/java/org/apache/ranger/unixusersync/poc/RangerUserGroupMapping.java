@@ -34,35 +34,35 @@ public static JSONArray vXGroupUsers = null;
 public static ArrayList<HashMap<String, String>> buildUserGroupMapping(String url){
 
 	//HashMap for UserGroupMapping
-	
+
 	ArrayList<HashMap<String, String>> UserGroupMapping = new ArrayList<HashMap<String, String>>();
-	 
+
     // Creating JSON Parser instance
     RangerJSONParser jParser = new RangerJSONParser();
-    
+
     // getting JSON string from URL
     JSONObject json = jParser.getJSONFromUrl(url);
-    
+
     try {
         // Getting Array of vXGroupUsers
-    	
-    	vXGroupUsers = json.getJSONArray(TAG_XGROUP_USERS);
-         
+
+	vXGroupUsers = json.getJSONArray(TAG_XGROUP_USERS);
+
         // looping through All vXGroupUsers
-    	
+
         for(int i = 0; i < vXGroupUsers.length(); i++) {
-        	
+
             JSONObject xausergroup = vXGroupUsers.getJSONObject(i);
-             
+
             // Storing each json item in variable
             String uname = xausergroup.getString(TAG_USER_NAME);
             String uid = xausergroup.getString(TAG_USER_ID);
             String gid = xausergroup.getString(TAG_GROUP_ID);
-           
-            
+
+
             // creating new HashMap
             HashMap<String, String> map = new HashMap<String, String>();
-             
+
             // adding each child node to HashMap key => value
             map.put(TAG_USER_NAME, uname);
             map.put(TAG_USER_ID, uid);
@@ -71,15 +71,13 @@ public static ArrayList<HashMap<String, String>> buildUserGroupMapping(String ur
             // adding HashList to ArrayList
             UserGroupMapping.add(map);
             }
-        
+
         } catch (JSONException e) {
         e.printStackTrace();
-       	}
-    
+	}
+
      return UserGroupMapping;
-    
+
     }
     */
 }
-
-

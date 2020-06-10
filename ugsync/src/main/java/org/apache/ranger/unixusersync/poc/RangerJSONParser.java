@@ -26,21 +26,21 @@ public class RangerJSONParser {
 
 	/*
  private static final Log LOG = LogFactory.getLog(RangerJSONParser.class);
- 
+
  private static JSONObject jObj = null;
- 
+
  private static String jsonstr = "";
 
- 
+
  public  JSONObject getJSONFromUrl(String url) {
-	
+
      try {
-		
+
 		Client client = Client.create();
-	 	WebResource webResource = client
+		WebResource webResource = client
 		   .resource(url);
-		
-	 	ClientResponse response = webResource.accept("application/json")
+
+		ClientResponse response = webResource.accept("application/json")
                   .get(ClientResponse.class);
 
 		if (response.getStatus() != 200) {
@@ -50,14 +50,14 @@ public class RangerJSONParser {
 
 		jsonstr = response.getEntity(String.class);
 		jObj = new JSONObject(jsonstr);
-		
+
 	    } catch (Exception e) {
-	    	LOG.error("XaSecure JSON Parser:Error parsing data" , e);
+		LOG.error("XaSecure JSON Parser:Error parsing data" , e);
 		}
-     	
-     	return jObj;
+
+	return jObj;
     }
-    
+
     */
- 
+
 }
