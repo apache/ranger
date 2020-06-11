@@ -1650,7 +1650,6 @@ public class ServiceREST {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.createPolicy(" + policy + ")");
 		}
-
 		RangerPolicy     ret  = null;
 		RangerPerfTracer perf = null;
 
@@ -1667,57 +1666,11 @@ public class ServiceREST {
 				}
 				boolean updateIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)))) ? true : false ;
 				boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
-
 				if (mergeIfExists && updateIfExists) {
 					LOG.warn("Cannot use both updateIfExists and mergeIfExists for a createPolicy. mergeIfExists will override updateIfExists for policy :[" + policy.getName() + "]");
 				}
-				if (mergeIfExists) {
+				if (mergeIfExists || updateIfExists) {
 					ret = applyPolicy(policy, request);
-				} else if(updateIfExists) {
-					RangerPolicy existingPolicy = null;
-					String serviceName = request.getParameter(PARAM_SERVICE_NAME);
-					if (serviceName == null) {
-						serviceName = (String) request.getAttribute(PARAM_SERVICE_NAME);
-					}
-					if(StringUtils.isNotEmpty(serviceName)) {
-						policy.setService(serviceName);
-					}
-					String policyName = request.getParameter(PARAM_POLICY_NAME);
-					if (policyName == null) {
-						policyName = (String) request.getAttribute(PARAM_POLICY_NAME);
-					}
-					if(StringUtils.isNotEmpty(policyName)) {
-						policy.setName(StringUtils.trim(policyName));
-					}
-					if (StringUtils.isNotEmpty(serviceName) && StringUtils.isNotEmpty(policyName)) {
-						String zoneName = request.getParameter(PARAM_ZONE_NAME);
-						if(StringUtils.isBlank(zoneName)) {
-							zoneName = (String) request.getAttribute(PARAM_ZONE_NAME);
-						}
-						if (StringUtils.isNotBlank(zoneName)) {
-							policy.setZoneName(StringUtils.trim(zoneName));
-						}
-						if (StringUtils.isNotBlank(zoneName)) {
-							existingPolicy = getPolicyByNameAndZone(policy.getService(), policy.getName(), policy.getZoneName());
-							if (existingPolicy == null && policy.getGuid() != null) {
-								existingPolicy = getPolicyByGuid(policy.getGuid(), policy.getService(), policy.getZoneName());
-							}
-						} else {
-							existingPolicy = getPolicyByName(policy.getService(), policy.getName());
-							if (existingPolicy == null && policy.getGuid() != null) {
-								existingPolicy = getPolicyByGuid(policy.getGuid(), policy.getService(), null);
-							}
-						}
-					}
-					try {
-						if (existingPolicy != null) {
-							policy.setId(existingPolicy.getId());
-							ret = updatePolicy(policy);
-						}
-					} catch (Exception excp){
-						LOG.error("updatePolicy(" + policy + ") failed", excp);
-						throw restErrorUtil.createRESTException(excp.getMessage());
-					}
 				}
 			}
 
@@ -1794,7 +1747,7 @@ public class ServiceREST {
 				} else {
 					existingPolicy = null;
 				}
-
+				boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
 				if (existingPolicy == null) {
 					if (StringUtils.isNotEmpty(policy.getName())) {
 						XXPolicy dbPolicy = daoManager.getXXPolicy().findByPolicyName(policy.getName());
@@ -1805,8 +1758,9 @@ public class ServiceREST {
 
 					ret = createPolicy(policy, null);
 				} else {
-					ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
-
+					if(mergeIfExists) {
+						ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
+					}
 					ret = updatePolicy(existingPolicy);
 				}
 			} catch(WebApplicationException excp) {
@@ -1833,7 +1787,6 @@ public class ServiceREST {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updatePolicy(" + policy + ")");
 		}
-
 		RangerPolicy ret  = null;
 		RangerPerfTracer perf = null;
 
@@ -2340,6 +2293,7 @@ public class ServiceREST {
 					if (updateIfExists) {
 						isOverride = false;
 					}
+
 					String destinationZoneName = getDestinationZoneName(destinationZones,zoneNameInJson);
 					if (deleteIfExists) {
 						deleteExactMatchPolicyForResource(policies, request.getRemoteUser(), destinationZoneName);
@@ -3499,74 +3453,6 @@ public class ServiceREST {
 			LOG.debug("<== ServiceREST.getPluginsInfo()");
 		}
 
-		return ret;
-	}
-
-	private RangerPolicy getPolicyByGuid(String guid, String serviceName, String zoneName) {
-		RangerPolicy ret = null;
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicyByGuid(" + guid +")");
-		}
-
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.GUID, guid);
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		if(StringUtils.isNotEmpty(zoneName)) {
-			filter.setParam(SearchFilter.ZONE_NAME, zoneName);
-		}
-		List<RangerPolicy> policies = getPolicies(filter);
-
-		if (CollectionUtils.isNotEmpty(policies)) {
-			ret = policies.get(0);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicyByGuid(" + guid + ")" + ret);
-		}
-		return ret;
-	}
-
-	private RangerPolicy getPolicyByName(String serviceName,String policyName) {
-		RangerPolicy ret = null;
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")");
-		}
-
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		filter.setParam(SearchFilter.POLICY_NAME, policyName);
-		List<RangerPolicy> policies = getPolicies(filter);
-
-		if (CollectionUtils.isNotEmpty(policies)) {
-			ret = policies.get(0);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")" + ret);
-		}
-		return ret;
-	}
-
-	private RangerPolicy getPolicyByNameAndZone(String serviceName, String policyName, String zoneName) {
-		RangerPolicy ret = null;
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
-		}
-
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		filter.setParam(SearchFilter.POLICY_NAME, policyName);
-		filter.setParam(SearchFilter.ZONE_NAME, zoneName);
-		List<RangerPolicy> policies = getPolicies(filter);
-
-		if (CollectionUtils.isNotEmpty(policies) && policies.size()==1) {
-			ret = policies.get(0);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
-		}
 		return ret;
 	}
 
