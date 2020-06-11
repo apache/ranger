@@ -466,9 +466,13 @@
 		<description>Time in milliseconds</description>
 	</property>
 	<property>
-        <name>ranger.audit.solr.bootstrap.enabled</name>
-        <value>true</value>
-    </property>
+		<name>ranger.audit.solr.bootstrap.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.audit.elasticsearch.bootstrap.enabled</name>
+		<value>true</value>
+	</property>
 	<property>
 		<name>ranger.audit.solr.max.retry</name>
 		<value>30</value>

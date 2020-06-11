@@ -76,6 +76,8 @@ audit_elasticsearch_urls=$(get_prop 'audit_elasticsearch_urls' $PROPFILE)
 audit_elasticsearch_port=$(get_prop 'audit_elasticsearch_port' $PROPFILE)
 audit_elasticsearch_user=$(get_prop 'audit_elasticsearch_user' $PROPFILE)
 audit_elasticsearch_password=$(get_prop 'audit_elasticsearch_password' $PROPFILE)
+audit_elasticsearch_index=$(get_prop 'audit_elasticsearch_index' $PROPFILE)
+audit_elasticsearch_bootstrap_enabled=$(get_prop 'audit_elasticsearch_bootstrap_enabled' $PROPFILE)
 audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
 audit_solr_user=$(get_prop 'audit_solr_user' $PROPFILE)
 audit_solr_password=$(get_prop 'audit_solr_password' $PROPFILE)
@@ -154,7 +156,7 @@ audit_solr_no_shards=$(get_prop 'audit_solr_no_shards' $PROPFILE)
 audit_solr_no_replica=$(get_prop 'audit_solr_no_replica' $PROPFILE)
 audit_solr_max_shards_per_node=$(get_prop 'audit_solr_max_shards_per_node' $PROPFILE)
 audit_solr_acl_user_list_sasl=$(get_prop 'audit_solr_acl_user_list_sasl' $PROPFILE)
-
+audit_solr_bootstrap_enabled=$(get_prop 'audit_solr_bootstrap_enabled' $PROPFILE)
 
 DB_HOST="${db_host}"
 
@@ -711,6 +713,10 @@ update_properties() {
 		propertyName=ranger.audit.solr.urls
 		newPropertyValue=${audit_solr_urls}
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+		propertyName=ranger.audit.solr.bootstrap.enabled
+		newPropertyValue=${audit_solr_bootstrap_enabled}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 
 	if [ "${audit_store}" == "elasticsearch" ]
@@ -730,6 +736,15 @@ update_properties() {
 		propertyName=ranger.audit.elasticsearch.password
 		newPropertyValue=${audit_elasticsearch_password}
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+		propertyName=ranger.audit.elasticsearch.index
+		newPropertyValue=${audit_elasticsearch_index}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+		propertyName=ranger.audit.elasticsearch.bootstrap.enabled
+		newPropertyValue=${audit_elasticsearch_bootstrap_enabled}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
 	fi
 
 	if [ "${audit_store}" != "" ]

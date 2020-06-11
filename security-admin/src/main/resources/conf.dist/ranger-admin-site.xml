@@ -66,6 +66,15 @@
 		<description></description>
 	</property>
 	<property>
+		<name>ranger.audit.elasticsearch.index</name>
+		<value></value>
+		<description></description>
+	</property>
+	<property>
+		<name>ranger.audit.elasticsearch.bootstrap.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
 		<name>ranger.audit.solr.urls</name>
 		<value>http://##solr_host##:6083/solr/ranger_audits</value>
 		<description></description>
