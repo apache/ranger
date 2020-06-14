@@ -334,7 +334,7 @@ public class PolicyRefUpdater {
 		return true;
 	}
 
-	static List<List<? extends RangerPolicyItem>> getAllPolicyItems(RangerPolicy policy) {
+	public static List<List<? extends RangerPolicyItem>> getAllPolicyItems(RangerPolicy policy) {
 		List<List<? extends RangerPolicyItem>> ret = new ArrayList<>();
 
 		if (CollectionUtils.isNotEmpty(policy.getPolicyItems())) {

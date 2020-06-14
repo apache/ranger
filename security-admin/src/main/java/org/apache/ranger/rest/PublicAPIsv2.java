@@ -554,6 +554,25 @@ public class PublicAPIsv2 {
 		}
 	}
 
+	@DELETE
+	@Path("/api/server/purgepolicies/{serviceName}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void purgeEmptyPolicies(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.purgeEmptyPolicies(" + serviceName + ")");
+		}
+
+		if (serviceName == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Invalid service name", true);
+		}
+
+		serviceREST.purgeEmptyPolicies(serviceName, request);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.purgeEmptyPolicies(" + serviceName + ")");
+		}
+	}
+
 	/*
 	 * Role Creation API
 	 */
