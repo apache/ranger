@@ -303,6 +303,7 @@ public class PolicyRefUpdater {
 		LOG.warn("Group specified in policy does not exist in ranger admin, creating new group, Group = " + group);
 		VXGroup vxGroup = new VXGroup();
 		vxGroup.setName(group);
+		vxGroup.setDescription(group);
 		vxGroup.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
 		final PolicyGroupCreateContext policyGroupCreateContext = new PolicyGroupCreateContext(vxGroup, xPolicy);
 		Runnable createAndAssociatePolicyGroup = new Runnable() {
