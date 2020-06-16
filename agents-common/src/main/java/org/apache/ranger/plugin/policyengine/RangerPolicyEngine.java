@@ -67,6 +67,8 @@ public interface RangerPolicyEngine {
 
 	Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
 
+	String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest);
+
 	// Helpers
 
 	List<RangerPolicy> getResourcePolicies(String zoneName);
@@ -74,8 +76,6 @@ public interface RangerPolicyEngine {
 	List<RangerPolicy> getResourcePolicies();
 
 	List<RangerPolicy> getTagPolicies();
-
-	String getMatchedZoneName(GrantRevokeRequest grantRevokeRequest);
 
 	// This API is used only used by test code
 	RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request);

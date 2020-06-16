@@ -296,21 +296,6 @@ public class PolicyEngine {
         return ret;
     }
 
-    public RangerPolicyRepository getRepositoryForMatchedZone(RangerAccessResource resource) {
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("==> PolicyEngine.getRepositoryForMatchedZone(" + resource +  ")");
-        }
-
-        String                       zoneName = getMatchedZoneName(resource);
-        final RangerPolicyRepository ret      = getRepositoryForZone(zoneName);
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== PolicyEngine.getRepositoryForMatchedZone(" + resource +  ")");
-        }
-
-        return ret;
-    }
-
     public RangerPolicyRepository getRepositoryForMatchedZone(RangerPolicy policy) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> PolicyEngine.getRepositoryForMatchedZone(" + policy + ")");
@@ -326,26 +311,53 @@ public class PolicyEngine {
         return ret;
     }
 
-    public String getMatchedZoneName(RangerAccessResource accessResource) {
+    public Set<String> getMatchedZonesForResourceAndChildren(RangerAccessResource accessResource) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> PolicyEngine.getMatchedZoneName(" + accessResource + ")");
+            LOG.debug("==> PolicyEngine.getMatchedZonesForResourceAndChildren(" + accessResource + ")");
         }
 
-        String ret = null;
+        Set<String> ret = null;
 
         if (MapUtils.isNotEmpty(this.resourceZoneTrie)) {
-            ret = getMatchedZoneName(accessResource.getAsMap(), accessResource);
+            ret = getMatchedZonesForResourceAndChildren(accessResource.getAsMap(), accessResource);
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== PolicyEngine.getMatchedZoneName(" + accessResource + ") : " + ret);
+            LOG.debug("<== PolicyEngine.getMatchedZonesForResourceAndChildren(" + accessResource + ") : " + ret);
         }
 
         return ret;
     }
 
-    public String getMatchedZoneName(Map<String, ?> resourceAsMap) {
-        return getMatchedZoneName(resourceAsMap, convertToAccessResource(resourceAsMap));
+    public String getUniquelyMatchedZoneName(Map<String, ?> resourceAsMap) {
+        String ret = null;
+        Set<String> matchedZones = getMatchedZonesForResourceAndChildren(resourceAsMap, convertToAccessResource(resourceAsMap));
+        if (CollectionUtils.isNotEmpty(matchedZones) && matchedZones.size() == 1) {
+            String[] matchedZonesArray = new String[1];
+            matchedZones.toArray(matchedZonesArray);
+            ret = matchedZonesArray[0];
+        }
+        return ret;
+    }
+
+    public RangerPolicyRepository getRepositoryForZone(String zoneName) {
+        final RangerPolicyRepository ret;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("zoneName:[" + zoneName + "]");
+        }
+
+        if (StringUtils.isNotEmpty(zoneName)) {
+            ret = getZonePolicyRepositories().get(zoneName);
+        } else {
+            ret = getPolicyRepository();
+        }
+
+        if (ret == null) {
+            LOG.error("policyRepository for zoneName:[" + zoneName + "],  serviceName:[" + getServiceName() + "], policyVersion:[" + getPolicyVersion() + "] is null!! ERROR!");
+        }
+
+        return ret;
     }
 
     public boolean hasTagPolicies(RangerPolicyRepository tagPolicyRepository) {
@@ -396,12 +408,12 @@ public class PolicyEngine {
         }
     }
 
-    private String getMatchedZoneName(Map<String, ?> resource, RangerAccessResource accessResource) {
+    private Set<String> getMatchedZonesForResourceAndChildren(Map<String, ?> resource, RangerAccessResource accessResource) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> PolicyEngine.getMatchedZoneName(" + resource + ", " + accessResource + ")");
+            LOG.debug("==> PolicyEngine.getMatchedZonesForResourceAndChildren(" + resource + ", " + accessResource + ")");
         }
 
-        String ret = null;
+        Set<String> ret = null;
 
         if (MapUtils.isNotEmpty(this.resourceZoneTrie)) {
             List<Set<RangerZoneResourceMatcher>> zoneMatchersList = null;
@@ -470,7 +482,7 @@ public class PolicyEngine {
                 }
 
                 if (intersection.size() > 0) {
-                    Set<String> matchedZoneNames = new HashSet<>();
+                    ret = new HashSet<>();
 
                     for (RangerZoneResourceMatcher zoneMatcher : intersection) {
                         if (LOG.isDebugEnabled()) {
@@ -484,7 +496,7 @@ public class PolicyEngine {
                             }
 
                             // Actual match happened
-                            matchedZoneNames.add(zoneMatcher.getSecurityZoneName());
+                            ret.add(zoneMatcher.getSecurityZoneName());
                         } else {
                             if (LOG.isDebugEnabled()) {
                                 LOG.debug("Did not match resource:[" + accessResource + "] using zoneMatcher:[" + zoneMatcher + "]");
@@ -493,24 +505,14 @@ public class PolicyEngine {
                     }
 
                     if (LOG.isDebugEnabled()) {
-                        LOG.debug("The following zone-names matched resource:[" + accessResource + "]: " + matchedZoneNames);
-                    }
-
-                    if (matchedZoneNames.size() == 1) {
-                        String[] zones = new String[1];
-
-                        matchedZoneNames.toArray(zones);
-
-                        ret = zones[0];
-                    } else {
-                        LOG.error("Internal error, multiple zone-names are matched. The following zone-names matched resource:[" + resource + "]: " + matchedZoneNames);
+                        LOG.debug("The following zone-names matched resource:[" + accessResource + "]: " + ret);
                     }
                 }
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== PolicyEngine.getMatchedZoneName(" + resource + ", " + accessResource + ") : " + ret);
+            LOG.debug("<== PolicyEngine.getMatchedZonesForResourceAndChildren(" + resource + ", " + accessResource + ") : " + ret);
         }
 
         return ret;
@@ -528,25 +530,6 @@ public class PolicyEngine {
         return ret;
     }
 
-    private RangerPolicyRepository getRepositoryForZone(String zoneName) {
-        final RangerPolicyRepository ret;
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("zoneName:[" + zoneName + "]");
-        }
-
-        if (StringUtils.isNotEmpty(zoneName)) {
-            ret = getZonePolicyRepositories().get(zoneName);
-        } else {
-            ret = getPolicyRepository();
-        }
-
-        if (ret == null) {
-            LOG.error("policyRepository for zoneName:[" + zoneName + "],  serviceName:[" + getServiceName() + "], policyVersion:[" + getPolicyVersion() + "] is null!! ERROR!");
-        }
-
-        return ret;
-    }
 
     private PolicyEngine(final PolicyEngine other, ServicePolicies servicePolicies) {
         this.useForwardedIPAddress = other.useForwardedIPAddress;

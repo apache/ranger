@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.policyengine.PolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestProcessor;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -37,6 +38,7 @@ import org.apache.ranger.plugin.policyengine.RangerTagResource;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.service.RangerDefaultRequestProcessor;
+import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRoles;
@@ -80,9 +82,9 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     @Override
-    public boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, String accessType) {
+    public boolean isAccessAllowed(RangerAccessResource resource, String zoneName, String user, Set<String> userGroups, String accessType) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyAdminImpl.isAccessAllowed(" + resource + ", " + user + ", " + userGroups + ", " + accessType + ")");
+            LOG.debug("==> RangerPolicyAdminImpl.isAccessAllowed(" + resource + ", " + zoneName + ", " + user + ", " + userGroups + ", " + accessType + ")");
         }
 
         boolean          ret  = false;
@@ -92,7 +94,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyAdminImpl.isAccessAllowed(user=" + user + ",accessType=" + accessType + "resource=" + resource.getAsString() + ")");
         }
 
-        final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForMatchedZone(resource);
+        final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForZone(zoneName);
 
         if (matchedRepository != null) {
             Set<String> roles = getRolesFromUserAndGroups(user, userGroups);
@@ -114,7 +116,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         RangerPerfTracer.log(perf);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyAdminImpl.isAccessAllowed(" + resource + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
+            LOG.debug("<== RangerPolicyAdminImpl.isAccessAllowed(" + resource + ", " + zoneName + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
         }
 
         return ret;
@@ -155,13 +157,14 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     @Override
-    public List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource, Map<String, Object> evalContext) {
+    public List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource, String zoneName, Map<String, Object> evalContext) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyAdminImpl.getExactMatchPolicies(" + resource + ", " + evalContext + ")");
+            LOG.debug("==> RangerPolicyAdminImpl.getExactMatchPolicies(" + resource + ", " + zoneName + ", " + evalContext  + ")");
         }
 
         List<RangerPolicy>     ret              = null;
-        RangerPolicyRepository policyRepository = policyEngine.getRepositoryForMatchedZone(resource);
+
+        RangerPolicyRepository policyRepository = policyEngine.getRepositoryForZone(zoneName);
 
         if (policyRepository != null) {
             for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
@@ -176,7 +179,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyAdminImpl.getExactMatchPolicies(" + resource + ", " + evalContext + "): " + ret);
+            LOG.debug("<==> RangerPolicyAdminImpl.getExactMatchPolicies(" + resource + ", " + zoneName + ", " + evalContext  + "): " + ret);
         }
 
         return ret;
@@ -244,6 +247,21 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     @Override
     public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
         return policyEngine.getPluginContext().getAuthContext().getRolesForUserAndGroups(user, groups);
+    }
+
+    @Override
+    public String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyAdminImpl.getUniquelyMatchedZoneName(" + grantRevokeRequest + ")");
+        }
+
+        String ret = policyEngine.getUniquelyMatchedZoneName(grantRevokeRequest.getResource());
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyAdminImpl.getUniquelyMatchedZoneName(" + grantRevokeRequest + ") : " + ret);
+        }
+
+        return ret;
     }
 
     // This API is used only by test-code; checks only policies within default security-zone
@@ -323,8 +341,25 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         requestProcessor.preProcess(request);
 
-        String                       zoneName          = policyEngine.getMatchedZoneName(resource);
-        final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForMatchedZone(resource);
+        Set<String> zoneNames = policyEngine.getMatchedZonesForResourceAndChildren(resource);
+
+        if (CollectionUtils.isEmpty(zoneNames)) {
+            getMatchingPoliciesForZone(request, null, ret);
+        } else {
+            for (String zoneName : zoneNames) {
+                getMatchingPoliciesForZone(request, zoneName, ret);
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyAdminImpl.getMatchingPolicies(" + resource + ", " + accessType + ") : " + ret.size());
+        }
+
+        return ret;
+    }
+
+    private void getMatchingPoliciesForZone(RangerAccessRequest request, String zoneName, List<RangerPolicy> ret) {
+        final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForZone(zoneName);
 
         if (matchedRepository != null) {
             if (policyEngine.hasTagPolicies(policyEngine.getTagPolicyRepository())) {
@@ -385,12 +420,6 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             }
 
         }
-
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyAdminImpl.getMatchingPolicies(" + resource + ", " + accessType + ") : " + ret.size());
-        }
-
-        return ret;
     }
 }
 

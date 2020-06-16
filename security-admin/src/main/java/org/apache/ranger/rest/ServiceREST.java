@@ -1285,21 +1285,21 @@ public class ServiceREST {
 					}
 					RangerService rangerService = svcStore.getServiceByName(serviceName);
 
-					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, userName, userGroups, resource);
-
+					String zoneName = getRangerAdminZoneName(serviceName, grantRequest);
+					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource);
 
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
 					}
 
-					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
+					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, zoneName, userName);
 	
 					if(policy != null) {
 						boolean policyUpdated = false;
 						policyUpdated = ServiceRESTUtil.processGrantRequest(policy, grantRequest);
 	
 						if(policyUpdated) {
-							policy.setZoneName(grantRequest.getZoneName());
+							policy.setZoneName(zoneName);
 							svcStore.updatePolicy(policy);
 						} else {
 							LOG.error("processGrantRequest processing failed");
@@ -1338,7 +1338,7 @@ public class ServiceREST {
 						}
 	
 						policy.getPolicyItems().add(policyItem);
-						policy.setZoneName(grantRequest.getZoneName());
+						policy.setZoneName(zoneName);
 
 						svcStore.createPolicy(policy);
 					}
@@ -1394,6 +1394,7 @@ public class ServiceREST {
 					String				 ownerUser  = grantRequest.getOwnerUser();
 
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
+					String               zoneName   = getRangerAdminZoneName(serviceName, grantRequest);
 
 					boolean isAllowed = false;
 
@@ -1402,18 +1403,18 @@ public class ServiceREST {
 							isAllowed = true;
 						}
 					} else {
-						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, userName, userGroups, resource);
+						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource);
 					}
 
 					if (isAllowed) {
-						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
+						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, zoneName, userName);
 
 						if(policy != null) {
 							boolean policyUpdated = false;
 							policyUpdated = ServiceRESTUtil.processGrantRequest(policy, grantRequest);
 
 							if(policyUpdated) {
-								policy.setZoneName(grantRequest.getZoneName());
+								policy.setZoneName(zoneName);
 								svcStore.updatePolicy(policy);
 							} else {
 								LOG.error("processSecureGrantRequest processing failed");
@@ -1452,7 +1453,7 @@ public class ServiceREST {
 							}
 
 							policy.getPolicyItems().add(policyItem);
-							policy.setZoneName(grantRequest.getZoneName());
+							policy.setZoneName(zoneName);
 
 							svcStore.createPolicy(policy);
 						}
@@ -1517,21 +1518,22 @@ public class ServiceREST {
 						throw restErrorUtil.generateRESTException(vXResponse);
 					}
 					RangerService rangerService = svcStore.getServiceByName(serviceName);
+					String        zoneName      = getRangerAdminZoneName(serviceName, revokeRequest);
 
-					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, userName, userGroups, resource);
+					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource);
 
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
 					}
 
-					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
+					RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, zoneName, userName);
 
 					if(policy != null) {
 						boolean policyUpdated = false;
 						policyUpdated = ServiceRESTUtil.processRevokeRequest(policy, revokeRequest);
 
 						if(policyUpdated) {
-							policy.setZoneName(revokeRequest.getZoneName());
+							policy.setZoneName(zoneName);
 							svcStore.updatePolicy(policy);
 						} else {
 							LOG.error("processRevokeRequest processing failed");
@@ -1590,6 +1592,8 @@ public class ServiceREST {
 					String ownerUser = revokeRequest.getOwnerUser();
 
 					RangerAccessResource resource = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
+					String               zoneName = getRangerAdminZoneName(serviceName, revokeRequest);
+
 
 					boolean isAllowed = false;
 
@@ -1598,18 +1602,18 @@ public class ServiceREST {
 							isAllowed = true;
 						}
 					} else {
-						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, userName, userGroups, resource);
+						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource);
 					}
 
 					if (isAllowed) {
-						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, userName);
+						RangerPolicy policy = getExactMatchPolicyForResource(serviceName, resource, zoneName, userName);
 
 						if(policy != null) {
 							boolean policyUpdated = false;
 							policyUpdated = ServiceRESTUtil.processRevokeRequest(policy, revokeRequest);
 
 							if(policyUpdated) {
-								policy.setZoneName(revokeRequest.getZoneName());
+								policy.setZoneName(zoneName);
 								svcStore.updatePolicy(policy);
 							} else {
 								LOG.error("processSecureRevokeRequest processing failed");
@@ -3320,14 +3324,14 @@ public class ServiceREST {
 		}
 	}
 
-	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerAccessResource resource, String user) throws Exception {
+	private RangerPolicy getExactMatchPolicyForResource(String serviceName, RangerAccessResource resource, String zoneName, String user) throws Exception {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resource + ", " + user + ")");
+			LOG.debug("==> ServiceREST.getExactMatchPolicyForResource(" + resource + ", " + zoneName + ", " + user + ")");
 		}
 
 		RangerPolicy       ret         = null;
 		RangerPolicyAdmin  policyAdmin = getPolicyAdmin(serviceName);
-		List<RangerPolicy> policies    = policyAdmin != null ? policyAdmin.getExactMatchPolicies(resource, null) : null;
+		List<RangerPolicy> policies    = policyAdmin != null ? policyAdmin.getExactMatchPolicies(resource, zoneName, null) : null;
 
 		if(CollectionUtils.isNotEmpty(policies)) {
 			// at this point, ret is a policy in policy-engine; the caller might update the policy (for grant/revoke); so get a copy from the store
@@ -3335,7 +3339,7 @@ public class ServiceREST {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resource + ", " + user + "): " + ret);
+			LOG.debug("<== ServiceREST.getExactMatchPolicyForResource(" + resource + ", " + zoneName + ", " + user + "): " + ret);
 		}
 
 		return ret;
@@ -3744,13 +3748,13 @@ public class ServiceREST {
 
 		return isAllowed;
 	}
-	private boolean hasAdminAccess(String serviceName, String userName, Set<String> userGroups, RangerAccessResource resource) {
+	private boolean hasAdminAccess(String serviceName, String zoneName, String userName, Set<String> userGroups, RangerAccessResource resource) {
 		boolean isAllowed = false;
 
 		RangerPolicyAdmin policyAdmin = getPolicyAdminForDelegatedAdmin(serviceName);
 
 		if(policyAdmin != null) {
-			isAllowed = policyAdmin.isAccessAllowed(resource, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
+			isAllowed = policyAdmin.isAccessAllowed(resource, zoneName, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
 		}
 
 		return isAllowed;
@@ -4314,6 +4318,17 @@ public class ServiceREST {
 			}
 			bizUtil.bulkModeOnlyFlushAndClear();
 		}
+	}
+
+	private String getRangerAdminZoneName(String serviceName, GrantRevokeRequest grantRevokeRequest) {
+		String ret = grantRevokeRequest.getZoneName();
+
+		if (StringUtils.isEmpty(ret)) {
+			RangerPolicyAdmin policyAdmin = getPolicyAdmin(serviceName);
+			ret = policyAdmin.getUniquelyMatchedZoneName(grantRevokeRequest);
+		}
+
+		return ret;
 	}
 }
 
