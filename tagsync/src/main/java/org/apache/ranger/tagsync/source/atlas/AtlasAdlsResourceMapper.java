@@ -103,7 +103,7 @@ public class AtlasAdlsResourceMapper extends AtlasResourceMapper {
 
 			elements.put(RANGER_TYPE_ADLS_GEN2_ACCOUNT, new RangerPolicyResource(accountName));
 			elements.put(RANGER_TYPE_ADLS_GEN2_CONTAINER, new RangerPolicyResource(containerName));
-			elements.put(RANGER_TYPE_ADLS_GEN2_RELATIVE_PATH, new RangerPolicyResource(relativePath));
+			elements.put(RANGER_TYPE_ADLS_GEN2_RELATIVE_PATH, new RangerPolicyResource(relativePath, Boolean.FALSE, Boolean.TRUE));
 		} else {
 			throwExceptionWithMessage("unrecognized entity-type: " + entityType);
 		}
