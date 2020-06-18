@@ -191,21 +191,22 @@ public class RangerBasePlugin {
 		try {
 			RangerPolicyEngine oldPolicyEngine = this.policyEngine;
 			ServicePolicies    servicePolicies = null;
-			boolean            isValid         = true;
+			boolean            isNewEngineNeeded = true;
 			boolean            usePolicyDeltas = false;
 
 			if (policies == null) {
 				policies = getDefaultSvcPolicies();
 
 				if (policies == null) {
-					LOG.error("Could not get default Service Policies");
-					isValid = false;
+					LOG.error("Could not get default Service Policies. Keeping old policy-engine!");
+					isNewEngineNeeded = false;
 				}
 			} else {
 				Boolean hasPolicyDeltas = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
 
 				if (hasPolicyDeltas == null) {
-					LOG.warn("Policies and policy-deltas are empty. Creating policy engine with no policies!!");
+					LOG.warn("Policies and policy-deltas are empty!! Keeping old policy-engine!");
+					isNewEngineNeeded = false;
 				} else {
 					if (hasPolicyDeltas.equals(Boolean.TRUE)) {
 						// Rebuild policies from deltas
@@ -217,7 +218,8 @@ public class RangerBasePlugin {
 							usePolicyDeltas = true;
 						} else {
 							LOG.error("Could not apply deltas=" + Arrays.toString(policies.getPolicyDeltas().toArray()));
-							isValid = false;
+							LOG.warn("Keeping old policy-engine!");
+							isNewEngineNeeded = false;
 						}
 					} else {
 						usePolicyDeltas = false;
@@ -225,7 +227,7 @@ public class RangerBasePlugin {
 				}
 			}
 
-			if (isValid) {
+			if (isNewEngineNeeded) {
 				RangerPolicyEngine newPolicyEngine      = null;
 				boolean            isPolicyEngineShared = false;
 
@@ -293,7 +295,7 @@ public class RangerBasePlugin {
 				}
 
 			} else {
-				LOG.error("Returning without saving policies to cache. Leaving current policy engine as-is");
+				LOG.warn("Returning without saving policies to cache. Leaving current policy engine as-is");
 			}
 
 		} catch (Exception e) {

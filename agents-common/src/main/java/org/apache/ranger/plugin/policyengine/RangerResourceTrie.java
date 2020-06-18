@@ -920,9 +920,11 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         boolean removeWildcardEvaluator(U evaluator) {
             if (CollectionUtils.isNotEmpty(wildcardEvaluators) && wildcardEvaluators.contains(evaluator)) {
                 undoSetup();
-                wildcardEvaluators.remove(evaluator);
-                if (CollectionUtils.isEmpty(wildcardEvaluators)) {
-                    wildcardEvaluators = null;
+                if (CollectionUtils.isNotEmpty(wildcardEvaluators)) {
+                    wildcardEvaluators.remove(evaluator);
+                    if (CollectionUtils.isEmpty(wildcardEvaluators)) {
+                        wildcardEvaluators = null;
+                    }
                 }
                 return true;
             } else {
