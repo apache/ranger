@@ -34,6 +34,7 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Random;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TimeZone;
@@ -73,7 +74,7 @@ public class MiscUtil {
 	public static final String TOKEN_ENV = "env:";
 	public static final String ESCAPE_STR = "\\";
 
-	static VMID sJvmID = new VMID();
+	private static final VMID         sJvmID        = new VMID();
 
 	public static String LINE_SEPARATOR = System.getProperty("line.separator");
 
@@ -294,6 +295,17 @@ public class MiscUtil {
 		return UUID.randomUUID().toString();
 	}
 
+	// UUID.randomUUID() uses SecureRandom, which is seen to be slow in some environments; this method uses Random
+	public static String generateGuid() {
+		byte[] randomBytes = new byte[16];
+
+		RandomHolder.random.nextBytes(randomBytes);
+
+		UUID uuid = UUID.nameUUIDFromBytes(randomBytes);
+
+		return uuid.toString();
+	}
+
 	public static <T> String stringify(T log) {
 		String ret = null;
 
@@ -461,7 +473,8 @@ public class MiscUtil {
 	}
 
 	/**
-	 * @param ugiLoginUser
+	 * @param newUGI
+	 * @param newSubject
 	 */
 	public static void setUGILoginUser(UserGroupInformation newUGI,
 			Subject newSubject) {
@@ -593,7 +606,8 @@ public class MiscUtil {
 	}
 
 	/**
-	 * @param string
+	 * @param useLogger
+	 * @param message
 	 * @param e
 	 */
 	static public boolean logErrorMessageByInterval(Log useLogger,
@@ -852,4 +866,10 @@ public class MiscUtil {
 	    utc.add(Calendar.MILLISECOND, -offset);
 	    return utc.getTime();
 	}
+
+	// use Holder class to defer initialization until needed
+	private static class RandomHolder {
+		static final Random random = new Random();
+	}
+
 }

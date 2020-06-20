@@ -43,32 +43,27 @@ import org.apache.ranger.plugin.util.RangerRESTUtils;
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
 
-	static long sequenceNumber;
+	private static final String       CONF_AUDIT_ID_STRICT_UUID     = "xasecure.audit.auditid.strict.uuid";
+	private static final boolean      DEFAULT_AUDIT_ID_STRICT_UUID  = false;
 
-	private static String UUID 	= MiscUtil.generateUniqueId();
-	private static AtomicInteger  counter =  new AtomicInteger(0);
 
-	protected String moduleName = RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME;
+	private   final boolean         auditIdStrictUUID;
+	protected final String          moduleName;
+	private   final RangerRESTUtils restUtils      = new RangerRESTUtils();
+	private         long            sequenceNumber = 0;
+	private         String          UUID           = MiscUtil.generateUniqueId();
+	private         AtomicInteger   counter        =  new AtomicInteger(0);
 
-	RangerRESTUtils restUtils = new RangerRESTUtils();
+
 
 	public RangerDefaultAuditHandler() {
+		auditIdStrictUUID = DEFAULT_AUDIT_ID_STRICT_UUID;
+		moduleName        = RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME;
 	}
 
 	public RangerDefaultAuditHandler(Configuration config) {
-		init(config);
-	}
-
-	public void init(Configuration config) {
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultAuditHandler.init()");
-		}
-
-		moduleName = config.get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultAuditHandler.init()");
-		}
+		auditIdStrictUUID = config.getBoolean(CONF_AUDIT_ID_STRICT_UUID, DEFAULT_AUDIT_ID_STRICT_UUID);
+		moduleName        = config.get(RangerHadoopConstants.AUDITLOG_RANGER_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_RANGER_MODULE_ACL_NAME);
 	}
 
 	@Override
@@ -145,7 +140,10 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setZoneName(result.getZoneName());
 			ret.setAgentHostname(restUtils.getAgentHostname());
 			ret.setPolicyVersion(result.getPolicyVersion());
+
 			populateDefaults(ret);
+
+			result.setAuditLogId(ret.getEventId());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -276,15 +274,27 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 	}
 
 	private String generateNextAuditEventId() {
-      int nextId = counter.getAndIncrement();
+		final String ret;
 
-      if(nextId == Integer.MAX_VALUE) {
-        // reset UUID and counter
-        UUID = MiscUtil.generateUniqueId();
-        counter = new AtomicInteger(0);
-      }
+		if (auditIdStrictUUID) {
+			ret = MiscUtil.generateGuid();
+		} else {
+			int nextId = counter.getAndIncrement();
 
-      return UUID + "-" + Integer.toString(nextId);
+			if (nextId == Integer.MAX_VALUE) {
+				// reset UUID and counter
+				UUID    = MiscUtil.generateUniqueId();
+				counter = new AtomicInteger(0);
+			}
+
+			ret = UUID + "-" + Integer.toString(nextId);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("generateNextAuditEventId(): " + ret);
+		}
+
+		return ret;
 	 }
 
 	private String writeObjectAsString(Serializable obj) {
