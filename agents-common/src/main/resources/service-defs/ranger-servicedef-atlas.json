@@ -115,7 +115,7 @@
 			},
 			"label": "Atlas Service",
 			"description": "Atlas Service",
-			"accessTypeRestrictions": ["admin-import", "admin-export"]
+			"accessTypeRestrictions": ["admin-import", "admin-export", "admin-purge"]
 		},
 		{
 			"itemId": 7,
