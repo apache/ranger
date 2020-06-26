@@ -101,6 +101,10 @@ public class AtlasAdlsResourceMapper extends AtlasResourceMapper {
 				throwExceptionWithMessage("relative-path not found in attribute '" +  ENTITY_ATTRIBUTE_QUALIFIED_NAME + "': " + qualifiedName);
 			}
 
+			if (relativePath.endsWith("/") && relativePath.length() != 1) {
+				relativePath = relativePath.substring(0, relativePath.lastIndexOf("/"));
+			}
+
 			elements.put(RANGER_TYPE_ADLS_GEN2_ACCOUNT, new RangerPolicyResource(accountName));
 			elements.put(RANGER_TYPE_ADLS_GEN2_CONTAINER, new RangerPolicyResource(containerName));
 			elements.put(RANGER_TYPE_ADLS_GEN2_RELATIVE_PATH, new RangerPolicyResource(relativePath, Boolean.FALSE, Boolean.TRUE));
