@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.store;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -257,6 +258,18 @@ public class EmbeddedServiceDefsUtil {
 			serviceDef=loadEmbeddedServiceDef(defType);
 		}
 		return serviceDef;
+	}
+
+	public static boolean isRecursiveEnabled(final RangerServiceDef rangerServiceDef, final String resourceDefName) {
+		boolean ret = false;
+		List<RangerServiceDef.RangerResourceDef>  resourceDefs = rangerServiceDef.getResources();
+		for(RangerServiceDef.RangerResourceDef resourceDef:resourceDefs) {
+			if (resourceDefName.equals(resourceDef.getName())) {
+				ret =  resourceDef.getRecursiveSupported();
+				break;
+			}
+		}
+		return ret;
 	}
 
 	private long getId(RangerServiceDef serviceDef) {

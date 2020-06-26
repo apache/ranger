@@ -686,9 +686,8 @@ public class PolicyEngine {
                         String                            resourceDefName = entry.getKey();
                         List<String>                      resourceValues  = entry.getValue();
                         RangerPolicy.RangerPolicyResource policyResource  = new RangerPolicy.RangerPolicyResource();
-
                         policyResource.setIsExcludes(false);
-                        policyResource.setIsRecursive(StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME));
+                        policyResource.setIsRecursive(EmbeddedServiceDefsUtil.isRecursiveEnabled(serviceDef, resourceDefName));
                         policyResource.setValues(resourceValues);
                         policyResources.put(resourceDefName, policyResource);
                     }
