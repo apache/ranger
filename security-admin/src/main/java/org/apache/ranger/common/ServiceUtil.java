@@ -126,9 +126,13 @@ public class ServiceUtil {
 		mapAccessTypeToPermType.put("getUserTopology", 29);
 		mapAccessTypeToPermType.put("getTopologyInfo", 30);
 		mapAccessTypeToPermType.put("uploadNewCredentials", 31);
-		mapAccessTypeToPermType.put("repladmin",32);
-		mapAccessTypeToPermType.put("serviceadmin",33);
-		mapAccessTypeToPermType.put("tempudfadmin",34);
+		mapAccessTypeToPermType.put("repladmin", 32);
+		mapAccessTypeToPermType.put("serviceadmin", 33);
+		mapAccessTypeToPermType.put("tempudfadmin", 34);
+		mapAccessTypeToPermType.put("idempotent_write", 35);
+		mapAccessTypeToPermType.put("describe_configs", 36);
+		mapAccessTypeToPermType.put("alter_configs", 37);
+		mapAccessTypeToPermType.put("cluster_action", 38);
 
 		version = "0";
 	}

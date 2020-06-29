@@ -355,11 +355,27 @@ public class AppConstants extends RangerCommonEnums {
 	 * XA_PERM_TYPE_TEMPUDFADMIN is an element of enum XAPermType. Its value is "XA_PERM_TYPE_TEMPUDFADMIN".
 	 */
 	public static final int XA_PERM_TYPE_TEMPUDFADMIN = 34;
+	/**
+	 * XA_PERM_TYPE_IDEMPOTENT_WRITE is an element of enum XAPermType. Its value is "XA_PERM_TYPE_IDEMPOTENT_WRITE".
+	 */
+	public static final int XA_PERM_TYPE_IDEMPOTENT_WRITE = 35;
+	/**
+	 * XA_PERM_TYPE_DESCRIBE_CONFIGS is an element of enum XAPermType. Its value is "XA_PERM_TYPE_DESCRIBE_CONFIGS".
+	 */
+	public static final int XA_PERM_TYPE_DESCRIBE_CONFIGS = 36;
+	/**
+	 * XA_PERM_TYPE_ALTER_CONFIGS is an element of enum XAPermType. Its value is "XA_PERM_TYPE_ALTER_CONFIGS".
+	 */
+	public static final int XA_PERM_TYPE_ALTER_CONFIGS = 37;
+	/**
+	 * XA_PERM_TYPE_CLUSTER_ACTION is an element of enum XAPermType. Its value is "XA_PERM_TYPE_CLUSTER_ACTION".
+	 */
+	public static final int XA_PERM_TYPE_CLUSTER_ACTION = 38;
 
 	/**
 	 * Max value for enum XAPermType_MAX
 	 */
-	public static final int XAPermType_MAX = 34;
+	public static final int XAPermType_MAX = 38;
 
 	/***************************************************************
 	 * Enum values for DatabaseFavor
@@ -886,6 +902,22 @@ public class AppConstants extends RangerCommonEnums {
 			// return "tempudfadmin"; //XA_PERM_TYPE_TEMPUDFADMIN
 			return "tempudfadmin";
 		}
+		if( elementValue == 35 ) {
+			// return "Idempotent Write"; //XA_PERM_TYPE_IDEMPOTENT_WRITE
+			return "idempotent_write";
+		}
+		if( elementValue == 36 ) {
+			// return "Describe Configs"; //XA_PERM_TYPE_DESCRIBE_CONFIGS
+			return "describe_configs";
+		}
+		if( elementValue == 37 ) {
+			// return "Alter Configs"; //XA_PERM_TYPE_ALTER_CONFIGS
+			return "alter_configs";
+		}
+		if( elementValue == 38 ) {
+			// return "Cluster Action"; //XA_PERM_TYPE_CLUSTER_ACTION
+			return "cluster_action";
+		}
 		return null;
 	}
 
@@ -1204,6 +1236,18 @@ public class AppConstants extends RangerCommonEnums {
 		}
 		if("tempudfadmin".equalsIgnoreCase(label)) {
 			return AppConstants.XA_PERM_TYPE_TEMPUDFADMIN; //XA_PERM_TYPE_TEMPUDFADMIN
+		}
+		if("idempotent_write".equalsIgnoreCase(label)) {
+			return AppConstants.XA_PERM_TYPE_IDEMPOTENT_WRITE; //XA_PERM_TYPE_IDEMPOTENT_WRITE
+		}
+		if("describe_configs".equalsIgnoreCase(label)) {
+			return AppConstants.XA_PERM_TYPE_DESCRIBE_CONFIGS; //XA_PERM_TYPE_DESCRIBE_CONFIGS
+		}
+		if("alter_configs".equalsIgnoreCase(label)) {
+			return AppConstants.XA_PERM_TYPE_ALTER_CONFIGS; //XA_PERM_TYPE_ALTER_CONFIGS
+		}
+		if("cluster_action".equalsIgnoreCase(label)) {
+			return AppConstants.XA_PERM_TYPE_CLUSTER_ACTION; //XA_PERM_TYPE_CLUSTER_ACTION
 		}
 		return 0;
 	}
