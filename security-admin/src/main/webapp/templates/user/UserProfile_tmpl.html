@@ -16,16 +16,17 @@
 --}}
 <h4 class="wrap-header bold"> User Profile </h4>
 <div class="wrap non-collapsible ">
+	{{#if setOldUi}}
+		<ul class="nav nav-tabs tabs clearfix" >
+			<li class="" data="edit-password" data-tab="edit-password">
+				<a data-toggle="tab" href="#edit-password"> <i class="blue icon-key bigger-125"></i> Change Password </a>
+			</li>
+			<li class="active" data-tab="edit-basic">
+				<a data-toggle="tab" href="#edit-basic"> <i class="green icon-edit bigger-125"></i> Basic Info </a>
+			</li>
 
-	<ul class="nav nav-tabs tabs clearfix" >
-		<li class="" data="edit-password" data-tab="edit-password">
-			<a data-toggle="tab" href="#edit-password"> <i class="blue icon-key bigger-125"></i> Change Password </a>
-		</li>
-		<li class="active" data-tab="edit-basic">
-			<a data-toggle="tab" href="#edit-basic"> <i class="green icon-edit bigger-125"></i> Basic Info </a>
-		</li>
-
-	</ul>
+		</ul>
+	{{/if}}
 
 	<div class="tab-content user-profile-tab-content">
 		<div class="tab-pane active" id="tab1">

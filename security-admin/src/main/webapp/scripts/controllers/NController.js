@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -34,21 +34,24 @@ define(function(require) {
             var vTopNav = require('views/common/TopNav');
             var vProfileBar = require('views/common/ProfileBar');
             var vFooter = require('views/common/Footer');
+            var rSidebar = require('views/policymanager/ServiceLayoutSidebar');
 
             App.rTopNav.show(new vTopNav({
                 model: App.userProfile,
                 appState: MAppState
             }));
+            var type = "resource"
+
+            $('#r_sidebar').addClass('sidebar-list')
+            App.rSideBar.show(new rSidebar({
+                type: type,
+            }))
 
             App.rTopProfileBar.show(new vProfileBar({}));
 
             App.rFooter.show(new vFooter({}));
-            //remove rSideBar from old UI
-            if (App.rSideBar && App.rSideBar.$el) {
-                App.rSideBar.$el.removeClass("sidebar-list")
-                App.rSideBar.reset()
-            }
-            $('#contentBody').removeClass("service-layout");
+
+            $('#contentBody').addClass("service-layout");
         },
 
         dashboardAction: function(action) {
@@ -70,6 +73,7 @@ define(function(require) {
             var RangerPolicyList = require('collections/RangerPolicyList');
             var VXGroupList = require('collections/VXGroupList');
             var VXUserList = require('collections/VXUserList');
+            this.rSidebarContentHideAndShow('ReportManager');
             if (App.rContent.currentView)
                 App.rContent.currentView.close();
             App.rContent.show(new view({
@@ -91,6 +95,8 @@ define(function(require) {
             _.extend(accessAuditList.queryParams, {
                 'sortBy': 'eventTime'
             });
+            this.rSidebarContentHideAndShow('AuditManager');
+            App.rSideBar.currentView.selectedList(tab.split('?')[0]);
             App.rContent.show(new view({
                 accessAuditList: accessAuditList,
                 tab: tab
@@ -103,6 +109,7 @@ define(function(require) {
             var view = require('views/reports/LoginSessionDetail');
             var VXAuthSessionList = require('collections/VXAuthSessionList');
             var authSessionList = new VXAuthSessionList();
+            this.rSidebarContentHideAndShow('AuditManager');
             authSessionList.fetch({
                 data: {
                     id: id
@@ -119,7 +126,7 @@ define(function(require) {
                 'currentTab': XAGlobals.AppTabs.None.value
             });
             var view = require('views/user/UserProfile');
-
+            this.rSidebarContentHideAndShow('ProfileManager');
             App.rContent.show(new view({
                 model: App.userProfile.clone()
             }));
@@ -135,6 +142,8 @@ define(function(require) {
             var view = require('views/users/UserTableLayout');
             var VXUserList = require('collections/VXUserList');
             var userList = new VXUserList();
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
+            App.rSideBar.currentView.selectedList(tab.split('?')[0]);
             App.rContent.show(new view({
                 collection: userList,
                 tab: tab.split('?')[0],
@@ -152,6 +161,7 @@ define(function(require) {
 
             var groupList = new VXGroupList();
             var user = new VXUser();
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
             user.collection = new VXUserList();
             groupList.fetch({
                 cache: true,
@@ -174,7 +184,7 @@ define(function(require) {
             var user = new VXUser({
                 id: userId
             });
-
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
             user.collection = new VXUserList();
             user.fetch({
                 cache: true
@@ -193,6 +203,7 @@ define(function(require) {
             var VXGroupList = require('collections/VXGroupList');
 
             var group = new VXGroup();
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
             group.collection = new VXGroupList();
             App.rContent.show(new view({
                 model: group
@@ -209,6 +220,7 @@ define(function(require) {
             var group = new VXGroup({
                 id: groupId
             });
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
             group.collection = new VXGroupList();
 
             group.fetch({
@@ -229,6 +241,7 @@ define(function(require) {
             var VXRoleList = require('collections/VXRoleList');
 
             var role = new VXRole();
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
             role.collection = new VXRoleList();
             App.rContent.show(new view({
                 model: role
@@ -245,6 +258,7 @@ define(function(require) {
             var role = new VXRole({
                 id: roleId
             });
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
             role.collection = new VXRoleList();
 
             role.fetch({
@@ -263,46 +277,16 @@ define(function(require) {
         serviceManagerAction: function(type) {
             MAppState.set({
                 'currentTab': XAGlobals.AppTabs.AccessManager.value
-            });
-            var XAUtil = require('utils/XAUtils');
-            var XAEnums = require('utils/XAEnums');
-            var view = require('views/policymanager/ServiceLayout');
-            var RangerServiceDefList = require('collections/RangerServiceDefList');
-            var RangerServiceDef = require('models/RangerServiceDef');
-            var RangerZoneList = require('collections/RangerZoneList');
-            var rangerZoneList = new RangerZoneList();
-
-            var collection = new RangerServiceDefList();
-            collection.queryParams.sortBy = 'serviceTypeId';
-
-            if (type == 'tag') {
-                var tagServiceDef = new RangerServiceDef();
-                tagServiceDef.url = XAUtil.getRangerServiceDef(XAEnums.ServiceType.SERVICE_TAG.label)
-                tagServiceDef.fetch({
-                    cache: false,
-                    async: false
-                })
-                collection.add(tagServiceDef);
-            } else {
-                collection.fetch({
-                    cache: false,
-                    async: false
-                });
-                var coll = collection.filter(function(model) {
-                    return model.get('name') != XAEnums.ServiceType.SERVICE_TAG.label
-                })
-                collection.reset(coll)
+            });     
+            var view1 = require('views/policymanager/NServiceLayout');
+            this.rSidebarContentHideAndShow('AccessManager');
+            App.rSideBar.currentView.componetList(type);
+            App.rSideBar.currentView.initializePlugins()
+            if(App.rSideBar.currentView.ui.serviceActive.length <= 0) {
+                App.rContent.show(new view1({
+                    type    : type,
+                }));
             }
-            rangerZoneList.fetch({
-                cache: false,
-                async: false,
-            })
-            //         if(App.rContent.currentView) App.rContent.currentView.close();
-            App.rContent.show(new view({
-                collection: collection,
-                type: type,
-                rangerZoneList: rangerZoneList
-            }));
         },
 
         serviceCreateAction: function(serviceTypeId) {
@@ -317,7 +301,7 @@ define(function(require) {
                 id: serviceTypeId
             });
             var rangerServiceModel = new RangerService();
-
+            this.rSidebarContentHideAndShow('AccessManager');
             App.rContent.show(new view({
                 model: rangerServiceModel,
                 serviceTypeId: serviceTypeId
@@ -343,7 +327,7 @@ define(function(require) {
                     id: serviceId
                 });
             }
-
+            this.rSidebarContentHideAndShow('AccessManager');
             rangerService.fetch({
                 cache: false
             }).done(function() {
@@ -359,11 +343,14 @@ define(function(require) {
                 'currentTab': XAGlobals.AppTabs.AccessManager.value
             });
             var XAUtil = require('utils/XAUtils');
-            var view = require('views/policies/RangerPolicyTableLayout');
+            var view = require('views/policies/NRangerPolicyTableLayout');
             var RangerService = require('models/RangerService');
             var RangerPolicyList = require('collections/RangerPolicyList');
 
             var rangerPolicyList = new RangerPolicyList();
+            this.rSidebarContentHideAndShow('AccessManager');
+            App.rSideBar.currentView.selecttedService(serviceId);
+            
             rangerPolicyList.queryParams['policyType'] = policyType.split("?")[0];
             if (_.isNaN(parseInt(serviceId))) {
                 var rangerService = new RangerService();
@@ -401,6 +388,8 @@ define(function(require) {
                     id: serviceId
                 });
             }
+            this.rSidebarContentHideAndShow('AccessManager');
+            App.rSideBar.currentView.selecttedService(serviceId);
             rangerService.fetch({
                 cache: false,
             }).done(function() {
@@ -434,6 +423,8 @@ define(function(require) {
                     id: serviceId
                 });
             }
+            this.rSidebarContentHideAndShow('AccessManager');
+            App.rSideBar.currentView.selecttedService(serviceId);
             rangerPolicy.collection = new RangerPolicyList();
             rangerPolicy.collection.url = XAUtil.getServicePoliciesURL(serviceId);
             rangerService.fetch({
@@ -457,7 +448,8 @@ define(function(require) {
             });
             var view = require('views/permissions/ModulePermsTableLayout');
             var ModulePermissionList = require('collections/VXModuleDefList');
-
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
+            App.rSideBar.currentView.selectedList(argument.split('?')[0]);
             App.rContent.show(new view({
                 collection: new ModulePermissionList(),
                 urlQueryParams: argument.indexOf("?") !== -1 ? argument.substring(argument.indexOf("?") + 1) : undefined,
@@ -475,6 +467,7 @@ define(function(require) {
                 id: moduleId
             });
             var that = this
+            this.rSidebarContentHideAndShow('UserGroupRoleManager');
             modulePermission.collection = new ModulePermissionList();
             modulePermission.fetch({
                 cache: false
@@ -501,6 +494,7 @@ define(function(require) {
             });
             var view = require('views/kms/KMSTableLayout');
             var KmsKeyList = require('collections/VXKmsKeyList');
+            this.rSidebarContentHideAndShow('KeyManager');
             App.rContent.show(new view({
                 collection: new KmsKeyList(),
                 kmsServiceName: kmsServiceName.split("?")[0],
@@ -514,7 +508,7 @@ define(function(require) {
             });
             var view = require('views/kms/KmsKeyCreate');
             var KmsKey = require('models/VXKmsKey');
-
+            this.rSidebarContentHideAndShow('KeyManager');
             App.rContent.show(new view({
                 model: new KmsKey({
                     'length': 128,
@@ -542,6 +536,21 @@ define(function(require) {
                 cache: false,
                 async: false,
             });
+            if (App.rSideBar.currentView) {
+                this.rSidebarContentHideAndShow('SecurityZone');
+                if (!_.isNaN(parseInt(listId))) {
+                    var zoneNameModel = rangerZoneList.find(function(m) {
+                        return m.id == listId
+                    });
+                    App.rSideBar.currentView.selectedList(zoneNameModel.get('name'));
+                }
+                if (_.isNaN(parseInt(listId)) && rangerZoneList.length > 0) {
+                    var zoneNameModel = rangerZoneList.find(function(m) {
+                        return m.id == listId
+                    });
+                    App.rSideBar.currentView.selectedList(rangerZoneList.models[0].get('name'));
+                }
+            }
             App.rContent.show(new vSecurityZone({
                 rangerService: rangerServiceList,
                 collection: rangerZoneList,
@@ -559,6 +568,7 @@ define(function(require) {
             var RangerZoneList = require('collections/RangerZoneList');
             var zoneSerivesColl = new RangerZoneList();
             var rangerServiceList = new RangerServiceList();
+            this.rSidebarContentHideAndShow('SecurityZone');
             rangerServiceList.fetch({
                 cache: false,
             }).done(function() {
@@ -586,6 +596,7 @@ define(function(require) {
                 id: zoneId
             })
             var zoneSerivesColl = new RangerZoneList();
+            this.rSidebarContentHideAndShow('SecurityZone');
             rangerServiceList.fetch({
                 cache: false,
                 async: false,
@@ -608,6 +619,12 @@ define(function(require) {
             XAUtils.defaultErrorHandler(undefined, {
                 'status': 404
             });
+        },
+
+        /**************** Sidebar content hide and show ******************************/
+        rSidebarContentHideAndShow: function(moduleName) {
+            App.rSideBar.$el.find('.listOfModule').hide();
+            App.rSideBar.$el.find("[data-name="+moduleName+"]").show();
         },
     });
 });

@@ -50,6 +50,7 @@ define(function(require){
                 showImportExportBtn : (SessionMgr.isUser() || XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true,
                 isZoneAdministration : (SessionMgr.isSystemAdmin()|| SessionMgr.isUser() || SessionMgr.isAuditor()) ? true : false,
                 isServiceManager : (App.vZone && _.isEmpty(App.vZone.vZoneName)) ? true : false,
+                setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
 			};
 			
 		},

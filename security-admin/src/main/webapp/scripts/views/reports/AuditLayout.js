@@ -67,6 +67,7 @@ define(function(require) {
 			return {
 				repositoryList	: repositoryList,
 				currentDate 	: Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"),
+				setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
 			};
 		},
 		breadCrumbs : [],

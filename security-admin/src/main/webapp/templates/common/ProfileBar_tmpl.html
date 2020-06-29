@@ -27,6 +27,13 @@
 				<li>
 					<a href="javascript:;" class="_allowNav" data-id="logout"> <i class="icon-off"></i>Log Out </a>
 				</li>
+				<li>
+					{{#if oldUi}}
+						<a href="javascript:;" data-id="oldNewSwitch" data-value="true"> <i class="icon-signout"></i>Switch to classic UI</a>
+					{{else}}
+						<a href="javascript:;" data-id="oldNewSwitch" data-value="false"> <i class="icon-signout"></i> Switch to latest UI </a>
+					{{/if}}
+				</li>
 			</ul>
 		</li>
 	</ul>

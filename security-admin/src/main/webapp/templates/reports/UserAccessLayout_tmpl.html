@@ -17,102 +17,104 @@
 <h3 class="wrap-header bold"> Reports </h3>
 
 <div class="wrap non-collapsible ">
-	<h3 class="wrap-header reportSearchHeader">Search Criteria
-		<span class="label label-yellow pull-right" data-js="searchResult"></span>
-	</h3>
-	<div class="wrap well ">
-		<div class="row-fluid">
-			<div class="span12">
-				<div class="form-horizontal">
-					<div class="span12">
-						<div class="pull-right">
-							<i class="icon-info-sign searchInfoUserAccess" title="Search Filter Hints"
-							   data-id="searchInfo"></i>
-						</div>
-						<div class="control-group">
-							<div class="span4">
-								<label class="control-label">Policy Name</label>
-								<div class="controls">
-									<input type="text" name="policyName" data-js="policyName" autofocus placeholder="Enter Policy Name">
-								</div>
+	{{#if setOldUi}}
+		<h3 class="wrap-header reportSearchHeader">Search Criteria
+			<span class="label label-yellow pull-right" data-js="searchResult"></span>
+		</h3>
+		<div class="wrap well ">
+			<div class="row-fluid">
+				<div class="span12">
+					<div class="form-horizontal">
+						<div class="span12">
+							<div class="pull-right">
+								<i class="icon-info-sign searchInfoUserAccess" title="Search Filter Hints"
+								   data-id="searchInfo"></i>
 							</div>
-							<div class="span4 reportSearchInfoInputs">
-								<label class="control-label control-label-align" for="policyType">Policy Type</label>
-								<div class="controls controls-margin">
-									<input type="text" data-id="policyType">
-								</div>
-							</div>
-						</div>
-						<div class="control-group">
-							<div class="span4">
-								<label class="control-label" for="component">Component</label>
-								<div class="controls">
-									<input type=text data-id="component" name="componentType">
-								</div>
-							</div>
-							<div class="span4 reportSearchInfoInputs">
-								<label class="control-label control-label-align">Resource</label>
-								<div class="controls controls-margin">
-									<input type="text" name="resourceName" data-js="resourceName" placeholder="Enter Resource Name">
-								</div>
-							</div>
-						</div>
-						<div class="control-group">
-							<div class="span4">
-								<label class="control-label" for="policyLabels">Policy Label</label>
-								<div class="controls">
-									<input type=text data-id="policyLabels" name="policyLabels">
-								</div>
-							</div>
-							<div class="span4 reportSearchInfoInputs">
-								<label class="control-label control-label-align" for="zoneName">Zone Name</label>
-								<div class="controls controls-margin">
-									<input type=text data-id="zoneName" name="zoneName">
-								</div>
-							</div>
-						</div>
-						<div class="control-group search-by">
-							<label class="control-label">Search By</label>
-							<div class="controls" data-js="searchBy">
-								<div class="">
-									<div class="btn-group">
-                                                                                <button class="btn dropdown-toggle" data-id="btnUserGroup" data-toggle="dropdown">
-											<span>Group</span>
-											<span class="caret"> </span>
-										</button>
-										<ul class="dropdown-menu">
-											<li>
-												<a data-id="grpSel" class="autoText" href="javascript:;">Group</a>
-											</li>
-											<li>
-												<a data-id="userSel" class="autoText" href="javascript:;">Username</a>
-											</li>
-										</ul>
+							<div class="control-group">
+								<div class="span4">
+									<label class="control-label">Policy Name</label>
+									<div class="controls">
+										<input type="text" name="policyName" data-js="policyName" autofocus placeholder="Enter Policy Name">
 									</div>
-									<input type="text" data-js="selectGroups">
-									<input type="text" style="display: none" data-js="userName">
+								</div>
+								<div class="span4 reportSearchInfoInputs">
+									<label class="control-label control-label-align" for="policyType">Policy Type</label>
+									<div class="controls controls-margin">
+										<input type="text" data-id="policyType">
+									</div>
 								</div>
 							</div>
+							<div class="control-group">
+								<div class="span4">
+									<label class="control-label" for="component">Component</label>
+									<div class="controls">
+										<input type=text data-id="component" name="componentType">
+									</div>
+								</div>
+								<div class="span4 reportSearchInfoInputs">
+									<label class="control-label control-label-align">Resource</label>
+									<div class="controls controls-margin">
+										<input type="text" name="resourceName" data-js="resourceName" placeholder="Enter Resource Name">
+									</div>
+								</div>
+							</div>
+							<div class="control-group">
+								<div class="span4">
+									<label class="control-label" for="policyLabels">Policy Label</label>
+									<div class="controls">
+										<input type=text data-id="policyLabels" name="policyLabels">
+									</div>
+								</div>
+								<div class="span4 reportSearchInfoInputs">
+									<label class="control-label control-label-align" for="zoneName">Zone Name</label>
+									<div class="controls controls-margin">
+										<input type=text data-id="zoneName" name="zoneName">
+									</div>
+								</div>
+							</div>
+							<div class="control-group search-by">
+								<label class="control-label">Search By</label>
+								<div class="controls" data-js="searchBy">
+									<div class="">
+										<div class="btn-group">
+	                                                                                <button class="btn dropdown-toggle" data-id="btnUserGroup" data-toggle="dropdown">
+												<span>Group</span>
+												<span class="caret"> </span>
+											</button>
+											<ul class="dropdown-menu">
+												<li>
+													<a data-id="grpSel" class="autoText" href="javascript:;">Group</a>
+												</li>
+												<li>
+													<a data-id="userSel" class="autoText" href="javascript:;">Username</a>
+												</li>
+											</ul>
+										</div>
+										<input type="text" data-js="selectGroups">
+										<input type="text" style="display: none" data-js="userName">
+									</div>
+								</div>
+							</div>
+
+
 						</div>
-
-
-					</div>
-					<div>
-						<div class="control-group">
-							<div class="controls">
-								<button type="button" class="btn btn-primary btn-small" data-js="searchBtn"
-										name="searchPolicy">
-									<i class="icon-search"></i>
-									Search
-								</button>
+						<div>
+							<div class="control-group">
+								<div class="controls">
+									<button type="button" class="btn btn-primary btn-small" data-js="searchBtn"
+											name="searchPolicy">
+										<i class="icon-search"></i>
+										Search
+									</button>
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>
 
+			</div>
 		</div>
-	</div>
+	{{/if}}
 	<div class="row-fluid">
 	<span>
 		<div class="btn-group btn-right">

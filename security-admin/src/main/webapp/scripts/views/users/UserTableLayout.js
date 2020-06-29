@@ -47,6 +47,13 @@ define(function(require){
 		_viewName : 'UserTableLayout',
 		
     	template: UsertablelayoutTmpl,
+
+		templateHelpers : function(){
+			return{
+				setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
+			}
+		},
+
     	breadCrumbs :[XALinks.get('Users')],
 		/** Layout sub regions */
     	regions: {

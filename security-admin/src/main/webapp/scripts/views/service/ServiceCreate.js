@@ -143,12 +143,21 @@ define(function(require){
 			XAUtil.blockUI();
 			this.model.save({},{
 				wait: true,
-				success: function () {
+				success: function (response) {
 					XAUtil.blockUI('unblock');
 					XAUtil.allowNavigation();
 					var msg = that.editService ? 'Service updated successfully' :'Service created successfully';
 					XAUtil.notifySuccess('Success', msg);
-					that.gotoResourceOrTagTab()
+					if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+						App.rSideBar.currentView.render();
+						if(that.editService) {
+							that.gotoServicePolicyListingPage();
+						} else{
+							that.gotoResourceOrTagNewTab(response);
+						}
+					} else {
+						that.gotoResourceOrTagTab()
+					}
 				},
 				error: function (model, response, options) {
 					XAUtil.blockUI('unblock');
@@ -173,6 +182,9 @@ define(function(require){
 							XAUtil.blockUI('unblock');
 							XAUtil.allowNavigation();
 							XAUtil.notifySuccess('Success', 'Service delete successfully');
+							if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+								App.rSideBar.currentView.render();
+							}
 							that.gotoResourceOrTagTab()
 						},
 						error: function (model, response, options) {
@@ -257,9 +269,26 @@ define(function(require){
 			}
 			App.appRouter.navigate("#!/policymanager/resource",{trigger: true});
 		},
+		gotoResourceOrTagNewTab : function (response) {
+			var Url = '#!/service/'+response.id+'/policies/0';
+			App.appRouter.navigate(Url,{trigger: true});
+		},
+
+		gotoServicePolicyListingPage : function () {
+			var Url = '#!/service/'+this.model.id+'/policies/0';
+			App.appRouter.navigate(Url,{trigger: true});
+		},
 		onCancel : function(){
 			XAUtil.allowNavigation();
-			this.gotoResourceOrTagTab();
+			if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+				if(this.editService) {
+					this.gotoServicePolicyListingPage();
+				} else{
+					this.gotoResourceOrTagTab();
+				}
+			} else {
+				this.gotoResourceOrTagTab();
+			}
 		},
 		/** on close */
 		onClose: function(){

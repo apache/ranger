@@ -47,6 +47,9 @@ define(function(require){
 		template: ModulePermsTableLayoutTmpl,
 
 		templateHelpers : function(){
+			return{
+                setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
+			}
 		},
 
 		breadCrumbs : function(){

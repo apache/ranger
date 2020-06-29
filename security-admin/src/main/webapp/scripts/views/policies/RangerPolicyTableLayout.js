@@ -56,7 +56,8 @@ define(function(require){
 				rangerPolicyType : this.collection.queryParams['policyType'],
 				isRenderAccessTab : XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef')) ? true 
                                         : XAUtil.isRenderRowFilter(this.rangerServiceDefModel.get('rowFilterDef')) ? true : false,
-                isAddNewPolicyButtonShow : !(XAUtil.isAuditorOrKMSAuditor(SessionMgr)) && this.rangerService.get('isEnabled')
+                isAddNewPolicyButtonShow : !(XAUtil.isAuditorOrKMSAuditor(SessionMgr)) && this.rangerService.get('isEnabled'),
+                setNewUi : localStorage.getItem('setOldUI') == "true" ? false : true,
 			};
 		},
         

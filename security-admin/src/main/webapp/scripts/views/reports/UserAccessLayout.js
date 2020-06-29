@@ -25,6 +25,7 @@ define(function(require) {'use strict';
 	var XAEnums 			= require('utils/XAEnums');
 	var XAUtil				= require('utils/XAUtils');
 	var XABackgrid			= require('views/common/XABackgrid');
+	var App    				= require('App');
 	var XATableLayout		= require('views/common/XATableLayout');
 	var localization		= require('utils/XALangSupport');
 	var XAGlobals			= require('utils/XAGlobals');
@@ -46,7 +47,8 @@ define(function(require) {'use strict';
 			return {
 				groupList : this.groupList,
 				policyHeaderList : this.policyCollList,
-				showExportJson : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true
+				showExportJson : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true,
+				setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
 			};
 		},
 
@@ -84,7 +86,8 @@ define(function(require) {'use strict';
 			iconSearchInfo      : '[data-id="searchInfo"]',
 			policyLabels		: '[data-id="policyLabels"]',
 			zoneName			: '[data-id="zoneName"]',
-                        selectUserGroup		: '[data-id="btnUserGroup"]'
+            selectUserGroup		: '[data-id="btnUserGroup"]',
+
 		},
 
 		/** ui events hash */
@@ -109,7 +112,7 @@ define(function(require) {'use strict';
 		 */
 		initialize : function(options) {
 			console.log("initialized a UserAccessLayout Layout");
-                        _.extend(this, _.pick(options, 'groupList','userList', 'urlQueryParams'));
+			_.extend(this, _.pick(options, 'groupList','userList', 'urlQueryParams'));
 			this.bindEvents();
 			this.previousSearchUrl = '';
 			this.searchedFlag = false;
@@ -153,6 +156,19 @@ define(function(require) {'use strict';
 		},
 
 		onRender : function() {
+			if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+				var sidebarUiElement = App.rSideBar.currentView.ui;
+				this.ui.policyName = sidebarUiElement.policyName;
+				this.ui.componentType = sidebarUiElement.componentType;
+				this.ui.policyType = sidebarUiElement.policyType;
+				this.ui.policyLabels = sidebarUiElement.policyLabels;
+				this.ui.zoneName = sidebarUiElement.zoneName;
+				this.ui.resourceName = sidebarUiElement.resourceName;
+				this.ui.userGroup = sidebarUiElement.userGroup;
+				this.ui.selectUserGroup = sidebarUiElement.selectUserGroup;
+				this.ui.userName = sidebarUiElement.userName;
+				this.ui.searchBtn = sidebarUiElement.searchBtn;
+			}
 			this.initializePlugins();
                         if( this.urlQueryParams) {
                                 this.urlParam = XAUtil.changeUrlToSearchQuery(decodeURIComponent(this.urlQueryParams));

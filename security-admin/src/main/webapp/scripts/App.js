@@ -38,7 +38,8 @@ define(function(require) {
         rTopProfileBar	: "#r_topProfileBar",
         rBreadcrumbs	: '#r_breadcrumbs',
         rContent		: "#r_content",
-        rFooter			: "#r_footer"
+        rFooter			: "#r_footer",
+        rSideBar        : "#r_sidebar"
 	});
 
 	/* Add initializers here */

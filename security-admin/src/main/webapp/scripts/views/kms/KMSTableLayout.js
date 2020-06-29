@@ -32,7 +32,8 @@ define(function(require){
 	var KmsKey				= require('models/VXKmsKey');
 	var XATableLayout		= require('views/common/XATableLayout');
 	var KmsTablelayoutTmpl 	= require('hbs!tmpl/kms/KmsTableLayout_tmpl');
-        var SessionMgr          = require('mgrs/SessionMgr');
+    var SessionMgr          = require('mgrs/SessionMgr');
+    var App    = require('App');
 
 	var KmsTableLayout = Backbone.Marionette.Layout.extend(
 	/** @lends KmsTableLayout */
@@ -42,7 +43,8 @@ define(function(require){
     	template: KmsTablelayoutTmpl,
     	templateHelpers : function(){
 	    return {
-	        isKeyadmin : SessionMgr.isKeyAdmin() ? true :false
+	        isKeyadmin : SessionMgr.isKeyAdmin() ? true :false,
+	        setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
 	    }
     	},
     	breadCrumbs :[XALinks.get('KmsManage')],
@@ -118,6 +120,9 @@ define(function(require){
 		},
 		/** on render callback */
 		onRender: function() {
+			if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+				this.ui.selectServiceName = App.rSideBar.currentView.ui.selectServiceName;
+			}
 			this.initializePlugins();
 			if(_.isUndefined(this.tab)){
 				this.renderKeyTab();
