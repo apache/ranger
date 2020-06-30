@@ -4710,17 +4710,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (serviceId != null) {
 				loadRangerPolicies(serviceId, processedServices, policyMap, searchFilter);
 			}
-		} else  {
+		} else {
 			xPolList = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
 			if (!CollectionUtils.isEmpty(xPolList)) {
-				if (isSearchQuerybyResource(searchFilter)) {
-					XXPolicy xXPolicy = xPolList.get(0);
-					loadRangerPolicies(xXPolicy.getService(), processedServices, policyMap, searchFilter);
-				} else {
-					for (XXPolicy xXPolicy : xPolList) {
-						if (!processedServices.contains(xXPolicy.getService())) {
-							loadRangerPolicies(xXPolicy.getService(), processedServices, policyMap, searchFilter);
-						}
+				for (XXPolicy xXPolicy : xPolList) {
+					if (!processedServices.contains(xXPolicy.getService())) {
+						loadRangerPolicies(xXPolicy.getService(), processedServices, policyMap, searchFilter);
 					}
 				}
 			}
@@ -4825,8 +4820,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 						policyMap.put(rangerPolicy.getId(), rangerPolicy);
 					}
 				}
-				processedServices.add(serviceId);
 			}
+			processedServices.add(serviceId);
 		} catch (Exception e) {
 		}
 	}
