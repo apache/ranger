@@ -77,8 +77,12 @@ public class RequestUtils {
 		}
 
 		if (request instanceof PutMappingRequest) {
-			indexs.add(((PutMappingRequest) request).getConcreteIndex().getName());
-			return indexs;
+			if (((PutMappingRequest) request).getConcreteIndex() != null) {
+				indexs.add(((PutMappingRequest) request).getConcreteIndex().getName());
+				return indexs;
+			} else {
+				return Arrays.asList(((PutMappingRequest) request).indices());
+			}
 		}
 
 		if (request instanceof SearchRequest) {
