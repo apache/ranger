@@ -181,10 +181,10 @@
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
         <solr.version>7.7.1</solr.version>
-        <spring-ldap-core.version>2.3.2.RELEASE</spring-ldap-core.version>
-        <springframework.security.version>4.2.16.RELEASE</springframework.security.version>
-        <springframework.test.version>4.3.23.RELEASE</springframework.test.version>
-        <springframework.version>4.3.23.RELEASE</springframework.version>
+        <spring-ldap-core.version>2.3.3.RELEASE</spring-ldap-core.version>
+        <springframework.security.version>4.2.17.RELEASE</springframework.security.version>
+        <springframework.test.version>4.3.27.RELEASE</springframework.test.version>
+        <springframework.version>4.3.27.RELEASE</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.0</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
