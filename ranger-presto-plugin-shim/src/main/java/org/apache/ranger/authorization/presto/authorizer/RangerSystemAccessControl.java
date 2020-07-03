@@ -526,6 +526,16 @@ public class RangerSystemAccessControl
     }
   }
 
+  @Override
+  public void checkCanShowColumnsMetadata(SystemSecurityContext systemSecurityContext, CatalogSchemaTableName table){
+    try {
+      activatePluginClassLoader();
+      systemAccessControlImpl.checkCanShowColumnsMetadata(systemSecurityContext, table);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+  }
+
   private void activatePluginClassLoader() {
     if (rangerPluginClassLoader != null) {
       rangerPluginClassLoader.activate();

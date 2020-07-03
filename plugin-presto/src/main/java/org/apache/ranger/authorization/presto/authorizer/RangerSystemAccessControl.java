@@ -639,6 +639,14 @@ public class RangerSystemAccessControl
     }
   }
 
+  @Override
+  public void checkCanShowColumnsMetadata(SystemSecurityContext context, CatalogSchemaTableName table) {
+    if (!hasPermission(createResource(table), context, PrestoAccessType.SELECT)) {
+      LOG.debug("RangerSystemAccessControl.checkCanShowColumnsMetadata(" + table.getSchemaTableName().getTableName() + ") denied");
+      AccessDeniedException.denyShowColumnsMetadata(table.getSchemaTableName().getTableName());
+    }
+  }
+
   /** HELPER FUNCTIONS **/
 
   private RangerPrestoAccessRequest createAccessRequest(RangerPrestoResource resource, SystemSecurityContext context, PrestoAccessType accessType) {
