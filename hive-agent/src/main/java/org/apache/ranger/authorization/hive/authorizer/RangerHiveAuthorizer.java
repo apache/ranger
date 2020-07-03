@@ -2246,7 +2246,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		try {
 			HiveObjectRef msObjRef = AuthorizationUtils.getThriftHiveObjectRef(privObj);
 
-			if (msObjRef.getObjectName() == null) {
+			if (msObjRef.getDbName() == null) {
 				throw new HiveAuthzPluginException("RangerHiveAuthorizer.showPrivileges() only supports SHOW PRIVILEGES for Hive resources and not user level");
 			}
 
@@ -2381,7 +2381,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			if (msObjRef != null) {
 				HivePrivilegeObject hivePrivilegeObject = null;
 
-				if (msObjRef.getObjectName() != null) {
+				if (msObjRef.getDbName() != null) {
 					// when resource is specified in the show grants, acl will be for that resource / user / groups
 					objectType = getPluginPrivilegeObjType(msObjRef.getObjectType());
 					dbName = msObjRef.getDbName();
