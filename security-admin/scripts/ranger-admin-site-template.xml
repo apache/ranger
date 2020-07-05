@@ -117,23 +117,19 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.jpa.jdbc.initialpoolsize</name>
+		<name>ranger.jpa.jdbc.idletimeout</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.jpa.jdbc.maxidletime</name>
+		<name>ranger.jpa.jdbc.connectiontestquery</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.jpa.jdbc.maxstatements</name>
+		<name>ranger.jpa.jdbc.maxlifetime</name>
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.jpa.jdbc.preferredtestquery</name>
-		<value></value>
-	</property>
-	<property>
-		<name>ranger.jpa.jdbc.idleconnectiontestperiod</name>
+		<name>ranger.jpa.jdbc.connectiontimeout</name>
 		<value></value>
 	</property>
 	<property>
