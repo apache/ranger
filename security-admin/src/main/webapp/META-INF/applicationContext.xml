@@ -127,85 +127,70 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		<property name="entityManagerFactory" ref="loggingEntityManagerFactory" />
 	</bean>
 
-	<!-- Datasource and Connection Pool Configuration http://www.mchange.com/projects/c3p0/index.jsp#configuration_properties -->
-	<bean id="defaultDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass">
+	<!-- Datasource and Connection Pool Configuration https://github.com/brettwooldridge/HikariCP -->
+	<bean id="defaultDataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<property name="driverClassName">
 			<value>${ranger.jpa.jdbc.driver}</value>
 		</property>
 		<property name="jdbcUrl">
 			<value>${ranger.jpa.jdbc.url}</value>
 		</property>
-		<property name="user">
+		<property name="username">
 			<value>${ranger.jpa.jdbc.user}</value>
 		</property>
 		<property name="password">
 			<value>${ranger.jpa.jdbc.password}</value>
 		</property>
-		<property name="maxPoolSize">
-			<!-- <value>20</value> -->
+		<property name="maximumPoolSize">
 			<value>${ranger.jpa.jdbc.maxpoolsize}</value>
 		</property>
-		<property name="minPoolSize">
+		<property name="minimumIdle">
 			<value>${ranger.jpa.jdbc.minpoolsize}</value>
 		</property>
-		<property name="initialPoolSize">
-			<value>${ranger.jpa.jdbc.initialpoolsize}</value>
+		<property name="idleTimeout">
+			<value>${ranger.jpa.jdbc.idletimeout}</value>
 		</property>
-		<!-- Seconds a Connection can remain pooled but unused before being discarded.
-		Zero means idle connections never expire. -->
-		<property name="maxIdleTime">
-			<value>${ranger.jpa.jdbc.maxidletime}</value>
+		<property name="connectionTestQuery">
+			<value>${ranger.jpa.jdbc.connectiontestquery}</value>
 		</property>
-		<property name="maxStatements">
-			<value>${ranger.jpa.jdbc.maxstatements}</value>
+		<property name="maxLifetime">
+			<value>${ranger.jpa.jdbc.maxlifetime}</value>
 		</property>
-		<property name="preferredTestQuery">
-			<value>${ranger.jpa.jdbc.preferredtestquery}</value>
-		</property>
-		<property name="idleConnectionTestPeriod">
-			<value>${ranger.jpa.jdbc.idleconnectiontestperiod}</value>
-		</property>
-		<property name="statementCacheNumDeferredCloseThreads">
-			<value>1</value>
+		<property name="connectionTimeout">
+			<value>${ranger.jpa.jdbc.connectiontimeout}</value>
 		</property>
 	</bean>
 
-	<bean id="loggingDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
-		<property name="driverClass">
+	<bean id="loggingDataSource" class="com.zaxxer.hikari.HikariDataSource" destroy-method="close">
+		<property name="driverClassName">
 			<value>${ranger.jpa.jdbc.driver}</value>
 		</property>
 		<property name="jdbcUrl">
 			<value>${ranger.jpa.audit.jdbc.url}</value>
 		</property>
-		<property name="user">
+		<property name="username">
 			<value>${ranger.jpa.jdbc.user}</value>
 		</property>
 		<property name="password">
 			<value>${ranger.jpa.jdbc.password}</value>
 		</property>
-		<property name="maxPoolSize">
-			<!-- <value>20</value> -->
+		<property name="maximumPoolSize">
 			<value>${ranger.jpa.jdbc.maxpoolsize}</value>
 		</property>
-		<property name="minPoolSize">
+		<property name="minimumIdle">
 			<value>${ranger.jpa.jdbc.minpoolsize}</value>
 		</property>
-		<property name="initialPoolSize">
-			<value>${ranger.jpa.jdbc.initialpoolsize}</value>
+		<property name="idleTimeout">
+			<value>${ranger.jpa.jdbc.idletimeout}</value>
 		</property>
-		<!-- Seconds a Connection can remain pooled but unused before being discarded.
-		Zero means idle connections never expire. -->
-		<property name="maxIdleTime">
-			<value>${ranger.jpa.jdbc.maxidletime}</value>
+		<property name="connectionTestQuery">
+			<value>${ranger.jpa.jdbc.connectiontestquery}</value>
 		</property>
-		<property name="maxStatements">
-			<value>${ranger.jpa.jdbc.maxstatements}</value>
+		<property name="maxLifetime">
+			<value>${ranger.jpa.jdbc.maxlifetime}</value>
 		</property>
-		<property name="preferredTestQuery">
-			<value>${ranger.jpa.jdbc.preferredtestquery}</value>
-		</property>
-		<property name="idleConnectionTestPeriod">
-			<value>${ranger.jpa.jdbc.idleconnectiontestperiod}</value>
+		<property name="connectionTimeout">
+			<value>${ranger.jpa.jdbc.connectiontimeout}</value>
 		</property>
 	</bean>
 

@@ -336,40 +336,33 @@
 		<description></description>
 	</property>
 
+	<!-- According to HikariCP's documentation, it recommends allowing HikariCP to act as a fixed size connection pool -->
 	<property>
 		<name>ranger.jpa.jdbc.minpoolsize</name>
-		<value>5</value>
+		<value>40</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>ranger.jpa.jdbc.initialpoolsize</name>
-		<value>5</value>
+		<name>ranger.jpa.jdbc.idletimeout</name>
+		<value>300000</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>ranger.jpa.jdbc.maxidletime</name>
-		<value>300</value>
-		<description></description>
-	</property>
-
-	<property>
-		<name>ranger.jpa.jdbc.maxstatements</name>
-		<value>500</value>
-		<description></description>
-	</property>
-
-	<property>
-		<name>ranger.jpa.jdbc.preferredtestquery</name>
+		<name>ranger.jpa.jdbc.connectiontestquery</name>
 		<value>select 1;</value>
 		<description></description>
 	</property>
 
 	<property>
-		<name>ranger.jpa.jdbc.idleconnectiontestperiod</name>
-		<value>60</value>
-		<description></description>
+		<name>ranger.jpa.jdbc.maxlifetime</name>
+		<value>1800000</value>
+	</property>
+
+	<property>
+		<name>ranger.jpa.jdbc.connectiontimeout</name>
+		<value>30000</value>
 	</property>
 
 	<property>
