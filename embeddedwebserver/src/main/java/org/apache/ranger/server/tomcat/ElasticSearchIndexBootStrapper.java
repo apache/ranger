@@ -25,20 +25,26 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.logging.Logger;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.config.Lookup;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.impl.auth.SPNegoSchemeFactory;
+import org.apache.ranger.authorization.credutils.CredentialsProviderUtil;
+import org.apache.ranger.authorization.credutils.kerberos.KerberosCredentialsProvider;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.indices.CreateIndexRequest;
 import org.elasticsearch.client.indices.CreateIndexResponse;
@@ -124,7 +130,7 @@ public class ElasticSearchIndexBootStrapper extends Thread {
 	}
 
 	private String connectionString() {
-		return String.format("%s://%s@%s:%s/%s", protocol, user, hosts, port, index);
+		return String.format(Locale.ROOT,"User:%s, %s://%s:%s/%s", user, protocol, hosts, port, index);
 	}
 
 	public void run() {
@@ -174,20 +180,9 @@ public class ElasticSearchIndexBootStrapper extends Thread {
 
 	private void createClient() {
 		try {
-			final CredentialsProvider credentialsProvider;
-			if (StringUtils.isNotBlank(user)) {
-				credentialsProvider = new BasicCredentialsProvider();
-				credentialsProvider.setCredentials(AuthScope.ANY, new UsernamePasswordCredentials(user, password));
-			} else {
-				credentialsProvider = null;
-			}
-
-			client = new RestHighLevelClient(RestClient
-					.builder(EmbeddedServerUtil.toArray(hosts, ",").stream().map(x -> new HttpHost(x, port, protocol))
-							.<HttpHost>toArray(i -> new HttpHost[i]))
-					.setHttpClientConfigCallback(clientBuilder -> (credentialsProvider != null)
-							? clientBuilder.setDefaultCredentialsProvider(credentialsProvider)
-							: clientBuilder));
+			RestClientBuilder restClientBuilder =
+					getRestClientBuilder(hosts, protocol, user, password, port);
+			client = new RestHighLevelClient(restClientBuilder);
 		} catch (Throwable t) {
 			lastLoggedAt.updateAndGet(lastLoggedAt -> {
 				long now = System.currentTimeMillis();
@@ -200,6 +195,38 @@ public class ElasticSearchIndexBootStrapper extends Thread {
 				}
 			});
 		}
+	}
+
+	public static RestClientBuilder getRestClientBuilder(String urls, String protocol, String user, String password, int port) {
+		RestClientBuilder restClientBuilder = RestClient.builder(
+				EmbeddedServerUtil.toArray(urls, ",").stream()
+						.map(x -> new HttpHost(x, port, protocol))
+						.<HttpHost>toArray(i -> new HttpHost[i])
+		);
+		if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password)) {
+			if (password.contains("keytab") && new File(password).exists()) {
+				final KerberosCredentialsProvider credentialsProvider =
+						CredentialsProviderUtil.getKerberosCredentials(user, password);
+				Lookup<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
+						.register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory()).build();
+				restClientBuilder.setHttpClientConfigCallback(clientBuilder -> {
+					clientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+					clientBuilder.setDefaultAuthSchemeRegistry(authSchemeRegistry);
+					return clientBuilder;
+				});
+			} else {
+				final CredentialsProvider credentialsProvider =
+						CredentialsProviderUtil.getBasicCredentials(user, password);
+				restClientBuilder.setHttpClientConfigCallback(clientBuilder ->
+						clientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+			}
+		} else {
+			LOG.severe("ElasticSearch Credentials not provided!!");
+			final CredentialsProvider credentialsProvider = null;
+			restClientBuilder.setHttpClientConfigCallback(clientBuilder ->
+					clientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+		}
+		return restClientBuilder;
 	}
 
 	private boolean createIndex() {

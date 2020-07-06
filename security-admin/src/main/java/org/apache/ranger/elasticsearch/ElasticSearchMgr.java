@@ -19,19 +19,33 @@
 
 package org.apache.ranger.elasticsearch;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.client.CredentialsProvider;
-import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.client.config.AuthSchemes;
+import org.apache.http.config.Lookup;
+import org.apache.http.config.RegistryBuilder;
+import org.apache.http.impl.auth.SPNegoSchemeFactory;
 import org.apache.log4j.Logger;
 import org.apache.ranger.audit.destination.ElasticSearchAuditDestination;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.authorization.credutils.CredentialsProviderUtil;
+import org.apache.ranger.authorization.credutils.kerberos.KerberosCredentialsProvider;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.StringUtil;
 import org.elasticsearch.client.RestClient;
+import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.springframework.stereotype.Component;
+
+import javax.security.auth.Subject;
+import javax.security.auth.kerberos.KerberosTicket;
+
+import java.io.File;
+import java.security.PrivilegedActionException;
+import java.util.Date;
+import java.util.Locale;
 
 import static org.apache.ranger.audit.destination.ElasticSearchAuditDestination.*;
 
@@ -44,6 +58,9 @@ public class ElasticSearchMgr {
 
 	private static final Logger logger = Logger.getLogger(ElasticSearchMgr.class);
 	public String index;
+	Subject subject;
+	String user;
+	String password;
 
 	synchronized void connect() {
 		if (client == null) {
@@ -52,12 +69,11 @@ public class ElasticSearchMgr {
 
 					String urls = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_URLS);
 					String protocol = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PROTOCOL, "http");
-					String user = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_USER, "");
-					String password = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PWRD, "");
+					user = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_USER, "");
+					password = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PWRD, "");
 					int port = Integer.parseInt(PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_PORT));
-					this.index = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_INDEX, "audit");
-					String parameterString = String.format("(URLs: %s; Protocol: %s; Port: %s; User: %s)",
-							urls, protocol, port, user);
+					this.index = PropertiesUtil.getProperty(CONFIG_PREFIX + "." + CONFIG_INDEX, "ranger_audits");
+					String parameterString = String.format(Locale.ROOT,"User:%s, %s://%s:%s/%s", user, protocol, urls, port, index);
 					logger.info("Initializing ElasticSearch " + parameterString);
 					if (urls != null) {
 						urls = urls.trim();
@@ -68,23 +84,12 @@ public class ElasticSearchMgr {
 					}
 
 					try {
-
-						final CredentialsProvider credentialsProvider;
-						if(!user.isEmpty()) {
-							credentialsProvider = new BasicCredentialsProvider();
-							logger.info(String.format("Using %s to login to ElasticSearch", user));
-							credentialsProvider.setCredentials(AuthScope.ANY,
-									new UsernamePasswordCredentials(user, password));
-						} else {
-							credentialsProvider = null;
+						if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password) && password.contains("keytab") && new File(password).exists()) {
+							subject = CredentialsProviderUtil.login(user, password);
 						}
-						client = new RestHighLevelClient(
-								RestClient.builder(
-										MiscUtil.toArray(urls, ",").stream()
-												.map(x -> new HttpHost(x, port, protocol))
-												.<HttpHost>toArray(i -> new HttpHost[i])
-								).setHttpClientConfigCallback(clientBuilder ->
-										(credentialsProvider != null) ? clientBuilder.setDefaultCredentialsProvider(credentialsProvider) : clientBuilder));
+						RestClientBuilder restClientBuilder =
+								getRestClientBuilder(urls, protocol, user, password, port);
+						client = new RestHighLevelClient(restClientBuilder);
 					} catch (Throwable t) {
 						logger.fatal("Can't connect to ElasticSearch: " + parameterString, t);
 					}
@@ -93,9 +98,54 @@ public class ElasticSearchMgr {
 		}
 	}
 
+	public static RestClientBuilder getRestClientBuilder(String urls, String protocol, String user, String password, int port) {
+		RestClientBuilder restClientBuilder = RestClient.builder(
+				MiscUtil.toArray(urls, ",").stream()
+						.map(x -> new HttpHost(x, port, protocol))
+						.<HttpHost>toArray(i -> new HttpHost[i])
+		);
+		if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password)) {
+			if (password.contains("keytab") && new File(password).exists()) {
+				final KerberosCredentialsProvider credentialsProvider =
+						CredentialsProviderUtil.getKerberosCredentials(user, password);
+				Lookup<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
+						.register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory()).build();
+				restClientBuilder.setHttpClientConfigCallback(clientBuilder -> {
+					clientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+					clientBuilder.setDefaultAuthSchemeRegistry(authSchemeRegistry);
+					return clientBuilder;
+				});
+			} else {
+				final CredentialsProvider credentialsProvider =
+						CredentialsProviderUtil.getBasicCredentials(user, password);
+				restClientBuilder.setHttpClientConfigCallback(clientBuilder ->
+						clientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+			}
+		} else {
+			logger.error("ElasticSearch Credentials not provided!!");
+			final CredentialsProvider credentialsProvider = null;
+			restClientBuilder.setHttpClientConfigCallback(clientBuilder ->
+					clientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+		}
+		return restClientBuilder;
+	}
+
 	RestHighLevelClient client = null;
 	public RestHighLevelClient getClient() {
 		if(client !=null) {
+			KerberosTicket ticket = CredentialsProviderUtil.getTGT(subject);
+			try {
+				if (new Date().getTime() > ticket.getEndTime().getTime()){
+					client = null;
+					CredentialsProviderUtil.ticketExpireTime80 = 0;
+					connect();
+				} else if (CredentialsProviderUtil.ticketWillExpire(ticket)) {
+					subject = CredentialsProviderUtil.login(user, password);
+				}
+			} catch (PrivilegedActionException e) {
+				logger.error("PrivilegedActionException:", e);
+				throw new RuntimeException(e);
+			}
 			return client;
 		} else {
 			connect();

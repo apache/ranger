@@ -255,6 +255,22 @@
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
           <include>org.apache.ranger:credentialbuilder</include>
+          <include>org.elasticsearch.client:elasticsearch-rest-client</include>
+          <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>
+          <include>org.elasticsearch:elasticsearch-x-content</include>
+          <include>org.elasticsearch:elasticsearch-core</include>
+          <include>org.elasticsearch:elasticsearch</include>
+          <include>org.elasticsearch.plugin:lang-mustache-client</include>
+          <include>org.elasticsearch.plugin:rank-eval-client</include>
+          <include>org.apache.httpcomponents:httpasyncclient</include>
+          <include>org.apache.httpcomponents:httpcore-nio</include>
+          <include>com.fasterxml.jackson.core:jackson-core</include>
+          <include>org.apache.logging.log4j:log4j-core</include>
+          <include>org.apache.logging.log4j:log4j-api</include>
+          <include>org.apache.lucene:lucene-core</include>
+          <include>com.carrotsearch:hppc</include>
+          <include>joda-time:joda-time</include>
+          <include>org.apache.ranger:ranger-plugins-cred</include>
         </includes>
       </binaries>
     </moduleSet>
