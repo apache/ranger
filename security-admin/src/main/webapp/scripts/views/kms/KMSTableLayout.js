@@ -230,8 +230,8 @@ define(function(require){
 						label : localization.tt("lbl.action"),
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue,model) {
-								return '<a href="javascript:void(0);" data-name ="rolloverKey" data-id="'+model.get('name')+'" class="btn btn-mini" title="Rollover"><i class="icon-edit" /></a>\
-										<a href="javascript:void(0);" data-name ="deleteKey" data-id="'+model.get('name')+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash" /></a>';
+								return '<a href="javascript:void(0);" data-name ="rolloverKey" data-id="'+model.get('name')+'" class="btn btn-mini" title="Rollover"><i class="icon-edit"></i></a>\
+										<a href="javascript:void(0);" data-name ="deleteKey" data-id="'+model.get('name')+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash"></i></a>';
 								//You can use rawValue to custom your html, you can change this value using the name parameter.
 							}
 						}),
