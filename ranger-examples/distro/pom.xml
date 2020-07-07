@@ -54,6 +54,7 @@
                                     <descriptors>
                                         <descriptor>src/main/assembly/sampleapp.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-sampleapp.xml</descriptor>
+                                        <descriptor>src/main/assembly/sample-client.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>
@@ -68,7 +69,7 @@
     <dependencies>
         <dependency>
             <groupId>org.apache.ranger</groupId>
-            <artifactId>ranger-sampleapp-plugin</artifactId>
+            <artifactId>sample-client</artifactId>
             <version>${project.version}</version>
         </dependency>
     </dependencies>
