@@ -523,10 +523,11 @@
                 </os>
             </activation>
             <modules>
-        <module>jisql</module>
+                <module>jisql</module>
                 <module>agents-audit</module>
                 <module>agents-common</module>
                 <module>agents-cred</module>
+                <module>intg</module>
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
