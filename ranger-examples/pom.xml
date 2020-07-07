@@ -29,5 +29,6 @@
         <module>sampleapp</module>
         <module>plugin-sampleapp</module>
         <module>distro</module>
+        <module>sample-client</module>
     </modules>
 </project>
