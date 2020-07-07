@@ -284,7 +284,9 @@ define(function(require) {
                 clientIP                        : 'Client IP',
                 eventCount                      : 'Event Count',
                 tags                            : 'Tags',
-                permission                      : 'Permission'
+                permission                      : 'Permission',
+                override                        : 'Override',
+                normal                          : 'Normal'
 
 			},
 			btn : {
