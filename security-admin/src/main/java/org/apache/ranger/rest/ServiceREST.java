@@ -62,8 +62,11 @@ import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
+import org.apache.ranger.biz.PolicyRefUpdater;
 import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.biz.RangerPolicyAdminCache;
+import org.apache.ranger.biz.RangerPolicyAdminCacheForEngineOptions;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -110,8 +113,6 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.biz.RangerPolicyAdminCache;
-import org.apache.ranger.biz.RangerPolicyAdminCacheForEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -3252,6 +3253,52 @@ public class ServiceREST {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceREST.deletePolicyDeltas(" + olderThan + ")");
+		}
+	}
+
+	@DELETE
+	@Path("/server/purgepolicies/{serviceName}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void purgeEmptyPolicies(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.purgeEmptyPolicies(" + serviceName + ")");
+		}
+
+		if (serviceName == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Invalid service name", true);
+		}
+
+		RangerPerfTracer perf = null;
+
+		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.purgeEmptyPolicies(serviceName=" + serviceName + ")");
+			}
+
+			if (svcStore.getServiceByName(serviceName) == null) {
+				throw new Exception("service does not exist - name=" + serviceName);
+			}
+
+			ServicePolicies servicePolicies = svcStore.getServicePolicies(serviceName, -1L);
+			if (servicePolicies != null && CollectionUtils.isNotEmpty(servicePolicies.getPolicies())) {
+				for (RangerPolicy policy : servicePolicies.getPolicies()) {
+					if (CollectionUtils.isEmpty(PolicyRefUpdater.getAllPolicyItems(policy))) {
+						deletePolicy(policy.getId());
+					}
+				}
+			}
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
+			LOG.error("purgeEmptyPolicies(" + serviceName + ") failed", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.purgeEmptyPolicies(" + serviceName + ")");
 		}
 	}
 
