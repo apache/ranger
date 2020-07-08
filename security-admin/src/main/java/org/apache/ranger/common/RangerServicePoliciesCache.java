@@ -132,7 +132,7 @@ public class RangerServicePoliciesCache {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerServicePoliciesCache.getServicePolicies(" + serviceName + ", " + serviceId + ", " + lastKnownVersion + ", " + needsBackwardCompatibility + "): count=" + ((ret == null || ret.getPolicies() == null) ? 0 : ret.getPolicies().size()));
+			LOG.debug("<== RangerServicePoliciesCache.getServicePolicies(" + serviceName + ", " + serviceId + ", " + lastKnownVersion + ", " + needsBackwardCompatibility + "): ret:[" + ret + "]");
 		}
 
 		return ret;
@@ -366,6 +366,9 @@ public class RangerServicePoliciesCache {
 
 			if (!ret) {
 				loadCompleteSetOfPolicies(serviceName, serviceStore);
+				LOG.warn("Policies loaded from db for service:" + serviceName + "] are [" + servicePolicies + "]");
+				LOG.warn("Policies in cache for service:[" + serviceName + "] are [" + policiesFromIncrementalComputation + "]");
+
 			}
 
 			return ret;
@@ -376,17 +379,27 @@ public class RangerServicePoliciesCache {
 
 			if (!ret) {
 				loadCompleteSetOfPolicies(serviceName, serviceStore);
+				LOG.warn("Policies loaded from db for service:" + serviceName + "] are [" + servicePolicies + "]");
+				LOG.warn("Tag Policies in cache for tag-service:[" + tagServiceName + "] are [" + policiesFromIncrementalComputation + "]");
 			}
 
 			return ret;
 		}
 
 		private boolean checkCacheSanity(String serviceName, ServiceStore serviceStore, List<RangerPolicy> policiesFromIncrementalComputation) {
-			return serviceStore.getPoliciesCount(serviceName) == (CollectionUtils.isEmpty(policiesFromIncrementalComputation) ? 0 : policiesFromIncrementalComputation.size());
+			final boolean ret;
+			long dbPoliciesCount = serviceStore.getPoliciesCount(serviceName);
+			long cachedPoliciesCount = (CollectionUtils.isEmpty(policiesFromIncrementalComputation) ? 0 : policiesFromIncrementalComputation.size());
+			ret = dbPoliciesCount == cachedPoliciesCount;
+			if (!ret) {
+				LOG.warn("For service:[" + serviceName + "]: dbPoliciesCount:[" + dbPoliciesCount + "], cachedPoliciesCount:[" + cachedPoliciesCount + "]");
+			}
+			return ret;
+
 		}
 
 		private void loadCompleteSetOfPolicies(String serviceName, ServiceStore serviceStore) {
-			LOG.warn("Something went wrong doing incremental policies!! Loading all policies!!");
+			LOG.warn("Something went wrong doing incremental policies for service:[" + serviceName + "]!! Loading all policies!!");
 			try {
 				servicePolicies = serviceStore.getServicePolicies(serviceName, -1L);
 				pruneUnusedAttributes();
