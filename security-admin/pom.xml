@@ -388,11 +388,6 @@
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
-            <artifactId>libfb303</artifactId>
-            <version>${libfb303.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.thrift</groupId>
             <artifactId>libthrift</artifactId>
             <version>${libthrift.version}</version>
         </dependency>

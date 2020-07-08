@@ -79,7 +79,6 @@
           <include>org.apache.hive:hive-exec:jar:${hive.version}</include>
           <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
           <include>org.apache.hive:hive-metastore:jar:${hive.version}</include>
-          <include>org.apache.thrift:libfb303:jar:${libfb303.version}</include>
           <include>org.apache.thrift:libthrift:jar:${libthrift.version}</include>
         </includes>
       </binaries>
