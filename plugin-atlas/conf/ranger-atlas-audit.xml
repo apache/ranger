@@ -44,18 +44,6 @@
 		<value>NONE</value>
 	</property>
 
-	<!-- ElasticSearch audit provider configuration -->
-	<property>
-		<name>xasecure.audit.destination.elasticsearch</name>
-		<value>false</value>
-	</property>
-
-	<property>
-		<name>xasecure.audit.destination.elasticsearch.urls</name>
-		<value>NONE</value>
-	</property>
-
-
 	<!-- HDFS audit provider configuration -->
 	<property>
 		<name>xasecure.audit.destination.hdfs</name>

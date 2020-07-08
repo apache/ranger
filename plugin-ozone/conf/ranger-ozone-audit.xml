@@ -243,10 +243,6 @@
 		<value>false</value>
 	</property>
 	<property>
-		<name>xasecure.audit.elasticsearch.is.enabled</name>
-		<value>false</value>
-	</property>
-	<property>
 		<name>xasecure.audit.solr.async.max.queue.size</name>
 		<value>1</value>
 	</property>
