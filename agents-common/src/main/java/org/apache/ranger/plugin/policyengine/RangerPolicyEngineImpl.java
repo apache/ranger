@@ -457,12 +457,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				policyRepository = policyEngine.getRepositoryForZone(zoneName);
 
 				ret = evaluatePoliciesNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
+				ret.setZoneName(zoneName);
 
 				if (ret.getIsAllowed()) {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Zone:[" + zoneName + "] allowed access. Completed processing other zones");
 					}
-					ret.setZoneName(zoneName);
 					break;
 				}
 			}
