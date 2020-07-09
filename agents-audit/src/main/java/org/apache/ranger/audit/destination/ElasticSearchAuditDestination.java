@@ -129,7 +129,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                     AuthzAuditEvent authzEvent = (AuthzAuditEvent) event;
                     String id = authzEvent.getEventId();
                     Map<String, Object> doc = toDoc(authzEvent);
-                    bulkRequest.add(new IndexRequest(index).id(id).source(doc).type(""));
+                    bulkRequest.add(new IndexRequest(index).id(id).source(doc));
                 }
             } catch (Exception ex) {
                 addFailedCount(eventList.size());
@@ -209,7 +209,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                         .map(x -> new HttpHost(x, port, protocol))
                         .<HttpHost>toArray(i -> new HttpHost[i])
         );
-        if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password)) {
+        if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password)) {
             if (password.contains("keytab") && new File(password).exists()) {
                 final KerberosCredentialsProvider credentialsProvider =
                         CredentialsProviderUtil.getKerberosCredentials(user, password);
@@ -237,7 +237,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
 
     private RestHighLevelClient newClient() {
         try {
-            if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password) && password.contains("keytab") && new File(password).exists()) {
+            if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password) && password.contains("keytab") && new File(password).exists()) {
                 subject = CredentialsProviderUtil.login(user, password);
             }
             RestClientBuilder restClientBuilder =
@@ -280,7 +280,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
         if (urls != null) {
             urls = urls.trim();
         }
-        if (urls != null && urls.equalsIgnoreCase("NONE")) {
+        if ("NONE".equalsIgnoreCase(urls)) {
             urls = null;
         }
         return urls;
@@ -288,7 +288,9 @@ public class ElasticSearchAuditDestination extends AuditDestination {
 
     private String getStringProperty(Properties props, String propName, String defaultValue) {
         String value = MiscUtil.getStringProperty(props, propName);
-        if (null == value) return defaultValue;
+        if (null == value) {
+            return defaultValue;
+        }
         return value;
     }
 

@@ -203,7 +203,7 @@ public class ElasticSearchIndexBootStrapper extends Thread {
 						.map(x -> new HttpHost(x, port, protocol))
 						.<HttpHost>toArray(i -> new HttpHost[i])
 		);
-		if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password)) {
+		if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password)) {
 			if (password.contains("keytab") && new File(password).exists()) {
 				final KerberosCredentialsProvider credentialsProvider =
 						CredentialsProviderUtil.getKerberosCredentials(user, password);

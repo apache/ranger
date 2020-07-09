@@ -33,7 +33,6 @@ import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.credutils.CredentialsProviderUtil;
 import org.apache.ranger.authorization.credutils.kerberos.KerberosCredentialsProvider;
 import org.apache.ranger.common.PropertiesUtil;
-import org.apache.ranger.common.StringUtil;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
@@ -78,13 +77,13 @@ public class ElasticSearchMgr {
 					if (urls != null) {
 						urls = urls.trim();
 					}
-					if (!new StringUtil().isEmpty(urls) && urls.equalsIgnoreCase("NONE")) {
+					if (StringUtils.isBlank(urls) || "NONE".equalsIgnoreCase(urls.trim())) {
 						logger.info(String.format("Clearing URI config value: %s", urls));
 						urls = null;
 					}
 
 					try {
-						if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password) && password.contains("keytab") && new File(password).exists()) {
+						if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password) && password.contains("keytab") && new File(password).exists()) {
 							subject = CredentialsProviderUtil.login(user, password);
 						}
 						RestClientBuilder restClientBuilder =
@@ -104,7 +103,7 @@ public class ElasticSearchMgr {
 						.map(x -> new HttpHost(x, port, protocol))
 						.<HttpHost>toArray(i -> new HttpHost[i])
 		);
-		if (StringUtils.isNotEmpty(user) && StringUtils.isNotEmpty(password)) {
+		if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password)) {
 			if (password.contains("keytab") && new File(password).exists()) {
 				final KerberosCredentialsProvider credentialsProvider =
 						CredentialsProviderUtil.getKerberosCredentials(user, password);
