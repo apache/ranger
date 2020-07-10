@@ -115,7 +115,7 @@ public class RoleRefUpdater {
 				XXUser xUser = daoMgr.getXXUser().findByUserName(roleUser);
 
 				if (xUser == null) {
-					if (createNonExistUserGroup) {
+					if (createNonExistUserGroup && xaBizUtil.checkAdminAccess()) {
 						LOG.warn("User specified in role does not exist in ranger admin, creating new user, User = "
 								+ roleUser);
 						// Schedule another transaction and let this transaction complete (and commit) successfully!
@@ -158,7 +158,7 @@ public class RoleRefUpdater {
 				XXGroup xGroup = daoMgr.getXXGroup().findByGroupName(roleGroup);
 
 				if (xGroup == null) {
-					if (createNonExistUserGroup) {
+					if (createNonExistUserGroup && xaBizUtil.checkAdminAccess()) {
 						LOG.warn("Group specified in role does not exist in ranger admin, creating new group, Group = "
 								+ roleGroup);
 						VXGroup vxGroupNew = new VXGroup();

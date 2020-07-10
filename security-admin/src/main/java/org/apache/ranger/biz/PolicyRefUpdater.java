@@ -23,10 +23,13 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
+
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
@@ -59,6 +62,7 @@ import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXGroup;
+import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -95,6 +99,9 @@ public class PolicyRefUpdater {
 
 	@Autowired
 	RangerTransactionService transactionService;
+
+	@Autowired
+	RESTErrorUtil restErrorUtil;
 
 	public void createNewPolMappingForRefTable(RangerPolicy policy, XXPolicy xPolicy, XXServiceDef xServiceDef) throws Exception {
 		if(policy == null) {
@@ -205,7 +212,14 @@ public class PolicyRefUpdater {
 				groupPolicyAssociation(xPolicy,groupId,group );
 			}
 			else {
-				createGroupForPolicy(group, xPolicy);
+				if(rangerBizUtil.checkAdminAccess()) {
+					createGroupForPolicy(group, xPolicy);
+				}else {
+					VXResponse gjResponse = new VXResponse();
+					gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+					gjResponse.setMsgDesc("Operation denied. Group name: "+group + " specified in policy does not exist in ranger admin.");
+					throw restErrorUtil.generateRESTException(gjResponse);
+				}
 			}
 		}
 
@@ -221,7 +235,14 @@ public class PolicyRefUpdater {
 				userPolicyAssociation(xPolicy,userId, user );
 			}
 			else {
-				createUserForPolicy(user,xPolicy);
+				if(rangerBizUtil.checkAdminAccess()) {
+					createUserForPolicy(user,xPolicy);
+				}else {
+					VXResponse gjResponse = new VXResponse();
+					gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+					gjResponse.setMsgDesc("Operation denied. User name: "+user + " specified in policy does not exist in ranger admin.");
+					throw restErrorUtil.generateRESTException(gjResponse);
+				}
 			}
 
 		}
@@ -325,12 +346,17 @@ public class PolicyRefUpdater {
 	private Long createRoleForPolicy(String role) throws Exception {
 		LOG.warn("Role specified in policy does not exist in ranger admin, creating new role = " + role);
 
-		RangerRole rRole = new RangerRole(role, null, null, null, null);
-
-		xUserMgr.checkAdminAccess();
-
-		RangerRole createdRole= roleStore.createRole(rRole, false);
-		return createdRole.getId();
+		if (rangerBizUtil.checkAdminAccess()) {
+			RangerRole rRole = new RangerRole(role, null, null, null, null);
+			RangerRole createdRole = roleStore.createRole(rRole, false);
+			return createdRole.getId();
+		} else {
+			VXResponse gjResponse = new VXResponse();
+			gjResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+			gjResponse.setMsgDesc(
+					"Operation denied. Role name: " + role + " specified in policy does not exist in ranger admin.");
+			throw restErrorUtil.generateRESTException(gjResponse);
+		}
 	}
 
 

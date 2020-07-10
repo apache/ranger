@@ -1533,4 +1533,16 @@ public class RangerBizUtil {
 		}
 	}
 
+	public boolean checkAdminAccess() {
+		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+		if (currentUserSession != null) {
+			return currentUserSession.isUserAdmin();
+		} else {
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setMsgDesc("Bad Credentials");
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
+	}
+
 }
