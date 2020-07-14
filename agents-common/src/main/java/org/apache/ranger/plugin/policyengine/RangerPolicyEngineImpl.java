@@ -468,7 +468,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 		}
 
-		if (request.isAccessTypeAny() && CollectionUtils.isEmpty(zoneNames) && ret != null && !ret.getIsAllowed() && MapUtils.isNotEmpty(policyEngine.getZonePolicyRepositories())) {
+		if (request.isAccessTypeAny() && (request.getResource() == null || CollectionUtils.isEmpty(request.getResource().getKeys())) && ret != null && !ret.getIsAllowed() && MapUtils.isNotEmpty(policyEngine.getZonePolicyRepositories())) {
 			// resource is empty and access is ANY
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Process all security-zones");
