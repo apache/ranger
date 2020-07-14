@@ -1748,7 +1748,7 @@ public class ServiceREST {
 				} else {
 					existingPolicy = null;
 				}
-				boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
+
 				if (existingPolicy == null) {
 					if (StringUtils.isNotEmpty(policy.getName())) {
 						XXPolicy dbPolicy = daoManager.getXXPolicy().findByPolicyName(policy.getName());
@@ -1759,10 +1759,26 @@ public class ServiceREST {
 
 					ret = createPolicy(policy, null);
 				} else {
+					boolean mergeIfExists = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)));
+
+					if (!mergeIfExists) {
+						boolean updateIfExists = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)));
+						if (updateIfExists) {
+							// Called with explicit intent of updating an existing policy
+							mergeIfExists = false;
+						} else {
+							// Invoked through REST API. Merge with existing policy unless 'mergeIfExists' is explicitly set to false in HttpServletRequest
+							mergeIfExists = !"false".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)));
+						}
+					}
+
 					if(mergeIfExists) {
 						ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
+						policy = existingPolicy;
+					} else {
+						policy.setId(existingPolicy.getId());
 					}
-					ret = updatePolicy(existingPolicy);
+					ret = updatePolicy(policy);
 				}
 			} catch(WebApplicationException excp) {
 				throw excp;
