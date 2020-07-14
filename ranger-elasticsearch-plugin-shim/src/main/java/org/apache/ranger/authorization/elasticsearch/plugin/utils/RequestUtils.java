@@ -30,6 +30,9 @@ import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.mapping.put.PutMappingRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
+import org.elasticsearch.action.admin.indices.close.CloseIndexRequest;
+import org.elasticsearch.action.admin.indices.cache.clear.ClearIndicesCacheRequest;
+import org.elasticsearch.action.admin.indices.settings.put.UpdateSettingsRequest;
 import org.elasticsearch.action.admin.indices.stats.IndicesStatsRequest;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.get.MultiGetRequest;
@@ -97,6 +100,21 @@ public class RequestUtils {
 
 		if (request instanceof OpenIndexRequest) {
 			indexs = Arrays.asList(((OpenIndexRequest) request).indices());
+			return indexs.size() == 0? Arrays.asList("*") : indexs;
+		}
+
+		if (request instanceof CloseIndexRequest) {
+			indexs = Arrays.asList(((CloseIndexRequest) request).indices());
+			return indexs.size() == 0? Arrays.asList("*") : indexs;
+		}
+
+		if (request instanceof ClearIndicesCacheRequest) {
+			indexs = Arrays.asList(((ClearIndicesCacheRequest) request).indices());
+			return indexs.size() == 0? Arrays.asList("*") : indexs;
+		}
+
+		if (request instanceof UpdateSettingsRequest) {
+			indexs = Arrays.asList(((UpdateSettingsRequest) request).indices());
 			return indexs.size() == 0? Arrays.asList("*") : indexs;
 		}
 
