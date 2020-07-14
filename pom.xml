@@ -291,6 +291,7 @@
             <id>ranger-examples</id>
             <modules>
                 <module>agents-common</module>
+                <module>agents-cred</module>
                 <module>intg</module>
                 <module>ranger-examples</module>
             </modules>

@@ -26,16 +26,21 @@ import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerRESTClient;
+import org.apache.hadoop.security.SecureClientLogin;
 
+import javax.security.auth.Subject;
+import java.security.PrivilegedAction;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
 
 public class RangerClient {
     private static final Logger LOG = LoggerFactory.getLogger(RangerClient.class);
+    private static final String AUTH_KERBEROS    = "kerberos";
 
     // QueryParams
     private static final String PARAM_DAYS                          = "days";
@@ -133,13 +138,33 @@ public class RangerClient {
 
 
     private final RangerRESTClient restClient;
+    private boolean isSecureMode = false;
+    private Subject sub = null;
+
+    public RangerClient(String configFile) {
+        RangerClientConfig cfg = new RangerClientConfig(configFile);
+        restClient             = new RangerRESTClient(cfg.getURL(), cfg.getSslConfigFile(), new Configuration());
+
+        String authenticationType = cfg.getAuthenticationType();
+        String principal          = cfg.getPrincipal();
+        String keytab             = cfg.getKeytab();
+
+        if (AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+            isSecureMode = true;
+            try {
+                sub = SecureClientLogin.loginUserFromKeytab(principal,keytab);
+            } catch (IOException e) {
+                LOG.error(e.getMessage());
+            }
+        } else LOG.error("Authentication credentials missing/invalid");
+    }
 
 
     public RangerClient(String hostname, String username, String password) {
         restClient = new RangerRESTClient(hostname, "", new Configuration());
 
         restClient.setBasicAuthInfo(username, password);
-    }
+   }
 
     public RangerClient(RangerRESTClient restClient) {
         this.restClient = restClient;
@@ -380,6 +405,36 @@ public class RangerClient {
         callAPI(DELETE_POLICY_DELTAS, queryParams, null, null);
     }
 
+    private ClientResponse invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {
+        final ClientResponse clientResponse;
+        try {
+            switch (api.getMethod()) {
+                case HttpMethod.POST:
+                    clientResponse = restClient.post(api.getPath(), params, request);
+                    break;
+
+                case HttpMethod.PUT:
+                    clientResponse = restClient.put(api.getPath(), params, request);
+                    break;
+
+                case HttpMethod.GET:
+                    clientResponse = restClient.get(api.getPath(), params);
+                    break;
+
+                case HttpMethod.DELETE:
+                    clientResponse = restClient.delete(api.getPath(), params);
+                    break;
+
+                default:
+                    LOG.error(api.getMethod() + ": unsupported HTTP method");
+
+                    clientResponse = null;
+            }
+        } catch (Exception excp) {
+            throw new RangerServiceException(excp);
+        }
+        return clientResponse;
+    }
 
     private <T> T callAPI(API api, Map<String, String> params, Object request, Class<T> responseType) throws RangerServiceException {
         T ret = null;
@@ -397,32 +452,16 @@ public class RangerClient {
 
         final ClientResponse clientResponse;
 
-        try {
-            switch (api.getMethod()) {
-                case HttpMethod.POST:
-                    clientResponse = restClient.post(api.getPath(), params, request);
-                break;
-
-                case HttpMethod.PUT:
-                    clientResponse = restClient.put(api.getPath(), params, request);
-                break;
-
-                case HttpMethod.GET:
-                    clientResponse = restClient.get(api.getPath(), params);
-                break;
-
-                case HttpMethod.DELETE:
-                    clientResponse = restClient.delete(api.getPath(), params);
-                break;
-
-                default:
-                    LOG.error(api.getMethod() + ": unsupported HTTP method");
-
-                    clientResponse = null;
-            }
-        } catch (Exception excp) {
-            throw new RangerServiceException(excp);
-        }
+        if (isSecureMode) {
+            clientResponse = Subject.doAs(sub, (PrivilegedAction<ClientResponse>) () -> {
+                try {
+                    return invokeREST(api,params,request);
+                } catch (RangerServiceException e) {
+                    LOG.error(e.getMessage());
+                }
+                return null;
+            });
+        } else clientResponse = invokeREST(api,params,request);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("method={}, path={}, contentType={}, accept={}, httpStatus={}", api.getMethod(), api.getNormalizedPath(), api.getConsumes(), api.getProduces(), (clientResponse != null ? clientResponse.getStatus() : "null"));
