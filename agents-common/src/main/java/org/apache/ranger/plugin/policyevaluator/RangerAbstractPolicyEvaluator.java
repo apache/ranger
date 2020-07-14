@@ -26,7 +26,9 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
@@ -35,13 +37,16 @@ import java.util.Map;
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyEvaluator.class);
 
-	private RangerPolicy     policy;
-	private RangerServiceDef serviceDef;
-	private Integer          leafResourceLevel;
-	private int              evalOrder;
-	protected long           usageCount;
-	protected boolean        usageCountMutable = true;
+	private   RangerPolicy        policy;
+	private   RangerServiceDef    serviceDef;
+	private   RangerResourceDef   leafResourceDef;
+	private   int                 evalOrder;
+	protected RangerPluginContext pluginContext = null;
 
+
+	public void setPluginContext(RangerPluginContext pluginContext) { this.pluginContext = pluginContext; }
+
+	public RangerPluginContext getPluginContext() { return pluginContext; }
 
 	@Override
 	public void init(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
@@ -49,9 +54,9 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			LOG.debug("==> RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
 		}
 
-		this.policy            = policy;
-		this.serviceDef        = serviceDef;
-		this.leafResourceLevel = ServiceDefUtil.getLeafResourceLevel(serviceDef, getPolicyResource());
+		this.policy          = policy;
+		this.serviceDef      = serviceDef;
+		this.leafResourceDef = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
@@ -84,8 +89,8 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
-	public Integer getLeafResourceLevel() {
-		return leafResourceLevel;
+	public boolean isAncestorOf(RangerResourceDef resourceDef) {
+		return ServiceDefUtil.isAncestorOf(serviceDef, leafResourceDef, resourceDef);
 	}
 
 	public boolean hasAllow() {
@@ -101,11 +106,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
-	public long getUsageCount() {
-		return usageCount;
-	}
-
-	@Override
 	public int getEvalOrder() {
 		return evalOrder;
 	}
@@ -116,22 +116,6 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 	public void setEvalOrder(int evalOrder) {
 		this.evalOrder = evalOrder;
-	}
-
-	@Override
-	public void incrementUsageCount(int number) {
-		if (usageCountMutable) usageCount += number;
-	}
-
-	@Override
-	public void setUsageCountImmutable() {
-		this.usageCountMutable = false;
-	}
-
-	@Override
-	public void resetUsageCount() {
-		this.usageCount = 0;
-		this.usageCountMutable = true;
 	}
 
 	@Override
@@ -149,8 +133,11 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	public StringBuilder toString(StringBuilder sb) {
 		sb.append("RangerAbstractPolicyEvaluator={");
 
-		sb.append("policy={").append(policy).append("} ");
-		sb.append("serviceDef={").append(serviceDef).append("} ");
+		sb.append("policy={");
+		if (policy != null) {
+			policy.toString(sb);
+		}
+		sb.append("} ");
 
 		sb.append("}");
 

@@ -631,7 +631,14 @@ define(function(require) {
 				status : error.status
 			}));
 		} else if (error.status == 419) {
-			window.location = 'login.jsp?sessionTimeout=true';
+			if(!_.isNull(error.getResponseHeader("X-Rngr-Redirect-Url"))) {
+				XAUtils.notifyError('error', 'Session Timeout')
+				setTimeout( function(){
+					window.location = error.getResponseHeader("X-Rngr-Redirect-Url");
+				}, 4000);
+			} else {
+				window.location = 'login.jsp?sessionTimeout=true';
+			}
 		}
 	};
 	XAUtils.select2Focus = function(event) {
@@ -763,29 +770,38 @@ define(function(require) {
 			pluginAttr) {
 		var visualSearch, that = this;
 		var supportMultipleItems = pluginAttr.supportMultipleItems || false;
-		var multipleFacet = serverAttrName.filter(function(elem) { 
+                var multipleFacet = serverAttrName.filter(function(elem) {
 			return elem['addMultiple'];
 		}).map(function(elem) {
 			return elem.text;
 		});
 		var search = function(searchCollection, collection) {
-			var params = {};
+                        var params = {}, urlParams = {};
 			if($('.popover')){
 					$('.popover').remove();
 			}
 			searchCollection.each(function(m) {
-				var serverParamName = _.findWhere(serverAttrName, {
-					text : m.attributes.category
-				});
-				var extraParam = {};
-				if (_.has(serverParamName, 'multiple')
-						&& serverParamName.multiple) {
-					extraParam[serverParamName.label] = XAUtils
-							.enumLabelToValue(serverParamName.optionsArr, m
-									.get('value'));
-					;
-					$.extend(params, extraParam);
-				} else {
+                //For url params
+                if(_.has(urlParams, m.get('category'))) {
+                        var oldValue = urlParams[m.get('category')], newValue = m.get('value');
+                        if (Array.isArray(oldValue)) {
+                                // if it's a list, append to the end
+                                oldValue.push(newValue);
+                        } else {
+                                // convert to a list
+                                urlParams[m.get('category')] = [oldValue, newValue];
+                        }
+                } else {
+                        urlParams[m.get('category')] = m.get('value')
+                }
+                var serverParamName = _.findWhere(serverAttrName, {
+                        text : m.attributes.category
+                });
+                var extraParam = {};
+                if (serverParamName && _.has(serverParamName, 'multiple') && serverParamName.multiple) {
+                        extraParam[serverParamName.label] = XAUtils.enumLabelToValue(serverParamName.optionsArr, m.get('value'));
+                        $.extend(params, extraParam);
+                } else {
 					if (!_.isUndefined(serverParamName)) {
 						var oldValue = params[serverParamName.label];
 						var newValue = m.get('value');
@@ -806,6 +822,31 @@ define(function(require) {
 			});
 			collection.queryParams = $.extend(collection.queryParams, params);
 			collection.state.currentPage = collection.state.firstPage;
+            //Add urlLabel to URL
+            var urlLabelParam = {};
+            _.map(urlParams, function(attr, key) {
+                _.filter(serverAttrName, function(val) {
+                    if(val.text === key) {
+                        return urlLabelParam[val.urlLabel] = attr
+                    }
+                })
+            })
+
+            if(!_.contains(["vXUsers","vXGroups","roles","vXModuleDef"], collection.modelAttrName)) {
+                //set sortBy value to url
+                if(!_.isUndefined(collection.queryParams) && collection.queryParams.sortBy && !_.isNull(collection.queryParams.sortBy)) {
+                    var sortparams = _.pick(collection.queryParams, 'sortBy');
+                    collection.state.order == 1 ? sortparams['sortType'] = "descending" : sortparams['sortType'] = "ascending";
+                    urlLabelParam = _.extend(urlLabelParam, sortparams)
+                }
+                //set sortKey value to url
+                if(!_.isUndefined(collection.state) && collection.state.sortKey && !_.isNull(collection.state.sortKey) && !_.contains(urlLabelParam, 'sortBy')) {
+                    var sortparams = _.pick(collection.state, 'sortKey');
+                    collection.state.order == 1 ? sortparams['sortType'] = "descending" : sortparams['sortType'] = "ascending";
+                    urlLabelParam = _.extend(urlLabelParam, sortparams)
+                }
+            }
+            XAUtils.changeParamToUrlFragment(urlLabelParam, collection.modelName);
 			collection.fetch({
 				reset : true,
 				cache : false,
@@ -1634,10 +1675,16 @@ define(function(require) {
                 url: searchUrl,
                 dataType: 'json',
                 data: function(term, page) {
-                    return {
-                        name: term,
-                        isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value,
-                    };
+                    if($select === 'roles') {
+                        return {
+                            roleNamePartial: term
+                        }
+                    } else {
+                        return {
+                            name: term,
+                            isVisible : XAEnums.VisibilityStatus.STATUS_VISIBLE.value,
+                        }
+                    }
                 },
                 results: function(data, page) {
                     var results = [],
@@ -1716,16 +1763,33 @@ define(function(require) {
     }
 
     //remove sort caret on grids
-    XAUtils.backgirdSort = function(col){
+    XAUtils.backgridSort = function(col){
+        if(!_.isUndefined(col.queryParams) && col.queryParams.sortBy && !_.isNull(col.queryParams.sortBy)) {
+                var sortparams = _.pick(col.queryParams, 'sortBy');
+            col.state.order == 1 ? sortparams['sortType'] = "descending" : sortparams['sortType'] = "ascending";
+            XAUtils.changeParamToUrlFragment(sortparams);
+        }
         col.on('backgrid:sort', function(model) {
             // No ids so identify model with CID
-            var cid = model.cid;
+            var cid = model.cid, urlObj = {};
             var filtered = model.collection.filter(function(model) {
                 return model.cid !== cid;
             });
             _.each(filtered, function(model) {
                model.set('direction', null);
             });
+            if(Backbone.history.fragment.indexOf("?") !== -1) {
+                var urlFragment = Backbone.history.fragment.substring(Backbone.history.fragment.indexOf("?") + 1);
+                urlObj = XAUtils.changeUrlToSearchQuery(decodeURIComponent(urlFragment));
+            }
+            urlObj['sortBy'] = model.get('name');
+            if(_.isNull(model.get('direction'))) {
+                delete urlObj.sortType;
+                delete urlObj.sortBy;
+            } else {
+                urlObj['sortType'] = model.get('direction');
+            }
+            XAUtils.changeParamToUrlFragment(urlObj);
         });
     }
 
@@ -1737,6 +1801,98 @@ define(function(require) {
             field.focus();
         });
     };
+
+    //Get service details By Service name
+    XAUtils.getServiceByName = function(name) {
+        return "service/plugins/services/name/" + name
+    };
+
+    //Add visual search query parameter to URL
+    XAUtils.changeParamToUrlFragment = function(obj, modelName) {
+	var App = require('App');
+        var baseUrlFregment = Backbone.history.fragment.split('?')[0],
+        str = [];
+        for (var p in obj) {
+            if (obj.hasOwnProperty(p)) {
+                if(_.isArray(obj[p])) {
+                    _.each(obj[p], function(val) {
+                        str.push(encodeURIComponent(p) + "=" + encodeURIComponent(val));
+                    })
+                } else {
+                    str.push(encodeURIComponent(p) + "=" + encodeURIComponent(obj[p]));
+                }
+            }
+        }
+        if(App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName) && !obj.hasOwnProperty("securityZone") &&
+            modelName && (modelName === "RangerServiceDef" || modelName === "RangerPolicy")) {
+		str.push(encodeURIComponent("securityZone")+"="+ encodeURIComponent(App.vZone.vZoneName));
+        }
+        if( _.isEmpty(str)) {
+            Backbone.history.navigate(baseUrlFregment , false);
+        } else {
+            Backbone.history.navigate(baseUrlFregment+"?"+str.join("&") , false);
+        }
+    }
+
+    //convert URL to object params
+    XAUtils.changeUrlToSearchQuery = function(query) {
+        var query_string = {};
+        var vars = query.split("&");
+        for (var i=0;i<vars.length;i++) {
+            var pair = vars[i].split("=");
+            pair[0] = decodeURIComponent(pair[0]);
+            pair[1] = decodeURIComponent(pair[1]);
+            // If first entry with this name
+            if (typeof query_string[pair[0]] === "undefined") {
+                query_string[pair[0]] = pair[1];
+                // If second entry with this name
+            } else if (typeof query_string[pair[0]] === "string") {
+                var arr = [ query_string[pair[0]], pair[1] ];
+                query_string[pair[0]] = arr;
+                // If third or later entry with this name
+            } else {
+                query_string[pair[0]].push(pair[1]);
+            }
+        }
+        return query_string;
+    }
+
+    //Return key from serverAttrName for vsSearch
+    XAUtils.filterKeyForVSQuery = function(list, key) {
+        var value = _.filter(list, function(m) {
+            return m.urlLabel === key
+        })
+        if(_.isEmpty(value) || _.isUndefined(value)) {
+            value = _.filter(list, function(m) {
+                return m.text === key
+            })
+        }
+       return value[0].text
+    }
+
+    //convert string to Camel Case
+    XAUtils.stringToCamelCase = function(str) {
+        return str.replace(/(?:^\w|[A-Z]|\b\w)/g, function(word, index) {
+            return index == 0 ? word.toLowerCase() : word.toUpperCase();
+        }).replace(/\s+/g, '');
+    }
+
+    //Set backgrid table sorting direction
+    XAUtils.backgridSortType = function(collection, column) {
+        _.filter(column, function(val, key){
+            if(key == collection.queryParams.sortBy) {
+                val['direction'] =  collection.state.order == 1 ? "descending" : "ascending"
+            }
+        })
+    }
+
+    //Set default sort by and sort order in collection
+    XAUtils.setSorting = function(collectin, sortParams) {
+        _.extend(collectin.queryParams,{ 'sortBy'  :  sortParams.sortBy });
+        if(sortParams.sortType) {
+            sortParams.sortType == "ascending" ? collectin.setSorting(sortParams.sortBy,-1) : collectin.setSorting(sortParams.sortBy,1);
+        }
+    }
 
 	return XAUtils;
 });

@@ -22,13 +22,13 @@ package org.apache.ranger.plugin.audit;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 
-/**
- * This class should be generated per request and flushed at the end of the
- * request
- */
 public class RangerMultiResourceAuditHandler extends RangerDefaultAuditHandler {
+	private static final Log LOG = LogFactory.getLog(RangerMultiResourceAuditHandler.class);
+
 	Collection<AuthzAuditEvent> auditEvents = new ArrayList<>();
 
 	public RangerMultiResourceAuditHandler() {
@@ -64,7 +64,10 @@ public class RangerMultiResourceAuditHandler extends RangerDefaultAuditHandler {
 				super.logAuthzAudit(auditEvent);
 			}
 		} catch (Throwable t) {
-
+			LOG.error("Error occured while writing audit log... ", t);
+		} finally {
+			// reset auditEvents once audits are logged
+			auditEvents = new ArrayList<>();
 		}
 	}
 }

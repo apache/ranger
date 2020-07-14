@@ -31,7 +31,7 @@
 		<link rel="shortcut icon" href="images/favicon.ico">
 		<link href="styles/bootstrap.min.css" media="all" rel="stylesheet" type="text/css" id="bootstrap-css">
 		<link href="styles/xa.css" media="all" rel="stylesheet" type="text/css" >
-                <script src="libs/bower/jquery/js/jquery-3.4.1.js" ></script>
+                <script src="libs/bower/jquery/js/jquery-3.5.1.js" ></script>
 		
 		<script src="scripts/prelogin/XAPrelogin.js" ></script>
 
@@ -56,12 +56,16 @@
 	<body class="login" style="">
 		<%
 			response.setHeader("X-Frame-Options", "DENY");
+			response.setHeader("X-Content-Type-Options", "nosniff");
+			response.setHeader("X-XSS-Protection", "1; mode=block");
+			response.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline';font-src 'self'");
+			response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 		%>
 		<!-- Page content
 		================================================== -->
 		<section id="signin-container" style="margin-top: 4.5px;">
 			<div class="l-logo">
-				<img src="images/logo.png" alt="Ranger logo">
+                                <img src="images/ranger_logo.png" alt="Ranger logo">
 			</div>
 			<form action="" method="post" accept-charset="utf-8">
 				<fieldset>

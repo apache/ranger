@@ -21,27 +21,17 @@ package org.apache.ranger.solr;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.AccessAuditsService;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.common.SearchField;
-import org.apache.ranger.common.SearchField.DATA_TYPE;
-import org.apache.ranger.common.SearchField.SEARCH_TYPE;
-import org.apache.ranger.common.SortField;
-import org.apache.ranger.common.SortField.SORT_ORDER;
-import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
@@ -55,7 +45,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @Scope("singleton")
-public class SolrAccessAuditsService {
+public class SolrAccessAuditsService extends AccessAuditsService {
 	private static final Logger LOGGER = Logger.getLogger(SolrAccessAuditsService.class);
 
 	@Autowired
@@ -68,76 +58,7 @@ public class SolrAccessAuditsService {
 	RESTErrorUtil restErrorUtil;
 
 	@Autowired
-	StringUtil stringUtil;
-
-	@Autowired
 	RangerDaoManager daoManager;
-
-	private List<SortField> sortFields = new ArrayList<SortField>();
-	private List<SearchField> searchFields = new ArrayList<SearchField>();
-
-	public SolrAccessAuditsService() {
-
-		searchFields.add(new SearchField("id", "id",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("accessType", "access",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("aclEnforcer", "enforcer",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("agentId", "agent",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("repoName", "repo",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("sessionId", "sess",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("requestUser", "reqUser",
-			SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("excludeUser", "exlUser",
-			SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("requestData", "reqData", SearchField.DATA_TYPE.STRING,
-				SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("resourcePath", "resource", SearchField.DATA_TYPE.STRING,
-				SearchField.SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("clientIP", "cliIP",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-
-		searchFields.add(new SearchField("auditType", "logType",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("accessResult", "result",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		// searchFields.add(new SearchField("assetId", "obj.assetId",
-		// SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("policyId", "policy",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("repoType", "repoType",
-				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-                searchFields.add(new SearchField("-repoType", "-repoType",
-        SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
-                searchFields.add(new SearchField("-requestUser", "-reqUser",
-        		SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("resourceType", "resType",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("reason", "reason",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("action", "action",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-
-		searchFields.add(new SearchField("startDate", "evtTime",
-				DATA_TYPE.DATE, SEARCH_TYPE.GREATER_EQUAL_THAN));
-		searchFields.add(new SearchField("endDate", "evtTime", DATA_TYPE.DATE,
-				SEARCH_TYPE.LESS_EQUAL_THAN));
-
-		searchFields.add(new SearchField("tags", "tags", DATA_TYPE.STRING, SEARCH_TYPE.PARTIAL));
-		searchFields.add(new SearchField("cluster", "cluster",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("zoneName", "zoneName",
-				SearchField.DATA_TYPE.STR_LIST, SearchField.SEARCH_TYPE.FULL));
-		searchFields.add(new SearchField("agentHost", "agentHost",
-				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-
-		sortFields.add(new SortField("eventTime", "evtTime", true,
-				SORT_ORDER.DESC));
-	}
 
 
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
@@ -188,56 +109,6 @@ public class SolrAccessAuditsService {
 		returnList.setStartIndex((int) docs.getStart());
 		returnList.setVXAccessAudits(xAccessAuditList);
 		return returnList;
-	}
-
-
-	private void updateUserExclusion(Map<String, Object> paramList) {
-		String val = (String) paramList.get("excludeServiceUser");
-
-		if (val != null && Boolean.valueOf(val.trim())) { // add param to negate requestUsers which will be added as
-			// filter query in solr
-			List<String> excludeUsersList = getExcludeUsersList();
-			if (CollectionUtils.isNotEmpty(excludeUsersList)) {
-				Object oldUserExclusions = paramList.get("-requestUser");
-				if (oldUserExclusions instanceof Collection && (!((Collection<?>)oldUserExclusions).isEmpty())) {
-					excludeUsersList.addAll((Collection<String>)oldUserExclusions);
-					paramList.put("-requestUser", excludeUsersList);
-				} else {
-					paramList.put("-requestUser", excludeUsersList);
-				}
-			}
-		}
-	}
-
-	private List<String> getExcludeUsersList() {
-		//for excluding serviceUsers using existing property in ranger-admin-site
-		List<String> excludeUsersList = new ArrayList<String>(getServiceUserList());
-
-		//for excluding additional users using new property in ranger-admin-site
-		String additionalExcludeUsers = PropertiesUtil.getProperty("ranger.accesslogs.exclude.users.list");
-		List<String> additionalExcludeUsersList = null;
-		if (StringUtils.isNotBlank(additionalExcludeUsers)) {
-			additionalExcludeUsersList = new ArrayList<>(Arrays.asList(StringUtils.split(additionalExcludeUsers, ",")));
-			for (String serviceUser : additionalExcludeUsersList) {
-				if (StringUtils.isNotBlank(serviceUser) && !excludeUsersList.contains(serviceUser.trim())) {
-					excludeUsersList.add(serviceUser);
-				}
-			}
-		}
-		return excludeUsersList;
-	}
-
-	private List<String> getServiceUserList() {
-		String components = EmbeddedServiceDefsUtil.DEFAULT_BOOTSTRAP_SERVICEDEF_LIST;
-		List<String> serviceUsersList = new ArrayList<String>();
-		List<String> componentNames =  Arrays.asList(StringUtils.split(components,","));
-		for(String componentName : componentNames) {
-			String serviceUser = PropertiesUtil.getProperty("ranger.plugins."+componentName+".serviceuser");
-			if(StringUtils.isNotBlank(serviceUser)) {
-				serviceUsersList.add(serviceUser);
-			}
-		}
-		return serviceUsersList;
 	}
 
 	/**
@@ -294,6 +165,11 @@ public class SolrAccessAuditsService {
 		value = doc.getFieldValue("repo");
 		if (value != null) {
 			accessAudit.setRepoName(value.toString());
+			XXService xxService = daoManager.getXXService().findByName(accessAudit.getRepoName());
+
+			if(xxService != null) {
+				accessAudit.setRepoDisplayName(xxService.getDisplayName());
+			}
 		}
 		value = doc.getFieldValue("sess");
 		if (value != null) {
@@ -334,6 +210,7 @@ public class SolrAccessAuditsService {
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
 			if (xServiceDef != null) {
 				accessAudit.setServiceType(xServiceDef.getName());
+				accessAudit.setServiceTypeDisplayName(xServiceDef.getDisplayName());
 			}
 		}
 		value = doc.getFieldValue("resType");

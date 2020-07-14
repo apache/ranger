@@ -40,6 +40,13 @@ define(function(require){
 		_viewName : 'UserProfile',
 		
     	template: UserprofileTmpl,
+
+    	templateHelpers : function(){
+			return{
+				setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
+			}
+		},
+
         breadCrumbs : [XALinks.get('UserProfile')],
 		/** Layout sub regions */
     	regions: {
@@ -81,6 +88,9 @@ define(function(require){
 
 		/** on render callback */
 		onRender: function() {
+			if(localStorage.getItem('setOldUI') == "false") {
+				App.rSideBar.currentView.ui.profileTab.find('[data-tab="edit-basic"]').addClass('selected');
+			}
 			if(!_.isUndefined(this.model.get('userSource')) && this.model.get('userSource') == XAEnums.UserSource.XA_USER.value){
 				this.$('[data-tab="edit-password"]').hide();
 				this.$('[data-tab="edit-basic"]').hide();
@@ -192,6 +202,9 @@ define(function(require){
 		},
 		/** on close */
 		onClose: function(){
+			if(localStorage.getItem('setOldUI') == "false") {
+				App.rSideBar.currentView.ui.profileTab.find('.selected').removeClass('selected');
+			}
 		}
 
 	});

@@ -144,6 +144,7 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
 			}
 		}
 		serviceDef.setName(serviceDefNewName);
+		serviceDef.setDisplayName(serviceDefNewName);
 		serviceDefDao.update(serviceDef);
 		LOG.info("Renamed service-def " + serviceDefName + " as " + serviceDefNewName);
 		XXServiceDao serviceDao = daoMgr.getXXService();
@@ -158,6 +159,7 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
 					continue;
 				}
 				service.setName(serviceNewName);
+				service.setDisplayName(serviceNewName);
 				serviceDao.update(service);
 				LOG.info("Renamed service " + serviceName + " as " + serviceNewName);
 			}

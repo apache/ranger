@@ -44,7 +44,7 @@ public class RequestUtils {
 	public static final String CLIENT_IP_ADDRESS = "ClientIPAddress";
 
 	public static String getClientIPAddress(RestRequest request) {
-		SocketAddress socketAddress = request.getRemoteAddress();
+		SocketAddress socketAddress = request.getHttpChannel().getRemoteAddress();
 		if (socketAddress instanceof InetSocketAddress) {
 			return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
 		}
@@ -77,8 +77,12 @@ public class RequestUtils {
 		}
 
 		if (request instanceof PutMappingRequest) {
-			indexs.add(((PutMappingRequest) request).getConcreteIndex().getName());
-			return indexs;
+			if (((PutMappingRequest) request).getConcreteIndex() != null) {
+				indexs.add(((PutMappingRequest) request).getConcreteIndex().getName());
+				return indexs;
+			} else {
+				return Arrays.asList(((PutMappingRequest) request).indices());
+			}
 		}
 
 		if (request instanceof SearchRequest) {
@@ -98,8 +102,7 @@ public class RequestUtils {
 		}
 
 		if (request instanceof BulkRequest) {
-			@SuppressWarnings("rawtypes")
-			List<DocWriteRequest> requests = ((BulkRequest) request).requests();
+			@SuppressWarnings("rawtypes") List<DocWriteRequest<?>> requests = ((BulkRequest) request).requests();
 
 			if (CollectionUtils.isNotEmpty(requests)) {
 				for (DocWriteRequest<?> docWriteRequest : requests) {

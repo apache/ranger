@@ -25,7 +25,7 @@ public class ListRangerUser
     private final String uid;
     private final String uname;
     private final String gid;
-    
+
     public static ListRangerUser parseUser(final String userLine)
         throws InvalidUserException
     {
@@ -57,11 +57,11 @@ public class ListRangerUser
             final String       uname;
             final String	   uid;
             final String       gid;
-          
+
             uname  = parts[0];
             uid    = parts[2];
             gid    = parts[3];
-            
+
             xaUser = new ListRangerUser(uname, uid, gid);
 
             return xaUser;
@@ -77,7 +77,7 @@ public class ListRangerUser
         uname    = nm;
         uid      = userid;
         gid 	 = grpid;
-        
+
     }
 
     public String getGid()
@@ -95,7 +95,7 @@ public class ListRangerUser
         return (uid);
     }
 
-   
+
     @Override
     public String toString()
     {
@@ -107,10 +107,9 @@ public class ListRangerUser
         sb.append(uid);
         sb.append(":");
         sb.append(gid);
-        
+
         sb.setLength(sb.length() - 1);
 
         return (sb.toString());
     }
 }
-

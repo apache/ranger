@@ -217,7 +217,8 @@ The Apache Ranger project bundles the following files under the MIT License:
 This product includes jQuery (http://jquery.org ), Copyright © 2014, John Resig.
 This product includes jQuery UI (http://jqueryui.com ), Copyright © 2013 jQuery Foundation.  
 This product includes Backbone (http://backbonejs.org ), Copyright © 2010-2014 Jeremy Ashkenas, DocumentCloud.
-This product includes underscore (http:underscorejs.org ), Copyright © 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors.  
+This product includes underscore (http:underscorejs.org ), Copyright © 2009-2014 Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors.
+This product includes Azure/azure-sdk-for-java (https://github.com/Azure/azure-sdk-for-java/blob/master/LICENSE.txt ), Copyright (c) 2015 Microsoft.  
 This product includes Backbone.Marionette (http://marionettejs.com/ ) Copyright (c)2013 Derick Bailey, Muted Solutions, LLC.  
 This product includes Backbone.Wreqr (http://marionettejs.com/ ) Copyright ©,2012 Derick Bailey, Muted Solutions, LLC.
 This product includes Backbone.BabySitter (http://marionettejs.com/ ), Copyright ©2013 Derick Bailey, Muted Solutions, LLC.  

@@ -36,9 +36,11 @@ import com.google.common.collect.Sets;
 
 public class RangerServiceValidator extends RangerValidator {
 	private static final Log LOG = LogFactory.getLog(RangerServiceValidator.class);
-	static final public String VALIDATION_SERVICE_NAME = "^[a-zA-Z0-9_-][a-zA-Z0-9\\s_-]{0,254}";
 
-	static Pattern serviceNameCompiledRegEx;
+	private static final Pattern SERVICE_NAME_VALIDATION_REGEX         = Pattern.compile("^[a-zA-Z0-9_-][a-zA-Z0-9_-]{0,254}", Pattern.CASE_INSENSITIVE);
+	private static final Pattern LEGACY_SERVICE_NAME_VALIDATION_REGEX  = Pattern.compile("^[a-zA-Z0-9_-][a-zA-Z0-9\\s_-]{0,254}", Pattern.CASE_INSENSITIVE);
+	private static final Pattern SERVICE_DISPLAY_NAME_VALIDATION_REGEX = Pattern.compile("^[a-zA-Z0-9_-][a-zA-Z0-9\\s_-]{0,254}", Pattern.CASE_INSENSITIVE);
+
 	public RangerServiceValidator(ServiceStore store) {
 		super(store);
 	}
@@ -47,7 +49,6 @@ public class RangerServiceValidator extends RangerValidator {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerServiceValidator.validate(%s, %s)", service, action));
 		}
-
 		List<ValidationFailureDetails> failures = new ArrayList<>();
 		boolean valid = isValid(service, action, failures);
 		String message = "";
@@ -105,7 +106,6 @@ public class RangerServiceValidator extends RangerValidator {
 		if (!(action == Action.CREATE || action == Action.UPDATE)) {
 			throw new IllegalArgumentException("isValid(RangerService, ...) is only supported for CREATE/UPDATE");
 		}
-
 		boolean valid = true;
 		if (service == null) {
 			ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_NULL_SERVICE_OBJECT;
@@ -152,7 +152,16 @@ public class RangerServiceValidator extends RangerValidator {
 						.build());
 				valid = false;
 			} else {
-				if(!validateString(VALIDATION_SERVICE_NAME, name)){
+				Pattern serviceNameRegex = SERVICE_NAME_VALIDATION_REGEX;
+				if (action == Action.UPDATE) {
+					RangerService rangerService = getService(service.getId());
+					if (rangerService != null && StringUtils.isNotBlank(rangerService.getName()) && rangerService.getName().contains(" ")) {
+						//RANGER-2808 Support for space in services created with space in earlier version
+						serviceNameRegex = LEGACY_SERVICE_NAME_VALIDATION_REGEX;
+					}
+				}
+
+				if(!isValidString(serviceNameRegex, name)){
 					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_NAME;
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("name")
@@ -182,6 +191,39 @@ public class RangerServiceValidator extends RangerValidator {
 								.build());
 						valid = false;
 					}
+				}
+			}
+			// Display name
+			String displayName = service.getDisplayName();
+			if(!isValidString(SERVICE_DISPLAY_NAME_VALIDATION_REGEX, displayName)){
+				ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SPECIAL_CHARACTERS_SERVICE_DISPLAY_NAME;
+				failures.add(new ValidationFailureDetailsBuilder()
+						.field("displayName")
+						.isSemanticallyIncorrect()
+						.errorCode(error.getErrorCode())
+						.becauseOf(error.getMessage(displayName))
+						.build());
+				valid = false;
+			}else{
+				RangerService otherService = getServiceByDisplayName(displayName);
+				if (otherService != null && action == Action.CREATE) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("displayName")
+							.isSemanticallyIncorrect()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(displayName, otherService.getName()))
+							.build());
+					valid = false;
+				} else if (otherService != null && otherService.getId() !=null && !otherService.getId().equals(id)) {
+					ValidationErrorCode error = ValidationErrorCode.SERVICE_VALIDATION_ERR_SERVICE_DISPLAY_NAME_CONFICT;
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("id/displayName")
+							.isSemanticallyIncorrect()
+							.errorCode(error.getErrorCode())
+							.becauseOf(error.getMessage(displayName, otherService.getName()))
+							.build());
+					valid = false;
 				}
 			}
 			String type = service.getType();
@@ -225,7 +267,6 @@ public class RangerServiceValidator extends RangerValidator {
 					valid = false;
 				}
 			}
-
 			String tagServiceName = service.getTagService();
 
 			if (StringUtils.isNotBlank(tagServiceName) && StringUtils.equals(type, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
@@ -238,7 +279,6 @@ public class RangerServiceValidator extends RangerValidator {
 			}
 
 			boolean needToEnsureServiceType = false;
-
 			if (action == Action.UPDATE) {
 				RangerService otherService = getService(name);
 				String otherTagServiceName = otherService == null ? null : otherService.getTagService();
@@ -253,7 +293,6 @@ public class RangerServiceValidator extends RangerValidator {
 					needToEnsureServiceType = true;
 				}
 			}
-
 			if (needToEnsureServiceType) {
 				RangerService maybeTagService = getService(tagServiceName);
 				if (maybeTagService == null || !StringUtils.equals(maybeTagService.getType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
@@ -273,22 +312,7 @@ public class RangerServiceValidator extends RangerValidator {
 		return valid;
 	}
 
-	public boolean regExPatternMatch(String expression, String inputStr) {
-		Pattern pattern = serviceNameCompiledRegEx;
-		if (pattern == null) {
-			pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
-			serviceNameCompiledRegEx = pattern;
-		}
-
-		return pattern != null && pattern.matcher(inputStr).matches();
-	}
-
-	public boolean validateString(String regExStr, String str) {
-		try {
-			return regExPatternMatch(regExStr, str);
-		} catch (Throwable t) {
-			LOG.error("Error validating string. str=" + str + " due to reason " + t.getMessage() + ". Stack Trace : " + t.getStackTrace());
-			return false;
-		}
+	public boolean isValidString(final Pattern pattern, final String name) {
+		return pattern != null && StringUtils.isNotBlank(name) && pattern.matcher(name).matches();
 	}
 }

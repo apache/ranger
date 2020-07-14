@@ -20,11 +20,11 @@ from subprocess import  Popen,PIPE
 from optparse import OptionParser
 
 if os.getenv('JAVA_HOME') is None:
-	print "ERROR: JAVA_HOME environment property was not defined, exit."
+	print("ERROR: JAVA_HOME environment property was not defined, exit.")
 	sys.exit(1)
 else:
 	JAVA_BIN=os.path.join(os.getenv('JAVA_HOME'),'bin','java')
-print "Using Java:" + str(JAVA_BIN)
+print("Using Java:" + str(JAVA_BIN))
 
 def main():
 
@@ -54,22 +54,22 @@ def call_keystore(libpath, filepath, aliasKey, aliasValue='', getorcreate='get')
 		output, error = p.communicate()
 		statuscode = p.returncode
 		if statuscode == 0:
-			print "Alias " + aliasKey + " created successfully!"
+			print("Alias " + aliasKey + " created successfully!")
 		else :
-			print "Error creating Alias!! Error: " + str(error)
-		
+			print("Error creating Alias!! Error: " + str(error))
+
 	elif getorcreate == 'get':
 		commandtorun = [JAVA_BIN, '-cp', finalLibPath, 'org.apache.ranger.credentialapi.buildks' ,'get', aliasKey, '-provider',finalFilePath]
 		p = Popen(commandtorun,stdin=PIPE, stdout=PIPE, stderr=PIPE)
 		output, error = p.communicate()
 		statuscode = p.returncode
 		if statuscode == 0:
-			print "Alias : " + aliasKey + " Value : " + str(output)
+			print("Alias : " + aliasKey + " Value : " + str(output))
 		else :
-			print "Error getting value!! Error: " + str(error)
-		
+			print("Error getting value!! Error: " + str(error))
+
 	else:
-		print 'Invalid Arguments!!'
-	
+		print('Invalid Arguments!!')
+
 if __name__ == '__main__':
 	main()

@@ -179,6 +179,9 @@ define(function(require) {
                         }
                         var msg = that.editZone ? 'Service zone updated successfully' : 'Service zone created successfully';
                         XAUtil.notifySuccess('Success', msg);
+                        if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+                            App.rSideBar.currentView.render();
+                        }
                         App.appRouter.navigate("#!/zones/zone/"+model.id, {
                             trigger: true
                         });

@@ -109,7 +109,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		unixSyncSourceInfo.setMinUserId(config.getMinUserId());
 		unixSyncSourceInfo.setMinGroupId(config.getMinGroupId());
 
-		LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId);
+		}
 
 		timeout = config.getUpdateMillisMin();
 		enumerateGroupMembers = config.isGroupEnumerateEnabled();
@@ -217,11 +219,15 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	
 	private void print() {
 		for(String user : user2GroupListMap.keySet()) {
-			LOG.debug("USER:" + user);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("USER:" + user);
+			}
 			List<String> groups = user2GroupListMap.get(user);
 			if (groups != null) {
 				for(String group : groups) {
-					LOG.debug("\tGROUP: " + group);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("\tGROUP: " + group);
+					}
 				}
 			}
 		}
@@ -303,7 +309,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 						LOG.warn("Group Name could not be found for group id: [" + groupId + "]. Skipping adding user [" + userName + "] with id [" + userId + "].");
 					}
 				} else {
-					LOG.debug("Skipping user [" + userName + "] since its userid [" + userId + "] is less than minuserid limit [" + minimumUserId + "].");
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Skipping user [" + userName + "] since its userid [" + userId + "] is less than minuserid limit [" + minimumUserId + "].");
+					}
 				}
 			}
 		} finally {
@@ -318,13 +326,17 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		if (enumerateGroupMembers) {
 			String line = null;
 
-			LOG.debug("Start drill down group members");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Start drill down group members");
+			}
 			for (Map.Entry<String, List<String>> entry : internalUser2GroupListMap.entrySet()) {
 				// skip users we already now about
 				if (user2GroupListMap.containsKey(entry.getKey()))
 					continue;
 
-				LOG.debug("Enumerating user " + entry.getKey());
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Enumerating user " + entry.getKey());
+				}
 
 				int numUserId = -1;
 				try {
@@ -350,7 +362,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					reader.close();
 				}
 
-				LOG.debug("id -G returned " + line);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("id -G returned " + line);
+				}
 
 				if (line == null || line.trim().isEmpty()) {
 					LOG.warn("User " + entry.getKey() + " could not be resolved");
@@ -374,7 +388,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				user2GroupListMap.put(entry.getKey(), allowedGroups);
 				allGroups.addAll(allowedGroups);
 			}
-			LOG.debug("End drill down group members");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("End drill down group members");
+			}
 		}
 	}
 
@@ -419,7 +435,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	}
 
 	private void buildUnixGroupList(String allGroupsCmd, String groupCmd, boolean useGid) throws Throwable {
-		LOG.debug("Start enumerating groups");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Start enumerating groups");
+		}
 		BufferedReader reader = null;
 
 		try {
@@ -447,18 +465,24 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				reader.close();
 		}
 
-		LOG.debug("End enumerating group");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("End enumerating group");
+		}
 
 		if (!useNss)
 			return;
 
 		if (enumerateGroupMembers) {
-			LOG.debug("Start enumerating group members");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Start enumerating group members");
+			}
 			String line = null;
 			Map<String,String> copy = new HashMap<String, String>(groupId2groupNameMap);
 
 			for (Map.Entry<String, String> group : copy.entrySet()) {
-				LOG.debug("Enumerating group: " + group.getValue() + " GID(" + group.getKey() + ")");
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Enumerating group: " + group.getValue() + " GID(" + group.getKey() + ")");
+				}
 
 				String command;
 				if (useGid) {
@@ -468,7 +492,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				}
 
 				String[] cmd = new String[]{"bash", "-c", command + " " + group.getKey()};
-				LOG.debug("Executing: " + Arrays.toString(cmd));
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Executing: " + Arrays.toString(cmd));
+				}
 
 				try {
 					Process process = Runtime.getRuntime().exec(cmd);
@@ -478,23 +504,31 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					if (reader != null)
 						reader.close();
 				}
-				LOG.debug("bash -c " + command + " for group " + group + " returned " + line);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("bash -c " + command + " for group " + group + " returned " + line);
+				}
 
 				parseMembers(line);
 			}
-			LOG.debug("End enumerating group members");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("End enumerating group members");
+			}
 		}
 
 		if (config.getEnumerateGroups() != null) {
 			String line = null;
 			String[] groups = config.getEnumerateGroups().split(",");
 
-			LOG.debug("Adding extra groups");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Adding extra groups");
+			}
 
 			for (String group : groups) {
 				String command = String.format(groupCmd, group);
 				String[] cmd = new String[]{"bash", "-c", command + " '" + group + "'"};
-				LOG.debug("Executing: " + Arrays.toString(cmd));
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Executing: " + Arrays.toString(cmd));
+				}
 
 				try {
 					Process process = Runtime.getRuntime().exec(cmd);
@@ -505,11 +539,15 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 						reader.close();
 				}
 
-				LOG.debug("bash -c " + command + " for group " + group + " returned " + line);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("bash -c " + command + " for group " + group + " returned " + line);
+				}
 
 				parseMembers(line);
 			}
-			LOG.debug("Done adding extra groups");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Done adding extra groups");
+			}
 		}
 	}
 

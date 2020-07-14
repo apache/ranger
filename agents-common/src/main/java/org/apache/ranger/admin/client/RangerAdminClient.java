@@ -20,20 +20,25 @@
  package org.apache.ranger.admin.client;
 
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.plugin.util.RangerUserStore;
 
 import java.util.List;
 
 
 public interface RangerAdminClient {
 
-	void init(String serviceName, String appId, String configPropertyPrefix);
+	void init(String serviceName, String appId, String configPropertyPrefix, Configuration config);
 
 	ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
+
+	RangerRoles getRolesIfUpdated(long lastKnownRoleVersion, long lastActivationTimeInMills) throws Exception;
 
 	RangerRole createRole(RangerRole request) throws Exception;
 
@@ -56,5 +61,7 @@ public interface RangerAdminClient {
 	ServiceTags getServiceTagsIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception;
 
 	List<String> getTagTypes(String tagTypePattern) throws Exception;
+
+	RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception;
 
 }

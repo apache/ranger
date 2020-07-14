@@ -23,6 +23,7 @@ define(function(require){
 
 	var Backbone		= require('backbone');
 	var Communicator	= require('communicator');
+	var localization	= require('utils/XALangSupport');
 	
 	var ErrorView_tmpl = require('hbs!tmpl/common/ErrorView_tmpl'); 
 	
@@ -31,29 +32,17 @@ define(function(require){
 	{
 		_viewName : ErrorView,
 		
-    	template: ErrorView_tmpl,
-        templateHelpers :function(){
-        	var msg = '', moreInfo = '';
-        	if(this.status == 401){
-        		msg = 'Access Denied (401)'
-            	moreInfo = "Sorry, you don't have enough privileges to view this page.";
-        	} else if(this.status == 204){
-        		msg = 'No Content (204)'
-                moreInfo = "Sorry, Please sync-up the users with your source directory.";
-            } else {
-        		msg = 'Page not found (404).'
-            	moreInfo = "Sorry, this page isn't here or has moved.";
-            }
-        	return {
-        		'msg' : msg,
-        		'moreInfo' : moreInfo
-        	};
-        },
-    	/** ui selector cache */
-    	ui: {
-    		'goBackBtn' : 'a[data-id="goBack"]',
-    		'home' 		: 'a[data-id="home"]'
-    	},
+		template: ErrorView_tmpl,
+
+		templateHelpers :function(){ },
+
+		/** ui selector cache */
+		ui: {
+			'goBackBtn' : 'a[data-id="goBack"]',
+			'home' 		: 'a[data-id="home"]',
+			'msg'		: '[data-id="msg"]',
+			'moreInfo'		: '[data-id="moreInfo"]',
+		},
 
 		/** ui events hash */
 		events: function() {
@@ -63,7 +52,7 @@ define(function(require){
 			return events;
 		},
 
-    	/**
+		/**
 		* intialize a new ErrorView ItemView 
 		* @constructs
 		*/
@@ -85,10 +74,29 @@ define(function(require){
 		onRender: function() {
 			this.initializePlugins();
 			$('#r_breadcrumbs').hide();
-			 if(this.status == 204){
-				 this.ui.goBackBtn.hide();
-				 this.ui.home.hide();
-			 }
+			var msg = '', moreInfo = '';
+			if(this.status == 401){
+				msg = 'Access Denied (401)';
+				moreInfo =  localization.tt("msg.accessDenied");
+			} else if(this.status == 204){
+				msg = 'No Content (204)'
+				moreInfo = localization.tt("msg.noContent");
+			} else if(this.status == "checkSSOTrue"){
+				msg = 'Sign Out Is Not Complete!'
+				moreInfo = localization.tt("msg.signOutIsNotComplete");
+			} else {
+				msg = 'Page not found (404).'
+				moreInfo = localization.tt("msg.pageNotFound");
+			}
+			this.ui.msg.html(msg);
+			this.ui.moreInfo.html(moreInfo);
+			if(this.status == 204){
+				this.ui.goBackBtn.hide();
+				this.ui.home.hide();
+			}
+			if(this.status == "checkSSOTrue") {
+				this.ui.home.hide();
+			}
 		},
 		goBackClick : function(){
 			history.back();

@@ -24,11 +24,13 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
+import javax.script.ScriptEngineFactory;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 import java.util.Collections;
@@ -65,11 +67,54 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 			LOG.debug("RangerScriptConditionEvaluator.init() - engineName=" + engineName);
 		}
 
+		String conditionType = condition != null ? condition.getType() : null;
+
 		try {
 			ScriptEngineManager manager = new ScriptEngineManager();
+
+			if (LOG.isDebugEnabled()) {
+				List<ScriptEngineFactory> factories = manager.getEngineFactories();
+
+				if (CollectionUtils.isEmpty(factories)) {
+					LOG.debug("List of scriptEngineFactories is empty!!");
+				} else {
+					for (ScriptEngineFactory factory : factories) {
+						LOG.debug("engineName=" + factory.getEngineName() + ", language=" + factory.getLanguageName());
+					}
+				}
+			}
+
 			scriptEngine = manager.getEngineByName(engineName);
 		} catch (Exception exp) {
 			LOG.error("RangerScriptConditionEvaluator.init() failed with exception=" + exp);
+		}
+
+		if (scriptEngine == null) {
+			LOG.warn("failed to initialize condition '" + conditionType + "': script engine '" + engineName + "' was not created in a default manner");
+			LOG.info("Will try to get script-engine from plugin-class-loader");
+
+
+			RangerPluginClassLoader pluginClassLoader;
+
+			try {
+
+				pluginClassLoader = RangerPluginClassLoader.getInstance(serviceDef.getName(), null);
+
+				if (pluginClassLoader != null) {
+					scriptEngine = pluginClassLoader.getScriptEngine(engineName);
+				} else {
+					LOG.error("Cannot get script-engine from null pluginClassLoader");
+				}
+
+			} catch (Throwable exp) {
+				LOG.error("RangerScriptConditionEvaluator.init() failed with exception=", exp);
+			}
+		}
+
+		if (scriptEngine == null) {
+			LOG.error("failed to initialize condition '" + conditionType + "': script engine '" + engineName + "' was not created");
+		} else {
+			LOG.info("ScriptEngine for engineName=[" + engineName + "] is successfully created");
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -94,7 +139,7 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 
 				RangerScriptExecutionContext context    = new RangerScriptExecutionContext(readOnlyRequest);
 				RangerTagForEval             currentTag = context.getCurrentTag();
-				Map<String, String>          tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.<String, String>emptyMap();
+				Map<String, String>          tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
 
 				Bindings bindings = scriptEngine.createBindings();
 
@@ -123,8 +168,14 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 					LOG.error("RangerScriptConditionEvaluator.isMatched(): failed to evaluate script," +
 							" exception=" + exception);
 				}
+			} else {
+				String conditionType = condition != null ? condition.getType() : null;
+				LOG.error("failed to evaluate condition '" + conditionType + "': script is empty");
 			}
 
+		} else {
+			String conditionType = condition != null ? condition.getType() : null;
+			LOG.error("failed to evaluate condition '" + conditionType + "': script engine not found");
 		}
 
 		if (LOG.isDebugEnabled()) {

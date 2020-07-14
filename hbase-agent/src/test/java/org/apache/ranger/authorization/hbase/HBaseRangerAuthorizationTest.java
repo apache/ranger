@@ -1026,7 +1026,7 @@ public class HBaseRangerAuthorizationTest {
 			throw new Exception(e);
 		}
 		UserPermission userPermission = new UserPermission(Bytes.toBytes("@IT"), TableName.valueOf("temp5"), null,
-				Permission.Action.READ, Permission.Action.WRITE);
+				Permission.Action.READ, Permission.Action.WRITE, Permission.Action.EXEC);
 		Assert.assertTrue("@IT permission should be there", userPermissions.contains(userPermission));
 
 	}

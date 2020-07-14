@@ -40,6 +40,13 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		super(daoManager);
 	}
 
+	public long getCountById(Long policyId) {
+		return getEntityManager()
+					.createNamedQuery("XXPolicy.countById", Long.class)
+					.setParameter("policyId", policyId)
+					.getSingleResult();
+	}
+
 	public XXPolicy findByNameAndServiceId(String polName, Long serviceId) {
 		return findByNameAndServiceIdAndZoneId(polName, serviceId, RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID);
 	}
@@ -222,4 +229,26 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		return ret;
 	}
 
+	public long findRoleRefPolicyCount(String roleName, Long serviceId) {
+		long ret = -1;
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicy.findRoleRefPolicyCount", Long.class)
+					.setParameter("serviceId", serviceId)
+					.setParameter("roleName", roleName).getSingleResult();
+		} catch (Exception e) {
+		}
+		return ret;
+	}
+
+	public long getPoliciesCount(String serviceName) {
+		long ret = 0L;
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicy.getPoliciesCount", Long.class)
+					.setParameter("serviceName", serviceName).getSingleResult();
+		} catch (Exception e) {
+		}
+		return ret;
+	}
 }

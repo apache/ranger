@@ -46,20 +46,22 @@ import javax.net.ssl.TrustManagerFactory;
 import org.apache.log4j.Logger;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.XMLUtils;
+import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.UserGroupSync;
+import org.apache.ranger.usergroupsync.UserSyncMetricsProducer;
 
 public class UnixAuthenticationService {
 
 	private static final Logger LOG = Logger.getLogger(UnixAuthenticationService.class);
-	
+
 	private static final String serviceName = "UnixAuthenticationService";
-	
+
 	private static final String SSL_ALGORITHM = "TLS";
 	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.usersync.port";
-	
+
 	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file";
 	private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file";
-	
+
 	private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.key.password";
 	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password";
 
@@ -123,11 +125,12 @@ public class UnixAuthenticationService {
 			LOG.info("Service: " + serviceName + " - STOPPED.");
 		}
 	}
-	
+
 	private void startUnixUserGroupSyncProcess() {
 		//
 		//  Start the synchronization service ...
 		//
+		LOG.info("Start : startUnixUserGroupSyncProcess " );
 		UserGroupSync syncProc = new UserGroupSync();
 		Thread newSyncProcThread = new Thread(syncProc);
 		newSyncProcThread.setName("UnixUserSyncThread");
@@ -135,13 +138,27 @@ public class UnixAuthenticationService {
         // Therefore this is marked as non-daemon thread. Don't change the following line
 		newSyncProcThread.setDaemon(false);
 		newSyncProcThread.start();
+        LOG.info("UnixUserSyncThread started");
+        LOG.info("creating UserSyncMetricsProducer thread with default metrics location : "+System.getProperty("logdir"));
+		//Start the user sync metrics
+		boolean isUserSyncMetricsEnabled = UserGroupSyncConfig.getInstance().isUserSyncMetricsEnabled();
+		if (isUserSyncMetricsEnabled) {
+			UserSyncMetricsProducer userSyncMetricsProducer = new UserSyncMetricsProducer();
+			Thread userSyncMetricsProducerThread = new Thread(userSyncMetricsProducer);
+			userSyncMetricsProducerThread.setName("UserSyncMetricsProducerThread");
+			userSyncMetricsProducerThread.setDaemon(false);
+			userSyncMetricsProducerThread.start();
+			LOG.info("UserSyncMetricsProducer started");
+		} else {
+			LOG.info(" Ranger userSync metrics is not enabled");
+		}
 	}
-	
+
 
 	//TODO: add more validation code
 	private void init() throws Throwable {
 		Properties prop = new Properties();
-		
+
 		for (String fn : UGSYNC_CONFIG_XML_FILES ) {
             XMLUtils.loadConfig(fn, prop);
 		}

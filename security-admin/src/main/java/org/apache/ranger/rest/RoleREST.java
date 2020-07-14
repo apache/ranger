@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
@@ -36,6 +37,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -43,19 +45,27 @@ import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
+import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.UserSessionBase;
-import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.validation.RangerRoleValidator;
+import org.apache.ranger.plugin.model.validation.RangerValidator;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
+import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
-import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -71,8 +81,16 @@ public class RoleREST {
 
     private static List<String> INVALID_USERS = new ArrayList<>();
 
+    public static final String POLICY_DOWNLOAD_USERS = "policy.download.auth.users";
+
     @Autowired
     RESTErrorUtil restErrorUtil;
+
+    @Autowired
+    AssetMgr assetMgr;
+
+    @Autowired
+    RangerDaoManager daoManager;
 
     @Autowired
     RoleDBStore roleStore;
@@ -88,6 +106,9 @@ public class RoleREST {
 
     @Autowired
     RangerSearchUtil searchUtil;
+
+    @Autowired
+    ServiceUtil serviceUtil;
 
     @Autowired
     RangerValidatorFactory validatorFactory;
@@ -111,19 +132,24 @@ public class RoleREST {
 
     @POST
     @Path("/roles")
-    public RangerRole createRole(@QueryParam("serviceName") String serviceName,  RangerRole role) {
+    public RangerRole createRole(@QueryParam("serviceName") String serviceName,  RangerRole role
+           , @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
+           ) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> createRole("+ role + ")");
         }
 
         RangerRole ret;
         try {
+            RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
+            validator.validate(role, RangerValidator.Action.CREATE);
+
             String userName = role.getCreatedByUser();
             ensureAdminAccess(serviceName, userName);
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
-            ret = roleStore.createRole(role);
+            ret = roleStore.createRole(role, createNonExistUserGroup);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -143,8 +169,10 @@ public class RoleREST {
 
     @PUT
     @Path("/roles/{id}")
-    public RangerRole updateRole(@PathParam("id") Long roleId,
-                                                 RangerRole role) {
+    public RangerRole updateRole(@PathParam("id") Long roleId
+                                , RangerRole role
+                                , @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
+                                ) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> updateRole(id=" + roleId +", " + role + ")");
         }
@@ -156,11 +184,14 @@ public class RoleREST {
         }
         RangerRole ret;
         try {
+            RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
+            validator.validate(role, RangerValidator.Action.UPDATE);
+
             ensureAdminAccess(null, null);
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
-            ret = roleStore.updateRole(role);
+            ret = roleStore.updateRole(role, createNonExistUserGroup);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -187,6 +218,9 @@ public class RoleREST {
             LOG.debug("==> deleteRole(user=" + execUser + " name=" + roleName + ")");
         }
         try {
+            RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
+            validator.validate(roleName, RangerRoleValidator.Action.DELETE);
+
             ensureAdminAccess(serviceName, execUser);
             roleStore.deleteRole(roleName);
         } catch(WebApplicationException excp) {
@@ -212,6 +246,9 @@ public class RoleREST {
             LOG.debug("==> deleteRole(id=" + roleId + ")");
         }
         try {
+            RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
+            validator.validate(roleId, RangerRoleValidator.Action.DELETE);
+
             ensureAdminAccess(null, null);
             roleStore.deleteRole(roleId);
         } catch(WebApplicationException excp) {
@@ -293,17 +330,9 @@ public class RoleREST {
             LOG.debug("==> getAllRoles()");
         }
         SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
-        List<RangerRole> roles;
         try {
             ensureAdminAccess(null, null);
-            roles = roleStore.getRoles(filter);
-            ret.setRoleList(roles);
-            if (roles != null) {
-                ret.setTotalCount(roles.size());
-                ret.setSortBy(filter.getSortBy());
-                ret.setSortType(filter.getSortType());
-                ret.setResultSize(roles.size());
-            }
+            roleStore.getRoles(filter,ret);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -396,7 +425,7 @@ public class RoleREST {
             role.setUsers(new ArrayList<>(roleUsers));
             role.setGroups(new ArrayList<>(roleGroups));
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role,false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -450,7 +479,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -496,7 +525,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -548,6 +577,7 @@ public class RoleREST {
                     throw restErrorUtil.createRESTException("User doesn't have permissions to grant role " + roleName);
                 }
 
+                existingRole.setUpdatedBy(userName);
                 addUsersGroupsAndRoles(existingRole, grantRoleRequest.getUsers(), grantRoleRequest.getGroups(), grantRoleRequest.getRoles(), grantRoleRequest.getGrantOption());
             }
         } catch(WebApplicationException excp) {
@@ -601,6 +631,7 @@ public class RoleREST {
                 if (existingRole == null) {
                     throw restErrorUtil.createRESTException("User doesn't have permissions to revoke role " + roleName);
                 }
+                existingRole.setUpdatedBy(userName);
 
                 if (revokeRoleRequest.getGrantOption()) {
                     removeAdminFromUsersGroupsAndRoles(existingRole, revokeRoleRequest.getUsers(), revokeRoleRequest.getGroups(), revokeRoleRequest.getRoles());
@@ -656,6 +687,178 @@ public class RoleREST {
         return new ArrayList<>(ret);
     }
 
+    @GET
+    @Path("/download/{serviceName}")
+    @Produces({ "application/json", "application/xml" })
+    public RangerRoles getRangerRolesIfUpdated(
+            @PathParam("serviceName") String serviceName,
+            @QueryParam("lastKnownRoleVersion") Long lastKnownRoleVersion,
+            @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
+            @QueryParam("pluginId") String pluginId,
+            @DefaultValue("") @QueryParam("clusterName") String clusterName,
+            @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
+            @Context HttpServletRequest request) throws Exception {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RoleREST.getRangerRolesIfUpdated("
+                    + serviceName + ", " + lastKnownRoleVersion + ", " + lastActivationTime + ")");
+        }
+        RangerRoles ret = null;
+
+        boolean isValid           = false;
+        int     httpCode          = HttpServletResponse.SC_OK;
+        Long    downloadedVersion = null;
+        String  logMsg            = null;
+
+        try {
+            bizUtil.failUnauthenticatedIfNotAllowed();
+            isValid = serviceUtil.isValidService(serviceName, request);
+        } catch (WebApplicationException webException) {
+            httpCode = webException.getResponse().getStatus();
+            logMsg = webException.getResponse().getEntity().toString();
+        } catch (Exception e) {
+            httpCode = HttpServletResponse.SC_BAD_REQUEST;
+            logMsg = e.getMessage();
+        }
+        if (isValid) {
+            if (lastKnownRoleVersion == null) {
+                lastKnownRoleVersion = Long.valueOf(-1);
+            }
+            try {
+                RangerRoles roles = roleStore.getRoles(serviceName, lastKnownRoleVersion);
+                if (roles == null) {
+                    downloadedVersion = lastKnownRoleVersion;
+                    httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+                    logMsg = "No change since last update";
+                } else {
+                    downloadedVersion = roles.getRoleVersion();
+                    roles.setServiceName(serviceName);
+                    ret = roles;
+                    httpCode = HttpServletResponse.SC_OK;
+                    logMsg = "Returning RangerRoles =>" + (ret.toString());
+                }
+
+            } catch (Throwable excp) {
+                LOG.error("getRangerRolesIfUpdated(" + serviceName + ", " + lastKnownRoleVersion + ", " + lastActivationTime + ") failed", excp);
+                httpCode = HttpServletResponse.SC_BAD_REQUEST;
+                logMsg = excp.getMessage();
+            }
+        }
+
+        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_ROLES, downloadedVersion, lastKnownRoleVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
+
+        if (httpCode != HttpServletResponse.SC_OK) {
+            boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+            throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RoleREST.getRangerRolesIfUpdated(" + serviceName + ", " + lastKnownRoleVersion + ", " + lastActivationTime + ")" + ret);
+        }
+        return ret;
+    }
+
+    @GET
+    @Path("/secure/download/{serviceName}")
+    @Produces({ "application/json", "application/xml" })
+    public RangerRoles getSecureRangerRolesIfUpdated(
+            @PathParam("serviceName") String serviceName,
+            @QueryParam("lastKnownRoleVersion") Long lastKnownRoleVersion,
+            @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
+            @QueryParam("pluginId") String pluginId,
+            @DefaultValue("") @QueryParam("clusterName") String clusterName,
+            @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
+            @Context HttpServletRequest request) throws Exception {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RoleREST.getSecureRangerRolesIfUpdated("
+                    + serviceName + ", " + lastKnownRoleVersion + ", " + lastKnownRoleVersion + ")");
+        }
+        RangerRoles ret  = null;
+        int     httpCode          = HttpServletResponse.SC_OK;
+        String  logMsg            = null;
+        boolean isAllowed         = false;
+        boolean isAdmin           = bizUtil.isAdmin();
+        boolean isKeyAdmin        = bizUtil.isKeyAdmin();
+        Long    downloadedVersion = null;
+
+        request.setAttribute("downloadPolicy", "secure");
+
+        boolean isValid = false;
+        try {
+            isValid = serviceUtil.isValidService(serviceName, request);
+        } catch (WebApplicationException webException) {
+            httpCode = webException.getResponse().getStatus();
+            logMsg = webException.getResponse().getEntity().toString();
+        } catch (Exception e) {
+            httpCode = HttpServletResponse.SC_BAD_REQUEST;
+            logMsg = e.getMessage();
+        }
+        if (isValid) {
+            if (lastKnownRoleVersion == null) {
+                lastKnownRoleVersion = Long.valueOf(-1);
+            }
+            try {
+                XXService xService = daoManager.getXXService().findByName(serviceName);
+                if (xService == null) {
+                    LOG.error("Requested Service not found. serviceName=" + serviceName);
+                    throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Service:" + serviceName + " not found",
+                            false);
+                }
+                XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
+                RangerService rangerService = svcStore.getServiceByName(serviceName);
+
+                if (org.apache.commons.lang.StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+                    if (isKeyAdmin) {
+                        isAllowed = true;
+                    }else {
+                        isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
+                    }
+                }else{
+                    if (isAdmin) {
+                        isAllowed = true;
+                    }else{
+                        isAllowed = bizUtil.isUserAllowed(rangerService, POLICY_DOWNLOAD_USERS);
+                    }
+                }
+
+                if (isAllowed) {
+                    RangerRoles roles = roleStore.getRoles(serviceName, lastKnownRoleVersion);
+                    if (roles == null) {
+                        downloadedVersion = lastKnownRoleVersion;
+                        httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+                        logMsg = "No change since last update";
+                    } else {
+                        downloadedVersion = roles.getRoleVersion();
+                        roles.setServiceName(serviceName);
+                        ret = roles;
+                        httpCode = HttpServletResponse.SC_OK;
+                        logMsg = "Returning RangerRoles =>" + (ret.toString());
+                    }
+                } else {
+                    LOG.error("getSecureRangerRolesIfUpdated(" + serviceName + ", " + lastKnownRoleVersion + ") failed as User doesn't have permission to UserGroupRoles");
+                    httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+                    logMsg = "User doesn't have permission to download UserGroupRoles";
+                }
+
+            } catch (Throwable excp) {
+                LOG.error("getSecureRangerRolesIfUpdated(" + serviceName + ", " + lastKnownRoleVersion + ", " + lastActivationTime + ") failed", excp);
+                httpCode = HttpServletResponse.SC_BAD_REQUEST;
+                logMsg = excp.getMessage();
+            }
+        }
+
+        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_ROLES, downloadedVersion, lastKnownRoleVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
+
+        if (httpCode != HttpServletResponse.SC_OK) {
+            boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+            throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RoleREST.getSecureRangerRolesIfUpdated(" + serviceName + ", " + lastKnownRoleVersion + ", " + lastActivationTime + ")" + ret);
+        }
+        return ret;
+    }
+
     private void ensureAdminAccess(String serviceName, String userName) throws Exception {
 
         /* If userName (execUser) is not same as logged in user then check
@@ -670,7 +873,7 @@ public class RoleREST {
         UserSessionBase usb = ContextUtil.getCurrentUserSession();
         String loggedInUser = usb != null ? usb.getLoginId() : null;
         if (!StringUtil.equals(userName, loggedInUser)) {
-            if (!userIsRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
+            if (!bizUtil.isUserRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
                 throw new Exception("User does not have permission for this operation");
             }
             effectiveUser = userName != null ? userName : loggedInUser;
@@ -678,7 +881,7 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
 
-        if (!userIsRangerAdmin(effectiveUser)) {
+        if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
             throw new Exception("User " + effectiveUser + " does not have permission for this operation");
         }
     }
@@ -697,7 +900,7 @@ public class RoleREST {
         UserSessionBase usb = ContextUtil.getCurrentUserSession();
         String loggedInUser = usb != null ? usb.getLoginId() : null;
         if (!StringUtil.equals(userName, loggedInUser)) {
-            if (!userIsRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
+            if (!bizUtil.isUserRangerAdmin(loggedInUser) && !userIsSrvAdmOrSrvUser(serviceName, loggedInUser)) {
                 LOG.error("User does not have permission for this operation");
                 return null;
             }
@@ -706,7 +909,7 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
         try {
-            if (!userIsRangerAdmin(effectiveUser)) {
+            if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
                 existingRole = roleStore.getRole(roleName);
                 ensureRoleAccess(effectiveUser, userGroups, existingRole);
 
@@ -719,19 +922,6 @@ public class RoleREST {
         }
 
         return existingRole;
-    }
-
-    private boolean userIsRangerAdmin(String username) {
-        boolean isAdmin = false;
-        try {
-            VXUser vxUser = xUserService.getXUserByUserName(username);
-            if (vxUser != null && (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_SYS_ADMIN))) {
-                isAdmin = true;
-            }
-        } catch (Exception ex) {
-            LOG.error("User " + username + " does not have permissions for this operation" + ex.getMessage());
-        }
-        return isAdmin;
     }
 
     private boolean userIsSrvAdmOrSrvUser(String serviceName, String username) {
@@ -911,7 +1101,7 @@ public class RoleREST {
             role.setGroups(new ArrayList<>(roleGroups));
             role.setRoles(new ArrayList<>(roleRoles));
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -968,7 +1158,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1013,7 +1203,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, false);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -1091,4 +1281,3 @@ public class RoleREST {
         }
     }
 }
-

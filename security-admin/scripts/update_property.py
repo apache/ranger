@@ -23,7 +23,7 @@ def write_properties_to_xml(xml_path, property_name='', property_value=''):
 		try:
 			xml = ET.parse(xml_path)
 		except ExpatError:
-			print "Error while parsing file:"+xml_path
+			print("Error while parsing file:"+xml_path)
 			return -1
 		root = xml.getroot()
 		for child in root.findall('property'):

@@ -50,6 +50,9 @@ public class ServiceTags implements java.io.Serializable {
 	public static final String OP_DELETE        = "delete";
 	public static final String OP_REPLACE       = "replace";
 
+	public enum TagsChangeExtent { NONE, TAGS, SERVICE_RESOURCE, ALL }
+	public enum TagsChangeType { NONE, SERVICE_RESOURCE_UPDATE, TAG_UPDATE, TAG_RESOURCE_MAP_UPDATE, RANGER_ADMIN_START, INVALIDATE_TAG_DELTAS, ALL }
+
 	private String                      op = OP_ADD_OR_UPDATE;
 	private String                      serviceName;
 	private Long                        tagVersion;
@@ -58,6 +61,8 @@ public class ServiceTags implements java.io.Serializable {
 	private Map<Long, RangerTag>        tags;
 	private List<RangerServiceResource> serviceResources;
 	private Map<Long, List<Long>>       resourceToTagIds;
+	private Boolean					 	isDelta;
+	private TagsChangeExtent			tagsChangeExtent;
 
 	public ServiceTags() {
 		this(OP_ADD_OR_UPDATE, null, 0L, null, null, null, null, null);
@@ -65,6 +70,10 @@ public class ServiceTags implements java.io.Serializable {
 
 	public ServiceTags(String op, String serviceName, Long tagVersion, Date tagUpdateTime, Map<Long, RangerTagDef> tagDefinitions,
 					   Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources, Map<Long, List<Long>> resourceToTagIds) {
+		this(op, serviceName, tagVersion, tagUpdateTime, tagDefinitions, tags, serviceResources, resourceToTagIds, false, TagsChangeExtent.ALL);
+	}
+	public ServiceTags(String op, String serviceName, Long tagVersion, Date tagUpdateTime, Map<Long, RangerTagDef> tagDefinitions,
+					   Map<Long, RangerTag> tags, List<RangerServiceResource> serviceResources, Map<Long, List<Long>> resourceToTagIds, Boolean isDelta, TagsChangeExtent tagsChangeExtent) {
 		setOp(op);
 		setServiceName(serviceName);
 		setTagVersion(tagVersion);
@@ -73,6 +82,8 @@ public class ServiceTags implements java.io.Serializable {
 		setTags(tags);
 		setServiceResources(serviceResources);
 		setResourceToTagIds(resourceToTagIds);
+		setIsDelta(isDelta);
+		setTagsChangeExtent(tagsChangeExtent);
 	}
 	/**
 	 * @return the op
@@ -162,6 +173,21 @@ public class ServiceTags implements java.io.Serializable {
 		this.resourceToTagIds = resourceToTagIds == null ? new HashMap<Long, List<Long>>() : resourceToTagIds;
 	}
 
+	public Boolean getIsDelta() {
+		return isDelta == null ? Boolean.FALSE : isDelta;
+	}
+
+	public void setIsDelta(Boolean isDelta) {
+		this.isDelta = isDelta;
+	}
+
+	public TagsChangeExtent getTagsChangeExtent() {
+		return tagsChangeExtent;
+	}
+
+	public void setTagsChangeExtent(TagsChangeExtent tagsChangeExtent) {
+		this.tagsChangeExtent = tagsChangeExtent;
+	}
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -177,6 +203,8 @@ public class ServiceTags implements java.io.Serializable {
 				.append("serviceName=").append(serviceName).append(", ")
 				.append("tagVersion=").append(tagVersion).append(", ")
 				.append("tagUpdateTime={").append(tagUpdateTime).append("}")
+				.append("isDelta={").append(isDelta).append("}")
+				.append("tagsChangeExtent={").append(tagsChangeExtent).append("}")
 				.append("}");
 
 		return sb;

@@ -72,10 +72,15 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-    		<groupId>org.apache.httpcomponents</groupId>
-    		<artifactId>httpcore</artifactId>
-    		<version>${httpcomponents.httpcore.version}</version>
-		</dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${httpcomponents.httpcore.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.thrift</groupId>
+            <artifactId>libthrift</artifactId>
+            <version>${libthrift.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.tez</groupId>
             <artifactId>tez-dag</artifactId>

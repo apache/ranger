@@ -31,12 +31,12 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
+import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
-import org.apache.ranger.plugin.util.RangerResourceTrie;
 import org.apache.ranger.plugin.util.SearchFilter;
 
 import java.util.ArrayList;
@@ -363,7 +363,7 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                     RangerPolicy.RangerPolicyResource policyResource = new RangerPolicy.RangerPolicyResource();
 
                     policyResource.setIsExcludes(false);
-                    policyResource.setIsRecursive(StringUtils.equals(serviceDef.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_HDFS_NAME));
+                    policyResource.setIsRecursive(EmbeddedServiceDefsUtil.isRecursiveEnabled(serviceDef, resourceDefName));
                     policyResource.setValues(resourceValues);
                     policyResources.put(resourceDefName, policyResource);
 
@@ -411,15 +411,15 @@ public class RangerSecurityZoneValidator extends RangerValidator {
 
             for (Map<String, List<String>> resource : resources) {
 
-                List<List<RangerZoneResourceMatcher>> zoneMatchersList = null;
-                List<RangerZoneResourceMatcher>       smallestList     = null;
+                List<Set<RangerZoneResourceMatcher>> zoneMatchersList = null;
+                Set<RangerZoneResourceMatcher>       smallestList     = null;
 
                 for (Map.Entry<String, List<String>> entry : resource.entrySet()) {
                     String       resourceDefName = entry.getKey();
                     List<String> resourceValues  = entry.getValue();
 
                     RangerResourceTrie<RangerZoneResourceMatcher> trie         = trieMap.get(resourceDefName);
-                    List<RangerZoneResourceMatcher>               matchedZones = trie.getEvaluatorsForResource(resourceValues);
+                    Set<RangerZoneResourceMatcher>               matchedZones = trie.getEvaluatorsForResource(resourceValues);
 
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("ResourceDefName:[" + resourceDefName +"], values:[" + resourceValues +"], matched-zones:[" + matchedZones +"]");
@@ -447,11 +447,11 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                 if (smallestList == null) {
                     continue;
                 }
-                final List<RangerZoneResourceMatcher> intersection;
+                final Set<RangerZoneResourceMatcher> intersection;
 
                 if (zoneMatchersList != null) {
-                    intersection = new ArrayList<>(smallestList);
-                    for (List<RangerZoneResourceMatcher> zoneMatchers : zoneMatchersList) {
+                    intersection = new HashSet<>(smallestList);
+                    for (Set<RangerZoneResourceMatcher> zoneMatchers : zoneMatchersList) {
                         if (zoneMatchers != smallestList) {
                             // remove zones from intersection that are not in zoneMatchers
                             intersection.retainAll(zoneMatchers);

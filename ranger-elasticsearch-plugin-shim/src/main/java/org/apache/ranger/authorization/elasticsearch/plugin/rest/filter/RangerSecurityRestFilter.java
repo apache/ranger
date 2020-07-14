@@ -18,31 +18,30 @@
 package org.apache.ranger.authorization.elasticsearch.plugin.rest.filter;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.ranger.authorization.elasticsearch.plugin.authc.user.UsernamePasswordToken;
 import org.apache.ranger.authorization.elasticsearch.plugin.utils.RequestUtils;
 import org.elasticsearch.ElasticsearchStatusException;
 import org.elasticsearch.client.node.NodeClient;
-import org.elasticsearch.common.component.AbstractComponent;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.rest.RestChannel;
 import org.elasticsearch.rest.RestHandler;
 import org.elasticsearch.rest.RestRequest;
 import org.elasticsearch.rest.RestStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class RangerSecurityRestFilter extends AbstractComponent implements RestHandler {
+public class RangerSecurityRestFilter extends AbstractLifecycleComponent implements RestHandler {
 
-	private static final Logger LOG = ESLoggerFactory.getLogger(RangerSecurityRestFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityRestFilter.class);
 
 	private final RestHandler restHandler;
 
 	private final ThreadContext threadContext;
 
-	public RangerSecurityRestFilter(final Settings settings, final ThreadContext threadContext,
+	public RangerSecurityRestFilter(final ThreadContext threadContext,
 			final RestHandler restHandler) {
-		super(settings);
+		super();
 		this.restHandler = restHandler;
 		this.threadContext = threadContext;
 	}
@@ -70,4 +69,19 @@ public class RangerSecurityRestFilter extends AbstractComponent implements RestH
 
 		this.restHandler.handleRequest(request, channel, client);
 	}
+
+    @Override
+    protected void doStart() {
+
+    }
+
+    @Override
+    protected void doStop() {
+
+    }
+
+    @Override
+    protected void doClose() {
+
+    }
 }

@@ -63,6 +63,8 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String RESOURCE_ENTITY_TYPE                   = "entity-type";
 	public static final String RESOURCE_ENTITY_CLASSIFICATION         = "entity-classification";
 	public static final String RESOURCE_ENTITY_ID                     = "entity";
+	public static final String RESOURCE_ENTITY_LABEL                  = "entity-label";
+	public static final String RESOURCE_ENTITY_BUSINESS_METADATA      = "entity-business-metadata";
 	public static final String RESOURCE_ENTITY_OWNER                  = "owner";
 	public static final String RESOURCE_RELATIONSHIP_TYPE             = "relationship-type";
 	public static final String RESOURCE_END_ONE_ENTITY_TYPE           = "end-one-entity-type";
@@ -155,7 +157,9 @@ public class RangerServiceAtlas extends RangerBaseService {
         List<RangerPolicy> ret                         = super.getDefaultRangerPolicies();
         String             adminUser                   = getStringConfig("atlas.admin.user", ADMIN_USERNAME_DEFAULT);
         String             tagSyncUser                 = getStringConfig("atlas.rangertagsync.user", TAGSYNC_USERNAME_DEFAULT);
+
         boolean            relationshipTypeAllowPublic = getBooleanConfig("atlas.default-policy.relationship-type.allow.public", true);
+
 
         for (RangerPolicy defaultPolicy : ret) {
             final Map<String, RangerPolicyResource> policyResources = defaultPolicy.getResources();
@@ -185,6 +189,15 @@ public class RangerServiceAtlas extends RangerBaseService {
                 }
             }
 
+			if (defaultPolicy.getName().contains("all")
+					&& policyResources.containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)
+					&& StringUtils.isNotBlank(lookUpUser)) {
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ)));
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
         }
 
         //4.add new policy for public group with entity-read, entity-create, entity-update, entity-delete for  __AtlasUserProfile, __AtlasUserSavedSearch entity type

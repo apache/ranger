@@ -32,7 +32,8 @@ define(function(require){
 	var KmsKey				= require('models/VXKmsKey');
 	var XATableLayout		= require('views/common/XATableLayout');
 	var KmsTablelayoutTmpl 	= require('hbs!tmpl/kms/KmsTableLayout_tmpl');
-        var SessionMgr          = require('mgrs/SessionMgr');
+    var SessionMgr          = require('mgrs/SessionMgr');
+    var App    = require('App');
 
 	var KmsTableLayout = Backbone.Marionette.Layout.extend(
 	/** @lends KmsTableLayout */
@@ -42,7 +43,8 @@ define(function(require){
     	template: KmsTablelayoutTmpl,
     	templateHelpers : function(){
 	    return {
-	        isKeyadmin : SessionMgr.isKeyAdmin() ? true :false
+	        isKeyadmin : SessionMgr.isKeyAdmin() ? true :false,
+	        setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
 	    }
     	},
     	breadCrumbs :[XALinks.get('KmsManage')],
@@ -77,7 +79,7 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a KmsTableLayout Layout");
-			_.extend(this, _.pick(options, 'tab','kmsServiceName','kmsManagePage'));
+                        _.extend(this, _.pick(options, 'tab','kmsServiceName','kmsManagePage', 'urlQueryParams'));
 			this.showKeyList = true;
 			this.isKnownKmsServicePage =  this.kmsManagePage == 'new' ? false : true;
 			this.initializeKMSServices();
@@ -118,6 +120,9 @@ define(function(require){
 		},
 		/** on render callback */
 		onRender: function() {
+			if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+				this.ui.selectServiceName = App.rSideBar.currentView.ui.selectServiceName;
+			}
 			this.initializePlugins();
 			if(_.isUndefined(this.tab)){
 				this.renderKeyTab();
@@ -225,8 +230,8 @@ define(function(require){
 						label : localization.tt("lbl.action"),
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue,model) {
-								return '<a href="javascript:void(0);" data-name ="rolloverKey" data-id="'+model.get('name')+'" class="btn btn-mini" title="Rollover"><i class="icon-edit" /></a>\
-										<a href="javascript:void(0);" data-name ="deleteKey" data-id="'+model.get('name')+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash" /></a>';
+								return '<a href="javascript:void(0);" data-name ="rolloverKey" data-id="'+model.get('name')+'" class="btn btn-mini" title="Rollover"><i class="icon-edit"></i></a>\
+										<a href="javascript:void(0);" data-name ="deleteKey" data-id="'+model.get('name')+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash"></i></a>';
 								//You can use rawValue to custom your html, you can change this value using the name parameter.
 							}
 						}),
@@ -248,9 +253,17 @@ define(function(require){
 				placeholder = localization.tt('h.searchForKeys');	
 				coll = this.collection;
 				searchOpt = ['Key Name'];
-				serverAttrName  = [	{text : "Key Name", label :"name"}];
+                                serverAttrName  = [	{text : "Key Name", label :"name", urlLabel : "keyName"}];
 			}
 			var query = (!_.isUndefined(coll.VSQuery)) ? coll.VSQuery : '';
+                        if(!_.isUndefined(this.urlQueryParams)) {
+                                var urlQueryParams = XAUtil.changeUrlToSearchQuery(this.urlQueryParams);
+                                _.map(urlQueryParams, function(val , key) {
+                    if (_.some(serverAttrName, function(m){return m.urlLabel == key})) {
+                        query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
+                    }
+                                });
+                        }
 			var pluginAttr = {
 				      placeholder :placeholder,
 				      container : this.ui.visualSearch,

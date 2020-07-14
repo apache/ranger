@@ -15,6 +15,7 @@
 
 DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_change_log;
+DROP TABLE IF EXISTS x_tag_change_log;
 DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
@@ -99,6 +100,7 @@ DROP SEQUENCE IF EXISTS x_sec_zone_ref_tag_srvc_SEQ;
 DROP SEQUENCE IF EXISTS x_ranger_global_state_seq;
 DROP SEQUENCE IF EXISTS x_security_zone_seq;
 DROP SEQUENCE IF EXISTS x_policy_change_log_seq;
+DROP SEQUENCE IF EXISTS x_tag_change_log_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_user_seq;
 DROP SEQUENCE IF EXISTS x_policy_ref_datamask_type_seq;
@@ -189,6 +191,7 @@ email VARCHAR(512) DEFAULT NULL NULL,
 status INT DEFAULT '0' NOT NULL,
 user_src INT DEFAULT '0' NOT NULL,
 notes VARCHAR(4000) DEFAULT NULL NULL,
+other_attributes VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_portal_user_UK_login_id UNIQUE(login_id),
 CONSTRAINT x_portal_user_UK_email UNIQUE(email),
@@ -321,6 +324,7 @@ GROUP_TYPE INT DEFAULT '0' NOT NULL,
 CRED_STORE_ID BIGINT DEFAULT NULL,
 GROUP_SRC INT DEFAULT 0 NOT NULL,
 IS_VISIBLE INT DEFAULT '1' NOT NULL,
+other_attributes VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(ID),
 CONSTRAINT x_group_UK_group_name UNIQUE(group_name),
 CONSTRAINT X_GROUP_FK_ADDED_BY_ID FOREIGN KEY(ADDED_BY_ID) REFERENCES X_PORTAL_USER(ID),
@@ -357,6 +361,7 @@ descr VARCHAR(4000) DEFAULT NULL NULL,
 status INT DEFAULT '0' NOT NULL,
 cred_store_id BIGINT DEFAULT NULL NULL,
 is_visible INT DEFAULT '1' NOT NULL,
+other_attributes VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_user_UK_user_name UNIQUE(user_name),
 CONSTRAINT x_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -519,6 +524,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
+display_name VARCHAR(1024) DEFAULT NULL NULL,
 impl_class_name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
@@ -542,6 +548,7 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 version BIGINT DEFAULT NULL NULL,
 type BIGINT DEFAULT NULL NULL,
 name VARCHAR(255) DEFAULT NULL NULL,
+display_name VARCHAR(255) DEFAULT NULL NULL,
 policy_version BIGINT DEFAULT NULL NULL,
 policy_update_time TIMESTAMP DEFAULT NULL NULL,
 description VARCHAR(1024) DEFAULT NULL NULL,
@@ -642,7 +649,7 @@ description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_validation_message VARCHAR(1024) DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_service_conf_def_FK_defid FOREIGN KEY(def_id) REFERENCES x_service_def(id),
 CONSTRAINT x_service_conf_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -677,7 +684,7 @@ description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_validation_message VARCHAR(1024) DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
 primary key(id),
@@ -700,7 +707,7 @@ item_id BIGINT NOT NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 datamask_options VARCHAR(1024) DEFAULT NULL NULL,
 rowfilter_options VARCHAR(1024) DEFAULT NULL NULL,
 primary key(id),
@@ -746,7 +753,7 @@ description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_validation_message VARCHAR(1024) DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_policy_cond_def_FK_defid FOREIGN KEY(def_id) REFERENCES x_service_def(id),
 CONSTRAINT x_policy_cond_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -766,7 +773,7 @@ item_id BIGINT NOT NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
 enricher VARCHAR(1024) DEFAULT NULL NULL,
 enricher_options VARCHAR(1024) DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_context_enricher_def_FK_defid FOREIGN KEY(def_id) REFERENCES x_service_def(id),
 CONSTRAINT x_context_enricher_def_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -804,7 +811,7 @@ item_id BIGINT NOT NULL,
 name VARCHAR(1024) DEFAULT NULL NULL,
 label VARCHAR(1024) DEFAULT NULL NULL,
 rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_enum_element_def_FK_defid FOREIGN KEY(enum_def_id) REFERENCES x_enum_def(id),
 CONSTRAINT x_enum_element_def_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -857,7 +864,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 resource_id BIGINT NOT NULL,
 value VARCHAR(1024) DEFAULT NULL NULL,
-sort_order INT,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_policy_res_map_FK_res_id FOREIGN KEY(resource_id) REFERENCES x_policy_resource(id),
 CONSTRAINT x_policy_res_map_FK_added_by FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -874,7 +881,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 policy_id BIGINT NOT NULL,
 delegate_admin BOOLEAN DEFAULT '0' NOT NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 item_type INT DEFAULT 0 NOT NULL,
 is_enabled BOOLEAN DEFAULT '1' NOT NULL,
 comments VARCHAR(255) DEFAULT NULL NULL,
@@ -895,7 +902,7 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 policy_item_id BIGINT NOT NULL,
 type BIGINT NOT NULL,
 is_allowed BOOLEAN DEFAULT '0' NOT NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_plc_item_access_FK_pi_id FOREIGN KEY(policy_item_id) REFERENCES x_policy_item(id),
 CONSTRAINT x_plc_item_access_FK_atd_id FOREIGN KEY(type) REFERENCES x_access_type_def(id),
@@ -914,7 +921,7 @@ upd_by_id BIGINT DEFAULT NULL NULL,
 policy_item_id BIGINT NOT NULL,
 type BIGINT NOT NULL,
 value VARCHAR(1024) DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_plc_item_cond_FK_pi_id FOREIGN KEY(policy_item_id) REFERENCES x_policy_item(id),
 CONSTRAINT x_plc_item_cond_FK_pcd_id FOREIGN KEY(type) REFERENCES x_policy_condition_def(id),
@@ -932,7 +939,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 policy_item_id BIGINT NOT NULL,
 user_id BIGINT DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_plc_itm_usr_perm_FK_pi_id FOREIGN KEY(policy_item_id) REFERENCES x_policy_item(id),
 CONSTRAINT x_plc_itm_usr_perm_FK_user_id FOREIGN KEY(user_id) REFERENCES x_user(id),
@@ -950,7 +957,7 @@ added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 policy_item_id BIGINT NOT NULL,
 group_id BIGINT DEFAULT NULL NULL,
-sort_order SMALLINT DEFAULT '0' NULL,
+sort_order INT DEFAULT '0' NULL,
 primary key(id),
 CONSTRAINT x_plc_itm_grp_perm_FK_pi_id FOREIGN KEY(policy_item_id) REFERENCES x_policy_item(id),
 CONSTRAINT x_plc_itm_grp_perm_FK_group_id FOREIGN KEY(group_id) REFERENCES x_group(id),
@@ -1113,7 +1120,7 @@ CREATE TABLE x_datamask_type_def (
   datamask_options VARCHAR(1024) DEFAULT NULL NULL,
   rb_key_label VARCHAR(1024) DEFAULT NULL NULL,
   rb_key_description VARCHAR(1024) DEFAULT NULL NULL,
-  sort_order SMALLINT DEFAULT '0' NULL,
+  sort_order INT DEFAULT '0' NULL,
   primary key (id),
   CONSTRAINT x_datamask_type_def_FK_def_id FOREIGN KEY (def_id) REFERENCES x_service_def (id) ,
   CONSTRAINT x_datamask_type_def_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -1163,6 +1170,8 @@ policy_version bigint NOT NULL DEFAULT '0',
 policy_update_time TIMESTAMP DEFAULT NULL,
 tag_version bigint NOT NULL DEFAULT '0',
 tag_update_time TIMESTAMP DEFAULT NULL,
+role_version bigint NOT NULL DEFAULT '0',
+role_update_time TIMESTAMP DEFAULT NULL,
 primary key (id),
 CONSTRAINT x_service_version_info_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
 );
@@ -1553,6 +1562,24 @@ priv_type INT DEFAULT NULL NULL,
 );
 commit;
 
+CREATE SEQUENCE x_tag_change_log_seq;
+
+CREATE TABLE x_tag_change_log (
+id BIGINT DEFAULT nextval('x_tag_change_log_seq'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+service_id bigint NOT NULL,
+change_type int NOT NULL,
+service_tags_version bigint DEFAULT '0' NOT NULL,
+service_resource_id bigint DEFAULT NULL NULL,
+tag_id bigint DEFAULT NULL NULL,
+primary key (id)
+);
+commit;
+
+CREATE INDEX x_tag_change_log_IDX_service_id ON x_tag_change_log(service_id);
+CREATE INDEX x_tag_change_log_IDX_tag_version ON x_tag_change_log(service_tags_version);
+commit;
+
 CREATE INDEX x_policy_change_log_IDX_service_id ON x_policy_change_log(service_id);
 CREATE INDEX x_policy_change_log_IDX_policy_version ON x_policy_change_log(policy_version);
 commit;
@@ -1767,6 +1794,11 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('040',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('041',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('042',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('043',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('044',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('045',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('046',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('047',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES
@@ -1813,6 +1845,11 @@ INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
 
+
+INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerRole','{"Version":"1"}');
+INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerUserStore','{"Version":"1"}');
+INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (current_timestamp,current_timestamp,getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerSecurityZone','{"Version":"1"}');
+
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10002',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10003',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
@@ -1835,7 +1872,14 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10025',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10026',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10027',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10028',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10030',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10033',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10034',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10035',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10036',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10037',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10038',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 DROP VIEW IF EXISTS vx_trx_log;

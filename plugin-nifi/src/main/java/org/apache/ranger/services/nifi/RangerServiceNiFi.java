@@ -24,7 +24,6 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.nifi.client.NiFiClient;
 import org.apache.ranger.services.nifi.client.NiFiConnectionMgr;
-
 import java.util.HashMap;
 import java.util.List;
 

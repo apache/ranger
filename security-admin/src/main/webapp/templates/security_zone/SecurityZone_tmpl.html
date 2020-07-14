@@ -15,58 +15,92 @@
   limitations under the License.
 --}}
 
-<div class="row-fluid security-panel">
-    <div class="security-sidebar" data-id="security-sidebar">
-        <div class="listData">
-            <div class="clearfix row-margin-bottom">
-                <h4 class="pull-left">Security Zones</h4>
-                {{#if isZoneAdministration}}
-                    <a href="#!/zones/create" class="btn-add-security pull-right btn btn-default btn-small" title="Create zone"><i class="icon-plus"></i></a>
-                {{/if}}
-            </div>
-            <div class="clearfix">
-                <input type="text" class="security-search" data-id="zoneSearch" placeholder="Search">
-            </div>
-            <div class="zone-wrap">
-                <ul class="zone-listing" data-id="zoneUlList">
-                    {{#ifCond zoneList.length '==' "0"}}
-                        <li>
-                            <h4>No Zone Found !
-                        </li>
-                    {{/ifCond}}
-                </ul>
-            </div>
-        </div><!-- listData -->
-    </div>
-    {{#if zoneList.length}}
-        <div class="security-details">
-            <div class="row-fluid">
-                <div class="span8">
-                    <button class="btn btn-default btn-small btn-slide-toggle pull-left m-r-sm" data-id="sideBarBtn"><i class="icon-reorder"></i><span></span></button><h2 data-id="zoneName">{{{zoneModelName}}}</h2>
+{{#if setOldUi}}
+    <div class="row-fluid security-panel">
+        <div class="security-sidebar" data-id="security-sidebar">
+            <div class="listDataZone">
+                <div class="clearfix row-margin-bottom">
+                    <h4 class="pull-left">Security Zones</h4>
+                    {{#if isZoneAdministration}}
+                        <a href="#!/zones/create" class="btn-add-security pull-right btn btn-default btn-small" title="Create zone"><i class="icon-plus"></i></a>
+                    {{/if}}
                 </div>
-                {{#if isZoneAdministration}}
-                    <div class="span4">
-                        <div class="btn-group-zone pull-right">
-                            <a type="button" href='#!/zones/edit/{{this.zoneModel.attributes.id}}' class="btn btn-default" data-id="editZone"><i class="icon-edit"></i>Edit</a>
-                            <button class="btn btn-danger" data-id="deleteZone"><i class="icon-trash"></i>Delete</button>
-                        </div>
-                    </div>
-                {{/if}}
-            </div>
-            <div class="row-fluid" data-id="zoneAdministrationView"></div>
-            <div class="panel panel-default">
-                <div class="panel-header" data-id="zoneServiceTbl">Services<i class="icon-chevron-up pull-right"></i></div>
-                <div class="panel-content" data-id="zoneTableLayout"></div>
-            </div>
+                <div class="clearfix">
+                    <input type="text" class="security-search" data-id="zoneSearch" placeholder="Search">
+                </div>
+                <div class="zone-wrap">
+                    <ul class="zone-listing" data-id="zoneUlList">
+                        {{#ifCond zoneList.length '==' "0"}}
+                            <li>
+                                <h4>No Zone Found !
+                            </li>
+                        {{/ifCond}}
+                    </ul>
+                </div>
+            </div><!-- listData -->
         </div>
-    {{else}}
-        {{#if isZoneAdministration}}
-            <div class="security-details-default">
-                <div class="default-zone">
-                    <img alt="Avatar" class="zoneImg" src="images/defult_zone.png">
-                    <a href="#!/zones/create" class="btn-add-security2 btn-large pull-right" title="Click here to Create new Zone"><i class="icon-plus"></i> Click here to Create new Zone</a>
+        {{#if zoneList.length}}
+            <div class="security-details">
+                <div class="row-fluid">
+                    <div class="span8">
+                        <button class="btn btn-default btn-small btn-slide-toggle pull-left m-r-sm" data-id="sideBarBtn"><i class="icon-reorder"></i><span></span></button><h2 data-id="zoneName">{{{zoneModelName}}}</h2>
+                    </div>
+                    {{#if isZoneAdministration}}
+                        <div class="span4">
+                            <div class="btn-group-zone pull-right">
+                                <a type="button" href='#!/zones/edit/{{this.zoneModel.attributes.id}}' class="btn btn-default" data-id="editZone"><i class="icon-edit"></i>Edit</a>
+                                <button class="btn btn-danger" data-id="deleteZone"><i class="icon-trash"></i>Delete</button>
+                            </div>
+                        </div>
+                    {{/if}}
+                </div>
+                <div class="row-fluid" data-id="zoneAdministrationView"></div>
+                <div class="panel panel-default">
+                    <div class="panel-header" data-id="zoneServiceTbl">Services<i class="icon-chevron-up pull-right"></i></div>
+                    <div class="panel-content" data-id="zoneTableLayout"></div>
                 </div>
             </div>
+        {{else}}
+            {{#if isZoneAdministration}}
+                <div class="security-details-default">
+                    <div class="default-zone">
+                        <img alt="Avatar" class="zoneImg" src="images/defult_zone.png">
+                        <a href="#!/zones/create" class="btn-add-security2 btn-large pull-right" title="Click here to Create new Zone"><i class="icon-plus"></i> Click here to Create new Zone</a>
+                    </div>
+                </div>
+            {{/if}}
         {{/if}}
-    {{/if}}
-</div>
+    </div>
+{{else}}
+    <div class="">
+        {{#if zoneList.length}}
+            <div class="wrap non-collapsible m-height">
+                <div class="">
+                    <div class="">
+                        {{#if isZoneAdministration}}
+                            <span class="pull-right">
+                                    <a type="button" href='#!/zones/edit/{{this.zoneModel.attributes.id}}' class="btn btn-default" data-id="editZone"><i class="icon-edit"></i> Edit</a>
+                                    <button class="btn btn-danger" data-id="deleteZone"><i class="icon-trash"></i> Delete</button>
+                            </span>
+                        {{/if}}
+                        <h2 data-id="zoneName">{{{zoneModelName}}}</h2>
+                    </div>
+                </div>
+                <div class="row-fluid" data-id="zoneAdministrationView"></div>
+                <div class="panel panel-default">
+                    <div class="panel-header" data-id="zoneServiceTbl">Services<i class="icon-chevron-up pull-right"></i></div>
+                    <div class="panel-content" data-id="zoneTableLayout"></div>
+                </div>
+            </div>
+        {{else}}
+            {{#if isZoneAdministration}}
+                <div class="security-details-default">
+                    <div class="default-zone">
+                        <img alt="Avatar" class="zoneImg" src="images/defult_zone.png">
+                        <a href="#!/zones/create" class="btn-add-security2 btn-large pull-right" title="Click here to Create new Zone"><i class="icon-plus"></i> Click here to Create new Zone</a>
+                    </div>
+                </div>
+            {{/if}}
+        {{/if}}
+    </div>
+{{/if}}

@@ -14,21 +14,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
+try:
+    import commands as commands
+except ImportError:
+    import subprocess as commands
+
 import re
-import StringIO
 import xml.etree.ElementTree as ET
-import ConfigParser
 import os, sys
 from os.path import isfile, join, dirname, basename
 from time import strftime, localtime
 import shutil
 import pwd, grp
-import commands
 
 globalDict = {}
 
 if (not 'JAVA_HOME' in os.environ):
-    print "ERROR: JAVA_HOME environment variable is not defined. Please define JAVA_HOME before running this script"
+    print("ERROR: JAVA_HOME environment variable is not defined. Please define JAVA_HOME before running this script")
     sys.exit(1)
 
 debugLevel = 1
@@ -73,7 +84,7 @@ defaultDNAME = 'cn=unixauthservice,ou=authenticator,o=mycompany,c=US'
 unixUserProp = 'unix_user'
 unixGroupProp = 'unix_group'
 
-logFolderPermMode = 0770
+logFolderPermMode = 0o770
 rootOwnerId = 0
 initPrefixList = ['S99', 'K00']
 
@@ -122,7 +133,7 @@ def initvariable():
             rangerBaseDirName = ranger_base_dir
     except:
         info = sys.exc_info()
-        print info[0], ":", info[1]
+        print(info[0], ":", info[1])
 
     usersyncBaseDirFullName = join(rangerBaseDirName, usersyncBaseDirName)
     confFolderName = join(usersyncBaseDirFullName, confBaseDirName)
@@ -134,7 +145,7 @@ def archiveFile(originalFileName):
     archiveDir = dirname(originalFileName)
     archiveFileName = "." + basename(originalFileName) + "." + (strftime("%d%m%Y%H%M%S", localtime()))
     movedFileName = join(archiveDir, archiveFileName)
-    print "INFO: moving [%s] to [%s] ......." % (originalFileName, movedFileName)
+    print("INFO: moving [%s] to [%s] ......." % (originalFileName, movedFileName))
     os.rename(originalFileName, movedFileName)
 
 
@@ -161,11 +172,11 @@ def getXMLConfigMap(xmlFileName):
 
 def getPropertiesConfigMap(configFileName):
     ret = {}
-    config = StringIO.StringIO()
+    config = StringIO()
     config.write('[dummysection]\n')
     config.write(open(configFileName).read())
     config.seek(0, os.SEEK_SET)
-    fcp = ConfigParser.ConfigParser()
+    fcp = ConfigParser()
     fcp.optionxform = str
     fcp.readfp(config)
     for k, v in fcp.items('dummysection'):
@@ -175,11 +186,11 @@ def getPropertiesConfigMap(configFileName):
 
 def getPropertiesKeyList(configFileName):
     ret = []
-    config = StringIO.StringIO()
+    config = StringIO()
     config.write('[dummysection]\n')
     config.write(open(configFileName).read())
     config.seek(0, os.SEEK_SET)
-    fcp = ConfigParser.ConfigParser()
+    fcp = ConfigParser()
     fcp.optionxform = str
     fcp.readfp(config)
     for k, v in fcp.items('dummysection'):
@@ -197,7 +208,7 @@ def writeXMLUsingProperties(xmlTemplateFileName, prop, xmlOutputFileName):
         if name in prop_arr:
             config.find('value').text = "_"
             continue
-        if (name in prop.keys()):
+        if (name in list(prop)):
             config.find('value').text = str(prop[name])
         # else:
         #    print "ERROR: key not found: %s" % (name)
@@ -214,7 +225,7 @@ def updatePropertyInJCKSFile(jcksFileName, propName, value):
     credUpdateClassName, propName, value, fn)
     ret = os.system(cmd)
     if (ret != 0):
-        print "ERROR: Unable update the JCKSFile(%s) for aliasName (%s)" % (fn, propName)
+        print("ERROR: Unable update the JCKSFile(%s) for aliasName (%s)" % (fn, propName))
         sys.exit(1)
     return ret
 
@@ -222,24 +233,24 @@ def updatePropertyInJCKSFile(jcksFileName, propName, value):
 def password_validation(password, userType):
     if password:
         if re.search("[\\\`'\"]", password):
-            print "[E] " + userType + " property contains one of the unsupported special characters like \" ' \ `"
+            print("[E] " + userType + " property contains one of the unsupported special characters like \" ' \ `")
             sys.exit(1)
         else:
-            print "[I] " + userType + " property is verified."
+            print("[I] " + userType + " property is verified.")
     else:
-        print "[E] Blank password is not allowed for property " + userType + ",please enter valid password."
+        print("[E] Blank password is not allowed for property " + userType + ",please enter valid password.")
         sys.exit(1)
 
 
 def convertInstallPropsToXML(props):
     directKeyMap = getPropertiesConfigMap(join(installTemplateDirName, install2xmlMapFileName))
     ret = {}
-    for k, v in props.iteritems():
-        if (k in directKeyMap.keys()):
+    for k, v in props.items():
+        if (k in list(directKeyMap)):
             newKey = directKeyMap[k]
             ret[newKey] = v
         else:
-            print "Direct Key not found:%s" % (k)
+            print("Direct Key not found:%s" % (k))
 
     ret['ranger.usersync.sink.impl.class'] = 'org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder'
     if (SYNC_SOURCE_KEY in ret):
@@ -263,14 +274,14 @@ def convertInstallPropsToXML(props):
             else:
                 ret[SYNC_INTERVAL_NEW_KEY] = int(ret[SYNC_INTERVAL_NEW_KEY]) * 60000
         else:
-            print "ERROR: Invalid value (%s) defined for %s in install.properties. Only valid values are %s" % (
-            syncSource, SYNC_SOURCE_KEY, SYNC_SOURCE_LIST)
+            print("ERROR: Invalid value (%s) defined for %s in install.properties. Only valid values are %s" % (
+            syncSource, SYNC_SOURCE_KEY, SYNC_SOURCE_LIST))
             sys.exit(1)
         ret['ranger.usersync.sync.source'] = syncSource
         del ret['SYNC_SOURCE']
     else:
-        print "ERROR: No value defined for SYNC_SOURCE in install.properties. valid values are %s" % (
-        SYNC_SOURCE_KEY, SYNC_SOURCE_LIST)
+        print("ERROR: No value defined for SYNC_SOURCE in install.properties. valid values are %s" % (
+        SYNC_SOURCE_KEY, SYNC_SOURCE_LIST))
         sys.exit(1)
 
     return ret
@@ -283,13 +294,13 @@ def createUser(username, groupname):
         cmd = "useradd -g %s %s -m" % (groupname, username)
         ret = os.system(cmd)
         if (ret != 0):
-            print "ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret)
+            print("ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret))
             sys.exit(1)
     try:
         ret = pwd.getpwnam(username).pw_uid
         return ret
-    except KeyError, e:
-        print "ERROR: Unable to create a new user account: %s with group %s - error [%s]" % (username, groupname, e)
+    except KeyError as e:
+        print("ERROR: Unable to create a new user account: %s with group %s - error [%s]" % (username, groupname, e))
         sys.exit(1)
 
 
@@ -300,13 +311,13 @@ def createGroup(groupname):
         cmd = "groupadd %s" % (groupname)
         ret = os.system(cmd)
         if (ret != 0):
-            print "ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret)
+            print("ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret))
             sys.exit(1)
     try:
         ret = grp.getgrnam(groupname).gr_gid
         return ret
-    except KeyError, e:
-        print "ERROR: Unable to create a new group: %s" % (groupname, e)
+    except KeyError as e:
+        print("ERROR: Unable to create a new group: %s" % (groupname, e))
         sys.exit(1)
 
 
@@ -325,7 +336,7 @@ def initializeInitD(ownerName):
             f = open(initdFn, 'w')
             f.write(newdata)
             f.close()
-        os.chmod(initdFn, 0550)
+        os.chmod(initdFn, 0o550)
         rcDirList = ["/etc/rc2.d", "/etc/rc3.d", "/etc/rc.d/rc2.d", "/etc/rc.d/rc3.d"]
         for rcDir in rcDirList:
             if (os.path.isdir(rcDir)):
@@ -348,7 +359,7 @@ def createJavaKeystoreForSSL(fn, passwd):
     fn, passwd, passwd, defaultDNAME)
     ret = os.system(cmd)
     if (ret != 0):
-        print "ERROR: unable to create JavaKeystore for SSL: file (%s)" % (fn)
+        print("ERROR: unable to create JavaKeystore for SSL: file (%s)" % (fn))
         sys.exit(1)
     return ret
 
@@ -356,7 +367,7 @@ def createJavaKeystoreForSSL(fn, passwd):
 def write_env_files(exp_var_name, log_path, file_name):
     final_path = "{0}/{1}".format(confBaseDirName, file_name)
     if not os.path.isfile(final_path):
-        print "Creating %s file" % file_name
+        print("Creating %s file" % file_name)
     f = open(final_path, "w")
     f.write("export {0}={1}".format(exp_var_name, log_path))
     f.close()
@@ -371,22 +382,22 @@ def main():
     unix_user = globalDict['unix_user']
     rangerUsersync_password = globalDict['rangerUsersync_password']
 
-    if globalDict['SYNC_SOURCE'].lower() == SYNC_SOURCE_LDAP and globalDict.has_key('ROLE_ASSIGNMENT_LIST_DELIMITER') \
-     and globalDict.has_key('USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER') and globalDict.has_key('USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER'):
+    if globalDict['SYNC_SOURCE'].lower() == SYNC_SOURCE_LDAP and 'ROLE_ASSIGNMENT_LIST_DELIMITER' in globalDict \
+     and 'USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER' in globalDict and 'USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER' in globalDict:
         roleAssignmentDelimiter = globalDict['ROLE_ASSIGNMENT_LIST_DELIMITER']
         userGroupAssignmentDelimiter= globalDict['USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER']
         userNameGroupNameAssignmentListDelimiter= globalDict['USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER'];
         if roleAssignmentDelimiter != "" :
             if roleAssignmentDelimiter == userGroupAssignmentDelimiter or roleAssignmentDelimiter == userNameGroupNameAssignmentListDelimiter :
-                print "ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different"
+                print("ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different")
                 sys.exit(1)
         if userGroupAssignmentDelimiter != "" :
             if roleAssignmentDelimiter == userGroupAssignmentDelimiter or userGroupAssignmentDelimiter == userNameGroupNameAssignmentListDelimiter:
-                print "ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different"
+                print("ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different")
                 sys.exit(1)
         if userNameGroupNameAssignmentListDelimiter != "":
             if roleAssignmentDelimiter == userNameGroupNameAssignmentListDelimiter or userGroupAssignmentDelimiter == userNameGroupNameAssignmentListDelimiter:
-                print "ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different"
+                print("ERROR: All Delimiters ROLE_ASSIGNMENT_LIST_DELIMITER, USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER and USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER  should be different")
                 sys.exit(1)
 
     if pid_dir_path == "":
@@ -399,7 +410,7 @@ def main():
     dirList = [rangerBaseDirName, usersyncBaseDirFullName, confFolderName, certFolderName]
     for dir in dirList:
         if (not os.path.isdir(dir)):
-            os.makedirs(dir, 0750)
+            os.makedirs(dir, 0o750)
 
     defFileList = [defaultSiteXMLFileName, log4jFileName]
     for defFile in defFileList:
@@ -417,7 +428,7 @@ def main():
     str = "export JAVA_HOME=%s\n" % os.environ['JAVA_HOME']
     jhf.write(str)
     jhf.close()
-    os.chmod(java_home_setter_fn, 0750)
+    os.chmod(java_home_setter_fn, 0o750)
 
     if (not os.path.isdir(localConfFolderName)):
         os.symlink(confFolderName, localConfFolderName)
@@ -481,12 +492,12 @@ def main():
 
     try:
         groupId = grp.getgrnam(groupName).gr_gid
-    except KeyError, e:
+    except KeyError as e:
         groupId = createGroup(groupName)
 
     try:
         ownerId = pwd.getpwnam(ownerName).pw_uid
-    except KeyError, e:
+    except KeyError as e:
         ownerId = createUser(ownerName, groupName)
 
     os.chown(logFolderName, ownerId, groupId)
@@ -502,7 +513,7 @@ def main():
 
     cryptPath = mergeProps['ranger.usersync.credstore.filename']
 
-    for keyName, aliasName in PROP2ALIASMAP.iteritems():
+    for keyName, aliasName in PROP2ALIASMAP.items():
         if (keyName in mergeProps):
             keyPassword = mergeProps[keyName]
             updatePropertyInJCKSFile(cryptPath, aliasName, keyPassword)
@@ -534,64 +545,64 @@ def main():
 
     writeXMLUsingProperties(fn, mergeProps, outfn)
 
+    hadoop_conf_full_path = join(hadoop_conf, hadoopConfFileName)
+    usersync_conf_full_path = join(usersyncBaseDirFullName, confBaseDirName, hadoopConfFileName)
+    if not isfile(hadoop_conf_full_path):
+        print("WARN: core-site.xml file not found in provided hadoop conf path...")
+        f = open(usersync_conf_full_path, "w")
+        f.write("<configuration></configuration>")
+        f.close()
+        os.chown(usersync_conf_full_path, ownerId, groupId)
+        os.chmod(usersync_conf_full_path, 0o750)
+    else:
+        if os.path.islink(usersync_conf_full_path):
+            os.remove(usersync_conf_full_path)
+
     fixPermList = [".", usersyncBaseDirFullName, confFolderName, certFolderName]
 
     for dir in fixPermList:
         for root, dirs, files in os.walk(dir):
             os.chown(root, ownerId, groupId)
-            os.chmod(root, 0755)
+            os.chmod(root, 0o755)
             for obj in dirs:
                 dn = join(root, obj)
                 os.chown(dn, ownerId, groupId)
-                os.chmod(dn, 0755)
+                os.chmod(dn, 0o755)
             for obj in files:
                 fn = join(root, obj)
                 os.chown(fn, ownerId, groupId)
-                os.chmod(fn, 0750)
+                os.chmod(fn, 0o750)
 
     if isfile(nativeAuthProgramName):
         os.chown(nativeAuthProgramName, rootOwnerId, groupId)
-        os.chmod(nativeAuthProgramName, 0750)
+        os.chmod(nativeAuthProgramName, 0o750)
     else:
-        print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
-        nativeAuthProgramName, "root", groupName)
+        print("WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
+        nativeAuthProgramName, "root", groupName))
 
     if isfile(pamAuthProgramName):
         os.chown(pamAuthProgramName, rootOwnerId, groupId)
-        os.chmod(pamAuthProgramName, 0750)
+        os.chmod(pamAuthProgramName, 0o750)
     else:
-        print "WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
-        pamAuthProgramName, "root", groupName)
+        print("WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
+        pamAuthProgramName, "root", groupName))
 
     write_env_files("logdir", logFolderName, ENV_LOGDIR_FILE);
     write_env_files("RANGER_USERSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE);
     write_env_files("USERSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
     write_env_files("USERSYNC_CONF_DIR", confFolderName, ENV_CONF_FILE);
     os.chown(join(confBaseDirName, ENV_LOGDIR_FILE), ownerId, groupId)
-    os.chmod(join(confBaseDirName, ENV_LOGDIR_FILE), 0755)
+    os.chmod(join(confBaseDirName, ENV_LOGDIR_FILE), 0o755)
     os.chown(join(confBaseDirName, ENV_HADOOP_CONF_FILE), ownerId, groupId)
-    os.chmod(join(confBaseDirName, ENV_HADOOP_CONF_FILE), 0755)
+    os.chmod(join(confBaseDirName, ENV_HADOOP_CONF_FILE), 0o755)
     os.chown(join(confBaseDirName, ENV_PID_FILE), ownerId, groupId)
-    os.chmod(join(confBaseDirName, ENV_PID_FILE), 0755)
+    os.chmod(join(confBaseDirName, ENV_PID_FILE), 0o755)
     os.chown(join(confBaseDirName, ENV_CONF_FILE), ownerId, groupId)
-    os.chmod(join(confBaseDirName, ENV_CONF_FILE), 0755)
+    os.chmod(join(confBaseDirName, ENV_CONF_FILE), 0o755)
 
     f = open(join(confBaseDirName, ENV_PID_FILE), "a+")
     f.write("\nexport {0}={1}".format("UNIX_USERSYNC_USER", unix_user))
     f.close()
-
-    hadoop_conf_full_path = join(hadoop_conf, hadoopConfFileName)
-    usersync_conf_full_path = join(usersyncBaseDirFullName, confBaseDirName, hadoopConfFileName)
-    if not isfile(hadoop_conf_full_path):
-        print "WARN: core-site.xml file not found in provided hadoop conf path..."
-        f = open(usersync_conf_full_path, "w")
-        f.write("<configuration></configuration>")
-        f.close()
-        os.chown(usersync_conf_full_path, ownerId, groupId)
-        os.chmod(usersync_conf_full_path, 0750)
-    else:
-        if os.path.islink(usersync_conf_full_path):
-            os.remove(usersync_conf_full_path)
 
     if isfile(hadoop_conf_full_path) and not isfile(usersync_conf_full_path):
         os.symlink(hadoop_conf_full_path, usersync_conf_full_path)
@@ -602,8 +613,8 @@ def main():
     if rangerUsersync_password != "" :
         output = os.system(cmd)
         if (output == 0):
-          print "[I] Successfully updated password of " + rangerUsersync_name +" user"
+          print("[I] Successfully updated password of " + rangerUsersync_name +" user")
         else:
-          print "[ERROR] Unable to change password of " + rangerUsersync_name +" user."
+          print("[ERROR] Unable to change password of " + rangerUsersync_name +" user.")
 
 main()

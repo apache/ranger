@@ -27,14 +27,12 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.UnaryOperator;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.ranger.authorization.elasticsearch.plugin.action.filter.RangerSecurityActionFilter;
 import org.apache.ranger.authorization.elasticsearch.plugin.rest.filter.RangerSecurityRestFilter;
 import org.elasticsearch.action.support.ActionFilter;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.cluster.service.ClusterService;
 import org.elasticsearch.common.io.stream.NamedWriteableRegistry;
-import org.elasticsearch.common.logging.ESLoggerFactory;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.common.xcontent.NamedXContentRegistry;
@@ -46,10 +44,12 @@ import org.elasticsearch.rest.RestHandler;
 import org.elasticsearch.script.ScriptService;
 import org.elasticsearch.threadpool.ThreadPool;
 import org.elasticsearch.watcher.ResourceWatcherService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerElasticsearchPlugin extends Plugin implements ActionPlugin {
 
-	private static final Logger LOG = ESLoggerFactory.getLogger(RangerElasticsearchPlugin.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerElasticsearchPlugin.class);
 
 	private static final String RANGER_ELASTICSEARCH_PLUGIN_CONF_NAME = "ranger-elasticsearch-plugin";
 
@@ -59,6 +59,7 @@ public class RangerElasticsearchPlugin extends Plugin implements ActionPlugin {
 
 	public RangerElasticsearchPlugin(Settings settings) {
 		this.settings = settings;
+		LOG.debug("settings:"+this.settings);
 	}
 
 	@Override
@@ -68,8 +69,7 @@ public class RangerElasticsearchPlugin extends Plugin implements ActionPlugin {
 
 	@Override
 	public UnaryOperator<RestHandler> getRestHandlerWrapper(ThreadContext threadContext) {
-		return (UnaryOperator<RestHandler>) (handler -> new RangerSecurityRestFilter(this.settings, threadContext,
-				handler));
+		return (UnaryOperator<RestHandler>) (handler -> new RangerSecurityRestFilter(threadContext, handler));
 	}
 
 	@Override
@@ -81,7 +81,7 @@ public class RangerElasticsearchPlugin extends Plugin implements ActionPlugin {
 
 		addPluginConfig2Classpath(environment);
 
-		rangerSecurityActionFilter = new RangerSecurityActionFilter(this.settings, threadPool.getThreadContext());
+		rangerSecurityActionFilter = new RangerSecurityActionFilter(threadPool.getThreadContext());
 		return Collections.singletonList(rangerSecurityActionFilter);
 	}
 
@@ -101,7 +101,7 @@ public class RangerElasticsearchPlugin extends Plugin implements ActionPlugin {
 		try {
 			if (configFile.exists()) {
 				ClassLoader classLoader = this.getClass().getClassLoader();
-				// This classLoader is FactoryURLClassLoader in eleasticsearch
+				// This classLoader is FactoryURLClassLoader in elasticsearch
 				if (classLoader instanceof URLClassLoader) {
 					URLClassLoader urlClassLoader = (URLClassLoader) classLoader;
 					Class<? extends URLClassLoader> urlClass = urlClassLoader.getClass();

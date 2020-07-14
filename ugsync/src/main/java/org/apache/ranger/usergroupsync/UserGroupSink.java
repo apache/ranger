@@ -22,6 +22,7 @@
 import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
 
 import java.util.List;
+import java.util.Map;
 
 public interface UserGroupSink {
 	void init() throws Throwable;
@@ -30,9 +31,13 @@ public interface UserGroupSink {
 	
 	void addOrUpdateUser(String user) throws Throwable;
 	
-	void addOrUpdateGroup(String group) throws Throwable;
+	void addOrUpdateGroup(String group, Map<String, String> groupAttrs) throws Throwable;
 	
 	void addOrUpdateGroup(String group, List<String> users) throws Throwable;
 
 	void postUserGroupAuditInfo(UgsyncAuditInfo ugsyncAuditInfo) throws Throwable;
+
+	void addOrUpdateUser(String user, Map<String, String> userAttrs, List<String> groups) throws Throwable;
+
+	void addOrUpdateGroup(String group, Map<String, String> groupAttrs, List<String> users) throws Throwable;
 }

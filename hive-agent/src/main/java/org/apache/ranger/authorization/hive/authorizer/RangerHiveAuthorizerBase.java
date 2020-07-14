@@ -147,14 +147,6 @@ public abstract class RangerHiveAuthorizerBase extends AbstractHiveAuthorizer {
 		return VERSION.V1;
 	}
 
-	@Override
-	public void setCurrentRole(String roleName)
-			throws HiveAccessControlException, HiveAuthzPluginException {
-		LOG.debug("RangerHiveAuthorizerBase.setCurrentRole()");
-
-		throwNotImplementedException("setCurrentRole");
-	}
-
 	private void throwNotImplementedException(String method) throws HiveAuthzPluginException {
 		throw new HiveAuthzPluginException(method + "() not implemented in Ranger AbstractHiveAuthorizer");
 	}

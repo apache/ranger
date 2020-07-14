@@ -195,19 +195,26 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		return trxLogList;
 	}
 
-	public String restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(String fieldName, RangerPolicy vObj,
-			int action) {
-		String result = "";
+	public String restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(String fieldName, RangerPolicy vObj) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> RangerPolicyService( Field Name : (" + fieldName +") RangerPolicy : ("+ vObj + ")");
+		}
+		String ret = "";
 		if (StringUtils.isNotBlank(fieldName)
 				&& StringUtils.equalsIgnoreCase(fieldName.trim(), POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME)
 				&& vObj != null) {
-
-			if (vObj.getPolicyType() == RangerPolicy.POLICY_TYPE_ROWFILTER
-					|| vObj.getPolicyType() == RangerPolicy.POLICY_TYPE_DATAMASK) {
-				result = null;
+			Integer policyType = vObj.getPolicyType();
+			if (policyType == null || policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
+				return ret;
+			} else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER
+						|| policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
+					ret = null;
 			}
 		}
-		return result;
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== RangerPolicyService( Field Name : (" + fieldName +") RangerPolicy : ("+ vObj + ") ret : ( "+ret+" )");
+		}
+		return ret;
 	}
 	private XXTrxLog processFieldToCreateTrxLog(Field field, String objectName,
 			RangerPolicy vObj, XXPolicy mObj, RangerPolicy oldPolicy, int action) {
@@ -285,7 +292,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			}
 
 			if (action == OPERATION_CREATE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj, action) == null) {
+				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
 					return null;
 				}
 				if (stringUtil.isEmpty(value)) {
@@ -294,13 +301,13 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				xTrxLog.setNewValue(value);
 				actionString = actionCreate;
 			} else if (action == OPERATION_DELETE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj, action) == null) {
+				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
 					return null;
 				}
 				xTrxLog.setPreviousValue(value);
 				actionString = actionDelete;
 			} else if (action == OPERATION_UPDATE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj, action) == null) {
+				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
 					return null;
 				}
 				actionString = actionUpdate;
@@ -487,7 +494,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				xTrxLog.setNewValue(value);
 			}
 			else if (action == OPERATION_IMPORT_CREATE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj, action) == null) {
+				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
 					return null;
 				}
 				if (stringUtil.isEmpty(value)) {
@@ -496,7 +503,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				xTrxLog.setNewValue(value);
 				actionString = actionImportCreate;
 			} else if (action == OPERATION_IMPORT_DELETE_CONTEXT) {
-				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj, action) == null) {
+				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
 					return null;
 				}
 				xTrxLog.setPreviousValue(value);

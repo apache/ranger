@@ -148,6 +148,15 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	protected String notes;
 
 	/**
+	 * Additional store attributes.
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name="OTHER_ATTRIBUTES")
+	protected String otherAttributes;
+
+	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public XXPortalUser ( ) {
@@ -314,6 +323,23 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets JSON {@link String} representation of additional store attributes.
+	 * This method accepts null values.
+	 * @param otherAttributes
+	 */
+	public void setOtherAttributes(String otherAttributes) {
+		this.otherAttributes = otherAttributes;
+	}
+
+	/**
+	 * @return JSON {@link String} representation of additional store attributes if available,
+	 * <code>null</code> otherwise.
+	 */
+	public String getOtherAttributes() {
+		return otherAttributes;
+	}
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -329,6 +355,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 		str += "status={" + status + "} ";
 		str += "userSource={" + userSource + "} ";
 		str += "notes={" + notes + "} ";
+		str += "otherAttributes={" + otherAttributes + "} ";
 		str += "}";
 		return str;
 	}

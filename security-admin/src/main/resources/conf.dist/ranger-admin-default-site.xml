@@ -201,7 +201,14 @@
 
 
 <!-- Embedded Web-Server properties  -->
-
+	<property>
+		<name>ranger.valve.errorreportvalve.showserverinfo</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger.valve.errorreportvalve.showreport</name>
+		<value>false</value>
+	</property>
 <!--
 #
 # Service Information
@@ -374,7 +381,13 @@
 	<property>
 		<name>ranger.jpa.jdbc.batch-clear.size</name>
 		<value>10</value>
-		<description>batch size to flush and clear jdbc statements</description>
+		<description>batch size (in number of policies) to flush and clear jdbc statements during batch policy import/delete</description>
+	</property>
+
+	<property>
+		<name>ranger.jpa.jdbc.batch-persist.size</name>
+		<value>500</value>
+		<description>batch size (in number of objects) to flush and clear jdbc statements during jpa persistence</description>
 	</property>
 
 	<property>
@@ -453,9 +466,13 @@
 		<description>Time in milliseconds</description>
 	</property>
 	<property>
-        <name>ranger.audit.solr.bootstrap.enabled</name>
-        <value>true</value>
-    </property>
+		<name>ranger.audit.solr.bootstrap.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.audit.elasticsearch.bootstrap.enabled</name>
+		<value>true</value>
+	</property>
 	<property>
 		<name>ranger.audit.solr.max.retry</name>
 		<value>30</value>
@@ -463,7 +480,7 @@
 	</property>
 	<property>
 		<name>ranger.sha256Password.update.disable</name>
-		<value>true</value>
+		<value>false</value>
 		<description></description>
 	</property>
 	<!-- # DB Info for audit_DB -->

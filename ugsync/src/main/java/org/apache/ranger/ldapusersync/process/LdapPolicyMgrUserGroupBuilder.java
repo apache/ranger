@@ -19,54 +19,38 @@
 
 package org.apache.ranger.ldapusersync.process;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.UnknownHostException;
 import java.security.KeyStore;
 import java.security.PrivilegedAction;
-import java.security.SecureRandom;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.HashMap;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.KeyManager;
-import javax.net.ssl.KeyManagerFactory;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.SSLSession;
-import javax.net.ssl.TrustManager;
-import javax.net.ssl.TrustManagerFactory;
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Cookie;
-import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.URLEncoderUtil;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.*;
+import org.apache.ranger.unixusersync.process.RangerUgSyncRESTClient;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 
 import com.google.common.collect.Table;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.config.ClientConfig;
-import com.sun.jersey.api.client.config.DefaultClientConfig;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
-import com.sun.jersey.client.urlconnection.HTTPSProperties;
 
 public class LdapPolicyMgrUserGroupBuilder implements UserGroupSink {
 
@@ -98,7 +82,6 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	private static final String GROUP_SOURCE_EXTERNAL ="1";
 
-	private static final String RANGER_ADMIN_COOKIE_NAME = "RANGERADMINSESSIONID";
 	private static String LOCAL_HOSTNAME = "unknown";
 	private String recordsToPullPerCall = "1000";
 	private boolean isMockRun = false;
@@ -111,18 +94,10 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	private UserGroupInfo				usergroupInfo = new UserGroupInfo();
 	private GroupUserInfo				groupuserInfo = new GroupUserInfo();
+	private volatile RangerUgSyncRESTClient ldapUgSyncClient;
 	
 	Table<String, String, String> groupsUsersTable;
-	
-	private String keyStoreFile =  null;
-	private String keyStoreFilepwd = null;
-	private String trustStoreFile = null;
-	private String trustStoreFilepwd = null;
-	private String keyStoreType = null;
-	private String trustStoreType = null;
-	private HostnameVerifier hv =  null;
 
-	private SSLContext sslContext = null;
 	private String authenticationType = null;
 	String principal;
 	String keytab;
@@ -130,8 +105,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
     Map<String, String> userMap = new LinkedHashMap<String, String>();
     Map<String, String> groupMap = new LinkedHashMap<String, String>();
     private boolean isRangerCookieEnabled;
-    private volatile Client client;
-
+    private String rangerCookieName;
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -145,16 +119,18 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
 		isMockRun = config.isMockRunEnabled();
 		isRangerCookieEnabled = config.isUserSyncRangerCookieEnabled();
+		rangerCookieName = config.getRangerAdminCookieName();
+
 		if (isMockRun) {
 			LOG.setLevel(Level.DEBUG);
 		}
 		sessionId=null;
-		keyStoreFile =  config.getSSLKeyStorePath();
-		keyStoreFilepwd = config.getSSLKeyStorePathPassword();
-		trustStoreFile = config.getSSLTrustStorePath();
-		trustStoreFilepwd = config.getSSLTrustStorePathPassword();
-		keyStoreType = KeyStore.getDefaultType();
-		trustStoreType = KeyStore.getDefaultType();
+		String keyStoreFile =  config.getSSLKeyStorePath();
+		String trustStoreFile = config.getSSLTrustStorePath();
+		String keyStoreFilepwd = config.getSSLKeyStorePathPassword();
+		String trustStoreFilepwd = config.getSSLTrustStorePathPassword();
+		String keyStoreType = KeyStore.getDefaultType();
+		String trustStoreType = KeyStore.getDefaultType();
 		authenticationType = config.getProperty(AUTHENTICATION_TYPE,"simple");
 		try {
 			principal = SecureClientLogin.getPrincipal(config.getProperty(PRINCIPAL,""), LOCAL_HOSTNAME);
@@ -163,33 +139,29 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 		keytab = config.getProperty(KEYTAB,"");
 		nameRules = config.getProperty(NAME_RULE,"DEFAULT");
+		ldapUgSyncClient = new RangerUgSyncRESTClient(policyMgrBaseUrl, keyStoreFile, keyStoreFilepwd, keyStoreType,
+				trustStoreFile, trustStoreFilepwd, trustStoreType, authenticationType, principal, keytab,
+				config.getPolicyMgrUserName(), config.getPolicyMgrPassword());
+
         String userGroupRoles = config.getGroupRoleRules();
         if (userGroupRoles != null && !userGroupRoles.isEmpty()) {
             getRoleForUserGroups(userGroupRoles);
         }
+        if (LOG.isDebugEnabled()) {
+			LOG.debug("PolicyMgrUserGroupBuilder.init()==> PolMgrBaseUrl : "+policyMgrBaseUrl+" KeyStore File : "+keyStoreFile+" TrustStore File : "+trustStoreFile+ "Authentication Type : "+authenticationType);
+		}
     }
 
 	@Override
 	public void addOrUpdateUser(String userName, List<String> groups) throws Throwable {
-		//* Add user to groups mapping in the x_user table. 
-		//* Here the assumption is that the user already exists in x_portal_user table.
-		if ( ! isMockRun ) {
-			// If the rest call to ranger admin fails, 
-			// propagate the failure to the caller for retry in next sync cycle.
-			if (addUserGroupInfo(userName, groups) == null ) {
-				String msg = "Failed to add addorUpdate user group info";
-				LOG.error(msg);
-				throw new Exception(msg);
-			}
-		}
 
 	}
 
 	@Override
-	public void addOrUpdateGroup(String groupName) throws Throwable {
+	public void addOrUpdateGroup(String groupName, Map<String, String> groupAttrs) throws Throwable {
 		//* Build the group info object and do the rest call
 			if ( ! isMockRun ) {
-				if ( addGroupInfo(groupName) == null) {
+				if ( addGroupInfo(groupName, groupAttrs) == null) {
 					String msg = "Failed to add addorUpdate group info";
 					LOG.error(msg);
 					throw new Exception(msg);
@@ -198,13 +170,15 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	}
 	
-	private XGroupInfo addGroupInfo(final String groupName){
+	private XGroupInfo addGroupInfo(final String groupName, Map<String, String> groupAttrs){
 		XGroupInfo ret = null;
 		XGroupInfo group = null;
-		
-		LOG.debug("INFO: addPMXAGroup(" + groupName + ")");
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("INFO: addPMXAGroup(" + groupName + ")");
+		}
 		if (! isMockRun) {
-			group = addXGroupInfo(groupName);
+			group = addXGroupInfo(groupName, groupAttrs);
 		}
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal,keytab)) {
 			try {
@@ -232,7 +206,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}	
 	}
 	
-	private XGroupInfo addXGroupInfo(String aGroupName) {
+	private XGroupInfo addXGroupInfo(String aGroupName, Map<String, String> groupAttrs) {
 		
 		XGroupInfo addGroup = new XGroupInfo();
 		
@@ -243,6 +217,8 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		addGroup.setGroupType("1");
 
 		addGroup.setGroupSource(GROUP_SOURCE_EXTERNAL);
+		Gson gson = new Gson();
+		addGroup.setOtherAttributes(gson.toJson(groupAttrs));
 		groupuserInfo.setXgroupInfo(addGroup);
 
 		return addGroup;
@@ -251,22 +227,26 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	private XGroupInfo getAddedGroupInfo(XGroupInfo group){	
 		XGroupInfo ret = null;
 		String response = null;
+		ClientResponse clientRes = null;
 		Gson gson = new GsonBuilder().create();
 		String jsonString = gson.toJson(group);
+		String relativeUrl = PM_ADD_GROUP_URI;
+
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(jsonString,PM_ADD_GROUP_URI);
+			response = cookieBasedUploadEntity(group, relativeUrl);
 		}
 		else {
-			Client c = getClient();
-			WebResource r = c.resource(getURL(PM_ADD_GROUP_URI));
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Group" + jsonString);
 			}
 			try {
-				response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+				clientRes = ldapUgSyncClient.post(relativeUrl, null, group);
+				if (clientRes != null) {
+					response = clientRes.getEntity(String.class);
+				}
 			}
 			catch(Throwable t){
-				LOG.error("Failed to communicate Ranger Admin : ", t);
+				LOG.error("Failed to get response, Error is : ", t);
 			}
 		}
 
@@ -287,46 +267,58 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	@Override
 	public void addOrUpdateUser(String userName) throws Throwable {
+
+	}
+
+	@Override
+	public void addOrUpdateUser(String userName, Map<String, String> userAttrs, List<String> groups) throws Throwable {
 		// First add to x_portal_user
-		LOG.debug("INFO: addPMAccount(" + userName + ")" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("INFO: addPMAccount(" + userName + ")");
+		}
 		if (! isMockRun) {
-			if (addMUser(userName) == null) {
-		        String msg = "Failed to add portal user";
-		        LOG.error(msg);
-		        throw new Exception(msg);
+			if (addMUser(userName, userAttrs) == null) {
+				String msg = "Failed to add portal user";
+				LOG.error(msg);
+				throw new Exception(msg);
 			}
 		}
-		List<String> groups = new ArrayList<String>();
 		//* Build the user group info object with empty groups and do the rest call
 		if ( ! isMockRun ) {
-			// If the rest call to ranger admin fails, 
+			// If the rest call to ranger admin fails,
 			// propagate the failure to the caller for retry in next sync cycle.
-			if (addUserGroupInfo(userName, groups) == null ) {
+			if (addUserGroupInfo(userName, userAttrs, groups) == null ) {
 				String msg = "Failed to add addorUpdate user group info";
 				LOG.error(msg);
 				throw new Exception(msg);
 			}
 		}
-		
 	}
-	
-	private UserGroupInfo addUserGroupInfo(String userName, List<String> groups){
+
+	private UserGroupInfo addUserGroupInfo(String userName, Map<String, String> userAttrs, List<String> groups){
 		if(LOG.isDebugEnabled()) {
 	 		LOG.debug("==> LdapPolicyMgrUserGroupBuilder.addUserGroupInfo " + userName + " and groups");
 	 	}
 		UserGroupInfo ret = null;
 		XUserInfo user = null;
-		LOG.debug("INFO: addPMXAUser(" + userName + ")");
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("INFO: addPMXAUser(" + userName + ")");
+		}
 		
 		if (! isMockRun) {
-			user = addXUserInfo(userName);
+			user = addXUserInfo(userName, userAttrs);
 		}
-		for(String g : groups) {
-				LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")" );
+		if (CollectionUtils.isNotEmpty(groups)) {
+			for (String g : groups) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("INFO: addPMXAGroupToUser(" + userName + "," + g + ")");
+				}
+			}
 		}
 		if (! isMockRun ) {
 			addXUserGroupInfo(user, groups);
 		}
+
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
 			try {
 				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
@@ -352,34 +344,55 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 	}
 	
-	private XUserInfo addXUserInfo(String aUserName) {
-		
+	private XUserInfo addXUserInfo(String aUserName, Map<String, String> userAttrs) {
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.addXUserInfo " + aUserName + " and " + userAttrs);
+		}
+
 		XUserInfo xuserInfo = new XUserInfo();
 
 		xuserInfo.setName(aUserName);
-		
+
 		xuserInfo.setDescription(aUserName + " - add from Unix box");
+		if (MapUtils.isNotEmpty(userAttrs)) {
+			Gson gson = new Gson();
+			xuserInfo.setOtherAttributes(gson.toJson(userAttrs));
+		}
         if (userMap.containsKey(aUserName)) {
             List<String> roleList = new ArrayList<String>();
             roleList.add(userMap.get(aUserName));
             xuserInfo.setUserRoleList(roleList);
         }
 		usergroupInfo.setXuserInfo(xuserInfo);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== LdapPolicyMgrUserGroupBuilder.addXUserInfo " + aUserName + " and " + userAttrs);
+		}
 		
 		return xuserInfo;
 	}
 
 	private void addXUserGroupInfo(XUserInfo aUserInfo, List<String> aGroupList) {
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.addXUserGroupInfo ");
+		}
 		
 		List<XGroupInfo> xGroupInfoList = new ArrayList<XGroupInfo>();
-		
-		for(String groupName : aGroupList) {
-			XGroupInfo group = addXGroupInfo(groupName);
-			xGroupInfoList.add(group);
-			addXUserGroupInfo(aUserInfo, group);
+
+		if (CollectionUtils.isNotEmpty(aGroupList)) {
+			for (String groupName : aGroupList) {
+				XGroupInfo group = addXGroupInfo(groupName, null);
+				xGroupInfoList.add(group);
+				addXUserGroupInfo(aUserInfo, group);
+			}
 		}
 		
 		usergroupInfo.setXgroupInfo(xGroupInfoList);
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== LdapPolicyMgrUserGroupBuilder.addXUserGroupInfo ");
+		}
 	}
 	
 	private XUserGroupInfo addXUserGroupInfo(XUserInfo aUserInfo, XGroupInfo aGroupInfo) {
@@ -401,22 +414,26 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.getUsergroupInfo(UserGroupInfo ret)");
 		}
 		String response = null;
+		ClientResponse clientRes = null;
 		Gson gson = new GsonBuilder().create();
 		String jsonString = gson.toJson(usergroupInfo);
+		String relativeUrl = PM_ADD_USER_GROUP_INFO_URI;
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("USER GROUP MAPPING" + jsonString);
 		}
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(jsonString,PM_ADD_USER_GROUP_INFO_URI);
+			response = cookieBasedUploadEntity(usergroupInfo,relativeUrl);
 		}
 		else {
-			Client c = getClient();
-			WebResource r = c.resource(getURL(PM_ADD_USER_GROUP_INFO_URI));
-			try{
-				response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+			try {
+				clientRes = ldapUgSyncClient.post(relativeUrl, null, usergroupInfo);
+				if (clientRes != null) {
+					response = clientRes.getEntity(String.class);
+				}
 			}
 			catch(Throwable t){
-				LOG.error("Failed to communicate Ranger Admin : ", t);
+				LOG.error("Failed to get response, Error is : ", t);
 			}
 		}
 		if ( LOG.isDebugEnabled() ) {
@@ -432,9 +449,15 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 
 	@Override
 	public void addOrUpdateGroup(String groupName, List<String> users) throws Throwable {
+	}
+
+	@Override
+	public void addOrUpdateGroup(String groupName, Map<String, String> groupAttrs, List<String> users) throws Throwable {
 		// First get the existing group user mappings from Ranger admin.
 		// Then compute the delta and send the updated group user mappings to ranger admin.
-		LOG.debug("addOrUpdateGroup for " + groupName + " with users: " + users);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("addOrUpdateGroup for " + groupName + " with users: " + users);
+		}
 		GroupUserInfo groupUserInfo = null;
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal,keytab)) {
 			try {
@@ -466,7 +489,9 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
                 oldUsers.add(xUserInfo.getName());
                 oldUserMap.put(xUserInfo.getName(), xUserInfo.getUserRoleList());
             }
-        LOG.debug("Returned users for group " + groupUserInfo.getXgroupInfo().getName() + " are: " + oldUsers);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Returned users for group " + groupUserInfo.getXgroupInfo().getName() + " are: " + oldUsers);
+			}
 		}
 		
 		List<String> addUsers = new ArrayList<String>();
@@ -486,8 +511,9 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
                 }
 			}
 		}
-		
-		LOG.debug("addUsers = " + addUsers);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("addUsers = " + addUsers);
+		}
 		delXGroupUserInfo(groupName, delUsers);
 		
 		//* Add user to group mapping in the x_group_user table. 
@@ -495,7 +521,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		if ( ! isMockRun ) {
 			// If the rest call to ranger admin fails, 
 			// propagate the failure to the caller for retry in next sync cycle.
-			if (addGroupUserInfo(groupName, addUsers) == null ) {
+			if (addGroupUserInfo(groupName, groupAttrs, addUsers) == null ) {
 				String msg = "Failed to add addorUpdate group user info";
 				LOG.error(msg);
 				throw new Exception(msg);
@@ -512,9 +538,11 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	}
 
 	private void addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) {
-		LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfNewUsers() + ", " + auditInfo.getNoOfNewGroups() +
-				", " + auditInfo.getNoOfModifiedUsers() + ", " + auditInfo.getNoOfModifiedGroups() +
-				", " + auditInfo.getSyncSource() + ")" );
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("INFO: addAuditInfo(" + auditInfo.getNoOfNewUsers() + ", " + auditInfo.getNoOfNewGroups() +
+					", " + auditInfo.getNoOfModifiedUsers() + ", " + auditInfo.getNoOfModifiedGroups() +
+					", " + auditInfo.getSyncSource() + ")");
+		}
 
 		if (authenticationType != null
 				&& AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
@@ -550,19 +578,22 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getUserGroupAuditInfo()");
 		}
 		String response = null;
+		ClientResponse clientRes = null;
 		Gson gson = new GsonBuilder().create();
-		String jsonString = gson.toJson(userInfo);
+		String relativeUrl = PM_AUDIT_INFO_URI;
+
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(jsonString, PM_AUDIT_INFO_URI);
+			response = cookieBasedUploadEntity(userInfo, relativeUrl);
 		}
 		else {
-			Client c = getClient();
-			WebResource r = c.resource(getURL(PM_AUDIT_INFO_URI));
-			try{
-				response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+			try {
+				clientRes = ldapUgSyncClient.post(relativeUrl, null, userInfo);
+				if (clientRes != null) {
+					response = clientRes.getEntity(String.class);
+				}
 			}
 			catch(Throwable t){
-				LOG.error("Failed to communicate Ranger Admin : ", t);
+				LOG.error("Failed to get response, Error is : ", t);
 			}
 		}
 		if (LOG.isDebugEnabled()) {
@@ -614,15 +645,13 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		try {
 			ClientResponse response = null;
 
-			String uri = PM_DEL_USER_GROUP_LINK_URI.replaceAll(Pattern.quote("${groupName}"),
+			String relativeUrl = PM_DEL_USER_GROUP_LINK_URI.replaceAll(Pattern.quote("${groupName}"),
 					   URLEncoderUtil.encodeURIParam(groupName)).replaceAll(Pattern.quote("${userName}"), URLEncoderUtil.encodeURIParam(userName));
 			if (isRangerCookieEnabled) {
 				if (sessionId != null && isValidRangerCookie) {
-					WebResource webResource = createWebResourceForCookieAuth(uri);
-					WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
-					response = br.delete(ClientResponse.class);
+					response = ldapUgSyncClient.delete(relativeUrl, null, sessionId);
 					if (response != null) {
-						if (!(response.toString().contains(uri))) {
+						if (!(response.toString().contains(relativeUrl))) {
 							response.setStatus(HttpServletResponse.SC_NOT_FOUND);
 							sessionId = null;
 							isValidRangerCookie = false;
@@ -634,7 +663,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 								|| response.getStatus() == HttpServletResponse.SC_OK) {
 							cookieList = response.getCookies();
 							for (NewCookie cookie : cookieList) {
-								if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+								if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
 									sessionId = cookie.toCookie();
 									isValidRangerCookie = true;
 									break;
@@ -651,10 +680,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 				}
 			}
 			else {
-				Client c = getClient();
-				WebResource r = c.resource(getURL(uri));
-
-				response = r.delete(ClientResponse.class);
+				response = ldapUgSyncClient.delete(relativeUrl, null);
 			}
 		    if ( LOG.isDebugEnabled() ) {
 		    	LOG.debug("RESPONSE: [" + response.toString() + "]");
@@ -667,19 +693,23 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 	}
 	
-	private GroupUserInfo addGroupUserInfo(String groupName, List<String> users){
+	private GroupUserInfo addGroupUserInfo(String groupName, Map<String, String> groupAttrs, List<String> users){
 		if(LOG.isDebugEnabled()) {
 	 		LOG.debug("==> LdapPolicyMgrUserGroupBuilder.addGroupUserInfo " + groupName + " and " + users);
 	 	}
 		GroupUserInfo ret = null;
 		XGroupInfo group = null;
-		
-		LOG.debug("INFO: addPMXAGroup(" + groupName + ")" );
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("INFO: addPMXAGroup(" + groupName + ")");
+		}
 		if (! isMockRun) {
-			group = addXGroupInfo(groupName);
+			group = addXGroupInfo(groupName, groupAttrs);
 		}
 		for(String u : users) {
-				LOG.debug("INFO: addPMXAGroupToUser(" + groupName + "," + u + ")" );
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("INFO: addPMXAGroupToUser(" + groupName + "," + u + ")");
+			}
 		}
 		if (! isMockRun ) {
 			addXGroupUserInfo(group, users);
@@ -714,7 +744,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		List<XUserInfo> xUserInfoList = new ArrayList<XUserInfo>();
 
 		for(String userName : aUserList) {
-			XUserInfo user = addXUserInfo(userName);
+			XUserInfo user = addXUserInfo(userName, null);
 			xUserInfoList.add(user);
 			addXUserGroupInfo(user, aGroupInfo);
 		}
@@ -727,6 +757,8 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.getGroupUserInfo(GroupUserInfo ret)");
 		}
 		String response = null;
+		ClientResponse clientRes = null;
+		String relativeUrl = PM_ADD_GROUP_USER_INFO_URI;
 		Gson gson = new GsonBuilder().create();
 		
 
@@ -760,15 +792,16 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
         }
 
         if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(jsonString,PM_ADD_GROUP_USER_INFO_URI);
+			response = cookieBasedUploadEntity(groupuserInfo,relativeUrl);
 		}
         else {
-			Client c = getClient();
-			WebResource r = c.resource(getURL(PM_ADD_GROUP_USER_INFO_URI));
-			try{
-				response=r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(String.class, jsonString);
+			try {
+				clientRes = ldapUgSyncClient.post(relativeUrl, null, groupuserInfo);
+				if (clientRes != null) {
+					response = clientRes.getEntity(String.class);
+				}
 			}catch(Throwable t){
-				LOG.error("Failed to communicate Ranger Admin : ", t);
+				LOG.error("Failed to get response, Error is : ", t);
 			}
         }
         if (LOG.isDebugEnabled()) {
@@ -782,13 +815,15 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	}
 
 	
-	private MUserInfo addMUser(String aUserName) {
+	private MUserInfo addMUser(String aUserName, Map<String, String> userAttrs) {
 		MUserInfo ret = null;
 		MUserInfo userInfo = new MUserInfo();
 
 		userInfo.setLoginId(aUserName);
 		userInfo.setFirstName(aUserName);
         userInfo.setLastName(aUserName);
+		Gson gson = new Gson();
+        userInfo.setOtherAttributes(gson.toJson(userAttrs));
         String str[] = new String[1];
         if (userMap.containsKey(aUserName)) {
             str[0] = userMap.get(aUserName);
@@ -829,15 +864,20 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.getMUser()");
 		}
 		String response = null;
+		ClientResponse clientRes = null;
 		Gson gson = new GsonBuilder().create();
-		String jsonString = gson.toJson(userInfo);
+		String relativeUrl = PM_ADD_LOGIN_USER_URI;
 		if (isRangerCookieEnabled) {
-			response = cookieBasedUploadEntity(jsonString, PM_ADD_LOGIN_USER_URI);
+			response = cookieBasedUploadEntity(userInfo, relativeUrl);
 		} else {
-			Client c = getClient();
-			WebResource r = c.resource(getURL(PM_ADD_LOGIN_USER_URI));
-			response = r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE)
-					.post(String.class, jsonString);
+			try {
+				clientRes = ldapUgSyncClient.post(relativeUrl, null, userInfo);
+				if (clientRes != null) {
+					response = clientRes.getEntity(String.class);
+				}
+			} catch (Exception e) {
+				LOG.error("Failed to get response, Error is : " + e.getMessage());
+			}
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("RESPONSE[" + response + "]");
@@ -858,20 +898,22 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 		try {
 			String response = null;
+			ClientResponse clientRes = null;
 			Gson gson = new GsonBuilder().create();
-			String uri = PM_GET_GROUP_USER_MAP_LIST_URI.replaceAll(Pattern.quote("${groupName}"),
+			String relativeUrl = PM_GET_GROUP_USER_MAP_LIST_URI.replaceAll(Pattern.quote("${groupName}"),
 					   URLEncoderUtil.encodeURIParam(groupName));
 
 			if (isRangerCookieEnabled) {
-				response = cookieBasedGetEntity(uri, 0);
+				response = cookieBasedGetEntity(relativeUrl, 0);
 			}
 			else {
-				Client c = getClient();
-				WebResource r = c.resource(getURL(uri));
-				response = r.accept(MediaType.APPLICATION_JSON_TYPE).get(String.class);
+				clientRes = ldapUgSyncClient.get(relativeUrl, null);
+				if (clientRes != null) {
+					response = clientRes.getEntity(String.class);
+				}
 			}
 			if(LOG.isDebugEnabled()){
-				LOG.debug("RESPONSE for " + uri + ": [" + response + "]");
+				LOG.debug("RESPONSE for " + relativeUrl + ": [" + response + "]");
 			}
 
 		    ret = gson.fromJson(response, GroupUserInfo.class);
@@ -885,23 +927,17 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 		return ret;
 	}
-	
-	private String getURL(String uri) {
-		String ret = null;
-		ret = policyMgrBaseUrl + (uri.startsWith("/") ? uri : ("/" + uri));
-		return ret;
-	}
 
-	private String cookieBasedUploadEntity(String jsonString, String apiURL ) {
+	private String cookieBasedUploadEntity(Object obj, String apiURL ) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.cookieBasedUploadEntity()");
 		}
 		String response = null;
 		if (sessionId != null && isValidRangerCookie) {
-			response = tryUploadEntityWithCookie(jsonString,apiURL);
+			response = tryUploadEntityWithCookie(obj, apiURL);
 		}
 		else{
-			response = tryUploadEntityWithCred(jsonString,apiURL);
+			response = tryUploadEntityWithCred(obj, apiURL);
 		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== LdapPolicyMgrUserGroupBuilder.cookieBasedUploadEntity()");
@@ -926,19 +962,17 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		return response;
 	}
 
-	private String tryUploadEntityWithCookie(String jsonString, String apiURL) {
+	private String tryUploadEntityWithCookie(Object obj, String apiURL) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.tryUploadEntityWithCookie()");
 		}
 		String response = null;
 		ClientResponse clientResp = null;
-		WebResource webResource = createWebResourceForCookieAuth(apiURL);
-		WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
-		try{
-			clientResp=br.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, jsonString);
+		try {
+			clientResp = ldapUgSyncClient.post(apiURL, null, obj, sessionId);
 		}
 		catch(Throwable t){
-			LOG.error("Failed to communicate Ranger Admin : ", t);
+			LOG.error("Failed to get response, Error is : ", t);
 		}
 		if (clientResp != null) {
 			if (!(clientResp.toString().contains(apiURL))) {
@@ -949,10 +983,12 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 				sessionId = null;
 				isValidRangerCookie = false;
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
-				cookieList = clientResp.getCookies();
-				for (NewCookie cookie : cookieList) {
-					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
-						sessionId = cookie.toCookie();
+				List<NewCookie> respCookieList = clientResp.getCookies();
+				for (NewCookie cookie : respCookieList) {
+					if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
+						if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
+							sessionId = cookie.toCookie();
+						}
 						isValidRangerCookie = true;
 						break;
 					}
@@ -974,22 +1010,23 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	}
 
 
-	private String tryUploadEntityWithCred(String jsonString,String apiURL){
+	private String tryUploadEntityWithCred(Object obj, String apiURL){
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.tryUploadEntityInfoWithCred()");
 		}
 		String response = null;
 		ClientResponse clientResp = null;
-		Client c = getClient();
-		WebResource r = c.resource(getURL(apiURL));
+		Gson gson = new GsonBuilder().create();
+		String jsonString = gson.toJson(obj);
+
 		if ( LOG.isDebugEnabled() ) {
 		   LOG.debug("USER GROUP MAPPING" + jsonString);
 		}
 		try{
-			clientResp=r.accept(MediaType.APPLICATION_JSON_TYPE).type(MediaType.APPLICATION_JSON_TYPE).post(ClientResponse.class, jsonString);
+			clientResp = ldapUgSyncClient.post(apiURL, null, obj);
 		}
 		catch(Throwable t){
-			LOG.error("Failed to communicate Ranger Admin : ", t);
+			LOG.error("Failed to get response, Error is : ", t);
 		}
 		if (clientResp != null) {
 			if (!(clientResp.toString().contains(apiURL))) {
@@ -999,7 +1036,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_OK || clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
 				cookieList = clientResp.getCookies();
 				for (NewCookie cookie : cookieList) {
-					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+					if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
 						sessionId = cookie.toCookie();
 						isValidRangerCookie = true;
 						LOG.info("valid cookie saved ");
@@ -1028,16 +1065,15 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 		String response = null;
 		ClientResponse clientResp = null;
-		Client c = getClient();
-		WebResource r = c.resource(getURL(apiURL))
-				.queryParam("pageSize", recordsToPullPerCall)
-				.queryParam("startIndex", String.valueOf(retrievedCount));
 
+		Map<String, String> queryParams = new HashMap<String, String>();
+		queryParams.put("pageSize", recordsToPullPerCall);
+		queryParams.put("startIndex", String.valueOf(retrievedCount));
 		try{
-			clientResp=r.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+			clientResp = ldapUgSyncClient.get(apiURL, queryParams);
 		}
 		catch(Throwable t){
-			LOG.error("Failed to communicate Ranger Admin : ", t);
+			LOG.error("Failed to get response, Error is : ", t);
 		}
 		if (clientResp != null) {
 			if (!(clientResp.toString().contains(apiURL))) {
@@ -1047,7 +1083,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_OK || clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
 				cookieList = clientResp.getCookies();
 				for (NewCookie cookie : cookieList) {
-					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
+					if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
 						sessionId = cookie.toCookie();
 						isValidRangerCookie = true;
 						LOG.info("valid cookie saved ");
@@ -1077,13 +1113,15 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		}
 		String response = null;
 		ClientResponse clientResp = null;
-		WebResource webResource = createWebResourceForCookieAuth(apiURL).queryParam("pageSize", recordsToPullPerCall).queryParam("startIndex", String.valueOf(retrievedCount));
-		WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
-		try{
-			clientResp=br.accept(MediaType.APPLICATION_JSON_TYPE).get(ClientResponse.class);
+
+		Map<String, String> queryParams = new HashMap<String, String>();
+		queryParams.put("pageSize", recordsToPullPerCall);
+		queryParams.put("startIndex", String.valueOf(retrievedCount));
+		try {
+			clientResp = ldapUgSyncClient.get(apiURL, queryParams, sessionId);
 		}
 		catch(Throwable t){
-			LOG.error("Failed to communicate Ranger Admin : ", t);
+			LOG.error("Failed to get response, Error is : ", t);
 		}
 		if (clientResp != null) {
 			if (!(clientResp.toString().contains(apiURL))) {
@@ -1094,10 +1132,12 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 				sessionId = null;
 				isValidRangerCookie = false;
 			} else if (clientResp.getStatus() == HttpServletResponse.SC_NO_CONTENT || clientResp.getStatus() == HttpServletResponse.SC_OK) {
-				cookieList = clientResp.getCookies();
-				for (NewCookie cookie : cookieList) {
-					if (cookie.getName().equalsIgnoreCase(RANGER_ADMIN_COOKIE_NAME)) {
-						sessionId = cookie.toCookie();
+				List<NewCookie> respCookieList = clientResp.getCookies();
+				for (NewCookie cookie : respCookieList) {
+					if (cookie.getName().equalsIgnoreCase(rangerCookieName)) {
+						if (!(sessionId.getValue().equalsIgnoreCase(cookie.toCookie().getValue()))) {
+							sessionId = cookie.toCookie();
+						}
 						isValidRangerCookie = true;
 						break;
 					}
@@ -1116,157 +1156,6 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			LOG.debug("<== LdapPolicyMgrUserGroupBuilder.tryGetEntityWithCookie()");
 		}
 		return response;
-	}
-
-	public Client getClient() {
-		// result saves on access time when client is built at the time of the call
-		Client result = client;
-		if(result == null) {
-			synchronized(this) {
-				result = client;
-				if(result == null) {
-					client = result = buildClient();
-				}
-			}
-		}
-
-		return result;
-	}
-
-	private Client buildClient() {
-		
-		Client ret = null;
-		
-		if (policyMgrBaseUrl.startsWith("https://")) {
-			
-			ClientConfig config = new DefaultClientConfig();
-			
-			if (sslContext == null) {
-				
-				try {
-
-				KeyManager[] kmList = null;
-				TrustManager[] tmList = null;
-	
-				if (keyStoreFile != null && keyStoreFilepwd != null) {
-	
-					KeyStore keyStore = KeyStore.getInstance(keyStoreType);
-					InputStream in = null;
-					try {
-						in = getFileInputStream(keyStoreFile);
-						if (in == null) {
-							LOG.error("Unable to obtain keystore from file [" + keyStoreFile + "]");
-							return ret;
-						}
-						keyStore.load(in, keyStoreFilepwd.toCharArray());
-						KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
-						keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
-						kmList = keyManagerFactory.getKeyManagers();
-					}
-					finally {
-						if (in != null) {
-							in.close();
-						}
-					}
-					
-				}
-	
-				if (trustStoreFile != null && trustStoreFilepwd != null) {
-	
-					KeyStore trustStore = KeyStore.getInstance(trustStoreType);
-					InputStream in = null;
-					try {
-						in = getFileInputStream(trustStoreFile);
-						if (in == null) {
-							LOG.error("Unable to obtain keystore from file [" + trustStoreFile + "]");
-							return ret;
-						}
-						trustStore.load(in, trustStoreFilepwd.toCharArray());
-						TrustManagerFactory trustManagerFactory = TrustManagerFactory.getInstance(TrustManagerFactory.getDefaultAlgorithm());
-						trustManagerFactory.init(trustStore);
-						tmList = trustManagerFactory.getTrustManagers();
-					}
-					finally {
-						if (in != null) {
-							in.close();
-						}
-					}
-				}
-
-				sslContext = SSLContext.getInstance("TLS");
-	
-				sslContext.init(kmList, tmList, new SecureRandom());
-
-				hv = new HostnameVerifier() {
-					public boolean verify(String urlHostName, SSLSession session) {
-						return session.getPeerHost().equals(urlHostName);
-					}
-				};
-				}
-				catch(Throwable t) {
-					throw new RuntimeException("Unable to create SSLConext for communication to policy manager", t);
-				}
-
-			}
-
-			config.getProperties().put(HTTPSProperties.PROPERTY_HTTPS_PROPERTIES, new HTTPSProperties(hv, sslContext));
-
-			ret = Client.create(config);
-
-			
-		}
-		else {
-			ClientConfig cc = new DefaultClientConfig();
-		    cc.getProperties().put(ClientConfig.PROPERTY_FOLLOW_REDIRECTS, true);
-		    ret = Client.create(cc);	
-		}
-		if(!(authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab))){
-			if(ret!=null){
-				 String username = config.getPolicyMgrUserName();
-				 String password = config.getPolicyMgrPassword();
-				 if(username!=null && !username.trim().isEmpty() && password!=null && !password.trim().isEmpty()){
-					 ret.addFilter(new HTTPBasicAuthFilter(username, password));
-				 }
-			}
-		}
-		return ret;
-	}
-
-	private WebResource createWebResourceForCookieAuth(String url) {
-		Client cookieClient = getClient();
-		cookieClient.removeAllFilters();
-		WebResource ret = cookieClient.resource(getURL(url));
-		return ret;
-	}
-
-	private InputStream getFileInputStream(String path) throws FileNotFoundException {
-
-		InputStream ret = null;
-
-		File f = new File(path);
-
-		if (f.exists()) {
-			ret = new FileInputStream(f);
-		} else {
-			ret = LdapPolicyMgrUserGroupBuilder.class.getResourceAsStream(path);
-			
-			if (ret == null) {
-				if (! path.startsWith("/")) {
-					ret = getClass().getResourceAsStream("/" + path);
-				}
-			}
-			
-			if (ret == null) {
-				ret = ClassLoader.getSystemClassLoader().getResourceAsStream(path);
-				if (ret == null) {
-					if (! path.startsWith("/")) {
-						ret = ClassLoader.getSystemResourceAsStream("/" + path);
-					}
-				}
-			}
-		}
-
-		return ret;
 	}
 
     private void getRoleForUserGroups(String userGroupRolesData) {

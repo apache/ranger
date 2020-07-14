@@ -35,7 +35,7 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/policymanager/:tag"				: "serviceManagerAction",
 
 			/****** Analytics Report related **********************/
-			"!/reports/userAccess"		: "userAccessReportAction",
+                        "!/reports/:userAccess"		: "userAccessReportAction",
 			
 			/****** Audit Report related **********************/
 			"!/reports/audit/:tab"					: "auditReportAction",
@@ -63,7 +63,7 @@ function(Backbone, Marionette, localization, MAppState, XAUtil){
 			"!/service/:serviceId/policies/:id/edit"			: "RangerPolicyEditAction",
 
 			/************PERMISSIONS VIEWS *****************************************/
-            "!/permissions"					: "modulePermissionsAction",
+            "!/permissions/:models"					: "modulePermissionsAction",
             "!/permissions/:id/edit"        : "modulePermissionEditAction",
 			
 			/************ KMS ***************************/

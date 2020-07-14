@@ -26,12 +26,17 @@ public interface HbaseAuthUtils {
 	String ACCESS_TYPE_WRITE  = "write";
 	String ACCESS_TYPE_CREATE = "create";
 	String ACCESS_TYPE_ADMIN  = "admin";
+	String ACCESS_TYPE_EXECUTE  = "execute";
 
 	String getAccess(Action action);
+
+	String getActionName(String access);
 
 	boolean isReadAccess(String access);
 	
 	boolean isWriteAccess(String access);
+
+	boolean isExecuteAccess(String access);
 
 	String getTable(RegionCoprocessorEnvironment regionServerEnv);
 }

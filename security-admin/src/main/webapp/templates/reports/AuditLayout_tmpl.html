@@ -14,26 +14,28 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<ul class="nav nav-tabs tabs clearfix">
-   <li data-js="userSync">
-     <a data-toggle="tab" href="#userSync">{{tt 'h.userSync'}}</a>
-   </li>
-   <li data-js="pluginStatus">
-     <a data-toggle="tab" href="#pluginStatus">{{tt 'h.pluginStatus'}}</a> 
-   </li> 
-	<li data-js="agent" >
-     <a data-toggle="tab" href="#agent">{{tt 'h.agents'}}</a> 
-   </li>
-   <li data-js="users">
-     <a data-toggle="tab" href="#loginSession">{{tt 'h.loginSession'}} </a> 
-   </li> 
-   <li data-js="repository" > 
-     <a data-toggle="tab" href="#admin">{{tt 'h.admin'}} </a> 
-   </li> 
-   <li data-js="policy" class="active">
-     <a data-toggle="tab" href="#bigData">{{tt 'h.access'}} </a> 
-   </li> 
-</ul>
+{{#if setOldUi}}
+  <ul class="nav nav-tabs tabs clearfix">
+     <li data-js="userSync">
+       <a data-toggle="tab" href="#userSync">{{tt 'h.userSync'}}</a>
+     </li>
+     <li data-js="pluginStatus">
+       <a data-toggle="tab" href="#pluginStatus">{{tt 'h.pluginStatus'}}</a> 
+     </li> 
+  	<li data-js="agent" >
+       <a data-toggle="tab" href="#agent">{{tt 'h.agents'}}</a> 
+     </li>
+     <li data-js="users">
+       <a data-toggle="tab" href="#loginSession">{{tt 'h.loginSession'}} </a> 
+     </li> 
+     <li data-js="repository" > 
+       <a data-toggle="tab" href="#admin">{{tt 'h.admin'}} </a> 
+     </li> 
+     <li data-js="policy" class="active">
+       <a data-toggle="tab" href="#bigData">{{tt 'h.access'}} </a> 
+     </li> 
+  </ul>
+{{/if}}
 <div class="wrap non-collapsible " data-id="hide-popup" style="margin-top:-6px;">
 	<div class="wrap well">
 		<div class="row-fluid">

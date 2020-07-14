@@ -70,6 +70,14 @@ public abstract class XXServiceBase extends XXDBBase {
 	protected String name;
 
 	/**
+	 * displayName of the XXService
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name = "display_name")
+	protected String displayName;
+	/**
 	 * tagService of the XXService
 	 * <ul>
 	 * </ul>
@@ -207,6 +215,14 @@ public abstract class XXServiceBase extends XXDBBase {
 	 */
 	public String getName() {
 		return this.name;
+	}
+
+	public String getDisplayName() {
+		return displayName;
+	}
+
+	public void setDisplayName(String displayName) {
+		this.displayName = displayName;
 	}
 
 	/**
@@ -453,7 +469,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	@Override
 	public String toString() {
 		return "XXServiceBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", type=" + type
-				+ ", name=" + name + ", tagService=" + tagService + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
+				+ ", name=" + name +", displayName=" + displayName + ", tagService=" + tagService + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
 				+ ", tagVersion=" + tagVersion + ", tagUpdateTime=" + tagUpdateTime
 				+ ", description=" + description + ", isEnabled=" + isEnabled + "]";
 	}

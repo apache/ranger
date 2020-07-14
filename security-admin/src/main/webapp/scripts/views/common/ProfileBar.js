@@ -25,6 +25,7 @@ define(function(require){
     var Backbone		= require('backbone');
 	var Communicator	= require('communicator');
 	var SessionMgr 		= require('mgrs/SessionMgr');
+	var vError 			= require('views/common/ErrorView');
 	
 	var ProfileBar_tmpl = require('hbs!tmpl/common/ProfileBar_tmpl'); 
 	
@@ -36,13 +37,15 @@ define(function(require){
     	template: ProfileBar_tmpl,
     	templateHelpers : function(){
     		return {
-    			userProfile : this.userProfile
+    			userProfile : this.userProfile,
+    			oldUi : localStorage.getItem('setOldUI') == "true" ? false : true ,
     		};
     	},
         
     	/** ui selector cache */
     	ui: {
-    		logout : 'a[data-id="logout"]'
+    		logout : 'a[data-id="logout"]',
+    		oldNewSwitch : 'a[data-id="oldNewSwitch"]'
     	},
 
 		/** ui events hash */
@@ -50,6 +53,7 @@ define(function(require){
 			var events = {};
 			//events['change ' + this.ui.input]  = 'onInputChange';
 			events['click ' + this.ui.logout]  = 'checkKnoxSSO';
+			events['click ' + this.ui.oldNewSwitch]  = 'oldNewSwitch';
 			return events;
 		},
 		onLogout : function(checksso){
@@ -66,7 +70,9 @@ define(function(require){
 						if(checksso == 'false'){
 							window.location.replace('locallogin');
 						}else{
-							window.location.replace('');
+							App.rContent.show(new vError({
+								status : "checkSSOTrue"
+							}));
 						}
 					} else {
 						window.location.replace('login.jsp');
@@ -122,6 +128,19 @@ define(function(require){
 
 		/** all post render plugin initialization */
 		initializePlugins: function(){
+		},
+
+		/**Old  UI and New UI switch**/
+		oldNewSwitch : function() {
+			console.log(Backbone);
+			localStorage.setItem('setOldUI', this.ui.oldNewSwitch.data('value'));
+			// Restart Application for old and new UI
+			require(['Main'], function(main){
+				Backbone.history.stop();
+				Backbone.history.start();
+				main.startApp();
+			});
+			App.appRouter.navigate("",{trigger: false});
 		},
 
 		/** on close */

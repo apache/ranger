@@ -19,13 +19,15 @@
 
 package org.apache.ranger.services.kafka;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -39,6 +41,7 @@ import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.GROUP_PUB
 
 public class RangerServiceKafka extends RangerBaseService {
 	private static final Log LOG = LogFactory.getLog(RangerServiceKafka.class);
+	public static final String ACCESS_TYPE_CONSUME  = "consume";
 
 	public RangerServiceKafka() {
 		super();
@@ -103,7 +106,7 @@ public class RangerServiceKafka extends RangerBaseService {
 
 		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
 
-		String authType = RangerConfiguration.getInstance().get(RANGER_AUTH_TYPE,"simple");
+		String authType = getConfig().get(RANGER_AUTH_TYPE,"simple");
 
 		if (StringUtils.equalsIgnoreCase(authType, KERBEROS_TYPE)) {
 			if (LOG.isDebugEnabled()) {
@@ -119,6 +122,16 @@ public class RangerServiceKafka extends RangerBaseService {
 						defaultPolicyItem.getGroups().add(GROUP_PUBLIC);
 					}
 				}
+			}
+		}
+		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(Collections.singletonList(
+						new RangerPolicyItemAccess(ACCESS_TYPE_CONSUME)));
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
 			}
 		}
 

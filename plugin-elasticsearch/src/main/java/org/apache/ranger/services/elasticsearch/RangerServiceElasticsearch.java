@@ -22,16 +22,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.elasticsearch.client.ElasticsearchResourceMgr;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceElasticsearch extends RangerBaseService {
 
-	private static final Logger LOG = Logger.getLogger(RangerServiceElasticsearch.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceElasticsearch.class);
 
 	public RangerServiceElasticsearch() {
 		super();

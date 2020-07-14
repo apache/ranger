@@ -45,8 +45,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
-import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 public class ElasticsearchClient extends BaseClient {
 
@@ -134,7 +132,6 @@ public class ElasticsearchClient extends BaseClient {
 
 		ClientResponse response = null;
 		Client client = Client.create();
-		client.addFilter(new HTTPBasicAuthFilter(userName, StringUtils.EMPTY));
 		for (String currentUrl : elasticsearchUrls) {
 			if (StringUtils.isBlank(currentUrl)) {
 				continue;
@@ -142,7 +139,7 @@ public class ElasticsearchClient extends BaseClient {
 
 			String url = currentUrl.trim() + elasticsearchApi;
 			try {
-				response = getClientResponse(url, client);
+				response = getClientResponse(url, client, userName);
 
 				if (response != null) {
 					if (response.getStatus() == HttpStatus.SC_OK) {
@@ -161,14 +158,13 @@ public class ElasticsearchClient extends BaseClient {
 		return response;
 	}
 
-	private static ClientResponse getClientResponse(String url, Client client) {
+	private static ClientResponse getClientResponse(String url, Client client, String userName) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("getClientResponse():calling " + url);
 		}
 
-		WebResource webResource = client.resource(url);
-
-		ClientResponse response = webResource.accept(MediaType.APPLICATION_JSON).get(ClientResponse.class);
+		ClientResponse response = client.resource(url).accept(MediaType.APPLICATION_JSON).
+			header("userName", userName).get(ClientResponse.class);
 
 		if (response != null) {
 			if (LOG.isDebugEnabled()) {

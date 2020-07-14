@@ -17,7 +17,11 @@ import os,sys
 import pycurl
 import getpass
 import logging
-from StringIO import StringIO as BytesIO
+try:
+	from StringIO import StringIO as BytesIO
+except ImportError:
+	from io import BytesIO
+
 def log(msg,type):
 	if type == 'info':
 		logging.info(" %s",msg)
@@ -85,12 +89,12 @@ def processRequest(url,usernamepassword,data,method,isHttps,certfile,isDebug):
 	header.close()
 	c.close()
 	if isDebug ==True or (response_code!=200 and response_code!=204):
-		print 'Request URL = ' + str(url)
-		print 'Response    = ' + str(headerResponse)
+		log('Request URL = ' + str(url), "info")
+		log('Response    = ' + str(headerResponse), "info")
 	return response_code
 def validateArgs(argv):
 	if(len(argv)<7):
-		log("[E] insufficient number of arguments. Found " + len(argv) + "; expected at least 7","error")
+		log("[E] insufficient number of arguments. Found " + str(len(argv)) + "; expected at least 7","error")
 		printUsage()
 	if not "-users" in argv and not "-groups" in argv:
 		log("[E] -users or -groups switch was missing!","error")
@@ -217,8 +221,8 @@ def main(argv):
 	response_code=0
 	try:
 		response_code=processRequest(url,usernamepassword,None,'get',isHttps,certfile,False)
-	except pycurl.error, e:
-		print e
+	except pycurl.error as e:
+		print(e)
 		sys.exit(1)
 	if response_code == 302 or response_code==401 or response_code==403:
 		log("[E] Authentication Error:Please try with valid credentials!","error")

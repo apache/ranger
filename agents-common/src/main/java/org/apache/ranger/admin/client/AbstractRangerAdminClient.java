@@ -19,20 +19,41 @@
 
 package org.apache.ranger.admin.client;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
 public abstract class AbstractRangerAdminClient implements RangerAdminClient {
+    private static final Logger LOG = LoggerFactory.getLogger(AbstractRangerAdminClient.class);
+
+    protected Gson gson;
 
     @Override
-    public void init(String serviceName, String appId, String configPropertyPrefix) {
+    public void init(String serviceName, String appId, String configPropertyPrefix, Configuration config) {
+        Gson gson = null;
 
+        try {
+            gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+        } catch(Throwable excp) {
+            LOG.error("AbstractRangerAdminClient: failed to create GsonBuilder object", excp);
+        }
+
+        this.gson = gson;
     }
 
     @Override
     public ServicePolicies getServicePoliciesIfUpdated(long lastKnownVersion, long lastActivationTimeInMillis) throws Exception {
+        return null;
+    }
+
+    @Override
+    public RangerRoles getRolesIfUpdated(long lastKnownRoleVersion, long lastActivationTimeInMillis) throws Exception {
         return null;
     }
 
@@ -88,6 +109,11 @@ public abstract class AbstractRangerAdminClient implements RangerAdminClient {
 
     @Override
     public List<String> getTagTypes(String tagTypePattern) throws Exception {
+        return null;
+    }
+
+    @Override
+    public RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception {
         return null;
     }
 }

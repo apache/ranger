@@ -19,6 +19,10 @@
 
 package org.apache.ranger.unixusersync.config;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -26,7 +30,10 @@ import java.util.Properties;
 import java.util.Set;
 import java.util.StringTokenizer;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.credentialapi.CredentialReader;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
@@ -139,6 +146,15 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_USER_GROUP_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.groupnameattribute";
 	private static final String DEFAULT_USER_GROUP_NAME_ATTRIBUTE = "memberof,ismemberof";
 
+	private static final String LGSYNC_USER_CLOUDID_ATTRIBUTE = "ranger.usersync.ldap.user.cloudid.attribute";
+	private static final String DEFAULT_USER_CLOUDID_ATTRIBUTE = "objectid";
+
+	private static final String LGSYNC_USER_CLOUDID_ATTRIBUTE_DATATYPE = "ranger.usersync.ldap.user.cloudid.attribute.datatype";
+	private static final String DEFAULT_USER_CLOUDID_ATTRIBUTE_DATATYPE = "byte[]";
+
+	private static final String LGSYNC_OTHER_USER_ATTRIBUTES = "ranger.usersync.ldap.user.otherattributes";
+	private static final String DEFAULT_OTHER_USER_ATTRIBUTES = "userurincipaluame,";
+
 	public static final String UGSYNC_NONE_CASE_CONVERSION_VALUE = "none";
 	public static final String UGSYNC_LOWER_CASE_CONVERSION_VALUE = "lower";
 	public static final String UGSYNC_UPPER_CASE_CONVERSION_VALUE = "upper";
@@ -170,9 +186,6 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_USER_SEARCH_ENABLED = "ranger.usersync.user.searchenabled";
 	private static final boolean DEFAULT_LGSYNC_USER_SEARCH_ENABLED = true;
 
-	private static final String LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = "ranger.usersync.group.usermapsyncenabled";
-	private static final boolean DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED = false;
-
 	private static final String LGSYNC_GROUP_SEARCH_BASE = "ranger.usersync.group.searchbase";
 
 	private static final String LGSYNC_GROUP_SEARCH_SCOPE = "ranger.usersync.group.searchscope";
@@ -187,6 +200,15 @@ public class UserGroupSyncConfig  {
 
 	private static final String LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "ranger.usersync.group.memberattributename";
 	private static final String DEFAULT_LGSYNC_GROUP_MEMBER_ATTRIBUTE_NAME = "member";
+
+	private static final String LGSYNC_GROUP_CLOUDID_ATTRIBUTE = "ranger.usersync.ldap.group.cloudid.attribute";
+	private static final String DEFAULT_GROUP_CLOUDID_ATTRIBUTE = "objectid";
+
+	private static final String LGSYNC_GROUP_CLOUDID_ATTRIBUTE_DATATYPE = "ranger.usersync.ldap.group.cloudid.attribute.datatype";
+	private static final String DEFAULT_GROUP_CLOUDID_ATTRIBUTE_DATATYPE = "byte[]";
+
+	private static final String LGSYNC_OTHER_GROUP_ATTRIBUTES = "ranger.usersync.ldap.group.otherattributes";
+	private static final String DEFAULT_OTHER_GROUP_ATTRIBUTES = "displayname,";
 
 	private static final String LGSYNC_GROUP_HIERARCHY_LEVELS = "ranger.usersync.ldap.grouphierarchylevels";
 	private static final int DEFAULT_LGSYNC_GROUP_HIERARCHY_LEVELS = 0;
@@ -235,6 +257,16 @@ public class UserGroupSyncConfig  {
 
     private static final String USERSYNC_RANGER_COOKIE_ENABLED_PROP = "ranger.usersync.cookie.enabled";
 
+	private static final String RANGER_ADMIN_COOKIE_NAME_PROPS = "ranger.usersync.dest.ranger.session.cookie.name";
+
+    private static final String  UGSYNC_METRICS_FILEPATH =   "ranger.usersync.metrics.filepath";
+    private static final String  DEFAULT_UGSYNC_METRICS_FILEPATH =   "/tmp/";
+    private static final String  UGSYNC_METRICS_FILENAME =   "ranger.usersync.metrics.filename";
+    private static final String  DEFAULT_UGSYNC_METRICS_FILENAME =   "ranger_usersync_metric.json";
+    private static final String  UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM = "ranger.usersync.metrics.frequencytimeinmillis";
+    private static final long    DEFAULT_UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS = 10000L;
+    public static final String   UGSYNC_METRICS_ENABLED_PROP = "ranger.usersync.metrics.enabled";
+
     private Properties prop = new Properties();
 
 	private static volatile UserGroupSyncConfig me = null;
@@ -260,6 +292,16 @@ public class UserGroupSyncConfig  {
 		XMLUtils.loadConfig(DEFAULT_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CONFIG_FILE, prop);
+	}
+
+	public Configuration getConfig() {
+		Configuration ret = new Configuration();
+
+		for (String propName : prop.stringPropertyNames()) {
+			ret.set(propName, prop.getProperty(propName));
+		}
+
+		return ret;
 	}
 
 	public String getUserSyncFileSource(){
@@ -621,6 +663,43 @@ public class UserGroupSyncConfig  {
 		return userGroupNameAttributeSet;
 	}
 
+	public Set<String> getOtherUserAttributes() {
+		String otherAttributes =  prop.getProperty(LGSYNC_OTHER_USER_ATTRIBUTES);
+		if(otherAttributes == null || otherAttributes.trim().isEmpty()) {
+			otherAttributes = DEFAULT_OTHER_USER_ATTRIBUTES;
+		}
+		StringTokenizer st = new StringTokenizer(otherAttributes, ",");
+		Set<String> otherUserAttributes = new HashSet<String>();
+		while (st.hasMoreTokens()) {
+			otherUserAttributes.add(st.nextToken().trim());
+		}
+		return otherUserAttributes;
+	}
+
+	public String getUserCloudIdAttribute() {
+		String val =  prop.getProperty(LGSYNC_USER_CLOUDID_ATTRIBUTE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_USER_CLOUDID_ATTRIBUTE;
+		}
+		return val;
+	}
+
+	public String getUserCloudIdAttributeDataType() {
+		String val =  prop.getProperty(LGSYNC_USER_CLOUDID_ATTRIBUTE_DATATYPE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_USER_CLOUDID_ATTRIBUTE_DATATYPE;
+		}
+		return val;
+	}
+
+	public String getOtherUserAttributeDataType(String attrName) {
+		String attrType =  prop.getProperty(LGSYNC_OTHER_USER_ATTRIBUTES + "." + attrName + "datatype");
+		if (attrType == null || attrType.isEmpty()) {
+			attrType = "String";
+		}
+		return attrType.trim();
+	}
+
 	public String getUserNameCaseConversion() {
 		String ret = prop.getProperty(UGSYNC_USERNAME_CASE_CONVERSION_PARAM, DEFAULT_UGSYNC_USERNAME_CASE_CONVERSION_VALUE);
 		return ret.trim().toLowerCase();
@@ -696,17 +775,6 @@ public class UserGroupSyncConfig  {
 		return userSearchEnabled;
 	}
 
-	public boolean isGroupUserMapSyncEnabled() {
-		boolean groupUserMapSyncEnabled;
-		String val = prop.getProperty(LGSYNC_GROUP_USER_MAP_SYNC_ENABLED);
-		if(val == null || val.trim().isEmpty()) {
-			groupUserMapSyncEnabled = DEFAULT_LGSYNC_GROUP_USER_MAP_SYNC_ENABLED;
-		} else {
-			groupUserMapSyncEnabled  = Boolean.valueOf(val);
-		}
-		return groupUserMapSyncEnabled;
-	}
-
 	public String getGroupSearchBase() throws Throwable {
 		String val =  prop.getProperty(LGSYNC_GROUP_SEARCH_BASE);
 		if(val == null || val.trim().isEmpty()) {
@@ -761,6 +829,43 @@ public class UserGroupSyncConfig  {
 		}
 		return val;
 	}
+
+	public String getGroupCloudIdAttribute() {
+		String val =  prop.getProperty(LGSYNC_GROUP_CLOUDID_ATTRIBUTE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_GROUP_CLOUDID_ATTRIBUTE;
+		}
+		return val;
+	}
+
+	public String getGroupCloudIdAttributeDataType() {
+		String val =  prop.getProperty(LGSYNC_GROUP_CLOUDID_ATTRIBUTE_DATATYPE);
+		if (val == null || val.trim().isEmpty()) {
+			return DEFAULT_GROUP_CLOUDID_ATTRIBUTE_DATATYPE;
+		}
+		return val;
+	}
+
+	public Set<String> getOtherGroupAttributes() {
+		String otherAttributes =  prop.getProperty(LGSYNC_OTHER_GROUP_ATTRIBUTES);
+		if(otherAttributes == null || otherAttributes.trim().isEmpty()) {
+			otherAttributes = DEFAULT_OTHER_GROUP_ATTRIBUTES;
+		}
+		StringTokenizer st = new StringTokenizer(otherAttributes, ",");
+		Set<String> otherGroupAttributes = new HashSet<String>();
+		while (st.hasMoreTokens()) {
+			otherGroupAttributes.add(st.nextToken().trim());
+		}
+		return otherGroupAttributes;
+	}
+
+	public String getOtherGroupAttributeDataType(String attrName) {
+                String attrType =  prop.getProperty(LGSYNC_OTHER_GROUP_ATTRIBUTES + "." + attrName + "datatype");
+                if (attrType == null || attrType.isEmpty()) {
+                        attrType = "String";
+                }
+                return attrType.trim();
+        }
 
 	public int getGroupHierarchyLevels() {
         	int groupHierarchyLevels;
@@ -928,6 +1033,14 @@ public class UserGroupSyncConfig  {
 		return val == null || Boolean.valueOf(val.trim());
 	}
 
+	public String getRangerAdminCookieName() {
+		String ret = RangerCommonConstants.DEFAULT_COOKIE_NAME;
+		String val = prop.getProperty(RANGER_ADMIN_COOKIE_NAME_PROPS);
+		if (StringUtils.isNotBlank(val)) {
+			ret = val;
+		}
+		return ret;
+	}
 
     public String getRoleDelimiter() {
         if (prop != null && prop.containsKey(ROLE_ASSIGNMENT_LIST_DELIMITER)) {
@@ -1033,6 +1146,59 @@ public class UserGroupSyncConfig  {
 
 	/* Used only for unit testing */
 	public void setGroupHierarchyLevel(int groupHierarchyLevel) {
-        	prop.setProperty(LGSYNC_GROUP_HIERARCHY_LEVELS, String.valueOf(groupHierarchyLevel));
-        }
+		prop.setProperty(LGSYNC_GROUP_HIERARCHY_LEVELS, String.valueOf(groupHierarchyLevel));
+	}
+
+	public String getUserSyncMetricsFileName() throws IOException {
+		String val = prop.getProperty(UGSYNC_METRICS_FILEPATH);
+		if (StringUtils.isBlank(val)) {
+			if (StringUtils.isBlank(prop.getProperty("ranger.usersync.logdir"))) {
+				if (StringUtils.isBlank(System.getProperty("logdir"))) {
+					val = DEFAULT_UGSYNC_METRICS_FILEPATH;
+				} else {
+					val = System.getProperty("logdir");
+				}
+			} else {
+				val = prop.getProperty("ranger.usersync.logdir");
+			}
+		}
+
+		if (Files.notExists(Paths.get(val))) {
+			String current = new File(".").getCanonicalPath();
+			val = current + "/" + val;
+			if (Files.notExists(Paths.get(val))) {
+				return null;
+			}
+		}
+
+		StringBuilder pathAndFileName = new StringBuilder(val);
+		if (!val.endsWith("/")) {
+			pathAndFileName.append("/");
+		}
+
+		String fileName = prop.getProperty(UGSYNC_METRICS_FILENAME);
+		if (StringUtils.isBlank(fileName)) {
+			fileName = DEFAULT_UGSYNC_METRICS_FILENAME;
+		}
+		pathAndFileName.append(fileName);
+		return pathAndFileName.toString();
+	}
+
+	public long getUserSyncMetricsFrequency() {
+		long ret = DEFAULT_UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS;
+		String val = prop.getProperty(UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS_PARAM);
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Long.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+		return ret;
+	}
+
+	public boolean isUserSyncMetricsEnabled() {
+		String val = prop.getProperty(UGSYNC_METRICS_ENABLED_PROP);
+		return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
+	}
 }

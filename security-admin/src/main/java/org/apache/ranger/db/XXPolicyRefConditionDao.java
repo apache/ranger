@@ -108,4 +108,12 @@ public class XXPolicyRefConditionDao extends BaseDao<XXPolicyRefCondition>  {
         return ret;
     }
 
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
+		getEntityManager()
+			.createNamedQuery("XXPolicyRefCondition.deleteByPolicyId", tClass)
+			.setParameter("policyId", policyId).executeUpdate();
+	}
 }

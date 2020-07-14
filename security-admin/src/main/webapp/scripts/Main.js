@@ -23,17 +23,26 @@
 	'RegionManager',
 	'routers/Router',
 	'controllers/Controller',
+	'controllers/NController',
 	'modules/XAOverrides',
 	'modules/RestCsrf',
 	'utils/XAUtils',
 	'hbs!tmpl/common/loading_tmpl',
 	'backbone-fetch-cache'
 ],
-function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides,RestCSRF, XAUtils, loadingHTML ) {
+function ( Backbone, App, RegionManager, AppRouter, AppController, NewAppController, XAOverrides,RestCSRF, XAUtils, loadingHTML ) {
     'use strict';
 
 	function startApp(){
-		var controller = new AppController();
+		if(localStorage.getItem('setOldUI') == null) {
+			localStorage.setItem('setOldUI', true)
+		}
+		var controller;
+		if(localStorage.getItem('setOldUI') == "true") {
+			controller = new AppController()
+		} else {
+			controller = new NewAppController()
+		}
 		//deny some routes access for normal users
 		controller = XAUtils.filterAllowedActions(controller);
 		App.appRouter = new AppRouter({
@@ -50,7 +59,8 @@ function ( Backbone, App, RegionManager, AppRouter, AppController, XAOverrides,R
 
 	//export an object so that we can assert that at least RequireJS loading works or not
 	var mainModule={
-		name: 'Main'
+		name: 'Main',
+		startApp : startApp
 	};
 
 	try{

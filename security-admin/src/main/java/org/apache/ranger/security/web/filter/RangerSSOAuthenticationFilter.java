@@ -59,6 +59,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
@@ -191,11 +192,23 @@ public class RangerSSOAuthenticationFilter implements Filter {
 						// if the token is not valid then redirect to knox sso
 						else {
 							if (isWebUserAgent(userAgent)) {
-                                                                String ssourl = constructLoginURL(httpRequest, xForwardedURL);
-								if (LOG.isDebugEnabled()) {
-									LOG.debug("SSO URL = " + ssourl);
+								String ssourl = null;
+								String ajaxRequestHeader = httpRequest.getHeader("X-Requested-With");
+								if ("XMLHttpRequest".equals(ajaxRequestHeader)) {
+									ssourl = constructLoginURLForApi(httpRequest, xForwardedURL);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("ajaxRequestHeader redirectUrl = " + ssourl);
+									}
+									httpServletResponse.setHeader("X-Frame-Options", "DENY");
+									httpServletResponse.setStatus(RangerConstants.SC_AUTHENTICATION_TIMEOUT);
+									httpServletResponse.setHeader("X-Rngr-Redirect-Url", ssourl);
+								} else {
+									ssourl = constructLoginURL(httpRequest, xForwardedURL);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("SSO URL = " + ssourl);
+									}
+									httpServletResponse.sendRedirect(ssourl);
 								}
-								httpServletResponse.sendRedirect(ssourl);
 							} else {
 								filterChain.doFilter(servletRequest,httpServletResponse);
 							}
@@ -207,11 +220,23 @@ public class RangerSSOAuthenticationFilter implements Filter {
 				// if the jwt token is not available then redirect it to knox sso
 				else {
 					if (isWebUserAgent(userAgent)) {
-                                                String ssourl = constructLoginURL(httpRequest, xForwardedURL);
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("SSO URL = " + ssourl);
+						String ssourl = null;
+						String ajaxRequestHeader = httpRequest.getHeader("X-Requested-With");
+						if ("XMLHttpRequest".equals(ajaxRequestHeader)) {
+							ssourl = constructLoginURLForApi(httpRequest, xForwardedURL);
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("ajaxRequestHeader redirectUrl = " + ssourl);
+							}
+							httpServletResponse.setHeader("X-Frame-Options", "DENY");
+							httpServletResponse.setStatus(RangerConstants.SC_AUTHENTICATION_TIMEOUT);
+							httpServletResponse.setHeader("X-Rngr-Redirect-Url", ssourl);
+						} else {
+							ssourl = constructLoginURL(httpRequest, xForwardedURL);
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("SSO URL = " + ssourl);
+							}
+							httpServletResponse.sendRedirect(ssourl);
 						}
-						httpServletResponse.sendRedirect(ssourl);
 					} else {
 						filterChain.doFilter(servletRequest,httpServletResponse);
 					}
@@ -607,4 +632,28 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		}
 		return (RSAPublicKey) key;
 	}
+        /**
+         * Create the redirect URL to be used for authentication of the user in the absence
+         * of a JWT token within the incoming request.
+         *
+         * @param request
+         *            for getting the original request URL
+         * @return url to use as login url for redirect
+         */
+        protected String constructLoginURLForApi(HttpServletRequest request, String xForwardedURL) {
+                String delimiter = "?";
+                if (authenticationProviderUrl.contains("?")) {
+                        delimiter = "&";
+                }
+                String loginURL = authenticationProviderUrl + delimiter + originalUrlQueryParam + "=";
+                if (StringUtils.trimToNull(xForwardedURL) != null) {
+                        loginURL += xForwardedURL;
+                } else {
+                        loginURL += request.getRequestURL();
+                }
+                if (StringUtils.isNotEmpty(request.getRequestURI()) && request.getRequestURI().length() > 1) {
+                        loginURL = loginURL.replace(request.getRequestURI(), "/");
+                }
+                return loginURL;
+        }
 }

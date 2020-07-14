@@ -572,6 +572,7 @@ public class UserMgr {
 		gjUser.setPassword(userProfile.getPassword());
 		gjUser.setUserSource(userProfile.getUserSource());
 		gjUser.setPublicScreenName(userProfile.getPublicScreenName());
+		gjUser.setOtherAttributes(userProfile.getOtherAttributes());
 		if (userProfile.getFirstName() != null
 				&& userProfile.getLastName() != null
 				&& !userProfile.getFirstName().trim().isEmpty()
@@ -1109,6 +1110,14 @@ public class UserMgr {
 		return saltEncodedpasswd;
 	}
 
+	public String encryptWithOlderAlgo(String loginId, String password) {
+		String saltEncodedpasswd = "";
+
+		saltEncodedpasswd = md5Encoder.encodePassword(password, loginId);
+
+		return saltEncodedpasswd;
+	}
+
 	public VXPortalUser createUser(VXPortalUser userProfile) {
 		checkAdminAccess();
                 rangerBizUtil.blockAuditorRoleUser();
@@ -1163,6 +1172,7 @@ public class UserMgr {
 				 */
 			}
         }
+
         VXPortalUser userProfileRes = null;
         if (xXPortalUser != null) {
             userProfileRes = mapXXPortalUserToVXPortalUserForDefaultAccount(xXPortalUser);
@@ -1238,6 +1248,7 @@ public class UserMgr {
 		userProfile.setFirstName(user.getFirstName());
 		userProfile.setLastName(user.getLastName());
 		userProfile.setPublicScreenName(user.getPublicScreenName());
+		userProfile.setOtherAttributes(user.getOtherAttributes());
 
 		List<XXPortalUserRole> gjUserRoleList = daoManager
 				.getXXPortalUserRole().findByParentId(user.getId());

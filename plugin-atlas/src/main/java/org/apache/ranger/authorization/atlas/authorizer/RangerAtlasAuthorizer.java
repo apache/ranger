@@ -72,7 +72,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                     plugin = new RangerAtlasPlugin();
 
                     plugin.init();
-                    plugin.setResultProcessor(new RangerDefaultAuditHandler());
+
+                    plugin.setResultProcessor(new RangerDefaultAuditHandler(plugin.getConfig()));
 
                     atlasPlugin = plugin;
                 }
@@ -106,11 +107,14 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
             String                   action         = request.getAction() != null ? request.getAction().getType() : null;
             RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl(Collections.singletonMap(RESOURCE_SERVICE, "*"));
-            RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups());
+            RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
 
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setAction(action);
+            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
 
             ret = checkAccess(rangerRequest);
         } finally {
@@ -179,11 +183,12 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             rangerResource.setValue(RESOURCE_TYPE_NAME, typeName);
             rangerResource.setValue(RESOURCE_TYPE_CATEGORY, typeCategory);
 
-            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups());
+            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setAction(action);
-
+            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
 
             ret = checkAccess(rangerRequest);
         } finally {
@@ -224,11 +229,12 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
             RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
 
-            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups());
+            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setAction(action);
-
+            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
 
             rangerResource.setValue(RESOURCE_RELATIONSHIP_TYPE, relationShipType);
 
@@ -343,6 +349,14 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             rangerRequest.setClientIPAddress(request.getClientIPAddress());
             rangerRequest.setAccessTime(request.getAccessTime());
             rangerRequest.setResource(rangerResource);
+            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
+            if (AtlasPrivilege.ENTITY_ADD_LABEL.equals(request.getAction()) || AtlasPrivilege.ENTITY_REMOVE_LABEL.equals(request.getAction())) {
+                rangerResource.setValue(RESOURCE_ENTITY_LABEL, request.getLabel());
+            } else if (AtlasPrivilege.ENTITY_UPDATE_BUSINESS_METADATA.equals(request.getAction())) {
+                rangerResource.setValue(RESOURCE_ENTITY_BUSINESS_METADATA, request.getBusinessMetadata());
+            }
 
             if (StringUtils.isNotEmpty(classification)) {
                 rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classification));
@@ -417,6 +431,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             final AtlasEntityAccessRequest entityAccessRequest = new AtlasEntityAccessRequest(request.getTypeRegistry(), AtlasPrivilege.ENTITY_READ, entity, request.getUser(), request.getUserGroups());
 
             entityAccessRequest.setClientIPAddress(request.getClientIPAddress());
+            entityAccessRequest.setForwardedAddresses(request.getForwardedAddresses());
+            entityAccessRequest.setRemoteIPAddress(request.getRemoteIPAddress());
 
             if (!isAccessAllowed(entityAccessRequest, null)) {
                 scrubEntityHeader(entity);
@@ -449,6 +465,12 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             rangerResource.setValue(RESOURCE_ENTITY_TYPE, request.getEntityType());
             rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, strClassifications);
             rangerResource.setValue(RESOURCE_ENTITY_ID, request.getEntityId());
+
+            if (AtlasPrivilege.ENTITY_ADD_LABEL.equals(request.getAction()) || AtlasPrivilege.ENTITY_REMOVE_LABEL.equals(request.getAction())) {
+                rangerResource.setValue(RESOURCE_ENTITY_LABEL, "label=" + request.getLabel());
+            } else if (AtlasPrivilege.ENTITY_UPDATE_BUSINESS_METADATA.equals(request.getAction())) {
+                rangerResource.setValue(RESOURCE_ENTITY_BUSINESS_METADATA, "business-metadata=" + request.getBusinessMetadata());
+            }
 
             auditEvents  = new HashMap<>();
             resourcePath = rangerResource.getAsString();

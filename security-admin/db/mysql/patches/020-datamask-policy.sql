@@ -70,7 +70,7 @@ CREATE TABLE `x_datamask_type_def` (
 `datamask_options` varchar(1024) NULL DEFAULT NULL,
 `rb_key_label` varchar(1024) NULL DEFAULT NULL,
 `rb_key_description` varchar(1024) DEFAULT NULL,
-`sort_order` tinyint(3) DEFAULT '0',
+`sort_order` int DEFAULT 0,
 primary key (`id`),      
 CONSTRAINT `x_datamask_type_def_FK_def_id` FOREIGN KEY (`def_id`) REFERENCES `x_service_def` (`id`) ,
 CONSTRAINT `x_datamask_type_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),

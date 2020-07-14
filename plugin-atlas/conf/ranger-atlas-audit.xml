@@ -42,9 +42,8 @@
 	<property>
 		<name>xasecure.audit.destination.solr.collection</name>
 		<value>NONE</value>
-	</property>	
-	
-	
+	</property>
+
 	<!-- HDFS audit provider configuration -->
 	<property>
 		<name>xasecure.audit.destination.hdfs</name>

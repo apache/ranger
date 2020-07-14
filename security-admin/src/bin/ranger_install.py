@@ -16,15 +16,19 @@ import sys
 import errno
 import logging
 import zipfile
-import ConfigParser
-import StringIO
+try:
+    from StringIO import StringIO
+except ImportError:
+    from io import StringIO
+try:
+    from ConfigParser import ConfigParser
+except ImportError:
+    from configparser import ConfigParser
 import subprocess
 import fileinput
-#import MySQLdb
 import zipfile
 import re
 import shutil
-import commands
 from datetime import date
 import getpass
 import glob
@@ -78,11 +82,11 @@ def getstatusoutput(cmd):
     "sts = pipe.returncode
     """
     ret = subprocess.call(cmd, shell=True)
-    print "------------------"
-    print " cmd: " + str(cmd)
+    print("------------------")
+    print(" cmd: " + str(cmd))
     #print " output: " + output
-    print " ret: " + str(ret)
-    print "------------------"
+    print(" ret: " + str(ret))
+    print("------------------")
     return ret, ret
     #if sts is None:
     #    log("sts is None!!!! Manually setting to -1. PLEASE CHECK!!!!!!!!!!!!!!","info")
@@ -168,8 +172,7 @@ def get_class_path(paths):
 
 def get_jdk_options():
     global conf_dict
-    return [os.getenv('RANGER_PROPERTIES', ''),"-Dlogdir="+os.getenv("RANGER_LOG_DIR"),
-											' -Dcatalina.base=' + conf_dict['EWS_ROOT'] ]
+    return [os.getenv('RANGER_PROPERTIES', ''),"-Dlogdir="+os.getenv("RANGER_LOG_DIR"),' -Dcatalina.base=' + conf_dict['EWS_ROOT'] ]
 
 
 """
@@ -263,7 +266,7 @@ def init_variables(switch):
     conf_dict['JAVA_BIN']= os.path.join(os.getenv("JAVA_HOME"),'bin','java.exe')
     conf_dict['DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
     conf_dict['RANGER_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
-    conf_dict['RANGER_AUDIT_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")	
+    conf_dict['RANGER_AUDIT_DB_FLAVOR'] = os.getenv("RANGER_DB_FLAVOR")
     dir = os.path.join(os.getenv("RANGER_HOME"),"connector-jar")
     ews_dir = os.path.join(os.getenv("RANGER_ADMIN_HOME"),"ews","webapp","WEB-INF","lib")
     log(ews_dir,"info")
@@ -287,8 +290,8 @@ def init_variables(switch):
                 shutil.copy2(src, dir)
                 shutil.copy2(src, ews_dir)
                 conf_dict['SQL_CONNECTOR_JAR'] = os.path.join(dir,filename)
-				
-                    				
+
+
     conf_dict['db_host']=os.getenv("RANGER_ADMIN_DB_HOST") + ":" + os.getenv("RANGER_ADMIN_DB_PORT")
     conf_dict['db_name']=os.getenv("RANGER_ADMIN_DB_DBNAME")
     conf_dict['db_user']=os.getenv("RANGER_ADMIN_DB_USERNAME")
@@ -438,15 +441,15 @@ def get_mysql_cmd(user, password, host):
     return cmdArr
 
 def create_mysql_user(db_name, db_user, db_password, db_host, db_root_password):
-    global conf_dict
-    cmdArr = []
+	global conf_dict
+	cmdArr = []
 
-    MYSQL_BIN = conf_dict["MYSQL_BIN"]
-    hosts_arr =["%", "localhost"]
-    #check_mysql_password()
-    ### From properties file
-    log("\nCreating MySQL user "+db_user+" (using root priviledges)\n", 'debug')
-    for host in hosts_arr:
+	MYSQL_BIN = conf_dict["MYSQL_BIN"]
+	hosts_arr =["%", "localhost"]
+	#check_mysql_password()
+	### From properties file
+	log("\nCreating MySQL user "+db_user+" (using root priviledges)\n", 'debug')
+	for host in hosts_arr:
 		cmdArr = get_mysql_cmd('root', db_root_password, db_host)
 		#subprocess.call(["mysql", "-u", username, "-p%s" % password, "-e", "SELECT @@hostname"]
 
@@ -486,8 +489,8 @@ def check_mysql_password ():
 
     cmdStr = "\""+MYSQL_BIN+"\""+" -u root --password="+db_root_password+" -h "+MYSQL_HOST+" -s -e \"select version();\""
     status, output = getstatusoutput(cmdStr)
-    print "Status: " + str(status)
-    print "output: " + str(output)
+    print("Status: " + str(status))
+    print("output: " + str(output))
 
     if status == 0:
         log("Checking MYSQL root password DONE", "info")
@@ -696,7 +699,7 @@ def update_xapolicymgr_properties():
     ModConfig(xapolicymgr_properties,"xa.webapp.dir", WEBAPP_ROOT.replace('\\','/' ))
 
 def updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file):
-    ret = subprocess.call(['python', '%s\update_property.py' %os.getenv("RANGER_ADMIN_HOME"), propertyName ,newPropertyValue ,to_file])
+    ret = subprocess.call(['python', '%s\\update_property.py' %os.getenv("RANGER_ADMIN_HOME"), propertyName ,newPropertyValue ,to_file])
     if ret == 0:
         log("Updated property for :"+to_file,"info")
     else:
@@ -884,22 +887,22 @@ def update_properties():
         newPropertyValue="ranger.jpa.jdbc.password"
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
 
-	propertyName="ranger.credential.provider.path"
-	newPropertyValue=os.getenv("RANGER_ADMIN_CRED_KEYSTORE_FILE")
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+        propertyName="ranger.credential.provider.path"
+        newPropertyValue=os.getenv("RANGER_ADMIN_CRED_KEYSTORE_FILE")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-	propertyName="ranger.jpa.jdbc.password"
-	newPropertyValue="_"
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
-		
-	propertyName="ranger.jpa.audit.jdbc.credential.alias"
+        propertyName="ranger.jpa.jdbc.password"
+        newPropertyValue="_"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.jpa.audit.jdbc.credential.alias"
         newPropertyValue="ranger.jpa.audit.jdbc.password"
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_default)
-		
-	propertyName="ranger.jpa.audit.jdbc.password"
-	newPropertyValue="_"
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
-		
+
+        propertyName="ranger.jpa.audit.jdbc.password"
+        newPropertyValue="_"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
     else:
         propertyName="ranger.jpa.jdbc.password"
         newPropertyValue=os.getenv("RANGER_ADMIN_DB_PASSWORD")
@@ -911,7 +914,7 @@ def update_properties():
 
     if os.getenv("RANGER_AUTHENTICATION_METHOD") == "LDAP":
 
-	password_validation(os.getenv("RANGER_LDAP_BIND_PASSWORD"), "LDAP_BIND")
+        password_validation(os.getenv("RANGER_LDAP_BIND_PASSWORD"), "LDAP_BIND")
 
         propertyName="ranger.authentication.method"
         newPropertyValue=os.getenv("RANGER_AUTHENTICATION_METHOD")
@@ -936,30 +939,30 @@ def update_properties():
         propertyName="ranger.ldap.group.roleattribute"
         newPropertyValue=os.getenv("RANGER_LDAP_GROUPROLEATTRIBUTE")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
-	
-	propertyName="ranger.ldap.base.dn"
+
+        propertyName="ranger.ldap.base.dn"
         newPropertyValue=os.getenv("RANGER_LDAP_BASE_DN")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-	propertyName="ranger.ldap.bind.dn"
-	newPropertyValue=os.getenv("RANGER_LDAP_BIND_DN")
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
-	
-	propertyName="ranger.ldap.bind.password"
-	newPropertyValue="_"
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
-	
+        propertyName="ranger.ldap.bind.dn"
+        newPropertyValue=os.getenv("RANGER_LDAP_BIND_DN")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
+        propertyName="ranger.ldap.bind.password"
+        newPropertyValue="_"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
         propertyName="ranger.ldap.referral"
         newPropertyValue=os.getenv("RANGER_LDAP_REFERRAL")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-	propertyName="ranger.ldap.user.searchfilter"
-	newPropertyValue=os.getenv("RANGER_LDAP_USERSEARCHFILTER")
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+        propertyName="ranger.ldap.user.searchfilter"
+        newPropertyValue=os.getenv("RANGER_LDAP_USERSEARCHFILTER")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
          
     elif os.getenv("RANGER_AUTHENTICATION_METHOD") == "ACTIVE_DIRECTORY":
 
-	password_validation(os.getenv("RANGER_LDAP_AD_BIND_PASSWORD"), "AD_BIND")
+        password_validation(os.getenv("RANGER_LDAP_AD_BIND_PASSWORD"), "AD_BIND")
 
         propertyName="ranger.authentication.method"
         newPropertyValue=os.getenv("RANGER_AUTHENTICATION_METHOD")
@@ -973,25 +976,25 @@ def update_properties():
         newPropertyValue=os.getenv("RANGER_LDAP_AD_URL")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-     	propertyName="ranger.ldap.ad.base.dn"
+        propertyName="ranger.ldap.ad.base.dn"
         newPropertyValue=os.getenv("RANGER_LDAP_AD_BASE_DN")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-	propertyName="ranger.ldap.ad.bind.dn"
-	newPropertyValue=os.getenv("RANGER_LDAP_AD_BIND_DN")
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+        propertyName="ranger.ldap.ad.bind.dn"
+        newPropertyValue=os.getenv("RANGER_LDAP_AD_BIND_DN")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-	propertyName="ranger.ldap.ad.bind.password"
-	newPropertyValue="_"
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
-	
+        propertyName="ranger.ldap.ad.bind.password"
+        newPropertyValue="_"
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+
         propertyName="ranger.ldap.ad.referral"
         newPropertyValue=os.getenv("RANGER_LDAP_AD_REFERRAL")
         updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
-	propertyName="ranger.ldap.ad.user.searchfilter"
-	newPropertyValue=os.getenv("RANGER_LDAP_AD_USERSEARCHFILTER")
-	updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
+        propertyName="ranger.ldap.ad.user.searchfilter"
+        newPropertyValue=os.getenv("RANGER_LDAP_AD_USERSEARCHFILTER")
+        updatePropertyToFilePy(propertyName ,newPropertyValue ,to_file_ranger)
 
 def setup_authentication(authentication_method, xmlPath):
    if authentication_method == "UNIX":
@@ -1275,7 +1278,7 @@ def call_keystore(libpath,aliasKey,aliasValue , filepath,getorcreate):
         statuscode = p.returncode
         return statuscode, output
     else:
-        print 'proper command not received for input need get or create'
+        print('proper command not received for input need get or create')
 
 
 # Entry point to script using --service

@@ -376,7 +376,6 @@ def add_advanced_ranger_configurations(add_admin_or_usersync, ranger_service_pro
 		advanced_user_sync_properties['ranger.usersync.ldap.groupname.caseconversion'] = ranger_service_properties_from_file.get('ranger.usersync.ldap.groupname.caseconversion','none')
 		advanced_user_sync_properties['ranger.usersync.logdir'] = ranger_service_properties_from_file.get('ranger.usersync.logdir','/var/log/ranger/usersync')
 		advanced_user_sync_properties['ranger.usersync.group.searchenabled'] = ranger_service_properties_from_file.get('ranger.usersync.group.searchenabled','false')
-		advanced_user_sync_properties['ranger.usersync.group.usermapsyncenabled'] = ranger_service_properties_from_file.get('ranger.usersync.group.usermapsyncenabled','false')
 		advanced_user_sync_properties['ranger.usersync.group.searchbase'] = ranger_service_properties_from_file.get('ranger.usersync.group.searchbase',' ')
 		advanced_user_sync_properties['ranger.usersync.group.searchscope'] = ranger_service_properties_from_file.get('ranger.usersync.group.searchscope',' ')
 		advanced_user_sync_properties['ranger.usersync.group.objectclass'] = ranger_service_properties_from_file.get('ranger.usersync.group.objectclass',' ')

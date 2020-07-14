@@ -54,10 +54,6 @@
 		<value></value>
 	</property>
 	<property>
-		<name>ranger.usersync.group.usermapsyncenabled</name>
-		<value></value>
-	</property>
-	<property>
 		<name>ranger.usersync.ldap.binddn</name>
 		<value></value>
 	</property>
@@ -224,5 +220,25 @@
     <property>
           <name>ranger.usersync.group.based.role.assignment.rules</name>
       <value></value>
+    </property>
+    <property>
+		<name>ranger.usersync.dest.ranger.session.cookie.name</name>
+		<value>RANGERADMINSESSIONID</value>
+	</property>
+    <property>
+		<name>ranger.usersync.metrics.enabled</name>
+		<value>false</value>
+    </property>
+    <property>
+		<name>ranger.usersync.metrics.filepath</name>
+		<value></value>
+    </property>
+    <property>
+		<name>ranger.usersync.metrics.frequencytimeinmillis</name>
+		<value></value>
+    </property>
+    <property>
+		<name>ranger.usersync.metrics.filename</name>
+		<value></value>
     </property>
 </configuration>

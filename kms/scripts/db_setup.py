@@ -44,7 +44,7 @@ def check_output(query):
 	elif os_name == "WINDOWS":
 		p = subprocess.Popen(query, stdout=subprocess.PIPE, shell=True)
 	output = p.communicate ()[0]
-	return output
+	return output.decode()
 
 def log(msg,type):
 	if type == 'info':
@@ -268,21 +268,21 @@ class OracleConf(BaseDB):
 		output = check_output(query).strip()
 		output = output.strip(' |')
 		db_name = db_name.upper()
-		if output == db_name:
-			log("[I] User name " + db_user + " and tablespace " + db_name + " already exists.","info")
-			log("[I] Verifying table " + TABLE_NAME +" in tablespace " + db_name, "info")
+		if ((output == db_name) or (db_name =='' and output is not None and output != '')):
+			log("[I] User name " + db_user + " and tablespace " + output + " already exists.","info")
+			log("[I] Verifying table " + TABLE_NAME +" in tablespace " + output, "info")
 			get_cmd = self.get_jisql_cmd(db_user, db_password)
 			if is_unix:
-				query = get_cmd + " -c \; -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\"" %(db_name ,TABLE_NAME)
+				query = get_cmd + " -c \; -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\"" %(output ,TABLE_NAME)
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\" -c ;" %(db_name ,TABLE_NAME)
+				query = get_cmd + " -query \"select UPPER(table_name) from all_tables where UPPER(tablespace_name)=UPPER('%s') and UPPER(table_name)=UPPER('%s');\" -c ;" %(output ,TABLE_NAME)
 			jisql_log(query, db_password)
 			output = check_output(query)
 			if output.strip(TABLE_NAME.upper() + ' |'):
-				log("[I] Table " + TABLE_NAME +" already exists in tablespace " + db_name + "","info")
+				log("[I] Table " + TABLE_NAME +" already exists in tablespace " + output + "","info")
 				return True
 			else:
-				log("[I] Table " + TABLE_NAME +" does not exist in tablespace " + db_name + "","info")
+				log("[I] Table " + TABLE_NAME +" does not exist in tablespace " + output + "","info")
 				return False
 		else:
 			log("[E] "+db_user + " user already assigned to some other tablespace , provide different DB name.","error")

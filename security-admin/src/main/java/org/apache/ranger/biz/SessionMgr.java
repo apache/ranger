@@ -176,21 +176,36 @@ public class SessionMgr {
 				userSession.setSpnegoEnabled(true);
 			}
 
+			Boolean ssoEnabled;
+			if (authType == XXAuthSession.AUTH_TYPE_TRUSTED_PROXY) {
+				ssoEnabled = true;
+			} else {
+				Object ssoEnabledObj = httpRequest.getAttribute("ssoEnabled");
+				ssoEnabled = ssoEnabledObj != null ? Boolean.valueOf(String.valueOf(ssoEnabledObj)) : PropertiesUtil.getBooleanProperty("ranger.sso.enabled", false);
+			}
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("session id = " + userSession.getLoginId() + " ssoenabled = " + ssoEnabled);
+			}
+			userSession.setSSOEnabled(ssoEnabled);
+
 			resetUserSessionForProfiles(userSession);
 			resetUserModulePermission(userSession);
 
 			Calendar cal = Calendar.getInstance();
-			if (details != null) {
-				logger.info("Login Success: loginId=" + currentLoginId
-						+ ", sessionId=" + gjAuthSession.getId()
-						+ ", sessionId=" + details.getSessionId()
-						+ ", requestId=" + details.getRemoteAddress()
-						+ ", epoch=" + cal.getTimeInMillis());
-			} else {
-				logger.info("Login Success: loginId=" + currentLoginId
-						+ ", sessionId=" + gjAuthSession.getId()
-						+ ", details is null"
-						+ ", epoch=" + cal.getTimeInMillis());
+			if(logger.isDebugEnabled()) {
+				if (details != null) {
+					logger.debug("Login Success: loginId=" + currentLoginId
+							+ ", sessionId=" + gjAuthSession.getId()
+							+ ", sessionId=" + details.getSessionId()
+							+ ", requestId=" + details.getRemoteAddress()
+							+ ", epoch=" + cal.getTimeInMillis());
+				} else {
+					logger.debug("Login Success: loginId=" + currentLoginId
+							+ ", sessionId=" + gjAuthSession.getId()
+							+ ", details is null"
+							+ ", epoch=" + cal.getTimeInMillis());
+				}
 			}
 
 		}
@@ -229,7 +244,9 @@ public class SessionMgr {
 			rangerUserPermission.setUserPermissions(userPermissions);
 			rangerUserPermission.setLastUpdatedTime(Calendar.getInstance().getTimeInMillis());
 			userSession.setRangerUserPermission(rangerUserPermission);
-			logger.info("UserSession Updated to set new Permissions to User: " + userSession.getLoginId());
+			if (logger.isDebugEnabled()) {
+				logger.debug("UserSession Updated to set new Permissions to User: " + userSession.getLoginId());
+			}
 		} else {
 			logger.error("No XUser found with username: " + userSession.getLoginId() + "So Permission is not set for the user");
 		}
@@ -314,7 +331,7 @@ public class SessionMgr {
 				.equalsIgnoreCase(userSession.getXXPortalUser().getLoginId())) {
 			return true;
 		} else {
-			logger.info(
+			logger.warn(
 					"loginId doesn't match loginId from HTTPSession. Will create new session. loginId="
 							+ currentLoginId + ", userSession=" + userSession,
 					new Exception());
@@ -442,7 +459,9 @@ public class SessionMgr {
 			logger.error("Error getting user for loginId=" + loginId);
 			return false;
 		} else {
-			logger.info(loginId+" is a valid user");
+			if(logger.isDebugEnabled()) {
+				logger.debug(loginId + " is a valid user");
+			}
 			return true;
 		}
 		

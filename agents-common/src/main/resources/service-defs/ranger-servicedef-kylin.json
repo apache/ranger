@@ -1,6 +1,7 @@
 {
 	"id":12,
 	"name": "kylin",
+	"displayName": "kylin",
 	"implClass": "org.apache.ranger.services.kylin.RangerServiceKylin",
 	"label": "KYLIN",
 	"description": "KYLIN",

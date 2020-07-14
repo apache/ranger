@@ -54,7 +54,7 @@ define(function(require){
 			return this.constructor.nonCrudOperation.call(this, url, 'GET', options);
 		},
 		comparator : function(model) {
-			  return -model.get("id");
+                        // return -model.get("id");
 		}
 	},{
 		// static class members

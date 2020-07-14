@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -29,12 +29,12 @@ public class ListUserTest
 
  public static void main(String args[])
   {
-	 
+
   try{
-  
+
 	  FileReader file = new FileReader("C:\\git\\xa_server\\conf\\client\\passwd");
       BufferedReader br = new BufferedReader(file);
-  
+
 	  while ((strLine = br.readLine()) != null)   {
 		 ListRangerUser userList = ListRangerUser.parseUser(strLine);
      if (userList != null) {
@@ -43,11 +43,10 @@ public class ListUserTest
 		   System.out.println("userList is null");
      }
 	  }
-	
+
 	  file.close();
     }catch (Exception e){//Catch exception if any
-    	System.err.println("Error: " + e.getMessage());
+	System.err.println("Error: " + e.getMessage());
     }
   }
 }
-

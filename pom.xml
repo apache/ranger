@@ -69,7 +69,7 @@
         </mailingList>
     </mailingLists>
     <properties>
-        <maven.version.required>3.3.3</maven.version.required>
+        <maven.version.required>3.6.2</maven.version.required>
         <java.version.required>1.8</java.version.required>
         <javac.source.version>1.8</javac.source.version>
         <javac.target.version>1.8</javac.target.version>
@@ -82,20 +82,25 @@
         <apacheds.version>2.0.0-M22</apacheds.version>
         <asm.all.version>3.2</asm.all.version>
         <aspectj.version>1.8.2</aspectj.version>
-        <atlas.version>2.0.0</atlas.version>
+        <assembly.plugin.version>2.6</assembly.plugin.version>
+        <atlas.version>3.0.0-SNAPSHOT</atlas.version>
         <atlas.gson.version>2.5</atlas.gson.version>
         <atlas.jackson.version>2.9.9</atlas.jackson.version>
+        <atlas.jackson.databind.version>2.9.10.4</atlas.jackson.databind.version>
         <atlas.jettison.version>1.3.7</atlas.jettison.version>
         <atlas.commons.logging.version>1.1.3</atlas.commons.logging.version>
         <bouncycastle.version>1.55</bouncycastle.version>
         <c3p0.version>0.9.5.3</c3p0.version>
         <cglib.version>2.2.0-b23</cglib.version>
+        <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
+        <checkstyle.version>8.29</checkstyle.version>
         <codehaus.jackson.version>1.9.13</codehaus.jackson.version>
-        <commons.beanutils.version>1.9.3</commons.beanutils.version>
+        <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.cli.version>1.2</commons.cli.version>
         <commons.codec.version>1.12</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.8.1</commons.compress.version>
+        <commons.configuration1.version>1.10</commons.configuration1.version>
         <commons.configuration.version>2.1.1</commons.configuration.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
         <commons.digester.version>2.1</commons.digester.version>
@@ -108,7 +113,7 @@
         <curator.test.version>2.12.0</curator.test.version>
         <derby.version>10.11.1.1</derby.version>
         <eclipse.jpa.version>2.5.2</eclipse.jpa.version>
-        <elasticsearch.version>6.2.2</elasticsearch.version>
+        <elasticsearch.version>7.6.0</elasticsearch.version>
         <enunciate.version>2.11.1</enunciate.version>
         <findbugs.plugin.version>3.0.3</findbugs.plugin.version>
         <google.guava.version>25.1-jre</google.guava.version>
@@ -116,22 +121,23 @@
         <gson.version>2.2.4</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop.version>3.1.1</hadoop.version>
-	<ozone.version>0.4.0-alpha</ozone.version>
+        <ozone.version>0.4.0-alpha</ozone.version>
         <hamcrest.all.version>1.3</hamcrest.all.version>
         <hbase.version>2.0.2</hbase.version>
-        <hive.version>3.1.0</hive.version>
+        <hive.version>3.1.2</hive.version>
         <hbase-shaded-protobuf>2.0.0</hbase-shaded-protobuf>
         <hbase-shaded-netty>2.0.0</hbase-shaded-netty>
         <hbase-shaded-miscellaneous>2.0.0</hbase-shaded-miscellaneous>
-        <libfb303.version>0.9.3</libfb303.version>
-        <libthrift.version>0.12.0</libthrift.version>
+        <libthrift.version>0.13.0</libthrift.version>
         <htrace-core.version>4.1.0-incubating</htrace-core.version>
-        <httpcomponents.httpclient.version>4.5.3</httpcomponents.httpclient.version>
+        <httpcomponents.httpclient.version>4.5.6</httpcomponents.httpclient.version>
         <httpcomponents.httpcore.version>4.4.6</httpcomponents.httpcore.version>
-        <httpcomponents.httpmime.version>4.5.3</httpcomponents.httpmime.version>
+        <httpcomponents.httpasyncclient.version>4.1.3</httpcomponents.httpasyncclient.version>
+        <httpcomponents.httpmime.version>4.5.6</httpcomponents.httpmime.version>
         <javax.persistence.version>2.1.0</javax.persistence.version>
         <javax.servlet.version>3.1.0</javax.servlet.version>
         <javax-inject.version>1</javax-inject.version>
+        <javax.annotation-api>1.3.2</javax.annotation-api>
         <jaxb.api.version>2.3.1</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.3</jersey-bundle.version>
@@ -141,27 +147,29 @@
         <jersey-spring.version>1.19.3</jersey-spring.version>
         <jettison.version>1.1</jettison.version>
         <jline.version>0.9.94</jline.version>
+        <jopt-simple.version>3.2</jopt-simple.version>
         <json4s.version>3.2.11</json4s.version>
         <jsonsmart.version>2.3</jsonsmart.version>
         <jsr250.version>1.0</jsr250.version>
         <jsr305.version>1.3.9</jsr305.version>
         <junit.version>4.12</junit.version>
-        <kafka.version>2.0.0</kafka.version>
+        <kafka.version>2.4.0</kafka.version>
         <kerby.version>1.0.0</kerby.version>
         <knox.gateway.version>1.2.0</knox.gateway.version>
-        <kylin.version>2.5.0</kylin.version>
+        <kylin.version>2.6.4</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
         <metrics.core.version>3.0.2</metrics.core.version>
-        <mockito.version>2.23.4</mockito.version>
+        <mockito.version>3.0.0</mockito.version>
+        <mockito.all.version>1.10.19</mockito.all.version>
         <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
-        <netty.version>3.10.5.Final</netty.version>
-        <netty-all.version>4.1.34.Final</netty-all.version>
+        <netty.version>3.10.6.Final</netty.version>
+        <netty-all.version>4.1.49.Final</netty-all.version>
         <noggit.version>0.8</noggit.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
-        <presto.version>310</presto.version>
+        <presto.version>333</presto.version>
         <poi.version>3.17</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
@@ -172,28 +180,47 @@
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
         <solr.version>7.7.1</solr.version>
-        <spring-ldap-core.version>2.3.2.RELEASE</spring-ldap-core.version>
-        <springframework.security.version>4.2.13.RELEASE</springframework.security.version>
-        <springframework.test.version>4.3.20.RELEASE</springframework.test.version>
-        <springframework.version>4.3.20.RELEASE</springframework.version>
+        <spring-ldap-core.version>2.3.3.RELEASE</spring-ldap-core.version>
+        <springframework.security.version>4.2.17.RELEASE</springframework.security.version>
+        <springframework.test.version>4.3.27.RELEASE</springframework.test.version>
+        <springframework.version>4.3.27.RELEASE</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.0</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
-        <tomcat.embed.version>7.0.94</tomcat.embed.version>
+        <tomcat.embed.version>7.0.104</tomcat.embed.version>
+        <testng.version>6.9.4</testng.version>
         <velocity.version>1.7</velocity.version>
         <zookeeper.version>3.4.14</zookeeper.version>
         <codehaus.woodstox.stax2api.version>3.1.4</codehaus.woodstox.stax2api.version>
-		<fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>
-		<fasterxml.jackson.version>2.9.9</fasterxml.jackson.version>
-		<kstruct.gethostname4j.version>0.0.2</kstruct.gethostname4j.version>
-		<jna.version>5.2.0</jna.version>
-		<jna-platform.version>5.2.0</jna-platform.version>
+        <fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>
+        <fasterxml.jackson.version>2.9.9</fasterxml.jackson.version>
+        <fasterxml.jackson.databind.version>2.9.10.4</fasterxml.jackson.databind.version>
+        <kstruct.gethostname4j.version>0.0.2</kstruct.gethostname4j.version>
+        <jna.version>5.2.0</jna.version>
+        <jna-platform.version>5.2.0</jna-platform.version>
         <!-- presto plugin deps -->
-        <presto.airlift.version>0.178</presto.airlift.version>
+        <presto.airlift.version>0.192</presto.airlift.version>
         <presto.bval-jsr.version>2.0.0</presto.bval-jsr.version>
         <presto.guice.version>4.2.2</presto.guice.version>
         <presto.guava.version>26.0-jre</presto.guava.version>
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
+        <presto.re2j.version>1.1</presto.re2j.version>
+
+    <!-- Azure Key Vault dependencies -->
+        <com.microsoft.azure.version>1.22.0</com.microsoft.azure.version>
+        <com.microsoft.azure.azure-keyvault.version>1.2.1</com.microsoft.azure.azure-keyvault.version>
+        <com.microsoft.azure.azure-mgmt-keyvault.version>1.22.0</com.microsoft.azure.azure-mgmt-keyvault.version>
+        <com.microsoft.rest.client-runtime.version>1.6.7</com.microsoft.rest.client-runtime.version>
+        <com.microsoft.azure.azure-client-runtime.version>1.6.7</com.microsoft.azure.azure-client-runtime.version>
+        <com.microsoft.azure.adal4j.version>1.6.4</com.microsoft.azure.adal4j.version>
+        <io.reactivex.rxjava.version>1.3.8</io.reactivex.rxjava.version>
+        <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
+        <org.bouncycastle.bcprov-jdk15on>1.59</org.bouncycastle.bcprov-jdk15on>
+        <org.bouncycastle.bcpkix-jdk15on>1.59</org.bouncycastle.bcpkix-jdk15on>
+        <lucene.version>8.4.0</lucene.version>
+        <hppc.version>0.8.0</hppc.version>
+        <joda.time.version>2.10.5</joda.time.version>
+        <log4j.core.version>2.11.1</log4j.core.version>
     </properties>
     <profiles>
         <profile>
@@ -206,6 +233,7 @@
                 <module>agents-audit</module>
                 <module>agents-common</module>
                 <module>agents-cred</module>
+                <module>intg</module>
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
@@ -216,13 +244,14 @@
                 <module>knox-agent</module>
                 <module>storm-agent</module>
                 <module>plugin-yarn</module>
-		<module>plugin-ozone</module>
+                <module>plugin-ozone</module>
                 <module>security-admin</module>
                 <module>plugin-kafka</module>
                 <module>plugin-solr</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
+                <module>plugin-kudu</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -236,7 +265,7 @@
                 <module>ranger-hbase-plugin-shim</module>
                 <module>ranger-knox-plugin-shim</module>
                 <module>ranger-yarn-plugin-shim</module>
-		<module>ranger-ozone-plugin-shim</module>
+                <module>ranger-ozone-plugin-shim</module>
                 <module>ranger-storm-plugin-shim</module>
                 <module>ranger-kafka-plugin-shim</module>
                 <module>ranger-solr-plugin-shim</module>
@@ -246,47 +275,34 @@
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
                 <module>plugin-atlas</module>
+                <module>plugin-schema-registry</module>
                 <module>plugin-sqoop</module>
                 <module>ranger-sqoop-plugin-shim</module>
                 <module>plugin-kylin</module>
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <!--
+                   'distro' should be the last module. If a module gets inserted after
+                   ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
+                -->
+                <module>distro</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/hive-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/knox-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/storm-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
-				<descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
-                                <descriptor>src/main/assembly/admin-web.xml</descriptor>
-                                <descriptor>src/main/assembly/solr_audit_conf.xml</descriptor>
-                                <descriptor>src/main/assembly/usersync.xml</descriptor>
-                                <descriptor>src/main/assembly/tagsync.xml</descriptor>
-                                <descriptor>src/main/assembly/migration-util.xml</descriptor>
-                                <descriptor>src/main/assembly/kms.xml</descriptor>
-                                <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
-                                <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
+        </profile>
+        <profile>
+            <id>ranger-examples</id>
+            <modules>
+                <module>agents-common</module>
+                <module>intg</module>
+                <module>ranger-examples</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>ranger-admin</id>
+            <modules>
+                <module>agents-common</module>
+                <module>security-admin</module>
+            </modules>
         </profile>
         <profile>
             <id>ranger-hdfs-plugin</id>
@@ -301,19 +317,6 @@
                 <module>hdfs-agent</module>
                 <module>ranger-hdfs-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-hive-plugin</id>
@@ -328,19 +331,6 @@
                 <module>hive-agent</module>
                 <module>ranger-hive-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hive-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-hbase-plugin</id>
@@ -355,19 +345,6 @@
                 <module>hbase-agent</module>
                 <module>ranger-hbase-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-knox-plugin</id>
@@ -382,19 +359,6 @@
                 <module>knox-agent</module>
                 <module>ranger-knox-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/knox-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-storm-plugin</id>
@@ -409,19 +373,6 @@
                 <module>storm-agent</module>
                 <module>ranger-storm-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/storm-agent.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-yarn-plugin</id>
@@ -436,21 +387,8 @@
                 <module>plugin-yarn</module>
                 <module>ranger-yarn-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
-	<profile>
+    <profile>
             <id>ranger-ozone-plugin</id>
             <modules>
                 <module>agents-audit</module>
@@ -463,19 +401,6 @@
                 <module>plugin-ozone</module>
                 <module>ranger-ozone-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-kafka-plugin</id>
@@ -490,19 +415,6 @@
                 <module>plugin-kafka</module>
                 <module>ranger-kafka-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-solr-plugin</id>
@@ -517,19 +429,6 @@
                 <module>plugin-solr</module>
                 <module>ranger-solr-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-kms-plugin</id>
@@ -544,19 +443,6 @@
                 <module>plugin-kms</module>
                 <module>ranger-kms-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-kms.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-atlas-plugin</id>
@@ -571,19 +457,6 @@
                 <module>plugin-atlas</module>
                 <module>ranger-atlas-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-sqoop-plugin</id>
@@ -598,19 +471,6 @@
                 <module>plugin-sqoop</module>
                 <module>ranger-sqoop-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-kylin-plugin</id>
@@ -625,19 +485,6 @@
                 <module>plugin-kylin</module>
                 <module>ranger-kylin-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-elasticsearch-plugin</id>
@@ -652,19 +499,6 @@
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>ranger-presto-plugin</id>
@@ -679,19 +513,6 @@
                 <module>plugin-presto</module>
                 <module>ranger-presto-plugin-shim</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
         </profile>
         <profile>
             <id>linux</id>
@@ -701,10 +522,11 @@
                 </os>
             </activation>
             <modules>
-		<module>jisql</module>
+                <module>jisql</module>
                 <module>agents-audit</module>
                 <module>agents-common</module>
                 <module>agents-cred</module>
+                <module>intg</module>
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
@@ -721,6 +543,91 @@
                 <module>plugin-solr</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
+                <module>plugin-kudu</module>
+                <module>ugsync</module>
+                <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
+                <module>unixauthclient</module>
+                <module>unixauthservice</module>
+                <module>unixauthnative</module>
+                <module>ranger-util</module>
+                <module>plugin-kms</module>
+                <module>tagsync</module>
+                <module>ranger-hdfs-plugin-shim</module>
+                <module>ranger-plugin-classloader</module>
+                <module>ranger-hive-plugin-shim</module>
+                <module>ranger-hbase-plugin-shim</module>
+                <module>ranger-knox-plugin-shim</module>
+                <module>ranger-yarn-plugin-shim</module>
+                <module>ranger-ozone-plugin-shim</module>
+                <module>ranger-storm-plugin-shim</module>
+                <module>ranger-kafka-plugin-shim</module>
+                <module>ranger-solr-plugin-shim</module>
+                <module>ranger-atlas-plugin-shim</module>
+                <module>ranger-kms-plugin-shim</module>
+                <module>ranger-examples</module>
+                <module>ranger-tools</module>
+                <module>plugin-atlas</module>
+                <module>plugin-schema-registry</module>
+                <module>plugin-sqoop</module>
+                <module>ranger-sqoop-plugin-shim</module>
+                <module>plugin-kylin</module>
+                <module>ranger-kylin-plugin-shim</module>
+                <module>plugin-presto</module>
+                <module>ranger-presto-plugin-shim</module>
+                <module>plugin-elasticsearch</module>
+                <module>ranger-elasticsearch-plugin-shim</module>
+                <!--
+                   'distro' should be the last module. If a module gets inserted after
+                   ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
+                -->
+                <module>distro</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>linux-pam</id>
+            <activation>
+                <os>
+                    <family>linux</family>
+                </os>
+                <file>
+                    <exists>/usr/include/security/pam_appl.h</exists>
+                </file>
+            </activation>
+            <modules>
+                <module>unixauthpam</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>sign-artifacts</id>
+            <activation>
+                <property>
+                    <name>sign-artifacts</name>
+                    <value>true</value>
+                </property>
+            </activation>
+            <modules>
+                <module>jisql</module>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>intg</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>embeddedwebserver</module>
+                <module>kms</module>
+                <module>hbase-agent</module>
+                <module>hdfs-agent</module>
+                <module>hive-agent</module>
+                <module>knox-agent</module>
+                <module>storm-agent</module>
+                <module>plugin-yarn</module>
+                <module>plugin-ozone</module>
+                <module>security-admin</module>
+                <module>plugin-kafka</module>
+                <module>plugin-solr</module>
+                <module>plugin-nifi</module>
+                <module>plugin-nifi-registry</module>
+                <module>plugin-presto</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -740,76 +647,18 @@
                 <module>ranger-solr-plugin-shim</module>
                 <module>ranger-atlas-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
+                <module>ranger-presto-plugin-shim</module>
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
                 <module>plugin-atlas</module>
+                <module>plugin-schema-registry</module>
                 <module>plugin-sqoop</module>
                 <module>ranger-sqoop-plugin-shim</module>
                 <module>plugin-kylin</module>
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
-                <module>plugin-presto</module>
-                <module>ranger-presto-plugin-shim</module>
-                <module>unixauthnative</module>
             </modules>
-            <build>
-                <plugins>
-                    <plugin>
-                        <artifactId>maven-assembly-plugin</artifactId>
-                        <version>2.2-beta-5</version>
-			<configuration>
-                            <descriptors>
-                                <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/hive-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/knox-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/storm-agent.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
-                                <descriptor>src/main/assembly/admin-web.xml</descriptor>
-                                <descriptor>src/main/assembly/solr_audit_conf.xml</descriptor>
-                                <descriptor>src/main/assembly/usersync.xml</descriptor>
-                                <descriptor>src/main/assembly/tagsync.xml</descriptor>
-                                <descriptor>src/main/assembly/migration-util.xml</descriptor>
-                                <descriptor>src/main/assembly/kms.xml</descriptor>
-                                <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
-                                <descriptor>src/main/assembly/ranger-src.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
-                                <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </plugin>
-                </plugins>
-            </build>
-        </profile>
-        <profile>
-            <id>linux-pam</id>
-            <activation>
-                <os>
-                    <family>linux</family>
-                </os>
-				<file>
-					<exists>/usr/include/security/pam_appl.h</exists>
-				</file>
-            </activation>
-            <modules>
-                <module>unixauthpam</module>
-            </modules>
-        </profile>
-        <profile>
-            <id>sign-artifacts</id>
-            <activation>
-                <property>
-                    <name>sign-artifacts</name>
-                    <value>true</value>
-                </property>
-            </activation>
             <build>
                 <plugins>
                     <plugin>
@@ -876,6 +725,12 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
+                <groupId>org.testng</groupId>
+                <artifactId>testng</artifactId>
+                <version>${testng.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
                 <groupId>mysql</groupId>
                 <artifactId>mysql-connector-java</artifactId>
                 <version>${mysql-connector-java.version}</version>
@@ -903,21 +758,21 @@
                 <artifactId>gson</artifactId>
                 <version>${gson.version}</version>
             </dependency>
-			<dependency>
-				<groupId>com.webcohesion.enunciate</groupId>
-				<artifactId>enunciate-core-annotations</artifactId>
-				<version>${enunciate.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>commons-beanutils</groupId>
-				<artifactId>commons-beanutils</artifactId>
-				<version>${commons.beanutils.version}</version>
-			</dependency>
-			<dependency>
-				<groupId>org.apache.hbase</groupId>
-				<artifactId>hbase-client</artifactId>
-				<version>${hbase.version}</version>
-			</dependency>
+            <dependency>
+                <groupId>com.webcohesion.enunciate</groupId>
+                <artifactId>enunciate-core-annotations</artifactId>
+                <version>${enunciate.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>commons-beanutils</groupId>
+                <artifactId>commons-beanutils</artifactId>
+                <version>${commons.beanutils.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.hbase</groupId>
+                <artifactId>hbase-client</artifactId>
+                <version>${hbase.version}</version>
+            </dependency>
             <dependency>
                 <groupId>javax.annotation</groupId>
                 <artifactId>jsr250-api</artifactId>
@@ -933,7 +788,7 @@
                 <artifactId>jaxb-runtime</artifactId>
                 <version>${jaxb.api.version}</version>
             </dependency>
-		</dependencies>
+        </dependencies>
     </dependencyManagement>
     <build>
         <pluginManagement>
@@ -1026,26 +881,26 @@
                     <artifactId>maven-release-plugin</artifactId>
                     <version>2.5.2</version>
                 </plugin>
-				<plugin>
-					<groupId>com.webcohesion.enunciate</groupId>
-					<artifactId>enunciate-maven-plugin</artifactId>
-					<version>${enunciate.version}</version>
-					<configuration>
-						<enunciateArtifactId/>
-						<docsDir>docs/src/site/</docsDir>
-						<source>1.8</source>
-						<target>1.8</target>
-					</configuration>
-					<executions>
-						<execution>
-							<goals>
-								<goal>docs</goal>
-							</goals>
-							<phase>package</phase>
-						</execution>
-					</executions>
-				</plugin>
-			</plugins>
+                <plugin>
+                    <groupId>com.webcohesion.enunciate</groupId>
+                    <artifactId>enunciate-maven-plugin</artifactId>
+                    <version>${enunciate.version}</version>
+                    <configuration>
+                        <enunciateArtifactId/>
+                        <docsDir>docs/src/site/</docsDir>
+                        <source>1.8</source>
+                        <target>1.8</target>
+                    </configuration>
+                    <executions>
+                        <execution>
+                            <goals>
+                                <goal>docs</goal>
+                            </goals>
+                            <phase>package</phase>
+                        </execution>
+                    </executions>
+                </plugin>
+            </plugins>
         </pluginManagement>
         <plugins>
             <plugin>
@@ -1137,6 +992,8 @@
                         <exclude>**/test/resources/**/*.json</exclude>
                         <exclude>**/test/resources/**/*.txt</exclude>
                         <exclude>**/test/resources/**/*.csv</exclude>
+                        <exclude>**/test/resources/**/*.yaml</exclude>
+                        <exclude>**/test/resources/**/*.avcs</exclude>
                         <exclude>**/main/resources/**/*.json</exclude>
                         <exclude>**/samples/**/*.json</exclude>
                         <exclude>**/.externalToolBuilders/*</exclude>
@@ -1153,6 +1010,7 @@
                         <exclude>**/node_modules/**</exclude>
                         <exclude>**/package.json</exclude>
                         <exclude>**/package-lock.json</exclude>
+                        <exclude>**/ranger_es_schema.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>
@@ -1181,6 +1039,43 @@
                 <configuration>
                     <includeFilterFile>./dev-support/findbugsIncludeFile.xml</includeFilterFile>
                 </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <version>${assembly.plugin.version}</version>
+                <configuration>
+                    <skipAssembly>true</skipAssembly>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>${checkstyle.plugin.version}</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>${checkstyle.version}</version>
+                    </dependency>
+                </dependencies>
+                <executions>
+                    <execution>
+                        <id>checkstyle-check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <phase>verify</phase>
+                        <configuration>
+                            <consoleOutput>true</consoleOutput>
+                            <includeTestSourceDirectory>true</includeTestSourceDirectory>
+                            <configLocation>./dev-support/checkstyle.xml</configLocation>
+                            <suppressionsLocation>./dev-support/checkstyle-suppressions.xml</suppressionsLocation>
+                            <failOnViolation>true</failOnViolation>
+                        </configuration>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

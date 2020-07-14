@@ -17,10 +17,8 @@ import os
 import logging
 import subprocess
 import time
-#import ranger_install
 from xml.dom.minidom import getDOMImplementation
 import shutil
-import commands
 import re
 
 cmd = sys.argv[0]
@@ -76,9 +74,9 @@ def init_variables():
 	conf_dict["RANGER_ADMIN_HOME"] = os.getenv("RANGER_ADMIN_HOME")
 	conf_dict["RANGER_USERSYNC_HOME"] = os.getenv("RANGER_USERSYNC_HOME")
 	conf_dict["INSTALL_DIR"] = os.getenv("RANGER_USERSYNC_HOME")
-        USERSYNC_HOME = conf_dict['RANGER_USERSYNC_HOME']
+	USERSYNC_HOME = conf_dict['RANGER_USERSYNC_HOME']
 	copy_files(os.path.join(USERSYNC_HOME,"conf.dist"), os.path.join(USERSYNC_HOME,"conf"))
-        pass
+	pass
 
 def get_class_path(paths):
     separator = ';' if sys.platform == 'win32' else ':';
@@ -117,7 +115,7 @@ if service_entry:
 		text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)
 		prettyXml = text_re.sub('>\g<1></', uglyXml)
 
-		print prettyXml
+		print(prettyXml)
 	except:
 		sys.exit(1)
 

@@ -149,8 +149,13 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 
 		XXService xService = daoManager.getXXService().findByName(mObj.getRepoName());
 		if (xService != null) {
+			vObj.setRepoDisplayName(xService.getDisplayName());
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
-			vObj.setServiceType(xServiceDef.getName());
+
+			if (xServiceDef != null) {
+				vObj.setServiceType(xServiceDef.getName());
+				vObj.setServiceTypeDisplayName(xServiceDef.getDisplayName());
+			}
 		}
 
 		return vObj;

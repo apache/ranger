@@ -40,8 +40,14 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
 
 	public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
+	public static final String  ACTION_TYPE_METADATA_OPERATION = "METADATA OPERATION";
 	Collection<AuthzAuditEvent> auditEvents  = null;
 	boolean                     deniedExists = false;
+
+	Set<String> roleOperationCmds = new HashSet<>(Arrays.asList(HiveOperationType.CREATEROLE.name(), HiveOperationType.DROPROLE.name(),
+			HiveOperationType.SHOW_ROLES.name(), HiveOperationType.SHOW_ROLE_GRANT.name(),
+			HiveOperationType.SHOW_ROLE_PRINCIPALS.name(), HiveOperationType.GRANT_ROLE.name(),
+			HiveOperationType.REVOKE_ROLE.name()));
 
 	public RangerHiveAuditHandler() {
 		super();
@@ -90,6 +96,11 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 				}
 				auditEvent.setAccessType(commandStr);
 			}
+
+			String action = request.getAction();
+			if (hiveResource.getObjectType() == HiveObjectType.GLOBAL && isRoleOperation(action)) {
+				auditEvent.setAccessType(action);
+			}
 		}
 
 		return auditEvent;
@@ -108,13 +119,18 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		    ret = createAuditEvent(result, result.getMaskType(), resourcePath);
         } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
             ret = createAuditEvent(result, ACCESS_TYPE_ROWFILTER, resourcePath);
-		} else {
+		} else if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
 			String accessType = null;
 
 			if (request instanceof RangerHiveAccessRequest) {
 				RangerHiveAccessRequest hiveRequest = (RangerHiveAccessRequest) request;
 
 				accessType = hiveRequest.getHiveAccessType().toString();
+
+				String action = request.getAction();
+				if (ACTION_TYPE_METADATA_OPERATION.equals(action)) {
+					accessType = ACTION_TYPE_METADATA_OPERATION;
+				}
 			}
 
 			if (StringUtils.isEmpty(accessType)) {
@@ -174,6 +190,11 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		if(! result.getIsAudited()) {
 			return;
 		}
+
+		if  (skipFilterOperationAuditing(result)) {
+			return;
+		}
+
 		AuthzAuditEvent auditEvent = createAuditEvent(result);
 
 		if(auditEvent != null) {
@@ -196,7 +217,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	public void logAuditEventForDfs(String userName, String dfsCommand, boolean accessGranted, int repositoryType, String repositoryName) {
 		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
 
-		auditEvent.setAclEnforcer(RangerDefaultAuditHandler.RangerModuleName);
+		auditEvent.setAclEnforcer(moduleName);
 		auditEvent.setResourceType("@dfs"); // to be consistent with earlier release
 		auditEvent.setAccessType("DFS");
 		auditEvent.setAction("DFS");
@@ -273,6 +294,26 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			if (!ArrayUtils.isEmpty(cmd) && cmd.length > 2) {
 				ret = ret + cmd[2];
 			}
+		}
+		return ret;
+	}
+
+	private boolean skipFilterOperationAuditing(RangerAccessResult result) {
+		boolean ret = false;
+		RangerAccessRequest accessRequest = result.getAccessRequest();
+		if (accessRequest != null) {
+			String action = accessRequest.getAction();
+			if (ACTION_TYPE_METADATA_OPERATION.equals(action) && !result.getIsAllowed()) {
+				ret = true;
+			}
+		}
+		return ret;
+	}
+
+	private boolean isRoleOperation(String action) {
+		boolean ret = false;
+		if (roleOperationCmds.contains(action)) {
+			ret = true;
 		}
 		return ret;
 	}

@@ -229,8 +229,70 @@
         <value>/opt/safenetConf/64/8.3.1/sunpkcs11.cfg</value>
         <description>Location of Safenet key secure library configuration file</description>
   </property>
+  <property>
+        <name>ranger.kms.keysecure.provider.type</name>
+        <value>SunPKCS11</value>
+        <description>Security Provider for key secure</description>
+  </property>
 
   <!-- Key-Secure Config END-->
+   <!--Azure Key Vault START-->
+   <property>
+        <name>ranger.kms.azurekeyvault.enabled</name>
+        <value>false</value>
+        <description>Flag for Azure Key Vault</description>
+  </property>
+  <property>
+        <name>ranger.kms.azure.keyvault.ssl.enabled</name>
+        <value>false</value>
+        <description>Flag for Azure authentication via certificate or password</description>
+  </property>
+  <property>
+        <name>ranger.kms.azure.client.id</name>
+        <value></value>
+        <description>Azure Client Id</description>
+  </property>
+  <property>
+        <name>ranger.kms.azure.client.secret</name>
+        <value></value>
+        <description>Azure Client Secret</description>
+  </property>
+    <property>
+        <name>ranger.kms.azure.client.secret.alias</name>
+        <value>ranger.ks.azure.client.secret</value>
+        <description>Azure Client Secret Alias</description>
+  </property>
+  <property>
+        <name>ranger.kms.azure.keyvault.certificate.path</name>
+        <value>/home/machine/Desktop/azureAuthCertificate/keyvault-MyCert.pfx</value>
+        <description>Azure key vault cerificate path</description>
+  </property>
+  <property>
+        <name>ranger.kms.azure.keyvault.certificate.password</name>
+        <value></value>
+        <description>Azure key vault cerificate password</description>
+  </property>
+   <property>
+        <name>ranger.kms.azure.masterkey.name</name>
+        <value></value>
+        <description>Azure master key name</description>
+  </property>
+  <property>
+        <name>ranger.kms.azure.masterkey.type</name>
+        <value></value>
+        <description>Azure key type: RSA, RSA_HSM, EC, EC_HSM</description>
+  </property>
+    <property>
+        <name>ranger.kms.azure.zonekey.encryption.algorithm</name>
+        <value></value>
+        <description>Encryption Algo : RSA_OAEP, RSA_OAEP_256, RSA1_5</description>
+  </property>
+   <property>
+        <name>ranger.kms.azurekeyvault.url</name>
+        <value></value>
+        <description>Azure Key Vault url</description>
+  </property>
+   <!--Azure Key Vault END-->
     
   <!-- HSM Config -->
   <property>

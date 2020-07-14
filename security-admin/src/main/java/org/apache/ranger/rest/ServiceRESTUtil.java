@@ -215,14 +215,52 @@ public class ServiceRESTUtil {
 			LOG.debug("==> ServiceRESTUtil.processApplyPolicy()");
 		}
 
-		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
-		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
-		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
-		processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY_EXCEPTIONS);
+		// Check if applied policy or existing policy contains any conditions
+		if (ServiceRESTUtil.containsRangerCondition(existingPolicy) || ServiceRESTUtil.containsRangerCondition(appliedPolicy)) {
+			LOG.info("Applied policy [" + appliedPolicy + "] or existing policy [" + existingPolicy + "] contains condition(s). Combining two policies.");
+			combinePolicy(existingPolicy, appliedPolicy);
+
+		} else {
+
+			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
+			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
+			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
+			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY_EXCEPTIONS);
+		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.processApplyPolicy()");
 		}
+	}
+
+	static private void combinePolicy(RangerPolicy existingPolicy, RangerPolicy appliedPolicy) {
+
+		List<RangerPolicy.RangerPolicyItem> appliedPolicyItems;
+
+		// Combine allow policy-items
+		appliedPolicyItems = appliedPolicy.getPolicyItems();
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+			existingPolicy.getPolicyItems().addAll(appliedPolicyItems);
+		}
+
+		// Combine deny policy-items
+		appliedPolicyItems = appliedPolicy.getDenyPolicyItems();
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+			existingPolicy.getDenyPolicyItems().addAll(appliedPolicyItems);
+		}
+
+		// Combine allow-exception policy-items
+		appliedPolicyItems = appliedPolicy.getAllowExceptions();
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+			existingPolicy.getAllowExceptions().addAll(appliedPolicyItems);
+		}
+
+		// Combine deny-exception policy-items
+		appliedPolicyItems = appliedPolicy.getDenyExceptions();
+		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
+			existingPolicy.getDenyExceptions().addAll(appliedPolicyItems);
+		}
+
 	}
 
 	static private void processApplyPolicyForItemType(RangerPolicy existingPolicy, RangerPolicy appliedPolicy, POLICYITEM_TYPE policyItemType) {
@@ -329,8 +367,8 @@ public class ServiceRESTUtil {
 
 			// Split existing policyItems for users and groups extracted from appliedPolicyItem into userPolicyItems and groupPolicyItems
 			splitExistingPolicyItems(existingPolicy, users, userPolicyItems, groups, groupPolicyItems, roles, rolePolicyItems);
-			// Apply policyItems of given type in appliedPolicy to policyItems extracted from existingPolicy
-			mergePolicyItems(appliedPolicyItems, policyItemType, userPolicyItems, groupPolicyItems);
+			// Apply policyItems of given type in appliedPlicy to policyItems extracted from existingPolicy
+			mergePolicyItems(appliedPolicyItems, policyItemType, userPolicyItems, groupPolicyItems, rolePolicyItems);
 			// Add modified/new policyItems back to existing policy
 			mergeProcessedPolicyItems(existingPolicy, userPolicyItems, groupPolicyItems, rolePolicyItems);
 			compactPolicy(existingPolicy);
@@ -422,7 +460,6 @@ public class ServiceRESTUtil {
 			policyItem = splitAndGetConsolidatedPolicyItemForGroup(denyExceptionItems, group);
 			value[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()] = policyItem;
 		}
-
 		for (String role : roles) {
 			RangerPolicy.RangerPolicyItem value[] = rolePolicyItems.get(role);
 			if (value == null) {
@@ -666,7 +703,8 @@ public class ServiceRESTUtil {
 
 	static private void mergePolicyItems(List<RangerPolicy.RangerPolicyItem> appliedPolicyItems,
 			POLICYITEM_TYPE policyItemType, Map<String, RangerPolicy.RangerPolicyItem[]> existingUserPolicyItems,
-			Map<String, RangerPolicy.RangerPolicyItem[]> existingGroupPolicyItems) {
+			Map<String, RangerPolicy.RangerPolicyItem[]> existingGroupPolicyItems,
+			Map<String, RangerPolicy.RangerPolicyItem[]> existingRolePolicyItems ) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceRESTUtil.mergePolicyItems()");
 		}
@@ -696,6 +734,20 @@ public class ServiceRESTUtil {
 				addPolicyItemForGroup(items, policyItemType.ordinal(), group, policyItem);
 			}
 		}
+
+		for (RangerPolicy.RangerPolicyItem policyItem : appliedPolicyItems) {
+			List<String> roles = policyItem.getRoles();
+			for (String role : roles) {
+				RangerPolicy.RangerPolicyItem[] items = existingRolePolicyItems.get(role);
+				if (items == null) {
+					// Should not get here
+					items = new RangerPolicy.RangerPolicyItem[4];
+					existingRolePolicyItems.put(role, items);
+				}
+				addPolicyItemForRole(items, policyItemType.ordinal(), role, policyItem);
+			}
+		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceRESTUtil.mergePolicyItems()");
 		}
@@ -1015,17 +1067,21 @@ public class ServiceRESTUtil {
 		}
 
 		if (policy != null) {
-			List<RangerPolicy.RangerPolicyItem> allItems = new ArrayList<RangerPolicy.RangerPolicyItem>();
+			if (CollectionUtils.isNotEmpty(policy.getConditions())) {
+				ret = true;
+			} else {
+				List<RangerPolicy.RangerPolicyItem> allItems = new ArrayList<RangerPolicy.RangerPolicyItem>();
 
-			allItems.addAll(policy.getPolicyItems());
-			allItems.addAll(policy.getDenyPolicyItems());
-			allItems.addAll(policy.getAllowExceptions());
-			allItems.addAll(policy.getDenyExceptions());
+				allItems.addAll(policy.getPolicyItems());
+				allItems.addAll(policy.getDenyPolicyItems());
+				allItems.addAll(policy.getAllowExceptions());
+				allItems.addAll(policy.getDenyExceptions());
 
-			for (RangerPolicy.RangerPolicyItem policyItem : allItems) {
-				if (!policyItem.getConditions().isEmpty()) {
-					ret = true;
-					break;
+				for (RangerPolicy.RangerPolicyItem policyItem : allItems) {
+					if (!policyItem.getConditions().isEmpty()) {
+						ret = true;
+						break;
+					}
 				}
 			}
 		}

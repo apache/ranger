@@ -19,10 +19,8 @@
 package org.apache.ranger.server.tomcat;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.StringReader;
 import java.nio.ByteBuffer;
 import java.nio.charset.StandardCharsets;
@@ -34,17 +32,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import java.util.logging.Logger;
-import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.util.EntityUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
@@ -57,7 +52,6 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.cloud.SolrZkClient;
 import org.apache.solr.common.cloud.SolrZooKeeper;
 import org.apache.solr.common.cloud.ZkConfigManager;
-import org.apache.zookeeper.CreateMode;
 import org.noggit.JSONParser;
 import org.noggit.ObjectBuilder;
 
@@ -75,21 +69,16 @@ public class SolrCollectionBootstrapper extends Thread {
 	final static String SOLR_NO_REPLICA = "ranger.audit.solr.no.replica";
 	final static String SOLR_TIME_INTERVAL = "ranger.audit.solr.time.interval";
 	final static String SOLR_BOOTSTRP_MAX_RETRY = "ranger.audit.solr.max.retry";
-	final static String SOLR_ACL_USER_LIST_SASL = "ranger.audit.solr.acl.user.list.sasl";
 	final static String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 	public static final String DEFAULT_COLLECTION_NAME = "ranger_audits";
 	public static final String DEFAULT_CONFIG_NAME = "ranger_audits";
-	public static final String DEFAULT_SERVICE_NAME = "rangeradmin";
 	public static final long DEFAULT_SOLR_TIME_INTERVAL_MS = 60000L;
-	public static final int DEFAULT_SOLR_BOOTSTRP_MAX_RETRY  = 30;
-	private static final String CONFIG_FILE = "ranger-admin-site.xml";
-	private static final String CORE_SITE_CONFIG_FILENAME = "core-site.xml";
-	private static final String DEFAULT_CONFIG_FILENAME = "ranger-admin-default-site.xml";
+	private static final int TRY_UNTIL_SUCCESS  = -1;
+	public static final int DEFAULT_SOLR_BOOTSTRP_MAX_RETRY  = TRY_UNTIL_SUCCESS;
 	private static final String AUTH_TYPE_KERBEROS = "kerberos";
 	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
 	private static final String RANGER_SERVICE_HOSTNAME = "ranger.service.host";
 	private static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
-	private static final String SOLR_CONFIG_FILE = "solrconfig.xml";
   private static final String SSL_ENABLED_PARAM = "ranger.service.https.attrib.ssl.enabled";
 	private File configSetFolder = null;
 
@@ -115,49 +104,44 @@ public class SolrCollectionBootstrapper extends Thread {
 	SolrZooKeeper solrZookeeper = null;
 	SolrZkClient zkClient = null;
 
-	private Properties serverConfigProperties = new Properties();
-
 	public SolrCollectionBootstrapper() throws IOException {
 		logger.info("Starting Solr Setup");
-		XMLUtils.loadConfig(DEFAULT_CONFIG_FILENAME, serverConfigProperties);
-		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILENAME, serverConfigProperties);
-		XMLUtils.loadConfig(CONFIG_FILE, serverConfigProperties);
 
-		logger.info("AUTHENTICATION_TYPE : " + getConfig(AUTHENTICATION_TYPE));
-		if (getConfig(AUTHENTICATION_TYPE) != null
-				&& getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(
+		logger.info("AUTHENTICATION_TYPE : " + EmbeddedServerUtil.getConfig(AUTHENTICATION_TYPE));
+		if (EmbeddedServerUtil.getConfig(AUTHENTICATION_TYPE) != null
+				&& EmbeddedServerUtil.getConfig(AUTHENTICATION_TYPE).trim().equalsIgnoreCase(
 						AUTH_TYPE_KERBEROS)) {
 			isKERBEROS = true;
-			hostName = getConfig(RANGER_SERVICE_HOSTNAME);
+			hostName = EmbeddedServerUtil.getConfig(RANGER_SERVICE_HOSTNAME);
 			try {
 				principal = SecureClientLogin.getPrincipal(
-						getConfig(ADMIN_USER_PRINCIPAL), hostName);
+						EmbeddedServerUtil.getConfig(ADMIN_USER_PRINCIPAL), hostName);
 			} catch (IOException ignored) {
 				logger.warning("Failed to get ranger.admin.kerberos.principal. Reason: "
 						+ ignored.toString());
 			}
 		}
 
-		solr_collection_name = getConfig(SOLR_COLLECTION_NAME,
+		solr_collection_name = EmbeddedServerUtil.getConfig(SOLR_COLLECTION_NAME,
 				DEFAULT_COLLECTION_NAME);
 		logger.info("Solr Collection name provided is : "
 				+ solr_collection_name);
-		solr_config_name = getConfig(SOLR_CONFIG_NAME, DEFAULT_CONFIG_NAME);
+		solr_config_name = EmbeddedServerUtil.getConfig(SOLR_CONFIG_NAME, DEFAULT_CONFIG_NAME);
 		logger.info("Solr Config name provided is : " + solr_config_name);
-		no_of_replicas = getIntConfig(SOLR_NO_REPLICA, 1);
+		no_of_replicas = EmbeddedServerUtil.getIntConfig(SOLR_NO_REPLICA, 1);
 		logger.info("No. of replicas provided is : " + no_of_replicas);
 
-		no_of_shards = getIntConfig(SOLR_NO_SHARDS, 1);
+		no_of_shards = EmbeddedServerUtil.getIntConfig(SOLR_NO_SHARDS, 1);
 		logger.info("No. of shards provided is : " + no_of_shards);
-		max_node_per_shards = getIntConfig(SOLR_MAX_SHARD_PER_NODE, 1);
+		max_node_per_shards = EmbeddedServerUtil.getIntConfig(SOLR_MAX_SHARD_PER_NODE, 1);
 		logger.info("Max no of nodes per shards provided is : "
 				+ max_node_per_shards);
 
-		time_interval = getLongConfig(SOLR_TIME_INTERVAL,
+		time_interval = EmbeddedServerUtil.getLongConfig(SOLR_TIME_INTERVAL,
 				DEFAULT_SOLR_TIME_INTERVAL_MS);
 		logger.info("Solr time interval provided is : " + time_interval);
-		
-		max_retry = getIntConfig(SOLR_BOOTSTRP_MAX_RETRY, DEFAULT_SOLR_BOOTSTRP_MAX_RETRY);
+
+		max_retry = EmbeddedServerUtil.getIntConfig(SOLR_BOOTSTRP_MAX_RETRY, DEFAULT_SOLR_BOOTSTRP_MAX_RETRY);
 		if (System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG) == null) {
 			System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG,
 					"/dev/null");
@@ -169,7 +153,7 @@ public class SolrCollectionBootstrapper extends Thread {
 		path_for_cloud_mode = Paths.get(solrFileDir, "contrib",
 				"solr_for_audit_setup", "conf");
 		configSetFolder = path_for_cloud_mode.toFile();
-                String sslEnabledProp = getConfig(SSL_ENABLED_PARAM);
+                String sslEnabledProp = EmbeddedServerUtil.getConfig(SSL_ENABLED_PARAM);
                 isSSLEnabled = ("true".equalsIgnoreCase(sslEnabledProp));
 	}
 
@@ -178,9 +162,9 @@ public class SolrCollectionBootstrapper extends Thread {
 
 		String zkHosts = "";
 		List<String> zookeeperHosts = null;
-		if (getConfig(SOLR_ZK_HOSTS) != null
-				&& !StringUtil.isEmpty(getConfig(SOLR_ZK_HOSTS))) {
-			zkHosts = getConfig(SOLR_ZK_HOSTS).trim();
+		if (EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS) != null
+				&& !StringUtil.isEmpty(EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS))) {
+			zkHosts = EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS).trim();
 			zookeeperHosts = new ArrayList<String>(Arrays.asList(zkHosts
 					.split(",")));
 		}
@@ -190,7 +174,7 @@ public class SolrCollectionBootstrapper extends Thread {
 						h -> h.equalsIgnoreCase("none"))) {
 			logger.info("Solr zkHosts=" + zkHosts + ", collectionName="
 					+ solr_collection_name);
-			while (!is_completed && retry_counter < max_retry) {
+			while (!is_completed && (max_retry == TRY_UNTIL_SUCCESS || retry_counter < max_retry)) {
 				try {
 					if (connect(zookeeperHosts)) {
 						if (solr_cloud_mode) {
@@ -270,7 +254,7 @@ public class SolrCollectionBootstrapper extends Thread {
                         m = (Map) ObjectBuilder.getVal(new JSONParser(
                             new StringReader(response)));
                       } catch (JSONParser.ParseException e) {
-                        System.err.println("err response: " + response);
+                        logger.severe("Error response: " + response);
                         throw new AssertionError(e);
                       }
                     } finally {
@@ -331,11 +315,14 @@ public class SolrCollectionBootstrapper extends Thread {
 
 	private void logErrorMessageAndWait(String msg, Exception exception) {
 		retry_counter++;
-		String attempMessage = (retry_counter == max_retry) ? ("Maximum attempts reached for setting up Solr.")
-				: ("[retrying after " + time_interval
-						+ " ms]. No. of attempts left : "
-						+ (max_retry - retry_counter)
-						+ " . Maximum attempts : " + max_retry);
+		String attempMessage;
+		if (max_retry != TRY_UNTIL_SUCCESS) {
+			attempMessage = (retry_counter == max_retry) ? ("Maximum attempts reached for setting up Solr.")
+					: ("[retrying after " + time_interval + " ms]. No. of attempts left : "
+							+ (max_retry - retry_counter) + " . Maximum attempts : " + max_retry);
+		} else {
+			attempMessage = "[retrying after " + time_interval + " ms]";
+		}
 		StringBuilder errorBuilder = new StringBuilder();
 		errorBuilder.append(msg);
 		if (exception != null) {
@@ -401,17 +388,6 @@ public class SolrCollectionBootstrapper extends Thread {
 		}
 	}
 
-	private String getConfig(String key, String defaultValue) {
-		String ret = getConfig(key);
-		if (ret == null) {
-			ret = defaultValue;
-		}
-		return ret;
-	}
-
-
-
-
 	@SuppressWarnings("unchecked")
 	private List<String> getCollections() throws IOException, ParseException {
 		try {
@@ -433,68 +409,8 @@ public class SolrCollectionBootstrapper extends Thread {
 
 	}
 
-	private int getIntConfig(String key, int defaultValue) {
-		int ret = defaultValue;
-		String retStr = getConfig(key);
-		try {
-			if (retStr != null) {
-				ret = Integer.parseInt(retStr);
-			}
-		} catch (Exception err) {
-			logger.severe(retStr + " can't be parsed to int. Reason: "
-					+ err.toString());
-		}
-		return ret;
-	}
-
-	private Long getLongConfig(String key, Long defaultValue) {
-		Long ret = defaultValue;
-		String retStr = getConfig(key);
-		try {
-			if (retStr != null) {
-				ret = Long.parseLong(retStr);
-			}
-		} catch (Exception err) {
-			logger.severe(retStr + " can't be parsed to long. Reason: "
-					+ err.toString());
-		}
-		return ret;
-	}
-
-	private String getConfig(String key) {
-
-		String value = serverConfigProperties.getProperty(key);
-		if (value == null || value.trim().isEmpty()) {
-			// Value not found in properties file, let's try to get from
-			// System's property
-			value = System.getProperty(key);
-		}
-		return value;
-	}
-
-	private void uploadFileToZk(SolrZkClient zkClient, Path filePath,
-			Path configsPath) throws FileNotFoundException {
-		InputStream is = new FileInputStream(filePath.toString());
-		try {
-			if (zkClient.exists(configsPath.toString(), true)) {
-				zkClient.setData(configsPath.toString(),
-						IOUtils.toByteArray(is), true);
-			} else {
-				zkClient.create(configsPath.toString(),
-						IOUtils.toByteArray(is), CreateMode.PERSISTENT, true);
-			}
-		} catch (Exception e) {
-			throw new IllegalStateException(e);
-		} finally {
-			IOUtils.closeQuietly(is);
-		}
-	}
-
 	private File getConfigSetFolder() {
 		return configSetFolder;
 	}
 
-	private String getConfigFileName() {
-		return SOLR_CONFIG_FILE;
-	}
 }

@@ -56,7 +56,8 @@ define(function(require){
 				rangerPolicyType : this.collection.queryParams['policyType'],
 				isRenderAccessTab : XAUtil.isRenderMasking(this.rangerServiceDefModel.get('dataMaskDef')) ? true 
                                         : XAUtil.isRenderRowFilter(this.rangerServiceDefModel.get('rowFilterDef')) ? true : false,
-                isAddNewPolicyButtonShow : !(XAUtil.isAuditorOrKMSAuditor(SessionMgr)) && this.rangerService.get('isEnabled')
+                isAddNewPolicyButtonShow : !(XAUtil.isAuditorOrKMSAuditor(SessionMgr)) && this.rangerService.get('isEnabled'),
+                setNewUi : localStorage.getItem('setOldUI') == "true" ? false : true,
 			};
 		},
         
@@ -111,12 +112,32 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a RangerPolicyTableLayout Layout");
-			_.extend(this, _.pick(options,'rangerService'));
+                        _.extend(this, _.pick(options,'rangerService', 'urlQueryParams'));
 			this.bindEvents();
 			this.initializeServiceDef();
+			if(_.isUndefined(App.vZone)) {
+				App.vZone = {};
+			}
+                        if(App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName)) {
+                                XAUtil.changeParamToUrlFragment({"securityZone" : App.vZone.vZoneName}, this.collection.modelName);
+                        }
+                        if (!_.isUndefined(this.urlQueryParams)) {
+                                var searchFregment = XAUtil.changeUrlToSearchQuery(decodeURIComponent(this.urlQueryParams));
+                                if(_.has(searchFregment, 'securityZone')) {
+                                        App.vZone.vZoneName = searchFregment['securityZone'];
+                                        searchFregment = _.omit(searchFregment, 'securityZone');
+                                        if(_.isEmpty(searchFregment)) {
+                                                this.urlQueryParams = '';
+                                        } else {
+                                        this.urlQueryParams = $.param(searchFregment);
+                                        }
+                                } else {
+                                    App.vZone.vZoneName = "";
+                                }
+                        }
 		},
 
-		/** all events binding here */
+                /** all events binding here */
 		bindEvents : function(){
 			//this.listenTo(this.collection, "sync", this.render, this);
 		},
@@ -137,16 +158,18 @@ define(function(require){
             if(!_.isUndefined(App.vZone) && App.vZone.vZoneName){
                 this.collection.queryParams['zoneName'] = App.vZone.vZoneName;
             }
-			this.collection.fetch({
-				cache : false,
-			});
 		},
 		/** on render callback */
 		onRender: function() {
 			this.setTabForPolicyListing();
-			this.addVisualSearch();
 			this.renderTable();
 			this.initializePolicies();
+                        this.addVisualSearch();
+                        if(_.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)) {
+                                this.collection.fetch ({
+                                cache : false,
+                                })
+                        }
             XAUtil.searchInfoPopover(this.searchInfoArray , this.ui.iconSearchInfo , 'bottom');
 
 		},
@@ -211,7 +234,7 @@ define(function(require){
 				policyVerEl.append('<i id="preVer" class="icon-chevron-left ' + ((rangerPolicy.get('version') > 1) ? 'active' : '') + '"></i><text>Version ' + rangerPolicy.get('version') + '</text>').find('#preVer').click(function(e) {
 					view.previousVer(e);
 				});
-				var policyVerIndexAt = policyVersionList.indexOf(rangerPolicy.get('version').toString());
+                                var policyVerIndexAt = policyVersionList.indexOf(rangerPolicy.get('version'));
 				policyVerEl.append('<i id="nextVer" class="icon-chevron-right ' + (!_.isUndefined(policyVersionList[++policyVerIndexAt]) ? 'active' : '') + '"></i>').find('#nextVer').click(function(e) {
 					view.nextVer(e);
 				});
@@ -352,11 +375,11 @@ define(function(require){
 				formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 					fromRaw: function (rawValue,model) {
                         if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
-                            return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="'+model.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open icon-large" /></a>';
+                            return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="'+model.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open icon-large"></i></a>';
                         }else{
-                            return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="'+model.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open icon-large" /></a>\
-                                    <a href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit" class="btn btn-mini" title="Edit"><i class="icon-edit icon-large" /></a>\
-                                    <a href="javascript:void(0);" data-name ="deletePolicy" data-id="'+model.id+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash icon-large" /></a>';
+                            return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="'+model.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open icon-large"></i></a>\
+                                    <a href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit" class="btn btn-mini" title="Edit"><i class="icon-edit icon-large"></i></a>\
+                                    <a href="javascript:void(0);" data-name ="deletePolicy" data-id="'+model.id+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash icon-large"></i></a>';
 						//You can use rawValue to custom your html, you can change this value using the name parameter.
                         }
 					}
@@ -428,7 +451,7 @@ define(function(require){
 
 		addVisualSearch : function(){
 
-                        var that = this, resources = this.rangerServiceDefModel.get('resources');
+                        var that = this, resources = this.rangerServiceDefModel.get('resources'), query = '';
                         var policyType = this.collection.queryParams['policyType'];
                         if(XAUtil.isMaskingPolicy(policyType) ){
                         	if(!_.isEmpty(this.rangerServiceDefModel.get('dataMaskDef').resources)){
@@ -446,11 +469,11 @@ define(function(require){
 	
                         var searchOpt = ['Policy Name','Group Name','User Name','Status', 'Policy Label'];//,'Start Date','End Date','Today'];
                         searchOpt = _.union(searchOpt, _.map(resourceSearchOpt, function(opt){ return opt.label }))
-                        var serverAttrName  = [{text : "Group Name",  label :"group",   info:localization.tt('h.groupNameMsg')},
-                                               {text : "Policy Name", label :"policyNamePartial",  info :localization.tt('msg.policyNameMsg')},
-                                               {text : "Status",      info : localization.tt('msg.statusMsg') ,  label :"isEnabled",'multiple' : true, 'optionsArr' : PolicyStatusValue},
-                                               {text : "User Name",   label :"user" ,  info :localization.tt('h.userMsg')},
-                                               {text : "Policy Label",   label :"policyLabelsPartial" ,  info :localization.tt('h.policyLabelsinfo')},
+                        var serverAttrName  = [{text : "Group Name",  label :"group",   info:localization.tt('h.groupNameMsg'), urlLabel : 'groupName'},
+                                               {text : "Policy Name", label :"policyNamePartial",  info :localization.tt('msg.policyNameMsg'), urlLabel : 'policyName'},
+                                               {text : "Status",      info : localization.tt('msg.statusMsg') ,  label :"isEnabled",'multiple' : true, 'optionsArr' : PolicyStatusValue, urlLabel : 'status'},
+                                               {text : "User Name",   label :"user" ,  info :localization.tt('h.userMsg'), urlLabel : 'userName'},
+                                               {text : "Policy Label",   label :"policyLabelsPartial" ,  info :localization.tt('h.policyLabelsinfo'), urlLabel : 'policyLabel'},
                                                ];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
 				                 //  {text : 'Today',label :'today'}];
@@ -471,15 +494,24 @@ define(function(require){
                                                 'text': opt.label,
                                                 'label': 'resource:'+ opt.name,
                                                 'info' : info[opt.name],
+                                                'urlLabel' : XAUtil.stringToCamelCase(opt.label.toLowerCase()),
                                         };
 			});
 			serverAttrName = _.union(serverAttrName, serverRsrcAttrName)
                     this.searchInfoArray = serverAttrName;
+            if(!_.isUndefined(this.urlQueryParams)) {
+                var urlQueryParams = XAUtil.changeUrlToSearchQuery(this.urlQueryParams);
+                _.map(urlQueryParams, function(val , key) {
+                    if (_.some(serverAttrName, function(m){return m.urlLabel == key})) {
+                        query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
+                    }
+                });
+            }
 			var pluginAttr = {
-				      placeholder :localization.tt('h.searchForPolicy'),
-				      container : this.ui.visualSearch,
-				      query     : '',
-				      callbacks :  { 
+                                placeholder :localization.tt('h.searchForPolicy'),
+                                container : this.ui.visualSearch,
+                                query     : query,
+                                callbacks :  {
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 									case 'Status':
@@ -487,21 +519,7 @@ define(function(require){
 										break;
 									case 'Policy Type':
 										callback(that.getNameOfPolicyTypeNVList());
-//										callback(XAUtil.enumToSelectLabelValuePairs(XAEnums.PolicyType));
 										break;		
-								/*	case 'Audit Status':
-										callback(XAUtil.enumToSelectLabelValuePairs(XAEnums.AuthType));
-										break;	
-									case 'Start Date' :
-										setTimeout(function () { XAUtil.displayDatepicker(that.ui.visualSearch, callback); }, 0);
-										break;
-									case 'End Date' :
-										setTimeout(function () { XAUtil.displayDatepicker(that.ui.visualSearch, callback); }, 0);
-										break;
-									case 'Today'	:
-										var today = Globalize.format(new Date(),"yyyy/mm/dd");
-										callback([today]);
-										break;*/
 								}     
 			            	
 							}

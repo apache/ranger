@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.hive.client.HiveResourceMgr;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -49,6 +50,7 @@ public class RangerServiceHive extends RangerBaseService {
 	public static final String RESOURCE_COLUMN    = "column";
 	public static final String ACCESS_TYPE_CREATE = "create";
 	public static final String ACCESS_TYPE_SELECT = "select";
+	public static final String ACCESS_TYPE_READ  = "read";
 	public static final String ACCESS_TYPE_ALL    = "all";
 	public static final String WILDCARD_ASTERISK  = "*";
 
@@ -123,6 +125,14 @@ public class RangerServiceHive extends RangerBaseService {
 
 		for (RangerPolicy defaultPolicy : ret) {
 			final Map<String, RangerPolicyResource> policyResources = defaultPolicy.getResources();
+
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_READ)));
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
 
 			if (policyResources.size() == 1 && hasWildcardAsteriskResource(policyResources, RESOURCE_DATABASE)) { // policy for all databases
 				RangerPolicyItem policyItemPublic = new RangerPolicyItem();

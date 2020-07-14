@@ -103,4 +103,24 @@
 		<name>ranger.tagsync.source.atlasrest.ssl.config.filename</name>
 		<value></value>
 	</property>
+	<property>
+		<name>ranger.tagsync.dest.ranger.session.cookie.name</name>
+		<value>RANGERADMINSESSIONID</value>
+	</property>
+	<property>
+		<name>ranger.tagsync.metrics.filepath</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.metrics.filename</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.metrics.frequencytimeinmillis</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.tagsync.metrics.enabled</name>
+		<value>false</value>
+	</property>
 </configuration>

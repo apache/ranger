@@ -25,6 +25,7 @@ define(function(require) {'use strict';
 	var XAEnums 			= require('utils/XAEnums');
 	var XAUtil				= require('utils/XAUtils');
 	var XABackgrid			= require('views/common/XABackgrid');
+	var App    				= require('App');
 	var XATableLayout		= require('views/common/XATableLayout');
 	var localization		= require('utils/XALangSupport');
 	var XAGlobals			= require('utils/XAGlobals');
@@ -46,7 +47,8 @@ define(function(require) {'use strict';
 			return {
 				groupList : this.groupList,
 				policyHeaderList : this.policyCollList,
-				showExportJson : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true
+				showExportJson : (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true,
+				setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
 			};
 		},
 
@@ -84,6 +86,8 @@ define(function(require) {'use strict';
 			iconSearchInfo      : '[data-id="searchInfo"]',
 			policyLabels		: '[data-id="policyLabels"]',
 			zoneName			: '[data-id="zoneName"]',
+            selectUserGroup		: '[data-id="btnUserGroup"]',
+
 		},
 
 		/** ui events hash */
@@ -108,7 +112,7 @@ define(function(require) {'use strict';
 		 */
 		initialize : function(options) {
 			console.log("initialized a UserAccessLayout Layout");
-			_.extend(this, _.pick(options, 'groupList','userList'));
+			_.extend(this, _.pick(options, 'groupList','userList', 'urlQueryParams'));
 			this.bindEvents();
 			this.previousSearchUrl = '';
 			this.searchedFlag = false;
@@ -152,15 +156,55 @@ define(function(require) {'use strict';
 		},
 
 		onRender : function() {
+			if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+				var sidebarUiElement = App.rSideBar.currentView.ui;
+				this.ui.policyName = sidebarUiElement.policyName;
+				this.ui.componentType = sidebarUiElement.componentType;
+				this.ui.policyType = sidebarUiElement.policyType;
+				this.ui.policyLabels = sidebarUiElement.policyLabels;
+				this.ui.zoneName = sidebarUiElement.zoneName;
+				this.ui.resourceName = sidebarUiElement.resourceName;
+				this.ui.userGroup = sidebarUiElement.userGroup;
+				this.ui.selectUserGroup = sidebarUiElement.selectUserGroup;
+				this.ui.userName = sidebarUiElement.userName;
+				this.ui.searchBtn = sidebarUiElement.searchBtn;
+			}
 			this.initializePlugins();
-			this.setupGroupAutoComplete();
+                        if( this.urlQueryParams) {
+                                this.urlParam = XAUtil.changeUrlToSearchQuery(decodeURIComponent(this.urlQueryParams));
+                                if (this.urlParam['polResource']) {
+                                        this.ui.resourceName.val(this.urlParam['polResource']);
+                                }
+                                if(this.urlParam['policyNamePartial']) {
+                                        this.ui.policyName.val(this.urlParam['policyNamePartial']);
+                                }
+                                if(!_.isUndefined(this.urlParam['user']) && !_.isEmpty(this.urlParam['user'])) {
+                                        this.ui.userName.show();
+                                        this.setupUserAutoComplete();
+                                        this.ui.userGroup.select2('destroy');
+                                        this.ui.userGroup.val('').hide();
+                                        this.ui.selectUserGroup.find('span').first().text('Username')
+                                } else {
+                                        this.ui.userGroup.show();
+                                        this.setupGroupAutoComplete();
+                                        this.ui.userName.select2('destroy');
+                                        this.ui.userName.val('').hide();
+                                        this.ui.selectUserGroup.find('span').first().text('Group')
+                                }
+                        } else {
+                                this.setupGroupAutoComplete();
+                        }
 			this.renderComponentAndPolicyTypeSelect();
-			var policyType = this.ui.policyType.val();
-//			Show policies listing for each service and GET policies for each service
-			_.each(this.policyCollList, function(obj,i){
-				this.renderTable(obj.collName, obj.serviceDefName);
-				this.getResourceLists(obj.collName,obj.serviceDefName,policyType);
-			},this);
+                        if(this.urlQueryParams) {
+                                this.onSearch()
+                        } else {
+                                var policyType = this.ui.policyType.val();
+        //			Show policies listing for each service and GET policies for each service
+                                _.each(this.policyCollList, function(obj,i){
+                                        this.renderTable(obj.collName, obj.serviceDefName);
+                                        this.getResourceLists(obj.collName,obj.serviceDefName,policyType);
+                                },this);
+                        }
 			this.$el.find('[data-js="policyName"]').focus()
 			var urlString = XAUtil.getBaseUrl();
 			if(urlString.slice(-1) == "/") {
@@ -401,6 +445,7 @@ define(function(require) {'use strict';
 						}
 					}),
 					editable : false,
+                                        sortable : false,
 				},
 				resources: {
 					label: 'Resources',
@@ -464,6 +509,7 @@ define(function(require) {'use strict';
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
 					label : localization.tt("lbl.zoneName"),
 					editable : false,
+                                        sortable : false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
 							var labels ="";
@@ -575,11 +621,17 @@ define(function(require) {'use strict';
 			var zoneListOptions = _.map(this.rangerZoneList.models, function(m){
 				return { 'id':m.get('name'), 'text':m.get('name')}
 			});
+                        var tags = [];
+                        if (this.urlParam && this.urlParam['policyLabelsPartial'] && !_.isEmpty(this.urlParam['policyLabelsPartial'])) {
+                                tags.push( { 'id' : _.escape( this.urlParam['policyLabelsPartial'] ), 'text' : _.escape( this.urlParam['policyLabelsPartial'] ) } );
+                        }
 			this.ui.componentType.select2({
 				multiple: true,
 				closeOnSelect: true,
 				placeholder: 'Select Component',
 				//maximumSelectionSize : 1,
+                                value : (!_.isUndefined(that.urlParam) && !_.isUndefined(that.urlParam['serviceType']) && !_.isEmpty(that.urlParam['serviceType'])) ?
+                                                this.ui.componentType.val(that.urlParam['serviceType']) : this.ui.componentType.val(""),
 				width: '220px',
 				allowClear: true,
 				data: options
@@ -588,30 +640,62 @@ define(function(require) {'use strict';
 				closeOnSelect: false,
 				maximumSelectionSize : 1,
 				width: '220px',
-				value : this.ui.policyType.val("0"),
+                                value : (!_.isUndefined(that.urlParam) && !_.isUndefined(that.urlParam['policyType']) && !_.isEmpty(that.urlParam['policyType'])) ?
+                                                this.ui.policyType.val(that.urlParam['policyType']) : this.ui.policyType.val("0"),
 				allowClear: false,
 				data: policyTypes
 			});
 			this.ui.policyLabels.select2({
-				multiple: false,
-				closeOnSelect: true,
-				placeholder: 'Select Policy Label',
-				allowClear: true,
-				width: '220px',
-				ajax :{
-					url: "service/plugins/policyLabels",
-					async : false,
-					dataType : 'JSON',
-					data: function (term, page) {
-						return {policyLabel : term};
-					},
-					results: function (data, page) {
-						var results = [];
-						results = data.map(function(m, i){return {id : _.escape(m), text: _.escape(m) };});
-						return {results : results};
-					}
-				}
+                                multiple: true,
+                closeOnSelect : true,
+                placeholder : 'Policy Label',
+                width :'220px',
+                allowClear: true,
+                tokenSeparators: ["," , " "],
+                tags : true,
+                maximumSelectionSize : 1,
+                initSelection : function (element, callback) {
+                    callback(tags);
+                },
+                createSearchChoice: function(term, data) {
+                    term = _.escape(term);
+                    if ($(data).filter(function() {
+                        return this.text.localeCompare(term) === 0;
+                    }).length === 0) {
+                        if($.inArray(term, this.val()) >= 0){
+                            return null;
+                        }else{
+                            return {
+                                id : term,
+                                text: term
+                            };
+                        }
+                    }
+                },
+                ajax: {
+                    url: 'service/plugins/policyLabels',
+                    dataType: 'json',
+                    data: function (term, page) {
+                        return {policyLabel : term};
+                    },
+                    results: function (data, page) {
+                        var results = [] , selectedVals = [];
+                        if(data.resultSize != "0"){
+                            results = data.map(function(m){	return {id : _.escape(m), text: _.escape(m) };	});
+                        }
+                        return {results : results};
+                    },
+                },
+                formatResult : function(result){
+                    return result.text;
+                },
+                formatSelection : function(result){
+                    return result.text;
+                },
 			});
+                        if(this.urlParam && this.urlParam['policyLabelsPartial']) {
+                                this.ui.policyLabels.val(this.urlParam['policyLabelsPartial']).trigger('change');
+                        }
 			this.ui.zoneName.select2({
 				closeOnSelect: false,
 				maximumSelectionSize : 1,
@@ -619,6 +703,8 @@ define(function(require) {'use strict';
 				allowClear: true,
 				data: zoneListOptions,
 				placeholder: 'Select Zone Name',
+                                value : (!_.isUndefined(that.urlParam) && !_.isUndefined(that.urlParam['zoneName']) && !_.isEmpty(that.urlParam['zoneName'])) ?
+                                                this.ui.zoneName.val(that.urlParam['zoneName']) : this.ui.zoneName.val(""),
 			});
 		},
 		onDownload: function(e){
@@ -671,10 +757,7 @@ define(function(require) {'use strict';
 		},	
 		/** on render callback */
 		setupGroupAutoComplete : function(){
-			this.groupArr = this.groupList.map(function(m){
-				return { id : m.get('name') , text : _.escape(m.get('name'))};
-			});
-			var that = this, arr = [];
+                        var that = this;
 			this.ui.userGroup.select2({
 				closeOnSelect : true,
 				placeholder : 'Select Group',
@@ -684,11 +767,8 @@ define(function(require) {'use strict';
 				allowClear: true,
 				// tags : this.groupArr,
 				initSelection : function (element, callback) {
-					var data = [];
-					$(element.val().split(",")).each(function () {
-						var obj = _.findWhere(that.groupArr,{id:this});	
-						data.push({id: obj.text, text: obj.text});
-					});
+                                        var data = {};
+                                        data = {id: element.val(), text: element.val()};
 					callback(data);
 				},
 				ajax: { 
@@ -720,29 +800,20 @@ define(function(require) {'use strict';
 					return 'No group found.';
 				}
 			})//.on('select2-focus', XAUtil.select2Focus);
-		},		
+                        if(this.urlParam && this.urlParam['group'] && !_.isEmpty(this.urlParam['group'])) {
+                                this.ui.userGroup.val(this.urlParam['group']).trigger('change');
+                        }
+                },
 		setupUserAutoComplete : function(){
 			var that = this;
-			var arr = [];
-			this.userArr = this.userList.map(function(m){
-				return { id : m.get('name') , text : _.escape(m.get('name')) };
-			});
 			this.ui.userName.select2({
-//				multiple: true,
-//				minimumInputLength: 1,
 				closeOnSelect : true,
 				placeholder : 'Select User',
-//				maximumSelectionSize : 1,
 				width :'220px',
-				tokenSeparators: [",", " "],
 				allowClear: true,
-				// tags : this.userArr, 
 				initSelection : function (element, callback) {
-					var data = [];
-					$(element.val().split(",")).each(function () {
-						var obj = _.findWhere(that.userArr,{id:this});	
-						data.push({id: obj.text, text: obj.text});
-					});
+                                        var data = {};
+                                        data = {id: element.val(), text: element.val()};
 					callback(data);
 				},
 				ajax: { 
@@ -775,6 +846,9 @@ define(function(require) {'use strict';
 				}
 				
 			})//.on('select2-focus', XAUtil.select2Focus);
+                        if(this.urlParam && this.urlParam['user'] && !_.isEmpty(this.urlParam['user'])) {
+                                this.ui.userName.val(this.urlParam['user']).trigger('change');
+                        }
 		},
 		/** all post render plugin initialization */
 		initializePlugins : function() {
@@ -811,16 +885,23 @@ define(function(require) {'use strict';
 			
 		},
 		onSearch : function(e){
-			var that = this, url = '', urlString = XAUtil.getBaseUrl();
+                        var that = this, url = '', urlString = XAUtil.getBaseUrl(), urlParam = {};
 			//Get search values
-			var groups = (this.ui.userGroup.is(':visible')) ? this.ui.userGroup.select2('val'):undefined;
-			var users = (this.ui.userName.is(':visible')) ? this.ui.userName.select2('val'):undefined;
+                        var groups = (this.ui.selectUserGroup.text().trim() == "Group" ) ? this.ui.userGroup.select2('val'):undefined;
+                        var users = (this.ui.selectUserGroup.text().trim() == "Username") ? this.ui.userName.select2('val'):undefined;
 			var rxName = this.ui.resourceName.val(), policyName = this.ui.policyName.val() , policyType = this.ui.policyType.val(),
 			policyLabel = this.ui.policyLabels.val(), zoneName = this.ui.zoneName.val()
 			var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName, policyType: policyType, policyLabelsPartial:policyLabel,
 				zoneName : zoneName};
 			var component = (this.ui.componentType.val() != "") ? this.ui.componentType.select2('val'):undefined;
-            that.initializeRequiredData();
+                        urlParam = _.extend(params, {'serviceType': this.ui.componentType.val()});
+                        _.each(urlParam, function(value, key, obj){
+                                if (value === "" || value  === undefined) {
+                                        delete obj[key];
+                                }
+                        })
+                        XAUtil.changeParamToUrlFragment(urlParam);
+                        that.initializeRequiredData();
             _.each(this.policyCollList, function(obj,i){
                     this.renderTable(obj.collName, obj.serviceDefName);
             },this);

@@ -24,7 +24,6 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
-import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -227,7 +226,7 @@ public class RangerSslHelper {
 	
 	private SSLContext getSSLContext(KeyManager[] kmList, TrustManager[] tmList) {
 		try {
-			if(kmList != null && tmList != null) {
+			if(tmList != null) {
 				SSLContext sslContext = SSLContext.getInstance(RANGER_SSL_CONTEXT_ALGO_TYPE);
 	
 				sslContext.init(kmList, tmList, new SecureRandom());
@@ -236,7 +235,7 @@ public class RangerSslHelper {
 			}
 		} catch (NoSuchAlgorithmException e) {
 			LOG.error("SSL algorithm is available in the environment", e);
-		} catch (KeyManagementException e) {
+		} catch (Exception e) {
 			LOG.error("Unable to initialize the SSLContext", e);
 		}
 		

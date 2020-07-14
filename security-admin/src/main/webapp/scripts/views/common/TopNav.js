@@ -38,6 +38,7 @@ define(function(require){
         return{
                 showPermissionTab : XAUtil.isAuditorOrSystemAdmin(SessionMgr),
                 hideSecurityZoneTab : (SessionMgr.isKeyAdmin() || SessionMgr.isKMSAuditor()) ? true : false,
+                setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
 		}
     	},
         

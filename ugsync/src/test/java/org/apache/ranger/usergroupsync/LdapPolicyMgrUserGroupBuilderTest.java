@@ -21,6 +21,7 @@ package org.apache.ranger.usergroupsync;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.apache.ranger.ldapusersync.process.LdapPolicyMgrUserGroupBuilder;
@@ -36,14 +37,13 @@ public class LdapPolicyMgrUserGroupBuilderTest extends LdapPolicyMgrUserGroupBui
         }
 
         @Override
-        public void addOrUpdateUser(String user, List<String> groups) {
-                allGroups.addAll(groups);
-                //allUsers.add(user);
+        public void addOrUpdateUser(String user, Map<String, String> userAttrs, List<String> groups) {
+                allUsers.add(user);
                 //System.out.println("Username: " + user + " and associated groups: " + groups);
         }
 
         @Override
-        public void addOrUpdateGroup(String group) {
+        public void addOrUpdateGroup(String group, Map<String, String> groupAttrs) {
                 allGroups.add(group);
                 //System.out.println("Groupname: " + group);
         }
@@ -55,7 +55,7 @@ public class LdapPolicyMgrUserGroupBuilderTest extends LdapPolicyMgrUserGroupBui
         }
 
         @Override
-        public void addOrUpdateGroup(String group, List<String> users) {
+        public void addOrUpdateGroup(String group, Map<String, String> groupAttrs, List<String> users) {
         	boolean addGroup = false;
         		for (String user : users) {
         			if (allUsers.contains(user)) {

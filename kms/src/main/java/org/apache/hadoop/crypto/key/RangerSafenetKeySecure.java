@@ -20,16 +20,13 @@ package org.apache.hadoop.crypto.key;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.log4j.Logger;
-
 import com.sun.org.apache.xml.internal.security.utils.Base64;
-
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.security.Key;
 import java.security.KeyStore;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.Provider;
 import java.security.Security;
@@ -43,9 +40,10 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         static final Logger logger = Logger.getLogger(RangerSafenetKeySecure.class);
 
         private final String alias;
-        private final KeyStore myStore;
+        private final String providerType;
+        private KeyStore myStore;
         private final String adp;
-        private final Provider provider;
+        private Provider provider;
         private static final String MK_ALGO = "AES";
         private final int mkSize;
         private static final int MK_KeySize = 256;
@@ -53,38 +51,64 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
         private static final String CFGFILEPATH = "ranger.kms.keysecure.sunpkcs11.cfg.filepath";
         private static final String MK_KEYSIZE = "ranger.kms.keysecure.masterkey.size";
         private static final String ALIAS = "ranger.kms.keysecure.masterkey.name";
-
+        private static final String PROVIDER = "ranger.kms.keysecure.provider.type";
         private static final String KEYSECURE_LOGIN = "ranger.kms.keysecure.login";
 
-        public RangerSafenetKeySecure(Configuration conf) throws KeyStoreException, NoSuchAlgorithmException, CertificateException, IOException {
-                mkSize = conf.getInt(MK_KEYSIZE, MK_KeySize);
-                alias = conf.get(ALIAS, "RANGERMK");
-                adp = conf.get(KEYSECURE_LOGIN);
-                pkcs11CfgFilePath = conf.get(CFGFILEPATH);
+	public RangerSafenetKeySecure(Configuration conf) throws Exception {
+		mkSize = conf.getInt(MK_KEYSIZE, MK_KeySize);
+		alias = conf.get(ALIAS, "RANGERMK");
+		providerType = conf.get(PROVIDER, "SunPKCS11");
+		adp = conf.get(KEYSECURE_LOGIN);
+		pkcs11CfgFilePath = conf.get(CFGFILEPATH);
+		/*
+		 * Method sun.security.pkcs11.SunPKCS11 is supported till Java 8.
+		 * Provider.configure() method is available from Java 9 onwards and does not have Backward compatibility.
+		 * We need to remove Java 8 scenario and keep only Java 9+ once we completely upgrade to JAVA 9+.
+		 * */
+		try {
+			int javaVersion = getJavaVersion();
+			/*Minimum java requirement for Ranger KMS is Java 8 and Maximum java supported by Ranger KMS is Java 11*/
+			if(javaVersion == 8){
+				provider = new sun.security.pkcs11.SunPKCS11(pkcs11CfgFilePath);
+			}else if(javaVersion == 9 || javaVersion == 10 || javaVersion == 11){
+				Class<Provider> cls = Provider.class;
+				Method configureMethod = null;
+				configureMethod = cls.getDeclaredMethod("configure", String.class);
+				provider = Security.getProvider(providerType);
+				if(configureMethod != null){
+					provider = (Provider) configureMethod.invoke(provider,pkcs11CfgFilePath);
+				}
+			}
 
-                try {
-                        // Create a PKCS#11 session and initialize it
-                        // using the sunPKCS11 config file
-                        provider = new sun.security.pkcs11.SunPKCS11(pkcs11CfgFilePath);
-                        Security.addProvider(provider);
-                        myStore = KeyStore.getInstance("PKCS11", provider);
-                        if(myStore != null){
-                                myStore.load(null, adp.toCharArray());
-                        }else{
-                                logger.error("Safenet Keysecure not found. Please verify the Ranger KMS Safenet Keysecure configuration setup.");
-                        }
-
-                } catch (NoSuchAlgorithmException nsae) {
-                        throw new NoSuchAlgorithmException("Unexpected NoSuchAlgorithmException while loading keystore : "
-                                        + nsae.getMessage());
-                } catch (CertificateException e) {
-                        throw new CertificateException("Unexpected CertificateException while loading keystore : "
-                                        + e.getMessage());
-                } catch (IOException e) {
-                        throw new IOException("Unexpected IOException while loading keystore : "
-                                        + e.getMessage());
-                }
-        }
+			if(provider != null){
+				Security.addProvider(provider);
+				myStore = KeyStore.getInstance("PKCS11", provider);
+			}else{
+				logger.error("Provider was not initialize for Ranger Safenet Key Secure.");
+			}
+			if (myStore != null) {
+				myStore.load(null, adp.toCharArray());
+			} else {
+				logger.error("Safenet Keysecure not found. Please verify the Ranger KMS Safenet Keysecure configuration setup.");
+			}
+		}catch (NoSuchMethodException e) {
+			throw new NoSuchMethodException(
+					"Unexpected NoSuchMethodException while loading keystore : "
+							+ e.getMessage());
+		}catch (NoSuchAlgorithmException nsae) {
+			throw new NoSuchAlgorithmException(
+					"Unexpected NoSuchAlgorithmException while loading keystore : "
+							+ nsae.getMessage());
+		} catch (CertificateException e) {
+			throw new CertificateException(
+					"Unexpected CertificateException while loading keystore : "
+							+ e.getMessage());
+		} catch (IOException e) {
+			throw new IOException(
+					"Unexpected IOException while loading keystore : "
+							+ e.getMessage());
+		}
+	}
 
         @Override
         public boolean generateMasterKey(String password){
@@ -149,5 +173,22 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
                 }
                 return false;
         }
+
+		private int getJavaVersion() {
+			/*
+			 Java 8 or lower: 1.6.0_23, 1.7.0, 1.7.0_80, 1.8.0_211
+			 Java 9 or higher: 9.0.1, 11.0.4
+			*/
+			String version = System.getProperty("java.version");
+			if (version.startsWith("1.")) {
+				version = version.substring(2, 3);
+			} else {
+				int dot = version.indexOf(".");
+				if (dot != -1) {
+					version = version.substring(0, dot);
+				}
+			}
+			return Integer.parseInt(version);
+		}
 
 }

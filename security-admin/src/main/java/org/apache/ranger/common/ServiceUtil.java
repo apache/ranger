@@ -126,9 +126,13 @@ public class ServiceUtil {
 		mapAccessTypeToPermType.put("getUserTopology", 29);
 		mapAccessTypeToPermType.put("getTopologyInfo", 30);
 		mapAccessTypeToPermType.put("uploadNewCredentials", 31);
-		mapAccessTypeToPermType.put("repladmin",32);
-		mapAccessTypeToPermType.put("serviceadmin",33);
-		mapAccessTypeToPermType.put("tempudfadmin",34);
+		mapAccessTypeToPermType.put("repladmin", 32);
+		mapAccessTypeToPermType.put("serviceadmin", 33);
+		mapAccessTypeToPermType.put("tempudfadmin", 34);
+		mapAccessTypeToPermType.put("idempotent_write", 35);
+		mapAccessTypeToPermType.put("describe_configs", 36);
+		mapAccessTypeToPermType.put("alter_configs", 37);
+		mapAccessTypeToPermType.put("cluster_action", 38);
 
 		version = "0";
 	}
@@ -1578,6 +1582,7 @@ public class ServiceUtil {
 	public List<RangerPolicy> getMatchingPoliciesForResource(HttpServletRequest request,
 			List<RangerPolicy> policyLists) {
 		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
+		final String serviceTypeForTag = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME;
 		if (request != null) {
 			String resource = request.getParameter(SearchFilter.POL_RESOURCE);
 			String serviceType = request.getParameter(SearchFilter.SERVICE_TYPE);
@@ -1587,32 +1592,25 @@ public class ServiceUtil {
 				RangerPolicy.RangerPolicyResource rangerPolicyResource = null;
 				for (RangerPolicy rangerPolicy : policyLists) {
 					if (rangerPolicy != null) {
-						rangerPolicyResourceMap = rangerPolicy.getResources();
-						if (rangerPolicyResourceMap != null) {
-							if (rangerPolicyResourceMap.containsKey("path")) {
-								rangerPolicyResource = rangerPolicyResourceMap.get("path");
-								if (rangerPolicyResource != null) {
-									resourceList = rangerPolicyResource.getValues();
-									if (CollectionUtils.isNotEmpty(resourceList) && resourceList.size() == 1) {
-										String resourcePath = resourceList.get(0);
-										if (!StringUtil.isEmpty(resourcePath)) {
-											if (resourcePath.equals(resource)
-													|| resourcePath.startsWith(resource + "/")) {
-												policies.add(rangerPolicy);
-											}
+						if(serviceTypeForTag.equals(rangerPolicy.getServiceType())) {
+							policies.add(rangerPolicy);
+						}else {
+							rangerPolicyResourceMap = rangerPolicy.getResources();
+							if (rangerPolicyResourceMap != null) {
+								if (rangerPolicyResourceMap.containsKey("path")) {
+									rangerPolicyResource = rangerPolicyResourceMap.get("path");
+									if (rangerPolicyResource != null) {
+										resourceList = rangerPolicyResource.getValues();
+										if (CollectionUtils.isNotEmpty(resourceList) && resourceList.contains(resource)) {
+													policies.add(rangerPolicy);
 										}
 									}
-								}
-							} else if (rangerPolicyResourceMap.containsKey("database")) {
-								rangerPolicyResource = rangerPolicyResourceMap.get("database");
-								if (rangerPolicyResource != null) {
-									resourceList = rangerPolicyResource.getValues();
-									if (CollectionUtils.isNotEmpty(resourceList) && resourceList.size() == 1) {
-										String resourcePath = resourceList.get(0);
-										if (!StringUtil.isEmpty(resourcePath)) {
-											if (resourcePath.equals(resource)) {
-												policies.add(rangerPolicy);
-											}
+								} else if (rangerPolicyResourceMap.containsKey("database")) {
+									rangerPolicyResource = rangerPolicyResourceMap.get("database");
+									if (rangerPolicyResource != null) {
+										resourceList = rangerPolicyResource.getValues();
+										if (CollectionUtils.isNotEmpty(resourceList) && resourceList.contains(resource)) {
+													policies.add(rangerPolicy);
 										}
 									}
 								}

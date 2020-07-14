@@ -47,6 +47,13 @@ define(function(require){
 		_viewName : 'UserTableLayout',
 		
     	template: UsertablelayoutTmpl,
+
+		templateHelpers : function(){
+			return{
+				setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
+			}
+		},
+
     	breadCrumbs :[XALinks.get('Users')],
 		/** Layout sub regions */
     	regions: {
@@ -92,12 +99,15 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a UserTableLayout Layout");
 
-                        _.extend(this, _.pick(options, 'groupList','tab', 'roleList'));
+                        _.extend(this, _.pick(options, 'groupList','tab', 'roleList', 'urlQueryParams'));
 			this.showUsers = this.tab == 'usertab' ? true : false;
                         this.showGroups = this.tab == 'grouptab' ? true : false;
 			this.chgFlags = [];
 			if(_.isUndefined(this.groupList)){
 				this.groupList = new VXGroupList();
+			}
+			if(_.isUndefined(this.roleList)){
+				this.roleList = new VXRoleList();
 			}
 
 			this.bindEvents();
@@ -114,18 +124,11 @@ define(function(require){
 		/** on render callback */
 		onRender: function() {
 			this.initializePlugins();
-			if(this.tab == 'grouptab'){
-				this.renderGroupTab();
-                        } else if(this.tab == 'usertab'){
-				this.renderUserTab();
-                        } else{
-                                this.renderRoleTab();
-			}
+            this.renderTable();
 			this.bindEventToColl(this.collection);
 			this.bindEventToColl(this.groupList);
                         this.bindEventToColl(this.roleList);
-			this.addVisualSearch();
-		},
+        },
 		bindEventToColl : function(coll){
 			if(_.isUndefined(coll)) return;
 			this.listenTo(coll, "sync reset", function(){
@@ -146,21 +149,30 @@ define(function(require){
 		},
 		onTabChange : function(e){
 			var that = this;
-			this.chgFlags = [];
-			this.showUsers = $(e.currentTarget).attr('href') == '#users' ? true : false;
-                        this.showGroups = $(e.currentTarget).attr('href') == '#groups' ? true : false;
-			if(this.showUsers){				
-				this.renderUserTab();
-				this.addVisualSearch();
-                        } else if(this.showGroups){
-				this.renderGroupTab();
-				this.addVisualSearch();
-                        }else{
-                                this.renderRoleTab();
-                                this.addVisualSearch();
-			}
+                        if (!_.isUndefined(e)) {
+                                var nav = e.currentTarget.hash === "#users" ? "#!/users/usertab" : (e.currentTarget.hash === "#groups" ?
+                                 "#!/users/grouptab" : "#!/users/roletab");
+                                App.appRouter.navigate(nav,{trigger: false});
+                                this.showUsers = $(e.currentTarget).attr('href') == '#users' ? true : false;
+                                this.showGroups = $(e.currentTarget).attr('href') == '#groups' ? true : false;
+                this.urlQueryParams = '';
+                        }
+            this.renderTable();
+                        this.chgFlags = [];
 			$(this.rUserDetail.el).hide();
 		},
+
+        renderTable : function() {
+            // this.addVisualSearch();
+            if(this.showUsers){
+                this.renderUserTab();
+            } else if(this.showGroups){
+                this.renderGroupTab();
+            } else {
+                this.renderRoleTab();
+            }
+                },
+
 		onVisibilityChange : function(e){
 			var that = this;
 			var status = $(e.currentTarget).attr('data-id') == 'visible' ? true : false;
@@ -234,13 +246,18 @@ define(function(require){
 			var that = this;
                         this.ui.addNewRoles.hide();
                         this.ui.hideShowVisibility.show();
-			if(_.isUndefined(this.collection)){
+                        if(_.isUndefined(this.collection) || _.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)){
 				this.collection = new VXUserList();
-			}	
+                        }
 			this.collection.selectNone();
 			this.renderUserListTable();
-			_.extend(this.collection.queryParams, XAUtil.getUserDataParams())
-			this.collection.fetch({
+                        _.extend(this.collection.queryParams, XAUtil.getUserDataParams());
+                        this.ui.addNewGroup.hide();
+                        this.ui.addNewUser.show();
+                        this.$('.wrap-header').text('User List');
+                        this.addVisualSearch();
+            if (_.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)) {
+                this.collection.fetch({
 				reset: true,
 				cache: false
 			}).done(function(userList){
@@ -256,24 +273,28 @@ define(function(require){
 						_.last(userList.models).trigger("model:highlightUserGroupTableRow");
 					}
 				}
-				if(!_.isString(that.ui.addNewGroup)){
-					that.ui.addNewGroup.hide();
-					that.ui.addNewUser.show();
-				}
-				that.$('.wrap-header').text('User List');
 				that.checkRoleKeyAdmin();
 			});
+            }
 		},
 		renderGroupTab : function(){
 			var that = this;
-                        this.ui.addNewRoles.hide();
-                        this.ui.hideShowVisibility.show();
-			if(_.isUndefined(this.groupList)){
+            this.ui.addNewRoles.hide();
+            this.ui.hideShowVisibility.show();
+                        if(_.isUndefined(this.groupList) || _.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)){
 				this.groupList = new VXGroupList();
 			}
 			this.groupList.selectNone();
 			this.renderGroupListTable();
-			this.groupList.fetch({
+                        this.addVisualSearch();
+                        this.ui.addNewUser.hide();
+                        this.ui.addNewGroup.show();
+                        this.$('.wrap-header').text('Group List');
+                        this.$('ul').find('[data-js="groups"]').addClass('active');
+                        this.$('ul').find('[data-js="users"]').removeClass();
+                        this.$('ul').find('[data-js="roles"]').removeClass();
+            if (_.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)) {
+                this.groupList.fetch({
 				reset:true,
 				cache: false,
 			}).done(function(groupList){
@@ -289,46 +310,44 @@ define(function(require){
 					}
 					App.usersGroupsListing={};
 				}
-				that.ui.addNewUser.hide();
-				that.ui.addNewGroup.show();
-				that.$('.wrap-header').text('Group List');
-				that.$('ul').find('[data-js="groups"]').addClass('active');
-				that.$('ul').find('[data-js="users"]').removeClass();
 				that.checkRoleKeyAdmin();
 			});
+            }
 		},
                 renderRoleTab : function(){
                         var that = this;
                         this.ui.hideShowVisibility.hide();
-                        if(_.isUndefined(this.roleList)){
+                        if(_.isUndefined(this.roleList) || _.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)){
                                 this.roleList = new VXRoleList();
                         }
+                        this.ui.addNewUser.hide();
+                        this.ui.addNewGroup.hide();
+                        this.ui.addNewRoles.show();
+                        this.$('.wrap-header').text('Role List');
+                        this.$('ul').find('[data-js="roles"]').addClass('active');
+                        this.$('ul').find('[data-js="users"]').removeClass();
+                        this.$('ul').find('[data-js="groups"]').removeClass();
                         this.renderRoleListTable();
-                        this.roleList.fetch({
-                                reset:true,
-                                cache: false,
-                        }).done(function(roleList){
-                                if(App.usersGroupsListing && !_.isEmpty(App.usersGroupsListing) && App.usersGroupsListing.showLastPage){
-                                        if(roleList.state.totalRecords > roleList.state.pageSize){
-                                                that.roleList.getLastPage({
-                                                        cache : false,
-                                                }).done(function(m){
-                                                        (_.last(m.models)).trigger("model:highlightUserGroupTableRow");
-                                                });
-                                        }else{
-                                                (_.last(roleList.models)).trigger("model:highlightUserGroupTableRow");
-                                        }
-                                        App.usersGroupsListing={};
-                                }
-                                that.ui.addNewUser.hide();
-                                that.ui.addNewGroup.hide();
-                                that.ui.addNewRoles.show();
-                                that.$('.wrap-header').text('Role List');
-                                that.$('ul').find('[data-js="roles"]').addClass('active');
-                                that.$('ul').find('[data-js="users"]').removeClass();
-                                that.$('ul').find('[data-js="groups"]').removeClass();
-                                // that.checkRoleKeyAdmin();
-                        });
+                        this.addVisualSearch();
+                        if(_.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)) {
+                            this.roleList.fetch({
+                                    reset:true,
+                                    cache: false,
+                            }).done(function(roleList){
+                                    if(App.usersGroupsListing && !_.isEmpty(App.usersGroupsListing) && App.usersGroupsListing.showLastPage){
+                                            if(roleList.state.totalRecords > roleList.state.pageSize){
+                                                    that.roleList.getLastPage({
+                                                            cache : false,
+                                                    }).done(function(m){
+                                                            (_.last(m.models)).trigger("model:highlightUserGroupTableRow");
+                                                    });
+                                            }else{
+                                                    (_.last(roleList.models)).trigger("model:highlightUserGroupTableRow");
+                                            }
+                                            App.usersGroupsListing={};
+                                    }
+                            });
+                        }
                 },
 		renderUserListTable : function(){
 			var that = this;
@@ -348,7 +367,7 @@ define(function(require){
 				gridOpts : {
 					row: tableRow,
 					header : XABackgrid,
-					emptyText : 'No Users found!'
+					emptyText : 'No users found!'
 				}
 			}));	
 
@@ -374,6 +393,7 @@ define(function(require){
 					},
 					editable:false,
 					sortable:false,
+                                        sortType: 'toggle',
 					cell :'uri'						
 				},
 				emailAddress : {
@@ -481,7 +501,7 @@ define(function(require){
 				gridOpts : {
 					row: tableRow,
 					header : XABackgrid,
-					emptyText : 'No Groups found!'
+					emptyText : 'No groups found!'
 				}
 			}));	
 
@@ -555,6 +575,7 @@ define(function(require){
                     cell  : Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
                     drag  : false,
                     editable  : false,
+                    sortable : false,
                     formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw : function (rawValue,model) {
                             return ('<div align="center"><button class="userViewicon" title = "View Users" data-js="showUserList" data-name="' + model.get('name')
@@ -589,7 +610,7 @@ define(function(require){
                                 gridOpts : {
                                         row: tableRow,
                                         header : XABackgrid,
-                                        emptyText : 'No Groups found!'
+                                        emptyText : 'No roles found!'
                                 }
                         }));
                 },
@@ -958,37 +979,44 @@ define(function(require){
 				coll = this.collection;
 				searchOpt = ['User Name','Email Address','Visibility', 'Role','User Source','User Status'];//,'Start Date','End Date','Today'];
 				var userRoleList = _.map(XAEnums.UserRoles,function(obj,key){return {label:obj.label,value:key};});
-				serverAttrName  = [	{text : "User Name", label :"name"},
-									{text : "Email Address", label :"emailAddress"},
-				                   {text : "Role", label :"userRole", 'multiple' : true, 'optionsArr' : userRoleList},
-				                   	{text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus)},
-				                   {text : "User Source", label :"userSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.UserTypes)},
-				                   {text : "User Status", label :"status", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.ActiveStatus)},
-								];
+                serverAttrName  = [{text : "User Name", label :"name", urlLabel : "userName"},
+                                    {text : "Email Address", label :"emailAddress", urlLabel : "emailAddress"},
+                                    {text : "Role", label :"userRole", 'multiple' : true, 'optionsArr' : userRoleList, urlLabel : "role"},
+                                    {text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus), urlLabel : "visibility"},
+                                    {text : "User Source", label :"userSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.UserTypes), urlLabel : "userSource"},
+                                    {text : "User Status", label :"status", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.ActiveStatus), urlLabel : "userStatus"},
+                                ];
             } else if(this.showGroups){
 				placeholder = localization.tt('h.searchForYourGroup');
 				coll = this.groupList;
 				searchOpt = ['Group Name','Group Source', 'Visibility'];//,'Start Date','End Date','Today'];
-				serverAttrName  = [{text : "Group Name", label :"name"},
-				                   {text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus)},
-				                   {text : "Group Source", label :"groupSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.GroupTypes)},];
-
+                serverAttrName  = [{text : "Group Name", label :"name", urlLabel : "groupName"},
+                                    {text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus), urlLabel : "visibility"},
+                                    {text : "Group Source", label :"groupSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.GroupTypes), urlLabel : "groupSource"}
+                                ];
             } else{
                 placeholder = localization.tt('h.searchForYourRole');
                 coll = this.roleList;
                 searchOpt = ['Role Name','User Name', 'Group Name', /*Role ID*/];//,'Start Date','End Date','Today'];
-                serverAttrName  = [{text : "Role Name", label :"roleName"},
-                                   {text : "User Name", label :"userName"},
-                                   {text : "Group Name", label :"groupName"},
-                                   // {text : "Role ID", label : "roleId"}
-                                  ];
-			}
-			var query = (!_.isUndefined(coll.VSQuery)) ? coll.VSQuery : '';
+                serverAttrName  = [{text : "Role Name", label :"roleNamePartial", urlLabel : "roleName"},
+                                   {text : "User Name", label :"userNamePartial", urlLabel : "userName"},
+                                   {text : "Group Name", label :"groupNamePartial", urlLabel : "groupName"},
+                                ];
+            }
+            var query = '';
+            if(!_.isUndefined(this.urlQueryParams) && !_.isEmpty(this.urlQueryParams)) {
+                var urlQueryParams = XAUtil.changeUrlToSearchQuery(this.urlQueryParams);
+                _.map(urlQueryParams, function(val , key) {
+                    if (_.some(serverAttrName, function(m){return m.urlLabel == key})) {
+                        query += '"'+XAUtil.filterKeyForVSQuery(serverAttrName, key)+'":"'+val+'"';
+                    }
+                });
+            }
 			var pluginAttr = {
 				      placeholder :placeholder,
 				      container : this.ui.visualSearch,
 				      query     : query,
-				      callbacks :  { 
+                                      callbacks :  {
 				    	  valueMatches :function(facet, searchTerm, callback) {
 								switch (facet) {
 									case 'Role':

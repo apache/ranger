@@ -20,7 +20,6 @@ package org.apache.ranger.authorization.elasticsearch.plugin.action.filter;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.logging.log4j.Logger;
 import org.apache.ranger.authorization.elasticsearch.authorizer.RangerElasticsearchAuthorizer;
 import org.apache.ranger.authorization.elasticsearch.plugin.authc.user.UsernamePasswordToken;
 import org.apache.ranger.authorization.elasticsearch.plugin.utils.RequestUtils;
@@ -30,23 +29,23 @@ import org.elasticsearch.action.ActionRequest;
 import org.elasticsearch.action.ActionResponse;
 import org.elasticsearch.action.support.ActionFilter;
 import org.elasticsearch.action.support.ActionFilterChain;
-import org.elasticsearch.common.component.AbstractComponent;
-import org.elasticsearch.common.logging.ESLoggerFactory;
-import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.component.AbstractLifecycleComponent;
 import org.elasticsearch.common.util.concurrent.ThreadContext;
 import org.elasticsearch.rest.RestStatus;
 import org.elasticsearch.tasks.Task;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class RangerSecurityActionFilter extends AbstractComponent implements ActionFilter {
+public class RangerSecurityActionFilter extends AbstractLifecycleComponent implements ActionFilter {
 
-	private static final Logger LOG = ESLoggerFactory.getLogger(RangerSecurityActionFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityActionFilter.class);
 
 	private final ThreadContext threadContext;
 
 	private final RangerElasticsearchAuthorizer rangerElasticsearchAuthorizer = new RangerElasticsearchAuthorizer();
 
-	public RangerSecurityActionFilter(Settings settings, ThreadContext threadContext) {
-		super(settings);
+	public RangerSecurityActionFilter(ThreadContext threadContext) {
+		super();
 		this.threadContext = threadContext;
 	}
 
@@ -79,4 +78,19 @@ public class RangerSecurityActionFilter extends AbstractComponent implements Act
 		}
 		chain.proceed(task, action, request, listener);
 	}
+
+    @Override
+    protected void doStart() {
+
+    }
+
+    @Override
+    protected void doStop() {
+
+    }
+
+    @Override
+    protected void doClose() {
+
+    }
 }

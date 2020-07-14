@@ -53,7 +53,99 @@
       ],
       "policyType":0
     }
-  ],
+    ],
+    "securityZones": {
+      "zonehive": {
+        "containsAssociatedTagService": false,
+        "policies": [
+          {
+            "description": "First",
+            "id": 38,
+            "isAuditEnabled": true,
+            "isDenyAllElse": false,
+            "isEnabled": true,
+            "name": "First",
+            "options": {},
+            "policyItems": [
+              {
+                "accesses": [
+                  {
+                    "isAllowed": true,
+                    "type": "select"
+                  }
+                ],
+                "conditions": [],
+                "delegateAdmin": true,
+                "groups": [],
+                "roles": [],
+                "users": [
+                  "hive",
+                  "rangerlookup"
+                ]
+              }
+            ],
+            "policyLabels": [],
+            "policyPriority": 0,
+            "policyType": 0,
+            "resources":{"database":{"values":["db-zone"]},"table":{"values":["tbl1"]},"column":{"values":["*"]}},
+            "service": "hivedev",
+            "serviceType": "hive",
+            "validitySchedules": [],
+            "version": 1,
+            "zoneName": "zonehive"
+          },
+          {
+            "description": "Second",
+            "id": 39,
+            "isAuditEnabled": true,
+            "isDenyAllElse": false,
+            "isEnabled": true,
+            "name": "Second",
+            "options": {},
+            "policyItems": [
+              {
+                "accesses": [
+                  {
+                    "isAllowed": true,
+                    "type": "select"
+                  }
+                ],
+                "conditions": [],
+                "delegateAdmin": false,
+                "groups": [],
+                "roles": [],
+                "users": [
+                  "keyadmin"
+                ]
+              }
+            ],
+            "policyLabels": [],
+            "policyPriority": 0,
+            "policyType": 0,
+            "resources":{"database":{"values":["db-zone"]},"table":{"values":["tbl2"]},"column":{"values":["*"]}},
+            "rowFilterPolicyItems": [],
+            "service": "hivedev",
+            "serviceType": "hive",
+            "validitySchedules": [],
+            "version": 1,
+            "zoneName": "zonehive"
+          }
+        ],
+        "zoneName": "zonehive",
+        "resources": [
+          {
+            "database": [
+              "db-zone"
+            ],
+            "table": [
+              "*"
+            ],
+            "column": [
+              "*"
+            ]
+          }]
+      }
+    },
 
   "tests":[
     {"name":"DENY 'select tmp_1 from db1.tmp ;' for user1",
@@ -329,16 +421,48 @@
       "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
   ],
-  "updatedPolicies": [
-    {"changeType": 2,
-      "policy": {
-        "id": 4,
-        "version": 1,
-        "policyType": 0,
-        "serviceType": "hive"
-      }
-    }
-  ],
+  "updatedPolicies": {
+      "securityZones": {
+        "zonehive": {
+          "containsAssociatedTagService": false,
+          "policyDeltas": [
+            {
+              "changeType": 2,
+              "policy": {
+                "id": 39,
+                "policyType": 0,
+                "serviceType": "hive",
+                "zoneName": "zonehive"
+              }
+            }
+          ],
+
+          "resources": [
+            {
+              "database": [
+                "db-zone"
+              ],
+              "table": [
+                "tbl2"
+              ],
+              "column": [
+                "*"
+              ]
+            }],
+            "zoneName": "zonehive"
+        }
+      },
+      "policyDeltas": [
+        {"changeType": 2,
+          "policy": {
+            "id": 4,
+            "version": 1,
+            "policyType": 0,
+            "serviceType": "hive"
+          }
+        }
+    ]
+  },
   "updatedTests": [
     {"name":"DENY 'select abc_1 from db1.tmp ;' for user1",
       "request":{

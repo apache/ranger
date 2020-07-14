@@ -37,12 +37,12 @@ public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluat
 
 	private final RangerServiceResource       serviceResource;
 	private final RangerPolicyResourceMatcher policyResourceMatcher;
-	private final Integer                     leafResourceLevel;
+	private RangerServiceDef.RangerResourceDef leafResourceDef;
 
 	public RangerServiceResourceMatcher(final RangerServiceResource serviceResource, RangerPolicyResourceMatcher policyResourceMatcher) {
 		this.serviceResource       = serviceResource;
 		this.policyResourceMatcher = policyResourceMatcher;
-		this.leafResourceLevel     = ServiceDefUtil.getLeafResourceLevel(getServiceDef(), getPolicyResource());
+		this.leafResourceDef   = ServiceDefUtil.getLeafResourceDef(policyResourceMatcher.getServiceDef(), getPolicyResource());
 	}
 
 	public RangerServiceResource getServiceResource() { return serviceResource; }
@@ -66,17 +66,12 @@ public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluat
 	}
 
 	@Override
-	public Integer getLeafResourceLevel() {
-		return leafResourceLevel;
+	public boolean isAncestorOf(RangerServiceDef.RangerResourceDef resourceDef) {
+		return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
 	}
-
-
 
 	public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, Object> evalContext) {
 		return policyResourceMatcher != null ?  policyResourceMatcher.getMatchType(requestedResource, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;
-	}
-	RangerServiceDef getServiceDef() {
-		return policyResourceMatcher != null ? policyResourceMatcher.getServiceDef() : null;
 	}
 
 	static class IdComparator implements Comparator<RangerServiceResourceMatcher>, Serializable {

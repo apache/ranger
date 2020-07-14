@@ -32,9 +32,6 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.view.RangerPluginInfoList;
-import org.apache.ranger.view.RangerRoleList;
-import org.apache.ranger.view.RangerSecurityZoneList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -60,6 +57,9 @@ public class PublicAPIsv2 {
 
 	@Autowired
 	ServiceREST serviceREST;
+
+	@Autowired
+	TagREST tagREST;
 
 	@Autowired
 	SecurityZoneREST securityZoneRest;
@@ -117,8 +117,8 @@ public class PublicAPIsv2 {
 
 	@GET
     @Path("/api/zones")
-    public RangerSecurityZoneList getAllZones(@Context HttpServletRequest request){
-		return securityZoneRest.getAllZones(request);
+    public List<RangerSecurityZone> getAllZones(@Context HttpServletRequest request){
+		return securityZoneRest.getAllZones(request).getSecurityZones();
 	}
 
 	/*
@@ -516,26 +516,60 @@ public class PublicAPIsv2 {
 			logger.debug("==> PublicAPIsv2.getPluginsInfo()");
 		}
 
-		RangerPluginInfoList pluginInfoList = serviceREST.getPluginsInfo(request);
+		List<RangerPluginInfo> ret = serviceREST.getPluginsInfo(request).getPluginInfoList();
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.getPluginsInfo()");
 		}
-		return pluginInfoList.getPluginInfoList();
+		return ret;
 	}
 
 	@DELETE
 	@Path("/api/server/policydeltas")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @DefaultValue("false") @QueryParam("reloadServicePoliciesCache") Boolean reloadServicePoliciesCache, @Context HttpServletRequest request) {
+	public void deletePolicyDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @Context HttpServletRequest request) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("==> PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+			logger.debug("==> PublicAPIsv2.deletePolicyDeltas(" + olderThan + ")");
 		}
 
-		serviceREST.deletePolicyDeltas(olderThan, reloadServicePoliciesCache, request);
+		serviceREST.deletePolicyDeltas(olderThan, request);
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ", " + reloadServicePoliciesCache + ")");
+			logger.debug("<== PublicAPIsv2.deletePolicyDeltas(" + olderThan + ")");
+		}
+	}
+
+	@DELETE
+	@Path("/api/server/tagdeltas")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteTagDeltas(@DefaultValue("7") @QueryParam("days") Integer olderThan, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.deleteTagDeltas(" + olderThan + ")");
+		}
+
+		tagREST.deleteTagDeltas(olderThan, request);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.deleteTagDeltas(" + olderThan + ")");
+		}
+	}
+
+	@DELETE
+	@Path("/api/server/purgepolicies/{serviceName}")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void purgeEmptyPolicies(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.purgeEmptyPolicies(" + serviceName + ")");
+		}
+
+		if (serviceName == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Invalid service name", true);
+		}
+
+		serviceREST.purgeEmptyPolicies(serviceName, request);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.purgeEmptyPolicies(" + serviceName + ")");
 		}
 	}
 
@@ -546,10 +580,12 @@ public class PublicAPIsv2 {
 	@POST
 	@Path("/api/roles")
 	@Produces({ "application/json", "application/xml" })
-	public RangerRole createRole(@QueryParam("serviceName") String serviceName, RangerRole role, @Context HttpServletRequest request) {
+	public RangerRole createRole(@QueryParam("serviceName") String serviceName, RangerRole role
+			, @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
+			, @Context HttpServletRequest request) {
 		logger.info("==> PublicAPIsv2.createRole");
 		RangerRole ret;
-		ret = roleREST.createRole(serviceName, role);
+		ret = roleREST.createRole(serviceName, role, createNonExistUserGroup);
 		logger.info("<== PublicAPIsv2.createRole" + ret.getName());
 		return ret;
 	}
@@ -560,8 +596,10 @@ public class PublicAPIsv2 {
 	@PUT
 	@Path("/api/roles/{id}")
 	@Produces({ "application/json", "application/xml" })
-	public RangerRole updateRole(@PathParam("id") Long roleId, RangerRole role, @Context HttpServletRequest request) {
-		return roleREST.updateRole(roleId, role);
+	public RangerRole updateRole(@PathParam("id") Long roleId, RangerRole role
+			, @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
+			, @Context HttpServletRequest request) {
+		return roleREST.updateRole(roleId, role, createNonExistUserGroup);
 	}
 
 	@DELETE
@@ -596,8 +634,8 @@ public class PublicAPIsv2 {
 	@GET
 	@Path("/api/roles")
 	@Produces({ "application/json", "application/xml" })
-	public RangerRoleList getAllRoles(@Context HttpServletRequest request){
-		return roleREST.getAllRoles(request);
+	public List<RangerRole> getAllRoles(@Context HttpServletRequest request) {
+		return roleREST.getAllRoles(request).getSecurityRoles();
 	}
 
 	@GET

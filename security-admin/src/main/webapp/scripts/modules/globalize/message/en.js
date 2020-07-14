@@ -277,7 +277,16 @@ define(function(require) {
                 roles                           : 'Roles',
                 userWithGrantRolePrivilege      : 'Users (Grant privilege)',
                 groupWithGrantRolePrivilege      : 'Groups (Grant privilege)',
-                applicationType					: 'Application',
+                applicationType                 : 'Application',
+                displayName                     : 'Display Name',
+                auditAccessDetail               : 'Audit Access Log Detail',
+                hiveQuery                       : 'Hive Query',
+                clientIP                        : 'Client IP',
+                eventCount                      : 'Event Count',
+                tags                            : 'Tags',
+                permission                      : 'Permission',
+                override                        : 'Override',
+                normal                          : 'Normal'
 
 			},
 			btn : {
@@ -453,6 +462,7 @@ define(function(require) {
                 plsSelectUserToSetVisibility :' Please select user to set visibility or selected user is already visible/hidden.',
                 plsSelectGroupToSetVisibility:' Please select group to set visibility or selected group is already visible/hidden.',
                 activationTimeDelayMsg       : 'Policy is updated but not yet used for any enforcement.',
+                downloadTimeDelayMsg       : 'Policy is updated but not yet downloaded(sync-up with Ranger).',
                 pleaseSelectAccessTypeForTagMasking : 'Please select access type first to enable add masking options.',
                 addUserOrGroupOrRoleForDelegateAdmin      : 'Please select user/group/role for the selected permission(s)',
                 policyLabelsinfo		: 'Enter label of policy',
@@ -476,7 +486,14 @@ define(function(require) {
                 noDeleteRoleRow         :'Please select ranger role first to delete.',
                 addRolePermission       : 'Please add permission(s) for the selected role, else role will not be added.',
                 addRole                 : 'Please select role for the selected permission(s), else role will not be added.',
-                addSelectedUserGroupRoles : 'Please add selected user/group/roles to there respective table else user/group/roles will not be added.'
+                addSelectedUserGroupRoles : 'Please add selected user/group/roles to there respective table else user/group/roles will not be added.',
+                accessDenied            : 'Sorry, you don\'t have enough privileges to view this page.',
+                noContent               : 'Sorry, Please sync-up the users with your source directory.',
+                signOutIsNotComplete    : 'Authentication to this instance of Ranger is managed externally(for example,Apache Knox). \
+                                        You can still open this instance of Ranger from the same web browser without re-authentication. \
+                                        To prevent additional access to Ranger, <b>close all browser windows and exit the browser</b>.',
+                pageNotFound            : 'Sorry, this page isn\'t here or has moved.'
+
 
 			},
 			plcHldr : {
@@ -512,6 +529,7 @@ define(function(require) {
                 nameValidationMsg      :'Name should not start with space, it should be less than 256 characters and special characters are not allowed(except _ - and space).',
                 roleNameValidationMsg :'1. Role name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
                 policyNameValidationMsg   :'Please avoid these characters (&, <, >, \', ", `) for policy name.',
+                serviceNameValidationMsg :'Service name should be less than 256 characters and special characters are not allowed (except _ and -)',
 			},
 			serverMsg : {
 

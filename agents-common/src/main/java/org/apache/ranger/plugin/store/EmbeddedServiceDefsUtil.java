@@ -22,12 +22,13 @@ package org.apache.ranger.plugin.store;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 
 import com.google.gson.Gson;
@@ -48,7 +49,7 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,ozone";
+	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,ozone,kudu,schema-registry";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
@@ -61,6 +62,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_YARN_NAME  = "yarn";
 	public static final String EMBEDDED_SERVICEDEF_KAFKA_NAME = "kafka";
 	public static final String EMBEDDED_SERVICEDEF_SOLR_NAME  = "solr";
+	public static final String EMBEDDED_SERVICEDEF_SCHEMA_REGISTRY_NAME  = "schema-registry";
 	public static final String EMBEDDED_SERVICEDEF_NIFI_NAME  = "nifi";
 	public static final String EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME  = "nifi-registry";
 	public static final String EMBEDDED_SERVICEDEF_ATLAS_NAME  = "atlas";
@@ -71,6 +73,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME = "elasticsearch";
 	public static final String EMBEDDED_SERVICEDEF_PRESTO_NAME  = "presto";
 	public static final String EMBEDDED_SERVICEDEF_OZONE_NAME  = "ozone";
+	public static final String EMBEDDED_SERVICEDEF_KUDU_NAME  = "kudu";
 
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
@@ -83,10 +86,12 @@ public class EmbeddedServiceDefsUtil {
 	public static final String YARN_IMPL_CLASS_NAME  = "org.apache.ranger.services.yarn.RangerServiceYarn";
 	public static final String KAFKA_IMPL_CLASS_NAME = "org.apache.ranger.services.kafka.RangerServiceKafka";
 	public static final String SOLR_IMPL_CLASS_NAME  = "org.apache.ranger.services.solr.RangerServiceSolr";
+	public static final String SCHEMA_REGISTRY_IMPL_CLASS_NAME  = "org.apache.ranger.services.schemaregistry.RangerServiceSchemaRegistry";
 	public static final String NIFI_IMPL_CLASS_NAME  = "org.apache.ranger.services.nifi.RangerServiceNiFi";
 	public static final String ATLAS_IMPL_CLASS_NAME  = "org.apache.ranger.services.atlas.RangerServiceAtlas";
 	public static final String PRESTO_IMPL_CLASS_NAME  = "org.apache.ranger.services.presto.RangerServicePresto";
 	public static final String OZONE_IMPL_CLASS_NAME  = "org.apache.ranger.services.ozone.RangerServiceOzone";
+	public static final String KUDU_IMPL_CLASS_NAME  = "org.apache.ranger.services.kudu.RangerServiceKudu";
 
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
@@ -100,6 +105,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef yarnServiceDef;
 	private RangerServiceDef kafkaServiceDef;
 	private RangerServiceDef solrServiceDef;
+	private RangerServiceDef schemaRegistryServiceDef;
 	private RangerServiceDef nifiServiceDef;
 	private RangerServiceDef nifiRegistryServiceDef;
 	private RangerServiceDef atlasServiceDef;
@@ -110,14 +116,17 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef elasticsearchServiceDef;
 	private RangerServiceDef prestoServiceDef;
 	private RangerServiceDef ozoneServiceDef;
+	private RangerServiceDef kuduServiceDef;
 
 	private RangerServiceDef tagServiceDef;
 
-	private Gson gsonBuilder;
+	private final Gson              gsonBuilder;
+	private final RangerAdminConfig config;
 
 	/** Private constructor to restrict instantiation of this singleton utility class. */
 	private EmbeddedServiceDefsUtil() {
 		gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+		config      = RangerAdminConfig.getInstance();
 	}
 
 	public static EmbeddedServiceDefsUtil instance() {
@@ -128,7 +137,7 @@ public class EmbeddedServiceDefsUtil {
 		LOG.info("==> EmbeddedServiceDefsUtil.init()");
 
 		try {
-			createEmbeddedServiceDefs = RangerConfiguration.getInstance().getBoolean(PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS, true);
+			createEmbeddedServiceDefs = config.getBoolean(PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS, true);
 
 			supportedServiceDefs =getSupportedServiceDef();
 			/*
@@ -144,6 +153,7 @@ public class EmbeddedServiceDefsUtil {
 			yarnServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_YARN_NAME);
 			kafkaServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KAFKA_NAME);
 			solrServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SOLR_NAME);
+			schemaRegistryServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SCHEMA_REGISTRY_NAME);
 			nifiServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_NAME);
 			nifiRegistryServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME);
 			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME);
@@ -156,6 +166,7 @@ public class EmbeddedServiceDefsUtil {
 			elasticsearchServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME);
 			prestoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_PRESTO_NAME);
 			ozoneServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_OZONE_NAME);
+			kuduServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
@@ -202,6 +213,10 @@ public class EmbeddedServiceDefsUtil {
 		return getId(solrServiceDef);
 	}
 
+	public long getSchemaRegistryServiceDefId() {
+		return getId(schemaRegistryServiceDef);
+	}
+
 	public long getNiFiServiceDefId() {
 		return getId(nifiServiceDef);
 	}
@@ -235,12 +250,26 @@ public class EmbeddedServiceDefsUtil {
 
 	public long getOzoneServiceDefId() { return getId(ozoneServiceDef); }
 
+	public long getKuduServiceDefId() { return getId(kuduServiceDef); }
+
 	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
 		RangerServiceDef serviceDef=null;
 		if(StringUtils.isNotEmpty(defType)){
 			serviceDef=loadEmbeddedServiceDef(defType);
 		}
 		return serviceDef;
+	}
+
+	public static boolean isRecursiveEnabled(final RangerServiceDef rangerServiceDef, final String resourceDefName) {
+		boolean ret = false;
+		List<RangerServiceDef.RangerResourceDef>  resourceDefs = rangerServiceDef.getResources();
+		for(RangerServiceDef.RangerResourceDef resourceDef:resourceDefs) {
+			if (resourceDefName.equals(resourceDef.getName())) {
+				ret =  resourceDef.getRecursiveSupported();
+				break;
+			}
+		}
+		return ret;
 	}
 
 	private long getId(RangerServiceDef serviceDef) {
@@ -298,6 +327,11 @@ public class EmbeddedServiceDefsUtil {
 
 		ret = gsonBuilder.fromJson(reader, RangerServiceDef.class);
 
+		//Set DEFAULT displayName if missing
+		if (ret != null && StringUtils.isBlank(ret.getDisplayName())) {
+		    ret.setDisplayName(ret.getName());
+		}
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> EmbeddedServiceDefsUtil.loadEmbeddedServiceDef(" + serviceType + ")");
 		}
@@ -308,7 +342,7 @@ public class EmbeddedServiceDefsUtil {
 	private Set<String> getSupportedServiceDef(){
 		Set<String> supportedServiceDef =new HashSet<>();
 		try{
-			String ranger_supportedcomponents=RangerConfiguration.getInstance().get(PROPERTY_SUPPORTED_SERVICE_DEFS, DEFAULT_BOOTSTRAP_SERVICEDEF_LIST);
+			String ranger_supportedcomponents = config.get(PROPERTY_SUPPORTED_SERVICE_DEFS, DEFAULT_BOOTSTRAP_SERVICEDEF_LIST);
 			if(StringUtils.isBlank(ranger_supportedcomponents) || "all".equalsIgnoreCase(ranger_supportedcomponents)){
 				ranger_supportedcomponents=DEFAULT_BOOTSTRAP_SERVICEDEF_LIST;
 			}

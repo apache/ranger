@@ -1,6 +1,7 @@
 {
 	"id":9,
 	"name":"kafka",
+	 "displayName": "kafka",
 	"implClass":"org.apache.ranger.services.kafka.RangerServiceKafka",
 	"label":"Kafka",
 	"description":"Apache Kafka",
@@ -24,7 +25,7 @@
 			"uiHint":"",
 			"label":"Topic",
 			"description":"Topic",
-			"accessTypeRestrictions": ["create", "delete", "configure", "alter_configs", "describe", "describe_configs", "consume", "publish"]
+			"accessTypeRestrictions": ["create", "delete", "configure", "alter", "alter_configs", "describe", "describe_configs", "consume", "publish"]
 		},
 		{
 			"itemId":2,
@@ -56,7 +57,7 @@
 			},
 			"label":"Cluster",
 			"description":"Cluster",
-			"accessTypeRestrictions": ["create", "configure", "alter_configs", "describe", "describe_configs", "kafka_admin", "idempotent_write"]
+			"accessTypeRestrictions": ["create", "configure", "alter", "alter_configs", "describe", "describe_configs", "kafka_admin", "idempotent_write", "cluster_action"]
 		},
 		{
 			"itemId":4,
@@ -73,6 +74,22 @@
 			"label":"Delegation Token",
 			"description":"Delegation Token",
 			"accessTypeRestrictions": ["describe"]
+		},
+		{
+			"itemId":5,
+			"name":"consumergroup",
+			"type":"string",
+			"level":1,
+			"mandatory":true,
+			"excludesSupported":true,
+			"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions":{
+				"wildCard":true,
+				"ignoreCase":true
+			},
+			"label":"Consumer Group",
+			"description":"Consumer Group",
+			"accessTypeRestrictions": ["consume", "describe", "delete"]
 		}
 	],
 	"accessTypes":[
@@ -106,6 +123,24 @@
 			"label":"Describe"
 		},
 		{
+			"itemId":7,
+			"name":"kafka_admin",
+			"label":"Kafka Admin",
+			"impliedGrants":[
+				"publish",
+				"consume",
+				"configure",
+				"describe",
+				"create",
+				"delete",
+				"describe_configs",
+				"alter_configs",
+				"alter",
+				"idempotent_write",
+				"cluster_action"
+			]
+		},
+		{
 			"itemId":8,
 			"name":"create",
 			"label":"Create"
@@ -116,19 +151,6 @@
 			"label":"Delete",
 			"impliedGrants":[
 				"describe"
-			]
-		},
-		{
-			"itemId":7,
-			"name":"kafka_admin",
-			"label":"Kafka Admin",
-			"impliedGrants":[
-				"publish",
-				"consume",
-				"configure",
-				"describe",
-				"create",
-				"delete"
 			]
 		},
 		{
@@ -148,6 +170,16 @@
 			"impliedGrants":[
 				"describe_configs"
 			]
+		},
+		{
+			"itemId":13,
+			"name":"cluster_action",
+			"label":"Cluster Action"
+		},
+		{
+			"itemId":14,
+			"name":"alter",
+			"label":"Alter"
 		}
 	],
 	"configs":[

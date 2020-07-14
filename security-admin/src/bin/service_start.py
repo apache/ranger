@@ -55,7 +55,7 @@ if service_entry:
 		text_re = re.compile('>\n\s+([^<>\s].*?)\n\s+</', re.DOTALL)
 		prettyXml = text_re.sub('>\g<1></', uglyXml)
 
-		print prettyXml
+		print(prettyXml)
 	except:
-		print "######################## Ranger Setup failed! #######################"
+		print("######################## Ranger Setup failed! #######################")
 		sys.exit(1)

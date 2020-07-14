@@ -24,7 +24,6 @@ define(function(require) {
     var localization = require('utils/XALangSupport');
     var XALinks = require('modules/XALinks');
     var RangerService = require('models/RangerService');
-    var RangerServiceViewDetail = require('views/service/RangerServiceViewDetail');
     var SecurityZoneTmpl = require('hbs!tmpl/security_zone/SecurityZone_tmpl');
     var XABackgrid = require('views/common/XABackgrid');
     var XATableLayout = require('views/common/XATableLayout');
@@ -49,6 +48,7 @@ define(function(require) {
                 zoneModel: this.zoneModel,
                 zoneModelName: zoneModelName,
                 isZoneAdministration:isZoneAdministration,
+                setOldUi : localStorage.getItem('setOldUI') == "true" ? true : false,
             };
         },
 
@@ -299,8 +299,17 @@ define(function(require) {
                             that.collection.remove(model.get('id'));
                             XAUtil.notifySuccess('Success', localization.tt('msg.zoneDeleteMsg'));
                             that.zoneModel = _.first(that.collection.models);
-                            that.setupCollectionForZoneResource(that.zoneModel);
-                            that.render();
+                            if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+                                App.rSideBar.currentView.render();
+                                if(_.isUndefined(that.zoneModel)) {
+                                    App.appRouter.navigate("#!/zones/zone/list",{trigger: true});
+                                } else {
+                                    App.appRouter.navigate("#!/zones/zone/"+that.zoneModel.id,{trigger: true});
+                                }
+                            } else {
+                                that.setupCollectionForZoneResource(that.zoneModel);
+                                that.render();
+                            }
                             if(App.vZone && !_.isEmpty(App.vZone) && model.get('name') === App.vZone.vZoneName){
                                 App.vZone.vZoneName = "";
                             }

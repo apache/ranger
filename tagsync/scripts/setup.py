@@ -14,21 +14,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+try:
+	from StringIO import StringIO
+except ImportError:
+	from io import StringIO
+try:
+	from ConfigParser import ConfigParser
+except ImportError:
+	from configparser import ConfigParser
+try:
+	from urlparse import urlparse
+except ImportError:
+	from urllib.parse import urlparse
 import re
-import StringIO
 import xml.etree.ElementTree as ET
-import ConfigParser
 import os,errno,sys,getopt
 from os import listdir
 from os.path import isfile, join, dirname, basename
-from urlparse import urlparse
 from time import gmtime, strftime, localtime
 from xml import etree
 import shutil
 import pwd, grp
 
 if (not 'JAVA_HOME' in os.environ):
-	print "ERROR: JAVA_HOME environment variable is not defined. Please define JAVA_HOME before running this script"
+	print("ERROR: JAVA_HOME environment variable is not defined. Please define JAVA_HOME before running this script")
 	sys.exit(1)
 
 debugLevel = 1
@@ -63,7 +72,7 @@ defaultKeyStoreFileName = '/etc/ranger/tagsync/conf/rangertagsync.jceks'
 unixUserProp = 'unix_user'
 unixGroupProp = 'unix_group'
 
-logFolderPermMode = 0777
+logFolderPermMode = 0o777
 rootOwnerId = 0
 initPrefixList = ['S99', 'K00']
 
@@ -98,7 +107,7 @@ configure_security = False
 
 RANGER_TAGSYNC_HOME = os.getenv("RANGER_TAGSYNC_HOME")
 if RANGER_TAGSYNC_HOME is None:
-    RANGER_TAGSYNC_HOME = os.getcwd()
+	RANGER_TAGSYNC_HOME = os.getcwd()
 
 def populate_global_dict():
     global globalDict
@@ -120,7 +129,7 @@ def archiveFile(originalFileName):
     archiveDir = dirname(originalFileName)
     archiveFileName = "." + basename(originalFileName) + "." + (strftime("%d%m%Y%H%M%S", localtime()))
     movedFileName = join(archiveDir,archiveFileName)
-    print "INFO: moving [%s] to [%s] ......." % (originalFileName,movedFileName)
+    print("INFO: moving [%s] to [%s] ......." % (originalFileName,movedFileName))
     os.rename(originalFileName, movedFileName)
 
 def getXMLConfigKeys(xmlFileName):
@@ -145,11 +154,11 @@ def getXMLConfigMap(xmlFileName):
 
 def getPropertiesConfigMap(configFileName):
     ret = {}
-    config = StringIO.StringIO()
+    config = StringIO()
     config.write('[dummysection]\n')
     config.write(open(configFileName).read())
     config.seek(0,os.SEEK_SET)
-    fcp = ConfigParser.ConfigParser()
+    fcp = ConfigParser()
     fcp.optionxform = str
     fcp.readfp(config)
     for k,v in fcp.items('dummysection'):
@@ -158,11 +167,11 @@ def getPropertiesConfigMap(configFileName):
 
 def getPropertiesKeyList(configFileName):
     ret = []
-    config = StringIO.StringIO()
+    config = StringIO()
     config.write('[dummysection]\n')
     config.write(open(configFileName).read())
     config.seek(0,os.SEEK_SET)
-    fcp = ConfigParser.ConfigParser()
+    fcp = ConfigParser()
     fcp.optionxform = str
     fcp.readfp(config)
     for k,v in fcp.items('dummysection'):
@@ -170,11 +179,11 @@ def getPropertiesKeyList(configFileName):
     return ret
 
 def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
-    tree = ET.parse(xmlTemplateFileName)
-    root = tree.getroot()
-    for config in root.findall('property'):
-        name = config.find('name').text
-        if (name in prop.keys()):
+	tree = ET.parse(xmlTemplateFileName)
+	root = tree.getroot()
+	for config in root.findall('property'):
+		name = config.find('name').text
+		if (name in list(prop)):
 			if (name == TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING):
 				# Expected value is 'clusterName,componentName,serviceName;clusterName,componentName,serviceName' ...
 				# Blanks are not supported anywhere in the value.
@@ -192,16 +201,16 @@ def writeXMLUsingProperties(xmlTemplateFileName,prop,xmlOutputFileName):
 							newName.text = TAGSYNC_INSTALL_PROP_PREFIX_FOR_ATLAS_RANGER_MAPPING + str(parts[1]) + TAGSYNC_ATLAS_CLUSTER_IDENTIFIER + str(parts[0]) + TAGSYNC_INSTALL_PROP_SUFFIX_FOR_ATLAS_RANGER_MAPPING
 							newValue.text = str(parts[2])
 						else:
-							print "ERROR: incorrect syntax for %s, value=%s" % (TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING, multiValues[index])
+							print("ERROR: incorrect syntax for %s, value=%s" % (TAGSYNC_ATLAS_TO_RANGER_SERVICE_MAPPING, multiValues[index]))
 						index += 1
 				root.remove(config)
 			else:
 				config.find('value').text = str(prop[name])
-        #else:
-        #    print "ERROR: key not found: %s" % (name)
-    if isfile(xmlOutputFileName):
-        archiveFile(xmlOutputFileName)
-    tree.write(xmlOutputFileName)
+		#else:
+		#    print "ERROR: key not found: %s" % (name)
+	if isfile(xmlOutputFileName):
+		archiveFile(xmlOutputFileName)
+	tree.write(xmlOutputFileName)
 
 def updatePropertyInJCKSFile(jcksFileName,propName,value):
 	fn = jcksFileName
@@ -210,7 +219,7 @@ def updatePropertyInJCKSFile(jcksFileName,propName,value):
 	cmd = "java -cp './lib/*' %s create '%s' -value '%s' -provider jceks://file%s 2>&1" % (credUpdateClassName,propName,value,fn)
 	ret = os.system(cmd)
 	if (ret != 0):
-		print "ERROR: Unable to update the JCKSFile (%s) for aliasName (%s)" % (fn,propName)
+		print("ERROR: Unable to update the JCKSFile (%s) for aliasName (%s)" % (fn,propName))
 		sys.exit(1)
 	return ret
 
@@ -219,13 +228,13 @@ def convertInstallPropsToXML(props):
 	ret = {}
 	atlasOutFn = join(confFolderName, atlasApplicationPropFileName)
 
-	atlasOutFile = file(atlasOutFn, "w")
+	atlasOutFile = open(atlasOutFn, "w")
 
 	atlas_principal = ''
 	atlas_keytab = ''
 
-	for k,v in props.iteritems():
-		if (k in directKeyMap.keys()):
+	for k,v in props.items():
+		if (k in list(directKeyMap)):
 			newKey = directKeyMap[k]
 			if (k == TAGSYNC_ATLAS_KAFKA_ENDPOINTS_KEY):
 				atlasOutFile.write(newKey + "=" + v + "\n")
@@ -244,7 +253,7 @@ def convertInstallPropsToXML(props):
 			else:
 				ret[newKey] = v
 		else:
-			print "INFO: Direct Key not found:%s" % (k)
+			print("INFO: Direct Key not found:%s" % (k))
 
 	if (configure_security):
 		atlasOutFile.write("atlas.jaas.KafkaClient.loginModuleName = com.sun.security.auth.module.Krb5LoginModule" + "\n")
@@ -275,26 +284,26 @@ def createUser(username,groupname):
 	cmd = "useradd -g %s %s -m" % (groupname,username)
 	ret = os.system(cmd)
 	if (ret != 0):
-		print "ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret)
+		print("ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret))
 		sys.exit(1)
 	try:
 		ret = pwd.getpwnam(username).pw_uid
 		return ret
-	except KeyError, e:
-		print "ERROR: Unable to create a new user account: %s with group %s - error [%s]" % (username,groupname,e)
+	except KeyError as e:
+		print("ERROR: Unable to create a new user account: %s with group %s - error [%s]" % (username,groupname,e))
 		sys.exit(1)
 
 def createGroup(groupname):
 	cmd = "groupadd %s" % (groupname)
 	ret = os.system(cmd)
 	if (ret != 0):
-		print "ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret)
+		print("ERROR: os command execution (%s) failed. error code = %d " % (cmd, ret))
 		sys.exit(1)
 	try:
 		ret = grp.getgrnam(groupname).gr_gid
 		return ret
-	except KeyError, e:
-		print "ERROR: Unable to create a new group: %s" % (groupname,e)
+	except KeyError as e:
+		print("ERROR: Unable to create a new group: %s" % (groupname,e))
 		sys.exit(1)
 
 def initializeInitD():
@@ -302,7 +311,7 @@ def initializeInitD():
 		fn = join(installPropDirName,initdProgramName)
 		initdFn = join(initdDirName,initdProgramName)
 		shutil.copy(fn, initdFn)
-		os.chmod(initdFn,0550)
+		os.chmod(initdFn,0o550)
 		rcDirList = [ "/etc/rc2.d", "/etc/rc3.d", "/etc/rc.d/rc2.d", "/etc/rc.d/rc3.d" ]
 		for rcDir in rcDirList:
 			if (os.path.isdir(rcDir)):
@@ -323,7 +332,7 @@ def initializeInitD():
 def write_env_files(exp_var_name, log_path, file_name):
         final_path = "{0}/{1}".format(confBaseDirName,file_name)
         if not os.path.isfile(final_path):
-                print "INFO: Creating %s file" % file_name
+            print("INFO: Creating %s file" % file_name)
         f = open(final_path, "w")
         f.write("export {0}={1}".format(exp_var_name,log_path))
         f.close()
@@ -332,7 +341,7 @@ def main():
 
 	global configure_security
 
-	print "\nINFO: Installing ranger-tagsync .....\n"
+	print("\nINFO: Installing ranger-tagsync .....\n")
 
 	populate_global_dict()
 
@@ -345,16 +354,16 @@ def main():
 
 
 	hadoop_conf = globalDict['hadoop_conf']
-        pid_dir_path = globalDict['TAGSYNC_PID_DIR_PATH']
-        unix_user = globalDict['unix_user']
+	pid_dir_path = globalDict['TAGSYNC_PID_DIR_PATH']
+	unix_user = globalDict['unix_user']
 
-        if pid_dir_path == "":
-                pid_dir_path = "/var/run/ranger"
+	if pid_dir_path == "":
+		pid_dir_path = "/var/run/ranger"
 
 	dirList = [ rangerBaseDirName, tagsyncBaseDirFullName, confFolderName ]
 	for dir in dirList:
 		if (not os.path.isdir(dir)):
-			os.makedirs(dir,0755)
+			os.makedirs(dir,0o755)
 
 	defFileList = [ log4jFileName ]
 	for defFile in defFileList:
@@ -372,7 +381,7 @@ def main():
 	str = "export JAVA_HOME=%s\n" % os.environ['JAVA_HOME']
 	jhf.write(str)
 	jhf.close()
-	os.chmod(java_home_setter_fn,0750)
+	os.chmod(java_home_setter_fn,0o750)
 
 
 	if (not os.path.isdir(localConfFolderName)):
@@ -404,8 +413,8 @@ def main():
 	if (not os.path.isdir(tagsyncLogFolderName)):
 		os.makedirs(tagsyncLogFolderName,logFolderPermMode)
 
-        if (not os.path.isdir(pid_dir_path)):
-                os.makedirs(pid_dir_path,logFolderPermMode)
+	if (not os.path.isdir(pid_dir_path)):
+		os.makedirs(pid_dir_path,logFolderPermMode)
 
 	if (unixUserProp in mergeProps):
 		ownerName = mergeProps[unixUserProp]
@@ -421,12 +430,12 @@ def main():
 
 	try:
 		groupId = grp.getgrnam(groupName).gr_gid
-	except KeyError, e:
+	except KeyError as e:
 		groupId = createGroup(groupName)
 
 	try:
 		ownerId = pwd.getpwnam(ownerName).pw_uid
-	except KeyError, e:
+	except KeyError as e:
 		ownerId = createUser(ownerName, groupName)
 
 	os.chown(logFolderName,ownerId,groupId)
@@ -469,53 +478,54 @@ def main():
 	for dir in fixPermList:
 		for root, dirs, files in os.walk(dir):
 			os.chown(root, ownerId, groupId)
-			os.chmod(root,0755)
+			os.chmod(root,0o755)
 			for obj in dirs:
 				dn = join(root,obj)
 				os.chown(dn, ownerId, groupId)
-				os.chmod(dn, 0755)
+				os.chmod(dn, 0o755)
 			for obj in files:
 				fn = join(root,obj)
 				os.chown(fn, ownerId, groupId)
-				os.chmod(fn, 0755)
+				os.chmod(fn, 0o755)
 
 	write_env_files("RANGER_TAGSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE)
-        write_env_files("TAGSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
+	write_env_files("TAGSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
 	os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
-	os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0755)
-        os.chown(os.path.join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
-        os.chmod(os.path.join(confBaseDirName, ENV_PID_FILE),0755)
+	os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0o755)
+	os.chown(os.path.join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
+	os.chmod(os.path.join(confBaseDirName, ENV_PID_FILE),0o755)
 
-        f = open(os.path.join(confBaseDirName, ENV_PID_FILE), "a+")
-        f.write("\nexport {0}={1}".format("UNIX_TAGSYNC_USER",unix_user))
-        f.close()
+	f = open(os.path.join(confBaseDirName, ENV_PID_FILE), "a+")
+	f.write("\nexport {0}={1}".format("UNIX_TAGSYNC_USER",unix_user))
+	f.close()
 
 	hadoop_conf_full_path = os.path.join(hadoop_conf, hadoopConfFileName)
 	tagsync_conf_full_path = os.path.join(tagsyncBaseDirFullName,confBaseDirName,hadoopConfFileName)
 
 	if not isfile(hadoop_conf_full_path):
-		print "WARN: core-site.xml file not found in provided hadoop conf path..."
+		print("WARN: core-site.xml file not found in provided hadoop conf path...")
 		f = open(tagsync_conf_full_path, "w")
 		f.write("<configuration></configuration>")
 		f.close()
 		os.chown(tagsync_conf_full_path,ownerId,groupId)
-		os.chmod(tagsync_conf_full_path,0750)
+		os.chmod(tagsync_conf_full_path,0o750)
 	else:
 		if os.path.islink(tagsync_conf_full_path):
 			os.remove(tagsync_conf_full_path)
 
 	if isfile(hadoop_conf_full_path) and not isfile(tagsync_conf_full_path):
-			os.symlink(hadoop_conf_full_path, tagsync_conf_full_path)
-        rangerTagsync_password = globalDict['rangerTagsync_password']
-        rangerTagsync_name ='rangerTagsync'
-        endPoint='RANGER'
-        cmd = 'python updatetagadminpassword.py %s %s %s'  %(endPoint, rangerTagsync_name, rangerTagsync_password)
-        if rangerTagsync_password != "" :
-                output = os.system(cmd)
-                if (output == 0):
-                        print "[I] Successfully updated password of " + rangerTagsync_name +" user"
-                else:
-                        print "[ERROR] Unable to change password of " + rangerTagsync_name +" user."
-	print "\nINFO: Completed ranger-tagsync installation.....\n"
+		os.symlink(hadoop_conf_full_path, tagsync_conf_full_path)
+
+	rangerTagsync_password = globalDict['rangerTagsync_password']
+	rangerTagsync_name ='rangerTagsync'
+	endPoint='RANGER'
+	cmd = 'python updatetagadminpassword.py %s %s %s'  %(endPoint, rangerTagsync_name, rangerTagsync_password)
+	if rangerTagsync_password != "" :
+		output = os.system(cmd)
+		if (output == 0):
+			print("[I] Successfully updated password of " + rangerTagsync_name +" user")
+		else:
+			print("[ERROR] Unable to change password of " + rangerTagsync_name +" user.")
+	print("\nINFO: Completed ranger-tagsync installation.....\n")
 
 main()

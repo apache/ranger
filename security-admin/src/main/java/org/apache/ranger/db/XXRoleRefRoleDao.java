@@ -76,6 +76,18 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole>{
         }
     }
 
+	public Long findRoleRefRoleCount(String subRoleName) {
+		Long ret = -1L;
+
+		try {
+			ret = getEntityManager().createNamedQuery("XXRoleRefRole.findRoleRefRoleCount", Long.class)
+					.setParameter("subRoleName", subRoleName).getSingleResult();
+		} catch (Exception e) {
+		}
+
+		return ret;
+	}
+
     public Set<Long> getContainingRoles(Long subRoleId) {
         Set<Long> ret;
 

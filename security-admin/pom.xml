@@ -284,7 +284,7 @@
 		<dependency>
 			<groupId>com.fasterxml.jackson.core</groupId>
 			<artifactId>jackson-databind</artifactId>
-			<version>${fasterxml.jackson.version}</version>
+			<version>${fasterxml.jackson.databind.version}</version>
 		</dependency>
         <dependency>
             <groupId>com.sun.jersey.contribs</groupId>
@@ -385,11 +385,6 @@
             <groupId>org.apache.ranger</groupId>
             <artifactId>ranger-util</artifactId>
             <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.thrift</groupId>
-            <artifactId>libfb303</artifactId>
-            <version>${libfb303.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.thrift</groupId>
@@ -513,7 +508,7 @@
         <dependency>
             <groupId>com.nimbusds</groupId>
             <artifactId>nimbus-jose-jwt</artifactId>
-            <version>4.41.2</version>
+            <version>8.15</version>
             <scope>compile</scope>
         </dependency>
         <!-- Transitive dependency for nimbus-jose-jwt.
@@ -529,6 +524,11 @@
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
             <version>3.0</version>
+        </dependency>
+	<dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty</artifactId>
+            <version>${netty.version}</version>
         </dependency>
         <dependency>
             <groupId>javax.annotation</groupId>

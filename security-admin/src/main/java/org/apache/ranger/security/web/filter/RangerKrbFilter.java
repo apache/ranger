@@ -25,6 +25,7 @@ import org.apache.hadoop.security.authentication.server.KerberosAuthenticationHa
 import org.apache.hadoop.security.authentication.server.PseudoAuthenticationHandler;
 import org.apache.hadoop.security.authentication.util.*;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -119,6 +120,7 @@ public class RangerKrbFilter implements Filter {
   private long validity;
   private String cookieDomain;
   private String cookiePath;
+  private String cookieName;
 
   /**
    * <p>Initializes the authentication filter and signer secret provider.</p>
@@ -157,6 +159,7 @@ public class RangerKrbFilter implements Filter {
 
     cookieDomain = config.getProperty(COOKIE_DOMAIN, null);
     cookiePath = config.getProperty(COOKIE_PATH, null);
+    cookieName = config.getProperty(RangerCommonConstants.PROP_COOKIE_NAME, RangerCommonConstants.DEFAULT_COOKIE_NAME);
   }
 
   protected void initializeAuthHandler(String authHandlerClassName, FilterConfig filterConfig)
@@ -520,7 +523,9 @@ public class RangerKrbFilter implements Filter {
               agents = RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT;
             }
             parseBrowserUserAgents(agents);
-            if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) && !allowTrustedProxy){
+            String doAsUser = request.getParameter("doAs");
+            if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) &&
+                    (!allowTrustedProxy || (allowTrustedProxy && StringUtils.isEmpty(doAsUser))) ){
         	  ((HttpServletResponse)response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
                 filterChain.doFilter(request, response);
             }else{
@@ -555,7 +560,7 @@ public class RangerKrbFilter implements Filter {
               }
               for(String headerName : headerNames){
                 String value = httpResponse.getHeader(headerName);
-                if("Set-Cookie".equalsIgnoreCase(headerName) && value.startsWith("RANGERADMINSESSIONID")){
+                if("Set-Cookie".equalsIgnoreCase(headerName) && value.startsWith(cookieName)){
                   chk = false;
                   break;
                 }

@@ -29,5 +29,6 @@ public class HbaseAuthUtilsImplTest {
 		HbaseAuthUtilsImpl authUtils = new HbaseAuthUtilsImpl();
 		assertTrue(authUtils.isReadAccess("read"));
 		assertTrue(authUtils.isWriteAccess("write"));
+		assertTrue(authUtils.isExecuteAccess("execute"));
 	}
 }

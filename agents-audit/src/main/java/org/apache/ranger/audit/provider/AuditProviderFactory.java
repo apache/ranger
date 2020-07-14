@@ -28,11 +28,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.ShutdownHookManager;
-import org.apache.ranger.audit.destination.DBAuditDestination;
-import org.apache.ranger.audit.destination.FileAuditDestination;
-import org.apache.ranger.audit.destination.HDFSAuditDestination;
-import org.apache.ranger.audit.destination.Log4JAuditDestination;
-import org.apache.ranger.audit.destination.SolrAuditDestination;
+import org.apache.ranger.audit.destination.*;
 import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
 import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
 import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
@@ -125,7 +121,7 @@ public class AuditProviderFactory {
 		MiscUtil.setApplicationType(appType);
 
 		boolean isEnabled = MiscUtil.getBooleanProperty(props,
-				AUDIT_IS_ENABLED_PROP, false);
+				AUDIT_IS_ENABLED_PROP, true);
         if (!isEnabled) {
             LOG.info("AuditProviderFactory: Audit not enabled..");
             mProvider = getDefaultProvider();
@@ -283,8 +279,8 @@ public class AuditProviderFactory {
 			LOG.info("No v3 audit configuration found. Trying v2 audit configurations");
 			if (!isEnabled
 					|| !(isAuditToDbEnabled || isAuditToHdfsEnabled
-							|| isAuditToKafkaEnabled || isAuditToLog4jEnabled
-							|| isAuditToSolrEnabled || providers.size() == 0)) {
+					|| isAuditToKafkaEnabled || isAuditToLog4jEnabled
+					|| isAuditToSolrEnabled || providers.size() == 0)) {
 				LOG.info("AuditProviderFactory: Audit not enabled..");
 
 				mProvider = getDefaultProvider();
@@ -440,21 +436,23 @@ public class AuditProviderFactory {
 						+ ", propertyPrefix=" + propPrefix, e);
 			}
 		} else {
-			if (providerName.equals("file")) {
+			if (providerName.equalsIgnoreCase("file")) {
 				provider = new FileAuditDestination();
 			} else if (providerName.equalsIgnoreCase("hdfs")) {
 				provider = new HDFSAuditDestination();
-			} else if (providerName.equals("solr")) {
+			} else if (providerName.equalsIgnoreCase("solr")) {
 				provider = new SolrAuditDestination();
-			} else if (providerName.equals("kafka")) {
+			} else if (providerName.equalsIgnoreCase("elasticsearch")) {
+				provider = new ElasticSearchAuditDestination();
+			} else if (providerName.equalsIgnoreCase("kafka")) {
 				provider = new KafkaAuditProvider();
-			} else if (providerName.equals("db")) {
+			} else if (providerName.equalsIgnoreCase("db")) {
 				provider = new DBAuditDestination();
-			} else if (providerName.equals("log4j")) {
+			} else if (providerName.equalsIgnoreCase("log4j")) {
 				provider = new Log4JAuditDestination();
-			} else if (providerName.equals("batch")) {
+			} else if (providerName.equalsIgnoreCase("batch")) {
 				provider = new AuditBatchQueue(consumer);
-			} else if (providerName.equals("async")) {
+			} else if (providerName.equalsIgnoreCase("async")) {
 				provider = new AuditAsyncQueue(consumer);
 			} else {
 				LOG.error("Provider name doesn't have any class associated with it. providerName="

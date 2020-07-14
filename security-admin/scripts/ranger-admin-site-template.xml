@@ -161,6 +161,22 @@
 		<value></value>
 	</property>
 	<property>
+		<name>ranger.audit.elasticsearch.urls</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.elasticsearch.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.elasticsearch.user</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.elasticsearch.password</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.jpa.audit.jdbc.dialect</name>
 		<value></value>
 	</property>

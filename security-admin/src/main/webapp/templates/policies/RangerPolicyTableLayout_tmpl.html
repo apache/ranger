@@ -33,7 +33,18 @@
 		{{/if}}		
 		</ul>
 </div>
-<h3 class="wrap-header bold"> {{tt 'lbl.listOfPolicies'}} : {{rangerService.attributes.name}} </h3>
+{{#if setNewUi}}
+  <div class="list-header">
+    {{#if ../isNotUser}}
+      {{#if ../isNotAuditorOrKMSAuditor}}
+        <button type="button" title="" data-name="deleteService" class=" btn btn-small btn-right"> <i class="icon-trash"></i>  Service Delete</button>
+        <button type="button" title="" data-name="serviceEdit" class=" btn btn-small btn-right"> <i class="icon-edit"></i>  Service Edit</button>
+      {{/if}}
+      <button type="button" title="" data-name="serviceDetails" class=" btn btn-small btn-right"> <i class="icon-eye-open"></i>  Service Details</button>
+    {{/if}}
+</div>
+{{/if}}
+<h3 class="wrap-header bold"> {{tt 'lbl.listOfPolicies'}} : {{rangerService.attributes.displayName}} </h3>
 <div class="wrap non-collapsible m-height ">
 	<div>
         <div class="row-fluid margin-bottom-11">

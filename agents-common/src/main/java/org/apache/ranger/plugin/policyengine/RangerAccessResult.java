@@ -44,6 +44,7 @@ public class RangerAccessResult {
 	private boolean isAuditedDetermined;
 	private boolean  isAudited;
 	private long     auditPolicyId  = -1;
+	private String   auditLogId;
 	private long     policyId  = -1;
 	private int      policyPriority;
 	private String   zoneName;
@@ -202,6 +203,15 @@ public class RangerAccessResult {
 		this.policyId = policyId;
 	}
 
+	public String getAuditLogId() {
+		return auditLogId;
+	}
+
+	public void setAuditLogId(String auditLogId) {
+		this.auditLogId = auditLogId;
+	}
+
+
 	/**
 	 * @param policyId the auditPolicyId to set
 	 */
@@ -332,6 +342,7 @@ public class RangerAccessResult {
 		sb.append("isAllowed={").append(isAllowed).append("} ");
 		sb.append("isAuditedDetermined={").append(isAuditedDetermined).append("} ");
 		sb.append("isAudited={").append(isAudited).append("} ");
+		sb.append("auditLogId={").append(auditLogId).append("} ");
 		sb.append("policyType={").append(policyType).append("} ");
 		sb.append("policyId={").append(policyId).append("} ");
 		sb.append("zoneName={").append(zoneName).append("} ");

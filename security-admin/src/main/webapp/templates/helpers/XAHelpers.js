@@ -506,30 +506,55 @@
 		var serviceType = serviceDef.get('name'),
 		policyType = XAEnums.RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value;
 		if(!_.isUndefined(services[serviceType])){
-			_.each(services[serviceType],function(serv){
+			_.each(_.sortBy(services[serviceType],function(m){return m.get('name')}),function(serv){
 				serviceName = serv.get('name');
-				if(SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin()){
-					serviceOperationDiv = '<div class="pull-right">\
-                                            <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
-                                            <a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
-                                            <a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
-                                            <i class="icon-trash"></i></a>\
-                                           </div>'
-                                }
-                                if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
-                                    serviceOperationDiv = '<div class="pull-right">\
-                                                <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
-                                           </div>'
+				if(localStorage.getItem('setOldUI') == "true") {
+					if(SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin()){
+						serviceOperationDiv = '<div class="pull-right">\
+					                        <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
+					                        <a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
+					                        <a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
+					                        <i class="icon-trash"></i></a>\
+					                       </div>'
+					    }
+		            if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
+		                serviceOperationDiv = '<div class="pull-right">\
+		                            <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
+		                       </div>'
+					}
 				}
 				tr += '<tr><td><div>';
 				if (!serv.get('isEnabled')) {
 					tr += '<i class="icon-ban-circle text-color-red pull-left icon-large"></i>';
 				}
-				tr += '<a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
-					  </div></td></tr>';
+				if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+					tr += '<i class="icon-file pull-left icon-small m-top-5"></i>'
+				}
+                                //For service name
+                                if(!_.isUndefined(serv) && !_.isUndefined(serv.get('displayName')) ) {
+                                        tr += '<a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.get('displayName'))+'">'+_.escape(serv.get('displayName'))+'</a>'+serviceOperationDiv+'\
+                                                </div></td></tr>';
+                                } else {
+                                        tr += '<i class="icon-file pull-left"></i><a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
+                                                </div></td></tr>';
+                                }
 			});
 		}
 		return tr;
+	});
+	Handlebars.registerHelper('handleCollapeServiceIcon', function(services, serviceDef) {
+		var serviceType = serviceDef.get('name');
+		if(!_.isUndefined(services[serviceType]) && services[serviceType].length > 0) {
+			return '<i class="icon-caret-up" id="collapesService"></i>'
+		}
+	});
+	Handlebars.registerHelper('handleServiceDefIcon', function(serviceDefName) {
+		var iconServiceDefList = ["hdfs", "hive", "hbase", "yarn", "knox", "kafka", "solr", "nifi", "atlas", "kudu", "ozone", "kms", "nifi-registry", "tag"];
+		if (iconServiceDefList.includes(serviceDefName)) {
+			return '<i class="icon-component-'+ serviceDefName +' icon-large"></i>';
+		} else {
+			return '<i class="icon-component-default"></i>';
+		}
 	});
 	Handlebars.registerHelper('capitaliseLetter', function(str) {
 		return str.toUpperCase();

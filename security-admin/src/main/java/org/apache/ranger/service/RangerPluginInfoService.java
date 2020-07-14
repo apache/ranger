@@ -36,6 +36,7 @@ import org.apache.ranger.common.SortField;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPluginInfo;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.store.PList;
@@ -198,14 +199,22 @@ public class RangerPluginInfoService {
 		ret.setUpdateTime(xObj.getUpdateTime());
 		ret.setServiceName(xObj.getServiceName());
 
-                String serviceType = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(ret.getServiceName());
-                if (StringUtils.isNotBlank(serviceType)) {
-                        ret.setServiceType(serviceType);
-                }
+		String serviceDefName = daoManager.getXXServiceDef().findServiceDefTypeByServiceName(ret.getServiceName());
+		if (StringUtils.isNotBlank(serviceDefName)) {
+			ret.setServiceType(serviceDefName);
+			XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(serviceDefName);
+
+			ret.setServiceTypeDisplayName(xxServiceDef.getDisplayName());
+		}
 		ret.setHostName(xObj.getHostName());
 		ret.setAppType(xObj.getAppType());
 		ret.setIpAddress(xObj.getIpAddress());
 		ret.setInfo(jsonStringToMap(xObj.getInfo(), xxServiceVersionInfo, hasAssociatedTagService));
+
+		XXService xxService = daoManager.getXXService().findByName(ret.getServiceName());
+		if (xxService != null) {
+			ret.setServiceDisplayName(xxService.getDisplayName());
+		}
 		return ret;
 	}
 

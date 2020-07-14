@@ -2145,7 +2145,6 @@ public class TestServiceDBStore {
 
 		//PList<RangerPolicy> dbRangerPolicyList =
         serviceDBStore.getPaginatedServicePolicies(rangerService.getId(), filter);
-		Mockito.verify(daoManager).getXXService();
 	}
 
 	@Test
@@ -2502,5 +2501,64 @@ public class TestServiceDBStore {
 
 		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXService();
 		Mockito.verify(daoManager).getXXServiceConfigMap();
+	}
+
+	@Test
+	public void test50hasServiceConfigForPluginChanged() throws Exception {
+		String pluginConfigKey = "ranger.plugin.testconfig";
+		String otherConfigKey = "ranger.other.testconfig";
+		Map<String, String> serviceConfigs = rangerService().getConfigs();
+		List<XXServiceConfigMap> xConfMapList = new ArrayList<XXServiceConfigMap>();
+		for (String key : serviceConfigs.keySet()) {
+			XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+			xConfMap.setConfigkey(key);
+			xConfMap.setConfigvalue(serviceConfigs.get(key));
+			xConfMap.setServiceId(Id);
+			xConfMapList.add(xConfMap);
+		}
+
+		Map<String, String> validConfig = new HashMap<String, String>();
+		validConfig.putAll(serviceConfigs);
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(null, null));
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		validConfig.put(pluginConfigKey, "test value added");
+		Assert.assertTrue(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		XXServiceConfigMap xConfMap = new XXServiceConfigMap();
+		xConfMap.setConfigkey(pluginConfigKey);
+		xConfMap.setConfigvalue("test value added");
+		xConfMap.setServiceId(Id);
+		xConfMapList.add(xConfMap);
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		validConfig.put(pluginConfigKey, "test value changed");
+		Assert.assertTrue(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		validConfig.remove(pluginConfigKey);
+		Assert.assertTrue(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+		int index = xConfMapList.size();
+		xConfMap = xConfMapList.remove(index - 1);
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		validConfig.put(otherConfigKey, "other test value added");
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		xConfMap = new XXServiceConfigMap();
+		xConfMap.setConfigkey(otherConfigKey);
+		xConfMap.setConfigvalue("other test value added");
+		xConfMap.setServiceId(Id);
+		xConfMapList.add(xConfMap);
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		validConfig.put(otherConfigKey, "other test value changed");
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		validConfig.remove(otherConfigKey);
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+
+		index = xConfMapList.size();
+		xConfMap = xConfMapList.remove(index - 1);
+		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
 	}
 }

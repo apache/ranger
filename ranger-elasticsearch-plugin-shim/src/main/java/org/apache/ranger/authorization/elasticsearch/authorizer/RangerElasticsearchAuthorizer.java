@@ -19,18 +19,18 @@ package org.apache.ranger.authorization.elasticsearch.authorizer;
 
 import java.util.List;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
-import org.elasticsearch.common.logging.ESLoggerFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 
 public class RangerElasticsearchAuthorizer {
 
-	private static final Logger LOG = ESLoggerFactory.getLogger(RangerElasticsearchAuthorizer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerElasticsearchAuthorizer.class);
 
 	private static final String RANGER_PLUGIN_TYPE = "elasticsearch";
 
 	private static final String RANGER_ELASTICSEARCH_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.elasticsearch.authorizer.RangerElasticsearchAuthorizer";
-
 	private static RangerPluginClassLoader rangerPluginClassLoader = null;
 
 	private static ClassLoader esClassLoader = null;
@@ -67,9 +67,7 @@ public class RangerElasticsearchAuthorizer {
 			@SuppressWarnings("unchecked")
 			Class<RangerElasticsearchAccessControl> cls = (Class<RangerElasticsearchAccessControl>) Class
 					.forName(RANGER_ELASTICSEARCH_AUTHORIZER_IMPL_CLASSNAME, true, rangerPluginClassLoader);
-
 			activatePluginClassLoader();
-
 			rangerElasticsearchAccessControl = cls.newInstance();
 		} catch (Exception e) {
 			LOG.error("Error Enabling RangerElasticsearchAuthorizer", e);

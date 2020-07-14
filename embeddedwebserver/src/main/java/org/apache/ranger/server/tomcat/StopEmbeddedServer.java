@@ -37,10 +37,10 @@ public class StopEmbeddedServer extends EmbeddedServer {
 	public void stop() {
 		
 		try {
-			
-			int shutdownPort = getIntConfig("ranger.service.shutdown.port", DEFAULT_SHUTDOWN_PORT );
-			String shutdownCommand = getConfig("ranger.service.shutdown.command", DEFAULT_SHUTDOWN_COMMAND );
-			
+
+			int shutdownPort = EmbeddedServerUtil.getIntConfig("ranger.service.shutdown.port", DEFAULT_SHUTDOWN_PORT );
+			String shutdownCommand = EmbeddedServerUtil.getConfig("ranger.service.shutdown.command", DEFAULT_SHUTDOWN_COMMAND );
+
 			Socket sock = new Socket(SHUTDOWN_HOSTNAME,shutdownPort);
 			
 			PrintWriter out = new PrintWriter(sock.getOutputStream(), true);

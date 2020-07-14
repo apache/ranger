@@ -310,7 +310,7 @@
         },
         {
           "name": "Ancestor with wildcards match for 'finance,hr,tmp*:tax,employee,tmp*:' policy",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "policy" : {
             "service" : "any",
             "name" : "test",
@@ -383,7 +383,7 @@
         },
         {
           "name": "Ancestor with wildcards match for 'finance,hr,tmp*::' policy",
-          "type": "ancestorWithWildcardsMatch",
+          "type": "selfAndAllDescendants",
           "policy" : {
             "service" : "any",
             "name" : "test",

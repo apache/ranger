@@ -29,8 +29,6 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.Future;
 
-import org.I0Itec.zkclient.ZkClient;
-import org.I0Itec.zkclient.ZkConnection;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -46,12 +44,8 @@ import org.apache.kafka.common.config.SslConfigs;
 import org.junit.Assert;
 import org.junit.Test;
 
-import kafka.admin.AdminUtils;
-import kafka.admin.RackAwareMode;
 import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
-import kafka.utils.ZKStringSerializer$;
-import kafka.utils.ZkUtils;
 
 /**
  * A simple test that starts a Kafka broker, creates "test" and "dev" topics, sends a message to them and consumes it. We also plug in a 
@@ -143,11 +137,7 @@ public class KafkaRangerAuthorizerTest {
         kafkaServer.startup();
 
         // Create some topics
-        ZkClient zkClient = new ZkClient(zkServer.getConnectString(), 30000, 30000, ZKStringSerializer$.MODULE$);
-
-        final ZkUtils zkUtils = new ZkUtils(zkClient, new ZkConnection(zkServer.getConnectString()), false);
-        AdminUtils.createTopic(zkUtils, "test", 1, 1, new Properties(), RackAwareMode.Enforced$.MODULE$);
-        AdminUtils.createTopic(zkUtils, "dev", 1, 1, new Properties(), RackAwareMode.Enforced$.MODULE$);
+        KafkaTestUtils.createSomeTopics(zkServer.getConnectString());
     }
     
     @org.junit.AfterClass

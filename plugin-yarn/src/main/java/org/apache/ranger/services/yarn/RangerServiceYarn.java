@@ -18,6 +18,7 @@
 package org.apache.ranger.services.yarn;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,16 +27,20 @@ import org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.yarn.client.YarnResourceMgr;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
 public class RangerServiceYarn extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceYarn.class);
+	public static final String ACCESS_TYPE_SUBMIT_APP  = "submit-app";
 	
 	public RangerServiceYarn() {
 		super();
@@ -102,6 +107,15 @@ public class RangerServiceYarn extends RangerBaseService {
 		for (RangerPolicy defaultPolicy : ret) {
 			if(defaultPolicy.getName().contains("all")){
 				RangerPolicy.RangerPolicyResource queuePolicyResource = defaultPolicy.getResources().get(queueResourceName);
+
+				if (StringUtils.isNotBlank(lookUpUser)) {
+					RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+					policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+					policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_SUBMIT_APP)));
+					policyItemForLookupUser.setDelegateAdmin(false);
+					defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+				}
+
 				if (queuePolicyResource != null) {
 					List<RangerServiceDef.RangerResourceDef> resourceDefs = serviceDef.getResources();
 					RangerServiceDef.RangerResourceDef queueResourceDef = null;

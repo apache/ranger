@@ -37,6 +37,8 @@ public interface RangerAccessRequest {
 
 	Set<String> getUserGroups();
 
+	Set<String> getUserRoles();
+
 	Date getAccessTime();
 
 	String getClientIPAddress();

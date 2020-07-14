@@ -26,6 +26,7 @@ public class XUserInfo {
 	private String id;
 	private String name;
 	private String 	description;
+	private String otherAttributes;
     private List<String> groupNameList = new ArrayList<String>();
     private List<String> userRoleList = new ArrayList<String>();
 	
@@ -74,7 +75,15 @@ public class XUserInfo {
         this.userRoleList = userRoleList;
     }
 
-    @Override
+	public String getOtherAttributes() {
+		return otherAttributes;
+	}
+
+	public void setOtherAttributes(String otherAttributes) {
+		this.otherAttributes = otherAttributes;
+	}
+
+	@Override
     public String toString() {
         return "XUserInfo [id=" + id + ", name=" + name + ", description="
                 + description + ", groupNameList=" + groupNameList

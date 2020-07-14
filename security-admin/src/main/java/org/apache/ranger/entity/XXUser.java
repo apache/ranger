@@ -37,6 +37,8 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 
+import java.util.Objects;
+
 
 @Entity
 @Table(name="x_user")
@@ -106,6 +108,14 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 	@Column(name="CRED_STORE_ID"   )
 	protected Long credStoreId;
 
+	/**
+	 * Additional store attributes.
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name="OTHER_ATTRIBUTES")
+	protected String otherAttributes;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -212,6 +222,23 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 
 
 	/**
+	 * This method sets JSON {@link String} representation of additional store attributes.
+	 * This method accepts null values.
+	 * @param otherAttributes
+	 */
+	public void setOtherAttributes(String otherAttributes) {
+		this.otherAttributes = otherAttributes;
+	}
+
+	/**
+	 * @return JSON {@link String} representation of additional store attributes if available,
+	 * <code>null</code> otherwise.
+	 */
+	public String getOtherAttributes() {
+		return otherAttributes;
+	}
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -224,6 +251,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 		str += "status={" + status + "} ";
 		str += "isvisible={" + isVisible + "} ";
 		str += "credStoreId={" + credStoreId + "} ";
+		str += "otherAttributes={" + otherAttributes + "} ";
 		str += "}";
 		return str;
 	}
@@ -259,4 +287,8 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 		return null;
 	}
 
+	@Override
+	public int hashCode() {
+		return Objects.hash(super.hashCode(), name, description, status, credStoreId);
+	}
 }

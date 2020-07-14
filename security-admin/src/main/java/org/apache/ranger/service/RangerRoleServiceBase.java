@@ -34,6 +34,19 @@ public abstract class RangerRoleServiceBase<T extends XXRole, V extends RangerRo
 
         searchFields.add(new SearchField(SearchFilter.ROLE_ID, "obj.id", SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField(SearchFilter.ROLE_NAME, "obj.name", SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
+		searchFields.add(new SearchField(SearchFilter.GROUP_NAME, "xXRoleRefGroup.groupName",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL, "XXRoleRefGroup xXRoleRefGroup",
+				"xXRoleRefGroup.roleId = obj.id"));
+		searchFields.add(new SearchField(SearchFilter.USER_NAME, "xXRoleRefUser.userName", SearchField.DATA_TYPE.STRING,
+				SearchField.SEARCH_TYPE.FULL, "XXRoleRefUser xXRoleRefUser", "xXRoleRefUser.roleId = obj.id"));
+		searchFields.add(new SearchField(SearchFilter.ROLE_NAME_PARTIAL, "obj.name", SearchField.DATA_TYPE.STRING,
+				SearchField.SEARCH_TYPE.PARTIAL));
+		searchFields.add(new SearchField(SearchFilter.GROUP_NAME_PARTIAL, "xXRoleRefGroup.groupName",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefGroup xXRoleRefGroup",
+				"xXRoleRefGroup.roleId = obj.id"));
+		searchFields.add(new SearchField(SearchFilter.USER_NAME_PARTIAL, "xXRoleRefUser.userName",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL, "XXRoleRefUser xXRoleRefUser",
+				"xXRoleRefUser.roleId = obj.id"));
 
         sortFields.add(new SortField(SearchFilter.CREATE_TIME, "obj.createTime"));
         sortFields.add(new SortField(SearchFilter.UPDATE_TIME, "obj.updateTime"));
