@@ -86,15 +86,18 @@ public class RequestUtils {
 		}
 
 		if (request instanceof SearchRequest) {
-			return Arrays.asList(((SearchRequest) request).indices());
+			indexs = Arrays.asList(((SearchRequest) request).indices());
+			return indexs.size() == 0? Arrays.asList("*") : indexs;
 		}
 
 		if (request instanceof IndicesStatsRequest) {
-			return Arrays.asList(((IndicesStatsRequest) request).indices());
+			indexs = Arrays.asList(((IndicesStatsRequest) request).indices());
+			return indexs.size() == 0? Arrays.asList("*") : indexs;
 		}
 
 		if (request instanceof OpenIndexRequest) {
-			return Arrays.asList(((OpenIndexRequest) request).indices());
+			indexs = Arrays.asList(((OpenIndexRequest) request).indices());
+			return indexs.size() == 0? Arrays.asList("*") : indexs;
 		}
 
 		if (request instanceof DeleteIndexRequest) {
