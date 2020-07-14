@@ -60,7 +60,11 @@ public class RequestUtils {
 		List<String> indexs = new ArrayList<>();
 
 		if (request instanceof SingleShardRequest) {
-			indexs.add(((SingleShardRequest<?>) request).index());
+			String index = (SingleShardRequest<?>) request).index();
+			if (index == null) {
+				return Arrays.asList("*");
+			}
+			indexs.add(index);
 			return indexs;
 		}
 
