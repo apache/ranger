@@ -185,18 +185,20 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                 }
             }
         }
-        KerberosTicket ticket = CredentialsProviderUtil.getTGT(subject);
-        try {
-            if (new Date().getTime() > ticket.getEndTime().getTime()){
-                client = null;
-                CredentialsProviderUtil.ticketExpireTime80 = 0;
-                newClient();
-            } else if (CredentialsProviderUtil.ticketWillExpire(ticket)) {
-                subject = CredentialsProviderUtil.login(user, password);
+        if (subject != null) {
+            KerberosTicket ticket = CredentialsProviderUtil.getTGT(subject);
+            try {
+                if (new Date().getTime() > ticket.getEndTime().getTime()){
+                    client = null;
+                    CredentialsProviderUtil.ticketExpireTime80 = 0;
+                    newClient();
+                } else if (CredentialsProviderUtil.ticketWillExpire(ticket)) {
+                    subject = CredentialsProviderUtil.login(user, password);
+                }
+            } catch (PrivilegedActionException e) {
+                LOG.error("PrivilegedActionException:", e);
+                throw new RuntimeException(e);
             }
-        } catch (PrivilegedActionException e) {
-            LOG.error("PrivilegedActionException:", e);
-            throw new RuntimeException(e);
         }
         return client;
     }
@@ -209,7 +211,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                         .map(x -> new HttpHost(x, port, protocol))
                         .<HttpHost>toArray(i -> new HttpHost[i])
         );
-        if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password)) {
+        if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password) && !user.equalsIgnoreCase("NONE") && !password.equalsIgnoreCase("NONE")) {
             if (password.contains("keytab") && new File(password).exists()) {
                 final KerberosCredentialsProvider credentialsProvider =
                         CredentialsProviderUtil.getKerberosCredentials(user, password);

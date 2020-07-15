@@ -103,7 +103,7 @@ public class ElasticSearchMgr {
 						.map(x -> new HttpHost(x, port, protocol))
 						.<HttpHost>toArray(i -> new HttpHost[i])
 		);
-		if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password)) {
+		if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password) && !user.equalsIgnoreCase("NONE") && !password.equalsIgnoreCase("NONE")) {
 			if (password.contains("keytab") && new File(password).exists()) {
 				final KerberosCredentialsProvider credentialsProvider =
 						CredentialsProviderUtil.getKerberosCredentials(user, password);
@@ -131,7 +131,7 @@ public class ElasticSearchMgr {
 
 	RestHighLevelClient client = null;
 	public RestHighLevelClient getClient() {
-		if(client !=null) {
+		if (client != null && subject != null) {
 			KerberosTicket ticket = CredentialsProviderUtil.getTGT(subject);
 			try {
 				if (new Date().getTime() > ticket.getEndTime().getTime()){
