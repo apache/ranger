@@ -89,6 +89,7 @@ public class AtlasResourceMapperUtil {
 		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHdfsResourceMapper");
 		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasHbaseResourceMapper");
 		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasKafkaResourceMapper");
+		mapperNames.add("org.apache.ranger.tagsync.source.atlas.AtlasOzoneResourceMapper");
 
 		mapperNames.add(AtlasAdlsResourceMapper.class.getName());
 
