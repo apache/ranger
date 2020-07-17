@@ -45,9 +45,6 @@
         <system>JIRA</system>
         <url>https://issues.apache.org/jira/browse/ranger</url>
     </issueManagement>
-    <prerequisites>
-        <maven>3.0.1</maven>
-    </prerequisites>
     <mailingLists>
         <mailingList>
             <name>Dev Mailing List</name>
@@ -672,6 +669,26 @@
                                 <goals>
                                     <goal>sign</goal>
                                 </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-enforcer-plugin</artifactId>
+                        <version>1.4.1</version>
+                        <executions>
+                            <execution>
+                                <id>enforce-maven</id>
+                                <goals>
+                                    <goal>enforce</goal>
+                                </goals>
+                                <configuration>
+                                    <rules>
+                                        <requireMavenVersion>
+                                            <version>3.0.1</version>
+                                        </requireMavenVersion>
+                                    </rules>
+                                </configuration>
                             </execution>
                         </executions>
                     </plugin>
