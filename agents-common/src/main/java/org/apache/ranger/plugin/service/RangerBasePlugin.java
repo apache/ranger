@@ -205,7 +205,7 @@ public class RangerBasePlugin {
 				Boolean hasPolicyDeltas = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
 
 				if (hasPolicyDeltas == null) {
-					LOG.warn("Policies and policy-deltas are empty!! Keeping old policy-engine!");
+					LOG.warn("Downloaded policies are internally inconsistent!! [" + policies + "]. Please check server-side code! Keeping old policy-engine!");
 					isNewEngineNeeded = false;
 				} else {
 					if (hasPolicyDeltas.equals(Boolean.TRUE)) {

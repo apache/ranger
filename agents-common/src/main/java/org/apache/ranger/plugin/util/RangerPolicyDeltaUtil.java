@@ -165,28 +165,28 @@ public class RangerPolicyDeltaUtil {
             LOG.error("ServicePolicies are null!");
             ret = null;
         } else {
-            Boolean isDeltasInSecurityZones = null;
+            boolean isPoliciesExistInSecurityZones     = false;
+            boolean isPolicyDeltasExistInSecurityZones = false;
 
             if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
                 for (ServicePolicies.SecurityZoneInfo element : servicePolicies.getSecurityZones().values()) {
                     if (CollectionUtils.isNotEmpty(element.getPolicies()) && CollectionUtils.isEmpty(element.getPolicyDeltas())) {
-                        isDeltasInSecurityZones = false;
-                        break;
+                        isPoliciesExistInSecurityZones = true;
                     }
                     if (CollectionUtils.isEmpty(element.getPolicies()) && CollectionUtils.isNotEmpty(element.getPolicyDeltas())) {
-                        isDeltasInSecurityZones = true;
-                        break;
+                        isPolicyDeltasExistInSecurityZones = true;
                     }
                 }
             }
 
-            if (CollectionUtils.isNotEmpty(servicePolicies.getPolicies()) || (servicePolicies.getTagPolicies() != null && CollectionUtils.isNotEmpty(servicePolicies.getTagPolicies().getPolicies())) || (isDeltasInSecurityZones != null && isDeltasInSecurityZones.equals(Boolean.FALSE))) {
-                ret = false;
-            } else if (CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) || (isDeltasInSecurityZones != null && isDeltasInSecurityZones.equals(Boolean.TRUE))) {
-                ret = true;
-            } else {
-                LOG.warn("ServicePolicies contain either both policies and policy-deltas or contain neither policies nor policy-deltas!");
+            boolean isPoliciesExist     = CollectionUtils.isNotEmpty(servicePolicies.getPolicies()) || (servicePolicies.getTagPolicies() != null && CollectionUtils.isNotEmpty(servicePolicies.getTagPolicies().getPolicies())) || isPoliciesExistInSecurityZones;
+            boolean isPolicyDeltasExist = CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) || isPolicyDeltasExistInSecurityZones;
+
+            if (isPoliciesExist && isPolicyDeltasExist) {
+                LOG.warn("ServicePolicies contain both policies and policy-deltas!!");
                 ret = null;
+            } else {
+                ret = isPolicyDeltasExist;
             }
         }
         if (LOG.isDebugEnabled()) {
