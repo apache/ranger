@@ -38,6 +38,7 @@ BEGIN
   IF EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = @tablename and column_name = 'sort_order' and DATA_TYPE='tinyint')
   BEGIN
     DECLARE @ObjectName VARCHAR(100);
+    DECLARE @stmt VARCHAR(100);
     SELECT @ObjectName = OBJECT_NAME([default_object_id]) FROM SYS.COLUMNS WHERE [object_id] = OBJECT_ID('[dbo].[' + @tablename + ']') AND [name] = 'sort_order';
     IF @ObjectName IS NOT NULL
     BEGIN
