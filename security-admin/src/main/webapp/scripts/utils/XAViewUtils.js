@@ -31,7 +31,7 @@ define(function(require) {
     XAViewUtil.resourceTypeFormatter = function(rawValue, model){
         var resourcePath = _.isUndefined(model.get('resourcePath')) ? undefined : model.get('resourcePath');
         var resourceType = _.isUndefined(model.get('resourceType')) ? undefined : model.get('resourceType');
-        if((model.get('serviceType') === XAEnums.ServiceType.Service_HIVE.label || model.get('serviceType') === XAEnums.ServiceType.Service_HBASE.label)
+        if((model.get('serviceType') === XAEnums.ServiceType.Service_HIVE.label || model.get('serviceType') === XAEnums.ServiceType.Service_HBASE.label || model.get('serviceType') === XAEnums.ServiceType.Service_SOLR.label)
             && model.get('aclEnforcer') === "ranger-acl"
             && model.get('requestData')){
             if(resourcePath && !_.isEmpty(model.get('requestData'))) {
@@ -65,12 +65,13 @@ define(function(require) {
     };
 
     XAViewUtil.showQueryPopup = function(model, that){
-        if((model.get('serviceType') === XAEnums.ServiceType.Service_HIVE.label || model.get('serviceType') === XAEnums.ServiceType.Service_HBASE.label)
+        if((model.get('serviceType') === XAEnums.ServiceType.Service_HIVE.label || model.get('serviceType') === XAEnums.ServiceType.Service_HBASE.label || model.get('serviceType') === XAEnums.ServiceType.Service_SOLR.label)
             && model.get('aclEnforcer') === "ranger-acl"
             && model.get('requestData') && !_.isEmpty(model.get('requestData'))){
             var titleMap = {};
             titleMap[XAEnums.ServiceType.Service_HIVE.label] = 'Hive Query';
             titleMap[XAEnums.ServiceType.Service_HBASE.label] = 'HBase Audit Data';
+            titleMap[XAEnums.ServiceType.Service_SOLR.label] = 'Solr Query';
             var msg = '<div class="pull-right link-tag query-icon copyQuery btn btn-mini" title="Copy Query"><i class="icon-copy"></i></div><div class="query-content">'+model.get('requestData')+'</div>';
             var $elements = that.$el.find('table [data-name = "queryInfo"][data-id = "'+model.id+'"]');
             $elements.popover({

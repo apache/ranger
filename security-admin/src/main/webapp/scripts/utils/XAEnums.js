@@ -120,7 +120,8 @@ define(function(require) {
 		ASSET_HIVE:{value:3, label:'Hive', rbkey:'xa.enum.AssetType.ASSET_HIVE', tt: 'lbl.AssetType_ASSET_HIVE'},
 		ASSET_AGENT:{value:4, label:'Agent', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
 		ASSET_KNOX:{value:5, label:'Knox', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
-		ASSET_STORM:{value:6, label:'Storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'}
+		ASSET_STORM:{value:6, label:'Storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'},
+		ASSET_SOLR:{value:7, label:'Solr', rbkey:'xa.enum.AssetType.ASSET_SOLR', tt: 'lbl.AssetType_ASSET_SOLR'}
 	});
 	
 	XAEnums.ServiceType = mergeParams(XAEnums.ServiceType, {
@@ -130,8 +131,9 @@ define(function(require) {
 		Service_HBASE:{value:3, label:'hbase', rbkey:'xa.enum.AssetType.ASSET_HBASE', tt: 'lbl.AssetType_ASSET_HBASE'},
 		Service_KNOX:{value:4, label:'knox', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
 		Service_STORM:{value:5, label:'storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'},
-    SERVICE_TAG:{value:6, label:'tag', rbkey:'xa.enum.ServiceType.SERVICE_TAG', tt: 'lbl.ServiceType_SERVICE_TAG'},
-    Service_KMS:{value:7, label:'kms', rbkey:'xa.enum.ServiceType.SERVICE_KMS', tt: 'lbl.ServiceType_SERVICE_KMS'}
+		Service_SOLR:{value:6, label:'solr', rbkey:'xa.enum.AssetType.ASSET_SOLR', tt: 'lbl.AssetType_ASSET_SOLR'},
+    SERVICE_TAG:{value:7, label:'tag', rbkey:'xa.enum.ServiceType.SERVICE_TAG', tt: 'lbl.ServiceType_SERVICE_TAG'},
+    Service_KMS:{value:8, label:'kms', rbkey:'xa.enum.ServiceType.SERVICE_KMS', tt: 'lbl.ServiceType_SERVICE_KMS'}
 	});
 
 	XAEnums.AuthStatus = mergeParams(XAEnums.AuthStatus, {

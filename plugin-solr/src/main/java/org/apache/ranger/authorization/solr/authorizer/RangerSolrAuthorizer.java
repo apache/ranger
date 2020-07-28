@@ -41,6 +41,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
@@ -109,8 +110,6 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 	private String andQParserName;
 
 	private static volatile RangerBasePlugin solrPlugin = null;
-
-	private RangerSolrAuditHandler auditHandler = null;
 
 	boolean useProxyIP = false;
 	String proxyIPHeader = "HTTP_X_FORWARDED_FOR";
@@ -202,12 +201,12 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 						logger.info("Creating RangerSolrPlugin");
 						me = solrPlugin = new RangerBasePlugin("solr", "solr");
 					}
+					logger.info("Calling solrPlugin.init()");
+					solrPlugin.init();
+					solrPlugin.setResultProcessor(new RangerSolrAuditHandler(solrPlugin.getConfig()));
 				}
 			}
-			logger.info("Calling solrPlugin.init()");
-			solrPlugin.init();
-			auditHandler = new RangerSolrAuditHandler(solrPlugin.getConfig());
-			solrPlugin.setResultProcessor(auditHandler);
+
 			useProxyIP = solrPlugin.getConfig().getBoolean(
 					PROP_USE_PROXY_IP, useProxyIP);
 			proxyIPHeader = solrPlugin.getConfig().get(
@@ -267,6 +266,8 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 				logger.debug("==> RangerSolrAuthorizer.authorize()");
 				logAuthorizationConext(context);
 			}
+
+			RangerSolrAuditHandler auditHandler = new RangerSolrAuditHandler(solrPlugin.getConfig());
 
 			RangerPerfTracer perf = null;
 
@@ -373,6 +374,8 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 		if (SUPERUSER.equals(userName)) {
 			return;
 		}
+		RangerSolrAuditHandler auditHandler = new RangerSolrAuditHandler(solrPlugin.getConfig());
+		boolean isDenied = false;
 
 		if (attrsEnabled) {
 			if (logger.isDebugEnabled()) {
@@ -380,7 +383,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 			}
 			if (getUserStoreEnricher() == null || getUserStoreEnricher().getRangerUserStore() == null) {
 				logger.error("No User store enricher to read the ldap attributes");
-				return;
+				isDenied = true;
 			}
 			// Ranger UserStore info for user/group attributes
 			Map<String, Map<String, String>> userAttrMapping = getUserStoreEnricher().getRangerUserStore().getUserAttrMapping();
@@ -418,9 +421,50 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 				}
 
 			} else {
-				throw new SolrException(SolrException.ErrorCode.UNAUTHORIZED,
-						"Request from user: " + userName + " rejected because user is not associated with any roles");
+				isDenied = true;
 			}
+		}
+		HttpServletRequest httpServletRequest = (HttpServletRequest) rb.req.getContext().get("httpRequest");
+		if (httpServletRequest == null) {
+		}
+		String ip = null;
+		Date eventTime = new Date();
+		// Set the IP
+		if (useProxyIP) {
+			ip = httpServletRequest.getHeader("X-Forwarded-For");
+		}
+
+		if (ip == null) {
+			ip = httpServletRequest.getRemoteAddr();
+		}
+
+		try {
+
+			RangerAccessRequestImpl rangerRequest = createQueryRequest(
+					userName, getGroupsForUser(userName), ip, eventTime, rb.req);
+			if (isDenied == true) {
+				RangerAccessResult result = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, solrPlugin.getServiceName(), solrPlugin.getServiceDef(), rangerRequest);
+				result.setIsAllowed(false);
+				result.setPolicyId(-1);
+				result.setIsAccessDetermined(true);
+				result.setIsAudited(true);
+				auditHandler.processResult(result);
+			} else {
+				RangerAccessResult result = solrPlugin.isAccessAllowed(
+						rangerRequest, auditHandler);
+				if (logger.isDebugEnabled()) {
+					logger.debug("rangerRequest=" + result);
+				}
+				if (result == null) {
+					isDenied = true;
+				}
+			}
+		} finally {
+			auditHandler.flushAudit();
+		}
+		if (isDenied == true) {
+			throw new SolrException(SolrException.ErrorCode.UNAUTHORIZED,
+					"Permission denied for user: " + userName);
 		}
 	}
 
@@ -543,6 +587,26 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 		rangerRequest.setResource(rangerResource);
 		rangerRequest.setAccessType(accessType);
 		rangerRequest.setAction(action);
+
+		return rangerRequest;
+	}
+
+	private RangerAccessRequestImpl createQueryRequest(String userName,
+													   Set<String> userGroups, String ip, Date eventTime,
+													   SolrQueryRequest queryRequest) {
+
+		String accessType = ACCESS_TYPE_OTHERS;
+		String action = ACCESS_TYPE_QUERY;
+		RangerAccessRequestImpl rangerRequest = createBaseRequest(userName,
+				userGroups, ip, eventTime);
+		RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+		rangerResource.setServiceDef(solrPlugin.getServiceDef());
+		rangerResource.setValue(KEY_COLLECTION, queryRequest.getCore().getCoreDescriptor().getCollectionName());
+		rangerRequest.setResource(rangerResource);
+		rangerRequest.setAccessType(accessType);
+		rangerRequest.setAction(action);
+		rangerRequest.setRequestData(queryRequest.getParams().toLocalParamsString());
+		rangerRequest.setClusterName(solrPlugin.getClusterName());
 
 		return rangerRequest;
 	}
