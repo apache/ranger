@@ -61,6 +61,7 @@ define(function(require) {
 
         initialize: function(options) {
             console.log("initialized a Security Zone");
+            _.extend(this, _.pick(options, 'rangerService', 'zoneId'));
             var that = this;
             this.zoneResourcesColl = new RangerPolicyResourceList();
         },
@@ -106,7 +107,7 @@ define(function(require) {
         },
 
         getZoneModel: function() {
-           this.zoneModel = this.collection.get(this.options.zoneId);
+           this.zoneModel = this.collection.get(this.zoneId);
             if(_.isUndefined(this.zoneModel)){
                 this.zoneModel = _.first(this.collection.models);
             }
@@ -117,7 +118,7 @@ define(function(require) {
             var that = this, resources = [];
             if(zoneModel){
                 _.each(zoneModel.get('services'), function(value, key) {
-                    var serviceType = that.options.rangerService.models.find(function(m) {
+                    var serviceType = that.rangerService.models.find(function(m) {
                         if (m.get('name') == key)
                             return m.get('type')
                     })

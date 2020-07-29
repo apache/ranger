@@ -95,8 +95,8 @@ require.config({
 
         jquery: '../libs/bower/jquery/js/jquery-3.5.1.min',
         'jquery-ui': '../libs/other/jquery-ui/js/jquery-ui.min',
-        backbone: '../libs/bower/backbone-amd/js/backbone',
-        underscore: '../libs/bower/underscore-amd/js/underscore',
+        backbone: '../libs/bower/backbone/js/backbone',
+        underscore: '../libs/bower/underscore/js/underscore',
 
         /* alias all marionette libs */
         'backbone.marionette': '../libs/bower/backbone.marionette/js/backbone.marionette',

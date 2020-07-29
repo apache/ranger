@@ -555,10 +555,10 @@ define(function(require){
                     function(zone) {
                         if(that.rangerZoneList.models[0].get('name') == zone.get('name')) {
                             that.ui.zoneUlList.append('<li class="trim-containt" title="'+_.escape(zone.get('name'))+
-                                '" data-action="zoneListing" data-id="' + _.escape(zone.get('name')) + '">' + _.escape(zone.get('name')) + '</li>');
+                                '" data-action="zoneListing" data-id="' + _.escape(zone.get('name')) + '"><a href="#!/zones/zone/'+zone.get('id')+'">' + _.escape(zone.get('name')) + '</a></li>');
                         } else {
                             that.ui.zoneUlList.append('<li class="trim-containt" data-action="zoneListing" title="'
-                                +_.escape(zone.get('name'))+'" data-id="' + _.escape(zone.get('name')) + '">' + _.escape(zone.get('name')) + '</li>');
+                                +_.escape(zone.get('name'))+'" data-id="' + _.escape(zone.get('name')) + '"><a href="#!/zones/zone/'+zone.get('id')+'">' + _.escape(zone.get('name')) + '</a></li>');
                         }
                     }
                 );

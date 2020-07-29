@@ -36,19 +36,19 @@ define(function(require) {
                 template: RangerServiceViewDetailTmpl,
                 templateHelpers: function() {
                     var that = this, tagDetails = [];
-                    if(this.options.rangerService.get('tagService') && !_.isEmpty(this.options.rangerService.get('tagService'))) {
-                        tagDetails = this.options.rangerSeviceList.find(function(m) {
-                            return m.get('name') == that.options.rangerService.get('tagService')
+                    if(this.rangerService.get('tagService') && !_.isEmpty(this.rangerService.get('tagService'))) {
+                        tagDetails = this.rangerSeviceList.find(function(m) {
+                            return m.get('name') == that.rangerService.get('tagService')
                         })
                     }
                     return {
                        configsList : this.conf,
                        customConfigs : this.customConfigs,
-                       serviceName : this.options.rangerService.get('name'),
-                       description : this.options.rangerService.get('description'),
-                       isEnabled   : this.options.rangerService.get('isEnabled'),
+                       serviceName : this.rangerService.get('name'),
+                       description : this.rangerService.get('description'),
+                       isEnabled   : this.rangerService.get('isEnabled'),
                        tagService  : (!_.isEmpty(tagDetails)) ? tagDetails.get('displayName') : false,
-                       displayName : this.options.rangerService.get('displayName'),
+                       displayName : this.rangerService.get('displayName'),
                    }
                 },
 
@@ -58,8 +58,9 @@ define(function(require) {
                  */
                 initialize: function(options) {
                     console.log("initialized a Ranger Service View Diff");
+                    _.extend(this, _.pick(options, 'serviceDef', 'rangerService', 'rangerSeviceList'));
                     var that = this;
-                    that.getTemplateForservice(this.options);
+                    that.getTemplateForservice(this);
                 },
                 getTemplateForservice : function(options){
                     var configList = options.serviceDef.get('configs');
