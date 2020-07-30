@@ -217,7 +217,7 @@
         <org.bouncycastle.bcpkix-jdk15on>1.59</org.bouncycastle.bcpkix-jdk15on>
         <lucene.version>8.4.0</lucene.version>
         <hppc.version>0.8.0</hppc.version>
-        <joda.time.version>2.10.5</joda.time.version>
+        <joda.time.version>2.10.6</joda.time.version>
         <log4j.core.version>2.11.1</log4j.core.version>
     </properties>
     <profiles>
