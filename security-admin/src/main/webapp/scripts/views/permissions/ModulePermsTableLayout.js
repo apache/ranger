@@ -84,7 +84,8 @@ define(function(require){
 		initialize: function(options) {
 			console.log("initialized a ModulePermsTableLayout Layout");
 			
-                _.extend(this, _.pick(options, 'urlQueryParams'));
+                _.extend(this, _.pick(options));
+                this.urlQueryParams = XAUtil.urlQueryParams();
 			this.bindEvents();
 		},
 

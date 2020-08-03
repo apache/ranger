@@ -112,7 +112,8 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a RangerPolicyTableLayout Layout");
-                        _.extend(this, _.pick(options,'rangerService', 'urlQueryParams'));
+			_.extend(this, _.pick(options,'rangerService', 'urlQueryParams'));
+			this.urlQueryParams = XAUtil.urlQueryParams(); 
 			this.bindEvents();
 			this.initializeServiceDef();
 			if(_.isUndefined(App.vZone)) {
