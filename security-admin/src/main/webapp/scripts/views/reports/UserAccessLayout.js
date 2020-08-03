@@ -112,7 +112,8 @@ define(function(require) {'use strict';
 		 */
 		initialize : function(options) {
 			console.log("initialized a UserAccessLayout Layout");
-			_.extend(this, _.pick(options, 'groupList','userList', 'urlQueryParams'));
+			_.extend(this, _.pick(options, 'groupList','userList'));
+			this.urlQueryParams = XAUtil.urlQueryParams();
 			this.bindEvents();
 			this.previousSearchUrl = '';
 			this.searchedFlag = false;

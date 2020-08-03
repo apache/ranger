@@ -1894,5 +1894,11 @@ define(function(require) {
         }
     }
 
+    //Separate query parameters string from URL hash
+    XAUtils.urlQueryParams = function() {
+    	var urlHash = Backbone.history.location.hash;
+    	return urlHash.indexOf("?") !== -1 ? urlHash.substring(urlHash.indexOf("?") + 1) : undefined;
+    }
+
 	return XAUtils;
 });

@@ -79,7 +79,8 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a KmsTableLayout Layout");
-                        _.extend(this, _.pick(options, 'tab','kmsServiceName','kmsManagePage', 'urlQueryParams'));
+            _.extend(this, _.pick(options, 'tab','kmsServiceName','kmsManagePage'));
+            this.urlQueryParams = XAUtil.urlQueryParams();
 			this.showKeyList = true;
 			this.isKnownKmsServicePage =  this.kmsManagePage == 'new' ? false : true;
 			this.initializeKMSServices();

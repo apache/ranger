@@ -27,6 +27,12 @@
 	require('backgrid');
 	require('jquery-toggles');
 
+	Backbone.history.getHash = function(window) {
+		var pathStripper = /#.*$/;
+		var match = (window || this).location.href.match(/#(.*)$/);
+		return match ? this.decodeFragment(match[1].replace(pathStripper, '')) : '';
+	};
+
 	window.onbeforeunload = function(e) {
 		if (window._preventNavigation) {
 			var message = 'Are you sure you want to refresh the page? Unsaved changes will be lost.';

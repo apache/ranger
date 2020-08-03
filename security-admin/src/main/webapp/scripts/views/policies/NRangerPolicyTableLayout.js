@@ -132,7 +132,8 @@ define(function(require) {
              */
             initialize: function(options) {
                 console.log("initialized a NRangerPolicyTableLayout Layout");
-                _.extend(this, _.pick(options, 'rangerService', 'urlQueryParams'));
+                _.extend(this, _.pick(options, 'rangerService'));
+                this.urlQueryParams = XAUtil.urlQueryParams();
                 this.bindEvents();
                 this.initializeServiceDef();
                 this.initializeServices();
@@ -148,6 +149,7 @@ define(function(require) {
                     var searchFregment = XAUtil.changeUrlToSearchQuery(decodeURIComponent(this.urlQueryParams));
                     if (_.has(searchFregment, 'securityZone')) {
                         App.vZone.vZoneName = searchFregment['securityZone'];
+                        App.rSideBar.currentView.render();
                         searchFregment = _.omit(searchFregment, 'securityZone');
                         if (_.isEmpty(searchFregment)) {
                             this.urlQueryParams = '';

@@ -112,13 +112,12 @@ define(function(require){
                     vZoneName: ""
                 }
             }
-            if(this.type && this.type.split('?')[1]) {
-                var searchFregment = XAUtil.changeUrlToSearchQuery(decodeURIComponent(this.type.substring(this.type.indexOf("?") + 1)));
-                console.log(searchFregment);
-                if(_.has(searchFregment, 'securityZone')) {
-                        App.vZone.vZoneName = searchFregment['securityZone'];
-                }
-            }
+			if (!_.isUndefined(XAUtil.urlQueryParams())) {
+				var searchFregment = XAUtil.changeUrlToSearchQuery(decodeURIComponent(XAUtil.urlQueryParams()));
+				if(_.has(searchFregment, 'securityZone')) {
+					App.vZone.vZoneName = searchFregment['securityZone'];
+				}
+			}
         },
 
 		/** all events binding here */
