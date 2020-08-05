@@ -1065,7 +1065,7 @@ CREATE TABLE dbo.x_ugsync_audit_info(
 		no_of_new_groups bigint NOT NULL,
 		no_of_modified_users bigint NOT NULL,
 		no_of_modified_groups bigint NOT NULL,
-		sync_source_info varchar(4000) NOT NULL,
+		sync_source_info text NOT NULL,
 		session_id varchar(255) DEFAULT NULL NULL,
 		CONSTRAINT x_ugsync_audit_info_PK_id PRIMARY KEY CLUSTERED(id)
 )
@@ -2162,6 +2162,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('046',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('047',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('048',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
