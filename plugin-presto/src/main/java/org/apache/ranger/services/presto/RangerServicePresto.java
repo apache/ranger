@@ -20,6 +20,7 @@ package org.apache.ranger.services.presto;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
@@ -45,6 +46,9 @@ public class RangerServicePresto extends RangerBaseService {
 
     if (configs != null) {
       try {
+        if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
+          configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
+        }
         ret = PrestoResourceManager.connectionTest(serviceName, configs);
       } catch (HadoopException he) {
         LOG.error("<== RangerServicePresto.validateConfig Error:" + he);
@@ -71,6 +75,9 @@ public class RangerServicePresto extends RangerBaseService {
     }
     if (context != null) {
       try {
+        if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
+          configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
+        }
         ret  = PrestoResourceManager.getPrestoResources(serviceName, serviceType, configs,context);
       } catch (Exception e) {
         LOG.error( "<==RangerServicePresto.lookupResource Error : " + e);
