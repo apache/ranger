@@ -99,6 +99,7 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
                 userStoreRetriever.init(enricherDef.getEnricherOptions());
 
                 userStoreRefresher = new RangerUserStoreRefresher(userStoreRetriever, this, null, -1L, userStoreDownloadQueue, cacheFile);
+                LOG.info("Created Thread(RangerUserStoreRefresher(" + getName() + ")");
 
                 try {
                     userStoreRefresher.populateUserStoreInfo();

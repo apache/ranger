@@ -29,20 +29,16 @@ import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class JsonUtils {
     private static final Log LOG = LogFactory.getLog(JsonUtils.class);
 
-    private static final HashMap<String, String> MAP_STRING_STRING = new HashMap<>();
-
     private static final Gson gson;
 
     static {
-        gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-                .create();
+        gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
     }
 
     public static String mapToJson(Map<?, ?> map) {
@@ -102,7 +98,8 @@ public class JsonUtils {
 
         if(StringUtils.isNotEmpty(jsonStr)) {
             try {
-                ret = gson.fromJson(jsonStr, MAP_STRING_STRING.getClass());
+                Type mapType = new TypeToken<Map<String, String>>() {}.getType();
+                ret = gson.fromJson(jsonStr, mapType);
             } catch(Exception excp) {
                 LOG.warn("jsonToObject() failed to convert json to object: " + jsonStr, excp);
             }
@@ -113,8 +110,7 @@ public class JsonUtils {
 
     public static List<RangerValiditySchedule> jsonToRangerValiditySchedule(String jsonStr) {
         try {
-            Type listType = new TypeToken<List<RangerValiditySchedule>>() {
-            }.getType();
+            Type listType = new TypeToken<List<RangerValiditySchedule>>() {}.getType();
             return gson.fromJson(jsonStr, listType);
         } catch (Exception e) {
             LOG.error("Cannot get List<RangerValiditySchedule> from " + jsonStr, e);

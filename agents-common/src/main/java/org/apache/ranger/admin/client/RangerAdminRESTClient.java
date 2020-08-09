@@ -30,6 +30,7 @@ import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.util.*;
@@ -88,6 +89,11 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		clusterName       				= config.get(propertyPrefix + ".access.cluster.name", "");
 		if(StringUtil.isEmpty(clusterName)){
 			clusterName =config.get(propertyPrefix + ".ambari.cluster.name", "");
+			if (StringUtil.isEmpty(clusterName)) {
+				if (config instanceof RangerPluginConfig) {
+					clusterName = ((RangerPluginConfig)config).getClusterName();
+				}
+			}
 		}
 		int	 restClientConnTimeOutMs	= config.getInt(propertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		int	 restClientReadTimeOutMs	= config.getInt(propertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
