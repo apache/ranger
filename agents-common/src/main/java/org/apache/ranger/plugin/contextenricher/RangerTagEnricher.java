@@ -213,7 +213,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	 * combinations in a service-def will be much smaller than the number of service-resources.
 	 */
 
-	static class ResourceHierarchies {
+	static public class ResourceHierarchies {
 		private final Map<Collection<String>, Boolean> accessHierarchies    = new HashMap<>();
 		private final Map<Collection<String>, Boolean> dataMaskHierarchies  = new HashMap<>();
 		private final Map<Collection<String>, Boolean> rowFilterHierarchies = new HashMap<>();

@@ -39,24 +39,31 @@ public class RangerServiceResource extends RangerBaseModelObject {
 
 	private String                                         serviceName;
 	private Map<String, RangerPolicy.RangerPolicyResource> resourceElements;
+	private String                                         ownerUser;
 	private String                                         resourceSignature;
 
-	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature) {
+	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature, String ownerUser) {
 		super();
 		setGuid(guid);
 		setServiceName(serviceName);
 		setResourceElements(resourceElements);
 		setResourceSignature(resourceSignature);
+		setOwnerUser(ownerUser);
 	}
+	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements, String resourceSignature) {
+		this(guid, serviceName, resourceElements, resourceSignature, null);
+
+	}
+
 	public RangerServiceResource(String guid, String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements) {
-		this(guid, serviceName, resourceElements, null);
+		this(guid, serviceName, resourceElements, null, null);
 	}
 	public RangerServiceResource(String serviceName, Map<String, RangerPolicy.RangerPolicyResource> resourceElements) {
-		this(null, serviceName, resourceElements, null);
+		this(null, serviceName, resourceElements, null, null);
 	}
 
 	public RangerServiceResource() {
-		this(null, null, null, null);
+		this(null, null, null, null, null);
 	}
 
 	public String getServiceName() { return serviceName; }
@@ -65,6 +72,10 @@ public class RangerServiceResource extends RangerBaseModelObject {
 
 	public String getResourceSignature() {
 		return resourceSignature;
+	}
+
+	public String getOwnerUser() {
+		return ownerUser;
 	}
 
 	public void setServiceName(String serviceName) {
@@ -77,6 +88,10 @@ public class RangerServiceResource extends RangerBaseModelObject {
 
 	public void setResourceSignature(String resourceSignature) {
 		this.resourceSignature = resourceSignature;
+	}
+
+	public void setOwnerUser(String ownerUser) {
+		this.ownerUser = ownerUser;
 	}
 
 	@Override
@@ -106,6 +121,8 @@ public class RangerServiceResource extends RangerBaseModelObject {
 			}
 		}
 		sb.append("} ");
+
+		sb.append("ownerUser={").append(ownerUser).append("} ");
 
 		sb.append("resourceSignature={").append(resourceSignature).append("} ");
 

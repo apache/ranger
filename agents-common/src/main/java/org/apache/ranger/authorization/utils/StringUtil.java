@@ -22,6 +22,7 @@
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
@@ -303,6 +304,21 @@ public class StringUtil {
 					values.add(StringUtils.trim(item));
 				}
 			}
+		}
+		return values;
+	}
+
+	public static List<String> toList(String str) {
+		List<String> values;
+		if (StringUtils.isNotBlank(str)) {
+			values = new ArrayList<>();
+			for (String item : str.split(",")) {
+				if (StringUtils.isNotBlank(item)) {
+					values.add(StringUtils.trim(item));
+				}
+			}
+		} else {
+			values = Collections.emptyList();
 		}
 		return values;
 	}
