@@ -99,10 +99,36 @@
       "policyItems":[
         {"accesses":[{"type":"create","isAllowed":true}],"users":["user1","user2"],"groups":["group1","group2"],"delegateAdmin":false}
       ]
+    },
+    {"id":8,"name":"db=dummy; table=*; column=*","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"database":{"values":["dummy"]},"table":{"values":["*"]},"column":{"values":["*"]}},
+      "policyItems":[
+        {"accesses":[{"type":"create","isAllowed":true},{"type":"update","isAllowed":true},{"type":"drop","isAllowed":true}],"users":["user1","user2"],"groups":[],"delegateAdmin":false}
+      ],
+      "allowExceptions":[
+        {"accesses":[{"type":"create","isAllowed":true}, {"type":"update","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false},
+        {"accesses":[{"type":"create","isAllowed":true}, {"type":"update","isAllowed":true},{"type":"drop","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false}
+      ]
     }
   ],
 
   "tests":[
+    {"name":"ALLOW 'any dummy/*/*;' for user1",
+      "request":{
+        "resource":{"elements":{"database":"dummy", "table": "dummy", "column": "dummy"}},
+        "accessType":"","user":"user1","userGroups":["users"],"requestData":"any dummy/dummy/dummy for user1"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":8}
+    }
+    ,
+    {"name":"DENY 'any dummy/*/*;' for user2",
+      "request":{
+        "resource":{"elements":{"database":"dummy", "table": "dummy", "column": "dummy"}},
+        "accessType":"","user":"user2","userGroups":["users"],"requestData":"any dummy/dummy/dummy for user2"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    }
+  ,
     {"name":"ALLOW 'read s3a://qe-s3-bucket-mst/demo;' for user1",
       "request":{
         "resource":{"elements":{"url":"s3a://qe-s3-bucket-mst/demo"}},

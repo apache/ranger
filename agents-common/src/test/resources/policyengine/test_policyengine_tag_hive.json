@@ -322,13 +322,21 @@
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":3}
     },
+    {"name":"DENY 'desc default.table1;' for testuser",
+      "request":{
+        "resource":{"elements":{"database":"default", "table":"table1"}},
+        "accessType":"","user":"testuser","userGroups":[],"requestData":"desc default.table1;' for testuser",
+        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    },
     {"name":"ALLOW 'use default;' for hive",
       "request":{
         "resource":{"elements":{"database":"default"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"use default",
         "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"DENY 'use default;' for user1",
       "request":{

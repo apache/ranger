@@ -283,12 +283,12 @@
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     },
-    {"name":"DENY 'desc default.table1;' for hive using PII, PII-FINAL tags",
+    {"name":"ALLOW 'desc default.table1;' for hive using PII, PII-FINAL tags",
       "request":{
         "resource":{"elements":{"database":"default", "table":"table1"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"desc default.table1;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"DENY 'desc default.table2;' for user1 using PII-FINAL tag",
       "request":{
