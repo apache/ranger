@@ -156,7 +156,7 @@
       {"id":2,"name":"PII_TAG_POLICY","isEnabled":true,"isAuditEnabled":true,
         "resources":{"tag":{"values":["PII"],"isRecursive":false}},
         "policyItems":[
-          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false}
+          {"accesses":[{"type":"hive:select","isAllowed":true}, {"type":"hive:update","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false}
           ,
           {"accesses":[{"type":"hive:all","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false}
         ],
@@ -170,7 +170,7 @@
       {"id":3,"name":"EXPIRES_ON_TAG_POLICY","isEnabled":true,"isAuditEnabled":true,
         "resources":{"tag":{"values":["EXPIRES_ON"],"isRecursive":false}},
         "policyItems":[
-          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["user", "user1"],"groups":[],"delegateAdmin":false}
+          {"accesses":[{"type":"hive:select","isAllowed":true}, {"type":"hive:update","isAllowed":true}],"users":["user", "user1"],"groups":[],"delegateAdmin":false}
         ],
         "denyPolicyItems":[
           {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["user"],"groups":[],"delegateAdmin":false}
