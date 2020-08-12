@@ -104,6 +104,7 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME(3033, "Non-existent Zone name={0} in policy create"),
     POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE(3048, "Service name = {0} is not associated to Zone name = {1}"),
     POLICY_VALIDATION_ERR_UNSUPPORTED_POLICY_ITEM_TYPE(3049, "Deny or deny-exceptions are not supported if policy has isDenyAllElse flag set to true"),
+    POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009," Invalid service type [{0}] provided for service [{1}]"),
 
     // SECURITY_ZONE Validations
     SECURITY_ZONE_VALIDATION_ERR_UNSUPPORTED_ACTION(3034, "Internal error: unsupported action[{0}]; isValid() is only supported for DELETE"),

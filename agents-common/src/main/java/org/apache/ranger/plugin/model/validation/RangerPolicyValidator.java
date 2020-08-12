@@ -168,6 +168,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			}
 			String policyName  = policy.getName();
 			String serviceName = policy.getService();
+			String policyServicetype = policy.getServiceType();
 			String zoneName    = policy.getZoneName();
 
 			RangerService service = null;
@@ -195,6 +196,22 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = false;
 				} else {
 					serviceNameValid = true;
+
+					String serviceType = service.getType();
+
+					if (StringUtils.isNotEmpty(serviceType) && StringUtils.isNotEmpty(policyServicetype)) {
+						if (!serviceType.equalsIgnoreCase(policyServicetype)) {
+							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE;
+
+							failures.add(new ValidationFailureDetailsBuilder()
+									.field("service type")
+									.isSemanticallyIncorrect()
+									.becauseOf(error.getMessage(policyServicetype,serviceName))
+									.errorCode(error.getErrorCode())
+									.build());
+							valid = false;
+						}
+					}
 				}
 			}
 
