@@ -468,7 +468,7 @@ public class RangerClient {
         }
 
         if (clientResponse == null) {
-            throw new RangerServiceException(api, clientResponse);
+            throw new RangerServiceException(api, null);
         } else if (clientResponse.getStatus() == api.getExpectedStatus().getStatusCode()) {
             if (responseType != null) {
                 ret = clientResponse.getEntity(responseType);
@@ -542,11 +542,9 @@ public class RangerClient {
             try {
                 URI uri = new URI(path);
 
-                if (uri != null) {
-                    URI normalizedUri = uri.normalize();
+                URI normalizedUri = uri.normalize();
 
-                    ret = normalizedUri.toString();
-                }
+                ret = normalizedUri.toString();
             } catch (Exception e) {
                 LOG.error("getNormalizedPath() caught exception for path={}", path, e);
 

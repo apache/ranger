@@ -78,10 +78,10 @@
             <directory>${project.parent.basedir}/sample-client/scripts</directory>
             <includes>
                 <include>*.sh</include>
+                <include>*.py</include>
             </includes>
             <fileMode>755</fileMode>
         </fileSet>
-<!--        only for testing -->
         <fileSet>
             <outputDirectory></outputDirectory>
             <directory>${project.parent.basedir}/sample-client/conf</directory>
@@ -98,6 +98,25 @@
             <includes>
                 <include>*.properties</include>
             </includes>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>venv/pylib</outputDirectory>
+            <directory>../../intg/src/main/python</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>venv/resources</outputDirectory>
+            <directory>../../intg/src/main/resources</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>venv/pylib</outputDirectory>
+            <directory>../sample-client/src/main/python</directory>
+            <includes>
+                <include>sample_client.py</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>venv</outputDirectory>
+            <directory>../sample-client/venv</directory>
         </fileSet>
     </fileSets>
 </assembly>
