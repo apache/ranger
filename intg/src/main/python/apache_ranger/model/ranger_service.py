@@ -18,31 +18,26 @@
 
 import json
 
-from ranger.model.ranger_base import RangerBase
+from apache_ranger.model.ranger_base import RangerBase
 
 
-class RoleMember:
-    def __init__(self, name=None, isAdmin=None):
-        self.name    = name
-        self.isAdmin = isAdmin if isAdmin is not None else False
-
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
-
-
-class RangerRole(RangerBase):
+class RangerService(RangerBase):
     def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None,
-                 version=None, isEnabled=None, name=None, description=None, options=None, users=None, groups=None,
-                 roles=None, createdByUser=None):
+                 version=None, isEnabled=None, type=None, name=None, displayName=None, description=None,
+                 tagService=None, configs=None, policyVersion=None, policyUpdateTime=None, tagVersion=None,
+                 tagUpdateTime=None):
         super().__init__(id, guid, createdBy, updatedBy, createTime, updateTime, version, isEnabled)
 
-        self.name          = name
-        self.description   = description
-        self.options       = options if options is not None else {}
-        self.users         = users if users is not None else []
-        self.groups        = groups if groups is not None else []
-        self.roles         = roles if roles is not None else []
-        self.createdByUser = createdByUser
+        self.type             = type
+        self.name             = name
+        self.displayName      = displayName
+        self.description      = description
+        self.tagService       = tagService
+        self.configs          = configs if configs is not None else {}
+        self.policyVersion    = policyVersion
+        self.policyUpdateTime = policyUpdateTime
+        self.tagVersion       = tagVersion
+        self.tagUpdateTime    = tagUpdateTime
 
     def __repr__(self):
         return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)

@@ -21,25 +21,22 @@ import enum
 import json
 import logging
 import requests
-import logging.config
 
-from os       import path
 from http     import HTTPStatus
 from requests import Session, Response
 
-from ranger.model.ranger_role          import RangerRole
-from ranger.model.ranger_policy        import RangerPolicy
-from ranger.model.ranger_service       import RangerService
-from ranger.model.ranger_service_def   import RangerServiceDef
-from ranger.model.ranger_security_zone import RangerSecurityZone
+from apache_ranger.model.ranger_role          import RangerRole
+from apache_ranger.model.ranger_policy        import RangerPolicy
+from apache_ranger.model.ranger_service       import RangerService
+from apache_ranger.model.ranger_service_def   import RangerServiceDef
+from apache_ranger.model.ranger_security_zone import RangerSecurityZone
 
 
 APPLICATION_JSON = 'application/json'
-LOG_CONFIG = path.dirname(__file__) + '/../../../resources/logging.conf'
 
-logging.config.fileConfig(LOG_CONFIG, disable_existing_loggers=False)
 requests.packages.urllib3.disable_warnings()
 
+log = logging.getLogger(__name__)
 
 class Message:
     def __init__(self, name=None, rbKey=None, message=None, objectId=None, fieldName=None):
@@ -73,7 +70,6 @@ class HttpMethod(enum.Enum):
 
 class API:
     def __init__(self, path, method, expected_status, consumes=APPLICATION_JSON, produces=APPLICATION_JSON):
-        self.log = logging.getLogger(__name__)
         self.path            = path
         self.method          = method
         self.expected_status = expected_status
@@ -84,15 +80,15 @@ class API:
         session.headers['Accept']       = self.consumes
         session.headers['Content-type'] = self.produces
 
-        if self.log.isEnabledFor(logging.DEBUG):
-            self.log.debug('==> call({},{},{})'.format(self, params, request))
-            self.log.debug('------------------------------------------------------')
-            self.log.debug('Call         : {} {}'.format(self.method, self.path))
-            self.log.debug('Content-type : {}'.format(self.consumes))
-            self.log.debug('Accept       : {}'.format(self.produces))
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('==> call({},{},{})'.format(self, params, request))
+            log.debug('------------------------------------------------------')
+            log.debug('Call         : {} {}'.format(self.method, self.path))
+            log.debug('Content-type : {}'.format(self.consumes))
+            log.debug('Accept       : {}'.format(self.produces))
 
             if request is not None:
-                self.log.debug("Request      : {}".format(request))
+                log.debug("Request      : {}".format(request))
 
         path = baseUrl + self.path
 
@@ -109,21 +105,21 @@ class API:
 
         if client_response.status_code == self.expected_status:
             if client_response.content:
-                if self.log.isEnabledFor(logging.DEBUG):
-                    self.log.debug('Response: {}'.format(client_response.text))
+                if log.isEnabledFor(logging.DEBUG):
+                    log.debug('Response: {}'.format(client_response.text))
             else:
                 return None
         elif client_response.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
-            self.log.error('Ranger Admin unavailable. HTTP Status: {}'.format(HTTPStatus.SERVICE_UNAVAILABLE))
-            self.log.error("client_response=: {}" + str(client_response))
+            log.error('Ranger Admin unavailable. HTTP Status: {}'.format(HTTPStatus.SERVICE_UNAVAILABLE))
+            log.error("client_response=: {}" + str(client_response))
             return None
         else:
             raise Exception(client_response.text)
 
         __json = json.loads(str(json.dumps(client_response.json())))
 
-        if self.log.isEnabledFor(logging.DEBUG):
-            self.log.debug('<== call({},{},{}), result = {}'.format(self, params, request, client_response))
+        if log.isEnabledFor(logging.DEBUG):
+            log.debug('<== call({},{},{}), result = {}'.format(self, params, request, client_response))
 
         return __json
 
@@ -131,7 +127,7 @@ class API:
         try:
             return API(self.path.format(**params), self.method, self.expected_status, self.consumes, self.produces)
         except (KeyError, TypeError) as e:
-            self.log.error('Arguments not formatted properly' + str(e))
+            log.error('Arguments not formatted properly' + str(e))
             raise e
 
 
@@ -232,7 +228,6 @@ class RangerClient:
     DELETE_POLICY_DELTAS = API(URI_POLICY_DELTAS, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
 
     def __init__(self, url, username, password):
-        self.log            = logging.getLogger(__name__)
         self.__password     = password
         self.url            = url
         self.username       = username
