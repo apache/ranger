@@ -18,26 +18,31 @@
 
 import json
 
-from ranger.model.ranger_base import RangerBase
+from apache_ranger.model.ranger_base import RangerBase
 
 
-class RangerService(RangerBase):
+class RangerSecurityZoneService:
+    def __init__(self, resources=None):
+        self.resources = resources if resources is not None else []
+
+    def __repr__(self):
+        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+
+
+class RangerSecurityZone(RangerBase):
     def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None,
-                 version=None, isEnabled=None, type=None, name=None, displayName=None, description=None,
-                 tagService=None, configs=None, policyVersion=None, policyUpdateTime=None, tagVersion=None,
-                 tagUpdateTime=None):
+                 version=None, isEnabled=None, name=None, services=None, tagServices=None, adminUsers=None,
+                 adminUserGroups=None, auditUsers=None, auditUserGroups=None, description=None):
         super().__init__(id, guid, createdBy, updatedBy, createTime, updateTime, version, isEnabled)
-
-        self.type             = type
-        self.name             = name
-        self.displayName      = displayName
-        self.description      = description
-        self.tagService       = tagService
-        self.configs          = configs if configs is not None else {}
-        self.policyVersion    = policyVersion
-        self.policyUpdateTime = policyUpdateTime
-        self.tagVersion       = tagVersion
-        self.tagUpdateTime    = tagUpdateTime
+        self.name = name
+        self.services = services if services is not None else {}
+        self.tagServices = tagServices if tagServices is not None else []
+        self.adminUsers = adminUsers if adminUsers is not None else []
+        self.adminUserGroups = adminUserGroups if adminUserGroups is not None else []
+        self.auditUsers = auditUsers if auditUsers is not None else []
+        self.auditUserGroups = auditUserGroups if auditUserGroups is not None else []
+        self.description = description
+        return
 
     def __repr__(self):
         return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)

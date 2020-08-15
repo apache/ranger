@@ -18,31 +18,31 @@
 
 import json
 
-from ranger.model.ranger_base import RangerBase
+from apache_ranger.model.ranger_base import RangerBase
 
 
-class RangerSecurityZoneService:
-    def __init__(self, resources=None):
-        self.resources = resources if resources is not None else []
+class RoleMember:
+    def __init__(self, name=None, isAdmin=None):
+        self.name    = name
+        self.isAdmin = isAdmin if isAdmin is not None else False
 
     def __repr__(self):
         return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
 
 
-class RangerSecurityZone(RangerBase):
+class RangerRole(RangerBase):
     def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None,
-                 version=None, isEnabled=None, name=None, services=None, tagServices=None, adminUsers=None,
-                 adminUserGroups=None, auditUsers=None, auditUserGroups=None, description=None):
+                 version=None, isEnabled=None, name=None, description=None, options=None, users=None, groups=None,
+                 roles=None, createdByUser=None):
         super().__init__(id, guid, createdBy, updatedBy, createTime, updateTime, version, isEnabled)
-        self.name = name
-        self.services = services if services is not None else {}
-        self.tagServices = tagServices if tagServices is not None else []
-        self.adminUsers = adminUsers if adminUsers is not None else []
-        self.adminUserGroups = adminUserGroups if adminUserGroups is not None else []
-        self.auditUsers = auditUsers if auditUsers is not None else []
-        self.auditUserGroups = auditUserGroups if auditUserGroups is not None else []
-        self.description = description
-        return
+
+        self.name          = name
+        self.description   = description
+        self.options       = options if options is not None else {}
+        self.users         = users if users is not None else []
+        self.groups        = groups if groups is not None else []
+        self.roles         = roles if roles is not None else []
+        self.createdByUser = createdByUser
 
     def __repr__(self):
         return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)

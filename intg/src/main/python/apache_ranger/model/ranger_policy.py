@@ -18,7 +18,7 @@
 
 import json
 
-from ranger.model.ranger_base import RangerBase
+from apache_ranger.model.ranger_base import RangerBase
 
 
 class RangerPolicyResource:
