@@ -1,0 +1,46 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+FROM ubuntu:20.04
+
+# Install curl, wget, tzdata, Python, Java, python-requests
+RUN apt-get update && \
+    DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata python python3 python3-pip openjdk-8-jdk && \
+    curl https://bootstrap.pypa.io/get-pip.py --output /tmp/get-pip.py && \
+    python2 /tmp/get-pip.py && \
+    pip3 install requests && \
+    pip install requests
+
+# Set environment variables
+ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+
+# setup ranger group, and users
+RUN groupadd ranger && \
+    useradd -g ranger -ms /bin/bash ranger && \
+    useradd -g ranger -ms /bin/bash rangeradmin && \
+    useradd -g ranger -ms /bin/bash rangerugsync && \
+    useradd -g ranger -ms /bin/bash rangertagsync && \
+    useradd -g ranger -ms /bin/bash rangerkms && \
+    mkdir -p /home/ranger/dist && \
+    mkdir -p /home/ranger/scripts && \
+	mkdir -p /home/ranger/bin/ && \
+	chown -R ranger:ranger /home/ranger
+
+VOLUME /home/ranger/dist
+VOLUME /home/ranger/scripts
+
+ENTRYPOINT [ "/bin/bash" ]
