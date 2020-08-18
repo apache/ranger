@@ -18,8 +18,9 @@
 
 import setuptools
 
-with open("README.md", "r") as fh:
-    long_description = fh.read()
+# with open("README.md", "r") as fh:
+#     long_description = fh.read()
+long_description = "Apache Ranger Python client"
 
 setuptools.setup(
     name="apache-ranger",
