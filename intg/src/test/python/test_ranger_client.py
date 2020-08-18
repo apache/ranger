@@ -18,8 +18,8 @@
 
 import unittest
 from unittest.mock import patch
-from ranger.model.ranger_service import RangerService
-from ranger.client.ranger_client import API, HttpMethod, HTTPStatus, RangerClient
+from apache_ranger.model.ranger_service import RangerService
+from apache_ranger.client.ranger_client import API, HttpMethod, HTTPStatus, RangerClient
 
 
 class MockResponse:
@@ -41,7 +41,7 @@ class TestRangerClient(unittest.TestCase):
     USERNAME = "user"
     PASSWORD = "password"
 
-    @patch('ranger.client.ranger_client.Session')
+    @patch('apache_ranger.client.ranger_client.Session')
     def test_get_service_unavailable(self, mock_session):
         mock_session.return_value.get.return_value = MockResponse(HTTPStatus.SERVICE_UNAVAILABLE)
         result                                     = RangerClient(TestRangerClient.URL, TestRangerClient.USERNAME, TestRangerClient.PASSWORD).find_services({})
@@ -49,7 +49,7 @@ class TestRangerClient(unittest.TestCase):
         self.assertTrue(result is None)
 
 
-    @patch('ranger.client.ranger_client.Session')
+    @patch('apache_ranger.client.ranger_client.Session')
     def test_get_success(self, mock_session):
         response                                   = RangerService()
         mock_session.return_value.get.return_value = MockResponse(HTTPStatus.OK, response=response, content='Success')
@@ -58,8 +58,8 @@ class TestRangerClient(unittest.TestCase):
         self.assertTrue(response.__repr__() in result)
 
 
-    @patch('ranger.client.ranger_client.Session')
-    @patch('ranger.client.ranger_client.Response')
+    @patch('apache_ranger.client.ranger_client.Session')
+    @patch('apache_ranger.client.ranger_client.Response')
     def test_get_unexpected_status_code(self, mock_response, mock_session):
         content                                    = 'Internal Server Error'
         mock_response.text                         = content
@@ -73,7 +73,7 @@ class TestRangerClient(unittest.TestCase):
             self.assertTrue(content in repr(e))
 
 
-    @patch('ranger.client.ranger_client.RangerClient.FIND_SERVICES')
+    @patch('apache_ranger.client.ranger_client.RangerClient.FIND_SERVICES')
     def test_unexpected_http_method(self, mock_api):
         mock_api.method.return_value = "PATCH"
 
