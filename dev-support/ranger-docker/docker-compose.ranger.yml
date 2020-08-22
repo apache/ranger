@@ -1,0 +1,48 @@
+version: '3'
+services:
+  ranger:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger
+    image: ranger:latest
+    container_name: ranger
+    hostname: ranger.example.com
+    stdin_open: true
+    tty: true
+    networks:
+      - ranger
+    ports:
+      - "6080:6080"
+    depends_on:
+      - ranger-db
+      - ranger-solr
+    command:
+      - /home/ranger/scripts/ranger.sh
+
+  ranger-solr:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-solr
+    image: ranger-solr
+    container_name: ranger-solr
+    hostname: ranger-solr.example.com
+    networks:
+      - ranger
+    ports:
+      - "8983:8983"
+    command:
+      - solr-precreate
+      - ranger_audits
+      - /opt/solr/server/solr/configsets/ranger_audits/
+
+  ranger-db:
+    image: postgres:12
+    container_name: ranger-db
+    hostname: ranger-db.example.com
+    networks:
+      - ranger
+    environment:
+      POSTGRES_PASSWORD: rangerR0cks!
+
+networks:
+  ranger:

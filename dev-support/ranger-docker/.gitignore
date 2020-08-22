@@ -4,7 +4,6 @@
 .metadata
 .classpath
 .project
-/dist/
 /target/
 .DS_Store
 .idea

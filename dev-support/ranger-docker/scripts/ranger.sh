@@ -1,3 +1,5 @@
+#!/bin/bash
+
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -14,25 +16,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ranger-base-ubuntu:latest
+export RANGER_VERSION=`cat ${RANGER_DIST}/version`
 
-# Install Git, Maven, gcc
-RUN apt-get update && \
-    apt-get -y install git maven build-essential
 
-# Set environment variables
-ENV MAVEN_HOME /usr/share/maven
-ENV PATH /usr/java/bin:/usr/local/apache-maven/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+if [ -e ${RANGER_HOME}/admin ]
+then
+  SETUP_RANGER=false
+else
+  SETUP_RANGER=true
+fi
 
-USER ranger
+if [ "${SETUP_RANGER}" == "true" ]
+then
+  # Download PostgreSQL JDBC library
+  wget "https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7/postgresql-42.2.16.jre7.jar" -O /usr/share/java/postgresql.jar
 
-RUN mkdir -p /home/ranger/git && \
-    mkdir -p /home/ranger/.m2
+  cd ${RANGER_HOME}
+  tar xvfz ${RANGER_DIST}/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME}
+  ln -s ranger-${RANGER_VERSION}-admin admin
+  cp -f ${RANGER_SCRIPTS}/ranger-admin-install.properties admin/install.properties
 
-VOLUME /home/ranger/.m2
+  cd ${RANGER_HOME}/admin
+  ./setup.sh
+fi
 
-WORKDIR /home/ranger/git
+cd ${RANGER_HOME}/admin
+./ews/ranger-admin-services.sh start
 
-RUN git clone https://github.com/apache/ranger.git
-
-ENTRYPOINT [ "/home/ranger/scripts/ranger-build.sh" ]
+# prevent the container from exiting
+/bin/bash
