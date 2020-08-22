@@ -18,29 +18,34 @@ FROM ubuntu:20.04
 
 # Install curl, wget, tzdata, Python, Java, python-requests
 RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata python python3 python3-pip openjdk-8-jdk && \
+    DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata python python3 python3-pip openjdk-8-jdk bc iputils-ping && \
     curl https://bootstrap.pypa.io/get-pip.py --output /tmp/get-pip.py && \
     python2 /tmp/get-pip.py && \
     pip3 install requests && \
     pip install requests
 
 # Set environment variables
-ENV JAVA_HOME /usr/lib/jvm/java-8-openjdk-amd64
-ENV PATH /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV JAVA_HOME      /usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH           /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV RANGER_DIST    /home/ranger/dist
+ENV RANGER_SCRIPTS /home/ranger/scripts
+ENV RANGER_HOME    /opt/ranger
 
 # setup ranger group, and users
 RUN groupadd ranger && \
     useradd -g ranger -ms /bin/bash ranger && \
     useradd -g ranger -ms /bin/bash rangeradmin && \
-    useradd -g ranger -ms /bin/bash rangerugsync && \
+    useradd -g ranger -ms /bin/bash rangerusersync && \
     useradd -g ranger -ms /bin/bash rangertagsync && \
     useradd -g ranger -ms /bin/bash rangerkms && \
     mkdir -p /home/ranger/dist && \
     mkdir -p /home/ranger/scripts && \
-	mkdir -p /home/ranger/bin/ && \
-	chown -R ranger:ranger /home/ranger
+	mkdir -p /opt/ranger && \
+	chown -R ranger:ranger /opt/ranger
 
-VOLUME /home/ranger/dist
-VOLUME /home/ranger/scripts
+COPY ./dist/version /home/ranger/dist/
+COPY ./dist/ranger-*-admin.tar.gz /home/ranger/dist/
+COPY ./scripts/ranger.sh /home/ranger/scripts/
+COPY ./scripts/ranger-admin-install.properties /home/ranger/scripts/
 
-ENTRYPOINT [ "/bin/bash" ]
+ENTRYPOINT [ "/home/ranger/scripts/ranger.sh" ]

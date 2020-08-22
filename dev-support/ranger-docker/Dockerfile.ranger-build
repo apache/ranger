@@ -1,0 +1,55 @@
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+FROM ubuntu:20.04
+
+# Install curl, wget, tzdata, Python, Java, python-requests
+RUN apt-get update && \
+    DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata \
+	python python3 python3-pip openjdk-8-jdk bc iputils-ping git maven build-essential && \
+    curl https://bootstrap.pypa.io/get-pip.py --output /tmp/get-pip.py && \
+    python2 /tmp/get-pip.py && \
+    pip3 install requests && \
+    pip install requests
+
+# Set environment variables
+ENV MAVEN_HOME     /usr/share/maven
+ENV JAVA_HOME      /usr/lib/jvm/java-8-openjdk-amd64
+ENV PATH           /usr/java/bin:/usr/local/apache-maven/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+ENV RANGER_DIST    /home/ranger/dist
+ENV RANGER_SCRIPTS /home/ranger/scripts
+
+# setup ranger group, and users
+RUN groupadd ranger && \
+    useradd -g ranger -ms /bin/bash ranger && \
+    mkdir -p /home/ranger/dist && \
+    mkdir -p /home/ranger/scripts && \
+    mkdir -p /home/ranger/git && \
+    mkdir -p /home/ranger/.m2 && \
+	chown -R ranger:ranger /home/ranger
+
+COPY ./scripts/ranger-build.sh /home/ranger/scripts/
+
+VOLUME /home/ranger/dist
+VOLUME /home/ranger/.m2
+
+USER ranger
+
+WORKDIR /home/ranger/git
+
+RUN git clone https://github.com/apache/ranger.git
+
+ENTRYPOINT [ "/home/ranger/scripts/ranger-build.sh" ]

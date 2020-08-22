@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Licensed to the Apache Software Foundation (ASF) under one
 # or more contributor license agreements.  See the NOTICE file
 # distributed with this work for additional information
@@ -16,32 +14,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-if [ "${BRANCH}" == "" ]
-then
-  BRANCH=master
-fi
+FROM solr:8
 
-if [ "${PROFILE}" != "" ]
-then
-  ARG_PROFILES="-P ${PROFILE}"
-fi
+# Copy audit config set
+USER 0
+RUN  mkdir -p /opt/solr/server/solr/configsets/ranger_audits/conf
+COPY config/solr-ranger_audits/* /opt/solr/server/solr/configsets/ranger_audits/conf/
+RUN chown -R solr:solr /opt/solr/server/solr/configsets/ranger_audits/
 
-if [ "${SKIPTESTS}" == "" ]
-then
-  ARG_SKIPTESTS="-DskipTests"
-else
-  ARG_SKIPTESTS="-DskipTests=${SKIPTESTS}"
-fi
-
-export MAVEN_OPTS="-Xms2g -Xmx2g"
-export M2=/home/ranger/.m2
-
-cd /home/ranger/git/ranger
-
-git checkout ${BRANCH}
-git pull
-
-mvn ${ARG_PROFILES} ${ARG_SKIPTESTS} -DskipDocs clean package
-
-mv -f target/version /home/ranger/dist/
-mv -f target/ranger-* /home/ranger/dist/
+USER solr
