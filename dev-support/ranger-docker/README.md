@@ -42,6 +42,9 @@ deploy Apache Ranger and its dependent services in containers.
    3.2. Execute following command to start Ranger and dependent services in containers:
         docker-compose -f docker-compose.ranger.yml up -d
 
+   3.2. Execute following command to start Ranger enabled Hadoop services (only HDFS for now) in a continer:
+        docker-compose -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml up -d
+
 
 4. Alternatively docker command can be used to build and deploy Apache Ranger.
    4.1. Execute following command to build Docker image **ranger-build**:
@@ -70,6 +73,16 @@ deploy Apache Ranger and its dependent services in containers.
 
    4.7. Execute following command to install and run Ranger services in a container:
         docker run -it -d --name ranger --hostname ranger.example.com -p 6080:6080 --link ranger-db:ranger-db --link ranger-solr:ranger-solr ranger
+
+        This might take few minutes to complete.
+
+   4.8. Execute following command to build Docker image **ranger-hadoop**:
+        docker build -f Dockerfile.ranger-hadoop -t ranger-hadoop .
+
+        This steps includes downloading of Hadoop tar balls, and can take a while to complete.
+
+   4.9. Execute following command to install and run Ranger enabled Hadoop services (only HDFS for now) in a container:
+        docker run -it -d --name ranger-hadoop --hostname ranger-hadoop.example.com -p 9000:9000 --link ranger:ranger --link ranger-solr:ranger-solr ranger-hadoop
 
         This might take few minutes to complete.
 

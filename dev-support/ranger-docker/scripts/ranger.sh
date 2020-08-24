@@ -43,5 +43,14 @@ fi
 cd ${RANGER_HOME}/admin
 ./ews/ranger-admin-services.sh start
 
+if [ "${SETUP_RANGER}" == "true" ]
+then
+  # Wait for Ranger Admin to become ready
+  sleep 30
+
+  python3 ${RANGER_SCRIPTS}/ranger-hdfs-service-dev_hdfs.py
+  python3 ${RANGER_SCRIPTS}/ranger-hive-service-dev_hive.py
+fi
+
 # prevent the container from exiting
 /bin/bash

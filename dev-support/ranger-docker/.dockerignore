@@ -2,4 +2,6 @@
 !config
 !dist/version
 !dist/ranger-*-admin.tar.gz
+!dist/ranger-*-hdfs-plugin.tar.gz
+!dist/ranger-*-hive-plugin.tar.gz
 !scripts/*
