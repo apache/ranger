@@ -16,12 +16,15 @@
 
 FROM ubuntu:20.04
 
+ENV RANGER_VERSION 3.0.0-SNAPSHOT
+
 # Install curl, wget, tzdata, Python, Java, python-requests
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata python python3 python3-pip openjdk-8-jdk bc iputils-ping && \
     curl https://bootstrap.pypa.io/get-pip.py --output /tmp/get-pip.py && \
     python2 /tmp/get-pip.py && \
     pip3 install requests && \
+    pip3 install apache-ranger && \
     pip install requests
 
 # Set environment variables
@@ -44,8 +47,10 @@ RUN groupadd ranger && \
 	chown -R ranger:ranger /opt/ranger
 
 COPY ./dist/version /home/ranger/dist/
-COPY ./dist/ranger-*-admin.tar.gz /home/ranger/dist/
+COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/
 COPY ./scripts/ranger.sh /home/ranger/scripts/
 COPY ./scripts/ranger-admin-install.properties /home/ranger/scripts/
+COPY ./scripts/ranger-hdfs-service-dev_hdfs.py /home/ranger/scripts/
+COPY ./scripts/ranger-hive-service-dev_hive.py /home/ranger/scripts/
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger.sh" ]
