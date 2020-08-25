@@ -421,6 +421,8 @@ public class AuditProviderFactory {
 				provider = new SolrAuditDestination();
 			} else if (providerName.equalsIgnoreCase("elasticsearch")) {
 				provider = new ElasticSearchAuditDestination();
+			} else if (providerName.equalsIgnoreCase("amazon_cloudwatch")) {
+				provider = new AmazonCloudWatchAuditDestination();
 			} else if (providerName.equalsIgnoreCase("kafka")) {
 				provider = new KafkaAuditProvider();
 			} else if (providerName.equalsIgnoreCase("log4j")) {
