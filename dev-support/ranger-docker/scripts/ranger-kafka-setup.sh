@@ -16,34 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+cat <<EOF > /etc/ssh/ssh_config
+Host *
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+EOF
 
-if [ ! -e ${RANGER_HOME}/.setupDone ]
-then
-  SETUP_RANGER=true
-else
-  SETUP_RANGER=false
-fi
+chown -R kafka:hadoop /opt/kafka/
 
-if [ "${SETUP_RANGER}" == "true" ]
-then
-  su -c "cd ${RANGER_HOME}/admin && ./setup.sh" ranger
+cd ${RANGER_HOME}/ranger-kafka-plugin
+./enable-kafka-plugin.sh
 
-  touch ${RANGER_HOME}/.setupDone
-fi
-
-su -c "cd ${RANGER_HOME}/admin && ./ews/ranger-admin-services.sh start" ranger
-
-if [ "${SETUP_RANGER}" == "true" ]
-then
-  # Wait for Ranger Admin to become ready
-  sleep 30
-
-  python3 ${RANGER_SCRIPTS}/ranger-hdfs-service-dev_hdfs.py
-  python3 ${RANGER_SCRIPTS}/ranger-yarn-service-dev_yarn.py
-  python3 ${RANGER_SCRIPTS}/ranger-hive-service-dev_hive.py
-  python3 ${RANGER_SCRIPTS}/ranger-hbase-service-dev_hbase.py
-  python3 ${RANGER_SCRIPTS}/ranger-kafka-service-dev_kafka.py
-fi
-
-# prevent the container from exiting
-/bin/bash
+echo "authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer" >> ${KAFKA_HOME}/config/server.properties

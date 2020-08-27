@@ -21,6 +21,7 @@ ENV RANGER_VERSION 3.0.0-SNAPSHOT
 ENV HADOOP_VERSION 3.1.1
 ENV HIVE_VERSION   3.1.2
 ENV HBASE_VERSION  2.0.3
+ENV KAFKA_VERSION  2.4.0
 
 # Install curl, wget, tzdata, Python, Java, python-requests
 RUN apt-get update && \
@@ -52,6 +53,7 @@ RUN groupadd ranger && \
     useradd -g hadoop -ms /bin/bash yarn && \
     useradd -g hadoop -ms /bin/bash hive && \
     useradd -g hadoop -ms /bin/bash hbase && \
+    useradd -g hadoop -ms /bin/bash kafka && \
     mkdir -p /home/ranger/dist && \
     mkdir -p /home/ranger/scripts && \
     chown -R ranger:ranger /home/ranger && \
