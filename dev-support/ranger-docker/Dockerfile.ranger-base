@@ -49,6 +49,7 @@ RUN groupadd ranger && \
     useradd -g ranger -ms /bin/bash rangerkms && \
     groupadd hadoop && \
     useradd -g hadoop -ms /bin/bash hdfs && \
+    useradd -g hadoop -ms /bin/bash yarn && \
     useradd -g hadoop -ms /bin/bash hive && \
     useradd -g hadoop -ms /bin/bash hbase && \
     mkdir -p /home/ranger/dist && \

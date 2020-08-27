@@ -13,6 +13,7 @@ services:
       - ranger
     ports:
       - "9000:9000"
+      - "8088:8088"
     depends_on:
       - ranger
 

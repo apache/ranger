@@ -81,7 +81,7 @@ deploy Apache Ranger and its dependent services in containers.
         This steps includes downloading of Hadoop tar balls, and can take a while to complete.
 
    4.10. Execute following command to install and run Ranger enabled HDFS in a container:
-         docker run -it -d --name ranger-hadoop --hostname ranger-hadoop.example.com -p 9000:9000 --link ranger:ranger --link ranger-solr:ranger-solr ranger-hadoop
+         docker run -it -d --name ranger-hadoop --hostname ranger-hadoop.example.com -p 9000:9000 -p 8088:8088 --link ranger:ranger --link ranger-solr:ranger-solr ranger-hadoop
 
         This might take few minutes to complete.
 
