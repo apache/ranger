@@ -914,32 +914,34 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 			LOG.debug("==> RangerHdfsAuditHandler.logAudit(" + result + ")");
 		}
 
-		if(! isAuditEnabled && result.getIsAudited()) {
-			isAuditEnabled = true;
-		}
+		if (result != null) {
+			if(! isAuditEnabled && result.getIsAudited()) {
+				isAuditEnabled = true;
+			}
 
-		if (auditEvent == null) {
-			auditEvent = super.getAuthzEvents(result);
-		}
+			if (auditEvent == null) {
+				auditEvent = super.getAuthzEvents(result);
+			}
 
-		if (auditEvent != null) {
-			RangerAccessRequest request = result.getAccessRequest();
-			RangerAccessResource resource = request.getResource();
-			String resourcePath = resource != null ? resource.getAsString() : null;
+			if (auditEvent != null) {
+				RangerAccessRequest request = result.getAccessRequest();
+				RangerAccessResource resource = request.getResource();
+				String resourcePath = resource != null ? resource.getAsString() : null;
 
-			// Overwrite fields in original auditEvent
-			auditEvent.setEventTime(request.getAccessTime() != null ? request.getAccessTime() : new Date());
-			auditEvent.setAccessType(request.getAction());
-			auditEvent.setResourcePath(this.pathToBeValidated);
-			auditEvent.setResultReason(resourcePath);
+				// Overwrite fields in original auditEvent
+				auditEvent.setEventTime(request.getAccessTime() != null ? request.getAccessTime() : new Date());
+				auditEvent.setAccessType(request.getAction());
+				auditEvent.setResourcePath(this.pathToBeValidated);
+				auditEvent.setResultReason(resourcePath);
 
-			auditEvent.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
-			auditEvent.setPolicyId(result.getPolicyId());
-			auditEvent.setPolicyVersion(result.getPolicyVersion());
+				auditEvent.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
+				auditEvent.setPolicyId(result.getPolicyId());
+				auditEvent.setPolicyVersion(result.getPolicyVersion());
 
-			Set<String> tags = getTags(request);
-			if (tags != null) {
-				auditEvent.setTags(tags);
+				Set<String> tags = getTags(request);
+				if (tags != null) {
+					auditEvent.setTags(tags);
+				}
 			}
 		}
 
