@@ -36,19 +36,5 @@ fi
 su -c "${HADOOP_HOME}/sbin/start-dfs.sh" hdfs
 su -c "${HADOOP_HOME}/sbin/start-yarn.sh" hdfs
 
-# if [ ! -e ${HIVE_HOME}/.setupDone ]
-# then
-#   su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir /tmp" hdfs
-#   su -c "${HADOOP_HOME}/bin/hdfs dfs -mkdir /user/hive/warehouse" hdfs
-#   su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod g+w /tmp" hdfs
-#   su -c "${HADOOP_HOME}/bin/hdfs dfs -chmod g+w /user/hive/warehouse" hdfs
-#
-#   su -c "${HIVE_HOME}/bin/schematool -dbType postgres -initSchema" hive
-#
-#   touch ${HIVE_HOME}/.setupDone
-# fi
-#
-# su -c "${HIVE_HOME}/bin/hiveserver2" hive
-
 # prevent the container from exiting
 /bin/bash

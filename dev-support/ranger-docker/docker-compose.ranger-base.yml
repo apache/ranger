@@ -1,0 +1,12 @@
+version: '3'
+services:
+  ranger-base:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-base
+    image: ranger-base
+    networks:
+      - ranger
+
+networks:
+  ranger:

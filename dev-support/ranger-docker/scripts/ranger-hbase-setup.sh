@@ -16,32 +16,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+echo "export JAVA_HOME=${JAVA_HOME}" >> ${HBASE_HOME}/conf/hbase-env.sh
 
-if [ ! -e ${RANGER_HOME}/.setupDone ]
-then
-  SETUP_RANGER=true
-else
-  SETUP_RANGER=false
-fi
+cat <<EOF > /etc/ssh/ssh_config
+Host *
+   StrictHostKeyChecking no
+   UserKnownHostsFile=/dev/null
+EOF
 
-if [ "${SETUP_RANGER}" == "true" ]
-then
-  su -c "cd ${RANGER_HOME}/admin && ./setup.sh" ranger
+chown -R hbase:hadoop /opt/hbase/
 
-  touch ${RANGER_HOME}/.setupDone
-fi
-
-su -c "cd ${RANGER_HOME}/admin && ./ews/ranger-admin-services.sh start" ranger
-
-if [ "${SETUP_RANGER}" == "true" ]
-then
-  # Wait for Ranger Admin to become ready
-  sleep 30
-
-  python3 ${RANGER_SCRIPTS}/ranger-hdfs-service-dev_hdfs.py
-  python3 ${RANGER_SCRIPTS}/ranger-hive-service-dev_hive.py
-  python3 ${RANGER_SCRIPTS}/ranger-hbase-service-dev_hbase.py
-fi
-
-# prevent the container from exiting
-/bin/bash
+cd ${RANGER_HOME}/ranger-hbase-plugin
+./enable-hbase-plugin.sh

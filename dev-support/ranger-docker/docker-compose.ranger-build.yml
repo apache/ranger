@@ -12,6 +12,8 @@ services:
     volumes:
       - ~/.m2:/home/ranger/.m2
       - ./dist:/home/ranger/dist
+    depends_on:
+      - ranger-base
     environment:
       BRANCH: 'master'
       SKIPTESTS: 'true'

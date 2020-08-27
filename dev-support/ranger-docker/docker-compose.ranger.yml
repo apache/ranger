@@ -14,6 +14,7 @@ services:
     ports:
       - "6080:6080"
     depends_on:
+      - ranger-base
       - ranger-db
       - ranger-solr
     command:
