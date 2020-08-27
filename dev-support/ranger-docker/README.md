@@ -40,7 +40,7 @@ deploy Apache Ranger and its dependent services in containers.
         status of ${HOME}/.m2 directory cache.
 
    3.2. Execute following command to start Ranger, Ranger enabled HDFS, Ranger enabled HBase, and dependeny services (Solr, DB) in continers:
-        docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml up -f docker-compose.ranger-hbase.yml -d
+        docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml up -d
 
 4. Alternatively docker command can be used to build and deploy Apache Ranger.
    4.1. Execute following command to build Docker image **ranger-base**:
@@ -78,21 +78,31 @@ deploy Apache Ranger and its dependent services in containers.
    4.9. Execute following command to build Docker image **ranger-hadoop**:
         docker build -f Dockerfile.ranger-hadoop -t ranger-hadoop .
 
-        This steps includes downloading of Hadoop tar balls, and can take a while to complete.
+        This step includes downloading of Hadoop tar balls, and can take a while to complete.
 
    4.10. Execute following command to install and run Ranger enabled HDFS in a container:
          docker run -it -d --name ranger-hadoop --hostname ranger-hadoop.example.com -p 9000:9000 -p 8088:8088 --link ranger:ranger --link ranger-solr:ranger-solr ranger-hadoop
 
-        This might take few minutes to complete.
+         This might take few minutes to complete.
 
    4.11. Execute following command to build Docker image **ranger-hbase**:
          docker build -f Dockerfile.ranger-hbase -t ranger-hbase .
 
-        This steps includes downloading of HBase tar ball, and can take a while to complete.
+         This step includes downloading of HBase tar ball, and can take a while to complete.
 
    4.12. Execute following command to install and run Ranger enabled HBase in a container:
          docker run -it -d --name ranger-hbase --hostname ranger-hbase.example.com --link ranger-hadoop:ranger-hadoop --link ranger:ranger --link ranger-solr:ranger-solr ranger-hbase
 
-        This might take few minutes to complete.
+         This might take few minutes to complete.
+
+   4.13. Execute following command to build Docker image **ranger-kafka**:
+         docker build -f Dockerfile.ranger-kafka -t ranger-kafka .
+
+         This step includes downloading of Kafka tar ball, and can take a while to complete.
+
+   4.12. Execute following command to install and run Ranger enabled Kafka in a container:
+         docker run -it -d --name ranger-kafka --hostname ranger-kafka.example.com --link ranger-hadoop:ranger-hadoop --link ranger:ranger --link ranger-solr:ranger-solr ranger-kafka
+
+         This might take few minutes to complete.
 
 5. Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)

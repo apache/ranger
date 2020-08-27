@@ -1,0 +1,18 @@
+version: '3'
+services:
+  ranger-kafka:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-kafka
+    image: ranger-kafka
+    container_name: ranger-kafka
+    hostname: ranger-kafka.example.com
+    stdin_open: true
+    tty: true
+    networks:
+      - ranger
+    depends_on:
+      - ranger
+
+networks:
+  ranger:
