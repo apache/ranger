@@ -4,4 +4,5 @@
 !dist/ranger-*-admin.tar.gz
 !dist/ranger-*-hdfs-plugin.tar.gz
 !dist/ranger-*-hive-plugin.tar.gz
+!dist/ranger-*-hbase-plugin.tar.gz
 !scripts/*

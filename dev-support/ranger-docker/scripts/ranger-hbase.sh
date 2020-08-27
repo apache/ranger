@@ -16,32 +16,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+service ssh start
 
-if [ ! -e ${RANGER_HOME}/.setupDone ]
+if [ ! -e ${HBASE_HOME}/.setupDone ]
 then
-  SETUP_RANGER=true
-else
-  SETUP_RANGER=false
+  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hbase
+  su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" hbase
+  su -c "chmod 0600 ~/.ssh/authorized_keys" hbase
+
+  echo "ssh" > /etc/pdsh/rcmd_default
+
+  ${RANGER_SCRIPTS}/ranger-hbase-setup.sh
+
+  touch ${HBASE_HOME}/.setupDone
 fi
 
-if [ "${SETUP_RANGER}" == "true" ]
-then
-  su -c "cd ${RANGER_HOME}/admin && ./setup.sh" ranger
-
-  touch ${RANGER_HOME}/.setupDone
-fi
-
-su -c "cd ${RANGER_HOME}/admin && ./ews/ranger-admin-services.sh start" ranger
-
-if [ "${SETUP_RANGER}" == "true" ]
-then
-  # Wait for Ranger Admin to become ready
-  sleep 30
-
-  python3 ${RANGER_SCRIPTS}/ranger-hdfs-service-dev_hdfs.py
-  python3 ${RANGER_SCRIPTS}/ranger-hive-service-dev_hive.py
-  python3 ${RANGER_SCRIPTS}/ranger-hbase-service-dev_hbase.py
-fi
+su -c "${HBASE_HOME}/bin/start-hbase.sh" hbase
 
 # prevent the container from exiting
 /bin/bash

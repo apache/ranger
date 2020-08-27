@@ -14,30 +14,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:20.04
+FROM ranger-base:latest
 
-# Install curl, wget, tzdata, Python, Java, python-requests
-RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata \
-	python python3 python3-pip openjdk-8-jdk bc iputils-ping git maven build-essential && \
-    curl https://bootstrap.pypa.io/get-pip.py --output /tmp/get-pip.py && \
-    python2 /tmp/get-pip.py && \
-    pip3 install requests && \
-    pip install requests
+
+# Install necessary packages to build Ranger
+RUN apt-get update && apt-get -y install git maven build-essential
 
 # Set environment variables
-ENV MAVEN_HOME     /usr/share/maven
-ENV JAVA_HOME      /usr/lib/jvm/java-8-openjdk-amd64
-ENV PATH           /usr/java/bin:/usr/local/apache-maven/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV RANGER_DIST    /home/ranger/dist
-ENV RANGER_SCRIPTS /home/ranger/scripts
+ENV MAVEN_HOME /usr/share/maven
+ENV PATH       /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/apache-maven/bin
 
 # setup ranger group, and users
-RUN groupadd ranger && \
-    useradd -g ranger -ms /bin/bash ranger && \
-    mkdir -p /home/ranger/dist && \
-    mkdir -p /home/ranger/scripts && \
-    mkdir -p /home/ranger/git && \
+RUN mkdir -p /home/ranger/git && \
     mkdir -p /home/ranger/.m2 && \
 	chown -R ranger:ranger /home/ranger
 

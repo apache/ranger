@@ -14,43 +14,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM ubuntu:20.04
+FROM ranger-base:latest
 
-ENV RANGER_VERSION 2.1.0
 
-# Install curl, wget, tzdata, Python, Java, python-requests
-RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata python python3 python3-pip openjdk-8-jdk bc iputils-ping && \
-    curl https://bootstrap.pypa.io/get-pip.py --output /tmp/get-pip.py && \
-    python2 /tmp/get-pip.py && \
-    pip3 install requests && \
-    pip3 install apache-ranger && \
-    pip install requests
+COPY ./dist/version                              ${RANGER_DIST}/
+COPY ./scripts/ranger.sh                         ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-admin-install.properties   ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-hdfs-service-dev_hdfs.py   ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-hive-service-dev_hive.py   ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-hbase-service-dev_hbase.py ${RANGER_SCRIPTS}/
 
-# Set environment variables
-ENV JAVA_HOME      /usr/lib/jvm/java-8-openjdk-amd64
-ENV PATH           /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-ENV RANGER_DIST    /home/ranger/dist
-ENV RANGER_SCRIPTS /home/ranger/scripts
-ENV RANGER_HOME    /opt/ranger
-
-# setup ranger group, and users
-RUN groupadd ranger && \
-    useradd -g ranger -ms /bin/bash ranger && \
-    useradd -g ranger -ms /bin/bash rangeradmin && \
-    useradd -g ranger -ms /bin/bash rangerusersync && \
-    useradd -g ranger -ms /bin/bash rangertagsync && \
-    useradd -g ranger -ms /bin/bash rangerkms && \
-    mkdir -p /home/ranger/dist && \
-    mkdir -p /home/ranger/scripts && \
-	mkdir -p /opt/ranger && \
-	chown -R ranger:ranger /opt/ranger
-
-COPY ./dist/version /home/ranger/dist/
-COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/
-COPY ./scripts/ranger.sh /home/ranger/scripts/
-COPY ./scripts/ranger-admin-install.properties /home/ranger/scripts/
-COPY ./scripts/ranger-hdfs-service-dev_hdfs.py /home/ranger/scripts/
-COPY ./scripts/ranger-hive-service-dev_hive.py /home/ranger/scripts/
+COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /tmp/
+RUN tar xvfz /tmp/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} && \
+    ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin && \
+    rm -f /tmp/ranger-${RANGER_VERSION}-admin.tar.gz && \
+    cp -f ${RANGER_SCRIPTS}/ranger-admin-install.properties ${RANGER_HOME}/admin/install.properties && \
+    mkdir -p /var/run/ranger && \
+    mkdir -p /var/log/ranger && \
+    chown -R ranger:ranger ${RANGER_HOME}/admin/ /var/run/ranger/ /var/log/ranger/ && \
+    mkdir -p /usr/share/java/ && \
+    wget "https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7/postgresql-42.2.16.jre7.jar" -O /usr/share/java/postgresql.jar
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger.sh" ]
