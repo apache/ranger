@@ -21,6 +21,7 @@ COPY ./dist/version                              ${RANGER_DIST}/
 COPY ./scripts/ranger.sh                         ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-admin-install.properties   ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-hdfs-service-dev_hdfs.py   ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-yarn-service-dev_yarn.py   ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-hive-service-dev_hive.py   ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-hbase-service-dev_hbase.py ${RANGER_SCRIPTS}/
 

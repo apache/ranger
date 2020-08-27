@@ -24,6 +24,10 @@ then
   su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" hdfs
   su -c "chmod 0600 ~/.ssh/authorized_keys" hdfs
 
+  su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" yarn
+  su -c "cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys" yarn
+  su -c "chmod 0600 ~/.ssh/authorized_keys" yarn
+
   echo "ssh" > /etc/pdsh/rcmd_default
 
   ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh
@@ -34,7 +38,7 @@ then
 fi
 
 su -c "${HADOOP_HOME}/sbin/start-dfs.sh" hdfs
-su -c "${HADOOP_HOME}/sbin/start-yarn.sh" hdfs
+su -c "${HADOOP_HOME}/sbin/start-yarn.sh" yarn
 
 # prevent the container from exiting
 /bin/bash

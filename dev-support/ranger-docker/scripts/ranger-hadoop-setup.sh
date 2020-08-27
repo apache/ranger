@@ -55,7 +55,12 @@ cat <<EOF > ${HADOOP_HOME}/etc/hadoop/yarn-site.xml
 </configuration>
 EOF
 
+mkdir -p /opt/hadoop/logs
 chown -R hdfs:hadoop /opt/hadoop/
+chmod g+w /opt/hadoop/logs
 
 cd ${RANGER_HOME}/ranger-hdfs-plugin
 ./enable-hdfs-plugin.sh
+
+cd ${RANGER_HOME}/ranger-yarn-plugin
+./enable-yarn-plugin.sh

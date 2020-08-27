@@ -39,6 +39,7 @@ then
   sleep 30
 
   python3 ${RANGER_SCRIPTS}/ranger-hdfs-service-dev_hdfs.py
+  python3 ${RANGER_SCRIPTS}/ranger-yarn-service-dev_yarn.py
   python3 ${RANGER_SCRIPTS}/ranger-hive-service-dev_hive.py
   python3 ${RANGER_SCRIPTS}/ranger-hbase-service-dev_hbase.py
 fi
