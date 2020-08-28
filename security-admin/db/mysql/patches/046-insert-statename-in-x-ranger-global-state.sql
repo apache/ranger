@@ -13,6 +13,16 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+DELIMITER $$
+DROP FUNCTION if exists getXportalUIdByLoginId$$
+CREATE FUNCTION `getXportalUIdByLoginId`(input_val VARCHAR(100)) RETURNS int(11)
+BEGIN DECLARE myid INT; SELECT x_portal_user.id into myid FROM x_portal_user
+WHERE x_portal_user.login_id = input_val;
+RETURN myid;
+END $$
+
+DELIMITER ;
+
 drop procedure if exists insert_statename_in_x_ranger_global_state;
 
 delimiter ;;

@@ -12,6 +12,40 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+IF EXISTS (SELECT *
+           FROM   sys.objects
+           WHERE  object_id = OBJECT_ID(N'dbo.getXportalUIdByLoginId')
+                  AND type IN ( N'FN', N'IF', N'TF', N'FS', N'FT' ))
+  DROP FUNCTION dbo.getXportalUIdByLoginId
+  PRINT 'Dropped function dbo.getXportalUIdByLoginId'
+
+GO
+PRINT 'Creating function dbo.getXportalUIdByLoginId'
+GO
+CREATE FUNCTION dbo.getXportalUIdByLoginId
+(
+
+        @inputValue varchar(200)
+)
+RETURNS int
+AS
+BEGIN
+        Declare @myid int;
+
+        Select @myid = id from x_portal_user where x_portal_user.login_id = @inputValue;
+
+        return @myid;
+
+END
+GO
+
+PRINT 'Created function dbo.getXportalUIdByLoginId successfully'
+GO
+
 
 GO
 IF EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_ranger_global_state' and column_name = 'state_name')

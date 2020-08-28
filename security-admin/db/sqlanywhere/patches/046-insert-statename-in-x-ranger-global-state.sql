@@ -13,6 +13,15 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+CREATE OR REPLACE FUNCTION dbo.getXportalUIdByLoginId (input_val CHAR(60))
+RETURNS INTEGER
+BEGIN
+  DECLARE myid INTEGER;
+  SELECT x_portal_user.id into myid FROM x_portal_user WHERE x_portal_user.login_id=input_val;
+  RETURN (myid);
+END;
+GO
+
 BEGIN
 	IF EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_ranger_global_state' and cname='state_name') THEN
 		

@@ -13,6 +13,10 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+CREATE OR REPLACE FUNCTION getXportalUIdByLoginId(input_val varchar(100))
+RETURNS bigint LANGUAGE SQL AS $$ SELECT x_portal_user.id FROM x_portal_user
+WHERE x_portal_user.login_id = $1; $$;
+
 select 'delimiter start';
 CREATE OR REPLACE FUNCTION insert_statename_in_x_ranger_global_state()
 RETURNS void AS $$
