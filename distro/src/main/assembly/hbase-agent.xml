@@ -19,7 +19,6 @@
   <id>hbase-plugin</id>
   <formats>
     <format>tar.gz</format>
-    <format>zip</format>
   </formats>
   <baseDirectory>${project.parent.name}-${project.version}-hbase-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>

@@ -14,7 +14,6 @@
 	<id>kafka-plugin</id>
 	<formats>
 		<format>tar.gz</format>
-		<format>zip</format>
 	</formats>
 	<baseDirectory>${project.parent.name}-${project.version}-kafka-plugin
 	</baseDirectory>
