@@ -347,7 +347,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== getCurrentRoleNamesFromRanger() for user " + user);
 			}
-			Set<String> userRoles = new HashSet<String>(hivePlugin.getUserRoles(user, auditHandler));
+
+			List<String> userRoles = hivePlugin.getUserRoles(user, auditHandler);
+
+			if (userRoles == null) {
+				userRoles = Collections.emptyList();
+			}
+
 			for (String role : userRoles) {
 				if (!ROLE_ADMIN.equalsIgnoreCase(role)) {
 					ret.add(role);
