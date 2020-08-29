@@ -19,7 +19,6 @@
   <id>ranger-tools</id>
   <formats>
     <format>tar.gz</format>
-    <format>zip</format>
   </formats>
   <baseDirectory>${project.parent.name}-${project.version}-ranger-tools</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
