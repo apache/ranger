@@ -28,8 +28,6 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
 import java.lang.reflect.Type;
@@ -50,7 +48,6 @@ import org.apache.ranger.unixusersync.model.*;
 import org.apache.ranger.unixusersync.process.RangerUgSyncRESTClient;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 
-import com.google.common.collect.Table;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
