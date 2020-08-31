@@ -1883,7 +1883,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERTBLPART_SKEWED_LOCATION:
 			case ALTERTABLE_OWNER:
 			case QUERY:
-				ret = FsAction.ALL;
+				ret = FsAction.READ_WRITE;
 				break;
 
 			case EXPLAIN:
