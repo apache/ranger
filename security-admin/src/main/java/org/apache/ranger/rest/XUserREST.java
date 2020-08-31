@@ -306,7 +306,15 @@ public class XUserREST {
 	public VXUserGroupInfo createXUserGroupFromMap(VXUserGroupInfo vXUserGroupInfo) {
 		return  xUserMgr.createXUserGroupFromMap(vXUserGroupInfo);
 	}
-	
+
+	@POST
+	@Path("/users/roleassignments")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public List<String> setXUserRolesByName(VXUsersGroupRoleAssignments ugRoleAssignments) {
+		return xUserMgr.updateUserRoleAssignments(ugRoleAssignments);
+	}
+
 	@POST
 	@Path("/secure/users")
 	@Produces({ "application/xml", "application/json" })

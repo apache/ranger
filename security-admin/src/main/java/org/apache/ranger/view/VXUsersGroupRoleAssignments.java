@@ -17,41 +17,50 @@
  * under the License.
  */
 
-package org.apache.ranger.unixusersync.model;
-
-import java.util.List;
-
-import javax.xml.bind.annotation.XmlRootElement;
+package org.apache.ranger.view;
 
 import org.codehaus.jackson.annotate.JsonAutoDetect;
-import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+
+import javax.xml.bind.annotation.XmlRootElement;
+import java.util.List;
+import java.util.Map;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 @XmlRootElement
-public class UserGroupList {
+public class VXUsersGroupRoleAssignments {
 
-	String user;
-	
-	List<String> groups;
+	List<String> users;
 
-	public String getUser() {
-		return user;
+	Map<String, String> groupRoleAssignments;
+
+	Map<String, String> userRoleAssignments;
+
+	public List<String> getUsers() {
+		return users;
 	}
 
-	public void setUser(String user) {
-		this.user = user;
+	public void setUsers(List<String> users) {
+		this.users = users;
 	}
 
-	public List<String> getGroups() {
-		return groups;
+	public Map<String, String> getGroupRoleAssignments() {
+		return groupRoleAssignments;
 	}
 
-	public void setGroups(List<String> groups) {
-		this.groups = groups;
+	public void setGroupRoleAssignments(Map<String, String> groupRoleAssignments) {
+		this.groupRoleAssignments = groupRoleAssignments;
 	}
 
+	public Map<String, String> getUserRoleAssignments() {
+		return userRoleAssignments;
+	}
+
+	public void setUserRoleAssignments(Map<String, String> userRoleAssignments) {
+		this.userRoleAssignments = userRoleAssignments;
+	}
 }

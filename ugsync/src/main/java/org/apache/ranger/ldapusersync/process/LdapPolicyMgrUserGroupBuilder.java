@@ -28,8 +28,11 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
 import java.util.StringTokenizer;
 import java.util.regex.Pattern;
+import java.lang.reflect.Type;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletResponse;
@@ -50,32 +53,30 @@ import org.apache.ranger.usergroupsync.UserGroupSink;
 import com.google.common.collect.Table;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.sun.jersey.api.client.ClientResponse;
 
 public class LdapPolicyMgrUserGroupBuilder implements UserGroupSink {
 
 private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder.class);
-	
-	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";	
+
+	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
 	private String AUTH_KERBEROS = "kerberos";
 	private static final String PRINCIPAL = "ranger.usersync.kerberos.principal";
 	private static final String KEYTAB = "ranger.usersync.kerberos.keytab";
 	private static final String NAME_RULE = "hadoop.security.auth_to_local";
-	
-	public static final String PM_USER_LIST_URI  = "/service/xusers/users/";				// GET
+
 	private static final String PM_ADD_USER_GROUP_INFO_URI = "/service/xusers/users/userinfo";	// POST
-	
+	public static final String PM_UPDATE_USERS_ROLES_URI  = "/service/xusers/users/roleassignments";	// PUT
+
 	private static final String PM_ADD_GROUP_USER_INFO_URI = "/service/xusers/groups/groupinfo";	// POST
-	
-	public static final String PM_GROUP_LIST_URI = "/service/xusers/groups/";				// GET
+
 	private static final String PM_ADD_GROUP_URI = "/service/xusers/groups/";				// POST
-	
+
 	private static final String PM_DEL_USER_GROUP_LINK_URI = "/service/xusers/group/${groupName}/user/${userName}"; // DELETE
-	
-	public static final String PM_USER_GROUP_MAP_LIST_URI = "/service/xusers/groupusers/";		// GET
-	
+
 	public static final String PM_GET_GROUP_USER_MAP_LIST_URI = "/service/xusers/groupusers/groupName/${groupName}";		// GET
-	
+
 	private static final String PM_ADD_LOGIN_USER_URI = "/service/users/default";			// POST
 
 	private static final String PM_AUDIT_INFO_URI = "/service/xusers/ugsync/auditinfo/";				// POST
@@ -95,8 +96,6 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 	private UserGroupInfo				usergroupInfo = new UserGroupInfo();
 	private GroupUserInfo				groupuserInfo = new GroupUserInfo();
 	private volatile RangerUgSyncRESTClient ldapUgSyncClient;
-	
-	Table<String, String, String> groupsUsersTable;
 
 	private String authenticationType = null;
 	String principal;
@@ -113,7 +112,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			LOCAL_HOSTNAME = "unknown";
 		}
 	}
-	
+
 	synchronized public void init() throws Throwable {
 		recordsToPullPerCall = config.getMaxRecordsPerAPICall();
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
@@ -169,7 +168,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			}
 
 	}
-	
+
 	private XGroupInfo addGroupInfo(final String groupName, Map<String, String> groupAttrs){
 		XGroupInfo ret = null;
 		XGroupInfo group = null;
@@ -203,17 +202,17 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			return null;
 		} else {
 			return getAddedGroupInfo(group);
-		}	
+		}
 	}
-	
+
 	private XGroupInfo addXGroupInfo(String aGroupName, Map<String, String> groupAttrs) {
-		
+
 		XGroupInfo addGroup = new XGroupInfo();
-		
+
 		addGroup.setName(aGroupName);
-		
+
 		addGroup.setDescription(aGroupName + " - add from Unix box");
-		
+
 		addGroup.setGroupType("1");
 
 		addGroup.setGroupSource(GROUP_SOURCE_EXTERNAL);
@@ -224,7 +223,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		return addGroup;
 	}
 
-	private XGroupInfo getAddedGroupInfo(XGroupInfo group){	
+	private XGroupInfo getAddedGroupInfo(XGroupInfo group){
 		XGroupInfo ret = null;
 		String response = null;
 		ClientResponse clientRes = null;
@@ -304,7 +303,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("INFO: addPMXAUser(" + userName + ")");
 		}
-		
+
 		if (! isMockRun) {
 			user = addXUserInfo(userName, userAttrs);
 		}
@@ -343,7 +342,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			return getUsergroupInfo(ret);
 		}
 	}
-	
+
 	private XUserInfo addXUserInfo(String aUserName, Map<String, String> userAttrs) {
 
 		if (LOG.isDebugEnabled()) {
@@ -359,17 +358,19 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			Gson gson = new Gson();
 			xuserInfo.setOtherAttributes(gson.toJson(userAttrs));
 		}
-        if (userMap.containsKey(aUserName)) {
-            List<String> roleList = new ArrayList<String>();
-            roleList.add(userMap.get(aUserName));
-            xuserInfo.setUserRoleList(roleList);
-        }
+		List<String> roleList = new ArrayList<String>();
+		if (userMap.containsKey(aUserName)) {
+			roleList.add(userMap.get(aUserName));
+		}else{
+			roleList.add("ROLE_USER");
+		}
+		xuserInfo.setUserRoleList(roleList);
 		usergroupInfo.setXuserInfo(xuserInfo);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== LdapPolicyMgrUserGroupBuilder.addXUserInfo " + aUserName + " and " + userAttrs);
 		}
-		
+
 		return xuserInfo;
 	}
 
@@ -378,7 +379,6 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.addXUserGroupInfo ");
 		}
-		
 		List<XGroupInfo> xGroupInfoList = new ArrayList<XGroupInfo>();
 
 		if (CollectionUtils.isNotEmpty(aGroupList)) {
@@ -388,24 +388,24 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 				addXUserGroupInfo(aUserInfo, group);
 			}
 		}
-		
+
 		usergroupInfo.setXgroupInfo(xGroupInfoList);
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== LdapPolicyMgrUserGroupBuilder.addXUserGroupInfo ");
 		}
 	}
-	
+
 	private XUserGroupInfo addXUserGroupInfo(XUserInfo aUserInfo, XGroupInfo aGroupInfo) {
-		
-		
+
+
 	    XUserGroupInfo ugInfo = new XUserGroupInfo();
-		
+
 		ugInfo.setUserId(aUserInfo.getId());
-		
+
 		ugInfo.setGroupName(aGroupInfo.getName());
-		
+
 		// ugInfo.setParentGroupId("1");
-		
+
         return ugInfo;
 	}
 
@@ -480,8 +480,8 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			}
 		} else {
 			groupUserInfo = getGroupUserInfo(groupName);
-		}	
-		
+		}
+
         List<String> oldUsers = new ArrayList<String>();
         Map<String, List<String>> oldUserMap = new HashMap<String, List<String>>();
         if (groupUserInfo != null && groupUserInfo.getXuserInfo() != null) {
@@ -493,10 +493,10 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 				LOG.debug("Returned users for group " + groupUserInfo.getXgroupInfo().getName() + " are: " + oldUsers);
 			}
 		}
-		
+
 		List<String> addUsers = new ArrayList<String>();
 		List<String> delUsers = new ArrayList<String>();
-		
+
 		for (String user : oldUsers) {
 			if (!users.contains(user)) {
 				delUsers.add(user);
@@ -515,18 +515,114 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			LOG.debug("addUsers = " + addUsers);
 		}
 		delXGroupUserInfo(groupName, delUsers);
-		
-		//* Add user to group mapping in the x_group_user table. 
+
+		//* Add user to group mapping in the x_group_user table.
 		//* Here the assumption is that the user already exists in x_portal_user table.
 		if ( ! isMockRun ) {
-			// If the rest call to ranger admin fails, 
+			// If the rest call to ranger admin fails,
 			// propagate the failure to the caller for retry in next sync cycle.
-			if (addGroupUserInfo(groupName, groupAttrs, addUsers) == null ) {
+			GroupUserInfo ret = addGroupUserInfo(groupName, groupAttrs, addUsers);
+			if (ret == null ) {
 				String msg = "Failed to add addorUpdate group user info";
 				LOG.error(msg);
 				throw new Exception(msg);
 			}
 		}
+
+		// Update roles for both deleted & new users in this group when role assignments are configured.
+		if (!groupMap.isEmpty() || !userMap.isEmpty()) {
+			UsersGroupRoleAssignments ugRoleAssignments = new UsersGroupRoleAssignments();
+			List<String> allUsers = new ArrayList<>();
+			if (!delUsers.isEmpty()) {
+				allUsers.addAll(delUsers);
+			}
+			if (!addUsers.isEmpty()) {
+				allUsers.addAll(addUsers);
+			}
+			if (!allUsers.isEmpty()) {
+				ugRoleAssignments.setUsers(allUsers);
+				ugRoleAssignments.setGroupRoleAssignments(groupMap);
+				ugRoleAssignments.setUserRoleAssignments(userMap);
+				if (updateRoles(ugRoleAssignments) == null) {
+					LOG.error("Unable to update roles for " + allUsers);
+				}
+			}
+		}
+	}
+
+	private List<String> updateRoles(UsersGroupRoleAssignments ugRoleAssignments) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("LdapPolicyMgrUserGroupBuilder.updateUserRole(" + ugRoleAssignments.getUsers() + ")");
+		}
+
+		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)){
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				final UsersGroupRoleAssignments result = ugRoleAssignments;
+				List<String> ret = Subject.doAs(sub, new PrivilegedAction<List<String>>() {
+					@Override
+					public List<String> run() {
+						try {
+							return updateUsersRoles(result);
+						} catch (Exception e) {
+							LOG.error("Failed to add User Group Info : ", e);
+						}
+						return null;
+					}
+				});
+				return ret;
+			} catch (Exception e) {
+				LOG.error("Failed to Authenticate Using given Principal and Keytab : " , e);
+			}
+			return null;
+		}else{
+			return updateUsersRoles(ugRoleAssignments);
+		}
+	}
+
+	private List<String> updateUsersRoles(UsersGroupRoleAssignments ugRoleAssignments) {
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> LdapPolicyMgrUserGroupBuilder.updateUserRoles(" + ugRoleAssignments.getUsers() + ")");
+		}
+		List<String> ret = null;
+		try {
+			String response = null;
+			ClientResponse clientRes = null;
+			Gson gson = new GsonBuilder().create();
+			String jsonString = gson.toJson(ugRoleAssignments);
+			String url = PM_UPDATE_USERS_ROLES_URI;
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("USER role MAPPING" + jsonString);
+			}
+			if (isRangerCookieEnabled) {
+				response = cookieBasedUploadEntity(ugRoleAssignments, url);
+			} else {
+				try {
+					clientRes = ldapUgSyncClient.post(url, null, ugRoleAssignments);
+					if (clientRes != null) {
+						response = clientRes.getEntity(String.class);
+					}
+				} catch (Throwable t) {
+					LOG.error("Failed to get response, Error is : ", t);
+				}
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("RESPONSE: [" + response + "]");
+			}
+			Type listType = new TypeToken<ArrayList<String>>() {
+			}.getType();
+			ret = new Gson().fromJson(response, listType);
+
+		} catch (Exception e) {
+
+			LOG.warn( "ERROR: Unable to update roles for: " + ugRoleAssignments.getUsers(), e);
+		}
+
+		if(LOG.isDebugEnabled()){
+			LOG.debug("<== LdapPolicyMgrUserGroupBuilder.updateUserRoles(" + ret + ")");
+		}
+		return ret;
 	}
 
 	@Override
@@ -692,7 +788,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			LOG.debug("<== LdapPolicyMgrUserGroupBuilder.delXUserGroupInfo()");
 		}
 	}
-	
+
 	private GroupUserInfo addGroupUserInfo(String groupName, Map<String, String> groupAttrs, List<String> users){
 		if(LOG.isDebugEnabled()) {
 	 		LOG.debug("==> LdapPolicyMgrUserGroupBuilder.addGroupUserInfo " + groupName + " and " + users);
@@ -738,7 +834,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 			return getGroupUserInfo(ret);
 		}
 	}
-	
+
 	private void addXGroupUserInfo(XGroupInfo aGroupInfo, List<String> aUserList) {
 
 		List<XUserInfo> xUserInfoList = new ArrayList<XUserInfo>();
@@ -760,32 +856,7 @@ private static final Logger LOG = Logger.getLogger(LdapPolicyMgrUserGroupBuilder
 		ClientResponse clientRes = null;
 		String relativeUrl = PM_ADD_GROUP_USER_INFO_URI;
 		Gson gson = new GsonBuilder().create();
-		
 
-        if (groupuserInfo != null
-                && groupuserInfo.getXgroupInfo() != null
-                && groupuserInfo.getXuserInfo() != null
-                && groupMap
-                        .containsKey(groupuserInfo.getXgroupInfo().getName())
-                && groupuserInfo.getXuserInfo().size() > 0) {
-            List<String> userRoleList = new ArrayList<String>();
-            userRoleList.add(groupMap.get(groupuserInfo.getXgroupInfo()
-                    .getName()));
-            int i = groupuserInfo.getXuserInfo().size();
-            for (int j = 0; j < i; j++) {
-                if (userMap.containsKey(groupuserInfo.getXuserInfo().get(j)
-                        .getName())) {
-                    List<String> userRole = new ArrayList<String>();
-                    userRole.add(userMap.get(groupuserInfo.getXuserInfo()
-                            .get(j).getName()));
-                    groupuserInfo.getXuserInfo().get(j)
-                            .setUserRoleList(userRole);
-                } else {
-                    groupuserInfo.getXuserInfo().get(j)
-                            .setUserRoleList(userRoleList);
-                }
-            }
-        }
         String jsonString = gson.toJson(groupuserInfo);
         if (LOG.isDebugEnabled()) {
             LOG.debug("GROUP USER MAPPING" + jsonString);

@@ -649,7 +649,7 @@ public class XUserMgr extends XUserMgrBase {
 
 		return vxGUInfo;
 	}
-	
+
 	public VXGroupUserInfo getXGroupUserFromMap(
 			String groupName) {
 		checkAdminAccess();
@@ -687,7 +687,7 @@ public class XUserMgr extends XUserMgrBase {
                 }
 				vxu.add(vxUser);
 			}
-			
+
 		}
 		vxGUInfo.setXuserInfo(vxu);
 
@@ -745,13 +745,13 @@ public class XUserMgr extends XUserMgrBase {
 				throw restErrorUtil.create403RESTException("Logged-In user is not allowed to access requested user data.");
 			}
 		}
-		
+
 		if(vXUser!=null && !hasAccessToModule(RangerConstants.MODULE_USER_GROUPS)){
 			vXUser=getMaskedVXUser(vXUser);
 		}
 		return vXUser;
 	}
-	
+
 	private boolean hasAccessToGetUserInfo(VXUser requestedVXUser) {
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 		if (userSession != null && userSession.getLoginId() != null) {
@@ -761,9 +761,9 @@ public class XUserMgr extends XUserMgrBase {
 				if (loggedInVXUser.getUserRoleList().size() == 1
 						&& loggedInVXUser.getUserRoleList().contains(
 								RangerConstants.ROLE_USER)) {
-					
+
 					return requestedVXUser.getId().equals(loggedInVXUser.getId()) ? true : false;
-									
+
 				}else{
 					return true;
 				}
@@ -779,7 +779,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public VXGroup getXGroup(Long id) {
 		VXGroup vXGroup=null;
-		
+
 		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
 		if (userSession != null && userSession.getLoginId() != null) {
 			VXUser loggedInVXUser = xUserService.getXUserByUserName(userSession
@@ -1538,6 +1538,71 @@ public class XUserMgr extends XUserMgrBase {
 			throw restErrorUtil.createRESTException("Login ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
 		}
 
+	}
+
+	public List<String> updateUserRoleAssignments(VXUsersGroupRoleAssignments ugRoleAssignments) {
+		List<String> updatedUsers = new ArrayList<>();
+		// For each user get groups and compute roles based on group role assignments
+		for (String userName : ugRoleAssignments.getUsers()) {
+			if (userMgr.getUserProfileByLoginId(userName) == null) {
+				logger.info(userName + " doesn't exist and hence ignoring role assignments");
+				continue;
+			}
+			Set<String> userRoleList = new HashSet<>();
+			Map<String, String> userMap = ugRoleAssignments.getUserRoleAssignments();
+			if (!userMap.isEmpty() && userMap.containsKey(userName)) {
+				// Add the user role that is defined in user role assignments
+				userRoleList.add(userMap.get(userName));
+			}
+			Map<String, String> groupMap = ugRoleAssignments.getGroupRoleAssignments();
+
+			if (!groupMap.isEmpty()) {
+				for (String group : getGroupsForUser(userName)) {
+					String value = groupMap.get(group);
+					if (value != null) {
+						userRoleList.add(value);
+					}
+				}
+			}
+			if (userRoleList.isEmpty()) {
+				userRoleList.add(RangerConstants.ROLE_USER);
+			}
+			String updatedUser = setRolesByUserName(userName, new ArrayList<>(userRoleList));
+			if (updatedUser != null) {
+				updatedUsers.add(updatedUser);
+			}
+		}
+		return updatedUsers;
+	}
+
+	private String setRolesByUserName(String userName, List<String> roleListNewProfile) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> XUserMgr.setRolesByUserName(" + userName + ", " + roleListNewProfile + ")");
+		}
+		String ret = null;
+		xaBizUtil.blockAuditorRoleUser();
+		if (roleListNewProfile == null) {
+			roleListNewProfile = new ArrayList<String>();
+		}
+
+		if(userName!=null && roleListNewProfile.size()>0){
+			checkAccessRoles(roleListNewProfile);
+			VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(userName);
+			if(oldUserProfile!=null){
+				denySelfRoleChange(oldUserProfile.getLoginId());
+				updateUserRolesPermissions(oldUserProfile,roleListNewProfile);
+				logger.info("<== XUserMgr.setRolesByUserName returned roles for " + userName + " are: " + roleListNewProfile );
+				ret = userName;
+			}else{
+				logger.error(userName + "doesn't exist.");
+			}
+		}else{
+			logger.error(userName + "doesn't exist or new role assignments are empty");
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== XUserMgr.setRolesByUserName(" + userName + ", " + roleListNewProfile + ") ret = " + ret);
+		}
+		return ret;
 	}
 
 	public VXStringList getUserRolesByExternalID(Long userId) {
