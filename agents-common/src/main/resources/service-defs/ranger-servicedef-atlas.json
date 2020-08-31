@@ -42,7 +42,7 @@
 			},
 			"label": "Type Name",
 			"description": "Type Name",
-			"accessTypeRestrictions": ["type-create", "type-update", "type-delete"]
+			"accessTypeRestrictions": ["type-read" ,"type-create", "type-update", "type-delete" ]
 		},
 		{
 			"itemId": 3,
@@ -298,17 +298,29 @@
 		{
 			"itemId": 1,
 			"name": "type-create",
-			"label": "Create Type"
+			"label": "Create Type",
+			"impliedGrants":
+			[
+				"type-read"
+			]
 		},
 		{
 			"itemId": 2,
 			"name": "type-update",
-			"label": "Update Type"
+			"label": "Update Type",
+			"impliedGrants":
+			[
+				"type-read"
+			]
 		},
 		{
 			"itemId": 3,
 			"name": "type-delete",
-			"label": "Delete Type"
+			"label": "Delete Type",
+			"impliedGrants":
+			[
+				"type-read"
+			]
 		},
 		{
 			"itemId": 4,
@@ -389,6 +401,11 @@
 			"itemId": 19,
 			"name": "entity-update-business-metadata",
 			"label": "Update Business Metadata"
+		},
+		{
+			"itemId": 20,
+			"name": "type-read",
+			"label": "Read Type"
 		}
 	],
 	"configs": [

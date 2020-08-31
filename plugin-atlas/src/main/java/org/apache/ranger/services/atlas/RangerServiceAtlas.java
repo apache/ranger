@@ -76,6 +76,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String SEARCH_FEATURE_POLICY_NAME             = "Allow users to manage favorite searches";
 
 	public static final String ACCESS_TYPE_ENTITY_READ  = "entity-read";
+	public static final String ACCESS_TYPE_TYPE_READ = "type-read";
 	public static final String ACCESS_TYPE_ENTITY_CREATE  = "entity-create";
 	public static final String ACCESS_TYPE_ENTITY_UPDATE = "entity-update";
 	public static final String ACCESS_TYPE_ENTITY_DELETE = "entity-delete";
@@ -197,6 +198,14 @@ public class RangerServiceAtlas extends RangerBaseService {
 				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ)));
 				policyItemForLookupUser.setDelegateAdmin(false);
 				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+
+			//  add a policy-item for rangertagsync user with 'type-read' permission in the policy for 'type-category'
+			if (policyResources.containsKey(RangerServiceAtlas.RESOURCE_TYPE_CATEGORY)) {
+				RangerPolicyItem policyItemTypeReadForAll = new RangerPolicyItem();
+				policyItemTypeReadForAll.setGroups(Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC));
+				policyItemTypeReadForAll.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_TYPE_READ)));
+				defaultPolicy.getPolicyItems().add(policyItemTypeReadForAll);
 			}
         }
 
