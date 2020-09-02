@@ -14,28 +14,28 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<div class="control-group">
-	<label class="control-label">{{tt 'lbl.userPermissions'}}</label>
-	<div class="controls">
-		<table class="table-permission table-condensed">
-			<thead>
-				<tr>
-					{{#each permHeaders}}
-					<th>{{./this}}</th>
-					{{/each}}
-
-				</tr>
-			</thead>
-			<tbody class="js-formInput">
-
-			</tbody>
-		</table>
-	</div>
+<div class="form-group">
+    <label class="control-label">{{tt 'lbl.userPermissions'}}</label>
+    <div class="col-md-12">
+        <div class="table-responsive">
+            <table class="table-permission table-condensed">
+                <thead>
+                    <tr>
+                        {{#each permHeaders}}
+                        <th>{{./this}}</th>
+                        {{/each}}
+                    </tr>
+                </thead>
+                <tbody class="js-formInput">
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-<div class="control-group">
-	<div class="controls" style="margin-top:-14px">
-		<button type="button" class="btn btn-small" data-action="addUser" title="Add">
-			<i class="icon-plus"></i>
-		</button>
-	</div>
+<div class="form-group">
+    <div class="col-md-12 m-t-md">
+        <button type="button" class="btn btn-sm" data-action="addUser" title="Add">
+            <i class="fa-fw fa fa-plus"></i>
+        </button>
+    </div>
 </div>

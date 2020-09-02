@@ -73,7 +73,7 @@ define(function(require){
 		},
 
 		displaySpinner: function () {
-            this.$el.empty().append('<i class="icon-spinner icon-spin icon-3x white spin-position"></i>');
+            this.$el.empty().append('<i class="fa-fw fa fa-spinner fa-fw fa fa-spin fa-fw fa fa-3x white spin-position"></i>');
         },
 
         removeSpinner: function () {

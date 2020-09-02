@@ -14,32 +14,30 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<form class="form-horizontal" >
-	<fieldset class="configProp">
-		<p class="formHeader">
-			{{tt 'lbl.serviceDetails'}} :
-		</p>
-		<div class="serviceDetail" data-fields={{serviceDetail}}></div>
-	</fieldset>
-	<fieldset class="configProp">
-		<p class="formHeader">
-			Config Properties : 
-		</p>
-		{{#compare this.serviceConfig "neq" ''}}
-			<div class="serviceConfig" data-fields={{serviceConfig}}></div>
-		{{/compare}}
-		<div class="extraServiceConfigs" ></div>
-	</fieldset>
-	
-	<div>
-		<div class="control-group field-username hdfs hive knox storm" style="display: block;">
-			<label class="control-label" for="c12_username"></label>
-			<div class="controls">
-				<span data-editor="">
-					<input data-id="testConn" type="button" value="Test Connection" class="btn" />
-				</span>
-	
-			</div>
-		</div>
-	</div>
+<form class="form-horizontal">
+    <fieldset class="configProp">
+        <p class="formHeader">
+            {{tt 'lbl.serviceDetails'}} :
+        </p>
+        <div class="serviceDetail" data-fields="{{serviceDetail}}"></div>
+    </fieldset>
+    <fieldset class="configProp">
+        <p class="formHeader">
+            Config Properties :
+        </p>
+        {{#compare this.serviceConfig "neq" ''}}
+            <div class="serviceConfig" data-fields="{{serviceConfig}}"></div>
+        {{/compare}}
+        <div class="extraServiceConfigs"></div>
+    </fieldset>
+    <div>
+        <div class="form-group field-username hdfs hive knox storm">
+            <label class="control-label" for="c12_username"></label>
+            <div class="col-sm-3 text-right">
+                <span data-editor="">
+                    <input data-id="testConn" type="button" value="Test Connection" class="btn btn-sm">
+                </span>
+            </div>
+        </div>
+    </div>
 </form>

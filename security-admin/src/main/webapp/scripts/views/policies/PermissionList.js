@@ -218,7 +218,7 @@ define(function(require) {
 			$select.select2({
 				closeOnSelect : true,
 				placeholder : placeholder,
-				width :'220px',
+				width :'290px',
 				tokenSeparators: [",", " "],
 				tags : true,
 				initSelection : function (element, callback) {
@@ -306,7 +306,7 @@ define(function(require) {
                         if(_.isNull(values) || _.isEmpty(values) || (_.contains(values,"-1")  &&  values.length == 1)){
                             $(this).empty();
                             that.model.unset('accesses');
-                            that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+                            that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
                             that.ui.addPermissionsSpan.attr('title','add');
                             return;
 						}
@@ -319,7 +319,7 @@ define(function(require) {
                         	if(!_.isUndefined(id)){
                         		var obj = _.findWhere(that.rangerServiceDefModel.attributes.accessTypes,{'name' : id});
 								permTypeArr.push({permType : obj.value});
-								return "<span class='label label-info'>" + obj.label + "</span>";
+								return "<span class='badge badge-info'>" + obj.label + "</span>";
                         	}
                         });
                         var items=[];
@@ -332,7 +332,7 @@ define(function(require) {
                         // Save form data to model
                         that.model.set('accesses', items);
                         $(this).html(valArr.join(" "));
-                        that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
+                        that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
                         that.ui.addPermissionsSpan.attr('title','edit');
 					},
                                 }).on('shown', function(e, editable) {
@@ -478,7 +478,7 @@ define(function(require) {
 					if(_.isNull(values) || _.isEmpty(values)){
 						$(this).empty();
 						that.model.unset('accesses');
-						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 						that.ui.addPermissionsSpan.attr('title','add');
 						//disable Masking option for tag based
 						if(XAUtil.isMaskingPolicy(that.rangerPolicyType)){
@@ -501,7 +501,7 @@ define(function(require) {
 						if(!_.isUndefined(id)){
 							var obj = _.findWhere(srcData,{'value' : id});
 							permTypeArr.push({permType : obj.value});
-							return "<span class='label label-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
+							return "<span class='badge badge-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
 						}
 					});
 					var items=[];
@@ -514,7 +514,7 @@ define(function(require) {
 					// Save form data to model
 					that.model.set('accesses', items);
 					$(this).html(_.uniq(valArr).join(" "));
-					that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addPermissionsSpan.attr('title','edit');
 					
 					//enabling add masking option for Tag-based
@@ -525,24 +525,31 @@ define(function(require) {
 						that.renderMaskingTypesForTagBasedPolicies(selectedComponent)
 					}
 				},
-			}).on('hide',function(e){
-					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
+			}).on('hidden',function(e){
+					// $(e.currentTarget).parent().find('.tag-condition-popover').remove()
+					$('.popover').parent().remove()
 			}).on('click', function(e) {
 				e.stopPropagation();
+				if($('.popover')){
+					$('.tag-condition-popover').remove()
+				}
 //				e.preventDefault();
 //				that.clickOnPermissions(that);
 				 //Sticky popup
-				var pop = $(this).parent('td').find('.popover')
+				var pop = $('.popover')
 				pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
 				pop.addClass('tag-fixed-popover');
 				pop.find('.arrow').removeClass('arrow')
 			});
 			that.ui.addPermissionsSpan.click(function(e) {
 				e.stopPropagation();
+				if($('.popover')){
+					$('.tag-condition-popover').remove()
+				}
 				that.$('a[data-js="permissions"]').editable('toggle');
 //				that.clickOnPermissions(that);
 				
-				var pop = $(this).parent('td').find('.popover')
+				var pop = $('.popover')
 				pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
 				pop.addClass('tag-fixed-popover');
 				pop.find('.arrow').removeClass('arrow')
@@ -575,7 +582,7 @@ define(function(require) {
                         }
                         that.ui.addMaskingTypeSpan.unbind( "click" );
 			this.$el.find('input[data-id="maskTypeCustom"]').unbind( "change" );
-			that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-plus');
+			that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 			that.ui.addMaskingTypeSpan.attr('title','add');
                         this.$el.find('input[data-id="maskTypeCustom"]').css("display","none");
 
@@ -590,7 +597,7 @@ define(function(require) {
 				display: function(value,srcData) {
 					if(_.isNull(value) || _.isUndefined(value) || _.isEmpty(value)){
 						$(this).empty();
-						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 						that.ui.addPermissionsSpan.attr('title','add');
 						return;
 					}
@@ -606,13 +613,14 @@ define(function(require) {
 						$(this).siblings('[data-id="maskTypeCustom"]').val(" ");
 					}
 					
-					$(this).html("<span class='label label-info'>"+ value.substr(0,value.indexOf(":")).toUpperCase() +" : "
+					$(this).html("<span class='badge badge-info'>"+ value.substr(0,value.indexOf(":")).toUpperCase() +" : "
 							+ obj.text +"</span>");
-					that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addMaskingTypeSpan.attr('title','edit');
 				},
 			}).on('hide',function(e){
-					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
+					//$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
+					$('.popover').parent().remove()
                         }).on('click', function(e) {
                             e.stopPropagation();
                             e.preventDefault();
@@ -637,30 +645,30 @@ define(function(require) {
 		},
 		clickOnPermissions : function(that) {
 			var selectAll = true;
-			var checklist = that.$('.editable-checklist').find('input[type="checkbox"]')
+			var checklist = $('.editable-checklist').find('input[type="checkbox"]')
             _.each(checklist,function(checkbox){
                 if($(checkbox).val() != -1 && !$(checkbox).is(':checked'))
                     selectAll = false;
             })
 			if(selectAll){
-				that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',true)
+				$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',true)
 			} else {
-				that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',false)
+				$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',false)
 			}
 			//for selectAll functionality
-                        that.$('input[type="checkbox"][value="-1"]').click(function(e){
+                        $('input[type="checkbox"][value="-1"]').click(function(e){
                 var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
                 $(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false);
             });
-			that.$('.editable-checklist input[type="checkbox"]').click(function(e){
+			$('.editable-checklist input[type="checkbox"]').click(function(e){
 				if(this.value!="-1"){
 					var selectAll = true;
-					that.$('.editable-checklist input[type="checkbox"]').each(function(index,item){
+					$('.editable-checklist input[type="checkbox"]').each(function(index,item){
 						if(item.value!="-1" && !item.checked){
 							selectAll = false;
 						}
 					});
-					that.$('input[type="checkbox"][value="-1"]').prop('checked',selectAll);
+					$('input[type="checkbox"][value="-1"]').prop('checked',selectAll);
 				}
 			});
 		},
@@ -673,11 +681,11 @@ define(function(require) {
 						return '<div class="editable-address margin-bottom-5">\
 						            <label style="display:block !important;">\
 						                <span>'+obj.label+' : </span>\
-						                <i title="'+localization.tt('validationMessages.jsValidationMsg')+'" class="icon-info-sign" style="float: right;margin-top: 6px;"></i>\
+						                <i title="'+localization.tt('validationMessages.jsValidationMsg')+'" class="fa-fw fa fa-info-circle" style="float: right;margin-top: 6px;"></i>\
 						            </label>\
 						            <textarea class="textAreaContainer" name="'+obj.name+'" placeholder="Please enter condition.."></textarea>\
 						            <div class="jsValidation">\
-						                <a href="javascript:;"class="jsValidationCheck btn btn-defult btn-mini" style="margin: 5px">Syntax check</a>\
+						                <a href="javascript:;"class="jsValidationCheck btn btn-defult btn-sm" style="margin: 5px">Syntax check</a>\
 						            </div>\
 						       </div>'
 					}
@@ -713,7 +721,7 @@ define(function(require) {
 						if(continue_){
 							//Generate html to show on UI
 							var html = _.map(value, function(val,name) {
-								var label = (i%2 == 0) ? 'label label-inverse' : 'label';
+								var label = (i%2 == 0) ? 'badge badge-dark' : 'label';
 								if(_.isEmpty(val)){
 									return ''; 
 								}
@@ -732,12 +740,12 @@ define(function(require) {
 							});
 							that.model.set('conditions', cond);
 							$(this).html(html);
-							that.ui.addConditionsSpan.find('i').attr('class', 'icon-pencil');
+							that.ui.addConditionsSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 							that.ui.addConditionsSpan.attr('title','edit');
 						} else {
 							that.model.unset('conditions');
 							$(this).empty();
-							that.ui.addConditionsSpan.find('i').attr('class', 'icon-plus');
+							that.ui.addConditionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 							that.ui.addConditionsSpan.attr('title','add');
 						}
 					},
@@ -770,13 +778,14 @@ define(function(require) {
 							return error.message;
 						}
 				    },
-				}).on('shown', function(e){
-				    that.$el.find('.jsValidationCheck').on('click',function(e){
+				}).on('shown' , function(e, editable) {
+				    $('.popover').addClass('tag-condition-popover');
+				    $('.jsValidationCheck').on('click',function(e){
 				        e.stopPropagation();
 				        var $textArea = $(e.currentTarget).parent().parent();
-				        if(that.$el.find('.editableform div.control-group').hasClass('error')){
-				            that.$el.find('.editableform div.control-group').removeClass('error');
-				            that.$el.find('.editable-error-block').remove();
+				        if($('.editableform div.form-group').hasClass('error')){
+				            $('.editableform div.form-group').removeClass('error');
+				            $('.editable-error-block').remove();
 				        }
 				        if($textArea.find('.textAreaContainer').hasClass('errorClass') || $textArea.find('.jsValidation span').hasClass('validSyntax')){
 				            $textArea.find('.textAreaContainer').removeClass('errorClass');
@@ -802,6 +811,7 @@ define(function(require) {
 				that.ui.addConditionsSpan.click(function(e) {
 					e.stopPropagation();
 					that.$('#policyConditions').editable('toggle');
+					$('.popover').addClass('tag-condition-popover');
 				});
 			}else{
 			    that.model.unset('conditions');
@@ -892,7 +902,7 @@ define(function(require) {
 					if(_.isNull(value) || _.isEmpty(value)){
 						$(this).empty();
 						that.model.unset('dataMaskInfo');
-						that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 						that.ui.addMaskingTypeSpan.attr('title','add');
 						return;
 					}
@@ -908,8 +918,8 @@ define(function(require) {
                                                 $(this).siblings('[data-id="maskTypeCustom"]').val(" ")
 					}
 					
-					$(this).html("<span class='label label-info'>" + obj.text + "</span>");
-					that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-pencil');
+					$(this).html("<span class='badge badge-info'>" + obj.text + "</span>");
+					that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addMaskingTypeSpan.attr('title','edit');
 				},
 			}).on('click', function(e) {
@@ -937,13 +947,13 @@ define(function(require) {
 					if(_.isNull(value) || _.isEmpty(value)){
 						$(this).empty();
 						that.model.unset('rowFilterInfo');
-						that.ui.addRowFilterSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addRowFilterSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 						that.ui.addRowFilterSpan.attr('title','add');
 						return;
 					}	
 					that.model.set('rowFilterInfo', {'filterExpr': value });
-					$(this).html("<span class='label label-info'>" + _.escape(value) + "</span>");
-					that.ui.addRowFilterSpan.find('i').attr('class', 'icon-pencil');
+					$(this).html("<span class='badge badge-info'>" + _.escape(value) + "</span>");
+					that.ui.addRowFilterSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addRowFilterSpan.attr('title','edit');
 				},
 			}).on('click', function(e) {

@@ -15,12 +15,12 @@
   limitations under the License.
 --}}
 <div class="diff-content">
-	<label class="no-margin label-size13-weightbold">Name : {{objectName}}</label>
-	<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
-	<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{userName}}</label>
+	<div class="no-margin label-size13-weightbold">Name: {{objectName}}</div>
+	<div class="no-margin label-size13-weightbold">Date: {{objectCreatedDate}}</div>
+	<div class="no-margin label-size13-weightbold">Created By: {{userName}}</div>
 {{#compare action 'eq' 'create'}}
 	{{#if collection.length}}
-		<h5>User Details :</h5>
+		<h5 class="bold wrap-header m-t-sm">User Details:</h5>
 		<div class="diff">
 			<div class="diff-left">
 				<h3>Fields</h3>
@@ -32,7 +32,7 @@
 			</div>
 			<div class="diff-right">
 				<h3>New Value</h3>
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
 				{{#each collection}}
 					{{#if ./this.attributes.newValue}}
 						{{#compare ./this.attributes.newValue "eq" ''}}
@@ -49,7 +49,7 @@
 		</div>
 	{{/if}}	
  	{{#if isGroup}}
-		<h5>Group  :</h5>
+		<h5 class="bold wrap-header m-t-sm">Group:</h5>
 		<div class="diff">
 			<div class="diff-left">
 				<h3>Fields</h3>
@@ -59,7 +59,7 @@
 			</div>
 			<div class="diff-right" data-id="diff">
 				<h3>New Value</h3>
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
 					<li class="change-row">
 						{{#each newGroupList}}
 							{{./this}} 
@@ -72,9 +72,9 @@
 	{{/if}}
 
 {{else}}
-	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{userName}}</label>
+	<label class="no-margin label-size13-weightbold">Deleted By: {{userName}}</label>
 	{{#if collection.length}}
-	<h5>User Details:</h5>
+	<h5 class="bold wrap-header m-t-sm">User Details:</h5>
 		<div class="diff">
 			<div class="diff-left">
 				<h3>Fields</h3>
@@ -86,7 +86,7 @@
 			</div>
 			<div class="diff-right">
 				<h3>Old Value</h3>
-					<ol class="unstyled data">
+					<ol class="list-unstyled data">
 					{{#each collection}}
 						{{#if ./this.attributes.previousValue}}
 							<li class="change-row">{{./this.attributes.previousValue}}</li>

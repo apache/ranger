@@ -44,7 +44,7 @@ define(function(require){
 		
     	template : RangerPolicycreateTmpl,
     	templateHelpers : function(){
-                var infoMsg = '', displayClass = 'hide', policyTimeStatus = '', expiredClass = 'hide';
+                var infoMsg = '', displayClass = 'd-none', policyTimeStatus = '', expiredClass = 'd-none';
 		if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
 			if(XAUtil.isTagBasedDef(this.rangerServiceDefModel)){
 				infoMsg = localization.tt('msg.maskingPolicyInfoMsgForTagBased'), displayClass = 'show';	
@@ -58,7 +58,7 @@ define(function(require){
             if(XAUtil.isPolicyExpierd(this.model)){
                 policyTimeStatus = localization.tt('msg.policyExpired'), expiredClass = 'show';
             }else{
-                expiredClass = 'hide';
+                expiredClass = 'd-none';
             }
                 }
     		return {
@@ -154,6 +154,11 @@ define(function(require){
 
 		/** on render callback */
 		onRender: function() {
+			// if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
+			// 	App.rContent.$el.addClass('expanded-contant');
+			// } else {
+			// 	App.rContent.$el.removeClass('expanded-contant');
+			// }
 			XAUtil.showAlerForDisabledPolicy(this);
 			this.rForm.show(this.form);
 			this.rForm.$el.dirtyFields();
@@ -298,6 +303,7 @@ define(function(require){
 				callback : function(){
 					XAUtil.blockUI();
 					that.model.destroy({
+						wait: true,
 						success: function(model, response) {
 							XAUtil.blockUI('unblock');
 							XAUtil.allowNavigation();

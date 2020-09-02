@@ -174,7 +174,7 @@ define(function(require){
 				label : localization.tt("lbl.action"),
 				formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 					fromRaw: function (rawValue,model) {
-						return '<a href="#!/permissions/'+model.id+'/edit" class="btn btn-mini" title="Edit"><i class="icon-edit icon-large"></i></a>';
+						return '<a href="#!/permissions/'+model.id+'/edit" class="btn btn-sm" title="Edit"><i class="fa-fw fa fa-edit fa-fw fa fa-large"></i></a>';
 					}
 				}),
 				editable: false,

@@ -86,7 +86,7 @@ define(function(require){
 			events['click ' + this.ui.btnShowMore]  = 'onShowMore';
 			events['click ' + this.ui.btnShowLess]  = 'onShowLess';
 			events['click ' + this.ui.btnSave]  = 'onSave';
-			events['click ' + this.ui.visibilityDropdown +' li a']  = 'onVisibilityChange';
+			events['click ' + this.ui.visibilityDropdown+ ' a']  = 'onVisibilityChange';
 			events['click ' + this.ui.deleteUser] = 'onDeleteUser';
             events['click ' + this.ui.showUserList] = 'showUserList';
             return events;
@@ -165,14 +165,20 @@ define(function(require){
 
         renderTable : function() {
             // this.addVisualSearch();
+            if (this.$el.find('.nav-tabs') && this.$el.find('.nav-tabs a').hasClass('active')) {
+                this.$el.find('.nav-tabs a').removeClass('active');
+            }
             if(this.showUsers){
+                this.$el.find('[data-js="users"] a').addClass('active')
                 this.renderUserTab();
             } else if(this.showGroups){
+                this.$el.find('[data-js="groups"] a').addClass('active')
                 this.renderGroupTab();
             } else {
+                this.$el.find('[data-js="roles"] a').addClass('active')
                 this.renderRoleTab();
             }
-                },
+        },
 
 		onVisibilityChange : function(e){
 			var that = this;
@@ -291,9 +297,6 @@ define(function(require){
                         this.ui.addNewUser.hide();
                         this.ui.addNewGroup.show();
                         this.$('.wrap-header').text('Group List');
-                        this.$('ul').find('[data-js="groups"]').addClass('active');
-                        this.$('ul').find('[data-js="users"]').removeClass();
-                        this.$('ul').find('[data-js="roles"]').removeClass();
             if (_.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)) {
                 this.groupList.fetch({
 				reset:true,
@@ -325,9 +328,6 @@ define(function(require){
                         this.ui.addNewGroup.hide();
                         this.ui.addNewRoles.show();
                         this.$('.wrap-header').text('Role List');
-                        this.$('ul').find('[data-js="roles"]').addClass('active');
-                        this.$('ul').find('[data-js="users"]').removeClass();
-                        this.$('ul').find('[data-js="groups"]').removeClass();
                         this.renderRoleListTable();
                         this.addVisualSearch();
                         if(_.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)) {
@@ -411,7 +411,7 @@ define(function(require){
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue) && rawValue.length > 0){
 								var role = rawValue[0];
-								return '<span class="label label-info">'+XAEnums.UserRoles[role].label+'</span>';
+								return '<span class="badge badge-info">'+XAEnums.UserRoles[role].label+'</span>';
 							}
 							return '--';
 						}
@@ -428,9 +428,9 @@ define(function(require){
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue)){
 								if(rawValue == XAEnums.UserSource.XA_PORTAL_USER.value)
-									return '<span class="label label-success">'+XAEnums.UserTypes.USER_INTERNAL.label+'</span>';
+									return '<span class="badge badge-success">'+XAEnums.UserTypes.USER_INTERNAL.label+'</span>';
 								else
-									return '<span class="label label-green">'+XAEnums.UserTypes.USER_EXTERNAL.label+'</span>';
+									return '<span class="badge badge-green">'+XAEnums.UserTypes.USER_EXTERNAL.label+'</span>';
 							}else
 								return '--';
 						}
@@ -462,9 +462,9 @@ define(function(require){
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue)){
 								if(rawValue)
-									return '<span class="label label-success">'+XAEnums.VisibilityStatus.STATUS_VISIBLE.label+'</span>';
+									return '<span class="badge badge-success">'+XAEnums.VisibilityStatus.STATUS_VISIBLE.label+'</span>';
 								else
-									return '<span class="label label-green">'+XAEnums.VisibilityStatus.STATUS_HIDDEN.label+'</span>';
+									return '<span class="badge badge-green">'+XAEnums.VisibilityStatus.STATUS_HIDDEN.label+'</span>';
 							}else
 								return '--';
 						}
@@ -537,9 +537,9 @@ define(function(require){
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue)){
 								if(rawValue == XAEnums.GroupSource.XA_PORTAL_GROUP.value)
-									return '<span class="label label-success">'+XAEnums.GroupTypes.GROUP_INTERNAL.label+'</span>';
+									return '<span class="badge badge-success">'+XAEnums.GroupTypes.GROUP_INTERNAL.label+'</span>';
 								else {
-									return '<span class="label label-green">'+XAEnums.GroupTypes.GROUP_EXTERNAL.label+'</span>';
+									return '<span class="badge badge-green">'+XAEnums.GroupTypes.GROUP_EXTERNAL.label+'</span>';
 								}
 							}else {
 								return '--';
@@ -558,9 +558,9 @@ define(function(require){
 						fromRaw: function (rawValue, model) {
 							if(!_.isUndefined(rawValue)){
 								if(rawValue){
-									return '<span class="label label-success">'+XAEnums.VisibilityStatus.STATUS_VISIBLE.label+'</span>';
+									return '<span class="badge badge-success">'+XAEnums.VisibilityStatus.STATUS_VISIBLE.label+'</span>';
 								} else {
-									return '<span class="label label-green">'+XAEnums.VisibilityStatus.STATUS_HIDDEN.label+'</span>';
+									return '<span class="badge badge-green">'+XAEnums.VisibilityStatus.STATUS_HIDDEN.label+'</span>';
 								}
 							}else {
 								return '--';
@@ -580,7 +580,7 @@ define(function(require){
                     formatter : _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw : function (rawValue,model) {
                             return ('<div align="center"><button class="userViewicon" title = "View Users" data-js="showUserList" data-name="' + model.get('name')
-                                + '" data-id="' + model.id + '"<font color="black"><i class="icon-group"> </i></font></button></div>');
+                                + '" data-id="' + model.id + '"<font color="black"><i class="fa-fw fa fa-group"> </i></font></button></div>');
                         }
                     }),
                 }
@@ -713,14 +713,14 @@ define(function(require){
                         msg +='<span class="link-tag userLists span-margin setEllipsis" title="'+ _.escape(model.get('name')) +'"><a href="#!/user/'+ model.id+'">'+ _.escape(model.get('name')) + '</a></span>';
                         that.copyUserLists.push(model.get('name'));
                     });
-                    var html = '<div class="row-fluid">\
-                                    <div class="span12">\
+                    var html = '<div class="row">\
+                                    <div class="col-md-12">\
                                         <input type="text" data-id="userInput" placeholder="Search Users" class= "users-list-search">\
-                                        <div class="pull-right link-tag copyUsers btn btn-mini" title="Copy All Users Name"><i class="icon-copy"></i></div>\
+                                        <div class="pull-right link-tag copyUsers btn btn-sm" title="Copy All Users Name"><i class="fa-fw fa fa-copy"></i></div>\
                                     </div>\
                                 </div>';
                     if(totalRecords > 100){
-                        var showAllUserbtn = '<button class="btn btn-mini showMore" data-id="'+ that.groupId +'" data-id="showMore" title="Show All Users">Show All Users</button>'
+                        var showAllUserbtn = '<button class="btn btn-sm showMore" data-id="'+ that.groupId +'" data-id="showMore" title="Show All Users">Show All Users</button>'
                         infoMsg = '<div class="alert alert-warning infoWidth">'+localization.tt('msg.showInitialHundredUser')+showAllUserbtn+'</div>'
                     }
                     if(_.isEmpty(msg)){
@@ -734,6 +734,7 @@ define(function(require){
                         title   : title,
                         okText  : localization.tt("lbl.ok"),
                         allowCancel : true,
+                        focusOk : false
                     }).open();
                     modal.$el.find('.cancel').hide();
                     modal.$el.find('.copyUsers').on("click", function(e){

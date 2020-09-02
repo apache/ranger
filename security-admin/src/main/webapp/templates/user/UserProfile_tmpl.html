@@ -16,31 +16,25 @@
 --}}
 <h4 class="wrap-header bold"> User Profile </h4>
 <div class="wrap non-collapsible ">
-	{{#if setOldUi}}
-		<ul class="nav nav-tabs tabs clearfix" >
-			<li class="" data="edit-password" data-tab="edit-password">
-				<a data-toggle="tab" href="#edit-password"> <i class="blue icon-key bigger-125"></i> Change Password </a>
-			</li>
-			<li class="active" data-tab="edit-basic">
-				<a data-toggle="tab" href="#edit-basic"> <i class="green icon-edit bigger-125"></i> Basic Info </a>
-			</li>
-
-		</ul>
-	{{/if}}
-
-	<div class="tab-content user-profile-tab-content">
-		<div class="tab-pane active" id="tab1">
-			<div data-id="r_form"></div>
-		</div>
-	</div>
-
-	<div class="form-actions form-policy">
-		<button type="submit" data-id="save" class="btn btn-primary">
-			Save
-		</button>
-		<button type="button" data-id="cancel" class="btn btn-inverse">
-			Cancel
-		</button>
-	</div>
-
+    {{#if setOldUi}}
+    <ul class="nav nav-tabs tabs clearfix">
+        <li class="" data="edit-password" data-tab="edit-password">
+            <a data-toggle="tab" href="#edit-password"> <i class="blue fa-fw fa fa-key bigger-125"></i> Change Password </a>
+        </li>
+        <li class="active" data-tab="edit-basic">
+            <a data-toggle="tab" href="#edit-basic"> <i class="green fa-fw fa fa-edit bigger-125"></i> Basic Info </a>
+        </li>
+    </ul>
+    {{/if}}
+    <div class="tab-content user-profile-tab-content">
+        <div class="tab-pane active" id="tab1">
+            <div data-id="r_form"></div>
+        </div>
+    </div>
+    <div class="form-actions row">
+        <div class="col-md-9 offset-md-3">
+            <button type="submit" data-id="save" class="btn btn-primary">Save</button>
+            <button type="button" data-id="cancel" class="btn btn-inverse">Cancel</button>
+        </div>
+    </div>
 </div>

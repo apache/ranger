@@ -89,14 +89,17 @@ require.config({
         'esprima': {
             'exports': 'esprima'
         },
+        'daterangepicker': {
+            deps: ['jquery', 'bootstrap', 'moment', 'momentTz']
+        },
     },
 
     paths: {
 
-        jquery: '../libs/bower/jquery/js/jquery-3.5.1.min',
+        'jquery': '../libs/bower/jquery/js/jquery-3.5.1.min',
         'jquery-ui': '../libs/other/jquery-ui/js/jquery-ui.min',
-        backbone: '../libs/bower/backbone/js/backbone',
-        underscore: '../libs/bower/underscore/js/underscore',
+        'backbone': '../libs/bower/backbone/js/backbone',
+        'underscore': '../libs/bower/underscore/js/underscore',
 
         /* alias all marionette libs */
         'backbone.marionette': '../libs/bower/backbone.marionette/js/backbone.marionette',
@@ -104,36 +107,31 @@ require.config({
         'backbone.babysitter': '../libs/bower/backbone.babysitter/js/backbone.babysitter',
 
         /* alias the bootstrap js lib */
-        bootstrap: '../libs/bower/bootstrap/js/bootstrap',
+        'bootstrap': '../libs/bower/bootstrap/js/bootstrap',
 
         /* BackGrid for Tables */
         'backgrid': '../libs/other/backgrid/backgrid',
         'backbone-fetch-cache': '../libs/other/backbone.fetch-cache',
-
         'backgrid-paginator': '../libs/bower/backgrid-paginator/js/backgrid-paginator',
         'backgrid-filter': '../libs/bower/backgrid-filter/js/backgrid-filter',
-
         'backbone-pageable': '../libs/bower/backbone-pageable/js/backbone-pageable',
         'localstorage': '../libs/bower/backbone.localstorage/backbone.localStorage',
         'backbone-forms': '../libs/bower/backbone-forms/js/backbone-forms',
         'backbone-forms.list': '../libs/bower/backbone-forms/js/list',
         'backbone-forms.templates': '../libs/bower/backbone-forms/js/bootstrap',
         'backbone-forms.XAOverrides': '../libs/fsOverrides/BBFOverrides',
-
         'Backbone.BootstrapModal': '../libs/bower/backbone.bootstrap-modal/js/backbone.bootstrap-modal',
         'bootstrap-editable': '../libs/bower/x-editable/js/bootstrap-editable',
         'bootstrap-datepicker': '../libs/other/datepicker/js/bootstrap-datepicker',
-        'bootstrap-datetimepicker': '../libs/other/bootstrap-datetimepicker/js/bootstrap-datetimepicker.min',
+        'moment': '../libs/bower/moment/js/moment-with-locales.min',
+        'momentTz': '../libs/bower/moment/js/moment-timezone-with-data.min',
+        'daterangepicker': '../libs/other/daterangepicker/js/daterangepicker',
         'bootstrap-notify': '../libs/bower/bootstrap-notify/js/bootstrap-notify',
-
-
         'jquery.cookie': '../libs/other/jquery-cookie/js/jquery.cookie',
         'jquery-toggles': '../libs/bower/jquery-toggles/js/toggles.min',
         'tag-it': '../libs/bower/tag-it/js/tag-it.min',
         'select2': '../libs/bower/select2/select2',
         'bootbox': '../libs/bower/bootbox/js/bootbox',
-        'moment': '../libs/bower/moment/js/moment-with-locales.min',
-        'momentTz': '../libs/bower/moment/js/moment-timezone-with-data.min',
         'visualsearch': '../libs/other/visualsearch/js/visualsearch',
         'globalize': '../libs/bower/globalize/lib/globalize',
         /* handlebars from the require handlerbars plugin below */
@@ -142,7 +140,6 @@ require.config({
         'i18nprecompile': '../libs/bower/require-handlebars-plugin/js/i18nprecompile',
         'hbs': '../libs/bower/require-handlebars-plugin/js/hbs',
         'esprima': '../libs/bower/esprima/esprima',
-
         'tmpl': '../templates'
     },
 

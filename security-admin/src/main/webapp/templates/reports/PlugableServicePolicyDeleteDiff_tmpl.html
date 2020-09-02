@@ -15,16 +15,16 @@
   limitations under the License.
 --}}
 <div class="diff-content">
-	<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
-	<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
+	<b>Policy ID:</b><label class="badge badge-ranger"> {{objectId}}</div>
+	<div class="no-margin label-size13-weightbold">Policy Name: {{policyName}}</div>
     {{#if zoneName}}
-        <label class="no-margin label-size13-weightbold" > Zone Name  &nbsp;&nbsp;:  {{zoneName}}</label>
+        <div class="no-margin label-size13-weightbold">Zone Name: {{zoneName}}</div>
     {{/if}}
-	<label class="no-margin label-size13-weightbold"> Deleted Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
-	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{userName}}</label>
+	<div class="no-margin label-size13-weightbold">Deleted Date: {{objectCreatedDate}}</div>
+	<div class="no-margin label-size13-weightbold">Deleted By: {{userName}}</div>
 
 {{#if collection.length}}
-	<h5>Policy Details :</h5>
+	<h5 class="bold wrap-header m-t-sm">Policy Details:</h5>
 	<div class="diff">
 		<div class="diff-left">
 			<h3>Fields</h3>
@@ -36,7 +36,7 @@
 		</div>
 	 	<div class="diff-left">
 			<h3>Old Value</h3>
-			<ol class="unstyled data">
+			<ol class="list-unstyled data">
 			{{#each collection}}
 					<li class="change-row">{{./this.attributes.previousValue}}</li>
 			{{/each}}	
@@ -46,12 +46,12 @@
 {{/if}}	
 
 {{#if oldPolicyValidityPeriod}}
-    <h5>Validity Period :</h5>
+    <h5 class="bold wrap-header m-t-sm">Validity Period:</h5>
     <div class="diff validityPeriod" >
         <div class="diff-right diff-list" data-id="diff">
             <h3>Old Value</h3>
             {{#each oldPolicyValidityPeriod}}
-                <ol class="unstyled data">
+                <ol class="list-unstyled data">
                     <li class="change-row"><i>Start Date</i>:
                         {{#if this.startTime}}
                             <span class="startTime">{{this.startTime}}</span><span>,</span>
@@ -80,7 +80,7 @@
 {{/if}}
 
 {{#if oldPolicyCondition}}
-    <h5>Policy Conditions :</h5>
+    <h5 class="bold wrap-header m-t-sm">Policy Conditions:</h5>
     <div class="diff diff-perms" >
         <div class="diff-right diff-list" data-id="diff">
             <h3>Old Value</h3>
@@ -98,12 +98,12 @@
 {{/if}}
 
 {{#if oldPolicyItems}}
-	<h5>Allow PolicyItems :</h5>
+	<h5 class="bold wrap-header m-t-sm">Allow PolicyItems:</h5>
 	<div class="diff diff-perms">
 		<div class="diff-right" data-id="diff">
 			<h3>Old Value</h3>
 			{{#each oldPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                                         <li class="change-row"><i>Roles</i>:
                                                                 {{#if_eq this.roles compare=0}}
                                                                         &lt;empty&gt;
@@ -152,12 +152,12 @@
 {{/if}}
 <!-- Masking Policy Items -->
 {{#if oldMaskPolicyItems}}
-	<h5>Masking Policy Items :</h5>
+	<h5 class="bold wrap-header m-t-sm">Masking Policy Items:</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>old Value</h3>
 				{{#each oldMaskPolicyItems}}
-					<ol class="unstyled data">
+					<ol class="list-unstyled data">
                                                 <li class="change-row"><i>Roles</i>:
                                                         {{#if_eq this.roles compare=0}}
                                                                 &lt;empty&gt;
@@ -202,12 +202,12 @@
 
 <!--  Row Filter Policy Items-->
 {{#if oldRowFilterPolicyItems}}
-	<h5>Row Level Filter Policy Items :</h5>
+	<h5 class="bold wrap-header m-t-sm">Row Level Filter Policy Items :</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>Old Value</h3>
 			{{#each oldRowFilterPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                                 <li class="change-row"><i>Roles</i>:
                                                         {{#if_eq this.roles compare=0}}
                                                                 &lt;empty&gt;
@@ -249,12 +249,12 @@
 {{/if}}	
 
 {{#if oldAllowExceptionPolicyItems}}
-	<h5>Allow Exception PolicyItems :</h5>
+	<h5 class="bold wrap-header m-t-sm">Allow Exception PolicyItems:</h5>
 	<div class="diff diff-perms">
 		<div class="diff-right" data-id="diff">
 			<h3>Old Value</h3>
 			{{#each oldAllowExceptionPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                                         <li class="change-row"><i>Roles</i>:
                                                                 {{#if_eq this.roles compare=0}}
                                                                         &lt;empty&gt;
@@ -291,7 +291,7 @@
 								<li class="change-row">
 									<i>Conditions</i>:
 										{{#each this.conditions}}
-											<span class="condition">{{this.type}} : [{{this.values}}]</span><span>,</span>
+											<span class="condition">{{this.type}}: [{{this.values}}]</span><span>,</span>
 										{{/each}}
 								</li>
 							{{/if}}	
@@ -303,12 +303,12 @@
 {{/if}}
 
 {{#if oldDenyPolicyItems}}
-	<h5>Deny PolicyItems :</h5>
+	<h5 class="bold wrap-header m-t-sm">Deny PolicyItems:</h5>
 	<div class="diff diff-perms">
 		<div class="diff-right" data-id="diff">
 			<h3>Old Value</h3>
 			{{#each oldDenyPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                                         <li class="change-row"><i>Roles</i>:
                                                                 {{#if_eq this.roles compare=0}}
                                                                         &lt;empty&gt;
@@ -345,7 +345,7 @@
 								<li class="change-row">
 									<i>Conditions</i>:
 										{{#each this.conditions}}
-											<span class="condition">{{this.type}} : [{{this.values}}]</span><span>,</span>
+											<span class="condition">{{this.type}}: [{{this.values}}]</span><span>,</span>
 										{{/each}}
 								</li>
 							{{/if}}	
@@ -357,12 +357,12 @@
 {{/if}}
 
 {{#if oldDenyExceptionPolicyItems}}
-	<h5>Deny Exception PolicyItems :</h5>
+	<h5 class="bold wrap-header m-t-sm">Deny Exception PolicyItems:</h5>
 	<div class="diff diff-perms">
 		<div class="diff-right" data-id="diff">
 			<h3>Old Value</h3>
 			{{#each oldDenyExceptionPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                                         <li class="change-row"><i>Roles</i>:
                                                                 {{#if_eq this.roles compare=0}}
                                                                         &lt;empty&gt;
@@ -399,7 +399,7 @@
 								<li class="change-row">
 									<i>Conditions</i>:
 										{{#each this.conditions}}
-											<span class="condition">{{this.type}} : [{{this.values}}]</span><span>,</span>
+											<span class="condition">{{this.type}}: [{{this.values}}]</span><span>,</span>
 										{{/each}}
 								</li>
 							{{/if}}	

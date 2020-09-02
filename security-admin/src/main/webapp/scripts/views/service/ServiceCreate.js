@@ -31,6 +31,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
 	var localization	= require('utils/XALangSupport');
+	var bootbox 		= require('bootbox');
 
 	var ServiceForm		= require('views/service/ServiceForm');
 	var RangerServiceDef	= require('models/RangerServiceDef');
@@ -243,7 +244,10 @@ define(function(require){
                             		   		}];
                             	   }
                                    var msgHtml = '<b>Connection Failed.</b></br>'+msResponse.msgDesc;
-                                   bootbox.dialog(msgHtml, popupBtnOpts);
+                                    bootbox.dialog({
+                                        message : msgHtml,
+                                        buttons: popupBtnOpts
+                                    });
 								} else {
 										bootbox.alert("Connection Failed.");
 								}

@@ -14,55 +14,54 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-
-
-	<div data-id="policyTypeTab">
-		<ul class="nav nav-tabs tabs clearfix">
-		{{#showRowLevelTab .}}
-			<li data-tab="rowLevelFilter" class=""><a data-toggle="tab"
-				href="#rowLevelFilter">Row Level Filter</a></li>
-		{{/showRowLevelTab}}
-		
-		{{#showMaskingTab .}}
-			<li data-tab="masking" class=""><a data-toggle="tab"
-				href="#masking">Masking</a></li>
-		{{/showMaskingTab}}
-		{{#if isRenderAccessTab}}
-			<li data-tab="access" class="active"><a data-toggle="tab"
-				href="#access">Access</a></li>
-		{{/if}}		
-		</ul>
+<div data-id="policyTypeTab">
+    <ul class="nav nav-tabs">
+        {{#if isRenderAccessTab}}
+        <li data-tab="access" class="nav-item active">
+            <a class="nav-link" data-toggle="tab" href="#access">Access</a>
+        </li>
+        {{/if}}
+        {{#showMaskingTab .}}
+        <li data-tab="masking" class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#masking">Masking</a>
+        </li>
+        {{/showMaskingTab}}
+        {{#showRowLevelTab .}}
+        <li data-tab="rowLevelFilter" class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#rowLevelFilter">Row Level Filter</a>
+        </li>
+        {{/showRowLevelTab}}
+    </ul>
 </div>
 {{#if setNewUi}}
-  <div class="list-header">
+<div class="list-header">
     {{#if ../isNotUser}}
-      {{#if ../isNotAuditorOrKMSAuditor}}
-        <button type="button" title="" data-name="deleteService" class=" btn btn-small btn-right"> <i class="icon-trash"></i>  Service Delete</button>
-        <button type="button" title="" data-name="serviceEdit" class=" btn btn-small btn-right"> <i class="icon-edit"></i>  Service Edit</button>
-      {{/if}}
-      <button type="button" title="" data-name="serviceDetails" class=" btn btn-small btn-right"> <i class="icon-eye-open"></i>  Service Details</button>
+    {{#if ../isNotAuditorOrKMSAuditor}}
+    <button type="button" title="" data-name="deleteService" class=" btn btn-mini btn-right"> <i class="fa-fw fa fa-trash"></i> Service Delete</button>
+    <button type="button" title="" data-name="serviceEdit" class=" btn btn-mini btn-right"> <i class="fa-fw fa fa-edit"></i> Service Edit</button>
+    {{/if}}
+    <button type="button" title="" data-name="serviceDetails" class=" btn btn-mini btn-right"> <i class="fa-fw fa fa-eye"></i> Service Details</button>
     {{/if}}
 </div>
 {{/if}}
 <h3 class="wrap-header bold"> {{tt 'lbl.listOfPolicies'}} : {{rangerService.attributes.displayName}} </h3>
 <div class="wrap non-collapsible m-height ">
-	<div>
-        <div class="row-fluid margin-bottom-11">
-            <div class="span9">
+    <div>
+        <div class="row margin-bottom-11">
+            <div class="col-md-9">
                 <div class="visual_search"></div>
             </div>
-            <div class="span1">
-                <i class="icon-info-sign searchInfo margin-left-min-30" title="Search Filter Hints" data-id="searchInfo"> </i>
+            <div class="col-md-1">
+                <i class="fa-fw fa fa-info-circle searchInfo margin-left-min-30" title="Search Filter Hints" data-id="searchInfo"> </i>
             </div>
-            <div class="span2">
+            <div class="col-md-2">
                 <div class="clearfix btn-right">
                     {{#if isAddNewPolicyButtonShow}}
-                            <a data-js="addNewPolicy" href="#!/service/{{rangerService.id}}/policies/create/{{this.rangerPolicyType}}" class="btn btn-primary " type="button">{{tt 'lbl.addNewPolicy'}} </a>
+                    <a data-js="addNewPolicy" href="#!/service/{{rangerService.id}}/policies/create/{{this.rangerPolicyType}}" class="btn btn-primary btn-sm" type="button">{{tt 'lbl.addNewPolicy'}} </a>
                     {{/if}}
                 </div>
             </div>
         </div>
-                <div data-id="r_table"></div>
-	</div>
+        <div data-id="r_table"></div>
+    </div>
 </div>
-

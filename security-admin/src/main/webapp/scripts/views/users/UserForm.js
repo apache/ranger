@@ -32,7 +32,6 @@ define(function(require){
 
 	require('backbone-forms');
 	require('backbone-forms.templates');
-	require('bootbox');
 	var UserForm = Backbone.Form.extend(
 	/** @lends UserForm */
 	{

@@ -275,9 +275,9 @@ define(function(require) {'use strict';
 							} else {
 								_.each(model.get('groups'),function(group,index){
 									if(index < 4) {
-										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + '</span>'  + " ";
+										group_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + '</span>'  + " ";
 									} else {
-										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + '</span>'  + " ";
+										group_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + '</span>'  + " ";
 									}
 								});
 								if(model.get('groups').length > 4) {
@@ -306,9 +306,9 @@ define(function(require) {'use strict';
 							} else {
 								_.each(model.get('users'),function(user,index){
 									if(index < 4) {
-										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + '</span>'+ " ";
+										user_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + '</span>'+ " ";
 									} else {
-										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + '</span>'+ " ";
+										user_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + '</span>'+ " ";
 									}
 								});
 								if(model.get('users').length > 4) {
@@ -333,9 +333,9 @@ define(function(require) {'use strict';
 							var access_str = '';
 							_.each(model.get('accesses'),function(access,index){
 								if(index < 4){
-                                                                        access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + access.type+'</span>'  + " ";
+                                                                        access_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + access.type+'</span>'  + " ";
 								} else {
-                                                                        access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + access.type+'</span>'+ " ";
+                                                                        access_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + access.type+'</span>'+ " ";
 								}
 							});
 							if(model.get('accesses').length > 4) {
@@ -371,9 +371,9 @@ define(function(require) {'use strict';
                                 if(maskValue.label){
 									if(maskValue.label == "Custom"){
 										var title = model.attributes.dataMaskInfo.dataMaskType +' : '+model.attributes.dataMaskInfo.valueExpr;
-										access_str = '<span class="label label-info trim-containt" title="'+_.escape(title)+'">'+_.escape(title)+'</span>';
+										access_str = '<span class="badge badge-info trim-containt" title="'+_.escape(title)+'">'+_.escape(title)+'</span>';
 									}else{
-										access_str = '<span class="label label-info trim-containt" title="'+_.escape(maskValue.label)+'">'+_.escape(maskValue.label)+'</span>';
+										access_str = '<span class="badge badge-info trim-containt" title="'+_.escape(maskValue.label)+'">'+_.escape(maskValue.label)+'</span>';
 									}
                                 }else {
                                   access_str ='<center>--</center>';
@@ -398,7 +398,7 @@ define(function(require) {'use strict';
                                 fromRaw: function (rawValue,model) {
                                     var access_str = '';
                                     if(model.get('rowFilterInfo').filterExpr){
-                                           access_str = '<span class="label label-info trim-containt" title="'+_.escape(model.get('rowFilterInfo').filterExpr)+'">' + _.escape(model.get('rowFilterInfo').filterExpr)+ '</span>'  + " ";
+                                           access_str = '<span class="badge badge-info trim-containt" title="'+_.escape(model.get('rowFilterInfo').filterExpr)+'">' + _.escape(model.get('rowFilterInfo').filterExpr)+ '</span>'  + " ";
                                     } else {
                                            access_str ='<center>--</center>';
                                     }
@@ -479,7 +479,7 @@ define(function(require) {'use strict';
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype,{
 						fromRaw: function(rawValue,model){
 							var policyType = model.get("policyType");
-							var startLbl = '<label class="label label-ranger" style="float:inherit;">';
+							var startLbl = '<label class="badge badge-primary">';
 							if (XAUtil.isMaskingPolicy(policyType)) {
 								return startLbl + XAEnums.RangerPolicyType.RANGER_MASKING_POLICY_TYPE.label + '</label>';
 							} else if (XAUtil.isRowFilterPolicy(policyType)) {
@@ -499,7 +499,7 @@ define(function(require) {'use strict';
 					editable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue) {
-							return rawValue ? '<label class="label label-success" style="float:inherit;">Enabled</label>' : '<label class="label label-important" style="float:inherit;">Disabled</label>';
+							return rawValue ? '<label class="badge badge-success" style="float:inherit;">Enabled</label>' : '<label class="badge badge-danger" style="float:inherit;">Disabled</label>';
 						}
 					}),
 					click : false,
@@ -515,7 +515,7 @@ define(function(require) {'use strict';
 						fromRaw: function (rawValue, model) {
 							var labels ="";
 							if(!_.isUndefined(rawValue) && rawValue.length != 0){
-								return '<span class="label label-inverse" style="float:inherit;">'+rawValue+'</span>'
+								return '<span class="badge badge-dark" style="float:inherit;">'+rawValue+'</span>'
 							}else{
 								return '<span style="float:inherit;">'+"--"+'</span>';
 							}
@@ -858,7 +858,7 @@ define(function(require) {'use strict';
 				var wrap = $(this).next();
 				// If next element is a wrap and hasn't .non-collapsible class
 				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible'))
-					$(this).prepend('<a href="#" class="wrap-collapse btn-right">hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>').prepend('<a href="#" class="wrap-expand btn-right" style="display: none">show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>');
+					$(this).prepend('<a href="#" class="wrap-collapse btn-right">hide&nbsp;&nbsp;<i class="fa-fw fa fa-caret-up"></i></a>').prepend('<a href="#" class="wrap-expand btn-right" style="display: none">show&nbsp;&nbsp;<i class="fa-fw fa fa-caret-down"></i></a>');
 			});
 			
 			// Collapse wrap
@@ -965,7 +965,7 @@ define(function(require) {'use strict';
         },
 		autocompleteFilter	: function(e){
 			var $el = $(e.currentTarget);
-			var $button = $(e.currentTarget).parents('.btn-group').find('button').find('span').first();
+			var $button = $(e.currentTarget).parent().parent().find('button');
 			if($el.data('id')== "grpSel"){
 				$button.text('Group');
 				this.ui.userGroup.show();

@@ -10,18 +10,20 @@ law or agreed to in writing, software distributed under the License is
 distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 KIND, either express or implied. See the License for the specific
 language governing permissions and limitations under the License. --}}
-<div class='resourceGrp'>
-        <div class="inline-block">
-                {{#each resources}}
-		<div class="m-t-xs"><b>{{this.key}}:</b> {{this.value}}</div>
-                {{/each}}
+<div class="resourceGrp">
+    <div class="row">
+        <div class="col-9">
+            {{#each resources}}
+                <div class="m-t-xs"><b>{{this.key}}:</b> {{this.value}}</div>
+            {{/each}}
         </div>
-        <div class="inline-block">
-                <a title="edit" class="btn btn-primary btn-mini m-r-xs" data-js="zoneResource"  data-action="editResource">
-                        <i class="icon-edit"></i>
-                </a>
-                <a  class="btn btn-danger btn-mini" data-action="delete">
-                        <i class="icon-remove"></i>
-                </a>
+        <div class="col-3">
+            <a title="edit" class="btn btn-primary m-r-xs btn-mini" data-js="zoneResource" data-action="editResource">
+                <i class="fa-fw fa fa-edit"></i>
+            </a>
+            <a class="btn btn-danger btn-mini" data-action="delete">
+                <i class="fa-fw fa fa-remove"></i>
+            </a>
         </div>
+    </div>
 </div>

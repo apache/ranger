@@ -23,7 +23,8 @@ define(function(require) {
 	var XAEnums = require('utils/XAEnums');
 	var localization = require('utils/XALangSupport');
 	var XAUtils = {};
-	require('bootstrap-notify');
+	var notify = require('bootstrap-notify');
+	var bootbox = require('bootbox');
 
 	// ///////////////////////////////////////////////////////
 	// Enum utility methods
@@ -208,20 +209,11 @@ define(function(require) {
 	 *            text - Plugin options
 	 */
 	XAUtils.notifyInfo = function(type, text, options) {
-		var html = '<div style="width: 245px;"><div style="min-height: 16px;"><div><span class="icon-exclamation-sign"></span>\
-			</div><h4 style="margin-top: -19px;margin-left: 15px;">Info</h4><div>'
-				+ text + '</div></div></div>';
-		if (_.isUndefined(options)) {
-			options = {
-				message : {
-					html : html,
-					text : text
-				},
-				type : 'info',
-				pausable: true
-			};
-		}
-		$('.top-right').notify(options).show();
+		$.notify({
+			icon: 'fa-fw fa fa-exclamation-circle',
+			title: '<strong>Info!</strong>',
+			message: text
+		});
 	};
 
 	/**
@@ -235,19 +227,13 @@ define(function(require) {
 	 *            text - Plugin options
 	 */
 	XAUtils.notifyError = function(type, text, options) {
-		var html = '<div style="width: 245px;"><div style="min-height: 16px;"><div><span class="icon-warning-sign"></span>\
-			</div><h4 style="margin-top: -19px;margin-left: 15px;">Error</h4><div>' + text + '</div></div></div>';
-		if (_.isUndefined(options)) {
-			options = {
-				message : {
-					html : html,
-					text : text
-				},
-				type : 'error',
-				pausable: true
-			};
-		}
-		$('.top-right').notify(options).show();
+		$.notify({
+			icon: 'fa-fw fa fa-exclamation-triangle',
+			title: '<strong>Error!</strong>',
+			message: text
+		},{
+			type: 'danger',
+		});
 	};
 
 	/**
@@ -261,19 +247,13 @@ define(function(require) {
 	 *            text - Plugin options
 	 */
 	XAUtils.notifySuccess = function(type, text, options) {
-		var html = '<div style="width: 245px;"><div style="min-height: 16px;"><div><span class="icon-ok-sign"></span>\
-							</div><h4 style="margin-top: -19px;margin-left: 15px;">Success</h4><div>'
-				+ text + '</div></div></div>';
-		if (_.isUndefined(options)) {
-			options = {
-				message : {
-					html : html
-				},
-				type : 'success',
-				pausable: true
-			};
-		}
-		$('.top-right').notify(options).show();
+		$.notify({
+			icon: 'fa-fw fa fa-check-circle',
+			title: '<strong>Success!</strong>',
+			message: text
+		},{
+			type: 'success'
+		});
 	};
 
 	/**
@@ -344,7 +324,7 @@ define(function(require) {
 	XAUtils.preventNavigation = function(msg, $form) {
 		window._preventNavigation = true;
 		window._preventNavigationMsg = msg;
-		$("body a, i[class^='icon-']").on("click.blockNavigation", function(e) {
+		$("body a, i[class^='fa-fw fa fa-']").on("click.blockNavigation", function(e) {
 			XAUtils.preventNavigationHandler.call(this, e, msg, $form);
 		});
 	};
@@ -355,7 +335,7 @@ define(function(require) {
 	XAUtils.allowNavigation = function() {
 		window._preventNavigation = false;
 		window._preventNavigationMsg = undefined;
-		$("body a, i[class^='icon-']").off('click.blockNavigation');
+		$("body a, i[class^='fa-fw fa fa-']").off('click.blockNavigation');
 	};
 
 	XAUtils.preventNavigationHandler = function(e, msg, $form) {
@@ -367,19 +347,26 @@ define(function(require) {
 
 			e.preventDefault();
 			e.stopImmediatePropagation();
-			bootbox.dialog(msg, [ {
-				"label" : localization.tt('btn.stayOnPage'),
-				"class" : "btn-success btn-small",
-				"callback" : function() {
+			bootbox.dialog(
+			{
+				message: msg,
+				buttons: {
+				    noclose: {
+				        "label" : localization.tt('btn.stayOnPage'),
+						"className" : "btn-success btn-sm",
+						"callback" : function() {
+						}
+				    },
+				    cancel: {
+						"label" : localization.tt('btn.leavePage'),
+						"className" : "btn-danger btn-sm",
+						"callback" : function() {
+							XAUtils.allowNavigation();
+							target.click();
+						}
+					}
 				}
-			}, {
-				"label" : localization.tt('btn.leavePage'),
-				"class" : "btn-danger btn-small",
-				"callback" : function() {
-					XAUtils.allowNavigation();
-					target.click();
-				}
-			} ]);
+			});
 			return false;
 		}
 	};
@@ -484,15 +471,15 @@ define(function(require) {
 			}
 			var newGroupArr = _.map(groupArr, function(name, i) {
 				if (i >= 4)
-                                        return '<span class="label label-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
+                                        return '<span class="badge badge-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
 							+ id + '" style="display:none;">' + name
 							+ '</span>';
 				else if (i == 3 && groupArr.length > 4) {
 					showMoreLess = true;
-                                        return '<span class="label label-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
+                                        return '<span class="badge badge-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
 							+ id + '">' + name + '</span>';
 				} else
-                                        return '<span class="label label-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
+                                        return '<span class="badge badge-info float-left-margin-2" data-name='+type+' model-'+ type +'-id="'
 							+ id + '">' + name + '</span>';
 			});
 			if (showMoreLess) {
@@ -534,15 +521,15 @@ define(function(require) {
 			return '--';
 		var newGroupArr = _.map(groupArr, function(name, i) {
 			if (i >= 4) {
-				return '<span class="label label-info float-left-margin-2" policy-' + type
+				return '<span class="badge badge-info float-left-margin-2" policy-' + type
 						+ '-id="' + model.id + '" style="display:none;">'
 						+ _.escape(name) + '</span>';
 			} else if (i == 3 && groupArr.length > 4) {
 				showMoreLess = true;
-				return '<span class="label label-info float-left-margin-2" policy-' + type
+				return '<span class="badge badge-info float-left-margin-2" policy-' + type
 						+ '-id="' + model.id + '">' + _.escape(name) + '</span>';
 			} else {
-				return '<span class="label label-info float-left-margin-2" policy-' + type
+				return '<span class="badge badge-info float-left-margin-2" policy-' + type
 						+ '-id="' + model.id + '">' + _.escape(name) + '</span>';
 			}
 		});
@@ -571,7 +558,7 @@ define(function(require) {
                 objArr = (userOrGroups == 'groups') ? _.pluck(rawValue, 'groupName') : _.pluck(rawValue, 'userName');
 		var newObjArr = _.map(objArr, function(name, i) {
 			if (i >= 4) {
-                                var eleStr = '', span = '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
+                                var eleStr = '', span = '<span class="badge badge-info float-left-margin-2" policy-' + userOrGroups
                                         + '-id="' + model.id +'">'
                                         +  _.escape(name) + '</span>';
                                 if( (i + listShownCnt ) === (listShownCnt*j) + 4){
@@ -590,10 +577,10 @@ define(function(require) {
                                 return eleStr;
 			} else if (i == 3 && objArr.length > 4) {
 				showMoreLess = true;
-				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
+				return '<span class="badge badge-info float-left-margin-2" policy-' + userOrGroups
                                                 + '-id="' + model.id + '">' +  _.escape(name) + '</span>';
 			} else {
-				return '<span class="label label-info float-left-margin-2" policy-' + userOrGroups
+				return '<span class="badge badge-info float-left-margin-2" policy-' + userOrGroups
                                                 + '-id="' + model.id + '">' +  _.escape(name) + '</span>';
 			}
 		});
@@ -1085,7 +1072,7 @@ define(function(require) {
 		}
 	};
 	XAUtils.customXEditableForPolicyCond = function(template,selectionList) {
-		// $.fn.editable.defaults.mode = 'inline';
+		// $.fn.editable.defaults.mode = 'list-inline';
 
 		var PolicyConditions = function(options) {
 			this.init('policyConditions', options, PolicyConditions.defaults);
@@ -1456,12 +1443,12 @@ define(function(require) {
         var showMoreLess = false;
         var newLabelArr = _.map(rawValue, function(name, i) {
             if (i >= 4) {
-                return '<span class="label label-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'" style="display:none;">'+ _.escape(name) + '</span>';
+                return '<span class="badge badge-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'" style="display:none;">'+ _.escape(name) + '</span>';
             } else if (i == 3 && rawValue.length > 4) {
                 showMoreLess = true;
-                return '<span class="label label-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'">' + _.escape(name) + '</span>';
+                return '<span class="badge badge-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'">' + _.escape(name) + '</span>';
             } else {
-                return '<span class="label label-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'">' + _.escape(name) + '</span>';
+                return '<span class="badge badge-info float-left-margin-2 shorten-label" title="'+ _.escape(name) +'" policy-label-id ="'+ model.id +'">' + _.escape(name) + '</span>';
             }
         });
         if (showMoreLess) {
@@ -1513,6 +1500,7 @@ define(function(require) {
         $('.datepicker').remove();
         $('.popover').remove();
         $('.datetimepicker').remove();
+        $('body').removeClass('modal-open')
     };
     //select2 option
     XAUtils.select2OptionForUserCreateChoice = function(){

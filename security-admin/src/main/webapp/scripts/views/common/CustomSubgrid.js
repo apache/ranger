@@ -98,9 +98,9 @@ define(function(require){
 			  className: "subgrid-custom-cell",
 			  // define the icon within the cell
 			  icon: function () {
-				  var iconOptions = '<a href="javascript:void(0);" style="color:black;"><i class="icon-plus"></i></a>';
+				  var iconOptions = '<a href="javascript:void(0);" style="color:black;"><i class="fa-fw fa fa-plus"></i></a>';
 				  if(this.state == "expanded")
-					  iconOptions = '<a href="javascript:void(0);" style="color:black;"><i class="icon-minus"></i></a>';
+					  iconOptions = '<a href="javascript:void(0);" style="color:black;"><i class="fa-fw fa fa-minus"></i></a>';
 				  return (iconOptions);
 			  },
 			  optionValues: undefined,

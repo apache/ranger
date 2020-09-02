@@ -30,8 +30,9 @@ define(function(require) {
         var XAGlobals		= require('utils/XAGlobals');
         var localization	= require('utils/XALangSupport');
         var localization    = require('utils/XALangSupport');
+        var moment = require('moment');
         require('bootstrap-editable');
-        require('bootstrap-datetimepicker');
+        require('daterangepicker');
 
         var PolicyTimeItem = Backbone.Marionette.ItemView.extend({
                 _msvName : 'PolicyTimeItem',
@@ -48,7 +49,8 @@ define(function(require) {
                         'click [data-action="delete"]'	: 'evDelete',
                         'change [data-js="startTimeInput"]'		: 'onInputStartTimeChange',
                         'change [data-js="endTimeInput"]'		: 'onInputEndTimeChange',
-                        'change [data-js="timezone"]'		: 'onTimezoneChange'
+                        'change [data-js="timezone"]'		: 'onTimezoneChange',
+                        'click .onCloseBtn' : 'onCloseBtn'
 
                 },
 
@@ -57,39 +59,59 @@ define(function(require) {
                 },
 
                 onRender : function() {
-              var that = this;
-              var startTime = this.$el.find(this.ui.startTime).datetimepicker({
-                  autoclose: true,
-                  minuteStep: 1,
-              }),
-              endTime = this.$el.find(this.ui.endTime).datetimepicker({
-                  autoclose: true,
-                  minuteStep: 1
-              });
-              startTime.on('changeDate', function(ev){
-                  that.$el.find(that.ui.endTime).datetimepicker('setStartDate', ev.date);
-              });
-              this.$el.find(this.ui.timezone).select2({
-                data: XAGlobals.Timezones,
-                multiple: false,
+                    var that = this;
+                    if(!this.model.isEmpty()) {
+                        if (!_.isEmpty(this.model.get('startTime'))) {
+                            that.$el.find('[data-js="startTimeInput"]').html(this.model.get('startTime'));
+                        }
+                        if (!_.isEmpty(this.model.get('endTime'))) {
+                            that.$el.find('[data-js="endTimeInput"]').html(this.model.get('endTime'))
+                        }
+                    }
+                    var startTime = this.$el.find(this.ui.startTime).daterangepicker({
+                        "singleDatePicker": true,
+                        "timePicker": true,
+                        "timePicker24Hour": true,
+                        "showDropdowns": true,
+                        "timePickerSeconds": true,
+                        "locale" : {
+                            'direction':'theme-date-picker',
+                            'cancelLabel': 'Clear'
+                        }
+                    },function(start) {
+                        that.$el.find('[data-js="startTimeInput"]').html(start.format('YYYY/MM/DD HH:mm:ss'));
+                        that.model.set('startTime', start.format('YYYY/MM/DD HH:mm:ss'));
+                    }),
+                    endTime = this.$el.find(this.ui.endTime).daterangepicker({
+                        "singleDatePicker": true,
+                        "timePicker": true,
+                        "timePicker24Hour": true,
+                        "showDropdowns": true,
+                        "timePickerSeconds": true,
+                        "locale" : {
+                            'direction':'theme-date-picker',
+                            'cancelLabel': 'Clear'
+                        }
+                    },function(end) {
+                        that.$el.find('[data-js="endTimeInput"]').html(end.format('YYYY/MM/DD HH:mm:ss'));
+                        that.model.set('endTime', end.format('YYYY/MM/DD HH:mm:ss'));
+                    });
+                    this.$el.find(this.ui.timezone).select2({
+                        data: XAGlobals.Timezones,
+                        multiple: false,
                         closeOnSelect: true,
                         placeholder: 'Select Timezone',
                         maximumSelectionSize : 1,
                         allowClear: true,
                         width:'180px'
-              });
+                    });
                 },
-                onInputStartTimeChange : function(e) {
-                    if(!_.isEmpty($(e.currentTarget).val())  && !_.isUndefined($(e.currentTarget).val())){
-                        this.model.set('startTime', $(e.currentTarget).val());
-                    }else{
+                onCloseBtn : function(e){
+                    if (e.currentTarget.dataset.value === "startTime") {
+                        this.$el.find('[data-js="startTimeInput"]').html('');
                         this.model.unset('startTime');
-                    }
-                },
-                onInputEndTimeChange : function(e) {
-                    if(!_.isEmpty($(e.currentTarget).val())  && !_.isUndefined($(e.currentTarget).val())){
-                        this.model.set('endTime', $(e.currentTarget).val());
-                    }else{
+                    } else {
+                        this.$el.find('[data-js="endTimeInput"]').html('');
                         this.model.unset('endTime');
                     }
                 },

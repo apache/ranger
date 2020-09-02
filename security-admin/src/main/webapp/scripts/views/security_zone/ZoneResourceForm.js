@@ -159,7 +159,7 @@ define(function(require) {
                     });
                 }
                 //hide form fields if it's parent is hidden
-                var resources = formDiv.find('.control-group');
+                var resources = formDiv.find('.form-group');
                 _.each(resources, function(rsrc, key) {
                     var parent = $(rsrc).attr('parent');
                     var label = $(rsrc).find('label').html();

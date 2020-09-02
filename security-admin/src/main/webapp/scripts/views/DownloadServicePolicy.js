@@ -125,8 +125,7 @@ define(function(require){
 				multiple: true,
 				closeOnSelect: true,
 				placeholder: 'Select Component',
-			    //maximumSelectionSize : 1,
-			    width: '530px',
+			    width: '700px',
 			    allowClear: true,
 			    data: options
 			}).on('change', function(e){
@@ -159,7 +158,7 @@ define(function(require){
 				multiple: true,
 				closeOnSelect: true,
 				placeholder: 'Select Service Name',
-			    width: '530px',
+			    width: '700px',
 			    allowClear: true,
 			    data: options
 			})

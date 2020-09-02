@@ -185,6 +185,7 @@ define(function(require) {
                     placeholder: 'Select Service Name',
                     allowClear: true,
                     data: options || [],
+                    width :'600px',
                     initSelection: function(element, callback) {
                         callback(tags);
                     },
