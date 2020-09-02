@@ -217,6 +217,7 @@ define(function(require) {
                     includeFilter: false,
                     includePagination: false,
                     gridOpts: {
+                        row: Backgrid.Row.extend({}),
                         header: XABackgrid,
                         emptyText: 'No Zone Data Found!!'
                     }
