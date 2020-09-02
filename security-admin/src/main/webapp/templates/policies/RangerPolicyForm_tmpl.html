@@ -13,37 +13,36 @@ language governing permissions and limitations under the License. --}}
 <form class="form-horizontal">
 	<fieldset>
 		<p class="formHeader">
-			Policy Details :
+			Policy Details:
 		</p>
-		<div class="row-fluid">
-			<div class="span8">
+		<div class="row ranger-policy">
+			<div class="col-md-8">
 				{{#if policyType}}
-					<div class="control-group field-id">
-						<label class="control-label" for="c1836_id">Policy Type</label>
-						<div class="controls">
-							<label class="label label-ranger" style="margin-top: 5px; margin-left: 9px;">{{policyType}}</label>
+					<div class="form-group field-id">
+						<label class="control-label col-sm-3" for="c1836_id">Policy Type</label>
+						<div class="col-sm-5">
+							<label class="badge badge-primary">{{policyType}}</label>
 						</div>
 					</div>
 				{{/if}}
 				{{#if id}}
-					<div class="control-group field-id">
-						<label class="control-label" for="c1836_id">Policy ID</label>
-						<div class="controls">
-							<label class="label label-ranger"
-								style="margin-top: 5px; margin-left: 9px;">{{id}}</label>
+					<div class="form-group field-id">
+						<label class="control-label col-sm-3" for="c1836_id">Policy ID</label>
+						<div class="col-sm-5">
+							<label class="badge badge-primary">{{id}}</label>
 						</div>
 					</div>
 				{{/if}}
 				<div data-fieldsets class="policy-form"></div>
 			</div>
-			<div class="policy-form span4">
-				<a href="javascript:void(0);" data-js="policyTimeBtn" data-id="1" class="btn btn-primary pull-right m-b-md" title="set time for policy"><i class="icon-time icon-large"></i>{{policyTimeBtnLabel}}</a>
+			<div class="policy-form col-md-4">
+				<a href="javascript:void(0);" data-js="policyTimeBtn" data-id="1" class="btn btn-primary pull-right m-b-md btn-sm" title="set time for policy"><i class="fa-fw fa fa-clock-o"></i>{{policyTimeBtnLabel}}</a>
 				{{#if policyConditionHideShow}}
-					<div class="">
+					<div class="table-responsive">
 						<table class="table table-bordered condition-group-table">
 							<thead>
 								<tr>
-									<th colspan="2">Policy Conditions <a href="javascript:void(0);" data-js="customPolicyConditions" class="btn btn-mini pull-right" title="set conditions for policy"><i class={{policyConditionIconClass}} data-id="policyCondIcon"></i></a></th>
+									<th colspan="2">Policy Conditions <a href="javascript:void(0);" data-js="customPolicyConditions" class="btn btn-sm pull-right" title="set conditions for policy"><i class='{{policyConditionIconClass}}' data-id="policyCondIcon"></i></a></th>
 								</tr>
 							</thead>
 							<tbody data-id="conditionData">
@@ -66,13 +65,13 @@ language governing permissions and limitations under the License. --}}
 	</fieldset>
 	<fieldset>
 			<p class="wrap-header bold formHeader">
-				{{conditionType}} Conditions : <span class="label label-yellow pull-right"></span>
+				{{conditionType}} Conditions: <span class="badge badge-yellow pull-right"></span>
 			</p>
 			&nbsp;
 			<div class="wrap position-relative">
 
 				<div data-customfields="groupPerms">
-					<div class="control-group">
+					<div class="form-group">
 						<label class="control-label">{{tt 'lbl.permissions'}}</label>
 						<div class="controls">
 							<img src="images/loading.gif"
@@ -82,14 +81,19 @@ language governing permissions and limitations under the License. --}}
 				</div>
 				{{#compare "Allow" "eq" conditionType}}
 					<div class="form-indent-right" data-js="allowExcludePerm">
-						<p class="wrap-header reportSearchHeader "><i class="icon-warning-sign icon-1 text-color-red"></i>
-						Exclude from Allow Conditions :</p>
-						&nbsp;
+						<div class="row m-b-md">
+							<div class="col-md-12">
+								<div class="wrap-header search-header">
+									<i class="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+									Exclude from Allow Conditions:
+								</div>
+							</div>
+						</div>
 						<div class="wrap position-relative borderNone">
 
 							<div class="" data-customfields="groupPermsAllowExclude">
-								<div class="control-group" style="margin-left: -100px;">
-									<label class="control-label">Exclude :</label>
+								<div class="form-group" style="margin-left: -100px;">
+									<label class="control-label">Exclude:</label>
 									<div class="controls">
 										<img src="images/loading.gif"
 											style="margin-left: 4%; margin-top: 1%;" />
@@ -101,18 +105,18 @@ language governing permissions and limitations under the License. --}}
 				{{/compare}}
 			</div>
 			{{#compare "Allow" "eq" conditionType}}
-				<div>
-					<div class="toggle-xa control-group">
-						<label class="control-label"> Deny All Other Accesses : </label>
+				<div  class="toggle-xa form-group">
+					<label class="control-label col-md-2">Deny All Other Accesses:</label>
+					<div class="col-md-10">
 						<div data-js="isDenyAllElse" class="toggle controls"></div>
 					</div>
 				</div>
 				<div data-js="denyConditionItems">
-					<p class="wrap-header bold formHeader">Deny Conditions :</p>
+					<p class="wrap-header bold formHeader">Deny Conditions:</p>
 					&nbsp;
 					<div class="wrap position-relative">
 						<div class="" data-customfields="groupPermsDeny">
-							<div class="control-group">
+							<div class="form-group">
 								<label class="control-label">{{tt 'lbl.permissions'}}</label>
 								<div class="controls">
 									<img src="images/loading.gif"
@@ -121,13 +125,13 @@ language governing permissions and limitations under the License. --}}
 							</div>
 						</div>
 						<div class="form-indent-right">
-							<p class="wrap-header reportSearchHeader"><i class="icon-warning-sign icon-1 text-color-red"></i>
-							Exclude from Deny Conditions :</p>
+							<p class="wrap-header search-header"><i class="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+							Exclude from Deny Conditions:</p>
 							&nbsp;
 							<div class="wrap position-relative borderNone">
 								<div class="" data-customfields="groupPermsDenyExclude">
-									<div class="control-group">
-										<label class="control-label">Exclude :</label>
+									<div class="form-group">
+										<label class="control-label">Exclude:</label>
 										<div class="controls">
 											<img src="images/loading.gif"
 												style="margin-left: 4%; margin-top: 1%;" />

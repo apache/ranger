@@ -14,19 +14,19 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<div class="serviceInfo row-fluid">
-  <div class="pull-left">
+<div class="serviceInfo">
+  <div class="">
     <p>
       <strong>{{tt 'lbl.serviceName'}} :</strong> {{PolicyDetails.service}}
     </p>
   </div>
-  <div class="pull-right">
+  <div class="">
     <p>
       <strong>{{tt 'lbl.serviceType'}} :</strong> {{PolicyDetails.serviceType}}
     </p>
   </div>
 </div>
-<div id="policyDetails" class="row-fluid">
+<div id="policyDetails" class="">
   <p class="formHeader">
     {{tt 'h.policyDetails'}} : 
   </p>
@@ -37,7 +37,7 @@
           {{tt 'lbl.policyType'}}
         </td>
         <td>
-          <div class="controls"><label class="label label-ranger" style="cursor: auto;">{{policyType}}</label></div>
+          <div class="controls"><label class="badge badge-ranger" style="cursor: auto;">{{policyType}}</label></div>
         </td>
       </tr>
       <tr>
@@ -45,7 +45,7 @@
           {{tt 'lbl.policyId'}}
         </td>
         <td>
-          <div class="controls"><label class="label label-ranger" style="cursor: auto;">{{PolicyDetails.id}}</label></div>
+          <div class="controls"><label class="badge badge-ranger" style="cursor: auto;">{{PolicyDetails.id}}</label></div>
         </td>
       </tr>
       <tr>
@@ -53,7 +53,7 @@
               {{tt 'lbl.version'}}
           </td>
           <td>
-              <div class="controls"><label class="label label-ranger" style="cursor: auto;">{{PolicyDetails.version}}</label></div>
+              <div class="controls"><label class="badge badge-ranger" style="cursor: auto;">{{PolicyDetails.version}}</label></div>
           </td>
       </tr>
       <tr>
@@ -62,8 +62,8 @@
           {{tt 'lbl.policyName'}}
         </td>
         <td>
-          <span class="label label-inverse pull-right">{{PolicyDetails.policyPriority}}</span>
-          <span class="label label-inverse pull-right m-r-xs">{{PolicyDetails.isEnabled}}</span>
+          <span class="badge badge-dark pull-right">{{PolicyDetails.policyPriority}}</span>
+          <span class="badge badge-dark pull-right m-r-xs">{{PolicyDetails.isEnabled}}</span>
           {{PolicyDetails.name}}
         </td>
       </tr>
@@ -76,7 +76,7 @@
           --
         {{else}}
           {{#each PolicyDetails.policyLabels}}
-            <span class="label label-inverse ">{{this}}</span>
+            <span class="badge badge-dark ">{{this}}</span>
           {{/each}}
         {{/ifCond}}
         </td>
@@ -88,10 +88,10 @@
         </td>
         <td>
           {{#each this.values}}
-            <span class="label label-info">{{this}}</span>
+            <span class="badge badge-info">{{this}}</span>
           {{/each}}
-          <span class="label label-inverse pull-right m-l-sm">{{this.Rec_Recursive}}</span>
-          <span class="label label-inverse pull-right">{{this.Rec_Exc}}</span>
+          <span class="badge badge-dark pull-right m-l-sm">{{this.Rec_Recursive}}</span>
+          <span class="badge badge-dark pull-right">{{this.Rec_Exc}}</span>
         </td>
       </tr>
       {{/each}}
@@ -114,7 +114,7 @@
           {{tt 'lbl.auditLogging'}}
         </td>
         <td>
-          <span class="label label-info">{{PolicyDetails.isAuditEnabled}}</span>
+          <span class="badge badge-info">{{PolicyDetails.isAuditEnabled}}</span>
         </td>
       </tr>
         <tr>
@@ -122,7 +122,7 @@
                 <td>{{tt 'lbl.zoneName'}}</td>
                 <td>
                     {{#if PolicyDetails.zoneName}}
-                        <span class="label label-inverse">{{PolicyDetails.zoneName}}</span>
+                        <span class="badge badge-dark">{{PolicyDetails.zoneName}}</span>
                     {{else}}
                         <span>--</span>
                     {{/if}}
@@ -133,10 +133,10 @@
   </table>
 </div>
 {{#if PolicyDetails.validitySchedules}}
-<div id="policyItems" class="row-fluid">
-        <p class="formHeader">Validity Period :<i class="icon-time icon-large pull-right"></i></p>
+<div id="policyItems" class="">
+        <p class="formHeader">Validity Period :<i class="fa-fw fa fa-time fa-fw fa fa-large pull-right"></i></p>
 
-        <table class="table-permission table-condensed table-read-only"
+        <table class="table table-permission table-condensed table-read-only"
                 style="width: 100%">
                 <thead>
                         <tr>
@@ -151,7 +151,7 @@
                         <th>{{blankCheck this.startTime}}</th>
                                         <th>{{blankCheck this.endTime}}</th>
                                         <th>{{#if this.timeZone}}
-                                                        <span class="label label-info">{{this.timeZone}}</span>
+                                                        <span class="badge badge-info">{{this.timeZone}}</span>
                                                 {{else}} --
                                                 {{/if}}
                                                 </th>
@@ -162,7 +162,7 @@
 </div>
 {{/if}}
 {{#if PolicyDetails.conditions}}
-  <div class="row-fluid">
+  <div class="">
     <p class="formHeader">Policy Conditions :</p>
     <table class="table table-bordered condition-group-table" style="width: 100%">
       <tbody>
@@ -177,11 +177,11 @@
   </div>
 {{/if}}
 {{#each PolicyDetails.policyItemsCond}}
-	<div id="policyItems" class="row-fluid">
+	<div id="policyItems" class="">
 	  <p class="formHeader">
 	    {{this.title}}  :
 	  </p>
-	  <table class="table-permission table-condensed table-read-only" style="width:100%">
+	  <table class="table table-permission table-condensed table-read-only" style="width:100%">
 	    <thead>
 	      <tr>
 	        {{#each this.headers}}
@@ -195,7 +195,7 @@
           <td>
             {{#if this.roles}}
               {{#each this.roles}}
-               <span class="label label-info">{{this}}</span>
+               <span class="badge badge-info">{{this}}</span>
               {{/each}}
             {{else}}
                  --
@@ -204,7 +204,7 @@
           <td>
             {{#if this.groups}}
               {{#each this.groups}}
-               <span class="label label-info">{{this}}</span>
+               <span class="badge badge-info">{{this}}</span>
               {{/each}}
             {{else}}
                  --
@@ -213,7 +213,7 @@
           <td>
             {{#if this.users}}
               {{#each this.users}}
-               <span class="label label-info">{{this}}</span>
+               <span class="badge badge-info">{{this}}</span>
               {{/each}}
             {{else}}
               --
@@ -223,7 +223,7 @@
 	 			<td>
 	 	  		{{#if this.conditions}}	
 	    	  		{{#each this.conditions}}
-	       				<span class="label label-info">
+	       				<span class="badge badge-info">
 		         			{{this.type}} :
 		         			{{#each this.values}}
 		           				{{this}}
@@ -236,23 +236,23 @@
 	       	</td>
 	       {{/if}}
 	        <td>{{#each this.accesses}}
-	          <span class="label label-info">{{#if this.isAllowed}}{{this.type}}{{/if}}</span>
+	          <span class="badge badge-info">{{#if this.isAllowed}}{{this.type}}{{/if}}</span>
 	          {{/each}}</td>
             {{#if this.dataMaskInfo}}
               {{#ifCond this.dataMaskInfo.dataMaskType '==' "CUSTOM"}}
                 <td>
-                  <span class="label label-info ">{{this.dataMaskInfo.label}}  :  {{this.dataMaskInfo.valueExpr}} </span>
+                  <span class="badge badge-info ">{{this.dataMaskInfo.label}}  :  {{this.dataMaskInfo.valueExpr}} </span>
                 </td>
               {{else}}
                 <td>
-                <span class="label label-info">{{this.dataMaskInfo.label}}</span>
+                <span class="badge badge-info">{{this.dataMaskInfo.label}}</span>
                 </td>
              {{/ifCond}}
           {{/if}}
           {{#if this.rowFilterInfo}}
             <td>
               {{#if this.rowFilterInfo.filterExpr}}
-                <span class="label label-info">{{this.rowFilterInfo.filterExpr}}</span>
+                <span class="badge badge-info">{{this.rowFilterInfo.filterExpr}}</span>
               {{else}}
                 --
               {{/if}}
@@ -276,14 +276,14 @@
             <b>{{tt 'lbl.isDenyAllElse'}} : </b>
           </td>
           <td>
-            <span class="label label-inverse">{{ ../../../  PolicyDetails.isDenyAllElse}}</span>
+            <span class="badge badge-dark">{{ ../../../  PolicyDetails.isDenyAllElse}}</span>
           </td>
         </tr>
       </div>
     {{/if}}
   {{/compare}}
 {{/each}}
-<div class="updateInfo row-fluid">
+<div class="updateInfo">
   <div class="pull-left">
     <p>
       <strong>{{tt 'lbl.updatedBy'}} :</strong> {{PolicyDetails.updatedBy}}

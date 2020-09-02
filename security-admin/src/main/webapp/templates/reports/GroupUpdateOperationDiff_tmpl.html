@@ -16,19 +16,19 @@
 --}}
 <div class="diff-content">
 	
-	<div class="row-fluid">
-		<div class="span6">
-			<label class="no-margin label-size13-weightbold">Name : {{objectName}}</label>
-			<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
-			<label class="no-margin label-size13-weightbold" > Updated By  &nbsp;&nbsp;:  {{userName}}</label>
+	<div class="row">
+		<div class="col-md-6">
+			<div class="no-margin label-size13-weightbold">Name: {{objectName}}</div>
+			<div class="no-margin label-size13-weightbold">Date: {{objectCreatedDate}}</div>
+			<div class="no-margin label-size13-weightbold">Updated By: {{userName}}</div>
 		</div>
-		<div class="span6 text-right">
+		<div class="col-md-6 text-right">
 			<div class="add-text legend"></div> Added
 			<div class="delete-text legend"></div> Deleted
 		</div>
 	</div>
 
-	<h5>Group Detail :</h5>
+	<h5 class="bold wrap-header m-t-sm">Group Detail:</h5>
 	<div class="diff">
 		<div class="diff-left">
 			<h3>Fields</h3>
@@ -40,7 +40,7 @@
 		</div>
  		<div class="diff-left">
 			<h3>Old Value</h3>
-			<ol class="unstyled data">
+			<ol class="list-unstyled data">
 			{{#each collection}}
 				{{#if ./this.attributes.previousValue}}
 					{{#compare ./this.attributes.previousValue "eq" ''}}
@@ -56,7 +56,7 @@
 		</div> 
 		<div class="diff-right">
 			<h3>New Value</h3>
-			<ol class="unstyled data">
+			<ol class="list-unstyled data">
 			{{#each collection}}
 				{{#if ./this.attributes.newValue}}
 					{{#compare ./this.attributes.newValue "eq" ''}}

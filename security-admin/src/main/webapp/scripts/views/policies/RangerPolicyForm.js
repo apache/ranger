@@ -71,7 +71,7 @@ define(function(require){
 						: localization.tt('lbl.addValidityPeriod'),
 					'policyConditionHideShow' : (this.rangerServiceDefModel.has('policyConditions') && !_.isEmpty(this.rangerServiceDefModel.get('policyConditions'))) ?
 					true : false,
-					'policyConditionIconClass': (this.model.has('conditions') && this.model.get('conditions').length > 0) ? 'icon-pencil' : 'icon-plus',
+					'policyConditionIconClass': (this.model.has('conditions') && this.model.get('conditions').length > 0) ? "fa fa-pencil" : "fa fa-plus",
 					'conditionsData': (this.model.has('conditions') && this.model.get('conditions').length > 0) ?
 						XAUtil.getPolicyConditionDetails(this.model.get('conditions'), this.rangerServiceDefModel) : [],
 				};
@@ -179,7 +179,8 @@ define(function(require){
                   content	: view,
                   title	: 'Policy Validity Period',
                   okText  :"Save",
-                  animate : true,focusOk:false,
+                  animate : true,
+                  focusOk : false,
                   escape:false,
                   // allowCancel:false,
                   modalOptions:{
@@ -219,7 +220,7 @@ define(function(require){
                     title : 'Policy Conditions',
                     okText  :"Save",
                     animate : true,
-                    focusOk:false,
+                    focusOk : false,
                     escape:false,
                     modalOptions:{
                         backdrop: 'static',
@@ -246,9 +247,9 @@ define(function(require){
                     });
                     that.model.set('conditions',conditions);
                     if(conditions.length > 0){
-                        that.$el.find('[data-id="policyCondIcon"]').removeClass('icon-plus').addClass('icon-pencil');
+                        that.$el.find('[data-id="policyCondIcon"]').removeClass('fa-fw fa fa-plus').addClass('fa-fw fa fa-pencil');
                     } else {
-                        that.$el.find('[data-id="policyCondIcon"]').removeClass('icon-pencil').addClass('icon-plus');
+                        that.$el.find('[data-id="policyCondIcon"]').removeClass('fa-fw fa fa-pencil').addClass('fa-fw fa fa-plus');
                     }
                     _.each(that.model.get('conditions'), function(val){
                         console.log(that);
@@ -274,8 +275,8 @@ define(function(require){
 				var wrap = $(this).next();
 				// If next element is a wrap and hasn't .non-collapsible class
 				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible')){
-					$(this).append('<a href="#" class="wrap-expand pull-right" style="display: none">show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>')
-						   .append('<a href="#" class="wrap-collapse pull-right" >hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>');
+					$(this).append('<a href="#" class="wrap-expand pull-right" style="display: none">show&nbsp;&nbsp;<i class="fa-fw fa fa-caret-down"></i></a>')
+						   .append('<a href="#" class="wrap-collapse pull-right" >hide&nbsp;&nbsp;<i class="fa-fw fa fa-caret-up"></i></a>');
 				}
 			});
 			// Collapse wrap
@@ -470,7 +471,7 @@ define(function(require){
 				});
 			}
 			//hide form fields if it's parent is hidden
-			var resources = formDiv.find('.control-group');
+			var resources = formDiv.find('.form-group');
 			_.each(resources, function(rsrc , key ){ 
 				var parent = $(rsrc).attr('parent');
 				var label = $(rsrc).find('label').html();

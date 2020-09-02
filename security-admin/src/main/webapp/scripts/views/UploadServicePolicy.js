@@ -293,7 +293,7 @@ define(function(require){
                         }
 			if(!_.isUndefined(this.targetFileObj)){
                                 this.$el.find('.selectFile').text(this.targetFileObj.name);
-                                this.$el.find('.selectFile').append('<i></i><label class="icon icon-remove icon-1x icon-remove-btn" data-id="fileNameClosebtn"></label>');
+                                this.$el.find('.selectFile').append('<i></i><label class="icon fa-fw fa fa-remove fa-fw fa fa-1x fa-fw fa fa-remove-btn" data-id="fileNameClosebtn"></label>');
                                 //check if file name is proper json extension or not
                                 if(this.targetFileObj.type === "application/json" || (this.targetFileObj.name).match(".json$", "i")){
                                         this.selectedFileValidation(e)

@@ -1,4 +1,4 @@
-{{!--
+{{!-- 
   Licensed to the Apache Software Foundation (ASF) under one or more
   contributor license agreements.  See the NOTICE file distributed with
   this work for additional information regarding copyright ownership.
@@ -15,26 +15,28 @@
   limitations under the License.
 --}}
 <div class="alert alert-danger errorMsg display-none">{{errorMsg}}</div>
-<div class="control-group">
-        <label class="control-label">{{fieldLabel}}</label>
-        <div class="controls">
-                <table class="table table-bordered table-condensed">
-                        <thead>
-                                <tr>
-                                        <th style="text-align: center;">Start Time</th>
-                                        <th style="text-align: center;">End Time</th>
-                                 <th style="text-align: center;">Time zone</th>
-                                </tr>
-                        </thead>
-                        <tbody class="js-formInput">
-                        </tbody>
-                </table>
+<div class="form-group">
+    <label class="control-label">{{fieldLabel}}</label>
+    <div class="col-md-12">
+        <div class="table-responsive">
+            <table class="table table-bordered table-condensed">
+                <thead>
+                    <tr>
+                        <th style="text-align: center;">Start Time</th>
+                        <th style="text-align: center;">End Time</th>
+                        <th style="text-align: center;">Time zone</th>
+                    </tr>
+                </thead>
+                <tbody class="js-formInput">
+                </tbody>
+            </table>
         </div>
+    </div>
 </div>
-<div class="control-group">
-        <div class="controls" style="margin-top:-14px">
-                <button type="button" class="btn btn-small" data-action="addTime" title="Add">
-                        <i class="icon-plus"></i>
-                </button>
-        </div>
+<div class="form-group">
+    <div class="col-md-12 m-t-md">
+        <button type="button" class="btn btn-sm" data-action="addTime" title="Add">
+            <i class="fa-fw fa fa-plus"></i>
+        </button>
+    </div>
 </div>

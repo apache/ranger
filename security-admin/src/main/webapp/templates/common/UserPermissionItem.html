@@ -24,18 +24,18 @@
 {{/if}}
 
 {{#if policyStorm}}
-<td>	
+<td>
         <span class="tags" id="tags-editable-1" data-toggle="manual" data-type="checklist" 
             data-value="{{stormPerms}}" data-original-title="Select Actions">
         </span>
-       	<a href="#" id="tags-edit-1" data-editable="tags-editable-1" class="" style="margin-left:10px;">
-      		{{#if isModelNew}}
-       			<i class="icon-plus" title="Add"></i>
-       		{{else}}
-       			<i class="icon-pencil" title="Edit"></i>
-       		{{/if}}
-       	</a>
-</td>	
+        <a href="#" id="tags-edit-1" data-editable="tags-editable-1" class="" style="margin-left:10px;">
+          {{#if isModelNew}}
+            <i class="fa-fw fa fa-plus" title="Add"></i>
+          {{else}}
+            <i class="fa-fw fa fa-pencil" title="Edit"></i>
+          {{/if}}
+        </a>
+</td>
 {{/if}}
 {{#each permissions}}
 		<td style="cursor:pointer;">
@@ -44,8 +44,8 @@
 {{/each}}
 
 <td>
-	<button type="button" class="btn btn-small btn-danger " data-action="delete">
-		<i class="icon-remove"></i>
+	<button type="button" class="btn btn-sm btn-danger " data-action="delete">
+		<i class="fa-fw fa fa-remove"></i>
 	</button>
 </td>
 

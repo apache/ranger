@@ -15,55 +15,59 @@
   limitations under the License.
 --}}
 {{#if setOldUi}}
-  <ul class="nav nav-tabs tabs clearfix">
-     <li data-js="userSync">
-       <a data-toggle="tab" href="#userSync">{{tt 'h.userSync'}}</a>
-     </li>
-     <li data-js="pluginStatus">
-       <a data-toggle="tab" href="#pluginStatus">{{tt 'h.pluginStatus'}}</a> 
-     </li> 
-  	<li data-js="agent" >
-       <a data-toggle="tab" href="#agent">{{tt 'h.agents'}}</a> 
-     </li>
-     <li data-js="users">
-       <a data-toggle="tab" href="#loginSession">{{tt 'h.loginSession'}} </a> 
-     </li> 
-     <li data-js="repository" > 
-       <a data-toggle="tab" href="#admin">{{tt 'h.admin'}} </a> 
-     </li> 
-     <li data-js="policy" class="active">
-       <a data-toggle="tab" href="#bigData">{{tt 'h.access'}} </a> 
-     </li> 
-  </ul>
+    <ul class="nav nav-tabs">
+      <li data-js="bigData" class="nav-item">
+            <a class="nav-link" data-toggle="tab" href="#bigData">{{tt 'h.access'}} </a>
+        </li>
+        <li class="nav-item" data-js="admin">
+            <a class="nav-link" data-toggle="tab" href="#admin">{{tt 'h.admin'}} </a>
+        </li>
+        <li class="nav-item" data-js="loginSession">
+            <a class="nav-link" data-toggle="tab" href="#loginSession">{{tt 'h.loginSession'}} </a>
+        </li>
+        <li class="nav-item" data-js="agent">
+            <a class="nav-link" data-toggle="tab" href="#agent">{{tt 'h.agents'}}</a>
+        </li>
+        <li class="nav-item" data-js="pluginStatus">
+            <a class="nav-link" data-toggle="tab" href="#pluginStatus">{{tt 'h.pluginStatus'}}</a>
+        </li>
+        <li class="nav-item" data-js="userSync">
+            <a class="nav-link" data-toggle="tab" href="#userSync">{{tt 'h.userSync'}}</a>
+        </li>
+    </ul>
 {{/if}}
-<div class="wrap non-collapsible " data-id="hide-popup" style="margin-top:-6px;">
-	<div class="wrap well">
-		<div class="row-fluid">
-                        <div class="span11">
-				<div class="visual_search"></div>
-			</div>
-                        <div>
-                <i class="icon-info-sign searchInfo" title="Search Filter Hints" data-id="searchInfo"> </i>
-		</div>
-
-                        </div>
-	</div>
-	<div class="row-fluid">
-		<div class="clearfix" data-id="refreshTable">
-			<button class="btn-right link-tag" data-id="refresh" style="margin-top: -3px;" title="Refresh">
-				<i class="icon-refresh"></i>
-			</button>
-			<span class="pull-right" data-id="lastUpdateTime"> Last Updated Time : <label data-id="lastUpdateTimeLabel" class="label label-info">{{currentDate}}</label> </span>
-            <span class="pull-right"> | </span>
-            <span class="pull-right"> Entries :
-                <label class="label label-info" data-id="showPageDetail"></label>
-            </span>
-            <div class="pull-left" data-id="excludeServiceUser">
-                <span>Exclude Service Users :</span>
-                <input type="checkbox" data-id="serviceUsersExclude">
+<div class="wrap non-collapsible " data-id="hide-popup">
+    <div class="wrap card">
+        <div class="row">
+            <div class="col-md-11">
+                <div class="visual_search"></div>
             </div>
-		</div>
-        <div  data-id="r_tableLists" class=""></div>
-	</div>
+            <div>
+                <i class="fa-fw fa fa-info-circle searchInfo" title="Search Filter Hints" data-id="searchInfo"> </i>
+            </div>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-md-12" data-id="refreshTable">
+            <button class="btn-right link-tag" data-id="refresh" style="margin-top: -3px;" title="Refresh">
+                <i class="fa-fw fa fa-refresh"></i>
+            </button>
+            <div class="text-right">
+                <span class="pull-right" data-id="lastUpdateTime">Last Updated Time: <label data-id="lastUpdateTimeLabel" class="badge badge-info">{{currentDate}}</label> </span>
+                <span class="pull-right"> &nbsp;|&nbsp; </span>
+                <span class="pull-right">Entries:
+                    <label class="badge badge-info" data-id="showPageDetail"></label>
+                </span>
+                <div class="pull-left" data-id="excludeServiceUser">
+                    <span>Exclude Service Users:</span>
+                    <input type="checkbox" data-id="serviceUsersExclude" style="vertical-align: middle;">
+                </div>
+            </div>
+        </div>
+      </div>
+        <div class="row">
+          <div class="col-md-12">
+            <div data-id="r_tableLists" class=""></div>
+          </div>
+      </div>
 </div>
-

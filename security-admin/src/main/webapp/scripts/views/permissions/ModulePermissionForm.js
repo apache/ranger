@@ -234,7 +234,7 @@ define(function(require) {
                         var selectedGroups = this.fields.selectGroups.editor.$el.select2('data');
                         _.each(selectedGroups, function(obj){
                                 var self = that;
-                                this.$el.find('[data-js="selectedGroupList"]').append('<span class="selected-widget"  ><i class="icon remove icon-remove" data-js="selectedGroupIcon" data-id="'+obj.id+'"></i>&nbsp;'+obj.text+'</span>')
+                                this.$el.find('[data-js="selectedGroupList"]').append('<span class="selected-widget"  ><i class="icon remove fa-fw fa fa-remove" data-js="selectedGroupIcon" data-id="'+obj.id+'"></i>&nbsp;'+obj.text+'</span>')
                                 this.addedGroups.push(obj)
                                 this.$el.find('[data-js="selectedGroupList"] :last').on('click',this.removeGroup.bind(this));
                                 this.fields.selectGroups.editor.$el.select2('data',[]);
@@ -280,7 +280,7 @@ define(function(require) {
                         var selectedUsers = this.fields.selectUsers.editor.$el.select2('data');
                         _.each(selectedUsers, function(obj){
                                 var self = that;
-                                this.$el.find('[data-js="selectedUserList"]').append('<span class="selected-widget"  ><i class="icon remove icon-remove" data-js="selectedUserIcon" data-id="'+obj.id+'"></i>&nbsp;'+obj.text+'</span>')
+                                this.$el.find('[data-js="selectedUserList"]').append('<span class="selected-widget"  ><i class="icon remove fa-fw fa fa-remove" data-js="selectedUserIcon" data-id="'+obj.id+'"></i>&nbsp;'+obj.text+'</span>')
                                 this.addedUsers.push(obj)
                                 this.$el.find('[data-js="selectedUserList"] :last').on('click',this.removeUser.bind(this));
                                 this.fields.selectUsers.editor.$el.select2('data', []);

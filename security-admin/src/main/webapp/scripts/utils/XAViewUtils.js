@@ -38,8 +38,8 @@ define(function(require) {
                 return '<div class="clearfix">\
                             <div class="pull-left resourceText" title="'+ _.escape(resourcePath)+'">'+_.escape(resourcePath)+'</div>\
                             <div class="pull-right">\
-                                <div class="queryInfo btn btn-mini link-tag query-icon" title="Query Info" data-name = "queryInfo" data-id ="'+model.get('id')+'">\
-                                    <i class="icon-table" ></i>\
+                                <div class="queryInfo btn btn-sm link-tag query-icon" title="Query Info" data-name = "queryInfo" data-id ="'+model.get('id')+'">\
+                                    <i class="fa-fw fa fa-table" ></i>\
                                 </div>\
                             </div>\
                         </div>\
@@ -48,8 +48,8 @@ define(function(require) {
                 return '<div class="clearfix">\
                             <div class="pull-left">--</div>\
                             <div class="pull-right">\
-                                <div class="queryInfo btn btn-mini link-tag query-icon" title="Query Info" data-id ="'+model.get('id')+'"data-name = "queryInfo"">\
-                                    <i class="icon-table"></i>\
+                                <div class="queryInfo btn btn-sm link-tag query-icon" title="Query Info" data-id ="'+model.get('id')+'"data-name = "queryInfo"">\
+                                    <i class="fa-fw fa fa-table"></i>\
                                 </div>\
                             </div>\
                         </div>';
@@ -72,7 +72,7 @@ define(function(require) {
             titleMap[XAEnums.ServiceType.Service_HIVE.label] = 'Hive Query';
             titleMap[XAEnums.ServiceType.Service_HBASE.label] = 'HBase Audit Data';
             titleMap[XAEnums.ServiceType.Service_SOLR.label] = 'Solr Query';
-            var msg = '<div class="pull-right link-tag query-icon copyQuery btn btn-mini" title="Copy Query"><i class="icon-copy"></i></div><div class="query-content">'+model.get('requestData')+'</div>';
+            var msg = '<div class="pull-right link-tag query-icon copyQuery btn btn-sm" title="Copy Query"><i class="fa-fw fa fa-copy"></i></div><div class="query-content">'+model.get('requestData')+'</div>';
             var $elements = that.$el.find('table [data-name = "queryInfo"][data-id = "'+model.id+'"]');
             $elements.popover({
                 html: true,
@@ -95,7 +95,7 @@ define(function(require) {
     };
 
     XAViewUtil.syncSourceDetail = function(e , that){
-        if($(e.target).is('.icon-edit,.icon-trash,a,code'))
+        if($(e.target).is('.fa-fw fa fa-edit,.fa-fw fa fa-trash,a,code'))
             return;
         var SyncSourceView = Backbone.Marionette.ItemView.extend({
             template : require('hbs!tmpl/reports/UserSyncInfo_tmpl'),
@@ -122,7 +122,8 @@ define(function(require) {
             title: localization.tt("h.syncDetails"),
             okText :localization.tt("lbl.ok"),
             allowCancel : true,
-            escape : true
+            escape : true,
+            focusOk : false
         }).open();
         modal.$el.find('.cancel').hide();
     };

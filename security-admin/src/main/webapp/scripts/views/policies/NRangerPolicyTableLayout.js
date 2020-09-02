@@ -42,7 +42,6 @@ define(function(require) {
 
     require('backgrid-filter');
     require('backgrid-paginator');
-    require('bootbox');
 
     var NRangerPolicyTableLayout = Backbone.Marionette.Layout.extend(
         /** @lends NRangerPolicyTableLayout */
@@ -264,14 +263,15 @@ define(function(require) {
                         title: localization.tt("h.policyDetails"),
                         okText: localization.tt("lbl.ok"),
                         allowCancel: true,
-                        escape: true
+                        escape: true,
+                        focusOk : false
                     }).open();
                     var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
-                    policyVerEl.append('<i id="preVer" class="icon-chevron-left ' + ((rangerPolicy.get('version') > 1) ? 'active' : '') + '"></i><text>Version ' + rangerPolicy.get('version') + '</text>').find('#preVer').click(function(e) {
+                    policyVerEl.append('<i id="preVer" class="fa-fw fa fa-chevron-left ' + ((rangerPolicy.get('version') > 1) ? 'active' : '') + '"></i><text>Version ' + rangerPolicy.get('version') + '</text>').find('#preVer').click(function(e) {
                         view.previousVer(e);
                     });
                     var policyVerIndexAt = policyVersionList.indexOf(rangerPolicy.get('version'));
-                    policyVerEl.append('<i id="nextVer" class="icon-chevron-right ' + (!_.isUndefined(policyVersionList[++policyVerIndexAt]) ? 'active' : '') + '"></i>').find('#nextVer').click(function(e) {
+                    policyVerEl.append('<i id="nextVer" class="fa-fw fa fa-chevron-right ' + (!_.isUndefined(policyVersionList[++policyVerIndexAt]) ? 'active' : '') + '"></i>').find('#nextVer').click(function(e) {
                         view.nextVer(e);
                     });
                     policyVerEl.after('<a id="revert" href="#" class="btn btn-primary" style="display:none;">Revert</a>').next('#revert').click(function(e) {
@@ -292,7 +292,7 @@ define(function(require) {
                                 if (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) {
                                     if (!_.isEmpty(model.get('validitySchedules')) && XAUtil.isPolicyExpierd(model)) {
                                         return '<div class="expiredIconPosition">\
-                                                <i class="icon-exclamation-sign backgrigModelId" title="Policy expired"></i>\
+                                                <i class="fa-fw fa fa-exclamation-circle backgrigModelId" title="Policy expired"></i>\
                                                 ' + model.id + '\
                                              </div>';
                                     } else {
@@ -303,7 +303,7 @@ define(function(require) {
                                 } else {
                                     if (!_.isEmpty(model.get('validitySchedules')) && XAUtil.isPolicyExpierd(model)) {
                                         return '<div class="expiredIconPosition">\
-                                                <i class="icon-exclamation-sign backgrigModelId" title="Policy expired"></i>\
+                                                <i class="fa-fw fa fa-exclamation-circle backgrigModelId" title="Policy expired"></i>\
                                                 <a class="" href="#!/service/' + that.rangerService.id + '/policies/' + model.id + '/edit">' + model.id + '</a>\
                                              </div>';
                                     } else {
@@ -346,7 +346,7 @@ define(function(require) {
                         editable: false,
                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                             fromRaw: function(rawValue) {
-                                return rawValue ? '<label class="label label-success">Enabled</label>' : '<label class="label label-important">Disabled</label>';
+                                return rawValue ? '<label class="badge badge-success">Enabled</label>' : '<label class="badge badge-danger">Disabled</label>';
                             }
                         }),
                         click: false,
@@ -359,7 +359,7 @@ define(function(require) {
                         editable: false,
                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                             fromRaw: function(rawValue) {
-                                return rawValue ? '<label class="label label-success">Enabled</label>' : '<label class="label label-important">Disabled</label>';
+                                return rawValue ? '<label class="badge badge-success">Enabled</label>' : '<label class="badge badge-danger">Disabled</label>';
                             }
                         }),
                         click: false,
@@ -419,11 +419,11 @@ define(function(require) {
                     formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw: function(rawValue, model) {
                             if (XAUtil.isAuditorOrKMSAuditor(SessionMgr)) {
-                                return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="' + model.id + '" class="btn btn-mini" title="View"><i class="icon-eye-open icon-large"></i></a>';
+                                return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="' + model.id + '" class="btn btn-mini" title="View"><i class="fa-fw fa fa-eye fa-fw fa fa-large"></i></a>';
                             } else {
-                                return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="' + model.id + '" class="btn btn-mini" title="View"><i class="icon-eye-open icon-large"></i></a>\
-                                    <a href="#!/service/' + that.rangerService.id + '/policies/' + model.id + '/edit" class="btn btn-mini" title="Edit"><i class="icon-edit icon-large"></i></a>\
-                                    <a href="javascript:void(0);" data-name ="deletePolicy" data-id="' + model.id + '"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash icon-large"></i></a>';
+                                return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="' + model.id + '" class="btn btn-mini" title="View"><i class="fa-fw fa fa-eye fa-fw fa fa-large"></i></a>\
+                                    <a href="#!/service/' + that.rangerService.id + '/policies/' + model.id + '/edit" class="btn btn-mini" title="Edit"><i class="fa-fw fa fa-edit fa-fw fa fa-large"></i></a>\
+                                    <a href="javascript:void(0);" data-name ="deletePolicy" data-id="' + model.id + '"  class="btn btn-mini btn-danger" title="Delete"><i class="fa-fw fa fa-trash fa-fw fa fa-large"></i></a>';
                                 //You can use rawValue to custom your html, you can change this value using the name parameter.
                             }
                         }
@@ -724,7 +724,8 @@ define(function(require) {
                     title: localization.tt("h.serviceDetails"),
                     okText: localization.tt("lbl.ok"),
                     allowCancel: true,
-                    escape: true
+                    escape: true,
+                    focusOk : false
                 }).open();
                 modal.$el.find('.cancel').hide();
             },

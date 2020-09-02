@@ -187,7 +187,7 @@
 		if(permsString == "--")
 			return permsString;
                 var permArr = permsString.split(',');
-		var cl = _.isObject(kclass) ? 'label label-info' : kclass;
+		var cl = _.isObject(kclass) ? 'badge badge-info' : kclass;
 		var tempArr = [];
 		_.each(permArr, function(val){
 			tempArr.push('<label class="'+cl+'">'+val+'</label>');
@@ -511,31 +511,31 @@
 				if(localStorage.getItem('setOldUI') == "true") {
 					if(SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin()){
 						serviceOperationDiv = '<div class="pull-right">\
-					                        <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
-					                        <a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="icon-edit"></i></a>\
+					                        <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="fa-fw fa fa-eye "></i></a>\
+					                        <a data-id="'+serv.id+'" class="btn btn-mini" href="#!/service/'+serviceDef.id+'/edit/'+serv.id+'" title="Edit"><i class="fa-fw fa fa-edit"></i></a>\
 					                        <a data-id="'+serv.id+'" class="deleteRepo btn btn-mini btn-danger" href="javascript:void(0);" title="Delete">\
-					                        <i class="icon-trash"></i></a>\
+					                        <i class="fa-fw fa fa-trash"></i></a>\
 					                       </div>'
 					    }
 		            if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
 		                serviceOperationDiv = '<div class="pull-right">\
-		                            <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open "></i></a>\
+		                            <a href="javascript:void(0);" data-name="viewService" data-id="'+serv.id+'" class="btn btn-mini" title="View"><i class="fa-fw fa fa-eye "></i></a>\
 		                       </div>'
 					}
 				}
 				tr += '<tr><td><div>';
 				if (!serv.get('isEnabled')) {
-					tr += '<i class="icon-ban-circle text-color-red pull-left icon-large"></i>';
+					tr += '<i class="fa-fw fa fa-ban text-color-red fa-lg" title="Disable"></i>';
 				}
 				if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
-					tr += '<i class="icon-file pull-left icon-small m-top-5"></i>'
+					tr += '<i class="fa-fw fa fa-file pull-left fa-fw fa fa-small m-top-5"></i>'
 				}
                                 //For service name
                                 if(!_.isUndefined(serv) && !_.isUndefined(serv.get('displayName')) ) {
-                                        tr += '<a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.get('displayName'))+'">'+_.escape(serv.get('displayName'))+'</a>'+serviceOperationDiv+'\
+                                        tr += '<a class="serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.get('displayName'))+'">'+_.escape(serv.get('displayName'))+'</a>'+serviceOperationDiv+'\
                                                 </div></td></tr>';
                                 } else {
-                                        tr += '<i class="icon-file pull-left"></i><a class="pull-left serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
+                                        tr += '<i class="fa-fw fa fa-file pull-left"></i><a class="serviceNameEllipsis" data-id="'+serv.id+'" href="#!/service/'+serv.id+'/policies/'+policyType+'" title="'+_.escape(serv.attributes.name)+'">'+_.escape(serv.attributes.name)+'</a>'+serviceOperationDiv+'\
                                                 </div></td></tr>';
                                 }
 			});
@@ -545,13 +545,13 @@
 	Handlebars.registerHelper('handleCollapeServiceIcon', function(services, serviceDef) {
 		var serviceType = serviceDef.get('name');
 		if(!_.isUndefined(services[serviceType]) && services[serviceType].length > 0) {
-			return '<i class="icon-caret-up" id="collapesService"></i>'
+			return '<i class="fa-fw fa fa-caret-up" id="collapesService"></i>'
 		}
 	});
 	Handlebars.registerHelper('handleServiceDefIcon', function(serviceDefName) {
 		var iconServiceDefList = ["hdfs", "hive", "hbase", "yarn", "knox", "kafka", "solr", "nifi", "atlas", "kudu", "ozone", "kms", "nifi-registry", "tag"];
 		if (iconServiceDefList.includes(serviceDefName)) {
-			return '<i class="icon-component-'+ serviceDefName +' icon-large"></i>';
+			return '<i class="icon-component-'+ serviceDefName +' fa-fw fa fa-large"></i>';
 		} else {
 			return '<i class="icon-component-default"></i>';
 		}
@@ -612,7 +612,7 @@
             return '<div class="margin-bottom-5">\
                         <label class="display-block">\
                             <span>'+obj.label+' : </span>\
-                            <i title="'+localization.tt('validationMessages.jsValidationMsg')+'" class="icon-info-sign pull-right margin-top-6"></i>\
+                            <i title="'+localization.tt('validationMessages.jsValidationMsg')+'" class="fa-fw fa fa-info-circle margin-top-6"></i>\
                         </label>\
                         <textarea class="multiline-condition" data-id="textAreaContainer" name="'+obj.name+'" placeholder="Please enter condition.."></textarea>\
                    </div>'

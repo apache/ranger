@@ -14,7 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<div id="serviceDetails" class="row-fluid">
+<div id="serviceDetails">
     <p class="formHeader">
         {{tt 'h.serviceDetails'}} :
     </p>
@@ -56,11 +56,11 @@
                 </td>
                 {{#if isEnabled}}
                     <td>
-                        <span class="label label-info">Enabled</span>
+                        <span class="badge badge-info">Enabled</span>
                     </td>
                 {{else}}
                 <td>
-                    <span class="label label-info">Disabled</span>
+                    <span class="badge badge-info">Disabled</span>
                 </td>
                 {{/if}}
             </tr>
@@ -72,14 +72,14 @@
                     {{#compare tagService  "eq" ''}}
                         <span>--</span>
                     {{else}}
-                        <span class="label label-info">{{tagService}}</span>
+                        <span class="badge badge-info">{{tagService}}</span>
                     {{/compare}}
                 </td>
             </tr>
         </tbody>
     </table>
 </div>
-<div id="configProperties" class="row-fluid">
+<div id="configProperties">
     <p class="formHeader">
         {{tt 'h.configProperties'}}  :
     </p>

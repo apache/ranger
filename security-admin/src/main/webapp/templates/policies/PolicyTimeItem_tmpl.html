@@ -15,24 +15,32 @@
   limitations under the License.
 --}}
 <td>
-        <div class="input-append date form_datetime"  data-date-format="yyyy/mm/dd hh:ii:ss" data-js="startTime">
-          <input class="date-input-width-127" size="16" type="text" value="{{this.startTime}}" readonly data-js="startTimeInput"/>
-          <span class="add-on"><i class="icon-remove"></i></span>
-          <span class="add-on"><i class="icon-th"></i></span>
+    <div class="range-time-piker form-control">
+        <div id="reportrange" class="inline-block" data-js="startTime">
+            <i class="fa fa-calendar"></i>&nbsp;
+            <div type="input" class="inline-block" value="{{this.startTime}}" data-js="startTimeInput" style="width: 165px"></div>
         </div>
+        <div class="inline-block pull-right onCloseBtn" data-value="startTime" style="top: 1px; position: relative;">
+            <i class="fa fa-times-circle-o"></i>
+        </div>
+    </div>
 </td>
 <td>
-  <div class="input-append date form_datetime"  data-date-format="yyyy/mm/dd hh:ii:ss" data-js="endTime">
-        <input class="date-input-width-127" size="16" type="text" value="{{this.endTime}}" readonly data-js="endTimeInput"/>
-        <span class="add-on"><i class="icon-remove"></i></span>
-        <span class="add-on"><i class="icon-th"></i></span>
+    <div class="range-time-piker form-control">
+        <div id="reportrange" class="inline-block" data-js="endTime">
+            <i class="fa fa-calendar"></i>&nbsp;
+            <div  class="inline-block" data-js="endTimeInput" style="width: 165px"></div>
         </div>
+        <div class="inline-block pull-right onCloseBtn" data-value="endTime" style="top: 1px; position: relative;">
+            <i class="fa fa-times-circle-o"></i>
+        </div>
+    </div>
 </td>
 <td>
         <input type="text" data-js="timezone" value="{{this.timeZone}}" placeholder="Select timezone" class="date-input-width-127" />
 </td>
 <td>
-        <button type="button" class="btn btn-small btn-danger" data-action="delete">
-                <i class="icon-remove"></i>
+        <button type="button" class="btn btn-sm btn-danger" data-action="delete">
+                <i class="fa-fw fa fa-remove"></i>
         </button>
 </td>

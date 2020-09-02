@@ -15,18 +15,18 @@
   limitations under the License.
 --}}
 <div class="diff-content">
-	<b>Policy ID :&nbsp;&nbsp;</b><label class="label label-ranger"> {{objectId}}</label>
-	<label class="no-margin label-size13-weightbold">Policy Name : {{policyName}}</label>
+	<b>Policy ID :&nbsp;&nbsp;</b><label class="badge badge-ranger"> {{objectId}}</div>
+	<div class="no-margin label-size13-weightbold">Policy Name: {{policyName}}</div>
     {{#if zoneName}}
-        <label class="no-margin label-size13-weightbold" > Zone Name  &nbsp;&nbsp;:  {{zoneName}}</label>
+        <div class="no-margin label-size13-weightbold">Zone Name: {{zoneName}}</div>
     {{/if}}
 	{{#if repositoryType}}
-	<label class="no-margin label-size13-weightbold">Repository Type : {{repositoryType}}</label>
+	<div class="no-margin label-size13-weightbold">Repository Type: {{repositoryType}}</div>
 	{{/if}}
-	<label class="no-margin label-size13-weightbold"> Created Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
-	<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{userName}}</label>
+	<div class="no-margin label-size13-weightbold">Created Date: {{objectCreatedDate}}</div>
+	<div class="no-margin label-size13-weightbold">Created By: {{userName}}</div>
 {{#if collection.length}}
-	<h5>Policy Details :</h5>
+	<h5 class="bold wrap-header m-t-sm">Policy Details:</h5>
 	<div class="diff">
 		<div class="diff-left">
 			<h3>Fields</h3>
@@ -38,7 +38,7 @@
 		</div>
 		<div class="diff-right">
 			<h3>New Value</h3>
-			<ol class="unstyled data">
+			<ol class="list-unstyled data">
 			{{#each collection}}
 				<li class="change-row">{{./this.attributes.newValue}}</li>
 			{{/each}}	
@@ -47,12 +47,12 @@
 	</div>
 {{/if}}	
 {{#if newPolicyValidityPeriod}}
-    <h5>Validity Period :</h5>
+    <h5 class="bold wrap-header m-t-sm">Validity Period:</h5>
     <div class="diff diff-perms" >
         <div class="diff-right diff-list" data-id="diff">
             <h3>New Value</h3>
             {{#each newPolicyValidityPeriod}}
-                <ol class="unstyled data">
+                <ol class="list-unstyled data">
                     <li class="change-row">Start Date:
                         {{#if this.startTime}}
                             {{this.startTime}}
@@ -80,14 +80,14 @@
     </div>
 {{/if}}
 {{#if newPolicyConditions}}
-    <h5>Policy Conditions :</h5>
+    <h5 class="bold wrap-header m-t-sm">Policy Conditions:</h5>
     <div class="diff diff-perms" >
         <div class="diff-right diff-list" data-id="diff">
             <h3>New Value</h3>
             {{#each newPolicyConditions}}
                 <li class="change-row">
                     {{#if this.type}}
-                        {{this.type}} : [{{this.values}}]
+                        {{this.type}}: [{{this.values}}]
                     {{else}}
                         --
                     {{/if}}
@@ -97,12 +97,12 @@
     </div>
 {{/if}}
 {{#if newPolicyItems}}
-	<h5>Allow PolicyItems :</h5>
+	<h5 class="bold wrap-header m-t-sm">Allow PolicyItems:</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>New Value</h3>
 				{{#each newPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                         <li class="change-row">Roles:
                                                 {{#if_eq this.roles compare=0}}
                                                         &lt;empty&gt;
@@ -147,12 +147,12 @@
 <!-- Allow Exceptions -->
 
 {{#if newAllowExceptionPolicyItems}}
-	<h5>Allow Exceptions :</h5>
+	<h5 class="bold wrap-header m-t-sm">Allow Exceptions:</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>New Value</h3>
 				{{#each newAllowExceptionPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                         <li class="change-row">Roles:
                                                 {{#if_eq this.roles compare=0}}
                                                         &lt;empty&gt;
@@ -197,12 +197,12 @@
 <!-- Deny PolicyItems -->
 
 {{#if newDenyPolicyItems}}
-	<h5>Deny PolicyItems :</h5>
+	<h5 class="bold wrap-header m-t-sm">Deny PolicyItems:</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>New Value</h3>
 				{{#each newDenyPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                         <li class="change-row">Roles:
                                                 {{#if_eq this.roles compare=0}}
                                                         &lt;empty&gt;
@@ -233,7 +233,7 @@
 					<li class="change-row">
 						Conditions:
 							{{#each this.conditions}}
-								{{this.type}} : [{{this.values}}]<span>,</span>
+								{{this.type}}: [{{this.values}}]<span>,</span>
 							{{/each}}
 					</li>
 					{{/if}}
@@ -245,12 +245,12 @@
 {{/if}}
 <!-- Deny Exception PolicyItems -->
 {{#if newDenyExceptionPolicyItems}}
-	<h5>Deny Exception PolicyItems:</h5>
-	<div class="diff diff-perms" >
+	<h5 class="bold wrap-header m-t-sm">Deny Exception PolicyItems:</h5>
+	<div class="diff diff-perms">
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>New Value</h3>
 				{{#each newDenyExceptionPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                         <li class="change-row">Roles:
                                                 {{#if_eq this.roles compare=0}}
                                                         &lt;empty&gt;
@@ -294,12 +294,12 @@
 
 <!-- Masking Policy Items -->
 {{#if newMaskPolicyItems}}
-	<h5>Masking Policy Items :</h5>
+	<h5 class="bold wrap-header m-t-sm">Masking Policy Items:</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>New Value</h3>
 			{{#each newMaskPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                         <li class="change-row">Roles:
                                                 {{#if_eq this.roles compare=0}}
                                                         &lt;empty&gt;
@@ -342,12 +342,12 @@
 
 <!--  Row Filter Policy Items-->
 {{#if newRowFilterPolicyItems}}
-	<h5>Row Level Filter Policy Items :</h5>
+	<h5 class="bold wrap-header m-t-sm">Row Level Filter Policy Items:</h5>
 	<div class="diff diff-perms" >
 		<div class="diff-right diff-list" data-id="diff">
 			<h3>New Value</h3>
 			{{#each newRowFilterPolicyItems}}
-				<ol class="unstyled data">
+				<ol class="list-unstyled data">
                                         <li class="change-row">Roles:
                                                 {{#if_eq this.roles compare=0}}
                                                         &lt;empty&gt;

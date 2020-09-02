@@ -16,50 +16,54 @@ language governing permissions and limitations under the License. --}}
 		<div>
 			<b>Select File : </b>
 		</div>
-		<label class="btn btn-default btn-file" data-id="importFile">Select
-			file <i class="icon-upload-alt"> </i> <input type="file" name="image"
+		<label class="btn btn-default btn-file btn-sm" data-id="importFile">Select
+			file <i class="fa-fw fa fa-arrow-circle-o-up"> </i> <input type="file" name="image"
 			data-id="uploadPolicyFile" style="display: none;"
 			accept=" .json " />
 		</label>
 		<label class="float-right" for="override">
-			Override Policy : <input id="override" type="checkbox" data-id="source" data-name="override" class="margin-left12">
+			Override Policy: <input id="override" type="checkbox" data-id="source" data-name="override" class="margin-left12" style="vertical-align: middle;">
 		</label>
 		<div class="selectFile margin-left6">No file chosen</div>
                 <div class="fileValidation text-color-red margin-left6" data-id="selectFileValidationMsg">Please Select Json file format</div>
 		<div data-id="selectZoneMapping">
 			<hr>
-			<div class="alert alert-warning show" data-id="policyInfoAlert"><i class="icon-info-sign searchInfo m-r-xs"></i>
+			<div class="alert alert-warning show" data-id="policyInfoAlert"><i class="fa-fw fa fa-info-circle searchInfo m-r-xs"></i>
 				All services gets listed on service destination when Zone destination is blank. When zone is selected at destination, then only services associated with that zone will be listed. 
 			</div>
-			<div class="control-group">
+			<div class="form-group">
 				<span><b>Specify Zone Mapping : </b></span>
 				<div>
 					<span class="margin-left-75">Source</span>
 					<span class="margin-left-213">Destination</span>
 				</div>
 			</div>
-			<div class="form-horizontal">
-				<input type="text" data-id="zoneSource" readOnly>
-				 &nbsp;&nbsp;To&nbsp;&nbsp;
-				<input type="text" data-id="zoneDestination" placeholder="No zone selected">
+			<div class="row">
+                <div class="col-md-4">
+                    <input class="form-control" type="text" data-id="zoneSource" readOnly>
+                </div>
+                &nbsp;&nbsp;To&nbsp;&nbsp;
+                <div class="col-md-5">
+                    <input type="text" data-id="zoneDestination" placeholder="No zone selected">
+                </div>
 			</div>
 		</div>
 		<div class="uploadSet" data-id="selectServicesMapping">
 			<hr>
-			<span><b>Specify Service Mapping : </b></span>
+			<span><b>Specify Service Mapping: </b></span>
 			<div>
 				<span class="margin-left-75">Source</span> 
 				<span class="margin-left-213">Destination</span>
 			</div>
-			<div class="serviceMapErrorMsg text-color-red hide margin-bottom-11">Please select/enter service name.</div>
-			<div class="serviceMapTextError text-color-red hide margin-bottom-11" >Source service name should not be same.</div>
+			<div class="serviceMapErrorMsg text-color-red margin-bottom-11" style="display: none;">Please select/enter service name.</div>
+			<div class="serviceMapTextError text-color-red margin-bottom-11" style="display: none;">Source service name should not be same.</div>
 		</div>
 	</div>
 	<div data-id="selectServicesMapping">
-		<div class="js-serviceMappingItems "></div>
-		<button type="button" class="btn btn-small" data-id="addServiceMaping"
+		<div class="js-serviceMappingItems importSelect2"></div>
+		<button type="button" class="btn btn-sm" data-id="addServiceMaping"
 			title="Add">
-			<i class="icon-plus"></i>
+			<i class="fa-fw fa fa-plus"></i>
 		</button>
 	</div>
 </div>

@@ -15,14 +15,14 @@
   limitations under the License.
 --}}
 <div class="diff-content">
-	<label class="no-margin label-size13-weightbold">Name : {{objectName}}</label>
-	<label class="no-margin label-size13-weightbold"> Date  &nbsp;&nbsp;:  {{objectCreatedDate}}</label>
+	<div class="no-margin label-size13-weightbold m-b-xs">Name: {{objectName}}</div>
+	<div class="no-margin label-size13-weightbold m-b-xs">Date: {{objectCreatedDate}}</div>
 {{#compare action 'eq' 'create'}}
-	<label class="no-margin label-size13-weightbold" > Created By  &nbsp;&nbsp;:  {{userName}}</label>
-	<h5>Zone Details :</h5>
+	<div class="no-margin label-size13-weightbold m-b-xs">Created By: {{userName}}</div>
+	<h5 class="bold wrap-header m-t-sm">Zone Details:</h5>
 	<div class="diff">
 		<div class="diff-left">
-			<h3>Fields :</h3>
+			<h3>Fields</h3>
 			<ol class="attr">
 				{{#each collection}}
 					<li class="change-row">{{./this.attributes.attributeName}}</li>
@@ -31,7 +31,7 @@
 		</div>
 		<div class="diff-right">
 			<h3>New Value</h3>
-			<ol class="unstyled data">
+			<ol class="list-unstyled data">
 			{{#each collection}}
 				{{#if ./this.attributes.newValue}}
 					{{#compare ./this.attributes.newValue "eq" ''}}
@@ -48,8 +48,8 @@
 	</div>
 	
 	<div class="row">
-		<div class="span8">
-	        <h5>Zone Service Details : </h5>
+		<div class="col-md-8">
+	        <h5 class="bold wrap-header m-t-sm">Zone Service Details:</h5>
 	        <table class="table table-bordered table-operations-new">
 	            <thead>
 	                <tr>
@@ -74,8 +74,8 @@
 	</div>
 
 {{else}}
-	<label class="no-margin label-size13-weightbold" > Deleted By  &nbsp;&nbsp;:  {{userName}}</label>
-	<h5>Zone Details : </h5>
+	<div class="no-margin label-size13-weightbold">Deleted By:  {{userName}}</div>
+	<h5 class="bold wrap-header m-t-sm">Zone Details:</h5>
 	<div class="diff">
 		<div class="diff-left">
 			<h3>Fields</h3>
@@ -87,7 +87,7 @@
 		</div>
 		 <div class="diff-left">
 			<h3>Old Value</h3>
-			<ol class="unstyled data">
+			<ol class="list-unstyled data">
 			{{#each collection}}
 				{{#if ./this.attributes.previousValue}}
 					{{#compare ./this.attributes.previousValue "eq" ''}}
@@ -105,8 +105,8 @@
 	</div>
 
 	<div class="row">
-		<div class="span8">
-	        <h5>Zone Service Details : </h5>
+		<div class="col-md-8">
+	        <h5 class="bold wrap-header m-t-sm">Zone Service Details:</h5>
 	        <table class="table table-bordered table-operations-new">
 	            <thead>
 	                <tr>

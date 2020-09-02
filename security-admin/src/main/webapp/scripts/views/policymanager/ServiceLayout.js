@@ -199,7 +199,8 @@ define(function(require){
 				content	: view,
 				title	: 'Export Policy',
 				okText  :"Export",
-				animate : true
+				animate : true,
+				focusOk : false
 			}).open();
 			
 		},
@@ -248,7 +249,8 @@ define(function(require){
 				content	: view,	
 				okText 	:"Import",
                                 title	: App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName) ? 'Import Policy For Zone' : 'Import Policy',
-				animate : true
+				animate : true,
+				focusOk : false
 			}).open();
 
 		},
@@ -296,7 +298,8 @@ define(function(require){
                 title: localization.tt("h.serviceDetails"),
                 okText :localization.tt("lbl.ok"),
                 allowCancel : true,
-                escape : true
+                escape : true,
+                focusOk : false
             }).open();
             modal.$el.find('.cancel').hide();
         },
@@ -310,6 +313,7 @@ define(function(require){
             }
             var servicesModel = _.clone(that.services);
             this.ui.selectZoneName.select2({
+                theme: 'bootstrap4',
                 closeOnSelect: false,
                 maximumSelectionSize : 1,
                 width: '220px',

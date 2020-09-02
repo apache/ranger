@@ -14,86 +14,85 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<div class="well well-small " style="margin-top: 36px;">
-	<div class="fancy title" style="margin-bottom: 16px;">
-		{{#if  userModel}}	
-				<span>User Information</span>
-		{{/if}}	
-		{{#if  groupModel}}
-				<span>Group Information</span>
-		{{/if}}
-	</div>
-	
-	{{#if  userModel}}	
-		<h4 style="font-size: 14.25px;">{{tt 'lbl.userName'}} : <span class="r-path">{{name}}</span></h4>
-	{{/if}}	
-	{{#if  groupModel}}
-		<h4 style="font-size: 14.25px;">{{tt 'lbl.groupName'}} : <span class="r-path">{{name}}</span></h4>
-	{{/if}}	
-		<label class="labelInverse">{{tt 'lbl.userInfo'}} :</label>
-		<table class="table table-bordered">
-			<tbody>
-				<tr>
-					<td>{{tt 'lbl.createdBy'}}</td>
-					<td> {{owner}} </td>
-				</tr>
-				<tr>
-					<td>{{tt 'lbl.createdOn'}}</td>
-					<td>{{dateFormat createDate format="MM/DD/YYYY HH:mm:ss A"}}</td>
-				</tr>
-				<tr>
-					<td>{{tt 'lbl.updatedBy'}}</td>
-					<td> {{updatedBy}} </td>
-				</tr>
-				<tr>
-					<td>{{tt 'lbl.updatedOn'}}</td>
-					<td>{{dateFormat updateDate format="MM/DD/YYYY HH:mm:ss A"}} </td>
-				</tr>
-			</tbody>
-		</table>
-	 {{#if  groupList.length}}	
-		<label class="labelInverse">{{tt 'lbl.group'}} :</label>
-		<table class="table table-bordered" >
-			<thead>
-				<tr>
-					<th >{{tt 'lbl.groupName'}}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>
-				{{#each groupList.models}}
-						<span class="label label-info">{{./this.attributes.name}}</span>					
-				{{/each}}
-					<a href="javascript:void(0);" data-id="showMore" class="" style="display:none;">
-							<code style=""> + More..</code>
-					</a>
-					<a href="javascript:void(0);" data-id="showLess" class="" style="display:none;">
-							<code style=""> - Less..</code>
-					</a>
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	{{/if}}	 
-	{{#if  userList.length}}	
-		<label class="labelInverse">{{tt 'lbl.users'}} :</label>
-		<table class="table table-bordered">
-			<thead>
-				<tr>
-					<th >{{tt 'lbl.userName'}}</th>
-				</tr>
-			</thead>
-			<tbody>
-				<tr>
-					<td>
-				{{#each userList.models}}
-						<span class="label label-info">{{./this.attributes.name}}</span>
-				{{/each}}
-					</td>
-				</tr>
-			</tbody>
-		</table>
-	{{/if}}	 
-	</div>
+ <div class="well-small card" style="margin-top: 36px;">
+    <div class="fancy title" style="margin-bottom: 16px;">
+        {{#if  userModel}}  
+            <span>User Information</span>
+        {{/if}}
+        {{#if  groupModel}}
+            <span>Group Information</span>
+        {{/if}}
+    </div>
+
+    {{#if  userModel}}
+        <h4 style="font-size: 14.25px;">{{tt 'lbl.userName'}} : <span class="r-path">{{name}}</span></h4>
+    {{/if}} 
+    {{#if  groupModel}}
+        <h4 style="font-size: 14.25px;">{{tt 'lbl.groupName'}} : <span class="r-path">{{name}}</span></h4>
+    {{/if}}
+        <label class="labelInverse">{{tt 'lbl.userInfo'}} :</label>
+        <table class="table table-bordered">
+            <tbody>
+                <tr>
+                    <td>{{tt 'lbl.createdBy'}}</td>
+                    <td> {{owner}} </td>
+                </tr>
+                <tr>
+                    <td>{{tt 'lbl.createdOn'}}</td>
+                    <td>{{dateFormat createDate format="MM/DD/YYYY HH:mm:ss A"}}</td>
+                </tr>
+                <tr>
+                    <td>{{tt 'lbl.updatedBy'}}</td>
+                    <td> {{updatedBy}} </td>
+                </tr>
+                <tr>
+                    <td>{{tt 'lbl.updatedOn'}}</td>
+                    <td>{{dateFormat updateDate format="MM/DD/YYYY HH:mm:ss A"}} </td>
+                </tr>
+            </tbody>
+        </table>
+    {{#if  groupList.length}}  
+        <label class="labelInverse">{{tt 'lbl.group'}} :</label>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{tt 'lbl.groupName'}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                {{#each groupList.models}}
+                        <span class="badge badge-info">{{./this.attributes.name}}</span>
+                {{/each}}
+                    <a href="javascript:void(0);" data-id="showMore" class="" style="display:none;">
+                            <code style=""> + More..</code>
+                    </a>
+                    <a href="javascript:void(0);" data-id="showLess" class="" style="display:none;">
+                            <code style=""> - Less..</code>
+                    </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    {{/if}}
+    {{#if  userList.length}}    
+        <label class="labelInverse">{{tt 'lbl.users'}} :</label>
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>{{tt 'lbl.userName'}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>
+                {{#each userList.models}}
+                    <span class="badge badge-info">{{./this.attributes.name}}</span>
+                {{/each}}
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    {{/if}}
 </div>
