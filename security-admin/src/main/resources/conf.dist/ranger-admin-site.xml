@@ -309,6 +309,10 @@
         <name>ranger.kms.service.user.hive</name>
         <value>hive</value>
     </property>
+    <property>
+        <name>ranger.kms.service.user.hbase</name>
+        <value>hbase</value>
+    </property>
 
     <property>
         <name>ranger.audit.hive.query.visibility</name>
