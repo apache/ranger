@@ -62,24 +62,12 @@
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-ozone-common</artifactId>
-	<!--
-	    <version>0.4.0.3.0.100.0-SNAPSHOT</version>
-	    <version>0.4.0-alpha</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/hadoop-ozone-common-0.4.0-alpha.jar</systemPath>
-	-->
-	    <version>0.4.0-alpha</version>
+	    <version>${ozone.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-hdds-common</artifactId>
-	<!--
-	    <version>0.4.0.3.0.100.0-SNAPSHOT</version>
-	    <version>0.4.0-alpha</version>
-            <scope>system</scope>
-            <systemPath>${project.basedir}/src/main/resources/hadoop-hdds-common-0.4.0-alpha.jar</systemPath> 
-	-->
-	    <version>0.4.0-alpha</version>
+	    <version>${ozone.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>

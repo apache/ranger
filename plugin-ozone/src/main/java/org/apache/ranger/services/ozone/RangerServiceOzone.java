@@ -46,6 +46,8 @@ public class RangerServiceOzone extends RangerBaseService {
     public static final String ACCESS_TYPE_CREATE  = "create";
     public static final String ACCESS_TYPE_LIST  = "list";
     public static final String ACCESS_TYPE_DELETE  = "delete";
+    public static final String ACCESS_TYPE_READ_ACL = "read_acl";
+    public static final String ACCESS_TYPE_WRITE_ACL = "write_acl";
     public static final String ACCESS_TYPE_ALL  = "all";
 
 
@@ -122,6 +124,8 @@ public class RangerServiceOzone extends RangerBaseService {
 					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_CREATE));
 					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_LIST));
 					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_DELETE));
+                    			accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ_ACL));
+                    			accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_WRITE_ACL));
 					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_ALL));
 					policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 					policyItemForLookupUser.setAccesses(accessListForLookupUser);
