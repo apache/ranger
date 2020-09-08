@@ -16,8 +16,8 @@
 			"parent": "",
 			"mandatory": true,
 			"lookupSupported": true,
-			"recursiveSupported": true,
-			"excludesSupported": false,
+			"recursiveSupported": false,
+			"excludesSupported": true,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": { "wildCard":true, "ignoreCase":false },
 			"validationRegEx":"",
@@ -55,7 +55,7 @@
 			"parent": "bucket",
 			"mandatory": true,
 			"lookupSupported": true,
-			"recursiveSupported": false,
+			"recursiveSupported": true,
 			"excludesSupported": true,
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": { "wildCard":true, "ignoreCase":true },
@@ -80,7 +80,9 @@
                                 "write",
                                 "create",
                                 "list",
-                                "delete"
+                                "delete",
+				"read_acl",
+				"write_acl"
                         ]
                 },
 		{
@@ -111,6 +113,16 @@
 			"itemId": 5,
 			"name": "delete",
 			"label": "Delete"
+		},
+		{
+			"itemId": 6,
+			"name": "read_acl",
+			"label": "Read_ACL"
+		},
+		{
+			"itemId": 7,
+			"name": "write_acl",
+			"label": "Write_ACL"
 		}
 	],
 
@@ -187,51 +199,6 @@
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":""
-		},
-
-		{
-			"itemId": 7,
-			"name": "dfs.datanode.kerberos.principal",
-			"type": "string",
-			"subType": "",
-			"mandatory": false,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":""
-		},
-
-		{
-			"itemId": 8,
-			"name": "dfs.namenode.kerberos.principal",
-			"type": "string",
-			"subType": "",
-			"mandatory": false,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":""
-		},
-
-		{
-			"itemId": 9,
-			"name": "dfs.secondary.namenode.kerberos.principal",
-			"type": "string",
-			"subType": "",
-			"mandatory": false,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":""
-		},
-
-		{
-			"itemId": 10,
-			"name": "commonNameForCertificate",
-			"type": "string",
-			"subType": "",
-			"mandatory": false,
-			"validationRegEx":"",
-			"validationMessage": "",
-			"uiHint":"",
-			"label": "Common Name for Certificate"
 		}
 	],
 

@@ -44,6 +44,8 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 	public static final String ACCESS_TYPE_CREATE = "create";
 	public static final String ACCESS_TYPE_LIST = "list";
 	public static final String ACCESS_TYPE_DELETE = "delete";
+	public static final String ACCESS_TYPE_READ_ACL = "read_acl";
+	public static final String ACCESS_TYPE_WRITE_ACL = "write_acl";
 
 
     public static final String KEY_RESOURCE_VOLUME = "volume";
@@ -186,6 +188,12 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 				break;
 			case LIST:
 				rangerAccessType = ACCESS_TYPE_LIST;
+				break;
+			case READ_ACL:
+				rangerAccessType = ACCESS_TYPE_READ_ACL;
+				break;
+			case WRITE_ACL:
+				rangerAccessType = ACCESS_TYPE_WRITE_ACL;
 				break;
 		}
 		return rangerAccessType;

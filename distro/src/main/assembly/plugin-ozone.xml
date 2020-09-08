@@ -61,8 +61,8 @@
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-ozone:jar:0.4.0.3.0.100.0-SNAPSHOT</include>
-                    <include>org.apache.hadoop:hadoop-hdds:jar:0.4.0.3.0.100.0-SNAPSHOT</include>
+                    <include>org.apache.hadoop:hadoop-ozone:jar:${ozone.version}</include>
+                    <include>org.apache.hadoop:hadoop-hdds:jar:${ozone.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
                     <include>com.sun.jersey:jersey-core</include>
