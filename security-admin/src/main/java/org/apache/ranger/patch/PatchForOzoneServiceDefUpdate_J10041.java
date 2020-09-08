@@ -27,7 +27,6 @@ import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -42,9 +41,12 @@ import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.support.TransactionTemplate;
 
-import java.util.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.Arrays;
+import java.util.HashMap;
 
 @Component
 public class PatchForOzoneServiceDefUpdate_J10041 extends BaseLoader {
