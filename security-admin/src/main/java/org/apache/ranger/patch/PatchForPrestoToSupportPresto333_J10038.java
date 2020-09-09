@@ -147,10 +147,10 @@ public class PatchForPrestoToSupportPresto333_J10038 extends BaseLoader {
       validator.validate(dbPrestoServiceDef, RangerValidator.Action.UPDATE);
       ret = svcStore.updateServiceDef(dbPrestoServiceDef);
       if (ret == null) {
-        logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME
+        logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME
           + " service-def");
         throw new RuntimeException("Error while updating "
-          + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
+          + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME + " service-def");
       }
 
     }
