@@ -19,6 +19,7 @@
 
 package org.apache.ranger.audit.provider.solr;
 
+import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.Collections;
@@ -229,8 +230,16 @@ public class SolrAuditProvider extends AuditDestination {
 	 */
 	@Override
 	public void stop() {
-		// TODO Auto-generated method stub
-
+		LOG.info("SolrAuditProvider.stop() called..");
+		try {
+			if (solrClient != null) {
+				solrClient.close();
+			}
+		} catch (IOException ioe) {
+			LOG.error("Error while stopping slor!", ioe);
+		} finally {
+			solrClient = null;
+		}
 	}
 
 	/*
