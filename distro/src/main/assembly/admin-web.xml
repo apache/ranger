@@ -190,8 +190,6 @@
           <include>io.opentracing:opentracing-util:jar:0.31.0</include>
           <include>io.opentracing.contrib:opentracing-tracerresolver:jar:0.1.5</include>
           <include>com.google.protobuf:protobuf-java</include>
-          <include>org.apache.ratis:ratis-common:jar:0.2.0</include>
-          <include>org.apache.ratis:ratis-thirdparty-misc:jar:0.2.0</include>
         </includes>
       </binaries>
     </moduleSet>
