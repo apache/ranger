@@ -30,9 +30,10 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRoles;
 
 public interface RangerPolicyEngine {
-	String GROUP_PUBLIC   = "public";
-	String ANY_ACCESS     = "_any";
-	String ADMIN_ACCESS   = "_admin";
+	String GROUP_PUBLIC      = "public";
+	String ANY_ACCESS        = "_any";
+	String ADMIN_ACCESS      = "_admin";
+	String SUPER_USER_ACCESS = "_super_user";
 
 	String AUDIT_ALL      = "audit-all";
 	String AUDIT_NONE     = "audit-none";

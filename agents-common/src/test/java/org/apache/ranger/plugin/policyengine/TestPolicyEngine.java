@@ -423,6 +423,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_superUserAccess() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_super_user_access.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
