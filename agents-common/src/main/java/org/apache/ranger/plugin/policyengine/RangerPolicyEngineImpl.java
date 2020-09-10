@@ -515,8 +515,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		final boolean            isSuperUser = isSuperUser(request.getUser(), request.getUserGroups());
 
 		// for superusers, set access as allowed
-		if (isSuperUser) {
-			ret.setIsAllowed(true);
+		if (isSuperUser || StringUtils.equals(request.getAccessType(), RangerPolicyEngine.SUPER_USER_ACCESS)) {
+			ret.setIsAllowed(isSuperUser);
 			ret.setIsAccessDetermined(true);
 			ret.setPolicyId(-1);
 			ret.setPolicyPriority(Integer.MAX_VALUE);
