@@ -92,6 +92,7 @@ public class AbstractPredicateUtil {
 		// addPredicateForTagServiceId(filter.getParam(SearchFilter.TAG_SERVICE_ID), predicates); // not supported
 		addPredicateForUserName(filter.getParam(SearchFilter.USER), predicates);
 		addPredicateForGroupName(filter.getParam(SearchFilter.GROUP), predicates);
+		addPredicateForRoleName(filter.getParam(SearchFilter.ROLE), predicates);
 		addPredicateForResources(filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true), predicates);
 		addPredicateForPolicyResource(filter.getParam(SearchFilter.POL_RESOURCE), predicates);
 		addPredicateForPartialPolicyName(filter.getParam(SearchFilter.POLICY_NAME_PARTIAL), predicates);
@@ -562,6 +563,64 @@ public class AbstractPredicateUtil {
 		}
 
 		return ret;
+	}
+
+	private Predicate addPredicateForRoleName(final String roleName, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(roleName)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerPolicy) {
+					RangerPolicy policy = (RangerPolicy)object;
+
+					List<?>[] policyItemsList = new List<?>[] { policy.getPolicyItems(),
+																policy.getDenyPolicyItems(),
+																policy.getAllowExceptions(),
+																policy.getDenyExceptions(),
+																policy.getDataMaskPolicyItems(),
+																policy.getRowFilterPolicyItems()
+															};
+					for(List<?> policyItemsObj : policyItemsList) {
+						@SuppressWarnings("unchecked")
+						List<RangerPolicyItem> policyItems = (List<RangerPolicyItem>)policyItemsObj;
+
+						for(RangerPolicyItem policyItem : policyItems) {
+							if(! policyItem.getRoles().isEmpty()) {
+								for(String role : policyItem.getRoles()) {
+									if(StringUtils.containsIgnoreCase(role, roleName)) {
+										ret = true;
+										break;
+									}
+								}
+							}
+						}
+						if (ret) {
+							break;
+						}
+					}
+				}else {
+					ret = true;
+				}
+
+				return ret;
+			}
+		};
+
+		if(predicates != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+
 	}
 
 	private Predicate addPredicateForIsEnabled(final String status, List<Predicate> predicates) {

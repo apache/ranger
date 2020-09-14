@@ -522,7 +522,7 @@ define(function(require) {
                     };
                 });
 
-                var searchOpt = ['Policy Name', 'Group Name', 'User Name', 'Status', 'Policy Label']; //,'Start Date','End Date','Today'];
+                var searchOpt = ['Policy Name', 'Group Name', 'User Name', 'Status', 'Policy Label', 'Role Name']; //,'Start Date','End Date','Today'];
                 searchOpt = _.union(searchOpt, _.map(resourceSearchOpt, function(opt) {
                     return opt.label
                 }))
@@ -553,7 +553,12 @@ define(function(require) {
                     label: "policyLabelsPartial",
                     info: localization.tt('h.policyLabelsinfo'),
                     urlLabel: 'policyLabel'
-                }, ];
+                }, {
+                    text : "Role Name",
+                    label :"role" ,
+                    info :localization.tt('h.roleMsg'),
+                    urlLabel : 'roleName'
+                }];
                 // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
                 //  {text : 'Today',label :'today'}];
                 var info = {

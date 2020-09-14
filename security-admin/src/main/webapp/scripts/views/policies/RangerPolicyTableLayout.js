@@ -468,12 +468,13 @@ define(function(require){
                         });
 			var PolicyStatusValue = _.map(XAEnums.ActiveStatus, function(status) { return { 'label': status.label, 'value': Boolean(status.value)}; });
 	
-                        var searchOpt = ['Policy Name','Group Name','User Name','Status', 'Policy Label'];//,'Start Date','End Date','Today'];
+                        var searchOpt = ['Policy Name','Group Name','User Name','Status', 'Policy Label', 'Role Name'];//,'Start Date','End Date','Today'];
                         searchOpt = _.union(searchOpt, _.map(resourceSearchOpt, function(opt){ return opt.label }))
                         var serverAttrName  = [{text : "Group Name",  label :"group",   info:localization.tt('h.groupNameMsg'), urlLabel : 'groupName'},
                                                {text : "Policy Name", label :"policyNamePartial",  info :localization.tt('msg.policyNameMsg'), urlLabel : 'policyName'},
                                                {text : "Status",      info : localization.tt('msg.statusMsg') ,  label :"isEnabled",'multiple' : true, 'optionsArr' : PolicyStatusValue, urlLabel : 'status'},
                                                {text : "User Name",   label :"user" ,  info :localization.tt('h.userMsg'), urlLabel : 'userName'},
+                                               {text : "Role Name",   label :"role" ,  info :localization.tt('h.roleMsg'), urlLabel : 'roleName'},
                                                {text : "Policy Label",   label :"policyLabelsPartial" ,  info :localization.tt('h.policyLabelsinfo'), urlLabel : 'policyLabel'},
                                                ];
 			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
