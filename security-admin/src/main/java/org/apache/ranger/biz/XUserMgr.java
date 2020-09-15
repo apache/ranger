@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Collections;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -1548,26 +1549,25 @@ public class XUserMgr extends XUserMgrBase {
 				logger.info(userName + " doesn't exist and hence ignoring role assignments");
 				continue;
 			}
-			Set<String> userRoleList = new HashSet<>();
+			String userRole = RangerConstants.ROLE_USER;
 			Map<String, String> userMap = ugRoleAssignments.getUserRoleAssignments();
 			if (!userMap.isEmpty() && userMap.containsKey(userName)) {
 				// Add the user role that is defined in user role assignments
-				userRoleList.add(userMap.get(userName));
-			}
-			Map<String, String> groupMap = ugRoleAssignments.getGroupRoleAssignments();
+				userRole = userMap.get(userName);
+			} else {
+				Map<String, String> groupMap = ugRoleAssignments.getGroupRoleAssignments();
 
-			if (!groupMap.isEmpty()) {
-				for (String group : getGroupsForUser(userName)) {
-					String value = groupMap.get(group);
-					if (value != null) {
-						userRoleList.add(value);
+				if (!groupMap.isEmpty()) {
+					for (String group : getGroupsForUser(userName)) {
+						String value = groupMap.get(group);
+						if (value != null) {
+							userRole = value;
+						}
 					}
 				}
 			}
-			if (userRoleList.isEmpty()) {
-				userRoleList.add(RangerConstants.ROLE_USER);
-			}
-			String updatedUser = setRolesByUserName(userName, new ArrayList<>(userRoleList));
+
+			String updatedUser = setRolesByUserName(userName, Collections.singletonList(userRole));
 			if (updatedUser != null) {
 				updatedUsers.add(updatedUser);
 			}
