@@ -274,7 +274,7 @@ define(function(require){
 
         initializeServices : function(){
             this.services = new RangerServiceList();
-            this.services.setPageSize(100);
+            this.services.setPageSize(200);
             this.services.fetch({
                cache : false,
                async : false

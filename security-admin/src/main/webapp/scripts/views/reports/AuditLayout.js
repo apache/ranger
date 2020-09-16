@@ -181,7 +181,7 @@ define(function(require) {
 				data :{'pageSource':'Audit'}
 			});
             this.serviceList = new RangerServiceList();
-            this.serviceList.setPageSize(100)
+            this.serviceList.setPageSize(200)
             this.serviceList.fetch({
                 cache : false,
                 async:false,

@@ -529,6 +529,7 @@ define(function(require) {
             var RangerZoneList = require('collections/RangerZoneList');
             var rangerServiceList = new RangerServiceList();
             var rangerZoneList = new RangerZoneList();
+            rangerServiceList.setPageSize(200);
             rangerServiceList.fetch({
                 cache: false,
                 async: false
@@ -554,6 +555,7 @@ define(function(require) {
             var RangerZoneList = require('collections/RangerZoneList');
             var zoneSerivesColl = new RangerZoneList();
             var rangerServiceList = new RangerServiceList();
+            rangerServiceList.setPageSize(200);
             rangerServiceList.fetch({
                 cache: false,
             }).done(function() {
@@ -581,6 +583,7 @@ define(function(require) {
                 id: zoneId
             })
             var zoneSerivesColl = new RangerZoneList();
+            rangerServiceList.setPageSize(200);
             rangerServiceList.fetch({
                 cache: false,
                 async: false,
