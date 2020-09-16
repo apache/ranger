@@ -832,6 +832,11 @@ define(function(require) {
                     collection.state.order == 1 ? sortparams['sortType'] = "descending" : sortparams['sortType'] = "ascending";
                     urlLabelParam = _.extend(urlLabelParam, sortparams)
                 }
+                //set excludeServiceUser value to url
+                if(!_.isUndefined(collection.queryParams) && _.has(collection.queryParams, 'excludeServiceUser')) {
+                    var sortparams = _.pick(collection.queryParams, 'excludeServiceUser');
+                    urlLabelParam = _.extend(urlLabelParam, sortparams)
+                }
             }
             XAUtils.changeParamToUrlFragment(urlLabelParam, collection.modelName);
 			collection.fetch({

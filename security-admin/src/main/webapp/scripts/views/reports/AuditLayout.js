@@ -142,8 +142,11 @@ define(function(require) {
             if(!_.isUndefined(this.urlQueryParams)) {
                 App.vsHistory[that.tab.split('?')[0]] = [];
                 var searchFregment = XAUtils.changeUrlToSearchQuery(decodeURIComponent(this.urlQueryParams));
+                if (this.urlQueryParams && _.has(searchFregment, 'excludeServiceUser')) {
+                    App.excludeServiceUser = searchFregment.excludeServiceUser == "true";
+                }
                 _.map (searchFregment, function(val, key) {
-                    if (key !== "sortBy" && key !== "sortType" && key !== "sortKey") {
+                    if (key !== "sortBy" && key !== "sortType" && key !== "sortKey" && key !== "excludeServiceUser") {
                         if (_.isArray(val)) {
                             _.map(val, function (v) {
                                 App.vsHistory[that.tab.split('?')[0]].push(new Backbone.Model( {'category': key, 'value' : v}));
@@ -545,10 +548,8 @@ define(function(require) {
 					}
                 }
 			};
-            if(App.excludeServiceUser){
-                this.accessAuditList.queryParams.excludeServiceUser = true;
-                this.ui.serviceUsersExclude.prop('checked', true);
-            }
+            this.accessAuditList.queryParams.excludeServiceUser = App.excludeServiceUser || false;
+            this.ui.serviceUsersExclude.prop('checked', App.excludeServiceUser || false);
             this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.accessAuditList, pluginAttr);
             this.setEventsToFacets(this.visualSearch, App.vsHistory.bigData);
         },
@@ -2251,6 +2252,9 @@ define(function(require) {
                 App.excludeServiceUser = e.currentTarget.checked;
                 this.accessAuditList.state.currentPage = this.accessAuditList.state.firstPage;
                 XAUtils.blockUI();
+                var urlParams = XAUtils.changeUrlToSearchQuery(decodeURIComponent(XAUtils.urlQueryParams()))
+                urlParams['excludeServiceUser'] = e.currentTarget.checked;
+                XAUtils.changeParamToUrlFragment(urlParams);
                 this.accessAuditList.fetch({
                     reset : true,
                     cache : false,
