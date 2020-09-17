@@ -76,14 +76,16 @@ define(function(require) {
             var $elements = that.$el.find('table [data-name = "queryInfo"][data-id = "'+model.id+'"]');
             $elements.popover({
                 html: true,
-                title:'<b>' + (titleMap[model.get('serviceType')] || 'Request Data') + '</b>' +
-                '<button type="button"  id="queryInfoClose" class="close closeBtn" onclick="$(&quot;.queryInfo&quot;).popover(&quot;hide&quot;);">&times;</button>',
+                title: '<b class="custom-title">'+ (titleMap[model.get('serviceType')] || 'Request Data') +'</b><a href="javascript:void(0)" class="close popoverClose">&times;</a>',
                 content: msg,
                 selector : true,
                 container:'body',
                 placement: 'top'
             }).on("click", function(e){
                 e.stopPropagation();
+                $('.popoverClose').on("click", function(){
+                    $(this).parents(".popover").popover('hide');
+                });
                 if($(e.target).data('toggle') !== 'popover' && $(e.target).parents('.popover.in').length === 0){
                     $('.queryInfo').not(this).popover('hide');
                     $('.copyQuery').on("click", function(e){
