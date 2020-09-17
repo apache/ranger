@@ -4446,7 +4446,12 @@ input.textFiledInputPadding:disabled {
 .modal-body {
   overflow-y: auto;
 }
-/*[fieldclass="resorces-css"] .control-label {
+
+.popover-header .close{
+  position: relative;
+  bottom: 6px;
+  cursor: pointer;
+}/*[fieldclass="resorces-css"] .control-label {
   margin-top: 0px;
   margin-right: -15px
 }*/
