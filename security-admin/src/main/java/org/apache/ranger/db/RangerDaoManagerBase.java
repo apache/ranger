@@ -317,6 +317,11 @@ public abstract class RangerDaoManagerBase {
 
 	public XXTagChangeLogDao getXXTagChangeLog() { return new XXTagChangeLogDao(this); }
 
+	public XXRMSMappingProviderDao getXXRMSMappingProvider() { return new XXRMSMappingProviderDao(this); }
+	public XXRMSNotificationDao getXXRMSNotification() { return new XXRMSNotificationDao(this); }
+	public XXRMSServiceResourceDao getXXRMSServiceResource() { return new XXRMSServiceResourceDao(this); }
+	public XXRMSResourceMappingDao getXXRMSResourceMapping() { return new XXRMSResourceMappingDao(this); }
+
 
 }
 

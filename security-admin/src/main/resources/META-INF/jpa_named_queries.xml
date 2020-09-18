@@ -1659,4 +1659,100 @@
 		<query>delete from XXTagChangeLog obj where obj.createTime &lt; :olderThan</query>
 	</named-query>
 
+	<!-- RMS queries -->
+
+	<named-query name="XXRMSResourceMapping.deleteByHlResourceId">
+		<query>DELETE FROM XXRMSResourceMapping obj WHERE obj.hlResourceId = :resourceId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSResourceMapping.deleteByLlResourceId">
+		<query>DELETE FROM XXRMSResourceMapping obj WHERE obj.llResourceId = :resourceId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSResourceMapping.findByHlAndLlResourceId">
+		<query>SELECT obj FROM XXRMSResourceMapping obj WHERE obj.hlResourceId = :hlResourceId and obj.llResourceId = :llResourceId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSResourceMapping.deleteByHlAndLlResourceId">
+		<query>DELETE FROM XXRMSResourceMapping obj WHERE obj.hlResourceId = :hlResourceId and obj.llResourceId = :llResourceId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSResourceMapping.deleteByLlOrHlResourceId">
+		<query>DELETE FROM XXRMSResourceMapping obj WHERE obj.hlResourceId = :resourceId or obj.llResourceId = :resourceId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSResourceMapping.findByHlResourceId">
+		<query>SELECT obj.llResourceId FROM XXRMSResourceMapping obj WHERE obj.hlResourceId = :hlResourceId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSResourceMapping.findByLlResourceId">
+		<query>SELECT obj.hlResourceId FROM XXRMSResourceMapping obj WHERE obj.llResourceId = :llResourceId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSResourceMapping.getServiceResourcesByLlResourceId">
+		<query>SELECT obj.id, obj.guid, obj.version, obj.isEnabled, obj.resourceSignature, obj.serviceId, obj.serviceResourceElements FROM XXRMSServiceResource obj where obj.id in (select mapping.hlResourceId FROM XXRMSResourceMapping mapping WHERE mapping.llResourceId = :llResourceId)
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSNotification.getMaxIdOfNotifications">
+		<query>select max(obj.notificationId) from XXRMSNotification obj where obj.llServiceId = :llServiceId and obj.hlServiceId = :hlServiceId</query>
+	</named-query>
+
+	<named-query name="XXRMSNotification.getAllAfterNotificationId">
+		<query>select obj from XXRMSNotification obj where obj.llServiceId = :llServiceId and obj.hlServiceId = :hlServiceId and obj.notificationId &gt; :notificationId order by obj.notificationId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSNotification.getNotificationWithTypeAfterNotificationId">
+		<query>select obj from XXRMSNotification obj where obj.changeType = :changeType and obj.llServiceId = :llServiceId and obj.hlServiceId = :hlServiceId and obj.notificationId &gt; :notificationId order by obj.notificationId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSNotification.getDeletedNotificationsByHlResourceId">
+		<query>select obj from XXRMSNotification obj where obj.changeType = 'delete' and obj.hlResourceId = :hlResourceId and obj.notificationId &gt; :lastKnownVersion order by obj.notificationId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSServiceResource.getLlResourceIdForHlResourceId">
+		<query>select obj from XXRMSServiceResource obj, XXRMSNotification notification where obj.id = notification.llResourceId and
+			notification.changeType = 'add' and notification.hlResourceId = :hlResourceId and notification.notificationId > :lastKnownIndex
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSServiceResource.findByServiceId">
+		<query>SELECT obj.id, obj.guid, obj.version, obj.isEnabled, obj.resourceSignature, obj.serviceId, obj.serviceResourceElements FROM XXRMSServiceResource obj where obj.serviceId = :serviceId
+			order by obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSServiceResource.getByLlOrHlServiceId">
+		<query>select obj.id from XXRMSServiceResource obj where obj.serviceId = :llServiceId or obj.serviceId = :hlServiceId
+			order by obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSServiceResource.deleteByLlOrHlServiceId">
+		<query>delete from XXRMSServiceResource obj where obj.serviceId = :llServiceId or obj.serviceId = :hlServiceId</query>
+	</named-query>
+
+	<named-query name="XXRMSServiceResource.findByServiceAndResourceSignature">
+		<query>select obj from XXRMSServiceResource obj where obj.serviceId = :serviceId and obj.resourceSignature = :resourceSignature</query>
+	</named-query>
+
+	<named-query name="XXRMSServiceResource.deleteById">
+		<query>DELETE FROM XXRMSServiceResource obj WHERE obj.id = :resourceId
+		</query>
+	</named-query>
+
+	<named-query name="XXRMSMappingProvider.findByName">
+		<query>select obj from XXRMSMappingProvider obj where obj.name = :name</query>
+	</named-query>
+
 </entity-mappings>

@@ -21,7 +21,7 @@ package org.apache.ranger.authorization.hadoop.config;
 
 public class RangerChainedPluginConfig extends RangerPluginConfig {
     public RangerChainedPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {
-        super(serviceType,  serviceName, appId, sourcePluginConfig.getClusterName(), sourcePluginConfig.getClusterType(), null);
+        super(serviceType, serviceName, appId, sourcePluginConfig);
 
         // add necessary config "overrides", so that RangerAdminClient implementations (like RangerAdminRESTClient)
         // will use configurations from ranger-<source-service-type>-security.xml (sourcePluginConfig) to connect to Ranger Admin
@@ -36,6 +36,11 @@ public class RangerChainedPluginConfig extends RangerPluginConfig {
         copyProperty(sourcePluginConfig, ".policy.rest.read.timeoutMs", 30 * 1000);
         copyProperty(sourcePluginConfig, ".policy.rest.supports.policy.deltas");
         copyProperty(sourcePluginConfig, ".tag.rest.supports.tag.deltas");
+
+        // SSL configurations
+        String[] legacySSLProperties = new String[] {"xasecure.policymgr.clientssl.keystore", "xasecure.policymgr.clientssl.keystore.type", "xasecure.policymgr.clientssl.keystore.credential.file","xasecure.policymgr.clientssl.truststore", "xasecure.policymgr.clientssl.truststore.credential.file", "hadoop.security.credential.provider.path"};
+        copyLegacySSLProperties(sourcePluginConfig, legacySSLProperties);
+
     }
 
     protected void copyProperty(RangerPluginConfig sourcePluginConfig, String propertySuffix) {
@@ -47,5 +52,34 @@ public class RangerChainedPluginConfig extends RangerPluginConfig {
 
     protected void copyProperty(RangerPluginConfig sourcePluginConfig, String propertySuffix, int defaultValue) {
         setInt(getPropertyPrefix() + propertySuffix, sourcePluginConfig.getInt("ranger.plugin" + sourcePluginConfig.getServiceType() + propertySuffix, defaultValue));
+    }
+
+    private void copyLegacySSLProperties(RangerPluginConfig sourcePluginConfig, String[] legacyPropertyNames) {
+        for (String legacyPropertyName : legacyPropertyNames) {
+            String value = sourcePluginConfig.get(legacyPropertyName);
+            if (value != null) {
+                set(legacyPropertyName, value);
+            }
+        }
+    }
+
+    protected String printProperties() {
+        StringBuilder sb = new StringBuilder();
+        boolean seenOneProp = false;
+        for (String propName : this.getProperties().stringPropertyNames()) {
+            String value = this.get(propName);
+            if (!seenOneProp) {
+                seenOneProp = true;
+            } else {
+                sb.append(",\n");
+            }
+            sb.append("{ propertyName:[").append(propName).append("], propertyValue:[").append(value).append("] }");
+        }
+        return sb.toString();
+    }
+
+    @Override
+    public String toString() {
+        return this.getClass().getSimpleName() + " : { " + printProperties() + " }";
     }
 }

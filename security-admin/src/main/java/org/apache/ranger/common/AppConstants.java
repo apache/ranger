@@ -624,16 +624,22 @@ public class AppConstants extends RangerCommonEnums {
 	public static final int CLASS_TYPE_XA_ACCESS_AUDIT_V5 = 1054;
 	public static final int CLASS_TYPE_UGYNC_AUDIT_INFO = 1055;
 
-	public static final int CLASS_TYPE_RANGER_SECURITY_ZONE = 1056;
-	public static final int CLASS_TYPE_RANGER_ROLE = 1057;
 	/**
 	 * Class type of RangerSecurityZone
 	 */
 
+	public static final int CLASS_TYPE_RANGER_SECURITY_ZONE = 1056;
+	public static final int CLASS_TYPE_RANGER_ROLE = 1057;
+
+	public static final int CLASS_TYPE_RMS_MAPPING_PROVIDER = 1058;
+	public static final int CLASS_TYPE_RMS_NOTIFICATION = 1059;
+	public static final int CLASS_TYPE_RMS_SERVICE_RESOURCE = 1060;
+	public static final int CLASS_TYPE_RMS_RESOURCE_MAPPING = 1061;
+
 	/**
 	 * Max value for enum ClassTypes_MAX
 	 */
-	public static final int ClassTypes_MAX = 1058;
+	public static final int ClassTypes_MAX = 1062;
 
 	
 	/***************************************************************
@@ -1041,6 +1047,19 @@ public class AppConstants extends RangerCommonEnums {
 		}
 		if( elementValue == 1057 ) {
 			return "Ranger Role"; //CLASS_TYPE_RANGER_ROLE
+		}
+
+		if( elementValue == 1058 ) {
+			return "Ranger Security Zone"; //CLAS
+		}
+		if( elementValue == 1059 ) {
+			return "Ranger Security Zone"; //CLAS
+		}
+		if( elementValue == 1060 ) {
+			return "Ranger Security Zone"; //CLAS
+		}
+		if( elementValue == 1061 ) {
+			return "Ranger Security Zone"; //CLAS
 		}
 		return null;
 	}

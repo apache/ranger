@@ -1804,6 +1804,112 @@ begin
 end;
 END; /
 /
+
+CREATE OR REPLACE PROCEDURE spdropsequence(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_sequences where sequence_name = upper(ObjName);
+      if (v_counter > 0) then
+        execute immediate 'DROP SEQUENCE ' || ObjName;
+      end if;
+END;/
+/
+
+call spdropsequence('X_RMS_SERVICE_RESOURCE_SEQ');
+call spdropsequence('X_RMS_NOTIFICATION_SEQ');
+call spdropsequence('X_RMS_RESOURCE_MAPPING_SEQ');
+call spdropsequence('X_RMS_MAPPING_PROVIDER_SEQ');
+
+commit;
+
+CREATE SEQUENCE X_RMS_SERVICE_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_RMS_NOTIFICATION_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_RMS_RESOURCE_MAPPING_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+CREATE SEQUENCE X_RMS_MAPPING_PROVIDER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
+
+
+CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
+IS
+v_counter integer;
+BEGIN
+    select count(*) into v_counter from user_tables where table_name = upper(ObjName);
+     if (v_counter > 0) then
+     execute immediate 'drop table ' || ObjName || ' cascade constraints';
+     end if;
+END;/
+/
+
+call spdroptable('X_RMS_NOTIFICATION');
+call spdroptable('X_RMS_RESOURCE_MAPPING');
+call spdroptable('X_RMS_MAPPING_PROVIDER');
+call spdroptable('X_RMS_SERVICE_RESOURCE');
+
+CREATE TABLE x_rms_service_resource(
+id NUMBER(20) NOT NULL,
+guid VARCHAR(1024) DEFAULT NULL NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+version NUMBER(20) DEFAULT NULL NULL,
+service_id NUMBER(20) NOT NULL,
+resource_signature VARCHAR(128) DEFAULT NULL NULL,
+is_enabled NUMBER(1) DEFAULT '1' NOT NULL,
+service_resource_elements_text CLOB DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_rms_service_res_UK_guid UNIQUE (guid),
+CONSTRAINT x_rms_svc_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
+);
+
+CREATE INDEX x_rms_svc_res_IDX_service_id ON x_rms_service_resource(service_id);
+
+CREATE TABLE x_rms_notification (
+id NUMBER(20) NOT NULL,
+hms_name VARCHAR(128) DEFAULT NULL NULL,
+notification_id NUMBER(20) DEFAULT NULL NULL,
+change_timestamp DATE DEFAULT NULL NULL,
+change_type VARCHAR(64) DEFAULT NULL NULL,
+hl_resource_id NUMBER(20) DEFAULT NULL NULL,
+hl_service_id NUMBER(20) DEFAULT NULL NULL,
+ll_resource_id NUMBER(20) DEFAULT NULL NULL,
+ll_service_id NUMBER(20) DEFAULT NULL NULL,
+PRIMARY KEY (id),
+CONSTRAINT x_rms_notis_FK_hl_service_id FOREIGN KEY(hl_service_id) REFERENCES x_service(id),
+CONSTRAINT x_rms_notis_FK_ll_service_id FOREIGN KEY(ll_service_id) REFERENCES x_service(id)
+);
+
+CREATE INDEX x_rms_notis_IDX_notis_id ON x_rms_notification(notification_id);
+CREATE INDEX x_rms_notis_IDX_hms_notis_id ON x_rms_notification(hms_name, notification_id);
+CREATE INDEX x_rms_notis_IDX_hl_svc_id ON x_rms_notification(hl_service_id);
+CREATE INDEX x_rms_notis_IDX_ll_svc_id ON x_rms_notification(ll_service_id);
+
+CREATE TABLE x_rms_resource_mapping(
+id NUMBER(20) NOT NULL,
+change_timestamp DATE DEFAULT NULL NULL,
+hl_resource_id NUMBER(20) NOT NULL,
+ll_resource_id NUMBER(20) NOT NULL,
+PRIMARY KEY (id),
+CONSTRAINT x_rms_res_map_UK_hl_id_ll_id UNIQUE(hl_resource_id, ll_resource_id),
+CONSTRAINT x_rms_res_map_FK_hl_res_id FOREIGN KEY(hl_resource_id) REFERENCES x_rms_service_resource(id),
+CONSTRAINT x_rms_res_map_FK_ll_res_id FOREIGN KEY(ll_resource_id) REFERENCES x_rms_service_resource(id)
+);
+
+CREATE INDEX x_rms_res_map_IDX_hl_svc_id ON x_rms_resource_mapping(hl_resource_id);
+CREATE INDEX x_rms_res_map_IDX_ll_svc_id ON x_rms_resource_mapping(ll_resource_id);
+
+
+CREATE TABLE x_rms_mapping_provider (
+id NUMBER(20) NOT NULL,
+change_timestamp DATE DEFAULT NULL NULL,
+name VARCHAR(128) NOT NULL,
+last_known_version NUMBER(20) NOT NULL,
+PRIMARY KEY (id),
+CONSTRAINT x_rms_map_provider_UK_name UNIQUE(name)
+);
+
+commit;
+
 insert into x_portal_user (id,CREATE_TIME, UPDATE_TIME,FIRST_NAME, LAST_NAME, PUB_SCR_NAME, LOGIN_ID, PASSWORD, EMAIL, STATUS) values (X_PORTAL_USER_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), 'Admin', '', 'Admin', 'admin', 'ceb4f32325eda6142bd65215f4c0f371', '', 1);
 insert into x_portal_user_role (id, CREATE_TIME, UPDATE_TIME, USER_ID, USER_ROLE, STATUS) values (X_PORTAL_USER_ROLE_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp), getXportalUIdByLoginId('admin'), 'ROLE_SYS_ADMIN', 1);
 insert into x_user (id,CREATE_TIME, UPDATE_TIME,user_name, status,descr) values (X_USER_SEQ.NEXTVAL, sys_extract_utc(systimestamp), sys_extract_utc(systimestamp),'admin', 0,'Administrator');
@@ -1873,6 +1979,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '046',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '047',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '048',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '049',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
