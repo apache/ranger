@@ -93,11 +93,12 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String CONFIG_PASSWORD                = "password";
 	public static final String ENTITY_NOT_CLASSIFIED          = "_NOT_CLASSIFIED";
 
-	private static final String TYPE_ENTITY         = "entity";
-	private static final String TYPE_CLASSIFICATION = "classification";
-	private static final String TYPE_STRUCT         = "struct";
-	private static final String TYPE_ENUM           = "enum";
-	private static final String TYPE_RELATIONSHIP   = "relationship";
+	private static final String TYPE_ENTITY             = "entity";
+	private static final String TYPE_CLASSIFICATION     = "classification";
+	private static final String TYPE_STRUCT             = "struct";
+	private static final String TYPE_ENUM               = "enum";
+	private static final String TYPE_RELATIONSHIP       = "relationship";
+	private static final String TYPE_BUSINESS_METADATA  = "business_metadata";
 
 	private static final String URL_LOGIN                = "/j_spring_security_check";
 	private static final String URL_GET_TYPESDEF_HEADERS = "/api/atlas/v2/types/typedefs/headers";
@@ -254,7 +255,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 	}
 
 	private static class AtlasServiceClient extends BaseClient {
-		private static final String[] TYPE_CATEGORIES = new String[] { "classification", "enum", "entity", "relationship", "struct" };
+		private static final String[] TYPE_CATEGORIES = new String[] { "classification", "enum", "entity", "relationship", "struct" ,"business_metadata" };
 
 		Map<String, List<String>> typesDef = new HashMap<>();
 
@@ -308,6 +309,10 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 					if (emptyOrContainsMatch(typeCategories, TYPE_RELATIONSHIP)) {
 						addIfStartsWithAndNotExcluded(ret, typesDef.get(TYPE_RELATIONSHIP), userInput, currentValues);
+					}
+
+					if (emptyOrContainsMatch(typeCategories, TYPE_BUSINESS_METADATA)) {
+						addIfStartsWithAndNotExcluded(ret, typesDef.get(TYPE_BUSINESS_METADATA), userInput, currentValues);
 					}
 				}
 				break;
