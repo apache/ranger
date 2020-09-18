@@ -394,6 +394,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 								resetPolicyUpdateLog(RETENTION_PERIOD_IN_DAYS, RangerPolicyDelta.CHANGE_TYPE_RANGER_ADMIN_START);
 								resetTagUpdateLog(TAG_RETENTION_PERIOD_IN_DAYS, ServiceTags.TagsChangeType.RANGER_ADMIN_START);
 								//createUnzonedSecurityZone();
+								initRMSDaos();
 								return null;
 							}
 						});
@@ -4903,6 +4904,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 		genericUser.setName(RangerPolicyEngine.RESOURCE_OWNER);
 		genericUser.setDescription(RangerPolicyEngine.RESOURCE_OWNER);
 		xUserService.createXUserWithOutLogin(genericUser);
+	}
+
+	private void initRMSDaos() {
+		daoMgr.getXXService();
+		daoMgr.getXXRMSMappingProvider();
+		daoMgr.getXXRMSNotification();
+		daoMgr.getXXRMSServiceResource();
+		daoMgr.getXXRMSResourceMapping();
 	}
 
 	public void resetPolicyUpdateLog(int retentionInDays, Integer policyChangeType) {

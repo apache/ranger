@@ -116,6 +116,23 @@ public class RangerPluginConfig extends RangerConfiguration {
         LOG.info(policyEngineOptions);
     }
 
+    protected RangerPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {
+        super();
+
+        this.serviceType    = serviceType;
+        this.appId          = StringUtils.isEmpty(appId) ? serviceType : appId;
+        this.propertyPrefix = "ranger.plugin." + serviceType;
+        this.serviceName    = serviceName;
+
+        this.clusterName    = sourcePluginConfig.getClusterName();
+        this.clusterType    = sourcePluginConfig.getClusterType();
+        this.useForwardedIPAddress = sourcePluginConfig.isUseForwardedIPAddress();
+        this.trustedProxyAddresses = sourcePluginConfig.getTrustedProxyAddresses();
+
+        this.policyEngineOptions = sourcePluginConfig.getPolicyEngineOptions();
+
+    }
+
     public String getServiceType() {
         return serviceType;
     }

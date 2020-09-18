@@ -1614,6 +1614,73 @@ END $$
 
 DELIMITER ;
 
+DROP TABLE IF EXISTS `x_rms_notification`;
+DROP TABLE IF EXISTS `x_rms_resource_mapping`;
+DROP TABLE IF EXISTS `x_rms_mapping_provider`;
+DROP TABLE IF EXISTS `x_rms_service_resource`;
+
+CREATE TABLE `x_rms_service_resource` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `guid` varchar(64) NOT NULL,
+  `create_time` timestamp NULL DEFAULT NULL,
+  `update_time` timestamp NULL DEFAULT NULL,
+  `added_by_id` bigint(20) DEFAULT NULL,
+  `upd_by_id` bigint(20) DEFAULT NULL,
+  `version` bigint(20) DEFAULT NULL,
+  `service_id` bigint(20) NOT NULL,
+  `resource_signature` varchar(128) DEFAULT NULL,
+  `is_enabled` tinyint(1) NOT NULL DEFAULT '1',
+  `service_resource_elements_text` text,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `x_rms_service_res_UK_guid` (`guid`),
+  CONSTRAINT `x_rms_service_res_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`)
+);
+CREATE INDEX x_rms_service_resource_IDX_service_id ON x_rms_service_resource(service_id);
+
+CREATE TABLE `x_rms_notification` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `hms_name` varchar(128) DEFAULT NULL,
+  `notification_id` bigint(20) DEFAULT NULL,
+  `change_timestamp` timestamp NULL DEFAULT NULL,
+  `change_type` varchar(64) DEFAULT NULL,
+  `hl_resource_id` bigint(20) DEFAULT NULL,
+  `hl_service_id` bigint(20) DEFAULT NULL,
+  `ll_resource_id` bigint(20) DEFAULT NULL,
+  `ll_service_id` bigint(20) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  CONSTRAINT `x_rms_notification_FK_hl_service_id` FOREIGN KEY (`hl_service_id`) REFERENCES `x_service` (`id`),
+  CONSTRAINT `x_rms_notification_FK_ll_service_id` FOREIGN KEY (`ll_service_id`) REFERENCES `x_service` (`id`)
+);
+
+CREATE INDEX x_rms_notification_IDX_notification_id ON x_rms_notification(notification_id);
+CREATE INDEX x_rms_notification_IDX_hms_name_notification_id ON x_rms_notification(hms_name, notification_id);
+CREATE INDEX x_rms_notification_IDX_hl_service_id ON x_rms_notification(hl_service_id);
+CREATE INDEX x_rms_notification_IDX_ll_service_id ON x_rms_notification(ll_service_id);
+
+
+CREATE TABLE `x_rms_resource_mapping` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `change_timestamp` timestamp NULL DEFAULT NULL,
+  `hl_resource_id` bigint(20) NOT NULL,
+  `ll_resource_id` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `x_rms_res_map_UK_hl_res_id_ll_res_id` (`hl_resource_id`,`ll_resource_id`),
+  CONSTRAINT `x_rms_res_map_FK_hl_res_id` FOREIGN KEY (`hl_resource_id`) REFERENCES `x_rms_service_resource` (`id`),
+  CONSTRAINT `x_rms_res_map_FK_ll_res_id` FOREIGN KEY (`ll_resource_id`) REFERENCES `x_rms_service_resource` (`id`)
+);
+
+CREATE INDEX x_rms_resource_mapping_IDX_hl_resource_id ON x_rms_resource_mapping(hl_resource_id);
+CREATE INDEX x_rms_resource_mapping_IDX_ll_resource_id ON x_rms_resource_mapping(ll_resource_id);
+
+CREATE TABLE `x_rms_mapping_provider` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `change_timestamp` timestamp NULL DEFAULT NULL,
+  `name` varchar(128) NOT NULL,
+  `last_known_version` bigint(20) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `x_rms_mapping_provider_UK_name` (`name`)
+);
+
 INSERT INTO x_portal_user(create_time,update_time,added_by_id,upd_by_id,first_name,last_name,pub_scr_name,login_id,password,email,status,user_src,notes) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1,0,NULL);
 INSERT INTO x_portal_user_role(create_time,update_time,added_by_id,upd_by_id,user_id,user_role,status) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),NULL,NULL,getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1);
 INSERT INTO x_group (ADDED_BY_ID, CREATE_TIME, DESCR, GROUP_SRC, GROUP_TYPE, GROUP_NAME, STATUS, UPDATE_TIME, UPD_BY_ID) VALUES (getXportalUIdByLoginId('admin'), UTC_TIMESTAMP(), 'public group', 0, 0, 'public', 0, UTC_TIMESTAMP(), getXportalUIdByLoginId('admin'));
@@ -1677,6 +1744,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('046',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('047',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('048',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('049',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)
