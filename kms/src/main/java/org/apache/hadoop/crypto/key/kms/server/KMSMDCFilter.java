@@ -20,7 +20,6 @@ package org.apache.hadoop.crypto.key.kms.server;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.delegation.web.HttpUserGroupInformation;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -36,7 +35,8 @@ import java.io.IOException;
  */
 @InterfaceAudience.Private
 public class KMSMDCFilter implements Filter {
-
+	
+	static final String RANGER_KMS_REST_API_PATH = "/kms/api/status";
   private static class Data {
     private UserGroupInformation ugi;
     private String method;
@@ -72,18 +72,25 @@ public class KMSMDCFilter implements Filter {
       FilterChain chain)
       throws IOException, ServletException {
     try {
-      DATA_TL.remove();
-      UserGroupInformation ugi = HttpUserGroupInformation.get();
-      String method = ((HttpServletRequest) request).getMethod();
-      StringBuffer requestURL = ((HttpServletRequest) request).getRequestURL();
-      String queryString = ((HttpServletRequest) request).getQueryString();
-      if (queryString != null) {
-        requestURL.append("?").append(queryString);
-      }
-      DATA_TL.set(new Data(ugi, method, requestURL.toString()));
-      chain.doFilter(request, response);
+    	 String path = ((HttpServletRequest) request).getRequestURI();
+    	    
+    	     if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
+    	    	chain.doFilter(request, response);
+    	      } else {
+			      DATA_TL.remove();
+			      UserGroupInformation ugi = HttpUserGroupInformation.get();
+			      String method = ((HttpServletRequest) request).getMethod();
+			      StringBuffer requestURL = ((HttpServletRequest) request).getRequestURL();
+			      String queryString = ((HttpServletRequest) request).getQueryString();
+			      if (queryString != null) {
+			        requestURL.append("?").append(queryString);
+			      }
+			      DATA_TL.set(new Data(ugi, method, requestURL.toString()));
+			      chain.doFilter(request, response);
+    	    }
     } finally {
       DATA_TL.remove();
+      
     }
   }
 
