@@ -25,6 +25,7 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.db.XXServiceDefDao;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
@@ -187,6 +188,11 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 		value = source.get("repo");
 		if (value != null) {
 			accessAudit.setRepoName(value.toString());
+			XXService xxService = daoManager.getXXService().findByName(accessAudit.getRepoName());
+
+			if(xxService != null) {
+				accessAudit.setRepoDisplayName(xxService.getDisplayName());
+			}
 		}
 		value = source.get("sess");
 		if (value != null) {
@@ -230,6 +236,7 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 					XXServiceDef xServiceDef = xxServiceDef.getById((long) accessAudit.getRepoType());
 					if (xServiceDef != null) {
 						accessAudit.setServiceType(xServiceDef.getName());
+						accessAudit.setServiceTypeDisplayName(xServiceDef.getDisplayName());
 					}
 				}
 			}
