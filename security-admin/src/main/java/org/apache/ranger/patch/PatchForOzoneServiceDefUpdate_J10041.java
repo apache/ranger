@@ -277,7 +277,7 @@ public class PatchForOzoneServiceDefUpdate_J10041 extends BaseLoader {
 						// Set recursive flag as false for volume resource
 						policyResources.get(OZONE_RESOURCE_VOLUME).setIsRecursive(false);
 						// Set exclude support flag as true for volume resource
-						policyResources.get(OZONE_RESOURCE_VOLUME).setIsExcludes(true);
+						policyResources.get(OZONE_RESOURCE_VOLUME).setIsExcludes(false);
 					}
 					if (policyResources.containsKey(OZONE_RESOURCE_KEY)) {
 						// Set is recursive flag as true for volume resource
