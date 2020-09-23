@@ -88,7 +88,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
     }
 
-    RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, boolean isOptimizedForRetrieval, RangerPluginContext pluginContext) {
+    public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators, boolean isOptimizedForRetrieval, RangerPluginContext pluginContext) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + ")");
         }
