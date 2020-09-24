@@ -4,6 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-kafka
+      args:
+        - KAFKA_VERSION=${KAFKA_VERSION}
+        - RANGER_VERSION=${RANGER_VERSION}
     image: ranger-kafka
     container_name: ranger-kafka
     hostname: ranger-kafka.example.com
@@ -13,6 +16,9 @@ services:
       - ranger
     depends_on:
       - ranger
+    environment:
+      - KAFKA_VERSION
+      - RANGER_VERSION
 
 networks:
   ranger:
