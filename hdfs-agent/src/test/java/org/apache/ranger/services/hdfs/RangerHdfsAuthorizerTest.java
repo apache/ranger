@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.server.namenode.INode;
+import org.apache.hadoop.hdfs.server.namenode.INodeAttributeProvider;
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributeProvider.AccessControlEnforcer;
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributes;
 import org.apache.hadoop.security.AccessControlException;
@@ -91,11 +92,31 @@ public class RangerHdfsAuthorizerTest {
          */
         public void checkDirAccess(FsAction access, String userName, String... groups) throws AccessControlException {
             final UserGroupInformation user = UserGroupInformation.createUserForTesting(userName, groups);
-            rangerControlEnforcer.checkPermission(FILE_OWNER, FILE_GROUP, user,
-                    Arrays.copyOf(attributes, attributes.length - 1), Arrays.copyOf(nodes, nodes.length - 1),
-                    new byte[0][0], SNAPSHOT_ID, path, ancestorIndex - 1, false /* doCheckOwner */,
-                    null /* ancestorAccess */, null /* parentAccess */ , access, null /* subAccess */ ,
-                    false /* ignoreEmptyDir */);
+
+            INodeAttributeProvider.AuthorizationContext.Builder builder =
+                    new  INodeAttributeProvider.AuthorizationContext.Builder()
+                    .fsOwner(FILE_OWNER)
+                    .supergroup(FILE_GROUP)
+                    .callerUgi(user)
+                    .inodeAttrs(Arrays.copyOf(attributes, attributes.length - 1))
+                    .inodes(Arrays.copyOf(nodes, nodes.length - 1))
+                    .pathByNameArr(new byte[0][0])
+                    .snapshotId(SNAPSHOT_ID)
+                    .path(path)
+                    .ancestorIndex(ancestorIndex - 1)
+                    .doCheckOwner(false)
+                    .ancestorAccess(null)
+                    .parentAccess(null)
+                    .access(access)
+                    .subAccess(null)
+                    .ignoreEmptyDir(false)
+                    .operationName(null)
+                    .callerContext(null);
+
+            INodeAttributeProvider.AuthorizationContext authorizationContext
+                    = new INodeAttributeProvider.AuthorizationContext(builder);
+
+            rangerControlEnforcer.checkPermissionWithContext(authorizationContext);
         }
 
         /**
@@ -104,9 +125,31 @@ public class RangerHdfsAuthorizerTest {
          */
         public void checkAccess(FsAction access, String userName, String... groups) throws AccessControlException {
             final UserGroupInformation user = UserGroupInformation.createUserForTesting(userName, groups);
-            rangerControlEnforcer.checkPermission(FILE_OWNER, FILE_GROUP, user, attributes, nodes, new byte[0][0],
-                    SNAPSHOT_ID, path, ancestorIndex, false /* doCheckOwner */, null /* ancestorAccess */,
-                    null /* parentAccess */ , access, null /* subAccess */ , false /* ignoreEmptyDir */);
+
+            INodeAttributeProvider.AuthorizationContext.Builder builder =
+                    new  INodeAttributeProvider.AuthorizationContext.Builder()
+                            .fsOwner(FILE_OWNER)
+                            .supergroup(FILE_GROUP)
+                            .callerUgi(user)
+                            .inodeAttrs(attributes)
+                            .inodes(nodes)
+                            .pathByNameArr(new byte[0][0])
+                            .snapshotId(SNAPSHOT_ID)
+                            .path(path)
+                            .ancestorIndex(ancestorIndex - 1)
+                            .doCheckOwner(false)
+                            .ancestorAccess(null)
+                            .parentAccess(null)
+                            .access(access)
+                            .subAccess(null)
+                            .ignoreEmptyDir(false)
+                            .operationName(null)
+                            .callerContext(null);
+
+            INodeAttributeProvider.AuthorizationContext authorizationContext
+                    = new INodeAttributeProvider.AuthorizationContext(builder);
+
+            rangerControlEnforcer.checkPermissionWithContext(authorizationContext);
         }
 
         /**

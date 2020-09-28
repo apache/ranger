@@ -28,6 +28,11 @@ public class RangerHadoopConstants {
 	public static final String WRITE_ACCCESS_TYPE = "write";
 	public static final String EXECUTE_ACCCESS_TYPE = "execute";
 
+	public static final String READ_EXECUTE_PERM  = "READ_EXECUTE";
+	public static final String WRITE_EXECUTE_PERM = "WRITE_EXECUTE";
+	public static final String READ_WRITE_PERM    = "READ_WRITE";
+	public static final String ALL_PERM           = "ALL";
+
 	public static final String HDFS_ROOT_FOLDER_PATH_ALT = "";
 	public static final String HDFS_ROOT_FOLDER_PATH = "/";
 	

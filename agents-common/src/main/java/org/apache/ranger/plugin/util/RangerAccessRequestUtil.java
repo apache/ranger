@@ -43,6 +43,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_USER = "USER";
 	public static final String KEY_OWNER = "OWNER";
 	public static final String KEY_ROLES = "ROLES";
+	public static final String KEY_CONTEXT_ACCESSTYPES = "ACCESSTYPES";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
