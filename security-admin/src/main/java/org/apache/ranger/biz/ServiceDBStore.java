@@ -139,6 +139,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -192,7 +193,6 @@ import org.apache.ranger.view.VXMetricServiceNameCount;
 import org.apache.ranger.view.VXMetricUserGroupCount;
 import org.apache.ranger.view.VXPolicyLabelList;
 import org.apache.ranger.view.VXPortalUser;
-import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
@@ -280,54 +280,54 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Autowired
 	RangerPolicyLabelHelper policyLabelsHelper;
 
-        @Autowired
+	@Autowired
 	XUserService xUserService;
-	
+
 	@Autowired
 	XUserMgr xUserMgr;
 
-    @Autowired
-    XGroupService xGroupService;
+	@Autowired
+	XGroupService xGroupService;
 
-    @Autowired
+	@Autowired
 	PolicyRefUpdater policyRefUpdater;
 
 	@Autowired
 	RangerDataHistService dataHistService;
 
-    @Autowired
-    @Qualifier(value = "transactionManager")
-    PlatformTransactionManager txManager;
+	@Autowired
+	@Qualifier(value = "transactionManager")
+	PlatformTransactionManager txManager;
 
-    @Autowired
-    RangerBizUtil bizUtil;
+	@Autowired
+	RangerBizUtil bizUtil;
 
-    @Autowired
-    RangerPolicyWithAssignedIdService assignedIdPolicyService;
+	@Autowired
+	RangerPolicyWithAssignedIdService assignedIdPolicyService;
 
-    @Autowired
-    RangerServiceWithAssignedIdService svcServiceWithAssignedId;
+	@Autowired
+	RangerServiceWithAssignedIdService svcServiceWithAssignedId;
 
-    @Autowired
-    RangerServiceDefWithAssignedIdService svcDefServiceWithAssignedId;
+	@Autowired
+	RangerServiceDefWithAssignedIdService svcDefServiceWithAssignedId;
 
-    @Autowired
-    RangerFactory factory;
-    
-    @Autowired
-    JSONUtil jsonUtil;
+	@Autowired
+	RangerFactory factory;
+
+	@Autowired
+	JSONUtil jsonUtil;
 
 	@Autowired
 	ServiceMgr serviceMgr;
 
-        @Autowired
-        AssetMgr assetMgr;
+	@Autowired
+	AssetMgr assetMgr;
 
 	@Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
-    RangerSecurityZoneServiceService securityZoneService;
+	RangerSecurityZoneServiceService securityZoneService;
 
 	@Autowired
 	RoleDBStore roleStore;
@@ -338,9 +338,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Autowired
 	UserMgr userMgr;
 
+	@Autowired
+	SecurityZoneDBStore securityZoneStore;
+
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
-	
+
 	public static final String HIDDEN_PASSWORD_STR = "*****";
 	public static final String CONFIG_KEY_PASSWORD = "password";
 	public static final String ACCESS_TYPE_DECRYPT_EEK    = "decrypteek";
@@ -1770,7 +1773,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(service == null) {
 			throw new Exception("no service exists with ID=" + id);
 		}
-		restrictIfZoneService(service);
+
+		// Manage zone
+		disassociateZonesForService(service); //RANGER-3016
+
 		List<Long> policyIds = daoMgr.getXXPolicy().findPolicyIdsByServiceId(service.getId());
 		if (CollectionUtils.isNotEmpty(policyIds)) {
 			long totalDeletedPolicies = 0;
@@ -1845,21 +1851,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 					}
 				}
 			}
-		}
-	}
-
-	private void restrictIfZoneService(RangerService service)
-	{
-		String serviceName = service.getName();
-		List<String> zonesNameList = daoMgr.getXXSecurityZoneDao().findZonesByServiceName(serviceName);
-		if (CollectionUtils.isNotEmpty(zonesNameList)) {
-			LOG.info("Can not delete service : " + serviceName
-					+ ", as it is already associated with " + zonesNameList.size() + " zones : " + zonesNameList);
-			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
-			vXResponse.setMsgDesc("Can not delete service : " + serviceName
-					+ ", as it is already associated with " + zonesNameList.size() + " zones : " + zonesNameList);
-			throw restErrorUtil.generateRESTException(vXResponse);
 		}
 	}
 
@@ -5490,4 +5481,31 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
+	/**
+	 * Removes given service from security zones.
+	 * And if given service is the only service
+	 * associated with security zone, remove zone.
+	 * @param service
+	 * @throws Exception
+	 */
+	private void disassociateZonesForService(RangerService service) throws Exception {
+		String serviceName = service.getName();
+		List<String> zonesNameList = daoMgr.getXXSecurityZoneDao().findZonesByServiceName(serviceName);
+		if (CollectionUtils.isNotEmpty(zonesNameList)) {
+			for (String zoneName : zonesNameList) {
+				RangerSecurityZone securityZone = securityZoneStore.getSecurityZoneByName(zoneName);
+				Map<String, RangerSecurityZoneService> zoneServices = securityZone.getServices();
+
+				if (zoneServices != null && !zoneServices.isEmpty()) {
+					zoneServices.remove(serviceName);
+					securityZone.setServices(zoneServices);
+					securityZoneStore.updateSecurityZoneById(securityZone);
+
+					if (zoneServices.isEmpty()) {
+						securityZoneStore.deleteSecurityZoneByName(zoneName);
+					}
+				}
+			}
+		}
+	}
 }
