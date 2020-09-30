@@ -1841,6 +1841,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case CREATEDATABASE:
 			case CREATETABLE:
 			case CREATETABLE_AS_SELECT:
+			case CREATEFUNCTION:
+			case DROPFUNCTION:
+			case RELOADFUNCTION:
 			case ALTERDATABASE:
 			case ALTERDATABASE_LOCATION:
 			case ALTERDATABASE_OWNER:
@@ -1882,6 +1885,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERPARTITION_MERGEFILES:
 			case ALTERTBLPART_SKEWED_LOCATION:
 			case ALTERTABLE_OWNER:
+			case ADD:
+			case DELETE:
 			case QUERY:
 				ret = FsAction.ALL;
 				break;
@@ -1910,9 +1915,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case SHOWPARTITIONS:
 			case SHOWLOCKS:
 			case SHOWCONF:
-			case CREATEFUNCTION:
-			case DROPFUNCTION:
-			case RELOADFUNCTION:
 			case CREATEMACRO:
 			case DROPMACRO:
 			case CREATEVIEW:
@@ -1946,8 +1948,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case SET:
 			case RESET:
 			case DFS:
-			case ADD:
-			case DELETE:
 			case COMPILE:
 			case START_TRANSACTION:
 			case COMMIT:
