@@ -25,19 +25,13 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.collections4.MapUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
-import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
@@ -50,13 +44,10 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXUser;
-import org.apache.ranger.view.VXUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-
-import static java.util.function.Function.identity;
-import static java.util.stream.Collectors.toMap;
+import org.springframework.util.CollectionUtils;
 
 @Service
 @Scope("singleton")
@@ -215,56 +206,11 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	}
 
 	@Override
-	protected List<VXUser> mapEntityToViewBeans(Map<VXUser, XXUser> vxUserXXUserMap) {
-		if (MapUtils.isNotEmpty(vxUserXXUserMap)) {
-			Map<String, VXUser> userNameVXUserMap = vxUserXXUserMap.keySet()
-					.stream()
-					.collect(toMap(VXUser::getName, identity()));
-			super.mapEntityToViewBeans(vxUserXXUserMap);
-			populateUserListAttributes(userNameVXUserMap);
-			return new ArrayList<>(vxUserXXUserMap.keySet());
-		}
-		return new ArrayList<>();
-	}
-
-	@Override
 	public VXUser populateViewBean(XXUser xUser) {
 		VXUser vObj = super.populateViewBean(xUser);
 		vObj.setIsVisible(xUser.getIsVisible());
 		populateGroupList(xUser.getId(), vObj);
 		return vObj;
-	}
-
-	@Override
-	public List<VXUser> populateViewBeans(List<XXUser> xUsers) {
-		List<VXUser> vObjList = super.populateViewBeans(xUsers);
-		if (CollectionUtils.isNotEmpty(vObjList) && CollectionUtils.isNotEmpty(xUsers) && xUsers.size() == vObjList.size()) {
-			Map<Long, VXUser> xUserIdVObjMap = new HashMap<>(xUsers.size());
-			for (int i = 0; i < xUsers.size(); ++i) {
-				VXUser vObj = vObjList.get(i);
-				XXUser xUser = xUsers.get(i);
-				vObj.setIsVisible(xUser.getIsVisible());
-				xUserIdVObjMap.put(xUser.getId(), vObj);
-			}
-			populateGroupList(xUserIdVObjMap);
-		}
-		return vObjList;
-	}
-
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	@Override
-	public VXUserList searchXUsers(SearchCriteria searchCriteria) {
-		VXUserList returnList = new VXUserList();
-
-		@SuppressWarnings("unchecked")
-		List<XXUser> resultList = searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
-
-		returnList.setVXUsers(populateViewBeans(resultList));
-		return returnList;
 	}
 
 	private void populateGroupList(Long xUserId, VXUser vObj) {
@@ -282,40 +228,6 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 		List<String> groupNames = new ArrayList<String>(groupNameList);
 		vObj.setGroupIdList(groups);
 		vObj.setGroupNameList(groupNames);
-	}
-
-	private void populateGroupList(Map<Long, VXUser> xUserIdVObjMap) {
-		List<XXGroupUser> allXXGroupUsers = daoManager.getXXGroupUser().getAll();
-		if (MapUtils.isNotEmpty(xUserIdVObjMap) && CollectionUtils.isNotEmpty(allXXGroupUsers)) {
-			Map<Long, List<XXGroupUser>> userIdXXGroupUserMap = new HashMap<>(xUserIdVObjMap.size());
-			for (Map.Entry<Long, VXUser> xUserIdVXUserEntry : xUserIdVObjMap.entrySet()) {
-				Long xUserId = xUserIdVXUserEntry.getKey();
-				List<XXGroupUser> xxGroupUsers = allXXGroupUsers
-						.stream()
-						.filter(xXGroupUser -> Objects.equals(xXGroupUser.getUserId(), xUserId))
-						.collect(Collectors.toList());
-				userIdXXGroupUserMap.put(xUserId, xxGroupUsers);
-			}
-			for (Map.Entry<Long, List<XXGroupUser>> xUserIdXXGroupUserListEntry : userIdXXGroupUserMap.entrySet()) {
-				Long xUserId = xUserIdXXGroupUserListEntry.getKey();
-				List<XXGroupUser> xGroupUserList = xUserIdXXGroupUserListEntry.getValue();
-				Set<Long> groupIdList = new LinkedHashSet<>();
-				Set<String> groupNameList = new LinkedHashSet<>();
-				if (xGroupUserList != null) {
-					for (XXGroupUser xGroupUser : xGroupUserList) {
-						groupIdList.add(xGroupUser.getParentGroupId());
-						groupNameList.add(xGroupUser.getName());
-					}
-				}
-				List<Long> groups = new ArrayList<>(groupIdList);
-				List<String> groupNames = new ArrayList<>(groupNameList);
-				VXUser vObj = xUserIdVObjMap.get(xUserId);
-				if (vObj != null) {
-					vObj.setGroupIdList(groups);
-					vObj.setGroupNameList(groupNames);
-				}
-			}
-		}
 	}
 
 	private void populateUserAttributes(String userName, VXUser vObj) {
@@ -344,57 +256,6 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 				userRoleList.add(RangerConstants.ROLE_USER);
 			}			
 			vObj.setUserRoleList(userRoleList);
-		}
-	}
-
-	private void populateUserListAttributes(Map<String, VXUser> userNameVObjMap) {
-		List<XXPortalUser> allXPortalUsers = daoManager.getXXPortalUser().findAllXPortalUser();
-		List<XXPortalUserRole> allXPortalUserRoles = daoManager.getXXPortalUserRole().getAll();
-		if (MapUtils.isNotEmpty(userNameVObjMap) && CollectionUtils.isNotEmpty(allXPortalUsers)) {
-			Map<String, XXPortalUser> loginIdXXPortalUserMap = new HashMap<>(allXPortalUsers.size());
-			Map<Long, List<XXPortalUserRole>> userIdRoleMap = new HashMap<>();
-			for (XXPortalUser xPortalUser : allXPortalUsers) {
-				loginIdXXPortalUserMap.put(xPortalUser.getLoginId(), xPortalUser);
-				List<XXPortalUserRole> xxPortalUserRoles = new ArrayList<>();
-				if (allXPortalUserRoles != null) {
-					for (XXPortalUserRole xPortalUserRole : allXPortalUserRoles) {
-						if (Objects.equals(xPortalUserRole.getUserId(), xPortalUser.getId())) {
-							xxPortalUserRoles.add(xPortalUserRole);
-						}
-					}
-				}
-				userIdRoleMap.put(xPortalUser.getId(), xxPortalUserRoles);
-			}
-
-			for (Map.Entry<String, VXUser> userNameVObjEntry : userNameVObjMap.entrySet()) {
-				String userName = userNameVObjEntry.getKey();
-				VXUser vObj = userNameVObjEntry.getValue();
-				if (userName != null && !userName.isEmpty()) {
-					List<String> userRoleList = new ArrayList<>();
-					XXPortalUser xXPortalUser = loginIdXXPortalUserMap.get(userName);
-					if (xXPortalUser != null) {
-						vObj.setFirstName(xXPortalUser.getFirstName());
-						vObj.setLastName(xXPortalUser.getLastName());
-						vObj.setPassword(PropertiesUtil.getProperty("ranger.password.hidden"));
-						String emailAddress = xXPortalUser.getEmailAddress();
-						if (emailAddress != null
-								&& stringUtil.validateEmail(emailAddress)) {
-							vObj.setEmailAddress(xXPortalUser.getEmailAddress());
-						}
-						vObj.setStatus(xXPortalUser.getStatus());
-						vObj.setUserSource(xXPortalUser.getUserSource());
-						List<XXPortalUserRole> gjUserRoleList = userIdRoleMap.get(
-								xXPortalUser.getId());
-						for (XXPortalUserRole gjUserRole : gjUserRoleList) {
-							userRoleList.add(gjUserRole.getUserRole());
-						}
-					}
-					if(userRoleList==null || userRoleList.isEmpty()){
-						userRoleList.add(RangerConstants.ROLE_USER);
-					}
-					vObj.setUserRoleList(userRoleList);
-				}
-			}
 		}
 	}
 

@@ -25,7 +25,6 @@
  */
 
 import java.util.Collection;
-import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -304,24 +303,6 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 	 */
 	public void setOtherAttributes(final String otherAttributes) {
 		this.otherAttributes = otherAttributes;
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
-
-		VXUser vxUser = (VXUser) o;
-
-		return Objects.equals(status, vxUser.status) &&
-				Objects.equals(name, vxUser.name) &&
-				Objects.equals(description, vxUser.description) &&
-				Objects.equals(credStoreId, vxUser.credStoreId);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), name, description, credStoreId, status);
 	}
 
 	/**
