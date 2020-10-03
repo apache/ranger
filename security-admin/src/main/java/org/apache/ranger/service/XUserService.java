@@ -285,8 +285,11 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	}
 
 	private void populateGroupList(Map<Long, VXUser> xUserIdVObjMap) {
-		List<XXGroupUser> allXXGroupUsers = daoManager.getXXGroupUser().getAll();
-		if (MapUtils.isNotEmpty(xUserIdVObjMap) && CollectionUtils.isNotEmpty(allXXGroupUsers)) {
+		if (MapUtils.isEmpty(xUserIdVObjMap)) {
+			return;
+		}
+		List<XXGroupUser> allXXGroupUsers = daoManager.getXXGroupUser().findByUserIdList(new ArrayList<>(xUserIdVObjMap.keySet()));
+		if (CollectionUtils.isNotEmpty(allXXGroupUsers)) {
 			Map<Long, List<XXGroupUser>> userIdXXGroupUserMap = new HashMap<>(xUserIdVObjMap.size());
 			for (Map.Entry<Long, VXUser> xUserIdVXUserEntry : xUserIdVObjMap.entrySet()) {
 				Long xUserId = xUserIdVXUserEntry.getKey();
@@ -348,9 +351,12 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 	}
 
 	private void populateUserListAttributes(Map<String, VXUser> userNameVObjMap) {
-		List<XXPortalUser> allXPortalUsers = daoManager.getXXPortalUser().findAllXPortalUser();
+		if (MapUtils.isEmpty(userNameVObjMap)) {
+			return;
+		}
+		List<XXPortalUser> allXPortalUsers = daoManager.getXXPortalUser().findByLoginIdList(new ArrayList<>(userNameVObjMap.keySet()));
 		List<XXPortalUserRole> allXPortalUserRoles = daoManager.getXXPortalUserRole().getAll();
-		if (MapUtils.isNotEmpty(userNameVObjMap) && CollectionUtils.isNotEmpty(allXPortalUsers)) {
+		if (CollectionUtils.isNotEmpty(allXPortalUsers)) {
 			Map<String, XXPortalUser> loginIdXXPortalUserMap = new HashMap<>(allXPortalUsers.size());
 			Map<Long, List<XXPortalUserRole>> userIdRoleMap = new HashMap<>();
 			for (XXPortalUser xPortalUser : allXPortalUsers) {

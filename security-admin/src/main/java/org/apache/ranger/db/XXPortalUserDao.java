@@ -19,10 +19,12 @@
 
 package org.apache.ranger.db;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.springframework.stereotype.Service;
@@ -102,5 +104,29 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 			return null;
 		}
 
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<XXPortalUser> findByLoginIdList(List<String> loginIdList) {
+		if (CollectionUtils.isEmpty(loginIdList)) {
+			return new ArrayList<>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPortalUser.findByLoginIdList").setParameter("loginIdList", loginIdList).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<>();
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<XXPortalUser> findByIdList(List<Long> idList) {
+		if (CollectionUtils.isEmpty(idList)) {
+			return new ArrayList<>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPortalUser.findByIdList").setParameter("idList", idList).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<>();
+		}
 	}
 }

@@ -27,7 +27,9 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Function;
+import java.util.stream.Stream;
 
 import com.google.gson.Gson;
 
@@ -43,6 +45,7 @@ import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 
+import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
 
 public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
@@ -119,8 +122,14 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 	}
 
 	private void mapBaseAttributesToViewBeans(Map<XXUser, VXUser> resourceViewBeanMap) {
-		List<XXPortalUser> allXPortalUsers = daoManager.getXXPortalUser().findAllXPortalUser();
-		if (MapUtils.isNotEmpty(resourceViewBeanMap) && CollectionUtils.isNotEmpty(allXPortalUsers)) {
+		if (MapUtils.isEmpty(resourceViewBeanMap)) {
+			return;
+		}
+		Stream<Long> addedByUserIdStream = resourceViewBeanMap.keySet().stream().map(XXUser::getAddedByUserId).filter(Objects::nonNull);
+		Stream<Long> updatedByUserIdStream = resourceViewBeanMap.keySet().stream().map(XXUser::getUpdatedByUserId).filter(Objects::nonNull);
+		List<Long> idList = Stream.concat(addedByUserIdStream, updatedByUserIdStream).mapToLong(Long::longValue).boxed().collect(toList());
+		List<XXPortalUser> allXPortalUsers = daoManager.getXXPortalUser().findByIdList(idList);
+		if (CollectionUtils.isNotEmpty(allXPortalUsers)) {
 			Map<Long, XXPortalUser> idXXPortalUserMap = allXPortalUsers
 					.stream()
 					.collect(toMap(XXPortalUser::getId, Function.identity()));
