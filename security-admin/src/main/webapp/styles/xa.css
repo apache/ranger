@@ -2202,9 +2202,19 @@ input.textFiledInputPadding ~ span {
 	width:110px;
 }
 .recursive-toggle-2 {
-	margin-left: 363px;
-	margin-top: -22px;
+	margin-left: 520px;
+	margin-top: -13px;
 	width:110px;
+}
+.expanded-contant .recursive-toggle-1{
+  margin-left: 320px;
+  margin-top: -15px;
+  width:110px;
+}
+.expanded-contant .recursive-toggle-2{
+  margin-left: 460px;
+  margin-top: -15px;
+  width:110px;
 }
 .recursive-toggle-hdfs-1{
 	margin-left: 348px;
