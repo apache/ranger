@@ -19,43 +19,63 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
 public class RangerChainedPluginConfig extends RangerPluginConfig {
+
+    private static final Log LOG = LogFactory.getLog(RangerChainedPluginConfig.class);
+
+    private final String[] legacySSLProperties           = new String[] {"xasecure.policymgr.clientssl.keystore", "xasecure.policymgr.clientssl.keystore.type", "xasecure.policymgr.clientssl.keystore.credential.file","xasecure.policymgr.clientssl.truststore", "xasecure.policymgr.clientssl.truststore.credential.file", "hadoop.security.credential.provider.path"};
+    private final String[] chainedPluginPropertyPrefixes = new String[] { ".chained.services"};
+
     public RangerChainedPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {
         super(serviceType, serviceName, appId, sourcePluginConfig);
 
-        // add necessary config "overrides", so that RangerAdminClient implementations (like RangerAdminRESTClient)
-        // will use configurations from ranger-<source-service-type>-security.xml (sourcePluginConfig) to connect to Ranger Admin
+        // Copy all of properties from sourcePluginConfig except chained properties but with converted propertyPrefix
+        copyProperties(sourcePluginConfig, sourcePluginConfig.getPropertyPrefix());
+
+        // Copy SSL configurations from sourcePluginConfig
+        copyLegacySSLProperties(sourcePluginConfig);
+
+        // Override copied properties from those in sourcePluginConfig with getPropertyPrefix()
+        copyProperties(sourcePluginConfig, getPropertyPrefix());
+
+        // Copy chained properties
+        copyChainedProperties(sourcePluginConfig, getPropertyPrefix());
 
         set(getPropertyPrefix() + ".service.name", serviceName);
-        copyProperty(sourcePluginConfig, ".policy.source.impl");
-        copyProperty(sourcePluginConfig, ".policy.cache.dir");
-        copyProperty(sourcePluginConfig, ".policy.rest.url");
-        copyProperty(sourcePluginConfig, ".policy.rest.ssl.config.file");
-        copyProperty(sourcePluginConfig, ".policy.pollIntervalMs", 30 * 1000);
-        copyProperty(sourcePluginConfig, ".policy.rest.client.connection.timeoutMs", 120 * 1000);
-        copyProperty(sourcePluginConfig, ".policy.rest.read.timeoutMs", 30 * 1000);
-        copyProperty(sourcePluginConfig, ".policy.rest.supports.policy.deltas");
-        copyProperty(sourcePluginConfig, ".tag.rest.supports.tag.deltas");
-
-        // SSL configurations
-        String[] legacySSLProperties = new String[] {"xasecure.policymgr.clientssl.keystore", "xasecure.policymgr.clientssl.keystore.type", "xasecure.policymgr.clientssl.keystore.credential.file","xasecure.policymgr.clientssl.truststore", "xasecure.policymgr.clientssl.truststore.credential.file", "hadoop.security.credential.provider.path"};
-        copyLegacySSLProperties(sourcePluginConfig, legacySSLProperties);
-
     }
 
-    protected void copyProperty(RangerPluginConfig sourcePluginConfig, String propertySuffix) {
-        String value = sourcePluginConfig.get("ranger.plugin." + sourcePluginConfig.getServiceType() + propertySuffix);
-        if (value != null) {
-            set(getPropertyPrefix() + propertySuffix, sourcePluginConfig.get("ranger.plugin." + sourcePluginConfig.getServiceType() + propertySuffix));
+    private void copyProperties(RangerPluginConfig sourcePluginConfig, String propertyPrefix) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> copyProperties: propertyPrefix:[" + propertyPrefix + "]");
+        }
+        for (String propName : sourcePluginConfig.getProperties().stringPropertyNames()) {
+            String value = sourcePluginConfig.get(propName);
+
+            if (value != null && propName.startsWith(propertyPrefix)) {
+                String suffix = propName.substring(propertyPrefix.length());
+                if (!isExcludedSuffix(suffix)) {
+                    set(getPropertyPrefix() + suffix, value);
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("set property:[" + getPropertyPrefix() + suffix + "] to value:[" + value + "]");
+                    }
+                } else {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Not copying property :[" + propName + "] value from sourcePluginConfig");
+                    }
+                }
+            }
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== copyProperties: propertyPrefix:[" + propertyPrefix + "]");
         }
     }
 
-    protected void copyProperty(RangerPluginConfig sourcePluginConfig, String propertySuffix, int defaultValue) {
-        setInt(getPropertyPrefix() + propertySuffix, sourcePluginConfig.getInt("ranger.plugin" + sourcePluginConfig.getServiceType() + propertySuffix, defaultValue));
-    }
-
-    private void copyLegacySSLProperties(RangerPluginConfig sourcePluginConfig, String[] legacyPropertyNames) {
-        for (String legacyPropertyName : legacyPropertyNames) {
+    private void copyLegacySSLProperties(RangerPluginConfig sourcePluginConfig) {
+        for (String legacyPropertyName : legacySSLProperties) {
             String value = sourcePluginConfig.get(legacyPropertyName);
             if (value != null) {
                 set(legacyPropertyName, value);
@@ -63,7 +83,31 @@ public class RangerChainedPluginConfig extends RangerPluginConfig {
         }
     }
 
-    protected String printProperties() {
+    private void copyChainedProperties(RangerPluginConfig sourcePluginConfig, String propertyPrefix) {
+        for (String propName : sourcePluginConfig.getProperties().stringPropertyNames()) {
+            String value = sourcePluginConfig.get(propName);
+
+            if (value != null && propName.startsWith(propertyPrefix)) {
+                String suffix = propName.substring(propertyPrefix.length());
+                for (String chainedPropertyPrefix : chainedPluginPropertyPrefixes) {
+                    if (StringUtils.startsWith(suffix, chainedPropertyPrefix)) {
+                        set(getPropertyPrefix() + suffix, value);
+                    }
+                }
+            }
+        }
+    }
+
+    private boolean isExcludedSuffix(String suffix) {
+        for (String excludedSuffix : chainedPluginPropertyPrefixes) {
+            if (StringUtils.startsWith(suffix, excludedSuffix)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private String printProperties() {
         StringBuilder sb = new StringBuilder();
         boolean seenOneProp = false;
         for (String propName : this.getProperties().stringPropertyNames()) {
