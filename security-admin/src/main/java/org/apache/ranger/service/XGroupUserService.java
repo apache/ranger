@@ -23,6 +23,8 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
@@ -101,6 +103,37 @@ public class XGroupUserService extends
 		}
 		vxGroupUser = postCreate(xxGroupUser);
 		return vxGroupUser;
+	}
+
+	public void createOrUpdateXGroupUsers(String groupName, Set<String> users, Map<String, Long> usersFromDB) {
+		XXGroup xxGroup = daoManager.getXXGroup().findByGroupName(groupName);
+		Map<String, XXGroupUser> groupUsers = daoManager.getXXGroupUser().findUsersByGroupName(groupName);
+		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
+		for (String username : users) {
+			if (usersFromDB.containsKey(username)) {
+				// Add or update group user mapping only if the user exists in x_user table.
+				XXGroupUser xxGroupUser = groupUsers.get(username);
+				if (xxGroupUser != null) {
+					if (xXPortalUser != null) {
+						xxGroupUser.setAddedByUserId(createdByUserId);
+						xxGroupUser.setUpdatedByUserId(createdByUserId);
+					}
+					xxGroupUser = getDao().update(xxGroupUser);
+				} else {
+					xxGroupUser = new XXGroupUser();
+					VXGroupUser vXGroupUser = new VXGroupUser();
+					vXGroupUser.setUserId(usersFromDB.get(username));
+					vXGroupUser.setName(groupName);
+					vXGroupUser.setParentGroupId(xxGroup.getId());
+					xxGroupUser = mapViewToEntityBean(vXGroupUser, xxGroupUser, 0);
+				}
+				VXGroupUser vXGroupUser = postCreate(xxGroupUser);
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("createXGroupUserFromMap(): Create or update group user mapping with groupname =  " + vXGroupUser.getName()
+							+ " username = %s userId = %d", username, vXGroupUser.getUserId()));
+				}
+			}
+		}
 	}
 
 	public VXGroupUser readResourceWithOutLogin(Long id) {

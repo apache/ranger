@@ -21,7 +21,7 @@ package org.apache.ranger.usergroupsync;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 
-public abstract class AbstractUserGroupSource implements UserGroupSource {
+public abstract class AbstractUserGroupSource {
 
     private static final Logger LOG = Logger.getLogger(AbstractUserGroupSource.class);
 

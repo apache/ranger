@@ -134,6 +134,23 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXUser.getAllUserIds">
+		<query>SELECT user.name, user.id FROM XXUser user
+		</query>
+	</named-query>
+
+	<named-query name="XXGroupUser.findUsersByGroupIds">
+               <query>SELECT group.name, user.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
+                       WHERE user.id=groupUser.userId and group.id=groupUser.parentGroupId
+               </query>
+       </named-query>
+
+	<named-query name="XXGroupUser.findUsersByGroupName">
+		<query>SELECT user.name FROM XXUser user, XXGroupUser groupUser
+			WHERE user.id=groupUser.userId and groupUser.name = :groupName
+		</query>
+	</named-query>
+
 	<!-- XXPermMap -->
 	<named-query name="XXPermMap.findByResourceId">
 		<query>SELECT obj FROM XXPermMap obj WHERE obj.resourceId = :resourceId

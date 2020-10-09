@@ -20,10 +20,7 @@
  package org.apache.ranger.db;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.NoResultException;
 
@@ -133,5 +130,53 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 			return new XXGroupUser();
 		}
 		return null;
+	}
+
+	public Map<String, Set<String>> findUsersByGroupIds() {
+		Map<String, Set<String>> groupUsers = new HashMap<>();
+
+		try {
+			List<Object[]> rows = (List<Object[]>) getEntityManager()
+					.createNamedQuery("XXGroupUser.findUsersByGroupIds")
+					.getResultList();
+			if (rows != null) {
+				for (Object[] row : rows) {
+					if (groupUsers.containsKey((String)row[0])) {
+						groupUsers.get((String)row[0]).add((String)row[1]);
+					} else {
+						Set<String> users = new HashSet<>();
+						users.add((String)row[1]);
+						groupUsers.put((String)row[0], users);
+					}
+				}
+			}
+		} catch (NoResultException e) {
+			//Ignore
+		}
+		return groupUsers;
+	}
+
+	public Map<String, XXGroupUser> findUsersByGroupName(String groupName) {
+		Map<String, XXGroupUser> users = new HashMap<>();
+
+		if (StringUtils.isNotBlank(groupName)) {
+			try {
+				List<Object[]> rows = (List<Object[]>) getEntityManager()
+						.createNamedQuery("XXGroupUser.findUsersByGroupName")
+						.setParameter("groupName", groupName)
+						.getResultList();
+				if (rows != null) {
+					for (Object[] row : rows) {
+							users.put((String)row[0], (XXGroupUser)row[1]);
+					}
+				}
+			} catch (NoResultException e) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(e.getMessage());
+				}
+			}
+		}
+
+		return users;
 	}
 }

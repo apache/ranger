@@ -142,6 +142,11 @@
 			<artifactId>jackson-jaxrs</artifactId>
 			<version>${codehaus.jackson.version}</version>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ugsync-util</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

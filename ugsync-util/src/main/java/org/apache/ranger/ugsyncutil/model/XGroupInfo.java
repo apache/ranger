@@ -17,19 +17,16 @@
  * under the License.
  */
 
- package org.apache.ranger.unixusersync.model;
+ package org.apache.ranger.ugsyncutil.model;
 
-import java.util.ArrayList;
-import java.util.List;
-
-public class XUserInfo {
+public class XGroupInfo {
+	
 	private String id;
 	private String name;
-	private String 	description;
+	private String description;
+	private String groupType;
+	private String groupSource;
 	private String otherAttributes;
-    private List<String> groupNameList = new ArrayList<String>();
-    private List<String> userRoleList = new ArrayList<String>();
-	
 	public String getId() {
 		return id;
 	}
@@ -49,31 +46,18 @@ public class XUserInfo {
 		this.description = description;
 	}
 	
-	public void setGroupNameList(List<String> groupNameList) {
-		this.groupNameList = groupNameList;
+	public String getGroupType() {
+		return groupType;
 	}
-	
-	public List<String> getGroupNameList() {
-		return groupNameList;
+	public void setGroupType(String groupType) {
+		this.groupType = groupType;
 	}
-
-	public void deleteGroups(List<String> delGroups) {
-		for (String delGroup : delGroups) {
-			groupNameList.remove(delGroup);
-		}
+	public String getGroupSource() {
+		return groupSource;
 	}
-
-	public List<String> getGroups() {
-		return groupNameList;
+	public void setGroupSource(String groupSource) {
+		this.groupSource = groupSource;
 	}
-
-    public List<String> getUserRoleList() {
-        return userRoleList;
-    }
-
-    public void setUserRoleList(List<String> userRoleList) {
-        this.userRoleList = userRoleList;
-    }
 
 	public String getOtherAttributes() {
 		return otherAttributes;
@@ -84,21 +68,14 @@ public class XUserInfo {
 	}
 
 	@Override
-    public String toString() {
-        return "XUserInfo [id=" + id + ", name=" + name + ", description="
-                + description + ", groupNameList=" + groupNameList
-                + ", userRoleList=" + userRoleList + "]";
-    }
-
-    @Override
 	public boolean equals(Object o) {
 		if (this == o) return true;
 		if (o == null || getClass() != o.getClass()) return false;
-		XUserInfo userInfo = (XUserInfo) o;
+		XGroupInfo groupInfo = (XGroupInfo) o;
 		if (name == null) {
-			if (userInfo.name != null)
+			if (groupInfo.name != null)
 				return false;
-		} else if (!name.equals(userInfo.name))
+		} else if (!name.equals(groupInfo.name))
 			return false;
 		return true;
 	}
