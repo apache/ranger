@@ -92,4 +92,21 @@ public class XXUserDao extends BaseDao<XXUser> {
 		return userGroups;
 	}
 
+	public Map<String, Long> getAllUserIds() {
+		Map<String, Long> users = new HashMap<>();
+		try {
+			List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.getAllUserIds").getResultList();
+			if (rows != null) {
+				for (Object[] row : rows) {
+					users.put((String)row[0], (Long)row[1]);
+				}
+			}
+		} catch (NoResultException e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug(e.getMessage());
+			}
+		}
+		return users;
+	}
+
 }

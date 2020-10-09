@@ -22,6 +22,7 @@
 import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
+import org.apache.ranger.ugsyncutil.model.XGroupInfo;
 
 public class GetXGroupListResponse {
 	private int totalCount;
@@ -44,7 +45,5 @@ public class GetXGroupListResponse {
 	public void setXgroupInfoList(List<XGroupInfo> xgroupInfoList) {
 		this.xgroupInfoList = xgroupInfoList;
 	}
-	
-	
 
 }

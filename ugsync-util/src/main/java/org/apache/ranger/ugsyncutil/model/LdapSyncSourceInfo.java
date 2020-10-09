@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.unixusersync.model;
+ package org.apache.ranger.ugsyncutil.model;
 
 public class LdapSyncSourceInfo {
 	private String ldapUrl;

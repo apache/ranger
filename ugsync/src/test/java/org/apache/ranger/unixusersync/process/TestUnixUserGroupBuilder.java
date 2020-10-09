@@ -20,15 +20,21 @@
 package org.apache.ranger.unixusersync.process;
 
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
-import static org.junit.Assert.*;
-import static org.hamcrest.Matchers.*;
+import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertFalse;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.equalTo;
+import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.hasValue;
 
 public class TestUnixUserGroupBuilder {
     private UserGroupSyncConfig config;
@@ -54,10 +60,10 @@ public class TestUnixUserGroupBuilder {
         String name = groups.get("0");
         assertThat(name, anyOf(equalTo("wheel"), equalTo("root")));
 
-        Map<String, List<String>> users = builder.getUser2GroupListMap();
-        List<String> usergroups = users.get("root");
-        assertNotNull(usergroups);
-        assertThat(usergroups, (Matcher)anyOf(hasItem("wheel"), hasItem("root")));
+        Map<String, Set<String>> groupUsers = builder.getGroupUserListMap();
+        Set<String> users = groupUsers.get("wheel");
+        assertNotNull(users);
+        assertThat(users, anyOf(hasItem("wheel"), hasItem("root")));
 
     }
 
@@ -72,10 +78,10 @@ public class TestUnixUserGroupBuilder {
         String name = groups.get("0");
         assertThat(name, anyOf(equalTo("wheel"), equalTo("root")));
 
-        Map<String, List<String>> users = builder.getUser2GroupListMap();
-        List<String> usergroups = users.get("root");
-        assertNotNull(usergroups);
-        assertThat(usergroups, (Matcher)anyOf(hasItem("wheel"), hasItem("root")));
+        Map<String, Set<String>> groupUsers = builder.getGroupUserListMap();
+        Set<String> users = groupUsers.get("wheel");
+        assertNotNull(users);
+        assertThat(users, anyOf(hasItem("wheel"), hasItem("root")));
     }
 
     @Test
@@ -105,8 +111,8 @@ public class TestUnixUserGroupBuilder {
         Map<String, String> groups = builder.getGroupId2groupNameMap();
         assertFalse(groups.containsValue("wheel"));
 
-        Map<String, List<String>> users = builder.getUser2GroupListMap();
-        assertNull(users.get("root"));
+        Map<String, Set<String>> groupUsers = builder.getGroupUserListMap();
+        assertNull(groupUsers.get("wheel"));
     }
     
     @Test
@@ -122,10 +128,10 @@ public class TestUnixUserGroupBuilder {
         String name = groups.get("1028");
         assertThat(name, anyOf(equalTo("wheel"), equalTo("sam")));
 
-        Map<String, List<String>> users = builder.getUser2GroupListMap();
-        List<String> usergroups = users.get("sam");
-        assertNotNull(usergroups);
-        assertThat(usergroups, (Matcher) anyOf(hasItem("wheel"), hasItem("sam")));
+        Map<String, Set<String>> groupUsers = builder.getGroupUserListMap();
+        Set<String> users = groupUsers.get("sam");
+        assertNotNull(groupUsers);
+        assertThat(users, anyOf(hasItem("wheel"), hasItem("sam")));
 
     }
 

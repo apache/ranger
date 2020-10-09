@@ -24,31 +24,41 @@ import java.io.File;
 import java.io.FileReader;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.List;
+import java.util.HashMap;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.ArrayList;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-import org.apache.ranger.unixusersync.model.FileSyncSourceInfo;
-import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
+import org.apache.ranger.ugsyncutil.model.FileSyncSourceInfo;
+import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.usergroupsync.AbstractUserGroupSource;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.stream.JsonReader;
+import org.apache.ranger.usergroupsync.UserGroupSource;
 
-public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
+public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  implements UserGroupSource {
 	private static final Logger LOG = Logger.getLogger(FileSourceUserGroupBuilder.class);
 
 	private Map<String,List<String>> user2GroupListMap     = new HashMap<String,List<String>>();
 	private String                   userGroupFilename     = null;
+	private Map<String, Map<String, String>> sourceUsers; // Stores username and attr name & value pairs
+	private Map<String, Map<String, String>> sourceGroups; // Stores groupname and attr name & value pairs
+	private Map<String, Set<String>> sourceGroupUsers;
 	private long                     usergroupFileModified = 0;
 	private UgsyncAuditInfo ugsyncAuditInfo;
 	private FileSyncSourceInfo				 fileSyncSourceInfo;
-	private Set<String>				groupNames;
 	private boolean isStartupFlag = false;
 
 	private boolean isUpdateSinkSucc = true;
@@ -110,8 +120,6 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		isUpdateSinkSucc = true;
-		String user=null;
-		List<String> groups=null;
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date lastModifiedTime = new Date(usergroupFileModified);
 		Date syncTime = new Date(System.currentTimeMillis());
@@ -122,32 +130,44 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 			buildUserGroupInfo();
 
 			for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
-				user = entry.getKey();
-				try {
-					if (userNameRegExInst != null) {
-						user = userNameRegExInst.transform(user);
-					}
-					groups = entry.getValue();
-					if (groupNameRegExInst != null) {
-						List<String> mappedGroups = new ArrayList<>();
-						for (String group : groups) {
-							mappedGroups.add(groupNameRegExInst.transform(group));
+				String userName = entry.getKey();
+				Map<String, String> userAttrMap = new HashMap<>();
+				userAttrMap.put("original_name", userName);
+				userAttrMap.put("full_name", userName);
+				sourceUsers.put(userName, userAttrMap);
+				List<String> groups = entry.getValue();
+				if (groups != null) {
+					for(String groupName : groups) {
+						Map<String, String> groupAttrMap = new HashMap<>();
+						groupAttrMap.put("original_name", groupName);
+						groupAttrMap.put("full_name", groupName);
+						sourceGroups.put(groupName, groupAttrMap);
+						Set<String> groupUsers = sourceGroupUsers.get(groupName);
+						if (CollectionUtils.isNotEmpty(groupUsers)) {
+							groupUsers.add(userName);
+						} else {
+							groupUsers = new HashSet<>();
+							groupUsers.add(userName);
 						}
-						groups = mappedGroups;
+						sourceGroupUsers.put(groupName, groupUsers);
 					}
-					groupNames.addAll(groups);
-					sink.addOrUpdateUser(user, groups);
-				} catch (Throwable t) {
-					LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
-							+ ", for user: " + user
-							+ ", groups: " + groups);
-					isUpdateSinkSucc = false;
 				}
+
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Users = " + sourceUsers.keySet());
+				LOG.debug("Groups = " + sourceGroups.keySet());
+				LOG.debug("GroupUsers = " + sourceGroupUsers.keySet());
+			}
+
+			try {
+				sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers);
+			} catch (Throwable t) {
+				LOG.error("Failed to update ranger admin. Will retry in next sync cycle!!", t);
+				isUpdateSinkSucc = false;
 			}
 		}
 		try {
-			fileSyncSourceInfo.setTotalUsersSynced(user2GroupListMap.size());
-			fileSyncSourceInfo.setTotalGroupsSynced(groupNames.size());
 			sink.postUserGroupAuditInfo(ugsyncAuditInfo);
 		} catch (Throwable t) {
 			LOG.error("sink.postUserGroupAuditInfo failed with exception: " + t.getMessage());
@@ -172,7 +192,9 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource {
 	}
 
 	public void buildUserGroupInfo() throws Throwable {
-		groupNames = new HashSet<>();
+		sourceUsers = new HashMap<>();
+		sourceGroups = new HashMap<>();
+		sourceGroupUsers = new HashMap<>();
 		buildUserGroupList();
 		if ( LOG.isDebugEnabled()) {
 			print();

@@ -104,11 +104,7 @@ public class UserGroupSyncConfig  {
 
 	private static final String UGSYNC_SINK_CLASS = "org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder";
 
-	private static final String LGSYNC_DELTASYNC_SINK_CLASS = "org.apache.ranger.ldapusersync.process.LdapPolicyMgrUserGroupBuilder";
-	
 	private static final String LGSYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
-
-	private static final String LGSYNC_DELTASYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapDeltaUserGroupBuilder";
 
 	private static final String LGSYNC_LDAP_URL = "ranger.usersync.ldap.url";
 	
@@ -174,10 +170,10 @@ public class UserGroupSyncConfig  {
 	private static final int DEFAULT_LGSYNC_PAGED_RESULTS_SIZE = 500;
 
 	private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ranger.usersync.group.searchenabled";
-	private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = false;
+	private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = true;
 
 	private static final String LGSYNC_GROUP_SEARCH_FIRST_ENABLED = "ranger.usersync.group.search.first.enabled";
-	private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_FIRST_ENABLED = false;
+	private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_FIRST_ENABLED = true;
 
 	/*This flag (ranger.usersync.user.searchenabled) is used only when group search first is enabled to get username either -
 	 * from the group member attribute of the group or
@@ -460,7 +456,7 @@ public class UserGroupSyncConfig  {
 		String val =  prop.getProperty(UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM);
 		String className = getUserGroupSource().getClass().getName();
 		if (val == null) {
-			if (LGSYNC_SOURCE_CLASS.equals(className) || LGSYNC_DELTASYNC_SOURCE_CLASS.equals(className)) {
+			if (LGSYNC_SOURCE_CLASS.equals(className)) {
 				return UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
 			} else {
 				return UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
@@ -469,7 +465,7 @@ public class UserGroupSyncConfig  {
 		else {
 			long ret = Long.parseLong(val);
 			long min_interval;
-			if (LGSYNC_SOURCE_CLASS.equals(className) || LGSYNC_DELTASYNC_SOURCE_CLASS.equals(className)) {
+			if (LGSYNC_SOURCE_CLASS.equals(className)) {
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
 			}else if(UGSYNC_SOURCE_CLASS.equals(className)){
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
@@ -495,8 +491,8 @@ public class UserGroupSyncConfig  {
 			syncSource=getSyncSource();
 		}
 		else {
-			if (val.equalsIgnoreCase(LGSYNC_SOURCE_CLASS) && isDeltaSyncEnabled()) {
-				val = LGSYNC_DELTASYNC_SOURCE_CLASS;
+			if (val.equalsIgnoreCase(LGSYNC_SOURCE_CLASS)) {
+				val = LGSYNC_SOURCE_CLASS;
 			}
 			syncSource = val;
 		}
@@ -506,11 +502,7 @@ public class UserGroupSyncConfig  {
 		if(syncSource!=null && syncSource.equalsIgnoreCase("UNIX")){
 			className = UGSYNC_SOURCE_CLASS;
 		}else if(syncSource!=null && syncSource.equalsIgnoreCase("LDAP")){
-			if (!isDeltaSyncEnabled()) {
-				className = LGSYNC_SOURCE_CLASS;
-			} else {
-				className = LGSYNC_DELTASYNC_SOURCE_CLASS;
-			}
+			className = LGSYNC_SOURCE_CLASS;
 		} 
 
 		return className;
@@ -529,14 +521,9 @@ public class UserGroupSyncConfig  {
 
 	public UserGroupSink getUserGroupSink() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SINK_CLASS_PARAM);
-		String className = getUserGroupSourceClassName();
 
-		if (className.equals(LGSYNC_DELTASYNC_SOURCE_CLASS)) {
-			val = LGSYNC_DELTASYNC_SINK_CLASS;
-		} else {
-			if(val == null || val.trim().isEmpty()) {
-				val = UGSYNC_SINK_CLASS;
-			}
+		if(val == null || val.trim().isEmpty()) {
+			val = UGSYNC_SINK_CLASS;
 		}
 
 		Class<UserGroupSink> ugSinkClass = (Class<UserGroupSink>)Class.forName(val);

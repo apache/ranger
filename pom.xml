@@ -252,6 +252,7 @@
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
                 <module>plugin-kudu</module>
+                <module>ugsync-util</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -303,6 +304,7 @@
             <modules>
                 <module>agents-common</module>
                 <module>security-admin</module>
+                <module>ugsync-util</module>
             </modules>
         </profile>
         <profile>
@@ -545,6 +547,7 @@
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-kudu</module>
+                <module>ugsync-util</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -629,6 +632,7 @@
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
+                <module>ugsync-util</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
