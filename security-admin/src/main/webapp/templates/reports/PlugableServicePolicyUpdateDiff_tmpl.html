@@ -49,7 +49,7 @@
 			<ol class="list-unstyled data">
 			{{#each collection}}
 					{{#compare ./this.attributes.previousValue "eq" ''}}
-				 			<li>--</li>		
+				 			<li>--</li>
 					{{else}}
 						<li class="change-row">{{{highlightForPlugableServiceModel ./this.attributes.newValue ./this.attributes.previousValue 'old' ./this.attributes.type}}}</li>
 					{{/compare}}
@@ -62,7 +62,7 @@
 			<ol class="list-unstyled data">
 			{{#each collection}}
 					{{#compare ./this.attributes.newValue "eq" ''}}
-				 			<li>--</li>		
+				 			<li>--</li>
 					{{else}}
 						<li class="change-row">{{{highlightForPlugableServiceModel ./this.attributes.newValue ./this.attributes.previousValue 'new' ./this.attributes.type}}}</li>
 					{{/compare}}

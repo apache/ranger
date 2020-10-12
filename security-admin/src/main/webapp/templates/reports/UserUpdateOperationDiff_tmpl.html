@@ -88,23 +88,31 @@
 		<div class="diff-left" data-id="diff">
 			<h3>Old Value</h3>
 			<ol class="list-unstyled data">
-				<li class="change-row">
-					{{#each previousGroupList}}
-						{{{highlightUsersForArr ./this ../newGroupList 'old'}}}
-						<span>,</span>
-					{{/each}}
-				</li>
+				{{#ifCond previousGroupList.length '==' "0"}}
+					<li class="change-row">--</li>
+				{{else}}
+					<li class="change-row">
+						{{#each previousGroupList}}
+							{{{highlightUsersForArr ./this ../newGroupList 'old'}}}
+							<span>,</span>
+						{{/each}}
+					</li>
+				{{/ifCond}}
 			</ol>
 		</div>
 		<div class="diff-right" data-id="diff">
 			<h3>New Value</h3>
 			<ol class="list-unstyled data">
-				<li class="change-row">
-					{{#each newGroupList}}
-						{{{highlightUsersForArr ./this ../previousGroupList 'new'}}}
-						<span>,</span>
-					{{/each}}
-				</li>
+				{{#ifCond newGroupList.length '==' "0"}}
+					<li class="change-row">--</li>
+				{{else}}
+					<li class="change-row">
+						{{#each newGroupList}}
+							{{{highlightUsersForArr ./this ../previousGroupList 'new'}}}
+							<span>,</span>
+						{{/each}}
+					</li>
+				{{/ifCond}}
 			</ol>
 		</div>
 	</div>

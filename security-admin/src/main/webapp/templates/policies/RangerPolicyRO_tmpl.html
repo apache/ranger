@@ -269,14 +269,14 @@
 	  </table>
 	</div>
   {{#compare "Exclude from Allow Conditions" "eq" this.title}}
-    {{#if ../../isDenyAllElse}}
+    {{#if ../isDenyAllElse}}
       <div class="deny-all-else">
         <tr>
           <td>
             <b>{{tt 'lbl.isDenyAllElse'}} : </b>
           </td>
           <td>
-            <span class="badge badge-dark">{{ ../../../  PolicyDetails.isDenyAllElse}}</span>
+            <span class="badge badge-dark">{{ ../PolicyDetails.isDenyAllElse}}</span>
           </td>
         </tr>
       </div>
