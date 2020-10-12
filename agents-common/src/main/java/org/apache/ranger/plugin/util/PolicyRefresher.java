@@ -53,7 +53,6 @@ public class PolicyRefresher extends Thread {
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
 	private final Gson                           gson;
-	private final boolean                        disableCacheIfServiceNotFound;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
 	private       long                           lastKnownVersion    = -1L;
@@ -91,7 +90,6 @@ public class PolicyRefresher extends Thread {
 		}
 
 		this.gson                          = gson;
-		this.disableCacheIfServiceNotFound = pluginConfig.getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 		this.rangerAdmin                   = RangerBasePlugin.createAdminClient(pluginConfig);
 		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
 		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
@@ -207,7 +205,7 @@ public class PolicyRefresher extends Thread {
 				loadRoles();
 				loadPolicy();
 			} catch(InterruptedException excp) {
-				LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
+				LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
 				break;
 			} finally {
 				if (trigger != null) {
@@ -261,6 +259,7 @@ public class PolicyRefresher extends Thread {
 			if (svcPolicies != null) {
 				plugIn.setPolicies(svcPolicies);
 				policiesSetInPlugin = true;
+				serviceDefSetInPlugin = false;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
 				lastKnownVersion = svcPolicies.getPolicyVersion() != null ? svcPolicies.getPolicyVersion() : -1L;
 			} else {
@@ -270,12 +269,12 @@ public class PolicyRefresher extends Thread {
 				}
 			}
 		} catch (RangerServiceNotFoundException snfe) {
-			if (disableCacheIfServiceNotFound) {
+			if (!serviceDefSetInPlugin) {
 				disableCache();
 				plugIn.setPolicies(null);
+				serviceDefSetInPlugin = true;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
 				lastKnownVersion = -1;
-				serviceDefSetInPlugin = true;
 			}
 		} catch (Exception excp) {
 			LOG.error("Encountered unexpected exception, ignoring..", excp);
