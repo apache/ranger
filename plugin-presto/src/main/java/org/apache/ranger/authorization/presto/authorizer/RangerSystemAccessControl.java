@@ -642,23 +642,26 @@ public class RangerSystemAccessControl
   /** HELPER FUNCTIONS **/
 
   private RangerPrestoAccessRequest createAccessRequest(RangerPrestoResource resource, SystemSecurityContext context, PrestoAccessType accessType) {
-    Set<String> userGroups = null;
+	String userName = null;
+	Set<String> userGroups = null;
 
     if (useUgi) {
       UserGroupInformation ugi = UserGroupInformation.createRemoteUser(context.getIdentity().getUser());
 
+      userName = ugi.getShortUserName();
       String[] groups = ugi != null ? ugi.getGroupNames() : null;
 
       if (groups != null && groups.length > 0) {
         userGroups = new HashSet<>(Arrays.asList(groups));
       }
     } else {
+      userName = context.getIdentity().getUser();
       userGroups = context.getIdentity().getGroups();
     }
 
     RangerPrestoAccessRequest request = new RangerPrestoAccessRequest(
       resource,
-      context.getIdentity().getUser(),
+      userName,
       userGroups,
       accessType
     );
