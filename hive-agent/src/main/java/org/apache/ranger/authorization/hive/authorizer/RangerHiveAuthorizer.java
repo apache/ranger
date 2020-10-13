@@ -2351,6 +2351,54 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
+	@Override
+	public List<HiveRoleGrant> getRoleGrantInfoForPrincipal(HivePrincipal principal)
+			throws HiveAuthzPluginException, HiveAccessControlException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerHiveAuthorizer.getRoleGrantInfoForPrincipal ==>  principal: " +  principal);
+		}
+		boolean result = false;
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		UserGroupInformation ugi = getCurrentUserGroupInfo();
+
+		if(ugi == null) {
+			throw new HiveAccessControlException("Permission denied: user information not available");
+		}
+
+		List<HiveRoleGrant> ret = new ArrayList<>();
+		String currentUserName = ugi.getShortUserName();
+		List<String> userNames = Arrays.asList(currentUserName);
+
+		try {
+			List<String> roleStringList = hivePlugin.getUserRoles(principal.getName(), auditHandler);
+
+			for (String roleName : roleStringList) {
+				RangerRole role = hivePlugin.getRole(ugi.getShortUserName(), roleName, auditHandler);
+				HiveRoleGrant hiveRoleGrant = new HiveRoleGrant();
+				hiveRoleGrant.setGrantOption(true);
+				hiveRoleGrant.setGrantor(role.getCreatedBy());
+				hiveRoleGrant.setGrantorType(HivePrincipal.HivePrincipalType.USER.name());
+				hiveRoleGrant.setGrantTime((int) (role.getUpdateTime().getTime()/1000));
+				hiveRoleGrant.setRoleName(roleName);
+				ret.add(hiveRoleGrant);
+			}
+			result = true;
+		} catch (Exception e) {
+			LOG.error("RangerHiveAuthorizer.getRoleGrantInfoForPrincipal() error", e);
+			throw new HiveAuthzPluginException("RangerHiveAuthorizer.getRoleGrantInfoForPrincipal() error: " + e.getMessage(), e);
+		} finally {
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, currentUserName, userNames, HiveOperationType.SHOW_ROLE_GRANT, HiveAccessType.SELECT, null, result);
+			auditHandler.processResult(accessResult);
+			auditHandler.flushAudit();
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerHiveAuthorizer.getRoleGrantInfoForPrincipal() Result: " + ret);
+		}
+
+		return ret;
+	}
+
 	private HivePrivilegeObjectType getPluginPrivilegeObjType(
 			org.apache.hadoop.hive.metastore.api.HiveObjectType objectType) {
 		switch (objectType) {
