@@ -43,7 +43,9 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
@@ -89,6 +91,11 @@ public class UnixAuthenticationService {
 	private static final String[] UGSYNC_CONFIG_XML_FILES = { "ranger-ugsync-default.xml",  "ranger-ugsync-site.xml" };
 
 	public static void main(String[] args) {
+
+		// load log configuration file dynamically if log4j.properties changed
+		String logPropFile = StringUtils.splitByWholeSeparator(System.getProperty("log4j.configuration"), ":")[1];
+		PropertyConfigurator.configureAndWatch(logPropFile, 10000L);
+
 		if (args.length > 0) {
 			for (String s : args) {
 				if ("-enableUnixAuth".equalsIgnoreCase(s)) {
