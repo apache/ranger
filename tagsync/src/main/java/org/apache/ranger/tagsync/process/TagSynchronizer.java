@@ -32,6 +32,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.log4j.Logger;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.model.TagSource;
 
@@ -53,6 +54,11 @@ public class TagSynchronizer {
 	private volatile boolean isShutdownInProgress = false;
 
 	public static void main(String[] args) {
+
+		// load log configuration file dynamically if log4j.properties changed
+		String logPropFile = StringUtils.splitByWholeSeparator(System.getProperty("log4j.configuration"), ":")[1];
+		PropertyConfigurator.configureAndWatch(logPropFile, 10000L);
+
 		TagSynchronizer tagSynchronizer = new TagSynchronizer();
 
 		TagSyncConfig config = TagSyncConfig.getInstance();
