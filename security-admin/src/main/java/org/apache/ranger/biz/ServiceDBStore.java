@@ -1798,6 +1798,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			configDao.remove(configMap);
 		}
 
+		// Purge x_rms data
+		daoMgr.getXXRMSServiceResource().purge(service.getId());
+
 		Long version = service.getVersion();
 		if(version == null) {
 			version = Long.valueOf(1);

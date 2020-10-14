@@ -1227,6 +1227,7 @@ public class TestServiceDBStore {
 				.mock(XXServiceConfigMapDao.class);
 		XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 		XXSecurityZoneDao xSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
+		XXRMSServiceResourceDao xRMSServiceResourceDao = Mockito.mock(XXRMSServiceResourceDao.class);
 
         RangerService rangerService = rangerService();
 		RangerPolicy rangerPolicy = rangerPolicy();
@@ -1393,6 +1394,8 @@ public class TestServiceDBStore {
 				.thenReturn(xConfMapList);
 		Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
 		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
+
+		Mockito.when(daoManager.getXXRMSServiceResource()).thenReturn(xRMSServiceResourceDao);
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
         serviceDBStore.deleteService(Id);
