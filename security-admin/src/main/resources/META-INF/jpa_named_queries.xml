@@ -146,7 +146,7 @@
        </named-query>
 
 	<named-query name="XXGroupUser.findUsersByGroupName">
-		<query>SELECT user.name FROM XXUser user, XXGroupUser groupUser
+		<query>SELECT user.name, groupUser FROM XXUser user, XXGroupUser groupUser
 			WHERE user.id=groupUser.userId and groupUser.name = :groupName
 		</query>
 	</named-query>

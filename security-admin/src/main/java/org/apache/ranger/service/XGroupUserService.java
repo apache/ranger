@@ -113,19 +113,26 @@ public class XGroupUserService extends
 			if (usersFromDB.containsKey(username)) {
 				// Add or update group user mapping only if the user exists in x_user table.
 				XXGroupUser xxGroupUser = groupUsers.get(username);
-				if (xxGroupUser != null) {
-					if (xXPortalUser != null) {
-						xxGroupUser.setAddedByUserId(createdByUserId);
-						xxGroupUser.setUpdatedByUserId(createdByUserId);
-					}
+				boolean groupUserMappingExists = true;
+				if (xxGroupUser == null) {
+					xxGroupUser = new XXGroupUser();
+					groupUserMappingExists = false;
+				}
+
+				if (xXPortalUser != null) {
+					xxGroupUser.setAddedByUserId(createdByUserId);
+					xxGroupUser.setUpdatedByUserId(createdByUserId);
+				}
+
+				if (groupUserMappingExists) {
 					xxGroupUser = getDao().update(xxGroupUser);
 				} else {
-					xxGroupUser = new XXGroupUser();
 					VXGroupUser vXGroupUser = new VXGroupUser();
 					vXGroupUser.setUserId(usersFromDB.get(username));
 					vXGroupUser.setName(groupName);
 					vXGroupUser.setParentGroupId(xxGroup.getId());
 					xxGroupUser = mapViewToEntityBean(vXGroupUser, xxGroupUser, 0);
+					xxGroupUser = getDao().create(xxGroupUser);
 				}
 				VXGroupUser vXGroupUser = postCreate(xxGroupUser);
 				if (logger.isDebugEnabled()) {
