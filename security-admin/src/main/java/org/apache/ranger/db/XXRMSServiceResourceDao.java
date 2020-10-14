@@ -39,8 +39,8 @@ import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.entity.XXRMSServiceResource;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.springframework.stereotype.Service;
 
@@ -242,24 +242,19 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 		return ret;
 	}
 
-	public void purge(long llServiceId, long hlServiceId) {
-		List<Long> list = getEntityManager()
-				.createNamedQuery("XXRMSServiceResource.getByLlOrHlServiceId", Long.class)
-				.setParameter("llServiceId", llServiceId)
-				.setParameter("hlServiceId", hlServiceId)
-				.getResultList();
+	public void purge(long serviceId) {
 
-		if (CollectionUtils.isNotEmpty(list)) {
-			for (long id : list) {
-				getEntityManager().createNamedQuery("XXRMSResourceMapping.deleteByLlOrHlResourceId")
-						.setParameter("resourceId", id)
-						.executeUpdate();
-			}
+		getEntityManager().createNamedQuery("XXRMSNotification.deleteByServiceId")
+				.setParameter("serviceId", serviceId)
+				.executeUpdate();
 
-			getEntityManager().createNamedQuery("XXRMSServiceResource.deleteByLlOrHlServiceId")
-					.setParameter("llServiceId", llServiceId)
-					.setParameter("hlServiceId", hlServiceId)
-					.executeUpdate();
-		}
+		getEntityManager().createNamedQuery("XXRMSResourceMapping.deleteByServiceId")
+				.setParameter("serviceId", serviceId)
+				.executeUpdate();
+
+		getEntityManager().createNamedQuery("XXRMSServiceResource.deleteByServiceId")
+				.setParameter("serviceId", serviceId)
+				.executeUpdate();
+
 	}
 }

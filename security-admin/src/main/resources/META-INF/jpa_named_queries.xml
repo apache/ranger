@@ -1718,6 +1718,13 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXRMSResourceMapping.deleteByServiceId">
+		<query>
+			DELETE FROM XXRMSResourceMapping mapping WHERE mapping.hlResourceId in (select obj.id from XXRMSServiceResource obj where obj.serviceId = :serviceId) OR
+			mapping.llResourceId in (select obj.id from XXRMSServiceResource obj where obj.serviceId = :serviceId)
+		</query>
+	</named-query>
+
 	<named-query name="XXRMSNotification.getMaxIdOfNotifications">
 		<query>select max(obj.notificationId) from XXRMSNotification obj where obj.llServiceId = :llServiceId and obj.hlServiceId = :hlServiceId</query>
 	</named-query>
@@ -1737,6 +1744,10 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXRMSNotification.deleteByServiceId">
+		<query>DELETE from XXRMSNotification obj where obj.llServiceId = :serviceId or obj.hlServiceId = :serviceId</query>
+	</named-query>
+
 	<named-query name="XXRMSServiceResource.getLlResourceIdForHlResourceId">
 		<query>select obj from XXRMSServiceResource obj, XXRMSNotification notification where obj.id = notification.llResourceId and
 			notification.changeType = 'add' and notification.hlResourceId = :hlResourceId and notification.notificationId > :lastKnownIndex
@@ -1749,14 +1760,14 @@
 		</query>
 	</named-query>
 
-	<named-query name="XXRMSServiceResource.getByLlOrHlServiceId">
-		<query>select obj.id from XXRMSServiceResource obj where obj.serviceId = :llServiceId or obj.serviceId = :hlServiceId
+	<named-query name="XXRMSServiceResource.getByServiceId">
+		<query>select obj.id from XXRMSServiceResource obj where obj.serviceId = :serviceId
 			order by obj.id
 		</query>
 	</named-query>
 
-	<named-query name="XXRMSServiceResource.deleteByLlOrHlServiceId">
-		<query>delete from XXRMSServiceResource obj where obj.serviceId = :llServiceId or obj.serviceId = :hlServiceId</query>
+	<named-query name="XXRMSServiceResource.deleteByServiceId">
+		<query>delete from XXRMSServiceResource obj where obj.serviceId = :serviceId</query>
 	</named-query>
 
 	<named-query name="XXRMSServiceResource.findByServiceAndResourceSignature">
