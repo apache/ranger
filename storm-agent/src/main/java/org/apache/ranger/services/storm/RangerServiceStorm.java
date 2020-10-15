@@ -19,10 +19,15 @@
 package org.apache.ranger.services.storm;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
@@ -34,6 +39,10 @@ import org.apache.commons.logging.LogFactory;
 public class RangerServiceStorm extends RangerBaseService {
 
 	private static final Log LOG = LogFactory.getLog(RangerServiceStorm.class);
+	public static final String ACCESS_TYPE_GET_TOPOLOGY  = "getTopology";
+	public static final String ACCESS_TYPE_GET_TOPOLOGY_CONF  = "getTopologyConf";
+	public static final String ACCESS_TYPE_GET_USER_TOPOLOGY  = "getUserTopology";
+	public static final String ACCESS_TYPE_GET_TOPOLOGY_INFO  = "getTopologyInfo";
 	
 	public RangerServiceStorm() {
 		super();
@@ -42,6 +51,34 @@ public class RangerServiceStorm extends RangerBaseService {
 	@Override
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		super.init(serviceDef, service);
+	}
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceStorm.getDefaultRangerPolicies()");
+		}
+
+		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicyItemAccess>();
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY));
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY_CONF));
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_USER_TOPOLOGY));
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_GET_TOPOLOGY_INFO));
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(accessListForLookupUser);
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServiceStorm.getDefaultRangerPolicies()");
+		}
+		return ret;
 	}
 
 	@Override
