@@ -80,20 +80,17 @@ public class HIVERangerAuthorizerTest {
         File scratchDir = new File("./target/hdfs/scratchdir").getAbsoluteFile();
         conf.set("hive.exec.scratchdir", scratchDir.getPath());
 
-        // REPL DUMP target folder
-        File replRootDir = new File("./target/user/hive").getAbsoluteFile();
-        conf.set("hive.repl.rootdir", replRootDir.getPath());
-
         // Create a temporary directory for the Hive metastore
-        File metastoreDir = new File("./metastore_db/").getAbsoluteFile();
+        File metastoreDir = new File("./target/rangerauthzmetastore/").getAbsoluteFile();
         conf.set(HiveConf.ConfVars.METASTORECONNECTURLKEY.varname,
                  String.format("jdbc:derby:;databaseName=%s;create=true",  metastoreDir.getPath()));
 
         conf.set(HiveConf.ConfVars.METASTORE_AUTO_CREATE_ALL.varname, "true");
         conf.set(HiveConf.ConfVars.HIVE_SERVER2_THRIFT_PORT.varname, "" + port);
         conf.set(HiveConf.ConfVars.METASTORE_SCHEMA_VERIFICATION.toString(), "false");
+        conf.set(HiveConf.ConfVars.METASTORE_CONNECTION_USER_NAME.varname,"youUserName");
+        conf.set(HiveConf.ConfVars.METASTOREPWD.varname, "youPassword");
         conf.set(HiveConf.ConfVars.HIVE_SERVER2_WEBUI_PORT.varname, "0");
-        conf.set(HiveConf.ConfVars.HIVE_EXECUTION_ENGINE.varname,"mr");
 
         hiveServer = new HiveServer2();
         hiveServer.init(conf);
@@ -106,8 +103,7 @@ public class HIVERangerAuthorizerTest {
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
         Statement statement = connection.createStatement();
 
-        statement.execute("CREATE DATABASE IF NOT EXISTS rangerauthz with dbproperties ('repl.source.for'='1,2,3')");
-        statement.execute("CREATE DATABASE IF NOT EXISTS demo");
+        statement.execute("CREATE DATABASE IF NOT EXISTS rangerauthz");
 
         statement.close();
         connection.close();
@@ -149,7 +145,7 @@ public class HIVERangerAuthorizerTest {
     public static void cleanup() throws Exception {
         hiveServer.stop();
         FileUtil.fullyDelete(hdfsBaseDir);
-        File metastoreDir = new File("./metastore_db/").getAbsoluteFile();
+        File metastoreDir = new File("./target/rangerauthzmetastore/").getAbsoluteFile();
         FileUtil.fullyDelete(metastoreDir);
     }
 
@@ -289,9 +285,7 @@ public class HIVERangerAuthorizerTest {
     }
 
     // this should be allowed (by the policy - user)
-    // Insert launches a MR job which fails in the unit test
     @Test
-    @org.junit.Ignore
     public void testHiveUpdateAllAsBob() throws Exception {
 
         String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
@@ -617,8 +611,7 @@ public class HIVERangerAuthorizerTest {
         // "jane" can only set a hash of the word, and not the word itself
         ResultSet resultSet = statement.executeQuery("SELECT * FROM words where count == '100'");
         if (resultSet.next()) {
-        	Assert.assertNotEquals("Mr.", resultSet.getString(1));
-            Assert.assertEquals("1a24b7688c199c24d87b5984d152b37d1d528911ec852d9cdf98c3ef29b916ea", resultSet.getString(1));
+        	Assert.assertEquals("127469a6b4253ebb77adccc0dd48461e", resultSet.getString(1));
         	Assert.assertEquals(100, resultSet.getInt(2));
         } else {
         	Assert.fail("No ResultSet found");
@@ -628,9 +621,7 @@ public class HIVERangerAuthorizerTest {
         connection.close();
     }
 
-    // Insert launches a MR job which fails in the unit test
     @Test
-    @org.junit.Ignore
     public void testCreateDropMacro() throws Exception {
         String initialUrl = "jdbc:hive2://localhost:" + port;
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
@@ -684,9 +675,7 @@ public class HIVERangerAuthorizerTest {
         connection.close();
     }
 
-    // Insert launches a MR job which fails in the unit test
     @Test
-    @org.junit.Ignore
     public void testCreateDropFunction() throws Exception {
         String initialUrl = "jdbc:hive2://localhost:" + port;
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
@@ -947,128 +936,9 @@ public class HIVERangerAuthorizerTest {
         String initialUrl = "jdbc:hive2://localhost:" + port;
         Connection connection = DriverManager.getConnection(initialUrl, "admin", "admin");
         Statement statement = connection.createStatement();
-        Assert.assertTrue(statement.execute("show grant user admin on table words"));
+        Assert.assertTrue(statement.execute("show grant user admin"));
         statement.close();
         connection.close();
     }
 
-        // test "dat_test_user", to do REPL DUMP
-        @Test
-        public void testREPLDUMPAuth() throws Exception {
-
-            String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
-            Connection connection = DriverManager.getConnection(url, "da_test_user", "da_test_user");
-
-            Statement statement = connection.createStatement();
-            try {
-                statement.execute("repl dump rangerauthz");
-            } catch (SQLException ex) {
-                Assert.fail("access should have been granted to da_test_user");
-            }
-            statement.close();
-            connection.close();
-
-            connection = DriverManager.getConnection(url, "bob", "bob");
-            statement = connection.createStatement();
-            try {
-                statement.execute("repl dump rangerauthz");
-                Assert.fail("Failure expected on an unauthorized call");
-            } catch (SQLException ex) {
-              //Excepted
-            }
-            statement.close();
-            connection.close();
-        }
-
-    // test "dat_test_user", to do REPL DUMP
-    @Test
-    public void testREPLDUMPTableAuth() throws Exception {
-
-        String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
-        Connection connection = DriverManager.getConnection(url, "da_test_user", "da_test_user");
-
-        Statement statement = connection.createStatement();
-        try {
-            statement.execute("repl dump rangerauthz.words");
-        } catch (SQLException ex) {
-            Assert.fail("access should have been granted to da_test_user");
-        }
-        statement.close();
-        connection.close();
-
-        connection = DriverManager.getConnection(url, "bob", "bob");
-        statement = connection.createStatement();
-        try {
-            statement.execute("repl dump rangerauthz.words");
-            Assert.fail("Failure expected on an unauthorized call");
-        } catch (SQLException ex) {
-            //Excepted
-        }
-        statement.close();
-        connection.close();
-    }
-
-    @Test
-    public void testKillQuery() throws Exception {
-
-        String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
-        Connection connection = DriverManager.getConnection(url, "da_test_user", "da_test_user");
-
-        Statement statement = connection.createStatement();
-        try {
-            statement.execute("kill query 'dummyQueryId'");
-        } catch (SQLException ex) {
-            Assert.fail("access should have been granted to da_test_user");
-        }
-        statement.close();
-        connection.close();
-
-        connection = DriverManager.getConnection(url, "bob", "bob");
-        statement = connection.createStatement();
-        try {
-            statement.execute("kill query 'dummyQueryId'");
-            Assert.fail("Failure expected on an unauthorized call");
-        } catch (SQLException ex) {
-            //Excepted
-        }
-        statement.close();
-        connection.close();
-    }
-
-    @Test
-    public void testWorkLoadManagementCommands() throws Exception {
-
-        String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
-        Connection connection = DriverManager.getConnection(url, "da_test_user", "da_test_user");
-
-        Statement statement = connection.createStatement();
-        try {
-            statement.execute("show resource plans");
-        } catch (SQLException ex) {
-            Assert.fail("access should have been granted to da_test_user");
-        }
-        statement.close();
-        connection.close();
-
-        connection = DriverManager.getConnection(url, "da_test_user", "da_test_user");
-        statement = connection.createStatement();
-        try {
-            statement.execute("create resource plan myplan1");
-        } catch (SQLException ex) {
-            Assert.fail("access should have been granted to da_test_user");
-        }
-        statement.close();
-        connection.close();
-
-        connection = DriverManager.getConnection(url, "bob", "bob");
-        statement = connection.createStatement();
-        try {
-            statement.execute("create resource plan myplan1");
-            Assert.fail("Failure expected on an unauthorized call");
-        } catch (SQLException ex) {
-            //Excepted
-        }
-        statement.close();
-        connection.close();
-    }
 }

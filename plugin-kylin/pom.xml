@@ -60,6 +60,10 @@
                     <groupId>org.apache.calcite</groupId>
                     <artifactId>calcite-core</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>org.apache.calcite</groupId>
+                    <artifactId>calcite-linq4j</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>

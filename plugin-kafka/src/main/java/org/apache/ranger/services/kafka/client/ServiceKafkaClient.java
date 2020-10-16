@@ -35,7 +35,6 @@ import org.apache.ranger.plugin.util.TimedEventUtil;
 
 import kafka.zk.KafkaZkClient;
 import kafka.zookeeper.ZooKeeperClient;
-import scala.Option;
 import scala.collection.Iterator;
 
 public class ServiceKafkaClient {
@@ -85,7 +84,7 @@ public class ServiceKafkaClient {
 		int sessionTimeout = 5000;
 		int connectionTimeout = 10000;
 		ZooKeeperClient zookeeperClient = new ZooKeeperClient(zookeeperConnect, sessionTimeout, connectionTimeout,
-				1, Time.SYSTEM, "kafka.server", "SessionExpireListener", Option.empty());
+				1, Time.SYSTEM, "kafka.server", "SessionExpireListener");
 		try (KafkaZkClient kafkaZkClient = new KafkaZkClient(zookeeperClient, true, Time.SYSTEM)) {
 			Iterator<String> iter = kafkaZkClient.getAllTopicsInCluster().iterator();
 			while (iter.hasNext()) {

@@ -121,7 +121,7 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 		VXAccessAuditList returnList = new VXAccessAuditList();
 		returnList.setPageSize(searchCriteria.getMaxRows());
 		returnList.setResultSize(response.getHits().getHits().length);
-		returnList.setTotalCount(response.getHits().getTotalHits().value);
+		returnList.setTotalCount(response.getHits().getTotalHits());
 		returnList.setStartIndex(searchCriteria.getStartIndex());
 		returnList.setVXAccessAudits(xAccessAuditList);
 		return returnList;

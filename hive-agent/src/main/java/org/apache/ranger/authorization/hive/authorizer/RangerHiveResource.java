@@ -30,70 +30,52 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 	public static final String KEY_UDF      = "udf";
 	public static final String KEY_COLUMN   = "column";
 	public static final String KEY_URL		= "url";
-	public static final String KEY_HIVESERVICE = "hiveservice";
-	public static final String KEY_GLOBAL	 = "global";
-
 
 	private HiveObjectType objectType = null;
 
-	//FirstLevelResource => Database or URL or Hive Service or Global
-	//SecondLevelResource => Table or UDF
-	//ThirdLevelResource => column
-	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource) {
-		this(objectType, firstLevelResource, null, null);
+	public RangerHiveResource(HiveObjectType objectType, String databaseorUrl) {
+		this(objectType, databaseorUrl, null, null);
 	}
 
-	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource, String secondLevelResource) {
-		this(objectType, firstLevelResource, secondLevelResource, null);
+	public RangerHiveResource(HiveObjectType objectType, String databaseorUrl, String tableOrUdf) {
+		this(objectType, databaseorUrl, tableOrUdf, null);
 	}
 	
-	public RangerHiveResource(HiveObjectType objectType, String firstLevelResource, String secondLevelResource, String thirdLevelResource) {
+	public RangerHiveResource(HiveObjectType objectType, String databaseorUrl, String tableOrUdf, String column) {
 		this.objectType = objectType;
 
 		switch(objectType) {
 			case DATABASE:
-				setValue(KEY_DATABASE, firstLevelResource);
+				if (databaseorUrl == null) {
+					databaseorUrl = "*";
+				}
+				setValue(KEY_DATABASE, databaseorUrl);
 			break;
 
 			case FUNCTION:
-				if (firstLevelResource == null) {
-					firstLevelResource = "";
+				if (databaseorUrl == null) {
+					databaseorUrl = "";
 				}
-				setValue(KEY_DATABASE, firstLevelResource);
-				setValue(KEY_UDF, secondLevelResource);
+				setValue(KEY_DATABASE, databaseorUrl);
+				setValue(KEY_UDF, tableOrUdf);
 			break;
 
 			case COLUMN:
-				setValue(KEY_DATABASE, firstLevelResource);
-				setValue(KEY_TABLE, secondLevelResource);
-				setValue(KEY_COLUMN, thirdLevelResource);
+				setValue(KEY_DATABASE, databaseorUrl);
+				setValue(KEY_TABLE, tableOrUdf);
+				setValue(KEY_COLUMN, column);
 			break;
 
 			case TABLE:
 			case VIEW:
 			case INDEX:
 			case PARTITION:
-				setValue(KEY_DATABASE, firstLevelResource);
-				setValue(KEY_TABLE, secondLevelResource);
+				setValue(KEY_DATABASE, databaseorUrl);
+				setValue(KEY_TABLE, tableOrUdf);
 			break;
 
 			case URI:
-				setValue(KEY_URL,firstLevelResource);
-			break;
-
-			case SERVICE_NAME:
-				if (firstLevelResource == null) {
-					firstLevelResource = "";
-				}
-				setValue(KEY_HIVESERVICE,firstLevelResource);
-			break;
-
-			case GLOBAL:
-				if (firstLevelResource == null) {
-					firstLevelResource = KEY_GLOBAL;
-					//There is no resource name associated to global operations
-				}
-				setValue(KEY_GLOBAL,firstLevelResource);
+				setValue(KEY_URL,databaseorUrl);
 			break;
 
 			case NONE:
@@ -124,9 +106,5 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 
 	public String getUrl() {
 		return (String) getValue(KEY_URL);
-	}
-
-	public String getHiveService() {
-		return (String) getValue(KEY_HIVESERVICE);
 	}
 }

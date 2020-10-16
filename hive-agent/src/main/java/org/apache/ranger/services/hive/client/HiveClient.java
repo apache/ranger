@@ -145,7 +145,7 @@ public class HiveClient extends BaseClient implements Closeable {
 					ret.add(dbName);
 				}
 			}
-		} catch (TException e) {
+		} catch (MetaException e) {
 			String msgDesc = "Unable to get Database";
 			HadoopException hdpException = new HadoopException(msgDesc, e);
 			hdpException.generateResponseDataMap(false, getMessage(e),

@@ -99,4 +99,18 @@ public class RangerConfiguration extends Configuration {
 		}
 		return lurl;
 	}
+	private static volatile RangerConfiguration config;
+	
+	public static RangerConfiguration getInstance() {
+        RangerConfiguration result = config;
+		if (result == null) {
+			synchronized (RangerConfiguration.class) {
+				result = config;
+				if (result == null) {
+					config = result = new RangerConfiguration();
+				}
+			}
+		}
+		return result;
+	}
 }

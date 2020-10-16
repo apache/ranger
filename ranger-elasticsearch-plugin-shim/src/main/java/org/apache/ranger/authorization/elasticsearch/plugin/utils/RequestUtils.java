@@ -79,7 +79,7 @@ public class RequestUtils {
 	public static final String CLIENT_IP_ADDRESS = "ClientIPAddress";
 
 	public static String getClientIPAddress(RestRequest request) {
-		SocketAddress socketAddress = request.getHttpChannel().getRemoteAddress();
+		SocketAddress socketAddress = request.getRemoteAddress();
 		if (socketAddress instanceof InetSocketAddress) {
 			return ((InetSocketAddress) socketAddress).getAddress().getHostAddress();
 		}
