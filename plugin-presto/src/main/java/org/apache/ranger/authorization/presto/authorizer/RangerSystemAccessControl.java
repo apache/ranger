@@ -290,7 +290,7 @@ public class RangerSystemAccessControl
   @Override
   public void checkCanSetCatalogSessionProperty(SystemSecurityContext context, String catalogName, String propertyName) {
     if (!hasPermission(createCatalogSessionResource(catalogName, propertyName), context, PrestoAccessType.ALTER)) {
-      LOG.debug("RangerSystemAccessControl.checkCanSetSystemSessionProperty(" + catalogName + ") denied");
+      LOG.debug("RangerSystemAccessControl.checkCanSetCatalogSessionProperty(" + catalogName + ") denied");
       AccessDeniedException.denySetCatalogSessionProperty(catalogName, propertyName);
     }
   }
@@ -485,7 +485,7 @@ public class RangerSystemAccessControl
   public void checkCanDropView(SystemSecurityContext context, CatalogSchemaTableName view) {
     if (!hasPermission(createResource(view), context, PrestoAccessType.DROP)) {
       LOG.debug("RangerSystemAccessControl.checkCanDropView(" + view.getSchemaTableName().getTableName() + ") denied");
-      AccessDeniedException.denyCreateView(view.getSchemaTableName().getTableName());
+      AccessDeniedException.denyDropView(view.getSchemaTableName().getTableName());
     }
   }
 
