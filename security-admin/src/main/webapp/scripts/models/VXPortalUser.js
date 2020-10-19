@@ -35,9 +35,7 @@ define(function(require){
 		 */
 
 		schema : function(){
-			var attrs = _.omit(this.serverSchema, 'id', 'createDate', 'updateDate', "version",
-					"displayOption", "permList", "forUserId", "status", "priGrpId",
-					 "updatedBy","isSystem");
+			var attrs = _.omit(this.serverSchema, 'id', 'createDate', 'updateDate', "permList", "publicScreenName");
 
 			_.each(attrs, function(o){
 				o.type = 'Hidden';
