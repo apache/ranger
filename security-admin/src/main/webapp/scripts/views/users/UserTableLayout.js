@@ -109,6 +109,7 @@ define(function(require){
 			}
 			if(_.isUndefined(this.roleList)){
 				this.roleList = new VXRoleList();
+				this.roleList.url = "service/roles/lookup/roles";
 			}
 
 			this.bindEvents();
@@ -323,6 +324,7 @@ define(function(require){
                         this.ui.hideShowVisibility.hide();
                         if(_.isUndefined(this.roleList) || _.isUndefined(this.urlQueryParams) || _.isEmpty(this.urlQueryParams)){
                                 this.roleList = new VXRoleList();
+                                this.roleList.url = "service/roles/lookup/roles";
                         }
                         this.ui.addNewUser.hide();
                         this.ui.addNewGroup.hide();

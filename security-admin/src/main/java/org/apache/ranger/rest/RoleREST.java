@@ -316,7 +316,7 @@ public class RoleREST {
         return ret;
     }
 
-    /* This operation is allowed only when effective User has ranger admin privilege
+    /* This operation is allowed only when effective User has ranger admin or auditor privilege
      * if execUser is not same as logged-in user then effective user is execUser
      * else  effective user is logged-in user.
      * This logic is implemented as part of ensureAdminAccess(String serviceName, String userName);
@@ -331,8 +331,30 @@ public class RoleREST {
         }
         SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
         try {
-            ensureAdminAccess(null, null);
             roleStore.getRoles(filter,ret);
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("getRoles() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getAllRoles():" + ret);
+        }
+        return ret;
+    }
+
+    @GET
+    @Path("/lookup/roles")
+    public RangerRoleList getAllRolesForUser(@Context HttpServletRequest request) {
+        RangerRoleList ret = new RangerRoleList();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getAllRolesForUser()");
+        }
+        SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
+        try {
+            roleStore.getRolesForUser(filter,ret);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {

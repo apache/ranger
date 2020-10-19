@@ -111,7 +111,8 @@ define(function(require){
             'searchBtn'           : '[data-js="searchBtn"]',
             'userName'            : '[data-js="userName"]',
             'selectServiceName'   : '[data-js="serviceName"]',
-            'profileTab'          : '.profile-tab'
+            'profileTab'          : '.profile-tab',
+            'roleName'            : '[data-js="roleName"]',
 
         },
 

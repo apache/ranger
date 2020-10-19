@@ -96,5 +96,20 @@ public class XXRoleDao extends BaseDao<XXRole> {
             return new ArrayList<String>();
         }
     }
+
+    @SuppressWarnings("unchecked")
+	public List<XXRole> findByUserId(Long UserId) {
+		if (UserId == null) {
+			return null;
+		}
+		List<XXRole> ret;
+		try {
+			ret = getEntityManager().createNamedQuery("XXRole.findByUserId", tClass).setParameter("userId", UserId)
+					.getResultList();
+		} catch (NoResultException e) {
+			ret = ListUtils.EMPTY_LIST;
+		}
+		return ret;
+	}
 }
 
