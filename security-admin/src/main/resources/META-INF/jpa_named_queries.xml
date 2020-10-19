@@ -1783,4 +1783,13 @@
 		<query>select obj from XXRMSMappingProvider obj where obj.name = :name</query>
 	</named-query>
 
+	<named-query name="XXRole.findByUserId">
+		<query>SELECT obj FROM XXRole obj
+				WHERE obj.id IN (SELECT roleRefUser.roleId FROM XXRoleRefUser roleRefUser WHERE roleRefUser.userId = :userId)
+				OR obj.id IN (SELECT roleRefGroup.roleId FROM XXRoleRefGroup roleRefGroup WHERE roleRefGroup.groupId IN
+				(SELECT groupUser.parentGroupId FROM XXGroupUser groupUser WHERE groupUser.userId = :userId))
+				order by obj.id
+		</query>
+	</named-query>
+
 </entity-mappings>

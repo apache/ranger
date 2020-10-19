@@ -71,7 +71,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 				"XXGroup xGrp , XXPolicyRefGroup refGroup", "obj.id = refGroup.policyId "
 						+ "and xGrp.id = refGroup.groupId"));
 		searchFields.add(new SearchField(SearchFilter.ROLE, "xRole.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
-				"XXRole xRole , XXPolicyRefRole refRole", "obj.id = reRole.policyId "
+				"XXRole xRole , XXPolicyRefRole refRole", "obj.id = refRole.policyId "
 				+ "and xRole.id = refRole.roleId"));
 		//might need updation
 		/*searchFields.add(new SearchField(SearchFilter.POL_RESOURCE, "resMap.value", DATA_TYPE.STRING,
