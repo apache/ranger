@@ -61,7 +61,7 @@ public class TestUnixUserGroupBuilder {
         assertThat(name, anyOf(equalTo("wheel"), equalTo("root")));
 
         Map<String, Set<String>> groupUsers = builder.getGroupUserListMap();
-        Set<String> users = groupUsers.get("wheel");
+        Set<String> users = groupUsers.get("root");
         assertNotNull(users);
         assertThat(users, anyOf(hasItem("wheel"), hasItem("root")));
 
@@ -79,7 +79,7 @@ public class TestUnixUserGroupBuilder {
         assertThat(name, anyOf(equalTo("wheel"), equalTo("root")));
 
         Map<String, Set<String>> groupUsers = builder.getGroupUserListMap();
-        Set<String> users = groupUsers.get("wheel");
+        Set<String> users = groupUsers.get("root");
         assertNotNull(users);
         assertThat(users, anyOf(hasItem("wheel"), hasItem("root")));
     }

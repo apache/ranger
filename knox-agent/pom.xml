@@ -23,6 +23,7 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <knox.jetty.version>9.4.31.v20200723</knox.jetty.version>
     </properties>
     <parent>
         <groupId>org.apache.ranger</groupId>
@@ -167,7 +168,7 @@
         <dependency>
             <groupId>org.eclipse.jetty</groupId>
             <artifactId>jetty-server</artifactId>
-            <version>9.4.12.v20180830</version>
+            <version>${knox.jetty.version}</version>
             <scope>test</scope>
         </dependency>
     </dependencies>

@@ -24,6 +24,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -43,6 +44,7 @@ import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.SnapshotDescription;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.security.access.AccessControlClient;
+import org.apache.hadoop.hbase.security.access.NamespacePermission;
 import org.apache.hadoop.hbase.security.access.Permission;
 import org.apache.hadoop.hbase.security.access.UserPermission;
 import org.apache.hadoop.hbase.util.Bytes;
@@ -76,8 +78,7 @@ public class HBaseRangerAuthorizationTest {
 
     private static int port;
     private static HBaseTestingUtility utility;
-    
-    
+
     @org.junit.BeforeClass
     public static void setup() throws Exception {
         port = getFreePort();
@@ -1007,8 +1008,8 @@ public class HBaseRangerAuthorizationTest {
 				}
 				boolean found = false;
 				for (UserPermission namespacePermission : userPermissions) {
-					if (namespacePermission.hasNamespace()) {
-						found = Bytes.equals(namespacePermission.getUser(), Bytes.toBytes("@QA"));
+					if (namespacePermission.getPermission() instanceof NamespacePermission) {
+						found = StringUtils.equals(namespacePermission.getUser(), "@QA");
 						if (found) {
 							break;
 						}
@@ -1025,8 +1026,10 @@ public class HBaseRangerAuthorizationTest {
 		} catch (Throwable e) {
 			throw new Exception(e);
 		}
-		UserPermission userPermission = new UserPermission(Bytes.toBytes("@IT"), TableName.valueOf("temp5"), null,
-				Permission.Action.READ, Permission.Action.WRITE, Permission.Action.EXEC);
+
+		UserPermission userPermission = new UserPermission("@IT",
+				Permission.newBuilder(TableName.valueOf("temp5")).withActions(Permission.Action.READ, Permission.Action.WRITE, Permission.Action.EXEC).build());
+
 		Assert.assertTrue("@IT permission should be there", userPermissions.contains(userPermission));
 
 	}
@@ -1037,5 +1040,4 @@ public class HBaseRangerAuthorizationTest {
         serverSocket.close();
         return port;
     }
-
 }
