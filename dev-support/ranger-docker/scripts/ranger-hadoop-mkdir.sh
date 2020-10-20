@@ -16,16 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "export JAVA_HOME=${JAVA_HOME}" >> ${HBASE_HOME}/conf/hbase-env.sh
+${HADOOP_HOME}/bin/hdfs dfs -mkdir /hbase
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hdfs
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/yarn
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hbaseMaster
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hbaseRegional
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/kafka
 
-cat <<EOF > /etc/ssh/ssh_config
-Host *
-   StrictHostKeyChecking no
-   UserKnownHostsFile=/dev/null
-EOF
-
-cp ${RANGER_SCRIPTS}/hbase-site.xml /opt/hbase/conf/hbase-site.xml
-chown -R hbase:hadoop /opt/hbase/
-
-cd ${RANGER_HOME}/ranger-hbase-plugin
-./enable-hbase-plugin.sh
+${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /hbase
+${HADOOP_HOME}/bin/hdfs dfs -chown hdfs:hadoop  /ranger/audit/hdfs
+${HADOOP_HOME}/bin/hdfs dfs -chown yarn:hadoop  /ranger/audit/yarn
+${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /ranger/audit/hbaseMaster
+${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /ranger/audit/hbaseRegional
+${HADOOP_HOME}/bin/hdfs dfs -chown kafka:hadoop /ranger/audit/kafka

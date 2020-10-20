@@ -25,6 +25,7 @@ COPY ./dist/ranger-${RANGER_VERSION}-hdfs-plugin.tar.gz /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-yarn-plugin.tar.gz /home/ranger/dist/
 COPY ./scripts/ranger-hadoop-setup.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hadoop.sh                         /home/ranger/scripts/
+COPY ./scripts/ranger-hadoop-mkdir.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hdfs-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/ranger-yarn-plugin-install.properties    /home/ranger/scripts/
 
