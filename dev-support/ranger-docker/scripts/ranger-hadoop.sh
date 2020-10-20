@@ -18,6 +18,8 @@
 
 service ssh start
 
+CREATE_HDFS_DIR=false
+
 if [ ! -e ${HADOOP_HOME}/.setupDone ]
 then
   su -c "ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa" hdfs
@@ -34,11 +36,17 @@ then
 
   su -c "${HADOOP_HOME}/bin/hdfs namenode -format" hdfs
 
+  CREATE_HDFS_DIR=true
   touch ${HADOOP_HOME}/.setupDone
 fi
 
 su -c "${HADOOP_HOME}/sbin/start-dfs.sh" hdfs
 su -c "${HADOOP_HOME}/sbin/start-yarn.sh" yarn
+
+if [ "${CREATE_HDFS_DIR}" == "true" ]
+then
+  su -c "${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh" hdfs
+fi
 
 # prevent the container from exiting
 /bin/bash
