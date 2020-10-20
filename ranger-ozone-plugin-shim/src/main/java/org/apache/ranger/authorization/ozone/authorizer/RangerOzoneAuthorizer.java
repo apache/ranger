@@ -21,9 +21,9 @@ package org.apache.ranger.authorization.ozone.authorizer;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.ozone.om.exceptions.OMException;
 import org.apache.hadoop.ozone.security.acl.IAccessAuthorizer;
 import org.apache.hadoop.ozone.security.acl.IOzoneObj;
-import org.apache.hadoop.ozone.security.acl.OzoneAclException;
 import org.apache.hadoop.ozone.security.acl.RequestContext;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 
@@ -76,11 +76,11 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
     }
 
     @Override
-    public boolean checkAccess(IOzoneObj ozoneObject, RequestContext context) throws OzoneAclException {
+    public boolean checkAccess(IOzoneObj ozoneObject, RequestContext context) throws OMException {
 
         boolean ret = false;
 
-        if(LOG.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerOzoneAuthorizer.checkAccess()");
         }
 
@@ -92,7 +92,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
             deactivatePluginClassLoader();
         }
 
-        if(LOG.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerOzoneAuthorizer.checkAccess()");
         }
 

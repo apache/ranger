@@ -41,6 +41,7 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 
+@org.junit.Ignore
 public class DefaultSchemaRegistryClientTest {
 
     private static final String V1_API_PATH = "api/v1";

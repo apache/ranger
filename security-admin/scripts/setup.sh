@@ -798,16 +798,16 @@ update_properties() {
 		propertyName=ranger.jpa.jdbc.password
 		newPropertyValue="_"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-	else
-		propertyName=ranger.jpa.jdbc.password
-		newPropertyValue="${db_password}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-	fi
 
-	if test -f $keystore; then
-		#echo "$keystore found."
-		chown -R ${unix_user}:${unix_group} ${keystore}
-		chmod 640 ${keystore}
+		if test -f "${keystore}"; then
+			#echo "$keystore found."
+			chown -R ${unix_user}:${unix_group} ${keystore}
+			chmod 640 ${keystore}
+		else
+			propertyName=ranger.jpa.jdbc.password
+			newPropertyValue="${db_password}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 	else
 		propertyName=ranger.jpa.jdbc.password
 		newPropertyValue="${db_password}"
@@ -844,14 +844,14 @@ update_properties() {
 				propertyName=ranger.solr.audit.user.password
 				newPropertyValue="_"
 				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-			else
-				propertyName=ranger.solr.audit.user.password
-				newPropertyValue="${audit_solr_password}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-			fi
 
-			if test -f $keystore; then
-				chown -R ${unix_user}:${unix_group} ${keystore}
+				if test -f "${keystore}"; then
+					chown -R ${unix_user}:${unix_group} ${keystore}
+				else
+					propertyName=ranger.solr.audit.user.password
+					newPropertyValue="${audit_solr_password}"
+					updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				fi
 			else
 				propertyName=ranger.solr.audit.user.password
 				newPropertyValue="${audit_solr_password}"
@@ -911,14 +911,14 @@ update_properties() {
 			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
 			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$javax_net_ssl_keyStoreAlias" -v "$javax_net_ssl_keyStorePassword" -c 1
-		else
-			propertyName=ranger.keystore.password
-			newPropertyValue="${javax_net_ssl_keyStorePassword}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
 
-		if test -f $keystore; then
-			chown -R ${unix_user}:${unix_group} ${keystore}
+			if test -f "${keystore}"; then
+				chown -R ${unix_user}:${unix_group} ${keystore}
+			else
+				propertyName=ranger.keystore.password
+				newPropertyValue="${javax_net_ssl_keyStorePassword}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			fi
 		else
 			propertyName=ranger.keystore.password
 			newPropertyValue="${javax_net_ssl_keyStorePassword}"
@@ -944,13 +944,14 @@ update_properties() {
 			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
 			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$javax_net_ssl_trustStoreAlias" -v "$javax_net_ssl_trustStorePassword" -c 1
-		else
-			propertyName=ranger.truststore.password
-			newPropertyValue="${javax_net_ssl_trustStorePassword}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
-		if test -f $keystore; then
-			chown -R ${unix_user}:${unix_group} ${keystore}
+
+			if test -f "${keystore}"; then
+				chown -R ${unix_user}:${unix_group} ${keystore}
+			else
+				propertyName=ranger.truststore.password
+				newPropertyValue="${javax_net_ssl_trustStorePassword}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			fi
 		else
 			propertyName=ranger.truststore.password
 			newPropertyValue="${javax_net_ssl_trustStorePassword}"
@@ -993,13 +994,14 @@ update_properties() {
 				newPropertyValue="_"
 				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 				$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$policymgr_https_keystore_credential_alias" -v "$policymgr_https_keystore_password" -c 1
-			else
-				propertyName=ranger.service.https.attrib.keystore.pass
-				newPropertyValue="${policymgr_https_keystore_password}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
-			fi
-			if test -f $keystore; then
-				chown -R ${unix_user}:${unix_group} ${keystore}
+
+				if test -f "${keystore}"; then
+					chown -R ${unix_user}:${unix_group} ${keystore}
+				else
+					propertyName=ranger.service.https.attrib.keystore.pass
+					newPropertyValue="${policymgr_https_keystore_password}"
+					updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				fi
 			else
 				propertyName=ranger.service.https.attrib.keystore.pass
 				newPropertyValue="${policymgr_https_keystore_password}"
@@ -1024,13 +1026,14 @@ update_properties() {
 			newPropertyValue="_"
 			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ranger_unixauth_keystore_alias" -v "$ranger_unixauth_keystore_password" -c 1
-		else
-			propertyName=ranger.unixauth.keystore.password
-			newPropertyValue="${ranger_unixauth_keystore_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
-		if test -f $keystore; then
-			chown -R ${unix_user}:${unix_group} ${keystore}
+
+			if test -f "${keystore}"; then
+				chown -R ${unix_user}:${unix_group} ${keystore}
+			else
+				propertyName=ranger.unixauth.keystore.password
+				newPropertyValue="${ranger_unixauth_keystore_password}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			fi
 		else
 			propertyName=ranger.unixauth.keystore.password
 			newPropertyValue="${ranger_unixauth_keystore_password}"
@@ -1055,13 +1058,14 @@ update_properties() {
 			newPropertyValue="_"
 			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ranger_unixauth_truststore_alias" -v "$ranger_unixauth_truststore_password" -c 1
-		else
-			propertyName=ranger.unixauth.truststore.password
-			newPropertyValue="${ranger_unixauth_truststore_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
-		fi
-		if test -f $keystore; then
-			chown -R ${unix_user}:${unix_group} ${keystore}
+
+			if test -f $keystore; then
+				chown -R ${unix_user}:${unix_group} ${keystore}
+			else
+				propertyName=ranger.unixauth.truststore.password
+				newPropertyValue="${ranger_unixauth_truststore_password}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			fi
 		else
 			propertyName=ranger.unixauth.truststore.password
 			newPropertyValue="${ranger_unixauth_truststore_password}"
@@ -1181,15 +1185,16 @@ do_authentication_setup(){
 					else
 						log "[E] $to_file_default does not exists" ; exit 1;
 					fi
-				else
-					propertyName=ranger.ldap.bind.password
-					newPropertyValue="${xa_ldap_bind_password}"
-					updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
-				fi
-				if test -f $keystore; then
-					#echo "$keystore found."
-					chown -R ${unix_user}:${unix_group} ${keystore}
-					chmod 640 ${keystore}
+
+					if test -f $keystore; then
+						#echo "$keystore found."
+						chown -R ${unix_user}:${unix_group} ${keystore}
+						chmod 640 ${keystore}
+					else
+						propertyName=ranger.ldap.bind.password
+						newPropertyValue="${xa_ldap_bind_password}"
+						updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+					fi
 				else
 					propertyName=ranger.ldap.bind.password
 					newPropertyValue="${xa_ldap_bind_password}"
@@ -1267,15 +1272,16 @@ do_authentication_setup(){
 					else
 						log "[E] $to_file_default does not exists" ; exit 1;
 					fi
-				else
-					propertyName=ranger.ldap.ad.bind.password
-					newPropertyValue="${xa_ldap_ad_bind_password}"
-					updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
-				fi
-				if test -f $keystore; then
-					#echo "$keystore found."
-					chown -R ${unix_user}:${unix_group} ${keystore}
-					chmod 640 ${keystore}
+
+					if test -f $keystore; then
+						#echo "$keystore found."
+						chown -R ${unix_user}:${unix_group} ${keystore}
+						chmod 640 ${keystore}
+					else
+						propertyName=ranger.ldap.ad.bind.password
+						newPropertyValue="${xa_ldap_ad_bind_password}"
+						updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+					fi
 				else
 					propertyName=ranger.ldap.ad.bind.password
 					newPropertyValue="${xa_ldap_ad_bind_password}"
