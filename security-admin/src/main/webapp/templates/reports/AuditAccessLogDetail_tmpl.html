@@ -17,6 +17,18 @@
 <div id="serviceDetails" class="row">
     <table class="table table-bordered table-condensed">
         <tbody>
+            <tr>
+                <td>
+                    {{tt 'lbl.auditId'}}
+                </td>
+                {{#compare auditaccessDetail.eventId "eq" ''}}
+                    <td> -- </td>
+                {{else}}
+                    <td>
+                        {{auditaccessDetail.eventId}}
+                    </td>
+                {{/compare}}
+            </tr>
            <tr>
                 <td>
                     {{tt 'lbl.policyId'}}

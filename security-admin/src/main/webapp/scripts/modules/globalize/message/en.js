@@ -286,7 +286,8 @@ define(function(require) {
                 tags                            : 'Tags',
                 permission                      : 'Permission',
                 override                        : 'Override',
-                normal                          : 'Normal'
+                normal                          : 'Normal',
+                auditId                         : 'Audit ID'
 
 			},
 			btn : {
