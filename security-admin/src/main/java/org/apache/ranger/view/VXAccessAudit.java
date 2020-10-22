@@ -152,6 +152,9 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 
 	protected Long policyVersion;
 
+	// Event ID
+	protected String eventId;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -604,6 +607,13 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		this.policyVersion = policyVersion;
 	}
 
+	public String getEventId() {
+		return eventId;
+	}
+
+	public void setEventId(String eventId) {
+		this.eventId = eventId;
+	}
 
 	/**
 	 * This return the bean content in string format
@@ -641,6 +651,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "clusterName={" + clusterName + "}";
 		str += "zoneName={" + zoneName + "}";
 		str += "agentHost={" + agentHost + "}";
+		str += "eventId={" + eventId + "}";
 		str += "}";
 		return str;
 	}

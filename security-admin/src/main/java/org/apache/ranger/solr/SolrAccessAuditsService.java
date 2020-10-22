@@ -127,6 +127,7 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		if (value != null) {
 			// TODO: Converting ID to hashcode for now
 			accessAudit.setId((long) value.hashCode());
+			accessAudit.setEventId(value.toString());
 		}
 		
 		value = doc.getFieldValue("cluster");
