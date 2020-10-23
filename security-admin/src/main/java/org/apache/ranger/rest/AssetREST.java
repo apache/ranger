@@ -641,24 +641,24 @@ public class AssetREST {
 				"Resource Type", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request,searchCriteria,"excludeServiceUser",
 				"Exclude Service User",StringUtil.VALIDATION_TEXT);
+
 		searchUtil.extractInt(request, searchCriteria, "auditType", "Audit Type");
-                searchUtil.extractInt(request, searchCriteria, "accessResult", "Result");
+		searchUtil.extractInt(request, searchCriteria, "accessResult", "Result");
 		searchUtil.extractInt(request, searchCriteria, "assetId", "Asset ID");
 		searchUtil.extractLong(request, searchCriteria, "policyId", "Policy ID");
-                searchUtil.extractInt(request, searchCriteria, "repoType", "Service Type");
-		
-		searchUtil.extractDate(request, searchCriteria, "startDate",
-                                "Start Date", "MM/dd/yyyy");
-                searchUtil.extractDate(request, searchCriteria, "endDate", "End Date",
-				"MM/dd/yyyy");
+		searchUtil.extractInt(request, searchCriteria, "repoType", "Service Type");
+
+		searchUtil.extractDate(request, searchCriteria, "startDate","Start Date", "MM/dd/yyyy");
+		searchUtil.extractDate(request, searchCriteria, "endDate", "End Date", "MM/dd/yyyy");
 
 		searchUtil.extractString(request, searchCriteria, "tags", "tags", null);
 		searchUtil.extractString(request, searchCriteria, "cluster", "Cluster Name", StringUtil.VALIDATION_TEXT);
-		searchUtil.extractStringList(request, searchCriteria, "zoneName", "Zone Name List", "zoneName", null,
-				                               null);
+		searchUtil.extractStringList(request, searchCriteria, "zoneName", "Zone Name List", "zoneName", null, null);
 
 		searchUtil.extractString(request, searchCriteria, "agentHost", "Agent Host Name", StringUtil.VALIDATION_TEXT);
-		
+
+		searchUtil.extractString(request, searchCriteria, "eventId", "Event Id", null);
+
 		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
 		boolean isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();
 		XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
