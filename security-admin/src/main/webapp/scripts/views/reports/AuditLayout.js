@@ -431,10 +431,11 @@ define(function(require) {
                                     {text : 'Cluster Name',label : 'cluster', urlLabel : 'clusterName'},
                                     {text : 'Zone Name',label : 'zoneName', urlLabel : 'zoneName'},
                                     {text : localization.tt("lbl.agentHost"), label :"agentHost", urlLabel : 'agentHost'},
+                                    {text : 'Audit ID', label : 'eventId', urlLabel : 'eventId'}
                                    //{text : localization.tt("lbl.permission"), label :'action', urlLabel : 'permission'}
                                 ];
             var searchOpt = ['Resource Type','Start Date','End Date','Application','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
-            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude User', localization.tt("lbl.agentHost"), 'Policy ID'];//, localization.tt("lbl.permission")];
+            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude User', localization.tt("lbl.agentHost"), 'Policy ID', 'Audit ID'];//, localization.tt("lbl.permission")];
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
