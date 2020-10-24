@@ -2066,8 +2066,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	private boolean isURIAccessAllowed(String userName, FsAction action,
-			Path filePath, FileSystem fs) {
+  private boolean isURIAccessAllowed(String userName, FsAction action, Path filePath, FileSystem fs) {
         boolean ret = false;
 
         if(action == FsAction.NONE) {
@@ -2125,13 +2124,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
    * like ViewHDFS, the resolved target path could be the path of other mounted
    * target fs path. Returns null if file does not exist or any other IOException.
    */
-	private Path resolvePath(Path path, FileSystem fs) {
-		try {
-			return fs.resolvePath(path);
-		} catch (IOException e) {
-			return null;
-		}
-	}
+  private Path resolvePath(Path path, FileSystem fs) {
+    try {
+      return fs.resolvePath(path);
+    } catch (IOException e) {
+      return null;
+    }
+  }
 
   /**
    * Returns true if the given fs supports mount functionality. In general we can
@@ -2139,9 +2138,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
    * ViewFsOverloadScheme or ViewDistributedFileSystem. Returns false if the
    * getChildFileSystems API returns null.
    */
-	private boolean isMountedFs(FileSystem fs){
-		return fs.getChildFileSystems() != null;
-	}
+  private boolean isMountedFs(FileSystem fs) {
+    return fs.getChildFileSystems() != null;
+  }
 
 
 
