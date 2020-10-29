@@ -31,6 +31,7 @@ import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.view.VXResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -92,8 +93,10 @@ public class RangerPreAuthSecurityHandler {
 				}
 			}
 		}
-
-		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not allowed to access the API", true);
+		VXResponse gjResponse = new VXResponse();
+        gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+        gjResponse.setMsgDesc("User is not allowed to access the API");
+        throw restErrorUtil.generateRESTException(gjResponse);
 	}
 
 	public boolean isAPISpnegoAccessible(){
@@ -103,7 +106,10 @@ public class RangerPreAuthSecurityHandler {
                 }else if(userSession != null && (userSession.isUserAdmin() || userSession.isKeyAdmin() || userSession.isAuditKeyAdmin())){
 			return true;
 		}
-		throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not allowed to access the API", true);
+        VXResponse gjResponse = new VXResponse();
+        gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
+        gjResponse.setMsgDesc("User is not allowed to access the API");
+        throw restErrorUtil.generateRESTException(gjResponse);
 	}
 	
 	public boolean isAdminOrKeyAdminRole(){
@@ -111,6 +117,9 @@ public class RangerPreAuthSecurityHandler {
 		if (userSession != null && (userSession.isKeyAdmin() || userSession.isUserAdmin())) {
 			return true;
 		}
-		throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "User is not allowed to access the API", true);
+		VXResponse gjResponse = new VXResponse();
+        gjResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+        gjResponse.setMsgDesc("User is not allowed to access the API");
+        throw restErrorUtil.generateRESTException(gjResponse);
 	}
 }
