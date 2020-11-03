@@ -175,6 +175,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		userNameMap = new HashMap<>();
 		userCache = new HashMap<>();
 		groupCache = new HashMap<>();
+		groupUsersCache = new HashMap<>();
 		isStartupFlag = true;
 
 		if (isMockRun) {
@@ -308,24 +309,26 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 			}
 		}
 		if (authenticationType != null && AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
-			try {
-				LOG.info("Using principal = " + principal + " and keytab = " + keytab);
-				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
-				Subject.doAs(sub, new PrivilegedAction<Void>() {
-					@Override
-					public Void run() {
-						try {
-							buildGroupList();
-							buildUserList();
-							buildGroupUserLinkList();
-						} catch (Exception e) {
-							LOG.error("Failed to build Group List : ", e);
-						}
-						return null;
+			LOG.info("Using principal = " + principal + " and keytab = " + keytab);
+			Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+			Boolean isInitDone = Subject.doAs(sub, new PrivilegedAction<Boolean>() {
+				@Override
+				public Boolean run() {
+					try {
+						buildGroupList();
+						buildUserList();
+						buildGroupUserLinkList();
+					} catch (Throwable e) {
+						LOG.error("Failed to build Users and Groups from Ranger admin : ", e);
+						return false;
 					}
-				});
-			} catch (Exception e) {
-				LOG.error("Failed to Authenticate Using given Principal and Keytab : ",e);
+					return true;
+				}
+			});
+			if (isInitDone.booleanValue() == false) {
+				String msg = ("Failed to build Users and Groups from Ranger admin");
+				LOG.error(msg);
+				throw new Exception(msg);
 			}
 		} else {
 			buildGroupList();
@@ -334,7 +337,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		}
 	}
 
-	private void buildGroupList() {
+	private void buildGroupList() throws Throwable {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupList()");
 		}
@@ -360,7 +363,8 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 						response = clientResp.getEntity(String.class);
 					}
 				} catch (Exception e) {
-					LOG.error("Failed to get response, Error is : " + e.getMessage());
+					LOG.error("Failed to get groups from Ranger, Error is : " + e.getMessage());
+					throw e;
 				}
 			}
 			if (LOG.isDebugEnabled()) {
@@ -387,7 +391,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		}
 	}
 
-	private void buildUserList() {
+	private void buildUserList() throws Throwable {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.buildUserList()");
 		}
@@ -413,7 +417,8 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 						response = clientResp.getEntity(String.class);
 					}
 				} catch (Exception e) {
-					LOG.error("Failed to get response, Error is : "+e.getMessage());
+					LOG.error("Failed to get users from Ranger admin, Error is : "+e.getMessage());
+					throw e;
 				}
 			}
 			if (LOG.isDebugEnabled()) {
@@ -439,7 +444,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		}
 	}
 
-	private void buildGroupUserLinkList() {
+	private void buildGroupUserLinkList() throws Throwable {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupUserLinkList()");
 		}
@@ -458,7 +463,8 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 						response = clientResp.getEntity(String.class);
 					}
 				} catch (Exception e) {
-					LOG.error("Failed to get response, Error is : " + e.getMessage());
+					LOG.error("Failed to get response, group user mappings from Ranger admin. Error is : " + e.getMessage());
+					throw e;
 				}
 			}
 			if (LOG.isDebugEnabled()) {
@@ -743,7 +749,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 				});
 			} catch (Exception e) {
 				LOG.error("Failed to add or update Users : " , e);
-				throw new Exception(e);
+				throw e;
 			}
 		} else {
 			ret = getUsers(xUserList);
@@ -787,7 +793,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 					}
 				} catch (Throwable t) {
 					LOG.error("Failed to get response, Error is : ", t);
-					throw new Exception(t);
+					throw t;
 				}
 			}
 			if (LOG.isDebugEnabled()) {
@@ -795,8 +801,13 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 			}
 
 			if (response != null) {
-				ret = Integer.valueOf(response);
-				uploadedCount += pageSize;
+				try {
+					ret = Integer.valueOf(response);
+					uploadedCount += pageSize;
+				} catch (NumberFormatException e) {
+					LOG.error("Failed to addOrUpdateUsers " + uploadedCount, e);
+					ret = 0;
+				}
 			} else {
 				LOG.error("Failed to addOrUpdateUsers " + uploadedCount );
 				ret = 0;
@@ -840,7 +851,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 				});
 			} catch (Exception e) {
 				LOG.error("Failed to add or update groups : " , e);
-				throw new Exception(e);
+				throw e;
 			}
 		} else {
 			ret = getGroups(xGroupList);
@@ -880,7 +891,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 					}
 				} catch (Throwable t) {
 					LOG.error("Failed to get response, Error is : ", t);
-					throw new Exception(t);
+					throw t;
 				}
 			}
 			if (LOG.isDebugEnabled()) {
@@ -888,8 +899,13 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 			}
 
 			if (response != null) {
-				ret = Integer.valueOf(response);
-				uploadedCount += pageSize;
+				try {
+					ret = Integer.valueOf(response);
+					uploadedCount += pageSize;
+				} catch (NumberFormatException e) {
+					LOG.error("Failed to addOrUpdateGroups " + uploadedCount, e );
+					ret = 0;
+				}
 			} else {
 				LOG.error("Failed to addOrUpdateGroups " + uploadedCount );
 				ret = 0;
@@ -929,7 +945,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 				});
 			} catch (Exception e) {
 				LOG.error("Failed to add or update group memberships : " , e);
-				throw new Exception(e);
+				throw e;
 			}
 		} else {
 			ret = getGroupUsers(groupUserInfoList);
@@ -968,7 +984,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 					}
 				} catch (Throwable t) {
 					LOG.error("Failed to get response, Error is : ", t);
-					throw new Exception(t);
+					throw t;
 				}
 			}
 			if (LOG.isDebugEnabled()) {
@@ -976,10 +992,15 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 			}
 
 			if (response != null) {
-				ret = Integer.valueOf(response);
-				uploadedCount += pageSize;
+				try {
+					ret = Integer.valueOf(response);
+					uploadedCount += pageSize;
+				} catch (NumberFormatException e) {
+					LOG.error("Failed to addOrUpdateGroupUsers " + uploadedCount, e );
+					ret = 0;
+				}
 			} else {
-				LOG.error("Failed to addOrUpdateGroups " + uploadedCount );
+				LOG.error("Failed to addOrUpdateGroupUsers " + uploadedCount );
 				ret = 0;
 			}
 
