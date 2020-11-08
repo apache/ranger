@@ -519,7 +519,7 @@ define(function(require) {
 				newPasswordError       :'Invalid Password. Minimum 8 characters with min one alphabet and one numeric.',
 				emailIdError           : 'Please enter valid email address.',
 				enterValidName         : 'Please enter valid name.',
-				passwordError          :'Password should be minimum 8 characters with min one alphabet and one numeric.',
+				passwordError          :'Password should be minimum 8 characters with min one alphabet and one numeric. For FIPS environment password should be minimum 14 characters with min one alphabet and one numeric.',
 				userNameValidationMsg  :'1. User name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
 				groupNameValidationMsg :'1. Group name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
                 firstNameValidationMsg :'1. First name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',
