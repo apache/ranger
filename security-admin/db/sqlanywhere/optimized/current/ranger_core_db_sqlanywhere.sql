@@ -2106,6 +2106,7 @@ CONSTRAINT x_rms_notification_FK_hl_service_id FOREIGN KEY(hl_service_id) REFERE
 CONSTRAINT x_rms_notification_FK_ll_service_id FOREIGN KEY(ll_service_id) REFERENCES x_service(id)
 );
 CREATE INDEX x_rms_service_resource_IDX_service_id ON x_rms_service_resource(service_id);
+CREATE INDEX x_rms_service_resource_IDX_resource_signature ON x_rms_service_resource(resource_signature);
 GO
 
 CREATE TABLE dbo.x_rms_notification (
@@ -2263,6 +2264,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('048',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('049',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('050',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
