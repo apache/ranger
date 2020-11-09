@@ -4461,7 +4461,48 @@ input.textFiledInputPadding:disabled {
   position: relative;
   bottom: 6px;
   cursor: pointer;
-}/*[fieldclass="resorces-css"] .control-label {
+}
+
+.recursive-toggle .toggle-off {
+  margin-left: -12px !important;
+}
+
+@media (min-width: 2000px){
+  .expanded-contant .include-toggle{
+    margin-left:400px;
+  }
+  .expanded-contant .recursive-toggle-2{
+    margin-left:500px;
+  }
+  .recursive-toggle-2 {
+    margin-left:600px;
+  }
+}
+
+@media (min-width: 2500px){
+  .expanded-contant .include-toggle{
+    margin-left:500px;
+  }
+  .expanded-contant .recursive-toggle-2{
+    margin-left:600px;
+  }
+  .recursive-toggle-2 {
+    margin-left:700px;
+  }
+}
+
+@media (min-width: 3000px){
+  .expanded-contant .include-toggle{
+    margin-left:550px;
+  }
+  .expanded-contant .recursive-toggle-2{
+    margin-left:650px;
+  }
+  .recursive-toggle-2 {
+    margin-left:750px;
+  }
+}
+/*[fieldclass="resorces-css"] .control-label {
   margin-top: 0px;
   margin-right: -15px
 }*/
