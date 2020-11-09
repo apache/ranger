@@ -154,11 +154,12 @@ define(function(require){
 
 		/** on render callback */
 		onRender: function() {
-			// if(localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null) {
-			// 	App.rContent.$el.addClass('expanded-contant');
-			// } else {
-			// 	App.rContent.$el.removeClass('expanded-contant');
-			// }
+			if((localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null)
+				&& App.rSideBar.$el.hasClass('expanded')) {
+				App.rContent.$el.addClass('expanded-contant');
+			} else {
+				App.rContent.$el.removeClass('expanded-contant');
+			}
 			XAUtil.showAlerForDisabledPolicy(this);
 			this.rForm.show(this.form);
 			this.rForm.$el.dirtyFields();
