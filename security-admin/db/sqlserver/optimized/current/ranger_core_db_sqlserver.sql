@@ -966,10 +966,10 @@ CREATE TABLE [dbo].[x_portal_user](
         [update_time] [datetime2] DEFAULT NULL NULL,
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
-        [first_name] [varchar](256) DEFAULT NULL NULL,
-        [last_name] [varchar](256) DEFAULT NULL NULL,
+        [first_name] [nvarchar](256) DEFAULT NULL NULL,
+        [last_name] [nvarchar](256) DEFAULT NULL NULL,
         [pub_scr_name] [varchar](2048) DEFAULT NULL NULL,
-        [login_id] [varchar](767) DEFAULT NULL NULL,
+        [login_id] [nvarchar](767) DEFAULT NULL NULL,
         [password] [varchar](512) NOT NULL,
         [email] [varchar](512) DEFAULT NULL NULL,
         [status] [int] DEFAULT 0 NOT NULL,
@@ -1120,8 +1120,8 @@ CREATE TABLE [dbo].[x_group](
         [update_time] [datetime2] DEFAULT NULL NULL,
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
-        [group_name] [varchar](767) NOT NULL,
-        [descr] [varchar](4000) NOT NULL,
+        [group_name] [nvarchar](767) NOT NULL,
+        [descr] [nvarchar](4000) NOT NULL,
         [status] [int] DEFAULT 0  NOT NULL,
         [group_type] [int] DEFAULT 0 NOT NULL,
         [cred_store_id] [bigint] DEFAULT NULL NULL,
@@ -1147,7 +1147,7 @@ CREATE TABLE [dbo].[x_group_groups](
         [update_time] [datetime2] DEFAULT NULL NULL,
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
-        [group_name] [varchar](1024) NOT NULL,
+        [group_name] [nvarchar](1024) NOT NULL,
         [p_group_id] [bigint] DEFAULT NULL  NULL,
         [group_id] [bigint] DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
@@ -1165,8 +1165,8 @@ CREATE TABLE [dbo].[x_user](
         [update_time] [datetime2] DEFAULT NULL NULL,
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
-        [user_name] [varchar](767) NOT NULL,
-        [descr] [varchar](4000) NOT NULL,
+        [user_name] [nvarchar](767) NOT NULL,
+        [descr] [nvarchar](4000) NOT NULL,
         [status] [int] DEFAULT 0 NOT NULL,
         [cred_store_id] [bigint] DEFAULT NULL NULL,
         [is_visible] [int] DEFAULT 1 NOT NULL,
@@ -1190,7 +1190,7 @@ CREATE TABLE [dbo].[x_group_users](
         [update_time] [datetime2] DEFAULT NULL NULL,
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
-        [group_name] [varchar](767) NOT NULL,
+        [group_name] [nvarchar](767) NOT NULL,
         [p_group_id] [bigint] DEFAULT NULL NULL,
         [user_id] [bigint] DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
@@ -2128,7 +2128,7 @@ CREATE TABLE [dbo].[x_ugsync_audit_info](
         [added_by_id] [bigint] DEFAULT NULL NULL,
         [upd_by_id] [bigint] DEFAULT NULL NULL,
         [event_time] [datetime2] DEFAULT NULL NULL,
-        [user_name] [varchar](255) NOT  NULL,
+        [user_name] [nvarchar](255) NOT  NULL,
         [sync_source] [varchar](128) NOT NULL,
         [no_of_new_users] [bigint] NOT NULL,
         [no_of_new_groups] [bigint] NOT NULL,
@@ -2241,7 +2241,7 @@ CREATE TABLE [dbo].[x_policy_ref_user] (
   [upd_by_id] [bigint] DEFAULT NULL NULL,
   [policy_id] [bigint] NOT NULL,
   [user_id] [bigint] NOT NULL,
-  [user_name] [varchar](4000) DEFAULT NULL NULL,
+  [user_name] [nvarchar](4000) DEFAULT NULL NULL,
   PRIMARY KEY CLUSTERED
   (
   [id] ASC
@@ -2263,7 +2263,7 @@ CREATE TABLE [dbo].[x_policy_ref_group] (
   [upd_by_id] [bigint] DEFAULT NULL NULL,
   [policy_id] [bigint] NOT NULL,
   [group_id] [bigint] NOT NULL,
-  [group_name] [varchar](4000) DEFAULT NULL NULL,
+  [group_name] [nvarchar](4000) DEFAULT NULL NULL,
   PRIMARY KEY CLUSTERED
   (
   [id] ASC
@@ -2363,7 +2363,7 @@ CREATE TABLE [dbo].[x_security_zone_ref_user](
         [upd_by_id] [bigint] DEFAULT NULL NULL,
         [zone_id] [bigint] DEFAULT NULL NULL,
         [user_id] [bigint] DEFAULT NULL NULL,
-        [user_name] [varchar](767) DEFAULT NULL NULL,
+        [user_name] [nvarchar](767) DEFAULT NULL NULL,
         [user_type] [tinyint] DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
 (
@@ -2392,7 +2392,7 @@ CREATE TABLE [dbo].[x_security_zone_ref_group](
         [upd_by_id] [bigint] DEFAULT NULL NULL,
         [zone_id] [bigint] DEFAULT NULL NULL,
         [group_id] [bigint] DEFAULT NULL NULL,
-        [group_name] [varchar](767) DEFAULT NULL NULL,
+        [group_name] [nvarchar](767) DEFAULT NULL NULL,
         [group_type] [tinyint] DEFAULT NULL NULL,
         PRIMARY KEY CLUSTERED
 (
@@ -2448,8 +2448,8 @@ CREATE TABLE [dbo].[x_role](
 [added_by_id] [bigint] DEFAULT NULL NULL,
 [upd_by_id] [bigint] DEFAULT NULL NULL,
 [version] [bigint] DEFAULT NULL NULL,
-[name] [varchar](255) NOT NULL,
-[description] [varchar](1024) DEFAULT NULL NULL,
+[name] [nvarchar](255) NOT NULL,
+[description] [nvarchar](1024) DEFAULT NULL NULL,
 [role_options] [varchar](4000) DEFAULT NULL NULL,
 [role_text] [nvarchar](max) DEFAULT NULL NULL,
   PRIMARY KEY CLUSTERED
@@ -2479,7 +2479,7 @@ CREATE TABLE [dbo].[x_role_ref_user](
 [upd_by_id] [bigint] DEFAULT NULL NULL,
 [role_id] [bigint] NOT NULL,
 [user_id] [bigint] DEFAULT NULL NULL,
-[user_name] [varchar](767) DEFAULT NULL NULL,
+[user_name] [nvarchar](767) DEFAULT NULL NULL,
 [priv_type] [int] DEFAULT NULL NULL,
   PRIMARY KEY CLUSTERED
 (
@@ -2507,7 +2507,7 @@ CREATE TABLE [dbo].[x_role_ref_group](
 [upd_by_id] [bigint] DEFAULT NULL NULL,
 [role_id] [bigint] NOT NULL,
 [group_id] [bigint] DEFAULT NULL NULL,
-[group_name] [varchar](767) DEFAULT NULL NULL,
+[group_name] [nvarchar](767) DEFAULT NULL NULL,
 [priv_type] [int] DEFAULT NULL NULL,
  PRIMARY KEY CLUSTERED
 (
@@ -2535,7 +2535,7 @@ CREATE TABLE [dbo].[x_policy_ref_role](
 [upd_by_id] [bigint] DEFAULT NULL NULL,
 [policy_id] [bigint] NOT NULL,
 [role_id] [bigint] NOT NULL,
-[role_name] [varchar](255) DEFAULT NULL NULL,
+[role_name] [nvarchar](255) DEFAULT NULL NULL,
  PRIMARY KEY CLUSTERED
   (
   [id] ASC
@@ -2566,7 +2566,7 @@ CREATE TABLE [dbo].[x_role_ref_role](
 [upd_by_id] [bigint] DEFAULT NULL NULL,
 [role_ref_id] [bigint] DEFAULT NULL NULL,
 [role_id] [bigint] NOT NULL,
-[role_name] [varchar](255) DEFAULT NULL NULL,
+[role_name] [nvarchar](255) DEFAULT NULL NULL,
 [priv_type] [int] DEFAULT NULL NULL,
   PRIMARY KEY CLUSTERED
   (
@@ -4103,6 +4103,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('048',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('049',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('050',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('051',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
