@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.hive.authorizer;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -808,17 +809,46 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						continue;
 					}
 
-					String 	path         		= hiveObj.getObjectName();
+          String pathStr = hiveObj.getObjectName();
 					HiveObjectType hiveObjType  = resource.getObjectType();
 
-					if(hiveObjType == HiveObjectType.URI && isPathInFSScheme(path)) {
-						FsAction permission = getURIAccessType(hiveOpType);
+          if (hiveObjType == HiveObjectType.URI && isPathInFSScheme(pathStr)) {
 
-						if(!isURIAccessAllowed(user, permission, path, getHiveConf())) {
-							throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user, permission.name(), path));
-						}
+            FsAction permission = getURIAccessType(hiveOpType);
+            Path path = new Path(pathStr);
+            FileSystem fs = null;
 
-						continue;
+            try {
+              fs = FileSystem.get(path.toUri(), getHiveConf());
+            } catch (IOException e) {
+              LOG.error("Error getting permissions for " + path, e);
+              throw new HiveAccessControlException(
+                  String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
+                      permission.name(), path),
+                  e);
+            }
+
+            boolean shouldCheckAccess = true;
+
+            if (isMountedFs(fs)) {
+              Path resolvedPath = resolvePath(path, fs);
+              if (resolvedPath != null) {
+                // we know the resolved path scheme. Let's check the resolved path
+                // scheme is part of hivePlugin.getFSScheme.
+                shouldCheckAccess = isPathInFSScheme(resolvedPath.toUri().toString());
+              }
+            }
+
+            if (shouldCheckAccess) {
+              if (!isURIAccessAllowed(user, permission, path, fs)) {
+                throw new HiveAccessControlException(
+                    String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
+                        permission.name(), path));
+              }
+              continue;
+            }
+            // This means we got resolved path scheme is not part of
+            // hivePlugin.getFSScheme
 					}
 
 					HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, hiveObjType, true);
@@ -869,17 +899,46 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						continue;
 					}
 
-					String   path       = hiveObj.getObjectName();
+          String pathStr = hiveObj.getObjectName();
 					HiveObjectType hiveObjType  = resource.getObjectType();
 
-					if(hiveObjType == HiveObjectType.URI  && isPathInFSScheme(path)) {
-						FsAction permission = getURIAccessType(hiveOpType);
+          if (hiveObjType == HiveObjectType.URI && isPathInFSScheme(pathStr)) {
 
-		                if(!isURIAccessAllowed(user, permission, path, getHiveConf())) {
-		    				throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user, permission.name(), path));
-		                }
+            FsAction permission = getURIAccessType(hiveOpType);
+            Path path = new Path(pathStr);
+            FileSystem fs = null;
 
-						continue;
+            try {
+              fs = FileSystem.get(path.toUri(), getHiveConf());
+            } catch (IOException e) {
+              LOG.error("Error getting permissions for " + path, e);
+              throw new HiveAccessControlException(
+                  String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
+                      permission.name(), path),
+                  e);
+            }
+
+            boolean shouldCheckAccess = true;
+
+            if (isMountedFs(fs)) {
+              Path resolvedPath = resolvePath(path, fs);
+              if (resolvedPath != null) {
+                // we know the resolved path scheme. Let's check the resolved path
+                // scheme is part of hivePlugin.getFSScheme.
+                shouldCheckAccess = isPathInFSScheme(resolvedPath.toUri().toString());
+              }
+            }
+
+            if (shouldCheckAccess) {
+              if (!isURIAccessAllowed(user, permission, path, fs)) {
+                throw new HiveAccessControlException(
+                    String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
+                        permission.name(), path));
+              }
+              continue;
+            }
+            // This means we got resolved path scheme is not part of
+            // hivePlugin.getFSScheme
 					}
 
 					HiveAccessType accessType = getAccessType(hiveObj, hiveOpType, hiveObjType, false);
@@ -2007,15 +2066,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-    private boolean isURIAccessAllowed(String userName, FsAction action, String uri, HiveConf conf) {
+  private boolean isURIAccessAllowed(String userName, FsAction action, Path filePath, FileSystem fs) {
         boolean ret = false;
 
         if(action == FsAction.NONE) {
             ret = true;
         } else {
             try {
-                Path       filePath   = new Path(uri);
-                FileSystem fs         = FileSystem.get(filePath.toUri(), conf);
                 FileStatus[] filestat = fs.globStatus(filePath);
 
                 if(filestat != null && filestat.length > 0) {
@@ -2039,7 +2096,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
                 }
             } catch(Exception excp) {
 				ret = false;
-                LOG.error("Error getting permissions for " + uri, excp);
+                LOG.error("Error getting permissions for " + filePath, excp);
             }
         }
 
@@ -2061,6 +2118,30 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 		return ret;
 	}
+
+  /**
+   * Resolves the path to actual target fs path. In the mount based file systems
+   * like ViewHDFS, the resolved target path could be the path of other mounted
+   * target fs path. Returns null if file does not exist or any other IOException.
+   */
+  private Path resolvePath(Path path, FileSystem fs) {
+    try {
+      return fs.resolvePath(path);
+    } catch (IOException e) {
+      return null;
+    }
+  }
+
+  /**
+   * Returns true if the given fs supports mount functionality. In general we can
+   * have child file systems only in the case of mount fs like ViewFileSystem,
+   * ViewFsOverloadScheme or ViewDistributedFileSystem. Returns false if the
+   * getChildFileSystems API returns null.
+   */
+  private boolean isMountedFs(FileSystem fs) {
+    return fs.getChildFileSystems() != null;
+  }
+
 
 
 	private void handleDfsCommand(HiveOperationType         hiveOpType,
