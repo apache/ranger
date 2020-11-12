@@ -2533,7 +2533,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		ServicePolicies servicePolicies = RangerServicePoliciesCache.getInstance().getServicePolicies(service.getName(), service.getId(), -1L, true, this);
 		final List<RangerPolicy> policies = servicePolicies != null ? servicePolicies.getPolicies() : null;
 
-		if(policies != null && filter != null) {
+		if(policies != null && filter != null && MapUtils.isNotEmpty(filter.getParams())) {
 			Map<String, String> filterResources = filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
 			String resourceMatchScope = filter.getParam(SearchFilter.RESOURCE_MATCH_SCOPE);
 

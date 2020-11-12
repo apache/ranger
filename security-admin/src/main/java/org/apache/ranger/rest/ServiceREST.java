@@ -178,7 +178,10 @@ public class ServiceREST {
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
 	public static final String CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
 	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
-	
+	final static public String POLICY_MATCHING_ALGO_BY_POLICYNAME = "matchByName";
+	final static public String POLICY_MATCHING_ALGO_BY_RESOURCE  = "matchByPolicySignature";
+	final static public String PARAM_POLICY_MATCHING_ALGORITHM = "policyMatchingAlgorithm";
+
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
@@ -1670,38 +1673,40 @@ public class ServiceREST {
 				}
 				boolean updateIfExists=("true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_UPDATE_IF_EXISTS)))) ? true : false ;
 				boolean mergeIfExists  = "true".equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_MERGE_IF_EXISTS)))  ? true : false;
+				// Default POLICY_MATCHING_ALGO_BY_RESOURCE
+				String policyMatchingAlgo = POLICY_MATCHING_ALGO_BY_POLICYNAME.equalsIgnoreCase(StringUtils.trimToEmpty(request.getParameter(PARAM_POLICY_MATCHING_ALGORITHM)))  ? POLICY_MATCHING_ALGO_BY_POLICYNAME : POLICY_MATCHING_ALGO_BY_RESOURCE;
+				if(LOG.isDebugEnabled()) {
+					LOG.debug(" policyMatchingAlgo : "+policyMatchingAlgo + " updateIfExists : " +updateIfExists  + " mergeIfExists: "+mergeIfExists + " deleteIfExists : "+deleteIfExists);
+				}
 				if (mergeIfExists && updateIfExists) {
 					LOG.warn("Cannot use both updateIfExists and mergeIfExists for a createPolicy. mergeIfExists will override updateIfExists for policy :[" + policy.getName() + "]");
 				}
-				if (mergeIfExists || updateIfExists) {
-					ret = applyPolicy(policy, request);
+
+				if (!mergeIfExists && !updateIfExists) {
+				    ret = createPolicyUnconditionally(policy);
+				} else if (mergeIfExists) {
+				    ret = applyPolicy(policy, request);
+				} else if (policyMatchingAlgo.equalsIgnoreCase(POLICY_MATCHING_ALGO_BY_RESOURCE)) {
+				    ret = applyPolicy(policy, request);
+				} else if (policyMatchingAlgo.equalsIgnoreCase(POLICY_MATCHING_ALGO_BY_POLICYNAME)) {
+				    RangerPolicy existingPolicy = getPolicyMatchByName(policy, request);
+				    if (existingPolicy != null) {
+				       policy.setId(existingPolicy.getId());
+				       ret = updatePolicy(policy);
+				    } else {
+				       ret = createPolicyUnconditionally(policy);
+				    }
 				}
+
+				if(LOG.isDebugEnabled()) {
+					LOG.debug("<== ServiceREST.createPolicy(" + policy + "): " + ret);
+				}
+				return ret;
+
 			}
 
 			if(ret == null) {
-				// this needs to happen before validator is called
-				// set name of policy if unspecified
-				if (StringUtils.isBlank(policy.getName())) { // use of isBlank over isEmpty is deliberate as a blank string does not strike us as a particularly useful policy name!
-					String guid = policy.getGuid();
-					if (StringUtils.isBlank(guid)) { // use of isBlank is deliberate. External parties could send the guid in, perhaps to sync between dev/test/prod instances?
-						guid = guidUtil.genGUID();
-						policy.setGuid(guid);
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("No GUID supplied on the policy!  Ok, setting GUID to [" + guid + "].");
-						}
-					}
-					String name = policy.getService() + "-" + guid;
-					policy.setName(name);
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Policy did not have its name set!  Ok, setting name to [" + name + "]");
-					}
-				}
-				RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-				validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
-
-				ensureAdminAccess(policy);
-                                bizUtil.blockAuditorRoleUser();
-				ret = svcStore.createPolicy(policy);
+				ret = createPolicyUnconditionally(policy);
 			}
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -1754,7 +1759,11 @@ public class ServiceREST {
 
 				if (existingPolicy == null) {
 					if (StringUtils.isNotEmpty(policy.getName())) {
-						XXPolicy dbPolicy = daoManager.getXXPolicy().findPolicy(policy.getName(), policy.getService(), policy.getZoneName());
+						String policyName  = StringUtils.isNotBlank(policy.getName()) ? policy.getName() : null;
+						String serviceName = StringUtils.isNotBlank(policy.getService()) ? policy.getService() : null;
+						String zoneName    = StringUtils.isNotBlank(policy.getZoneName()) ? policy.getZoneName() : null;
+						XXPolicy dbPolicy = daoManager.getXXPolicy().findPolicy(policyName, serviceName, zoneName);
+						//XXPolicy dbPolicy = daoManager.getXXPolicy().findPolicy(policy.getName(), policy.getService(), policy.getZoneName());
 						if (dbPolicy != null) {
 							policy.setName(policy.getName() + System.currentTimeMillis());
 						}
@@ -4245,6 +4254,123 @@ public class ServiceREST {
 		}
 
 		return ret;
+	}
+
+	private RangerPolicy getPolicyByName(String serviceName,String policyName) {
+		RangerPolicy ret = null;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")");
+		}
+
+		SearchFilter filter = new SearchFilter();
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+		filter.setParam(SearchFilter.POLICY_NAME, policyName);
+		List<RangerPolicy> policies = getPolicies(filter);
+
+		if (CollectionUtils.isNotEmpty(policies)) {
+			ret = policies.get(0);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")" + ret);
+		}
+		return ret;
+	}
+
+	private RangerPolicy getPolicyByNameAndZone(String serviceName, String policyName, String zoneName) {
+		RangerPolicy ret = null;
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
+		}
+
+		SearchFilter filter = new SearchFilter();
+		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+		filter.setParam(SearchFilter.POLICY_NAME, policyName);
+		filter.setParam(SearchFilter.ZONE_NAME, zoneName);
+		List<RangerPolicy> policies = getPolicies(filter);
+
+		if (CollectionUtils.isNotEmpty(policies) && policies.size()==1) {
+			ret = policies.get(0);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
+		}
+		return ret;
+	}
+
+	private RangerPolicy createPolicyUnconditionally(RangerPolicy policy) throws Exception {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.createPolicyUnconditionally( "+ policy +")");
+		}
+		RangerPolicy ret = null;
+		if (StringUtils.isBlank(policy.getName())) {
+			String guid = policy.getGuid();
+			if (StringUtils.isBlank(guid)) {
+				guid = guidUtil.genGUID();
+				policy.setGuid(guid);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No GUID supplied on the policy!  Ok, setting GUID to [" + guid + "].");
+				}
+			}
+			String name = policy.getService() + "-" + guid;
+			policy.setName(name);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Policy did not have its name set!  Ok, setting name to [" + name + "]");
+			}
+		}
+		RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
+		validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
+
+		ensureAdminAccess(policy);
+		bizUtil.blockAuditorRoleUser();
+
+		ret = svcStore.createPolicy(policy);
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.createPolicyUnconditionally( " + ret + ")");
+		}
+
+		return ret;
+	}
+
+	private RangerPolicy getPolicyMatchByName(RangerPolicy policy, HttpServletRequest request) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyMatchByName( " + policy + ")");
+		}
+		RangerPolicy existingPolicy = null;
+		String serviceName = request.getParameter(PARAM_SERVICE_NAME);
+		if (serviceName == null) {
+			serviceName = (String) request.getAttribute(PARAM_SERVICE_NAME);
+		}
+		if (StringUtils.isNotEmpty(serviceName)) {
+			policy.setService(serviceName);
+		}
+		String policyName = request.getParameter(PARAM_POLICY_NAME);
+		if (policyName == null) {
+			policyName = (String) request.getAttribute(PARAM_POLICY_NAME);
+		}
+		if (StringUtils.isNotEmpty(policyName)) {
+			policy.setName(StringUtils.trim(policyName));
+		}
+		if (StringUtils.isNotEmpty(serviceName) && StringUtils.isNotEmpty(policyName)) {
+			String zoneName = request.getParameter(PARAM_ZONE_NAME);
+			if (StringUtils.isBlank(zoneName)) {
+				zoneName = (String) request.getAttribute(PARAM_ZONE_NAME);
+			}
+			if (StringUtils.isNotBlank(zoneName)) {
+				policy.setZoneName(StringUtils.trim(zoneName));
+			}
+			if (StringUtils.isNotBlank(zoneName)) {
+				existingPolicy = getPolicyByNameAndZone(policy.getService(), policy.getName(), policy.getZoneName());
+			} else {
+				existingPolicy = getPolicyByName(policy.getService(), policy.getName());
+			}
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyMatchByName( " + existingPolicy + ")");
+		}
+		return existingPolicy;
 	}
 }
 
