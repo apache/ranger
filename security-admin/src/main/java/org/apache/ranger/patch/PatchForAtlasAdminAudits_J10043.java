@@ -35,8 +35,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
-public class PatchForAtlasAdminAudits_J10042 extends BaseLoader {
-    private static final Logger logger = Logger.getLogger(PatchForAtlasAdminAudits_J10042.class);
+public class PatchForAtlasAdminAudits_J10043 extends BaseLoader {
+    private static final Logger logger = Logger.getLogger(PatchForAtlasAdminAudits_J10043.class);
 
     private static final List<String> ATLAS_RESOURCES = new ArrayList<>(
             Arrays.asList("atlas-service"));
@@ -58,8 +58,8 @@ public class PatchForAtlasAdminAudits_J10042 extends BaseLoader {
     public static void main(String[] args) {
         logger.info("main()");
         try {
-            PatchForAtlasAdminAudits_J10042 loader = (PatchForAtlasAdminAudits_J10042) CLIUtil
-                    .getBean(PatchForAtlasAdminAudits_J10042.class);
+            PatchForAtlasAdminAudits_J10043 loader = (PatchForAtlasAdminAudits_J10043) CLIUtil
+                    .getBean(PatchForAtlasAdminAudits_J10043.class);
             loader.init();
             while (loader.isMoreToProcess()) {
                 loader.load();
@@ -79,19 +79,19 @@ public class PatchForAtlasAdminAudits_J10042 extends BaseLoader {
 
     @Override
     public void execLoad() {
-        logger.info("==> PatchForAtlasAdminAudits_J10042.execLoad()");
+        logger.info("==> PatchForAtlasAdminAudits_J10043.execLoad()");
         try {
             addAdminAuditsPermissionInServiceDef();
         } catch (Exception e) {
             throw new RuntimeException(
                     "Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
         }
-        logger.info("<== PatchForAtlasAdminAudits_J10042.execLoad()");
+        logger.info("<== PatchForAtlasAdminAudits_J10043.execLoad()");
     }
 
     @Override
     public void printStats() {
-        logger.info("PatchForAtlasAdminAudits_J10042 Logs");
+        logger.info("PatchForAtlasAdminAudits_J10043 Logs");
     }
 
     private void addAdminAuditsPermissionInServiceDef() throws Exception {
