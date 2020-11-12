@@ -261,6 +261,7 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 			if (zoneName == null) {
 				return getEntityManager().createNamedQuery("XXPolicy.findPolicyByPolicyNameAndServiceName", tClass)
 						.setParameter("policyName", policyName).setParameter("serviceName", serviceName)
+						.setParameter("zoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
 						.getSingleResult();
 			} else {
 				return getEntityManager()

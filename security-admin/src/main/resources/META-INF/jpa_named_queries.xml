@@ -341,7 +341,7 @@
 	</named-query>
 
 	<named-query name="XXPolicy.findPolicyByPolicyNameAndServiceName">
-		<query>select obj from XXPolicy obj, XXService svc where obj.name = :policyName and obj.service = svc.id and svc.name = :serviceName</query>
+		<query>select obj from XXPolicy obj, XXService svc where obj.name = :policyName and obj.service = svc.id and svc.name = :serviceName and obj.zoneId = :zoneId</query>
 	</named-query>
 
 	<named-query name="XXPolicy.findPolicyByPolicyNameAndServiceNameAndZoneName">
