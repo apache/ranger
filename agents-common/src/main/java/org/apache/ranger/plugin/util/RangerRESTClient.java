@@ -24,6 +24,8 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URL;
+import java.net.URLConnection;
 import java.security.KeyManagementException;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
@@ -430,6 +432,15 @@ public class RangerRESTClient {
 			}
 			else {
 				in = ClassLoader.getSystemResourceAsStream(fileName);
+			}
+			if(null==in) {
+				URL lurl = RangerRESTClient.class.getClassLoader().getResource(fileName);
+				
+				if (lurl == null ) {
+					lurl = RangerRESTClient.class.getClassLoader().getResource("/" + fileName);
+				}
+				 URLConnection urlConnection = lurl.openConnection();
+				 in = urlConnection.getInputStream();
 			}
 		}
 
