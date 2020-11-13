@@ -19,36 +19,24 @@
 
 package org.apache.ranger.db;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-//import java.util.stream.Collectors;
-
 import javax.persistence.NoResultException;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXRMSServiceResource;
-import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.store.StoredServiceResource;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
-
-	public static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
-	public static final Type subsumedDataType   = new TypeToken<Map<String, RangerPolicy.RangerPolicyResource>>() {}.getType();
 
 	private static RangerDaoManagerBase _daoManager = null;
 
@@ -112,7 +100,7 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 		}
 	}
 
-	public RangerServiceResource getServiceResourceByServiceAndResourceSignature(String serviceName, String resourceSignature) throws Exception {
+	public RangerServiceResource getServiceResourceByServiceAndResourceSignature(String serviceName, String resourceSignature) {
 
 		RangerServiceResource ret = null;
 
@@ -155,10 +143,16 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 			ret.setServiceName(service.getName());
 
 			if (StringUtils.isNotEmpty(xxServiceResource.getServiceResourceElements())) {
-				Map<String, RangerPolicy.RangerPolicyResource> serviceResourceElements = gsonBuilder.fromJson(xxServiceResource.getServiceResourceElements(), subsumedDataType);
-				if (MapUtils.isNotEmpty(serviceResourceElements)) {
-					ret.setResourceElements(serviceResourceElements);
+				try {
+					StoredServiceResource storedServiceResource = JsonUtilsV2.jsonToObj(xxServiceResource.getServiceResourceElements(), StoredServiceResource.class);
+					ret.setResourceElements(storedServiceResource.getResourceElements());
+					ret.setOwnerUser(storedServiceResource.getOwnerName());
+					ret.setAdditionalInfo(storedServiceResource.getAdditionalInfo());
+				} catch (Exception e){
+					ret = null;
 				}
+			} else {
+				ret = null;
 			}
 		}
 
@@ -185,15 +179,16 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 		XXService service = daoManager.getXXService().findByName(serviceResource.getServiceName());
 
 		if (service != null) {
-
 			ret.setServiceId(service.getId());
 
-			if (MapUtils.isNotEmpty(serviceResource.getResourceElements())) {
-				String serviceResourceElements = JsonUtils.mapToJson(serviceResource.getResourceElements());
-				if (StringUtils.isNotEmpty(serviceResourceElements)) {
-					ret.setServiceResourceElements(serviceResourceElements);
-				}
+			StoredServiceResource storedServiceResource = new StoredServiceResource(serviceResource.getResourceElements(), serviceResource.getOwnerUser(), serviceResource.getAdditionalInfo());
+			try {
+				String serviceResourceString = JsonUtilsV2.objToJson(storedServiceResource);
+				ret.setServiceResourceElements(serviceResourceString);
+			} catch (Exception e) {
+				ret = null;
 			}
+
 		} else {
 			ret = null;
 		}
