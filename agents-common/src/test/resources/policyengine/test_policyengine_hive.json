@@ -110,9 +110,41 @@
         {"accesses":[{"type":"create","isAllowed":true}, {"type":"update","isAllowed":true},{"type":"drop","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false}
       ]
     }
+  ,
+    {"id":9,"name":"db=db1","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"database":{"values":["db1"]}},
+      "isDenyAllElse": true,
+      "policyItems":[
+        {"accesses":[{"type":"select","isAllowed":true}],"users":["user1","user3","user4"],"groups":["group1","group2"],"delegateAdmin":false}
+      ]
+    }
   ],
 
   "tests":[
+    {"name":"ALLOW '_any access to no-database' for user5: match when request has less levels than policy",
+      "request":{
+        "resource":{"elements":{}},
+        "accessType":"","user":"user5","userGroups":["users"],"requestData":"show databases"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":9}
+    }
+  ,
+    {"name":"ALLOW '_any access to db1' for user5: match when request has less levels than policy",
+      "request":{
+        "resource":{"elements":{"database":"db1"}},
+        "accessType":"","user":"user5","userGroups":["users"],"requestData":"use db1"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":9}
+    }
+  ,
+    {"name":"DENY '_any access to db1' for user5: match when request has less levels than policy",
+      "request":{
+        "resource":{"elements":{"database":"db1"}},
+        "accessType":"","user":"user5","userGroups":["users"],"requestData":"use db1"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":9}
+    }
+  ,
     {"name":"ALLOW 'any dummy/*/*;' for user1",
       "request":{
         "resource":{"elements":{"database":"dummy", "table": "dummy", "column": "dummy"}},
@@ -391,7 +423,7 @@
       "resource":{"elements":{"database":"db1", "table":"table1"}},
       "accessType":"","user":"user1","userGroups":["users"],"requestData":"show columns in table1 from db1;"
      },
-     "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+     "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
     }
     ,
     {"name":"DENY '_any access to db1/_/col1' for user1: table not specified but column was specified",
@@ -410,7 +442,7 @@
      "result":{"isAudited":true,"isAllowed":true,"policyId":3}
     }
     ,
-    {"name":"ALLOW '_any access to db1/table1' for user1: match when request has same levels as policy",
+    {"name":"ALLOW '_any access to db1/tbl1' for user1: match when request has same levels as policy",
      "request":{
       "resource":{"elements":{"database":"db1", "table":"tbl1"}},
       "accessType":"","user":"user1","userGroups":["users"],"requestData":"describe db1.tbl1"
