@@ -48,6 +48,19 @@
       ]
     }
   ,
+    {"id":11,"name":"allow-read-to-public /test/forbidden/","isEnabled":true,"isAuditEnabled":true,
+      "isDenyAllElse": false,
+      "resources":{"path":{"values":["/test/forbidden/"],"isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["public"],"delegateAdmin":false}
+      ]
+    }
+  ,
+    {"id":12,"name":"deny-any-to-everybody /test/forbidden/","isEnabled":true,"isAuditEnabled":true,
+      "isDenyAllElse": true,
+      "resources":{"path":{"values":["/test/forbidden/"],"isRecursive":true}}
+    }
+  ,
     {"id":20,"name":"allow-read-to-user2 /test/restricted/","isEnabled":true,"isAuditEnabled":true,
       "resources":{"path":{"values":["/test/restricted/"],"isRecursive":true}},
       "policyItems":[
@@ -120,6 +133,15 @@
         "remoteIPAddress":"255.255.255.255"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":10}
+    }
+  ,
+    {"name":"DENY 'read /test/forbidden/sales.db' for u=user1",
+      "request":{
+        "resource":{"elements":{"path":"/test/forbidden/sales.db"}},
+        "accessType":"","user":"user1","userGroups":[],"requestData":"read /test/forbidden/sales.db",
+        "remoteIPAddress":"255.255.255.255"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":12}
     }
   ,
     {"name":"DENY 'read /test/restricted/sales.db' for u=user3",
