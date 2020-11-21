@@ -60,6 +60,9 @@ db_ssl_enabled=$(get_prop 'db_ssl_enabled' $PROPFILE)
 db_ssl_required=$(get_prop 'db_ssl_required' $PROPFILE)
 db_ssl_verifyServerCertificate=$(get_prop 'db_ssl_verifyServerCertificate' $PROPFILE)
 db_ssl_auth_type=$(get_prop 'db_ssl_auth_type' $PROPFILE)
+db_ssl_certificate_file=$(get_prop 'db_ssl_certificate_file' $PROPFILE)
+javax_net_ssl_trustStore_type=$(get_prop 'javax_net_ssl_trustStore_type' $PROPFILE)
+javax_net_ssl_keyStore_type=$(get_prop 'javax_net_ssl_keyStore_type' $PROPFILE)
 KMS_MASTER_KEY_PASSWD=$(get_prop 'KMS_MASTER_KEY_PASSWD' $PROPFILE)
 unix_user=$(get_prop 'unix_user' $PROPFILE)
 unix_user_pwd=$(get_prop 'unix_user_pwd' $PROPFILE)
@@ -282,12 +285,17 @@ init_variables(){
 		db_ssl_required="false"
 		db_ssl_verifyServerCertificate="false"
 		db_ssl_auth_type="2-way"
+		db_ssl_certificate_file=''
+		javax_net_ssl_trustStore_type='jks'
+		javax_net_ssl_keyStore_type='jks'
 	fi
 	if [ "${db_ssl_enabled}" == "true" ]
 	then
 		db_ssl_required=`echo $db_ssl_required | tr '[:upper:]' '[:lower:]'`
 		db_ssl_verifyServerCertificate=`echo $db_ssl_verifyServerCertificate | tr '[:upper:]' '[:lower:]'`
 		db_ssl_auth_type=`echo $db_ssl_auth_type | tr '[:upper:]' '[:lower:]'`
+		javax_net_ssl_trustStore_type=`echo $javax_net_ssl_trustStore_type | tr '[:upper:]' '[:lower:]'`
+		javax_net_ssl_keyStore_type=`echo $javax_net_ssl_keyStore_type | tr '[:upper:]' '[:lower:]'`
 		if [ "${db_ssl_required}" != "true" ]
 		then
 			db_ssl_required="false"
@@ -299,6 +307,14 @@ init_variables(){
 		if [ "${db_ssl_auth_type}" != "1-way" ]
 		then
 			db_ssl_auth_type="2-way"
+		fi
+		if [ "${javax_net_ssl_trustStore_type}" == "" ]
+		then
+			javax_net_ssl_trustStore_type="jks"
+		fi
+		if [ "${javax_net_ssl_keyStore_type}" == "" ]
+		then
+			javax_net_ssl_keyStore_type="jks"
 		fi
 	fi
 }
@@ -466,7 +482,7 @@ update_properties() {
 		log "[I] $to_file file found"
 	else
 		log "[E] $to_file does not exists" ; exit 1;
-    fi
+	fi
 
 	if [ "${db_ssl_enabled}" != "" ]
 	then
@@ -484,6 +500,18 @@ update_properties() {
 
 		propertyName=ranger.ks.db.ssl.auth.type
 		newPropertyValue="${db_ssl_auth_type}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.ks.db.ssl.certificateFile
+		newPropertyValue="${db_ssl_certificate_file}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.truststore.file.type
+		newPropertyValue="${javax_net_ssl_trustStore_type}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName=ranger.keystore.file.type
+		newPropertyValue="${javax_net_ssl_keyStore_type}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 	fi
 
@@ -530,9 +558,22 @@ update_properties() {
 		db_name=`echo ${db_name} | tr '[:upper:]' '[:lower:]'`
 		db_user=`echo ${db_user} | tr '[:upper:]' '[:lower:]'`
 
-		propertyName=ranger.ks.jpa.jdbc.url
-		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		if [ "${db_ssl_enabled}" == "true" ]
+		then
+			if test -f $db_ssl_certificate_file; then
+				propertyName=ranger.ks.jpa.jdbc.url
+				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslrootcert=${db_ssl_certificate_file}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+			else
+				propertyName=ranger.ks.jpa.jdbc.url
+				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+			fi
+		else
+			propertyName=ranger.ks.jpa.jdbc.url
+			newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		fi
 
 		propertyName=ranger.ks.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
@@ -1083,9 +1124,9 @@ setup_install_files(){
 	then
 		if [ "${db_ssl_auth_type}" == "1-way" ]
 		then
-			DB_SSL_PARAM="' -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+			DB_SSL_PARAM="' -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
 		else
-			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.keyStoreType={javax_net_ssl_keyStore_type} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
 		fi
 		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh
         chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-kms-env-dbsslparam.sh

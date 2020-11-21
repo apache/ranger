@@ -341,4 +341,16 @@
 	<name>ranger.ks.db.ssl.auth.type</name>
 	<value>2-way</value>
   </property>
+  <property>
+	<name>ranger.ks.db.ssl.certificateFile</name>
+	<value></value>
+  </property>
+  <property>
+	<name>ranger.truststore.file.type</name>
+	<value>jks</value>
+  </property>
+  <property>
+	<name>ranger.keystore.file.type</name>
+	<value>jks</value>
+  </property>
 </configuration>
