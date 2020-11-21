@@ -62,6 +62,7 @@ public class RangerKMSDB {
 	private static final String DB_SSL_KEYSTORE_PASSWORD="keystore.password";
 	private static final String DB_SSL_TRUSTSTORE="truststore.file";
 	private static final String DB_SSL_TRUSTSTORE_PASSWORD="truststore.password";
+	private static final String DB_SSL_CERTIFICATE_FILE="db.ssl.certificateFile";
 
     public static final int DB_FLAVOR_UNKNOWN = 0;
 	public static final int DB_FLAVOR_MYSQL = 1;
@@ -184,24 +185,24 @@ public class RangerKMSDB {
 				conf.set(PROPERTY_PREFIX+DB_SSL_VerifyServerCertificate, db_ssl_verifyServerCertificate);
 				conf.set(PROPERTY_PREFIX+DB_SSL_AUTH_TYPE, db_ssl_auth_type);
 				String ranger_jpa_jdbc_url=conf.get(PROPERTY_PREFIX+DB_URL);
-				if(!StringUtils.isEmpty(ranger_jpa_jdbc_url)){
-					if(ranger_jpa_jdbc_url.contains("?")) {
-						ranger_jpa_jdbc_url=ranger_jpa_jdbc_url.substring(0,ranger_jpa_jdbc_url.indexOf("?"));
-					}
+				if(StringUtils.isNotEmpty(ranger_jpa_jdbc_url) && !ranger_jpa_jdbc_url.contains("?")){
 					StringBuffer ranger_jpa_jdbc_url_ssl=new StringBuffer(ranger_jpa_jdbc_url);
 					if(getDBFlavor(conf)==DB_FLAVOR_MYSQL){
 						ranger_jpa_jdbc_url_ssl.append("?useSSL="+db_ssl_enabled+"&requireSSL="+db_ssl_required+"&verifyServerCertificate="+db_ssl_verifyServerCertificate);
 					}else if(getDBFlavor(conf)==DB_FLAVOR_POSTGRES){
-						if("true".equalsIgnoreCase(db_ssl_verifyServerCertificate) || "true".equalsIgnoreCase(db_ssl_required)){
+						String db_ssl_certificate_file = conf.get(PROPERTY_PREFIX+DB_SSL_CERTIFICATE_FILE);
+						if(StringUtils.isNotEmpty(db_ssl_certificate_file)) {
+							ranger_jpa_jdbc_url_ssl.append("?ssl="+db_ssl_enabled+"&sslmode=verify-full"+"&sslrootcert="+db_ssl_certificate_file);
+						} else if ("true".equalsIgnoreCase(db_ssl_verifyServerCertificate) || "true".equalsIgnoreCase(db_ssl_required)) {
+							ranger_jpa_jdbc_url_ssl.append("?ssl="+db_ssl_enabled+"&sslmode=verify-full"+"&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory");
+						} else {
 							ranger_jpa_jdbc_url_ssl.append("?ssl="+db_ssl_enabled);
-						}else{
-							ranger_jpa_jdbc_url_ssl.append("?ssl="+db_ssl_enabled+"&sslfactory=org.postgresql.ssl.NonValidatingFactory");
 						}
 					}
 					conf.set(PROPERTY_PREFIX+DB_URL, ranger_jpa_jdbc_url_ssl.toString());
-					jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
-					logger.info(PROPERTY_PREFIX+DB_URL+"="+ranger_jpa_jdbc_url_ssl.toString());
 				}
+				jpaProperties.put(JPA_DB_URL, conf.get(PROPERTY_PREFIX+DB_URL));
+				logger.info(PROPERTY_PREFIX+DB_URL+"="+conf.get(PROPERTY_PREFIX+DB_URL));
 
 				if("true".equalsIgnoreCase(db_ssl_verifyServerCertificate) || "true".equalsIgnoreCase(db_ssl_required)){
 					if(!"1-way".equalsIgnoreCase((db_ssl_auth_type))){

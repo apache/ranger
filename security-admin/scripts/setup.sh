@@ -63,6 +63,9 @@ db_ssl_enabled=$(get_prop 'db_ssl_enabled' $PROPFILE)
 db_ssl_required=$(get_prop 'db_ssl_required' $PROPFILE)
 db_ssl_verifyServerCertificate=$(get_prop 'db_ssl_verifyServerCertificate' $PROPFILE)
 db_ssl_auth_type=$(get_prop 'db_ssl_auth_type' $PROPFILE)
+db_ssl_certificate_file=$(get_prop 'db_ssl_certificate_file' $PROPFILE)
+javax_net_ssl_trustStore_type=$(get_prop 'javax_net_ssl_trustStore_type' $PROPFILE)
+javax_net_ssl_keyStore_type=$(get_prop 'javax_net_ssl_keyStore_type' $PROPFILE)
 rangerAdmin_password=$(get_prop 'rangerAdmin_password' $PROPFILE)
 rangerTagsync_password=$(get_prop 'rangerTagsync_password' $PROPFILE)
 rangerUsersync_password=$(get_prop 'rangerUsersync_password' $PROPFILE)
@@ -271,12 +274,17 @@ init_variables(){
 		db_ssl_required="false"
 		db_ssl_verifyServerCertificate="false"
 		db_ssl_auth_type="2-way"
+		db_ssl_certificate_file=''
+		javax_net_ssl_trustStore_type='jks'
+		javax_net_ssl_keyStore_type='jks'
 	fi
 	if [ "${db_ssl_enabled}" == "true" ]
 	then
 		db_ssl_required=`echo $db_ssl_required | tr '[:upper:]' '[:lower:]'`
 		db_ssl_verifyServerCertificate=`echo $db_ssl_verifyServerCertificate | tr '[:upper:]' '[:lower:]'`
 		db_ssl_auth_type=`echo $db_ssl_auth_type | tr '[:upper:]' '[:lower:]'`
+		javax_net_ssl_trustStore_type=`echo $javax_net_ssl_trustStore_type | tr '[:upper:]' '[:lower:]'`
+		javax_net_ssl_keyStore_type=`echo $javax_net_ssl_keyStore_type | tr '[:upper:]' '[:lower:]'`
 		if [ "${db_ssl_required}" != "true" ]
 		then
 			db_ssl_required="false"
@@ -288,6 +296,14 @@ init_variables(){
 		if [ "${db_ssl_auth_type}" != "1-way" ]
 		then
 			db_ssl_auth_type="2-way"
+		fi
+		if [ "${javax_net_ssl_trustStore_type}" == "" ]
+		then
+			javax_net_ssl_trustStore_type="jks"
+		fi
+		if [ "${javax_net_ssl_keyStore_type}" == "" ]
+		then
+			javax_net_ssl_keyStore_type="jks"
 		fi
 	fi
 }
@@ -562,6 +578,18 @@ update_properties() {
 		propertyName=ranger.db.ssl.auth.type
 		newPropertyValue="${db_ssl_auth_type}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.db.ssl.certificateFile
+		newPropertyValue="${db_ssl_certificate_file}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.truststore.file.type
+		newPropertyValue="${javax_net_ssl_trustStore_type}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+
+		propertyName=ranger.keystore.file.type
+		newPropertyValue="${javax_net_ssl_keyStore_type}"
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 	fi
 
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
@@ -629,9 +657,22 @@ update_properties() {
 		db_name=`echo ${db_name} | tr '[:upper:]' '[:lower:]'`
 		db_user=`echo ${db_user} | tr '[:upper:]' '[:lower:]'`
 
-		propertyName=ranger.jpa.jdbc.url
-		newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		if [ "${db_ssl_enabled}" == "true" ]
+		then
+			if test -f $db_ssl_certificate_file; then
+				propertyName=ranger.jpa.jdbc.url
+				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslrootcert=${db_ssl_certificate_file}"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			else
+				propertyName=ranger.jpa.jdbc.url
+				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
+				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			fi
+		else
+			propertyName=ranger.jpa.jdbc.url
+			newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
@@ -1478,9 +1519,9 @@ setup_install_files(){
 	then
 		if [ "${db_ssl_auth_type}" == "1-way" ]
 		then
-			DB_SSL_PARAM="' -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+			DB_SSL_PARAM="' -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
 		else
-			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} '"
+			DB_SSL_PARAM="' -Djavax.net.ssl.keyStore=${javax_net_ssl_keyStore} -Djavax.net.ssl.keyStorePassword=${javax_net_ssl_keyStorePassword} -Djavax.net.ssl.keyStoreType={javax_net_ssl_keyStore_type}  -Djavax.net.ssl.trustStore=${javax_net_ssl_trustStore} -Djavax.net.ssl.trustStorePassword=${javax_net_ssl_trustStorePassword} -Djavax.net.ssl.trustStoreType=${javax_net_ssl_trustStore_type} '"
 		fi
 		echo "export DB_SSL_PARAM=${DB_SSL_PARAM}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh
                 chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-dbsslparam.sh
