@@ -90,6 +90,16 @@ def populate_global_dict():
 			globalDict[key] = value
 		if 'ranger_admin_max_heap_size' not in globalDict:
 			globalDict['ranger_admin_max_heap_size']='1g'
+		elif 'ranger_admin_max_heap_size' in globalDict:
+			ranger_admin_heap_size = globalDict['ranger_admin_max_heap_size']
+			if str(ranger_admin_heap_size.lower()).endswith("g"):
+				ranger_admin_heap_size_numeric = int(str(ranger_admin_heap_size).lower().rstrip("g"))
+				if ranger_admin_heap_size_numeric < 1:
+					globalDict['ranger_admin_max_heap_size']='1g'
+			if str(ranger_admin_heap_size.lower()).endswith("m"):
+				ranger_admin_heap_size_numeric = int(str(ranger_admin_heap_size).lower().rstrip("m"))
+				if ranger_admin_heap_size_numeric < 1024:
+					globalDict['ranger_admin_max_heap_size']='1g'
 
 def jisql_log(query, db_password):
 	if jisql_debug == True:
