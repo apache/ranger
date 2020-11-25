@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 
 
@@ -48,6 +49,7 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 	protected String                   appId;
 	protected RangerServiceDef         serviceDef;
 	private   RangerPluginContext      pluginContext;
+	protected RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
 
 	@Override
 	public void setEnricherDef(RangerContextEnricherDef enricherDef) {
@@ -176,10 +178,18 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		this.pluginContext = pluginContext;
 	}
 
+	final public void setPolicyEngineOptions(RangerPolicyEngineOptions options) {
+		this.options = options;
+	}
+
 	public RangerPluginConfig getPluginConfig() {
 		RangerPluginContext pluginContext = this.pluginContext;
 
 		return pluginContext != null ? pluginContext.getConfig() : null;
+	}
+
+	public RangerPolicyEngineOptions getPolicyEngineOptions() {
+		return options;
 	}
 
 	public void notifyAuthContextChanged() {

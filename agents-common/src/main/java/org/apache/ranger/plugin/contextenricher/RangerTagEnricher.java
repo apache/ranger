@@ -392,7 +392,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					serviceResourceTrie = new HashMap<>();
 
 					for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-						serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie<>(resourceDef, resourceMatchers));
+						serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, resourceMatchers, getPolicyEngineOptions().optimizeTrieForRetrieval, null));
 					}
 				}
 				enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie);
