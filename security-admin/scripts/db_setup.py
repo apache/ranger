@@ -1158,7 +1158,7 @@ def main(argv):
 						if not os.path.exists(javax_net_ssl_trustStore):
 							log("[E] Invalid file Name! Unable to find truststore file:"+javax_net_ssl_trustStore,"error")
 							sys.exit(1)
-						if javax_net_ssl_trustStorePassword =="":
+						if javax_net_ssl_trustStorePassword is None or javax_net_ssl_trustStorePassword =="":
 							log("[E] Invalid ssl truststore password!","error")
 							sys.exit(1)
 					if db_ssl_auth_type == '2-way':
@@ -1171,7 +1171,7 @@ def main(argv):
 						if not os.path.exists(javax_net_ssl_keyStore):
 							log("[E] Invalid file Name! Unable to find keystore file:"+javax_net_ssl_keyStore,"error")
 							sys.exit(1)
-						if javax_net_ssl_keyStorePassword =="":
+						if javax_net_ssl_keyStorePassword is None or javax_net_ssl_keyStorePassword =="":
 							log("[E] Invalid ssl keystore password!","error")
 							sys.exit(1)
 
