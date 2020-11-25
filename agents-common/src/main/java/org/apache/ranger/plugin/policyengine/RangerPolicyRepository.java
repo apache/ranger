@@ -1008,7 +1008,7 @@ public class RangerPolicyRepository {
                         contextEnricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), "org.apache.ranger.common.RangerAdminTagEnricher", null);
                     }
 
-                    RangerContextEnricher contextEnricher = buildContextEnricher(contextEnricherDef);
+                    RangerContextEnricher contextEnricher = buildContextEnricher(contextEnricherDef, options);
 
                     if (contextEnricher != null) {
                         contextEnrichers.add(contextEnricher);
@@ -1019,7 +1019,7 @@ public class RangerPolicyRepository {
         return contextEnrichers;
     }
 
-    private RangerContextEnricher buildContextEnricher(RangerServiceDef.RangerContextEnricherDef enricherDef) {
+    private RangerContextEnricher buildContextEnricher(RangerServiceDef.RangerContextEnricherDef enricherDef, RangerPolicyEngineOptions  options) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyRepository.buildContextEnricher(" + enricherDef + ")");
         }
@@ -1059,6 +1059,7 @@ public class RangerPolicyRepository {
                 if (ret instanceof RangerAbstractContextEnricher) {
                     RangerAbstractContextEnricher abstractContextEnricher = (RangerAbstractContextEnricher) ret;
                     abstractContextEnricher.setPluginContext(pluginContext);
+                    abstractContextEnricher.setPolicyEngineOptions(options);
                 }
                 ret.init();
             }
