@@ -579,9 +579,12 @@ update_properties() {
 		newPropertyValue="${db_ssl_auth_type}"
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
-		propertyName=ranger.db.ssl.certificateFile
-		newPropertyValue="${db_ssl_certificate_file}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		if [ "${db_ssl_certificate_file}" != "" ]
+		then
+			propertyName=ranger.db.ssl.certificateFile
+			newPropertyValue="${db_ssl_certificate_file}"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		fi
 
 		propertyName=ranger.truststore.file.type
 		newPropertyValue="${javax_net_ssl_trustStore_type}"
