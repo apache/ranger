@@ -40,12 +40,14 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.StringTokenReplacer;
 
 public class PolicyEngine {
     private static final Log LOG = LogFactory.getLog(PolicyEngine.class);
@@ -62,6 +64,7 @@ public class PolicyEngine {
     private final Map<String, String>                 zoneTagServiceMap = new HashMap<>();
     private       boolean                             useForwardedIPAddress;
     private       String[]                            trustedProxyAddresses;
+    private final Map<String, StringTokenReplacer>    tokenReplacers = new HashMap<>();
 
     public boolean getUseForwardedIPAddress() {
         return useForwardedIPAddress;
@@ -108,6 +111,10 @@ public class PolicyEngine {
     public List<RangerContextEnricher> getAllContextEnrichers() { return allContextEnrichers; }
 
     public RangerPluginContext getPluginContext() { return pluginContext; }
+
+    public StringTokenReplacer getStringTokenReplacer(String resourceName) {
+        return tokenReplacers.get(resourceName);
+    }
 
     @Override
     public String toString() {
@@ -159,7 +166,7 @@ public class PolicyEngine {
         return resourceZoneTrie;
     }
 
-    public PolicyEngine(ServicePolicies servicePolicies, RangerPluginContext pluginContext, RangerRoles roles) {
+        public PolicyEngine(ServicePolicies servicePolicies, RangerPluginContext pluginContext, RangerRoles roles) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> PolicyEngine(" + ", " + servicePolicies + ", " + pluginContext + ")");
         }
@@ -230,6 +237,20 @@ public class PolicyEngine {
                 RangerPolicyRepository policyRepository = new RangerPolicyRepository(servicePolicies, this.pluginContext, zone.getKey());
 
                 zonePolicyRepositories.put(zone.getKey(), policyRepository);
+            }
+        }
+
+        for (RangerServiceDef.RangerResourceDef resourceDef : getServiceDef().getResources()) {
+            Map<String, String> matchOptions = resourceDef.getMatcherOptions();
+
+            if (RangerAbstractResourceMatcher.getOptionReplaceTokens(matchOptions)) {
+                String delimiterPrefix = RangerAbstractResourceMatcher.getOptionDelimiterPrefix(matchOptions);
+                char delimiterStart = RangerAbstractResourceMatcher.getOptionDelimiterStart(matchOptions);
+                char delimiterEnd = RangerAbstractResourceMatcher.getOptionDelimiterEnd(matchOptions);
+                char escapeChar = RangerAbstractResourceMatcher.getOptionDelimiterEscape(matchOptions);
+
+                StringTokenReplacer tokenReplacer = new StringTokenReplacer(delimiterStart, delimiterEnd, escapeChar, delimiterPrefix);
+                tokenReplacers.put(resourceDef.getName(), tokenReplacer);
             }
         }
 
@@ -639,7 +660,7 @@ public class PolicyEngine {
 
         List<RangerContextEnricher> tmpList;
         List<RangerContextEnricher> tagContextEnrichers      = tagPolicyRepository == null ? null :tagPolicyRepository.getContextEnrichers();
-        List<RangerContextEnricher> resourceContextEnrichers = policyRepository.getContextEnrichers();
+        List<RangerContextEnricher> resourceContextEnrichers = policyRepository == null ? null : policyRepository.getContextEnrichers();
 
         if (CollectionUtils.isEmpty(tagContextEnrichers)) {
             tmpList = resourceContextEnrichers;

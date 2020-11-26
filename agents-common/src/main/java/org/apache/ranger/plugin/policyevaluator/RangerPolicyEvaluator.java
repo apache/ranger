@@ -98,7 +98,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
 
-	boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType);
+	boolean isAccessAllowed(Long policyId, Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, Set<String> roles, String accessType, Map<String, Object> evalContext);
 
 	void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, boolean isAllowed, String reason);
 
