@@ -81,6 +81,8 @@
 							<include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
 							<include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
 							<include>org.codehaus.jackson:jackson-xc:jar:${codehaus.jackson.version}</include>
+							<include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+							<include>org.apache.commons:commons-lang3</include>
 						</includes>
 					</dependencySet>
 					<dependencySet>

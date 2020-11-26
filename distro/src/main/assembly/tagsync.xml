@@ -93,6 +93,7 @@
 							<include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
 							<include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
 							<include>org.cloudera.logredactor:logredactor</include>
+							<include>org.apache.commons:commons-lang3</include>
 						</includes>
 					</dependencySet>
 				</dependencySets>

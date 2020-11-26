@@ -70,7 +70,7 @@
                     <include>commons-beanutils:commons-beanutils</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
-                    <include>org.apache.commons:commons-compress</include>
+                    <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.apache.commons:commons-configuration2</include>
                     <include>commons-digester:commons-digester</include>
                     <include>commons-io:commons-io</include>
@@ -199,6 +199,8 @@
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
                     <include>org.apache.ranger:credentialbuilder</include>
+                    <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+                    <include>org.apache.commons:commons-lang3</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -351,6 +353,8 @@
                     <include>org.apache.htrace:htrace-core4</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
+                    <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+                    <include>org.apache.commons:commons-lang3</include>
                 </includes>
             </binaries>
         </moduleSet>
