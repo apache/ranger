@@ -369,15 +369,15 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	}
 
 	@Override
-	public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles,  String accessType) {
+	public boolean isAccessAllowed(Long policyId, Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, Set<String> roles,  String accessType, Map<String, Object> evalContext) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ")");
+			LOG.debug("==> RangerDefaultPolicyEvaluator.isAccessAllowed(" + policyId + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ", " + evalContext + ")");
 		}
 
-		boolean ret = isAccessAllowed(user, userGroups, roles, null, accessType) && isMatch(policy, null);
+		boolean ret = isAccessAllowed(user, userGroups, roles, null, accessType) && isMatch(resources, evalContext);
 		
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + "): " + ret);
+			LOG.debug("<== RangerDefaultPolicyEvaluator.isAccessAllowed(" + policyId + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ", " + evalContext + "): " + ret);
 		}
 
 		return ret;

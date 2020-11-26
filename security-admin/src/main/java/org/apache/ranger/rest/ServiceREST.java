@@ -120,6 +120,7 @@ import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -3550,6 +3551,9 @@ public class ServiceREST {
 			Set<String> userGroups = null;
 
 			Map<String, List<RangerPolicy>> servicePoliciesMap = new HashMap<String, List<RangerPolicy>>();
+			Map<String, Object>             evalContext        = new HashMap<>();
+
+			RangerAccessRequestUtil.setCurrentUserInContext(evalContext, userName);
 
 			for (int i = 0; i < policies.size(); i++) {
 				RangerPolicy       policy      = policies.get(i);
@@ -3609,7 +3613,7 @@ public class ServiceREST {
 						Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
 						for (RangerPolicy policy : listToFilter) {
-							if (policyAdmin.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS)
+							if (policyAdmin.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS, evalContext)
 									|| (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())))
 									|| isServiceAdminUser) {
 								ret.add(policy);
@@ -3704,9 +3708,12 @@ public class ServiceREST {
 		RangerPolicyAdmin policyAdmin = getPolicyAdminForDelegatedAdmin(policy.getService());
 
 		if(policyAdmin != null) {
+			Map evalContext = new HashMap<>();
+			RangerAccessRequestUtil.setCurrentUserInContext(evalContext, userName);
+
 			Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
-			isAllowed = policyAdmin.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS);
+			isAllowed = policyAdmin.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS, evalContext);
 		}
 
 		return isAllowed;

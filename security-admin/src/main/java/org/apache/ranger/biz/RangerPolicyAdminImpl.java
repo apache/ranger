@@ -37,14 +37,18 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyRepository;
 import org.apache.ranger.plugin.policyengine.RangerTagResource;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.service.RangerDefaultRequestProcessor;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.apache.ranger.plugin.util.StringTokenReplacer;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +60,14 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
     private final PolicyEngine                 policyEngine;
     private final RangerAccessRequestProcessor requestProcessor;
+    private final static Map<String, Object>          wildcardEvalContext = new HashMap<String, Object>() {
+        @Override
+        public Object get(Object key) { return RangerAbstractResourceMatcher.WILDCARD_ASTERISK; }
+    };
+
+    static {
+        wildcardEvalContext.put(RangerAbstractResourceMatcher.WILDCARD_ASTERISK, RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
+    }
 
     static public RangerPolicyAdmin getPolicyAdmin(final RangerPolicyAdminImpl other, final ServicePolicies servicePolicies) {
         RangerPolicyAdmin ret = null;
@@ -123,9 +135,9 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     @Override
-    public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType) {
+    public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType, Map<String, Object> evalContext) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyAdminImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ")");
+            LOG.debug("==> RangerPolicyAdminImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ", " + evalContext + ")");
         }
 
         boolean          ret  = false;
@@ -138,8 +150,12 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForMatchedZone(policy);
 
         if (matchedRepository != null) {
+            // RANGER-3082
+            // Convert policy resources to by substituting macros with ASTERISK
+            Map<String, RangerPolicyResource> modifiedPolicyResources = getPolicyResourcesWithMacrosReplaced(policy.getResources(), wildcardEvalContext);
+
             for (RangerPolicyEvaluator evaluator : matchedRepository.getPolicyEvaluators()) {
-                ret = evaluator.isAccessAllowed(policy, user, userGroups, roles, accessType);
+                ret = evaluator.isAccessAllowed(policy.getId(), modifiedPolicyResources, user, userGroups, roles, accessType, evalContext);
 
                 if (ret) {
                     break;
@@ -150,7 +166,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         RangerPerfTracer.log(perf);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyAdminImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + "): " + ret);
+            LOG.debug("<== RangerPolicyAdminImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ", " + evalContext + "): " + ret);
         }
 
         return ret;
@@ -420,6 +436,54 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             }
 
         }
+    }
+
+    private Map<String, RangerPolicyResource> getPolicyResourcesWithMacrosReplaced(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyAdminImpl.getPolicyResourcesWithMacrosReplaced(" + resources  + ", " + evalContext + ")");
+        }
+
+        final Map<String, RangerPolicyResource>  ret;
+
+        Collection<String> resourceKeys = resources == null ? null : resources.keySet();
+
+        if (CollectionUtils.isNotEmpty(resourceKeys)) {
+            ret = new HashMap<>();
+
+            for (String resourceName : resourceKeys) {
+                RangerPolicyResource resourceValues = resources.get(resourceName);
+                List<String>         values         = resourceValues == null ? null : resourceValues.getValues();
+
+                if (CollectionUtils.isNotEmpty(values)) {
+                    StringTokenReplacer tokenReplacer = policyEngine.getStringTokenReplacer(resourceName);
+
+                    if (tokenReplacer != null) {
+                        List<String> modifiedValues = new ArrayList<>();
+
+                        for (String value : values) {
+                            // RANGER-3082 - replace macros in value with ASTERISK
+                            String modifiedValue = tokenReplacer.replaceTokens(value, evalContext);
+                            modifiedValues.add(modifiedValue);
+                        }
+
+                        RangerPolicyResource modifiedPolicyResource = new RangerPolicyResource(modifiedValues, resourceValues.getIsExcludes(), resourceValues.getIsRecursive());
+                        ret.put(resourceName, modifiedPolicyResource);
+                    } else {
+                        ret.put(resourceName, resourceValues);
+                    }
+                } else {
+                    ret.put(resourceName, resourceValues);
+                }
+            }
+        } else {
+            ret = resources;
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyEngineImpl.getPolicyResourcesWithMacrosReplaced(" + resources  + ", " + evalContext + "): " + ret);
+        }
+
+        return ret;
     }
 }
 
