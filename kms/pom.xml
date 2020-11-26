@@ -32,25 +32,35 @@
             <artifactId>hadoop-kms</artifactId>
             <version>${hadoop.version}</version>
         </dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-core</artifactId>
-			<version>${fasterxml.jackson.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-annotations</artifactId>
-			<version>${fasterxml.jackson.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>${fasterxml.jackson.databind.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-core</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <version>${fasterxml.jackson.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+            <version>${fasterxml.jackson.databind.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+             </exclusions>
         </dependency>
         <dependency>
             <groupId>org.springframework</groupId>
@@ -143,6 +153,16 @@
             <version>${hadoop.version}</version>
             <scope>test</scope>
             <type>test-jar</type>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-compress</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+             </exclusions>
         </dependency>
         <dependency>
             <groupId>com.google.guava</groupId>
@@ -285,45 +305,69 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-		    <groupId>com.microsoft.azure</groupId>
-		    <artifactId>azure</artifactId>
-		    <version>${com.microsoft.azure.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>com.microsoft.azure</groupId>
-			<artifactId>azure-keyvault</artifactId>
-			<version>${com.microsoft.azure.azure-keyvault.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.microsoft.azure</groupId>
-		    <artifactId>azure-mgmt-keyvault</artifactId>
-		    <version>${com.microsoft.azure.azure-mgmt-keyvault.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.microsoft.rest</groupId>
-		    <artifactId>client-runtime</artifactId>
-		    <version>${com.microsoft.rest.client-runtime.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.microsoft.azure</groupId>
-		    <artifactId>azure-client-runtime</artifactId>
-		    <version>${com.microsoft.azure.azure-client-runtime.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>com.microsoft.azure</groupId>
-   			<artifactId>adal4j</artifactId>
-    		<version>${com.microsoft.azure.adal4j.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>io.reactivex</groupId>
-		    <artifactId>rxjava</artifactId>
-		    <version>${io.reactivex.rxjava.version}</version>
-		</dependency>
-		<dependency>
-		    <groupId>net.minidev</groupId>
-		    <artifactId>asm</artifactId>
-		    <version>${net.minidev.asm.version}</version>
-		</dependency>
+        <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure</artifactId>
+            <version>${com.microsoft.azure.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-keyvault</artifactId>
+            <version>${com.microsoft.azure.azure-keyvault.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-mgmt-keyvault</artifactId>
+            <version>${com.microsoft.azure.azure-mgmt-keyvault.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.rest</groupId>
+            <artifactId>client-runtime</artifactId>
+            <version>${com.microsoft.rest.client-runtime.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-client-runtime</artifactId>
+            <version>${com.microsoft.azure.azure-client-runtime.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>adal4j</artifactId>
+            <version>${com.microsoft.azure.adal4j.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-lang3</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>io.reactivex</groupId>
+            <artifactId>rxjava</artifactId>
+            <version>${io.reactivex.rxjava.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>net.minidev</groupId>
+            <artifactId>asm</artifactId>
+            <version>${net.minidev.asm.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.bouncycastle</groupId>
             <artifactId>bcprov-jdk15on</artifactId>
@@ -352,6 +396,11 @@
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
             <version>${commons.codec.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>${commons.lang3.version}</version>
         </dependency>
     </dependencies>
     <build>

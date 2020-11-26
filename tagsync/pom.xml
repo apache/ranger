@@ -120,6 +120,10 @@
             <version>${atlas.version}</version>
             <exclusions>
                 <exclusion>
+		    <groupId>org.apache.commons</groupId>
+		    <artifactId>commons-lang3</artifactId>
+		</exclusion>
+		<exclusion>
                     <groupId>org.apache.kafka</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
