@@ -111,7 +111,7 @@ public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
 
         Map<String, Collection<String>> impliedAccessGrants = getImpliedAccessGrants(serviceDef);
 
-        if(impliedAccessGrants == null || impliedAccessGrants.isEmpty()) {
+        if (impliedAccessGrants == null || impliedAccessGrants.isEmpty()) {
             return;
         }
 
