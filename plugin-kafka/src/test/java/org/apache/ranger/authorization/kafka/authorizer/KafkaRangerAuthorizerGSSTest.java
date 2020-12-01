@@ -42,6 +42,7 @@ import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.PartitionInfo;
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
 import org.junit.Assert;
 import org.junit.Test;
@@ -143,7 +144,11 @@ public class KafkaRangerAuthorizerGSSTest {
         kafkaServer.startup();
 
         // Create some topics
-        KafkaTestUtils.createSomeTopics(zkServer.getConnectString());
+        final Properties adminProps = new Properties();
+        adminProps.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
+        adminProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
+        adminProps.put(SaslConfigs.SASL_MECHANISM, "GSSAPI");
+        KafkaTestUtils.createSomeTopics(adminProps);
     }
 
     private static void configureKerby(String baseDir) throws Exception {
