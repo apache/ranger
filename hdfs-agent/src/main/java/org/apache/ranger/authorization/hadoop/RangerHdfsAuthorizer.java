@@ -279,6 +279,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				INode   ancestor            = null;
 				INode   parent              = null;
 				INode   inode               = null;
+				String  providedPath        = path;
 
 				boolean useDefaultAuthorizerOnly = false;
 				boolean doNotGenerateAuditRecord = false;
@@ -349,7 +350,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 					parent   = inodes.length > 1 ? inodes[inodes.length - 2] : null;
 					inode    = inodes[inodes.length - 1]; // could be null while creating a new file
 
-					auditHandler = doNotGenerateAuditRecord ? null : new RangerHdfsAuditHandler(resourcePath, isTraverseOnlyCheck, rangerPlugin.getHadoopModuleName(), rangerPlugin.getExcludedUsers(), operationName, callerctxt);
+					auditHandler = doNotGenerateAuditRecord ? null : new RangerHdfsAuditHandler(providedPath, isTraverseOnlyCheck, rangerPlugin.getHadoopModuleName(), rangerPlugin.getExcludedUsers(), operationName, callerctxt);
 
 					/* Hadoop versions prior to 2.8.0 didn't ask for authorization of parent/ancestor traversal for
 					 * reading or writing a file. However, Hadoop version 2.8.0 and later ask traversal authorization for
