@@ -25,6 +25,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 
@@ -117,6 +118,17 @@ public class JsonUtils {
             return null;
         }
     }
+
+    public static List<AuditFilter> jsonToAuditFilterList(String jsonStr) {
+        try {
+            Type listType = new TypeToken<List<AuditFilter>>() {}.getType();
+            return gson.fromJson(jsonStr, listType);
+        } catch (Exception e) {
+            LOG.error("failed to create audit filters from: " + jsonStr, e);
+            return null;
+        }
+    }
+
     public static List<RangerValidityRecurrence> jsonToRangerValidityRecurringSchedule(String jsonStr) {
         try {
             Type listType = new TypeToken<List<RangerValidityRecurrence>>() {

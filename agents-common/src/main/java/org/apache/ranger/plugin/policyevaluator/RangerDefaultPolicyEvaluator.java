@@ -856,7 +856,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return sb;
 	}
 
-	private void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef) {
+	protected void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef) {
 		if(policy == null || (!hasAllow() && !hasDeny()) || serviceDef == null) {
 			return;
 		}
@@ -875,7 +875,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		preprocessPolicyItems(policy.getRowFilterPolicyItems(), impliedAccessGrants);
 	}
 
-	private void preprocessPolicyItems(List<? extends RangerPolicyItem> policyItems, Map<String, Collection<String>> impliedAccessGrants) {
+	protected void preprocessPolicyItems(List<? extends RangerPolicyItem> policyItems, Map<String, Collection<String>> impliedAccessGrants) {
 		for(RangerPolicyItem policyItem : policyItems) {
 			if(CollectionUtils.isEmpty(policyItem.getAccesses())) {
 				continue;
@@ -910,7 +910,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 	}
 
-	private Map<String, Collection<String>> getImpliedAccessGrants(RangerServiceDef serviceDef) {
+	protected Map<String, Collection<String>> getImpliedAccessGrants(RangerServiceDef serviceDef) {
 		Map<String, Collection<String>> ret = null;
 
 		if(serviceDef != null && !CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {

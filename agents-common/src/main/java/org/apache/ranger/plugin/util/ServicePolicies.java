@@ -201,6 +201,8 @@ public class ServicePolicies implements java.io.Serializable {
 		private List<RangerPolicy> policies;
 		private RangerServiceDef   serviceDef;
 		private String             auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
+		private Map<String, String> serviceConfig;
+
 		/**
 		 * @return the serviceName
 		 */
@@ -282,6 +284,14 @@ public class ServicePolicies implements java.io.Serializable {
 			this.auditMode = auditMode;
 		}
 
+		public Map<String, String> getServiceConfig() {
+			return serviceConfig;
+		}
+
+		public void setServiceConfig(Map<String, String> serviceConfig) {
+			this.serviceConfig = serviceConfig;
+		}
+
 		@Override
 		public String toString() {
 			return "serviceName=" + serviceName + ", "
@@ -291,6 +301,7 @@ public class ServicePolicies implements java.io.Serializable {
 					+ "policies=" + policies + ", "
 					+ "serviceDef=" + serviceDef + ", "
 					+ "auditMode=" + auditMode
+					+ "serviceConfig=" + serviceConfig
 					;
 		}
 	}

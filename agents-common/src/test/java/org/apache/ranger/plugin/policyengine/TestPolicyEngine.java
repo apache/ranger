@@ -430,6 +430,21 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_auditFilterHdfs() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_audit_filter_hdfs.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+
+	@Test
+	public void testPolicyEngine_auditFilterHive() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_audit_filter_hive.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
@@ -461,6 +476,7 @@ public class TestPolicyEngine {
 			tagPolicies.setServiceName(testCase.tagPolicyInfo.serviceName);
 			tagPolicies.setServiceDef(testCase.tagPolicyInfo.serviceDef);
 			tagPolicies.setPolicies(testCase.tagPolicyInfo.tagPolicies);
+			tagPolicies.setServiceConfig(testCase.tagPolicyInfo.serviceConfig);
 
 			if (StringUtils.isNotBlank(testCase.auditMode)) {
 				tagPolicies.setAuditMode(testCase.auditMode);
@@ -563,7 +579,6 @@ public class TestPolicyEngine {
 	}
 
     private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerPolicyEngine policyEngineForEvaluatingWithACLs, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
-
         RangerAccessRequest request = null;
 
         for(TestData test : tests) {
@@ -643,11 +658,15 @@ public class TestPolicyEngine {
 
 				result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
+				policyEngine.evaluateAuditPolicies(result);
+
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
 				assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
 
 				result   = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
+
+				policyEngine.evaluateAuditPolicies(result);
 
                 assertNotNull("result was null! - " + test.name, result);
                 assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
@@ -660,6 +679,8 @@ public class TestPolicyEngine {
 
                 result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
 
+                policyEngine.evaluateAuditPolicies(result);
+
                 assertNotNull("result was null! - " + test.name, result);
                 assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
                 assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
@@ -667,6 +688,8 @@ public class TestPolicyEngine {
                 assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
 
                 result = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
+
+                policyEngine.evaluateAuditPolicies(result);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
@@ -682,11 +705,15 @@ public class TestPolicyEngine {
 
                 result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
 
+                policyEngine.evaluateAuditPolicies(result);
+
                 assertNotNull("result was null! - " + test.name, result);
                 assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
                 assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
 
 				result = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
+
+				policyEngine.evaluateAuditPolicies(result);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
@@ -745,6 +772,7 @@ public class TestPolicyEngine {
 		class TagPolicyInfo {
 			public String	serviceName;
 			public RangerServiceDef serviceDef;
+			public Map<String, String> serviceConfig;
 			public List<RangerPolicy> tagPolicies;
 		}
 	}

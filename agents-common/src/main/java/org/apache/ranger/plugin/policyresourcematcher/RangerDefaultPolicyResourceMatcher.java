@@ -202,7 +202,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
             errorText = "policyResources is null or empty, or serviceDef is null.";
         }
 
-        if (allMatchers == null) {
+        if (allMatchers == null && policyType != RangerPolicy.POLICY_TYPE_AUDIT) {
             serviceDefHelper       = null;
             validResourceHierarchy = null;
 

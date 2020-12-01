@@ -364,6 +364,10 @@ public class RangerBasePlugin {
 
 		}
 
+		if (policyEngine != null) {
+			policyEngine.evaluateAuditPolicies(ret);
+		}
+
 		if (resultProcessor != null) {
 			resultProcessor.processResult(ret);
 		}
@@ -399,6 +403,12 @@ public class RangerBasePlugin {
 			}
 		}
 
+		if (policyEngine != null && CollectionUtils.isNotEmpty(ret)) {
+			for (RangerAccessResult result : ret) {
+				policyEngine.evaluateAuditPolicies(result);
+			}
+		}
+
 		if (resultProcessor != null) {
 			resultProcessor.processResults(ret);
 		}
@@ -408,22 +418,36 @@ public class RangerBasePlugin {
 
 	public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
+		RangerAccessResult ret          = null;
 
 		if(policyEngine != null) {
-			return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, resultProcessor);
+			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, resultProcessor);
+
+			policyEngine.evaluateAuditPolicies(ret);
 		}
 
-		return null;
+		return ret;
 	}
 
 	public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
+		RangerAccessResult ret          = null;
 
 		if(policyEngine != null) {
-			return policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, resultProcessor);
+			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, resultProcessor);
+
+			policyEngine.evaluateAuditPolicies(ret);
 		}
 
-		return null;
+		return ret;
+	}
+
+	public void evalAuditPolicies(RangerAccessResult result) {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if (policyEngine != null) {
+			policyEngine.evaluateAuditPolicies(result);
+		}
 	}
 
 	public RangerResourceAccessInfo getResourceAccessInfo(RangerAccessRequest request) {

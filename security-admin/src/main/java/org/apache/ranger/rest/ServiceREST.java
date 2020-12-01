@@ -3102,7 +3102,13 @@ public class ServiceREST {
 					} else {
 						ret = updatedServicePolicies;
 					}
+
 					ret.setServiceConfig(svcStore.getServiceConfigForPlugin(ret.getServiceId()));
+
+					if (ret.getTagPolicies() != null && ret.getTagPolicies().getServiceId() != null) {
+						ret.getTagPolicies().setServiceConfig(svcStore.getServiceConfigForPlugin(ret.getTagPolicies().getServiceId()));
+					}
+
 					httpCode = HttpServletResponse.SC_OK;
 					logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : (ret.getPolicyDeltas() != null ? ret.getPolicyDeltas().size() : 0)) + " policies. Policy version=" + ret.getPolicyVersion();
 				}
@@ -3224,7 +3230,13 @@ public class ServiceREST {
 						} else {
 							ret = updatedServicePolicies;
 						}
+
 						ret.setServiceConfig(svcStore.getServiceConfigForPlugin(ret.getServiceId()));
+
+						if (ret.getTagPolicies() != null && ret.getTagPolicies().getServiceId() != null) {
+							ret.getTagPolicies().setServiceConfig(svcStore.getServiceConfigForPlugin(ret.getTagPolicies().getServiceId()));
+						}
+
 						httpCode = HttpServletResponse.SC_OK;
 						logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : (ret.getPolicyDeltas() != null ? ret.getPolicyDeltas().size() : 0)) + " policies. Policy version=" + ret.getPolicyVersion();
 					}
