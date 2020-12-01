@@ -155,7 +155,7 @@ public class RangerAccessResult {
 
 	public boolean getIsAuditedDetermined() { return isAuditedDetermined; }
 
-	private void setIsAuditedDetermined(boolean value) { isAuditedDetermined = value; }
+	public void setIsAuditedDetermined(boolean value) { isAuditedDetermined = value; }
 	
 	/**
 	 * @return the isAudited

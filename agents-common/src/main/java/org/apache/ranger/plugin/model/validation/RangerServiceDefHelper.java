@@ -206,6 +206,10 @@ public class RangerServiceDefHelper {
 
 		Set<List<RangerResourceDef>> ret = new HashSet<List<RangerResourceDef>>();
 
+		if (policyType == RangerPolicy.POLICY_TYPE_AUDIT) {
+			policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+		}
+
 		for (List<RangerResourceDef> hierarchy : getResourceHierarchies(policyType)) {
 			if (hierarchyHasAllResources(hierarchy, keys)) {
 				ret.add(hierarchy);

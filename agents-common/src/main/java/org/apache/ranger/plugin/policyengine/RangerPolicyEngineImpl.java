@@ -162,6 +162,41 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public void evaluateAuditPolicies(RangerAccessResult result) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evaluateAuditPolicies(result=" + result + ")");
+		}
+
+		RangerPolicyRepository tagPolicyRepository      = policyEngine.getTagPolicyRepository();
+		RangerPolicyRepository policyRepository         = policyEngine.getPolicyRepository();
+		RangerAccessRequest    request                  = result.getAccessRequest();
+		boolean                savedIsAuditedDetermined = result.getIsAuditedDetermined();
+		boolean                savedIsAudited           = result.getIsAudited();
+
+		result.setIsAudited(false);
+		result.setIsAuditedDetermined(false);
+
+		try {
+			if (tagPolicyRepository != null) {
+				evaluateTagAuditPolicies(request, result, tagPolicyRepository);
+			}
+
+			if (!result.getIsAuditedDetermined() && policyRepository != null) {
+				evaluateResourceAuditPolicies(request, result, policyRepository);
+			}
+		} finally {
+			if (!result.getIsAuditedDetermined()) {
+				result.setIsAudited(savedIsAudited);
+				result.setIsAuditedDetermined(savedIsAuditedDetermined);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evaluateAuditPolicies(result=" + result + ")");
+		}
+	}
+
+	@Override
 	public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.getResourceACLs(request=" + request + ")");
@@ -859,6 +894,80 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			ret.getAllowedUsers().removeAll(ret.getDeniedUsers());
 			ret.getAllowedGroups().removeAll(ret.getDeniedGroups());
 		}
+	}
+
+	private void evaluateTagAuditPolicies(RangerAccessRequest request, RangerAccessResult result, RangerPolicyRepository tagPolicyRepository) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evaluateTagAuditPolicies(request=" + request + ", result=" + result + ")");
+		}
+
+		Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
+
+		if (CollectionUtils.isNotEmpty(tags)) {
+			Date                        accessTime = request.getAccessTime() != null ? request.getAccessTime() : new Date();
+			List<PolicyEvaluatorForTag> evaluators = tagPolicyRepository.getLikelyMatchPolicyEvaluators(tags, RangerPolicy.POLICY_TYPE_AUDIT, accessTime);
+
+			if (CollectionUtils.isNotEmpty(evaluators)) {
+				for (PolicyEvaluatorForTag policyEvaluator : evaluators) {
+					RangerPolicyEvaluator evaluator      = policyEvaluator.getEvaluator();
+					RangerTagForEval      tag            = policyEvaluator.getTag();
+					RangerAccessRequest   tagEvalRequest = new RangerTagAccessRequest(tag, tagPolicyRepository.getServiceDef(), request);
+					RangerAccessResult    tagEvalResult  = createAccessResult(tagEvalRequest, RangerPolicy.POLICY_TYPE_AUDIT);
+
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("RangerPolicyEngineImpl.evaluateTagAuditPolicies: Evaluating Audit policies for tag (" + tag.getType() + ")" + "Tag Evaluator: " + policyEvaluator);
+					}
+
+					tagEvalResult.setAccessResultFrom(result);
+
+					result.incrementEvaluatedPoliciesCount();
+
+					evaluator.evaluate(tagEvalRequest, tagEvalResult);
+
+					if (tagEvalResult.getIsAuditedDetermined()) {
+						result.setIsAudited(tagEvalResult.getIsAudited());
+						break;
+					}
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evaluateTagAuditPolicies(request=" + request + ", result=" + result + ")");
+		}
+	}
+
+	private boolean evaluateResourceAuditPolicies(RangerAccessRequest request, RangerAccessResult result, RangerPolicyRepository policyRepository) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evaluateResourceAuditPolicies(request=" + request + ", result=" + result + ")");
+		}
+
+		boolean                     ret        = false;
+		List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchAuditPolicyEvaluators(request.getResource());
+
+		if (CollectionUtils.isNotEmpty(evaluators)) {
+			for (RangerPolicyEvaluator evaluator : evaluators) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("==> RangerPolicyEngineImpl.evaluateResourceAuditPolicies(): Evaluating RangerPolicyEvaluator...: " + evaluator);
+				}
+
+				result.incrementEvaluatedPoliciesCount();
+
+				evaluator.evaluate(request, result);
+
+				if (result.getIsAuditedDetermined()) {
+					ret = true;
+
+					break;
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evaluateResourceAuditPolicies(request=" + request + ", result=" + result + "): ret=" + ret);
+		}
+
+		return ret;
 	}
 
 	private static class ServiceConfig {
