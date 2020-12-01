@@ -109,7 +109,7 @@ Docker files in this folder create docker images and run them to build Apache Ra
 
    5.13. Execute following command to build Docker image **ranger-kafka**:
 
-         docker build -f Dockerfile.ranger-kafka --build-arg RANGER_VERSION=`cat dist/version` --build-arg KAFKA_VERSION=2.4.0 -t ranger-kafka .
+         docker build -f Dockerfile.ranger-kafka --build-arg RANGER_VERSION=`cat dist/version` --build-arg KAFKA_VERSION=2.5.0 -t ranger-kafka .
 
    This step includes downloading of Kafka tar ball, and can take a while to complete.
 

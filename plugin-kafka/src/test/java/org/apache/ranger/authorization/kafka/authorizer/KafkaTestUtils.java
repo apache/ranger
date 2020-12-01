@@ -27,10 +27,12 @@ import java.security.KeyStore;
 import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.X509Certificate;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Properties;
 
-import org.apache.kafka.common.utils.Time;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.bouncycastle.asn1.x500.X500Name;
 import org.bouncycastle.asn1.x500.style.RFC4519Style;
 import org.bouncycastle.asn1.x509.SubjectPublicKeyInfo;
@@ -38,12 +40,6 @@ import org.bouncycastle.cert.X509v3CertificateBuilder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
 import org.bouncycastle.operator.ContentSigner;
 import org.bouncycastle.operator.jcajce.JcaContentSignerBuilder;
-
-import kafka.admin.RackAwareMode;
-import kafka.zk.AdminZkClient;
-import kafka.zk.KafkaZkClient;
-import kafka.zookeeper.ZooKeeperClient;
-import scala.Option;
 
 public final class KafkaTestUtils {
     
@@ -82,13 +78,12 @@ public final class KafkaTestUtils {
     	
     }
 
-	static void createSomeTopics(String zkConnectString) {
-		ZooKeeperClient zookeeperClient = new ZooKeeperClient(zkConnectString, 30000, 30000,
-				1, Time.SYSTEM, "kafka.server", "SessionExpireListener", Option.empty());
-		try (KafkaZkClient kafkaZkClient = new KafkaZkClient(zookeeperClient, false, Time.SYSTEM)) {
-			AdminZkClient adminZkClient = new AdminZkClient(kafkaZkClient);
-			adminZkClient.createTopic("test", 1, 1, new Properties(), RackAwareMode.Enforced$.MODULE$);
-			adminZkClient.createTopic("dev", 1, 1, new Properties(), RackAwareMode.Enforced$.MODULE$);
+	static void createSomeTopics(Properties adminProps) {
+		try (AdminClient adminClient = AdminClient.create(adminProps)) {
+			adminClient.createTopics(Arrays.asList(
+					new NewTopic("test", 1, (short) 1),
+					new NewTopic("dev", 1, (short) 1)
+			));
 		}
 	}
 }

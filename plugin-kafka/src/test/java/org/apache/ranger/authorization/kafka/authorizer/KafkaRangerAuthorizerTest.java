@@ -115,11 +115,11 @@ public class KafkaRangerAuthorizerTest {
         props.put("controlled.shutdown.enable", Boolean.TRUE.toString());
         // Enable SSL
         props.put("listeners", "SSL://localhost:" + port);
-        props.put("ssl.keystore.location", serviceKeystorePath);
-        props.put("ssl.keystore.password", "sspass");
-        props.put("ssl.key.password", "skpass");
-        props.put("ssl.truststore.location", truststorePath);
-        props.put("ssl.truststore.password", "security");
+        props.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, serviceKeystorePath);
+        props.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "sspass");
+        props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
+        props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
+        props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
         props.put("security.inter.broker.protocol", "SSL");
         props.put("ssl.client.auth", "required");
         props.put("offsets.topic.replication.factor", (short) 1);
@@ -137,7 +137,16 @@ public class KafkaRangerAuthorizerTest {
         kafkaServer.startup();
 
         // Create some topics
-        KafkaTestUtils.createSomeTopics(zkServer.getConnectString());
+        final Properties adminProps = new Properties();
+        adminProps.put(CommonClientConfigs.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
+        adminProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SSL");
+        // ssl
+        adminProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, serviceKeystorePath);
+        adminProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "sspass");
+        adminProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
+        adminProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
+        adminProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
+        KafkaTestUtils.createSomeTopics(adminProps);
     }
     
     @org.junit.AfterClass
