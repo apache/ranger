@@ -106,12 +106,12 @@ public class KmsKeyMgr {
 	
 	@Autowired
 	RangerDaoManagerBase rangerDaoManagerBase;
-	
+
         @Autowired
         RangerBizUtil rangerBizUtil;
 
 	@SuppressWarnings("unchecked")
-	public VXKmsKeyList searchKeys(HttpServletRequest request, String repoName) throws Exception{
+	public VXKmsKeyList searchKeys(HttpServletRequest request, String repoName) throws Exception {
 		String providers[] = null;
 		try {
 			providers = getKMSURL(repoName);
@@ -131,7 +131,7 @@ public class KmsKeyMgr {
 		if(providers!=null){
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
-				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String currentUserLoginId = StringUtil.getUTFEncodedString(ContextUtil.getCurrentUserLoginId());
 				String keyLists = KMS_KEY_LIST_URI.replaceAll(
 						Pattern.quote("${userName}"), currentUserLoginId);
 				connProvider = providers[i];
@@ -142,6 +142,7 @@ public class KmsKeyMgr {
 				}else{
 					uri = uri.concat("?doAs="+currentUserLoginId);
 				}
+
 				final WebResource r = c.resource(uri);
 				try {
 					String response = null;
@@ -237,7 +238,7 @@ public class KmsKeyMgr {
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
 				String rollRest = KMS_ROLL_KEY_URI.replaceAll(Pattern.quote("${alias}"), vXKey.getName());
-				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String currentUserLoginId = StringUtil.getUTFEncodedString(ContextUtil.getCurrentUserLoginId());
 				String uri = providers[i] + (providers[i].endsWith("/") ? rollRest : ("/" + rollRest));
 				if(!isKerberos){
 					uri = uri.concat("?user.name="+currentUserLoginId);
@@ -292,7 +293,7 @@ public class KmsKeyMgr {
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
 				String deleteRest = KMS_DELETE_KEY_URI.replaceAll(Pattern.quote("${alias}"), name);
-				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String currentUserLoginId = StringUtil.getUTFEncodedString(ContextUtil.getCurrentUserLoginId());
 				String uri = providers[i] + (providers[i].endsWith("/") ? deleteRest : ("/" + deleteRest));
 				if(!isKerberos){
 						uri = uri.concat("?user.name="+currentUserLoginId);
@@ -344,7 +345,7 @@ public class KmsKeyMgr {
 		if(providers!=null){
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
-				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String currentUserLoginId = StringUtil.getUTFEncodedString(ContextUtil.getCurrentUserLoginId());
 				String uri = providers[i] + (providers[i].endsWith("/") ? KMS_ADD_KEY_URI : ("/" + KMS_ADD_KEY_URI));
 				if(!isKerberos){
 					uri = uri.concat("?user.name="+currentUserLoginId);
@@ -398,7 +399,7 @@ public class KmsKeyMgr {
 			for (int i = 0; i < providers.length; i++) {
 				Client c = getClient();
 				String keyRest = KMS_KEY_METADATA_URI.replaceAll(Pattern.quote("${alias}"), name);
-				String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+				String currentUserLoginId = StringUtil.getUTFEncodedString(ContextUtil.getCurrentUserLoginId());
 				String uri = providers[i] + (providers[i].endsWith("/") ? keyRest : ("/" + keyRest));
 				if(!isKerberos){
 						uri = uri.concat("?user.name="+currentUserLoginId);
@@ -433,11 +434,11 @@ public class KmsKeyMgr {
 		}
 		return null;
 	}
-	
+
 	public VXKmsKey getKeyFromUri(String provider, String name, boolean isKerberos, String repoName) throws Exception {
 		Client c = getClient();
 		String keyRest = KMS_KEY_METADATA_URI.replaceAll(Pattern.quote("${alias}"), name);
-		String currentUserLoginId = ContextUtil.getCurrentUserLoginId();
+		String currentUserLoginId = StringUtil.getUTFEncodedString(ContextUtil.getCurrentUserLoginId());
 		String uri = provider + (provider.endsWith("/") ? keyRest : ("/" + keyRest));
 		if(!isKerberos){
 			uri = uri.concat("?user.name="+currentUserLoginId);

@@ -200,11 +200,11 @@ public class XKeyREST {
 				JSONObject obj = new JSONObject(message);
 				message = obj.getString("message");
 			} catch (JSONException e1) {
-				message = e1.getMessage();
-			}			
-		}			
+				logger.error("Unable to parse the error message, So sending error message as it is - Error : " + e1.getMessage());
+			}
+		}
 		if (!(message==null) && !(message.isEmpty()) && message.contains("Connection refused")){
-			message = "Connection refused : Please check the KMS provider URL and whether the Ranger KMS is running";			
+			message = "Connection refused : Please check the KMS provider URL and whether the Ranger KMS is running";
 		} else if (!(message==null) && !(message.isEmpty()) && (message.contains("response status of 403") || message.contains("HTTP Status 403"))){
 			message = UNAUTHENTICATED_MSG;
 		} else if (!(message==null) && !(message.isEmpty()) && (message.contains("response status of 401") || message.contains("HTTP Status 401 - Authentication required"))){
