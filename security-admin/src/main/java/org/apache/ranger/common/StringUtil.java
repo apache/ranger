@@ -20,6 +20,9 @@
  package org.apache.ranger.common;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
@@ -256,6 +259,10 @@ public class StringUtil implements Serializable {
 				:	str.indexOf("@") >= 0 ?
 						str.substring(0,str.indexOf("@"))
 						: str;
+	}
+
+	public static String getUTFEncodedString(String username) throws UnsupportedEncodingException {
+		return URLEncoder.encode(username, StandardCharsets.UTF_8.toString());
 	}
 
 }
