@@ -83,7 +83,7 @@ public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
 
     @Override
     public boolean isAncestorOf(RangerResourceDef resourceDef) {
-        return matchAnyResource ? true : super.isAncestorOf(resourceDef);
+        return matchAnyResource || super.isAncestorOf(resourceDef);
     }
 
     @Override
