@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.ozone.client.OzoneResourceMgr;
@@ -116,7 +117,14 @@ public class RangerServiceOzone extends RangerBaseService {
         List<RangerPolicy> ret = super.getDefaultRangerPolicies();
 
 		for (RangerPolicy defaultPolicy : ret) {
-			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+			if (defaultPolicy.getName().startsWith("all")) {
+                		RangerPolicyItem policyItemOwner = new RangerPolicyItem();
+                		policyItemOwner.setUsers(Collections.singletonList(RangerPolicyEngine.RESOURCE_OWNER));
+                		policyItemOwner.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ALL)));
+                		policyItemOwner.setDelegateAdmin(true);
+                		defaultPolicy.getPolicyItems().add(policyItemOwner);
+
+                		if (StringUtils.isNotBlank(lookUpUser)) {
 					RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
 					List<RangerPolicy.RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
 					accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
@@ -131,9 +139,9 @@ public class RangerServiceOzone extends RangerBaseService {
 					policyItemForLookupUser.setAccesses(accessListForLookupUser);
 					policyItemForLookupUser.setDelegateAdmin(false);
 					defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+				}
 			}
-		}
-
+		}	
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerServiceOzone.getDefaultRangerPolicies() : " + ret);
         }
