@@ -90,9 +90,15 @@ public class EmbeddedServer {
 			configFile = args[0];
 		}
 
-		// load log configuration file dynamically if log4j.properties changed
-		String logPropFile = StringUtils.splitByWholeSeparator(System.getProperty("log4j.configuration"), ":")[1];
-		PropertyConfigurator.configureAndWatch(logPropFile, 10000L);
+		try {
+			// load log configuration file dynamically if log4j.properties changed
+			if (StringUtils.isNotBlank(System.getProperty("log4j.configuration"))) {
+				String logPropFile = StringUtils.splitByWholeSeparator(System.getProperty("log4j.configuration"), ":")[1];
+				PropertyConfigurator.configureAndWatch(logPropFile, 10000L);
+			}
+		} catch (Exception ignored) {
+			LOG.warning("Failed to get log4j.configuration  Reason: " + ignored.toString());
+		}
 
 		EmbeddedServerUtil.loadRangerConfigProperties(configFile);
 	}
