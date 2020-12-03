@@ -54,6 +54,7 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -637,7 +638,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						if (ret == null) {
 							ret = new HashSet<>();
 						}
-						ret.addAll(getTagsForServiceResource(enrichedServiceTags.getServiceTags(), resourceMatcher.getServiceResource(), matchType));
+						ret.addAll(getTagsForServiceResource(request.getAccessTime(), enrichedServiceTags.getServiceTags(), resourceMatcher.getServiceResource(), matchType));
 					}
 
 				}
@@ -746,7 +747,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	private static Set<RangerTagForEval> getTagsForServiceResource(final ServiceTags serviceTags, final RangerServiceResource serviceResource, final RangerPolicyResourceMatcher.MatchType matchType) {
+	private static Set<RangerTagForEval> getTagsForServiceResource(Date accessTime, final ServiceTags serviceTags, final RangerServiceResource serviceResource, final RangerPolicyResourceMatcher.MatchType matchType) {
 		Set<RangerTagForEval> ret = new HashSet<>();
 
 		final Long resourceId                        = serviceResource.getId();
@@ -763,12 +764,17 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 			if (CollectionUtils.isNotEmpty(tagIds)) {
 
+				accessTime = accessTime == null ? new Date() : accessTime;
+
 				for (Long tagId : tagIds) {
 
 					RangerTag tag = tags.get(tagId);
 
 					if (tag != null) {
-						ret.add(new RangerTagForEval(tag, matchType));
+						RangerTagForEval tagForEval = new RangerTagForEval(tag, matchType);
+						if (tagForEval.isApplicable(accessTime)) {
+							ret.add(tagForEval);
+						}
 					}
 				}
 			} else {
