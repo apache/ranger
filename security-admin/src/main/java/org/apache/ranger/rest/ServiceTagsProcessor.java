@@ -198,6 +198,7 @@ public class ServiceTagsProcessor {
 				}
 
 				List<RangerTag> tagsToRetain = new ArrayList<RangerTag>();
+				boolean         isAnyTagUpdated = false;
 
 				List<Long> tagIds = entry.getValue();
 				try {
@@ -251,18 +252,15 @@ public class ServiceTagsProcessor {
 								tagsToRetain.add(newTag);
 
 							} else {
-								// Keep this tag, but update it with attribute-values from incoming tag
+								// Keep this tag, but update it with attribute-values and validity schedules from incoming tag
 								tagsToRetain.add(matchingTag);
 
-								if (StringUtils.equals(incomingTag.getGuid(), matchingTag.getGuid())) {
-									// matching tag was found because of Guid match
-									if (LOG.isDebugEnabled()) {
-										LOG.debug("Updating existing private tag with id=" + matchingTag.getId());
-									}
-									// update private tag with new values
-									incomingTag.setId(matchingTag.getId());
-									tagStore.updateTag(incomingTag);
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Updating existing private tag with id=" + matchingTag.getId());
 								}
+								incomingTag.setId(matchingTag.getId());
+								tagStore.updateTag(incomingTag);
+								isAnyTagUpdated = true;
 							}
 						} else { // shared model
 							if (isResourcePrivateTag(matchingTag)) {
@@ -295,6 +293,8 @@ public class ServiceTagsProcessor {
 									tagResourceMap.setResourceId(resourceInStore.getId());
 
 									tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+								} else {
+									isAnyTagUpdated = true;
 								}
 
 							}
@@ -330,6 +330,9 @@ public class ServiceTagsProcessor {
 						LOG.error("deleteTagResourceMap failed, tagId=" + tagId + ", resourceId=" + resourceInStore.getId());
 						throw exception;
 					}
+				}
+				if (isAnyTagUpdated) {
+					tagStore.refreshServiceResource(resourceInStore.getId());
 				}
 			}
 		}

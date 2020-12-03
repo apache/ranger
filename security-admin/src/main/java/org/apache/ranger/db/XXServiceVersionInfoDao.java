@@ -136,28 +136,30 @@ public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
 	private void updateTagVersionAndTagUpdateTime(List<XXServiceVersionInfo> serviceVersionInfos, Long resourceId, Long tagId) {
 
-		if(CollectionUtils.isNotEmpty(serviceVersionInfos) || (resourceId == null && tagId == null)) {
+		if (resourceId != null || tagId != null) {
+			if (CollectionUtils.isNotEmpty(serviceVersionInfos)) {
 
-			final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
-			final ServiceTags.TagsChangeType  tagChangeType;
+				final ServiceDBStore.VERSION_TYPE versionType = ServiceDBStore.VERSION_TYPE.TAG_VERSION;
+				final ServiceTags.TagsChangeType tagChangeType;
 
-			if (tagId == null) {
-				tagChangeType = ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE;
-			} else if (resourceId == null) {
-				tagChangeType = ServiceTags.TagsChangeType.TAG_UPDATE;
-			} else {
-				tagChangeType = ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE;
-			}
+				if (tagId == null) {
+					tagChangeType = ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE;
+				} else if (resourceId == null) {
+					tagChangeType = ServiceTags.TagsChangeType.TAG_UPDATE;
+				} else {
+					tagChangeType = ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE;
+				}
 
-			for (XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
+				for (XXServiceVersionInfo serviceVersionInfo : serviceVersionInfos) {
 
-				final Long     serviceId             = serviceVersionInfo.getServiceId();
-				final Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, serviceId, versionType, tagChangeType, resourceId, tagId);
+					final Long serviceId = serviceVersionInfo.getServiceId();
+					final Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager, serviceId, versionType, tagChangeType, resourceId, tagId);
 
-				daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+					daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
+				}
 			}
 		} else {
-			LOG.warn("Unexpected empty list of serviceVersionInfos and/or null value for resourceId and tagId");
+			LOG.warn("Both resourceId and tagId are null! Should not have come here!");
 		}
 
 	}
