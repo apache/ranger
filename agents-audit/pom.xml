@@ -363,5 +363,10 @@
             <artifactId>aws-java-sdk-bundle</artifactId>
             <version>${aws-java-sdk.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents</groupId>
+            <artifactId>httpcore</artifactId>
+            <version>${httpcomponents.httpcore.version}</version>
+        </dependency>
     </dependencies>
 </project>
