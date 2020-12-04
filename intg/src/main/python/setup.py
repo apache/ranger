@@ -18,13 +18,12 @@
 
 import setuptools
 
-# with open("README.md", "r") as fh:
-#     long_description = fh.read()
-long_description = "Apache Ranger Python client"
+with open("README.md", "r") as fh:
+    long_description = fh.read()
 
 setuptools.setup(
     name="apache-ranger",
-    version="0.0.1",
+    version="0.0.2",
     author="Apache Ranger",
     author_email="dev@ranger.apache.org",
     description="Apache Ranger Python client",
@@ -37,5 +36,6 @@ setuptools.setup(
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
+    keywords='ranger client, apache ranger',
     python_requires='>=3.6',
 )
