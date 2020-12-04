@@ -36,7 +36,7 @@ Verify if apache-ranger client is installed:
 
 Package      Version
 ------------ ---------
-apache-ranger 0.0.1
+apache-ranger 0.0.2
 ```
 
 ## Usage
