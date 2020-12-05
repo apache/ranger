@@ -303,76 +303,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	private void initUserRoles() {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug(" ==> RangerHiveAuthorizer.initUserRoles()");
-		}
-		// from SQLStdHiveAccessController.initUserRoles()
-		// to aid in testing through .q files, authenticator is passed as argument to
-		// the interface. this helps in being able to switch the user within a session.
-		// so we need to check if the user has changed
-		String newUserName = getHiveAuthenticator().getUserName();
-		if (Objects.equals(currentUserName, newUserName)) {
-			// no need to (re-)initialize the currentUserName, currentRoles fields
-			return;
-		}
-		this.currentUserName = newUserName;
-		try {
-			currentRoles = getCurrentRoleNamesFromRanger();
-		} catch (HiveAuthzPluginException e) {
-			LOG.error("Error while fetching roles from ranger for user : " + currentUserName, e);
-		}
-		LOG.info("Current user : " + currentUserName + ", Current Roles : " + currentRoles);
-	}
-
-	private Set<String> getCurrentRoles() {
-		// from SQLStdHiveAccessController.getCurrentRoles()
-		initUserRoles();
-		return currentRoles;
-	}
-
-	private Set<String> getCurrentRoleNamesFromRanger() throws HiveAuthzPluginException {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerHiveAuthorizer.getCurrentRoleNamesFromRanger()");
-		}
-		UserGroupInformation ugi = getCurrentUserGroupInfo();
-
-		if (ugi == null) {
-			throw new HiveAuthzPluginException("User information not available");
-		}
-		Set<String> ret = new HashSet<String>();
-		String user = ugi.getShortUserName();
-
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
-		try {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== getCurrentRoleNamesFromRanger() for user " + user);
-			}
-
-			List<String> userRoles = hivePlugin.getUserRoles(user, auditHandler);
-
-			if (userRoles == null) {
-				userRoles = Collections.emptyList();
-			}
-
-			for (String role : userRoles) {
-				if (!ROLE_ADMIN.equalsIgnoreCase(role)) {
-					ret.add(role);
-				} else {
-					this.adminRole = role;
-				}
-			}
-		} catch (Exception excp) {
-			throw new HiveAuthzPluginException(excp);
-		} finally {
-			auditHandler.flushAudit();
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHiveAuthorizer.getCurrentRoleNamesFromRanger() for user " + user);
-		}
-		return ret;
-	}
-
 	@Override
 	public void setCurrentRole(String roleName) throws HiveAccessControlException, HiveAuthzPluginException {
 		// from SQLStdHiveAccessController.setCurrentRole()
@@ -421,6 +351,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		List<String> ret = null;
 
 		String currentUserName = ugi.getShortUserName();
+		Set<String> groups     = Sets.newHashSet(ugi.getGroupNames());
 		List<String> userNames = Arrays.asList(currentUserName);
 
 		try {
@@ -428,8 +359,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				LOG.debug("<== getAllRoles()");
 			}
 
-			ret = hivePlugin.getAllRoles(ugi.getShortUserName(), auditHandler);
-			result = true;
+			if ( hivePlugin != null) {
+				Set<String> roles = hivePlugin.getRolesFromUserAndGroups(currentUserName, groups);
+				ret = new ArrayList<>(roles);
+				result = true;
+			}
 
 		} catch(Exception excp) {
 			throw new HiveAuthzPluginException(excp);
@@ -1127,7 +1061,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			Set<String> groups = Sets.newHashSet(ugi.getGroupNames());
 			Set<String> roles  = getCurrentRoles();
 			if (LOG.isDebugEnabled()) {
-				LOG.debug(String.format("filterListCmdObjects: user[%s], groups%s", user, groups));
+				LOG.debug(String.format("filterListCmdObjects: user[%s], groups[%s], roles[%s] ", user, groups, roles));
 			}
 			
 			if (ret == null) { // if we got any items to filter then we can't return back a null.  We must return back a list even if its empty.
@@ -2918,6 +2852,93 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 		return ret;
 	}
+
+	private Set<String> getCurrentRoles() {
+		// from SQLStdHiveAccessController.getCurrentRoles()
+		initUserRoles();
+		return currentRoles;
+	}
+
+	private void initUserRoles() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(" ==> RangerHiveAuthorizer.initUserRoles()");
+		}
+		// from SQLStdHiveAccessController.initUserRoles()
+		// to aid in testing through .q files, authenticator is passed as argument to
+		// the interface. this helps in being able to switch the user within a session.
+		// so we need to check if the user has changed
+		String newUserName = getHiveAuthenticator().getUserName();
+		if (Objects.equals(currentUserName, newUserName)) {
+			// no need to (re-)initialize the currentUserName, currentRoles fields
+			return;
+		}
+		this.currentUserName = newUserName;
+		try {
+			currentRoles = getCurrentRoleNamesFromRanger();
+		} catch (HiveAuthzPluginException e) {
+			LOG.error("Error while fetching roles from ranger for user : " + currentUserName, e);
+		}
+		LOG.info("Current user : " + currentUserName + ", Current Roles : " + currentRoles);
+	}
+
+	private Set<String> getCurrentRoleNamesFromRanger() throws HiveAuthzPluginException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("RangerHiveAuthorizer.getCurrentRoleNamesFromRanger()");
+		}
+		boolean result = false;
+		UserGroupInformation ugi = getCurrentUserGroupInfo();
+
+		if (ugi == null) {
+			throw new HiveAuthzPluginException("User information not available");
+		}
+		Set<String> ret = new HashSet<String>();
+		String user = ugi.getShortUserName();
+		Set<String> groups = Sets.newHashSet(ugi.getGroupNames());
+
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		try {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== getCurrentRoleNamesFromRanger() for user " + user +", userGroups: " + groups);
+			}
+			Set<String> userRoles = new HashSet<String>(getRolesforUserAndGroups(user, groups));
+			for (String role : userRoles) {
+				if (!ROLE_ADMIN.equalsIgnoreCase(role)) {
+					ret.add(role);
+				} else {
+					this.adminRole = role;
+				}
+			}
+			result = true;
+		} catch (Exception excp) {
+			throw new HiveAuthzPluginException(excp);
+		} finally {
+			List<String> roleNames = new ArrayList<>(ret);
+			RangerAccessResult accessResult = createAuditEvent(hivePlugin, currentUserName, roleNames, HiveOperationType.SHOW_ROLES, HiveAccessType.SELECT, null, result);
+			auditHandler.processResult(accessResult);
+			auditHandler.flushAudit();
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerHiveAuthorizer.getCurrentRoleNamesFromRanger() for user: " + user + ", roleNames: " + ret);
+		}
+		return ret;
+	}
+
+	private Set<String> getRolesforUserAndGroups(String user, Set<String> groups) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerHiveAuthorizer.getRolesforUserAndGroups()");
+		}
+
+		Set<String> ret = null;
+		if (hivePlugin != null) {
+			ret = hivePlugin.getRolesFromUserAndGroups(user, groups);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerHiveAuthorizer.getRolesforUserAndGroups(), user: " + user + ", groups: " + groups + ", roles: " + ret);
+		}
+
+		return ret != null ? ret : Collections.emptySet();
+	}
 }
 
 enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI, SERVICE_NAME, GLOBAL };
@@ -2964,6 +2985,8 @@ class HiveObj {
 		ret = dbName.split("\\.");
 		return ret;
 	}
+
+
 }
 
 class RangerHivePlugin extends RangerBasePlugin {
