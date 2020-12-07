@@ -1404,7 +1404,10 @@ public class RangerPolicyRepository {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyRepository.deletePolicyEvaluator(" + evaluator.getPolicy() + ")");
         }
-        int policyType = evaluator.getPolicy().getPolicyType();
+        Integer policyType = evaluator.getPolicy().getPolicyType();
+        if (policyType == null) {
+            policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+        }
 
         List<RangerPolicyEvaluator> evaluators = null;
 
