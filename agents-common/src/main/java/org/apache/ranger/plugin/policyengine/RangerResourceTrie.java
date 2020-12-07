@@ -947,19 +947,20 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                             if (CollectionUtils.isEmpty(evaluators)) {
                                 evaluators = null;
                             }
+                        }
+                    }
+                }
+                if (wildcardEvaluators != null) {
+                    if (isSharingParentWildcardEvaluators) {
+                        wildcardEvaluators = null;
+                    } else {
+                        Set<U> parentWildcardEvaluators = getParent() == null ? null : getParent().getWildcardEvaluators();
 
-                            if (isSharingParentWildcardEvaluators) {
+                        if (parentWildcardEvaluators != null) {
+                            wildcardEvaluators.removeAll(parentWildcardEvaluators);
+
+                            if (CollectionUtils.isEmpty(wildcardEvaluators)) {
                                 wildcardEvaluators = null;
-                            } else {
-                                Set<U> parentWildcardEvaluators = getParent() == null ? null : getParent().getWildcardEvaluators();
-
-                                if (parentWildcardEvaluators != null) {
-                                    wildcardEvaluators.removeAll(parentWildcardEvaluators);
-
-                                    if (CollectionUtils.isEmpty(wildcardEvaluators)) {
-                                        wildcardEvaluators = null;
-                                    }
-                                }
                             }
                         }
                     }
