@@ -81,6 +81,7 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.source.file.check.interval.millis";
 
+	private static final String TAGSYNC_KEYSTORE_TYPE_PROP = "ranger.keystore.file.type";
 	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.keystore.filename";
 	private static final String TAGSYNC_ATLASREST_KEYSTORE_PROP = "ranger.tagsync.source.atlasrest.keystore.filename";
 
@@ -216,9 +217,8 @@ public class TagSyncConfig extends Configuration {
 		return sb.toString() + super.toString();
 	}
 
-	static public boolean isTagSyncEnabled(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_ENABLED_PROP);
-		return val == null || Boolean.valueOf(val.trim());
+	static public String getTagsyncKeyStoreType(Properties prop) {
+		return prop.getProperty(TAGSYNC_KEYSTORE_TYPE_PROP);
 	}
 
 	static public boolean isTagSyncRangerCookieEnabled(Properties prop) {
@@ -277,6 +277,11 @@ public class TagSyncConfig extends Configuration {
 		return prop.getProperty(TAGSYNC_TAGADMIN_REST_URL_PROP);
 	}
 
+	static public boolean isTagSyncEnabled(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_ENABLED_PROP);
+		return val == null || Boolean.valueOf(val.trim());
+	}
+
 	static public String getTagAdminPassword(Properties prop) {
 		//update credential from keystore
 		String password = null;
@@ -291,7 +296,7 @@ public class TagSyncConfig extends Configuration {
 			if (path != null) {
 				if (!path.trim().isEmpty()) {
 					try {
-						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_DEST_RANGER_PASSWORD_ALIAS);
+						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_DEST_RANGER_PASSWORD_ALIAS, getTagsyncKeyStoreType(prop));
 					} catch (Exception ex) {
 						password = null;
 					}
@@ -341,7 +346,7 @@ public class TagSyncConfig extends Configuration {
 			if (path != null) {
 				if (!path.trim().isEmpty()) {
 					try {
-						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_SOURCE_ATLASREST_PASSWORD_ALIAS);
+						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_SOURCE_ATLASREST_PASSWORD_ALIAS, getTagsyncKeyStoreType(prop));
 					} catch (Exception ex) {
 						password = null;
 					}

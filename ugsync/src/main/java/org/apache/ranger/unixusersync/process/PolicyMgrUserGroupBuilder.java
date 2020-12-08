@@ -22,7 +22,6 @@ package org.apache.ranger.unixusersync.process;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.UnknownHostException;
-import java.security.KeyStore;
 import java.security.PrivilegedAction;
 import java.util.Map;
 import java.util.Set;
@@ -186,8 +185,8 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		String trustStoreFile = config.getSSLTrustStorePath();
 		String keyStoreFilepwd = config.getSSLKeyStorePathPassword();
 		String trustStoreFilepwd = config.getSSLTrustStorePathPassword();
-		String keyStoreType = KeyStore.getDefaultType();
-		String trustStoreType = KeyStore.getDefaultType();
+		String keyStoreType = config.getSSLKeyStoreType();
+		String trustStoreType = config.getSSLTrustStoreType();
 		authenticationType = config.getProperty(AUTHENTICATION_TYPE,"simple");
 		try {
 			principal = SecureClientLogin.getPrincipal(config.getProperty(PRINCIPAL,""), LOCAL_HOSTNAME);

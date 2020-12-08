@@ -75,8 +75,8 @@ public class EmbeddedServer {
 	private static final String ADMIN_NAME_RULES = "hadoop.security.auth_to_local";
 	private static final String ADMIN_SERVER_NAME = "rangeradmin";
 	private static final String KMS_SERVER_NAME   = "rangerkms";
-	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = "jks";
-	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = "jks";
+	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
+	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
 	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLS";
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE = KeyManagerFactory.getDefaultAlgorithm();
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE = TrustManagerFactory.getDefaultAlgorithm();
@@ -152,6 +152,8 @@ public class EmbeddedServer {
 			ssl.setScheme("https");
 			ssl.setAttribute("SSLEnabled", "true");
 			ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLS"));
+			ssl.setAttribute("keystoreType", EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
+			ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
 			String clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.clientAuth", "false");
 			if("false".equalsIgnoreCase(clientAuth)){
 				clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.client.auth", "want");
@@ -161,7 +163,7 @@ public class EmbeddedServer {
 			String keyAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
 			String keystorePass=null;
 			if(providerPath!=null && keyAlias!=null){
-				keystorePass = CredentialReader.getDecryptedString(providerPath.trim(), keyAlias.trim());
+				keystorePass = CredentialReader.getDecryptedString(providerPath.trim(), keyAlias.trim(), EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
 				if (StringUtils.isBlank(keystorePass) || "none".equalsIgnoreCase(keystorePass.trim())) {
 					keystorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.pass");
 				}
@@ -432,8 +434,9 @@ public class EmbeddedServer {
 			keyStoreFile = getKeystoreFile();
 			keyStoreAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
 		}
+		String keyStoreFileType = EmbeddedServerUtil.getConfig("ranger.keystore.file.type",RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
 		String credentialProviderPath = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
-		String keyStoreFilepwd = CredentialReader.getDecryptedString(credentialProviderPath, keyStoreAlias);
+		String keyStoreFilepwd = CredentialReader.getDecryptedString(credentialProviderPath, keyStoreAlias, keyStoreFileType);
 
 		if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
 			InputStream in = null;
@@ -442,11 +445,11 @@ public class EmbeddedServer {
 				in = getFileInputStream(keyStoreFile);
 
 				if (in != null) {
-					KeyStore keyStore = KeyStore.getInstance(RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
+					KeyStore keyStore = KeyStore.getInstance(keyStoreFileType);
 
 					keyStore.load(in, keyStoreFilepwd.toCharArray());
 
-					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
+					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
 					keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
 
@@ -488,7 +491,8 @@ public class EmbeddedServer {
 		String truststoreFile = EmbeddedServerUtil.getConfig("ranger.truststore.file");
 		String truststoreAlias = EmbeddedServerUtil.getConfig("ranger.truststore.alias");
 		String credentialProviderPath = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
-		String trustStoreFilepwd = CredentialReader.getDecryptedString(credentialProviderPath, truststoreAlias);
+		String truststoreFileType = EmbeddedServerUtil.getConfig("ranger.truststore.file.type",RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
+		String trustStoreFilepwd = CredentialReader.getDecryptedString(credentialProviderPath, truststoreAlias, truststoreFileType);
 
 		if (StringUtils.isNotEmpty(truststoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
 			InputStream in = null;
@@ -497,7 +501,7 @@ public class EmbeddedServer {
 				in = getFileInputStream(truststoreFile);
 
 				if (in != null) {
-					KeyStore trustStore = KeyStore.getInstance(RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
+					KeyStore trustStore = KeyStore.getInstance(truststoreFileType);
 
 					trustStore.load(in, trustStoreFilepwd.toCharArray());
 

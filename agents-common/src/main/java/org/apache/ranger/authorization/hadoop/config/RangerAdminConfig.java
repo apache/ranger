@@ -19,12 +19,16 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
+import java.security.KeyStore;
 
 public class RangerAdminConfig extends RangerConfiguration {
     private static final Logger LOG = Logger.getLogger(RangerAdminConfig.class);
 
     private static volatile RangerAdminConfig sInstance = null;
+    private final boolean isFipsEnabled;
 
     public static RangerAdminConfig getInstance() {
         RangerAdminConfig ret = RangerAdminConfig.sInstance;
@@ -44,10 +48,11 @@ public class RangerAdminConfig extends RangerConfiguration {
 
     private RangerAdminConfig() {
         super();
-
         addAdminResources();
+        String storeType = get(RangerConfigConstants.RANGER_KEYSTORE_TYPE, KeyStore.getDefaultType());
+        isFipsEnabled = StringUtils.equalsIgnoreCase("bcfks", storeType) ? true : false;
+        
     }
-
 
     private boolean addAdminResources() {
         if (LOG.isDebugEnabled()) {
@@ -81,5 +86,9 @@ public class RangerAdminConfig extends RangerConfiguration {
         }
 
         return ret;
+    }
+
+    public boolean isFipsEnabled() {
+        return isFipsEnabled;
     }
 }

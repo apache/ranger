@@ -21,6 +21,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import java.io.File;
+import java.util.Arrays;
 
 import org.apache.commons.io.FileUtils;
 import org.junit.After;
@@ -48,7 +49,7 @@ public class Testbuildks {
     @Test
     public void testBuildKSsuccess() throws Exception {
         buildks buildksOBJ = new buildks();
-        String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile};
+        String[] argsCreateCommand = {"create", "TestCredential1", "-value", "PassworD123", "-provider", "jceks://file@/" + keystoreFile, "","jceks"};
         int rc1 = buildksOBJ.createCredential(argsCreateCommand);
         assertEquals(0, rc1);
 
@@ -57,6 +58,7 @@ public class Testbuildks {
         assertEquals(0, rc2);
 
         String[] argsGetCommand = {"get", "TestCredential1", "-provider", "jceks://file@/" +keystoreFile };
+        System.out.println("Get command = " + Arrays.toString(argsGetCommand));
         String pw = buildksOBJ.getCredential(argsGetCommand);
         assertEquals("PassworD123", pw);
         assertTrue(pw.equals("PassworD123"));

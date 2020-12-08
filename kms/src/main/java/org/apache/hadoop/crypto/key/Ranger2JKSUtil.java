@@ -41,7 +41,7 @@ public class Ranger2JKSUtil {
 	private static final String AZURE_KEYVAULT_CERTIFICATE_PATH = "ranger.kms.azure.keyvault.certificate.path";
 	private static final String AZURE_KEYVAULT_CERTIFICATE_PASSWORD = "ranger.kms.azure.keyvault.certificate.password";
 	private static final String CREDENTIAL_PATH = "ranger.ks.jpa.jdbc.credential.provider.path";
-	private static final String DEFAULT_KEYSTORE_TYPE = "jceks";
+	private static final String DEFAULT_KEYSTORE_TYPE = KeyStore.getDefaultType();
 	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
 	private static final String KEYSECURE_ENABLED = "ranger.kms.keysecure.enabled";
 	private static final String KEYSECURE_USERNAME = "ranger.kms.keysecure.login.username";
@@ -222,7 +222,7 @@ public class Ranger2JKSUtil {
 			String aliasValue = conf.get(alias);
 			if (pathValue != null && aliasValue != null) {
 				String xaDBPassword = CredentialReader.getDecryptedString(
-						pathValue.trim(), aliasValue.trim());
+						pathValue.trim(), aliasValue.trim(), KeyStore.getDefaultType());
 				if (xaDBPassword != null && !xaDBPassword.trim().isEmpty()
 						&& !xaDBPassword.trim().equalsIgnoreCase("none")) {
 					conf.set(key, xaDBPassword);

@@ -26,6 +26,7 @@ import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
 import java.security.Key;
+import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.UnrecoverableKeyException;
@@ -619,8 +620,9 @@ public class RangerKeyStoreProvider extends KeyProvider {
 			String pathValue = conf.get(path);
 			String aliasValue = conf.get(alias);
 			if (pathValue != null && aliasValue != null) {
+				String storeType = conf.get("ranger.keystore.file.type", KeyStore.getDefaultType());
 				String xaDBPassword = CredentialReader.getDecryptedString(
-						pathValue.trim(), aliasValue.trim());
+						pathValue.trim(), aliasValue.trim(), storeType);
 				if (xaDBPassword != null && !xaDBPassword.trim().isEmpty()
 						&& !xaDBPassword.trim().equalsIgnoreCase("none")) {
 					conf.set(key, xaDBPassword);

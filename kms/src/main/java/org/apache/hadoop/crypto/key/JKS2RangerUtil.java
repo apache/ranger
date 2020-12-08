@@ -41,7 +41,7 @@ public class JKS2RangerUtil {
 	private static final String AZURE_KEYVAULT_CERTIFICATE_PASSWORD = "ranger.kms.azure.keyvault.certificate.password";
 	private static final String AZURE_CLIENT_SECRET_ALIAS = "ranger.kms.azure.client.secret.alias";
 	private static final String CREDENTIAL_PATH = "ranger.ks.jpa.jdbc.credential.provider.path";
-	private static final String DEFAULT_KEYSTORE_TYPE = "jceks";
+	private static final String DEFAULT_KEYSTORE_TYPE = KeyStore.getDefaultType();
 	private static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
 	private static final String KEYSECURE_ENABLED = "ranger.kms.keysecure.enabled";
 	private static final String KEYSECURE_USERNAME = "ranger.kms.keysecure.login.username";
@@ -74,7 +74,7 @@ public class JKS2RangerUtil {
 				System.exit(1);
 			}
 			String keyStoreType = (args.length == 2 ? args[1]
-					: DEFAULT_KEYSTORE_TYPE);
+					: KeyStore.getDefaultType());
 			try {
 				KeyStore.getInstance(keyStoreType);
 			} catch (KeyStoreException e) {
@@ -105,7 +105,7 @@ public class JKS2RangerUtil {
 			String aliasValue = conf.get(alias);
 			if (pathValue != null && aliasValue != null) {
 				String xaDBPassword = CredentialReader.getDecryptedString(
-						pathValue.trim(), aliasValue.trim());
+						pathValue.trim(), aliasValue.trim(), KeyStore.getDefaultType());
 				if (xaDBPassword != null && !xaDBPassword.trim().isEmpty()
 						&& !xaDBPassword.trim().equalsIgnoreCase("none")) {
 					conf.set(key, xaDBPassword);
