@@ -96,6 +96,7 @@ public class TestTagEnricher {
 
         tagEnricher.setServiceName(testCase.serviceName);
         tagEnricher.setServiceDef(testCase.serviceDef);
+        tagEnricher.init();
         tagEnricher.setServiceTags(serviceTags);
 
         List<String> expectedTags = new ArrayList<>();

@@ -289,6 +289,24 @@ public class RangerServiceDefHelper {
 		return _delegate.isResourceGraphValid();
 	}
 
+	public List<String> getOrderedResourceNames(Collection<String> resourceNames) {
+		final List<String> ret;
+		if (resourceNames != null) {
+			ret = new ArrayList<>();
+			for (String orderedName : _delegate.getAllOrderedResourceNames()) {
+				for (String resourceName : resourceNames) {
+					if (StringUtils.equals(orderedName, resourceName) && !ret.contains(resourceName)) {
+						ret.add(resourceName);
+						break;
+					}
+				}
+			}
+		} else {
+			ret = Collections.EMPTY_LIST;
+		}
+		return ret;
+	}
+
 	/**
 	 * Not designed for public access.  Package level only for testability.
 	 */
@@ -299,6 +317,7 @@ public class RangerServiceDefHelper {
 		final String _serviceName;
 		final boolean _checkForCycles;
 		final boolean _valid;
+		final List<String> _orderedResourceNames;
 		final static Set<List<RangerResourceDef>> EMPTY_RESOURCE_HIERARCHY = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
 
 
@@ -327,6 +346,13 @@ public class RangerServiceDefHelper {
 					_hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
 				}
 			}
+
+			if (isValid) {
+				_orderedResourceNames = buildSortedResourceNames();
+			} else {
+				_orderedResourceNames = new ArrayList<>();
+			}
+
 			_valid = isValid;
 			if (LOG.isDebugEnabled()) {
 				String message = String.format("Found [%d] resource hierarchies for service [%s] update-date[%s]: %s", _hierarchies.size(), _serviceName,
@@ -536,6 +562,53 @@ public class RangerServiceDefHelper {
 				map.put(resourceDef.getName(), resourceDef);
 			}
 			return map;
+		}
+
+		List<String> getAllOrderedResourceNames() {
+			return this._orderedResourceNames;
+		}
+
+		private static class ResourceNameLevel implements Comparable<ResourceNameLevel> {
+			private String resourceName;
+			private int    level;
+
+			ResourceNameLevel(String resourceName, int level) {
+				this.resourceName = resourceName;
+				this.level        = level;
+			}
+
+			@Override
+			public int compareTo(ResourceNameLevel other) {
+				return Integer.compare(this.level, other.level);
+			}
+		}
+
+		private List<String> buildSortedResourceNames() {
+			final List<String> ret = new ArrayList<>();
+
+			boolean isValid = true;
+			List<ResourceNameLevel> resourceNameLevels = new ArrayList<>();
+			for (RangerResourceDef resourceDef : _serviceDef.getResources()) {
+				String name = resourceDef.getName();
+				Integer level = resourceDef.getLevel();
+				if (name != null && level != null) {
+					ResourceNameLevel resourceNameLevel = new ResourceNameLevel(name, level);
+					resourceNameLevels.add(resourceNameLevel);
+				} else {
+					LOG.error("Incorrect resourceDef:[name=" + name + "]");
+					isValid = false;
+					break;
+				}
+			}
+
+			if (isValid) {
+				Collections.sort(resourceNameLevels);
+
+				for (ResourceNameLevel resourceNameLevel : resourceNameLevels) {
+					ret.add(resourceNameLevel.resourceName);
+				}
+			}
+			return ret;
 		}
 	}
 

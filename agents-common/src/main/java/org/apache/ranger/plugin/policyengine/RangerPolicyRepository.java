@@ -790,64 +790,71 @@ public class RangerPolicyRepository {
             perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_OP_LOG, "RangerPolicyRepository.getLikelyMatchEvaluators(resource=" + resource.getAsString() + ")");
         }
 
-        Set<String>                 resourceKeys = resource == null ? null : resource.getKeys();
+        List<String>                     resourceKeys = resource == null ? null : options.getServiceDefHelper().getOrderedResourceNames(resource.getKeys());
+        Set<RangerPolicyEvaluator>       smallestList = null;
 
-        if(CollectionUtils.isNotEmpty(resourceKeys)) {
-            Set<RangerPolicyEvaluator>       evaluators = null;
-            List<Set<RangerPolicyEvaluator>> resourceEvaluatorsSet = null;
-            Set<RangerPolicyEvaluator>       smallestSet = null;
+        if (CollectionUtils.isNotEmpty(resourceKeys)) {
 
             for (String resourceName : resourceKeys) {
-                RangerResourceTrie trie = resourceTrie.get(resourceName);
+                RangerResourceTrie<RangerPolicyEvaluator> trie = resourceTrie.get(resourceName);
 
                 if (trie == null) { // if no trie exists for this resource level, ignore and continue to next level
                     continue;
                 }
 
-                Set<RangerPolicyEvaluator> resourceEvaluators = trie.getEvaluatorsForResource(resource.getValue(resourceName));
+                Set<RangerPolicyEvaluator> serviceResourceMatchersForResource = trie.getEvaluatorsForResource(resource.getValue(resourceName));
+                Set<RangerPolicyEvaluator> inheritedResourceMatchers = trie.getInheritedEvaluators();
 
-                if (CollectionUtils.isEmpty(resourceEvaluators)) { // no policies for this resource, bail out
-                    resourceEvaluatorsSet = null;
-                    smallestSet = null;
+                if (smallestList != null) {
+                    if (CollectionUtils.isEmpty(inheritedResourceMatchers) && CollectionUtils.isEmpty(serviceResourceMatchersForResource)) {
+                        smallestList = null;
+                    } else if (CollectionUtils.isEmpty(inheritedResourceMatchers)) {
+                        smallestList.retainAll(serviceResourceMatchersForResource);
+                    } else if (CollectionUtils.isEmpty(serviceResourceMatchersForResource)) {
+                        smallestList.retainAll(inheritedResourceMatchers);
+                    } else {
+                        Set<RangerPolicyEvaluator> smaller, bigger;
+                        if (serviceResourceMatchersForResource.size() < inheritedResourceMatchers.size()) {
+                            smaller = serviceResourceMatchersForResource;
+                            bigger = inheritedResourceMatchers;
+                        } else {
+                            smaller = inheritedResourceMatchers;
+                            bigger = serviceResourceMatchersForResource;
+                        }
+                        Set<RangerPolicyEvaluator> tmp = new HashSet<>();
+                        if (smallestList.size() < smaller.size()) {
+                            smallestList.stream().filter(smaller::contains).forEach(tmp::add);
+                            smallestList.stream().filter(bigger::contains).forEach(tmp::add);
+                        } else {
+                            smaller.stream().filter(smallestList::contains).forEach(tmp::add);
+                            if (smallestList.size() < bigger.size()) {
+                                smallestList.stream().filter(bigger::contains).forEach(tmp::add);
+                            } else {
+                                bigger.stream().filter(smallestList::contains).forEach(tmp::add);
+                            }
+                        }
+                        smallestList = tmp;
+                    }
+                } else {
+                    if (CollectionUtils.isEmpty(inheritedResourceMatchers) || CollectionUtils.isEmpty(serviceResourceMatchersForResource)) {
+                        Set<RangerPolicyEvaluator> tmp = CollectionUtils.isEmpty(inheritedResourceMatchers) ? serviceResourceMatchersForResource : inheritedResourceMatchers;
+                        smallestList = resourceKeys.size() == 1 || CollectionUtils.isEmpty(tmp) ? tmp : new HashSet<>(tmp);
+                    } else {
+                        smallestList = new HashSet<>(serviceResourceMatchersForResource);
+                        smallestList.addAll(inheritedResourceMatchers);
+                    }
+                }
+
+                if (CollectionUtils.isEmpty(smallestList)) {// no tags for this resource, bail out
+                    smallestList = null;
                     break;
                 }
-
-                if (smallestSet == null) {
-                    smallestSet = resourceEvaluators;
-                } else {
-                    if (resourceEvaluatorsSet == null) {
-                        resourceEvaluatorsSet = new ArrayList<>();
-                        resourceEvaluatorsSet.add(smallestSet);
-                    }
-                    resourceEvaluatorsSet.add(resourceEvaluators);
-
-                    if (smallestSet.size() > resourceEvaluators.size()) {
-                        smallestSet = resourceEvaluators;
-                    }
-                }
             }
+        }
 
-            if (resourceEvaluatorsSet != null) {
-                evaluators = new HashSet<>(smallestSet);
-                for (Set<RangerPolicyEvaluator> resourceEvaluators : resourceEvaluatorsSet) {
-                    if (resourceEvaluators != smallestSet) {
-                        // remove policies from ret that are not in resourceEvaluators
-                        evaluators.retainAll(resourceEvaluators);
-
-                        if (CollectionUtils.isEmpty(evaluators)) { // if no policy exists, bail out and return empty list
-                            evaluators = null;
-                            break;
-                        }
-                    }
-                }
-            } else {
-                evaluators = smallestSet;
-            }
-
-            if (evaluators != null) {
-                ret = new ArrayList<>(evaluators);
-                ret.sort(RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR);
-            }
+        if (smallestList != null) {
+            ret = new ArrayList<>(smallestList);
+            ret.sort(RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR);
         }
 
         RangerPerfTracer.logAlways(perf);
@@ -1320,10 +1327,7 @@ public class RangerPolicyRepository {
 
     private void removeEvaluatorFromTrie(RangerPolicyEvaluator oldEvaluator, RangerResourceTrie<RangerPolicyEvaluator> trie, String resourceDefName) {
         if (oldEvaluator != null) {
-            RangerPolicy.RangerPolicyResource resource = oldEvaluator.getPolicyResource().get(resourceDefName);
-            if (resource != null) {
-                trie.delete(resource, oldEvaluator);
-            }
+            trie.delete(oldEvaluator.getPolicyResource().get(resourceDefName), oldEvaluator);
         }
     }
 

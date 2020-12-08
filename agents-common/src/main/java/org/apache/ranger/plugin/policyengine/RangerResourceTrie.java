@@ -57,6 +57,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     private final String wildcardChars;
     private final TrieNode<T> root;
     private final boolean isOptimizedForRetrieval;
+    private       Set<T>  inheritedEvaluators;
 
     public RangerResourceTrie(RangerServiceDef.RangerResourceDef resourceDef, List<T> evaluators) {
         this(resourceDef, evaluators, true, null);
@@ -73,6 +74,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         this.optIgnoreCase = other.optIgnoreCase;
         this.optWildcard = other.optWildcard;
         this.wildcardChars = other.wildcardChars;
+        this.inheritedEvaluators = other.inheritedEvaluators != null ? new HashSet<>(other.inheritedEvaluators) : null;
         this.isOptimizedForRetrieval = false;
         this.root = copyTrieSubtree(other.root, null);
 
@@ -159,6 +161,10 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
     }
 
+    public Set<T> getInheritedEvaluators() {
+        return inheritedEvaluators;
+    }
+
     public Set<T> getEvaluatorsForResource(Object resource) {
         if (resource instanceof String) {
             return getEvaluatorsForResource((String) resource);
@@ -186,11 +192,11 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
         if (resource == null) {
             if (evaluator.isAncestorOf(resourceDef)) {
-                root.addWildcardEvaluator(evaluator);
+                addInheritedEvaluator(evaluator);
             }
         } else {
             if (resource.getIsExcludes()) {
-                root.addWildcardEvaluator(evaluator);
+                addInheritedEvaluator(evaluator);
             } else {
                 if (CollectionUtils.isNotEmpty(resource.getValues())) {
                     for (String value : resource.getValues()) {
@@ -216,11 +222,13 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_INIT_LOG, "RangerResourceTrie.delete(name=" + resource + ")");
         }
 
-        boolean isRemoved = false;
-        if (resource.getIsExcludes()) {
-            isRemoved = root.removeWildcardEvaluator(evaluator);
-        }
-        if (!isRemoved) {
+        if (resource == null) {
+            if (evaluator.isAncestorOf(resourceDef)) {
+                removeInheritedEvaluator(evaluator);
+            }
+        } else if (resource.getIsExcludes()) {
+            removeInheritedEvaluator(evaluator);
+        } else {
             for (String value : resource.getValues()) {
                 TrieNode<T> node = getNodeForResource(value);
                 if (node != null) {
@@ -245,6 +253,23 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
     TrieNode<T> getRoot() {
         return root;
+    }
+
+    private void addInheritedEvaluator(T evaluator) {
+        if (inheritedEvaluators == null) {
+            inheritedEvaluators = new HashSet<>();
+        }
+
+        inheritedEvaluators.add(evaluator);
+    }
+
+    private void removeInheritedEvaluator(T evaluator) {
+        if (CollectionUtils.isNotEmpty(inheritedEvaluators) && inheritedEvaluators.contains(evaluator)) {
+            inheritedEvaluators.remove(evaluator);
+            if (CollectionUtils.isEmpty(inheritedEvaluators)) {
+                inheritedEvaluators = null;
+            }
+        }
     }
 
     private TrieNode<T> copyTrieSubtree(final TrieNode<T> source, final TrieNode<T> parent) {
@@ -339,14 +364,14 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
             if (policyResource == null) {
                 if (evaluator.isAncestorOf(resourceDef)) {
-                    ret.addWildcardEvaluator(evaluator);
+                    addInheritedEvaluator(evaluator);
                 }
 
                 continue;
             }
 
             if (policyResource.getIsExcludes()) {
-                ret.addWildcardEvaluator(evaluator);
+                addInheritedEvaluator(evaluator);
             } else {
                 RangerResourceMatcher resourceMatcher = evaluator.getResourceMatcher(resourceName);
 
@@ -810,7 +835,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
                 }
 
                 for (Map.Entry<Character, TrieNode<U>> entry : children.entrySet()) {
-                    TrieNode child = entry.getValue();
+                    TrieNode<U> child = entry.getValue();
 
                     child.populateTrieData(trieData);
                 }
