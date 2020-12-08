@@ -37,6 +37,7 @@ import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -437,66 +438,70 @@ public class PolicyEngine {
         Set<String> ret = null;
 
         if (MapUtils.isNotEmpty(this.resourceZoneTrie)) {
-            List<Set<RangerZoneResourceMatcher>> zoneMatchersList = null;
             Set<RangerZoneResourceMatcher>       smallestList     = null;
+            RangerServiceDefHelper               serviceDefHelper = policyRepository.getOptions().getServiceDefHelper();
 
-            for (Map.Entry<String, ?> entry : resource.entrySet()) {
-                String                                        resourceDefName = entry.getKey();
-                Object                                        resourceValues  = entry.getValue();
-                RangerResourceTrie<RangerZoneResourceMatcher> trie            = resourceZoneTrie.get(resourceDefName);
+            List<String> resourceKeys = resource == null ? new ArrayList<>() : serviceDefHelper.getOrderedResourceNames(resource.keySet());
+
+            for (String resourceDefName : resourceKeys) {
+                RangerResourceTrie<RangerZoneResourceMatcher> trie = resourceZoneTrie.get(resourceDefName);
 
                 if (trie == null) {
                     continue;
                 }
 
-                Set<RangerZoneResourceMatcher> matchedZones = trie.getEvaluatorsForResource(resourceValues);
+                Object resourceValues = resource.get(resourceDefName);
+
+                Set<RangerZoneResourceMatcher> zoneMatchersForResource = trie.getEvaluatorsForResource(resourceValues);
+                Set<RangerZoneResourceMatcher> inheritedZoneMatchers = trie.getInheritedEvaluators();
 
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("ResourceDefName:[" + resourceDefName + "], values:[" + resourceValues + "], matched-zones:[" + matchedZones + "]");
+                    LOG.debug("ResourceDefName:[" + resourceDefName + "], values:[" + resourceValues + "], matched-zones:[" + zoneMatchersForResource + "], inherited-zones:[" + inheritedZoneMatchers + "]");
                 }
 
-                if (CollectionUtils.isEmpty(matchedZones)) { // no policies for this resource, bail out
-                    zoneMatchersList = null;
-                    smallestList     = null;
-
-                    break;
-                }
-
-                if (smallestList == null) {
-                    smallestList = matchedZones;
-                } else {
-                    if (zoneMatchersList == null) {
-                        zoneMatchersList = new ArrayList<>();
-
-                        zoneMatchersList.add(smallestList);
+                if (smallestList != null) {
+                    if (CollectionUtils.isEmpty(inheritedZoneMatchers) && CollectionUtils.isEmpty(zoneMatchersForResource)) {
+                        smallestList = null;
+                    } else if (CollectionUtils.isEmpty(inheritedZoneMatchers)) {
+                        smallestList.retainAll(zoneMatchersForResource);
+                    } else if (CollectionUtils.isEmpty(zoneMatchersForResource)) {
+                        smallestList.retainAll(inheritedZoneMatchers);
+                    } else {
+                        Set<RangerZoneResourceMatcher> smaller, bigger;
+                        if (zoneMatchersForResource.size() < inheritedZoneMatchers.size()) {
+                            smaller = zoneMatchersForResource;
+                            bigger = inheritedZoneMatchers;
+                        } else {
+                            smaller = inheritedZoneMatchers;
+                            bigger = zoneMatchersForResource;
+                        }
+                        Set<RangerZoneResourceMatcher> tmp = new HashSet<>();
+                        if (smallestList.size() < smaller.size()) {
+                            smallestList.stream().filter(smaller::contains).forEach(tmp::add);
+                            smallestList.stream().filter(bigger::contains).forEach(tmp::add);
+                        } else {
+                            smaller.stream().filter(smallestList::contains).forEach(tmp::add);
+                            if (smallestList.size() < bigger.size()) {
+                                smallestList.stream().filter(bigger::contains).forEach(tmp::add);
+                            } else {
+                                bigger.stream().filter(smallestList::contains).forEach(tmp::add);
+                            }
+                        }
+                        smallestList = tmp;
                     }
-
-                    zoneMatchersList.add(matchedZones);
-
-                    if (smallestList.size() > matchedZones.size()) {
-                        smallestList = matchedZones;
+                } else {
+                    if (CollectionUtils.isEmpty(inheritedZoneMatchers) || CollectionUtils.isEmpty(zoneMatchersForResource)) {
+                        Set<RangerZoneResourceMatcher> tmp = CollectionUtils.isEmpty(inheritedZoneMatchers) ? zoneMatchersForResource : inheritedZoneMatchers;
+                        smallestList = resourceKeys.size() == 1 || CollectionUtils.isEmpty(tmp) ? tmp : new HashSet<>(tmp);
+                    } else {
+                        smallestList = new HashSet<>(zoneMatchersForResource);
+                        smallestList.addAll(inheritedZoneMatchers);
                     }
                 }
             }
-            if (smallestList != null) {
-                final Set<RangerZoneResourceMatcher> intersection;
 
-                if (zoneMatchersList != null) {
-                    intersection = new HashSet<>(smallestList);
-
-                    for (Set<RangerZoneResourceMatcher> zoneMatchers : zoneMatchersList) {
-                        if (zoneMatchers != smallestList) {
-                            // remove zones from intersection that are not in zoneMatchers
-                            intersection.retainAll(zoneMatchers);
-
-                            if (CollectionUtils.isEmpty(intersection)) { // if no zoneMatcher exists, bail out and return empty list
-                                break;
-                            }
-                        }
-                    }
-                } else {
-                    intersection = smallestList;
-                }
+            if (CollectionUtils.isNotEmpty(smallestList)) {
+                final Set<RangerZoneResourceMatcher> intersection = smallestList;
 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Resource:[" + resource + "], matched-zones:[" + intersection + "]");
