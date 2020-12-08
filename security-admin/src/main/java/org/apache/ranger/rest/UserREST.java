@@ -310,7 +310,6 @@ public class UserREST {
 			throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null,"");
 		}
 
-		logger.info("changePassword:" + changePassword.getLoginId());
 		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(changePassword.getLoginId());
 		if (gjUser == null) {
 			logger.warn("SECURITY:changePassword(): Invalid loginId provided: loginId="+ changePassword.getLoginId());

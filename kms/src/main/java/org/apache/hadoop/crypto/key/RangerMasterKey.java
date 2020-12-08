@@ -18,6 +18,7 @@
 package org.apache.hadoop.crypto.key;
 
 import java.security.Key;
+import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -56,9 +57,9 @@ public class RangerMasterKey implements RangerKMSMKI {
     private static final int DEFAULT_SALT_SIZE = 8;
     private static final String DEFAULT_SALT = "abcdefghijklmnopqrstuvwxyz01234567890";
     private static final String DEFAULT_CRYPT_ALGO = "PBEWithMD5AndTripleDES";
-    private static final String DEFAULT_MD_ALGO = "MD5";
     private static final int DEFAULT_ITERATION_COUNT = 1000;
     private static String password = null;
+    private static String DEFAULT_MD_ALGO;
 
     public static final String DBKS_SITE_XML = "dbks-site.xml";
     private static Properties serverConfigProperties = new Properties();
@@ -177,6 +178,7 @@ public class RangerMasterKey implements RangerKMSMKI {
             logger.debug("==> RangerMasterKey.init()");
         }
         XMLUtils.loadConfig(DBKS_SITE_XML, serverConfigProperties);
+        DEFAULT_MD_ALGO = getConfig("ranger.keystore.file.type", KeyStore.getDefaultType()).equalsIgnoreCase("bcfks") ? "SHA-512" : "MD5";
         MK_CIPHER = getConfig("ranger.kms.service.masterkey.password.cipher", DEFAULT_MK_CIPHER);
         MK_KeySize = getIntConfig("ranger.kms.service.masterkey.password.size", DEFAULT_MK_KeySize);
         SALT_SIZE = getIntConfig("ranger.kms.service.masterkey.password.salt.size", DEFAULT_SALT_SIZE);

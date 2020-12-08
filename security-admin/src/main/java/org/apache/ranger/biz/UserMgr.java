@@ -28,6 +28,7 @@ import javax.persistence.Query;
 import javax.servlet.http.HttpServletResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
@@ -52,6 +53,7 @@ import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.service.XGroupPermissionService;
 import org.apache.ranger.service.XPortalUserService;
 import org.apache.ranger.service.XUserPermissionService;
+import org.apache.ranger.util.Pbkdf2PasswordEncoderCust;
 import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXPasswordChange;
 import org.apache.ranger.view.VXPortalUser;
@@ -116,6 +118,8 @@ public class UserMgr {
 
 	@Autowired
 	GUIDUtil guidUtil;
+
+	private final boolean isFipsEnabled;
 	
 	String publicRoles[] = new String[] { RangerConstants.ROLE_USER,
 			RangerConstants.ROLE_OTHER };
@@ -138,6 +142,7 @@ public class UserMgr {
 		if (logger.isDebugEnabled()) {
 			logger.debug("UserMgr()");
 		}
+		this.isFipsEnabled = RangerAdminConfig.getInstance().isFipsEnabled();
 	}
 
 	public XXPortalUser createUser(VXPortalUser userProfile, int userStatus,
@@ -414,13 +419,21 @@ public class UserMgr {
             vXResponse.setMsgDesc("SECURITY:changePassword().Ranger External Users cannot change password. LoginId=" + pwdChange.getLoginId());
             throw restErrorUtil.generateRESTException(vXResponse);
         }
+        
+        String currentPassword = gjUser.getPassword();
 		//check current password and provided old password is same or not
-		String encryptedOldPwd = encrypt(pwdChange.getLoginId(),pwdChange.getOldPassword());
-		if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
-			logger.info("changePassword(). Invalid old password. LoginId="+ pwdChange.getLoginId());
-			throw restErrorUtil.createRESTException("validationMessages.oldPasswordError",MessageEnums.INVALID_INPUT_DATA, null, null,pwdChange.getLoginId());
-		}
-
+		if (this.isFipsEnabled) {
+			if (!isPasswordValid(pwdChange.getLoginId(), currentPassword, pwdChange.getOldPassword())) {
+				logger.info("changePassword(). Invalid old password. LoginId="+ pwdChange.getLoginId());
+				throw restErrorUtil.createRESTException("serverMsg.userMgrOldPassword",MessageEnums.INVALID_INPUT_DATA, null, null,pwdChange.getLoginId());
+				}
+			} else {
+				String encryptedOldPwd = encrypt(pwdChange.getLoginId(),pwdChange.getOldPassword());
+				if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
+					logger.info("changePassword(). Invalid old password. LoginId="+ pwdChange.getLoginId());
+					throw restErrorUtil.createRESTException("serverMsg.userMgrOldPassword",MessageEnums.INVALID_INPUT_DATA, null, null,pwdChange.getLoginId());
+				}
+			}
 		//validate new password
 		if (!stringUtil.validatePassword(pwdChange.getUpdPassword(),new String[] { gjUser.getFirstName(),gjUser.getLastName(), gjUser.getLoginId()})) {
 			logger.warn("SECURITY:changePassword(). Invalid new password. LoginId="+ pwdChange.getLoginId());
@@ -428,27 +441,34 @@ public class UserMgr {
 		}
 
 		String encryptedNewPwd = encrypt(pwdChange.getLoginId(),pwdChange.getUpdPassword());
-		String currentPassword = gjUser.getPassword();
-		if (!encryptedNewPwd.equals(currentPassword)) {
-			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
-			XXTrxLog xTrxLog = new XXTrxLog();
-			xTrxLog.setAttributeName("Password");
-			xTrxLog.setPreviousValue(currentPassword);
-			xTrxLog.setNewValue(encryptedNewPwd);
-			xTrxLog.setAction("password change");
-			xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
-			xTrxLog.setObjectId(pwdChange.getId());
-			xTrxLog.setObjectName(pwdChange.getLoginId());
-			trxLogList.add(xTrxLog);
-                        rangerBizUtil.createTrxLog(trxLogList);
-			gjUser.setPassword(encryptedNewPwd);
-			gjUser = daoManager.getXXPortalUser().update(gjUser);
-			ret.setMsgDesc("Password successfully updated");
-			ret.setStatusCode(VXResponse.STATUS_SUCCESS);
-		} else {
-			ret.setMsgDesc("Password update failed");
-			ret.setStatusCode(VXResponse.STATUS_ERROR);
-			throw restErrorUtil.createRESTException("serverMsg.userMgrOldPassword",MessageEnums.INVALID_INPUT_DATA, gjUser.getId(),"password", gjUser.toString());
+		//check current password and provided new password different
+		boolean isNewPasswordDifferent;
+		if (this.isFipsEnabled) {
+				isNewPasswordDifferent = isNewPasswordDifferent(pwdChange.getLoginId(), pwdChange.getOldPassword(), pwdChange.getUpdPassword());
+			} else {
+				isNewPasswordDifferent = !encryptedNewPwd.equals(currentPassword);
+			}
+			if (isNewPasswordDifferent) {
+				List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
+				XXTrxLog xTrxLog = new XXTrxLog();
+				xTrxLog.setAttributeName("Password");
+				xTrxLog.setPreviousValue(currentPassword);
+				xTrxLog.setNewValue(encryptedNewPwd);
+				xTrxLog.setAction("password change");
+				xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_PASSWORD_CHANGE);
+				xTrxLog.setObjectId(pwdChange.getId());
+				xTrxLog.setObjectName(pwdChange.getLoginId());
+				trxLogList.add(xTrxLog);
+	                        rangerBizUtil.createTrxLog(trxLogList);
+				gjUser.setPassword(encryptedNewPwd);
+				gjUser = daoManager.getXXPortalUser().update(gjUser);
+				ret.setMsgDesc("Password successfully updated");
+				ret.setStatusCode(VXResponse.STATUS_SUCCESS);
+			} else {
+				logger.error("SECURITY:changePassword(). Password update failed. LoginId="+ pwdChange.getLoginId());
+				ret.setMsgDesc("Password update failed");
+				ret.setStatusCode(VXResponse.STATUS_ERROR);
+				throw restErrorUtil.createRESTException("serverMsg.userMgrOldPassword",MessageEnums.INVALID_INPUT_DATA, gjUser.getId(),"password", gjUser.toString());
 		}
 		return ret;
 	}
@@ -466,9 +486,6 @@ public class UserMgr {
 			changeEmail.setEmailAddress(null);
 		}
 
-		String encryptedOldPwd = encrypt(gjUser.getLoginId(),
-				changeEmail.getOldPassword());
-
 		if (!StringUtils.isEmpty(changeEmail.getEmailAddress()) && !stringUtil.validateEmail(changeEmail.getEmailAddress())) {
 			logger.info("Invalid email address." + changeEmail);
 			throw restErrorUtil.createRESTException(
@@ -477,16 +494,27 @@ public class UserMgr {
 					"emailAddress", changeEmail.toString());
 
 		}
-
-		if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
-			logger.info("changeEmailAddress(). Invalid  password. changeEmail="
-					+ changeEmail);
-
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrWrongPassword",
-					MessageEnums.OPER_NO_PERMISSION, null, null, ""
+		
+		if (this.isFipsEnabled) {
+			if (!isPasswordValid(changeEmail.getLoginId(), gjUser.getPassword(), changeEmail.getOldPassword())) {
+				logger.info("changeEmailAddress(). Invalid  password. changeEmail="
+								+ changeEmail);
+								throw restErrorUtil.createRESTException(
+											"serverMsg.userMgrWrongPassword",
+												MessageEnums.OPER_NO_PERMISSION, null, null, ""
+														+ changeEmail);
+					}
+			} else {
+				String encryptedOldPwd = encrypt(gjUser.getLoginId(), changeEmail.getOldPassword());
+				if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
+					logger.info("changeEmailAddress(). Invalid  password. changeEmail="
 							+ changeEmail);
-		}
+					throw restErrorUtil.createRESTException(
+							"serverMsg.userMgrWrongPassword",
+							MessageEnums.OPER_NO_PERMISSION, null, null, ""
+									+ changeEmail);
+				}
+			}
 
 		// Normalize email. Make it lower case
 		gjUser.setEmailAddress(stringUtil.normalizeEmail(changeEmail
@@ -1100,13 +1128,30 @@ public class UserMgr {
 	}
 
 	public String encrypt(String loginId, String password) {
-		String sha256PasswordUpdateDisable=PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
-		String saltEncodedpasswd="";
-		if("false".equalsIgnoreCase(sha256PasswordUpdateDisable)){
-			saltEncodedpasswd = sha256Encoder.encodePassword(password, loginId);
-		}else{
-			saltEncodedpasswd = md5Encoder.encodePassword(password, loginId);
+		String saltEncodedpasswd = "";
+		if (this.isFipsEnabled) {
+			try {
+				Pbkdf2PasswordEncoderCust pbkdf2Encoder = new Pbkdf2PasswordEncoderCust(loginId);
+				pbkdf2Encoder.setEncodeHashAsBase64(true);
+				if (password != null) {
+					saltEncodedpasswd = pbkdf2Encoder.encode(password);
+				}
+			} catch (Throwable t) {
+					logger.error("Password doesn't meet requirements");
+					throw restErrorUtil.createRESTException("Invalid password",
+							MessageEnums.INVALID_PASSWORD, null, null, ""
+									+ loginId);
+			}
+		} else {
+			String sha256PasswordUpdateDisable = PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
+
+			if ("false".equalsIgnoreCase(sha256PasswordUpdateDisable)) {
+				saltEncodedpasswd = sha256Encoder.encodePassword(password, loginId);
+			} else {
+				saltEncodedpasswd = md5Encoder.encodePassword(password, loginId);
+			}
 		}
+		
 		return saltEncodedpasswd;
 	}
 
@@ -1424,4 +1469,38 @@ public class UserMgr {
                 rangerBizUtil.createTrxLog(trxLogList);
                 return xXPortalUser;
         }
-}
+        public boolean isPasswordValid(String loginId, String encodedPassword, String password) {
+        			boolean isPasswordValid = false;
+        			try {
+        				Pbkdf2PasswordEncoderCust pbkdf2Encoder = new Pbkdf2PasswordEncoderCust(loginId);
+        				pbkdf2Encoder.setEncodeHashAsBase64(true);
+        				
+        				if (pbkdf2Encoder.matches(password, encodedPassword)) {
+        					isPasswordValid = true;
+        				}
+        			} catch (Throwable t) {
+        				logger.error("Unable to validate old password ", t);
+        			}
+        	
+        			return isPasswordValid;
+        		}
+        
+        public boolean isNewPasswordDifferent(String loginId, String currentPassword, String newPassword) {
+        			boolean isNewPasswordDifferent = true;
+        			String saltEncodedpasswd = "";
+        			try {
+        				Pbkdf2PasswordEncoderCust pbkdf2Encoder = new Pbkdf2PasswordEncoderCust(loginId);
+        				pbkdf2Encoder.setEncodeHashAsBase64(true);
+        				if (currentPassword != null) {
+        					saltEncodedpasswd = pbkdf2Encoder.encode(currentPassword);
+        			}
+        				if (pbkdf2Encoder.matches(newPassword, saltEncodedpasswd)) {
+        					isNewPasswordDifferent = false;
+        				}
+        			} catch (Throwable t) {
+        				logger.error("Unable to validate old and new passwords ", t);
+        			}
+        	
+        			return isNewPasswordDifferent;
+        	}
+	}

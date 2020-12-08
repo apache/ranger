@@ -64,6 +64,9 @@ public class UnixAuthenticationService {
 	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file";
 	private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file";
 
+	private static final String SSL_KEYSTORE_FILE_TYPE_PARAM = "ranger.keystore.file.type";
+	private static final String SSL_TRUSTSTORE_FILE_TYPE_PARAM = "ranger.truststore.file.type";
+
 	private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.key.password";
 	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password";
 
@@ -75,10 +78,12 @@ public class UnixAuthenticationService {
 	private static final String CREDSTORE_FILENAME_PARAM = "ranger.usersync.credstore.filename";
 	
 	private String keyStorePath;
+	private String keyStoreType;
 	private List<String> enabledProtocolsList;
 	private String keyStorePathPassword;
 	private String trustStorePath;
 	private String trustStorePathPassword;
+	private String trustStoreType;
 	private List<String>  adminUserList = new ArrayList<String>();
 	private String adminRoleNames;
 	
@@ -179,6 +184,9 @@ public class UnixAuthenticationService {
 		String credStoreFileName = prop.getProperty(CREDSTORE_FILENAME_PARAM);
 		
 		keyStorePath = prop.getProperty(SSL_KEYSTORE_PATH_PARAM);
+
+		keyStoreType = prop.getProperty(SSL_KEYSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
+		trustStoreType = prop.getProperty(SSL_TRUSTSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
 		
 		if (credStoreFileName == null) {
 			throw new RuntimeException("Credential file is not defined. param = [" + CREDSTORE_FILENAME_PARAM + "]");
@@ -194,8 +202,12 @@ public class UnixAuthenticationService {
 			throw new RuntimeException("Credential file [" + credStoreFileName + "]: can not be read." );
 		}
 		
-		keyStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName, SSL_KEYSTORE_PATH_PASSWORD_ALIAS);
-		trustStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName,SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS);
+		if ("bcfks".equalsIgnoreCase(keyStoreType)) {
+			String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+			credStoreFileName = crendentialProviderPrefixBcfks + credStoreFileName;
+		}
+		keyStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName, SSL_KEYSTORE_PATH_PASSWORD_ALIAS, keyStoreType);
+		trustStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName,SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS, trustStoreType);
 		
 		trustStorePath  = prop.getProperty(SSL_TRUSTSTORE_PATH_PARAM);
 		portNum = Integer.parseInt(prop.getProperty(REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM));
@@ -244,8 +256,8 @@ public class UnixAuthenticationService {
 		KeyManager[] km = null;
 
 		if (keyStorePath != null && ! keyStorePath.isEmpty()) {
-			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-			
+			KeyStore ks = KeyStore.getInstance(keyStoreType);
+		
 			InputStream in = null;
 			
 			in = getFileInputStream(keyStorePath);
@@ -273,7 +285,7 @@ public class UnixAuthenticationService {
 		KeyStore trustStoreKeyStore = null;
 		
 		if (trustStorePath != null && ! trustStorePath.isEmpty()) {
-			trustStoreKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			trustStoreKeyStore = KeyStore.getInstance(trustStoreType);
 			
 			InputStream in = null;
 			

@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,6 +33,7 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+//import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.XMLUtils;
@@ -75,6 +77,10 @@ public class UserGroupSyncConfig  {
 
 	public static final String UGSYNC_SOURCE_FILE_DELIMITER = "ranger.usersync.filesource.text.delimiter";
 	public static final String UGSYNC_SOURCE_FILE_DELIMITERER = "ranger.usersync.filesource.text.delimiterer";
+
+	private static final String SSL_KEYSTORE_FILE_TYPE_PARAM = "ranger.keystore.file.type";
+
+	private static final String SSL_TRUSTSTORE_FILE_TYPE_PARAM = "ranger.truststore.file.type";
 
 	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file";
 
@@ -389,6 +395,13 @@ public class UserGroupSyncConfig  {
 		return prop.getProperty(UGSYNC_MAX_RECORDS_PER_API_CALL_PROP);
 	}
 
+	public String getSSLKeyStoreType() {
+		return  prop.getProperty(SSL_KEYSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
+	}
+
+	public String getSSLTrustStoreType() {
+		return  prop.getProperty(SSL_TRUSTSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
+	}
 
 	public String getSSLKeyStorePath() {
 		return  prop.getProperty(SSL_KEYSTORE_PATH_PARAM);
@@ -404,7 +417,11 @@ public class UserGroupSyncConfig  {
 			String alias=SSL_KEYSTORE_PATH_PASSWORD_ALIAS;
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
-					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
+						String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+						path = crendentialProviderPrefixBcfks + path;
+					}
+					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim(), getSSLKeyStoreType());
 					if(password!=null&& !password.trim().isEmpty() && !"none".equalsIgnoreCase(password.trim()) && !"_".equalsIgnoreCase(password.trim())){
 						prop.setProperty(SSL_KEYSTORE_PATH_PASSWORD_PARAM,password);
 					}
@@ -428,7 +445,11 @@ public class UserGroupSyncConfig  {
 			String alias=SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS;
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
-					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
+						String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+						path = crendentialProviderPrefixBcfks + path;
+					}
+					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim(), getSSLKeyStoreType());
 					if(password!=null&& !password.trim().isEmpty() && !"none".equalsIgnoreCase(password.trim()) && !"_".equalsIgnoreCase(password.trim())){
 						prop.setProperty(SSL_TRUSTSTORE_PATH_PASSWORD_PARAM,password);
 					}
@@ -562,7 +583,11 @@ public class UserGroupSyncConfig  {
 			String alias=LGSYNC_LDAP_BIND_ALIAS;
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
-					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
+						String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+						path = crendentialProviderPrefixBcfks + path;
+					}
+					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim(), getSSLKeyStoreType());
 					if(password!=null&& !password.trim().isEmpty() && !password.trim().equalsIgnoreCase("none")){
 						prop.setProperty(LGSYNC_LDAP_BIND_PASSWORD,password);
 					}
@@ -890,8 +915,12 @@ public class UserGroupSyncConfig  {
 			String alias=prop.getProperty(SYNC_POLICY_MGR_ALIAS,"policymgr.user.password");
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
+					if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
+						String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+						path = crendentialProviderPrefixBcfks + path;
+					}
 					try{
-						password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+						password=CredentialReader.getDecryptedString(path.trim(),alias.trim(), getSSLKeyStoreType());
 					}catch(Exception ex){
 						password=null;
 					}

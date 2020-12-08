@@ -31,8 +31,10 @@ import javax.security.auth.login.Configuration;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.authentication.unix.jaas.RoleUserAuthorityGranter;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.util.Pbkdf2PasswordEncoderCust;
 import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -79,8 +81,10 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 	private LdapAuthenticator authenticator;
 
 	private boolean ssoEnabled = false;
+	private final boolean isFipsEnabled;
 
 	public RangerAuthenticationProvider() {
+		this.isFipsEnabled = RangerAdminConfig.getInstance().isFipsEnabled();
 
 	}
 
@@ -134,6 +138,15 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 				if (authentication != null && authentication.isAuthenticated()) {
 					return authentication;
 				}
+			}
+			if (this.isFipsEnabled) {
+				try {
+					authentication = getJDBCAuthentication(authentication,"");
+				} catch (Exception e) {
+					logger.error("JDBC Authentication failure: ", e);
+					throw e;
+				}
+				return authentication;
 			}
 			String encoder="SHA256";
 			try {
@@ -573,19 +586,26 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
 	private Authentication getJDBCAuthentication(Authentication authentication,String encoder) throws AuthenticationException{
 		try {
-
-			ReflectionSaltSource saltSource = new ReflectionSaltSource();
-			saltSource.setUserPropertyToUse("username");
-
 			DaoAuthenticationProvider authenticator = new DaoAuthenticationProvider();
 			authenticator.setUserDetailsService(userDetailsService);
-			if (encoder != null && "SHA256".equalsIgnoreCase(encoder)) {
-				authenticator.setPasswordEncoder(new ShaPasswordEncoder(256));
-			} else if(encoder != null && "MD5".equalsIgnoreCase(encoder)) {
-				authenticator.setPasswordEncoder(new Md5PasswordEncoder());
+			if (this.isFipsEnabled) {
+				if (authentication.getCredentials() != null && !authentication.isAuthenticated()) {
+					Pbkdf2PasswordEncoderCust passwordEncoder = new Pbkdf2PasswordEncoderCust(authentication.getName());
+					passwordEncoder.setEncodeHashAsBase64(true);
+					authenticator.setPasswordEncoder(passwordEncoder);
+				}
+			} else {
+				ReflectionSaltSource saltSource = new ReflectionSaltSource();
+				saltSource.setUserPropertyToUse("username");
+				if (encoder != null && "SHA256".equalsIgnoreCase(encoder)) {
+					authenticator.setPasswordEncoder(new ShaPasswordEncoder(256));
+					authenticator.setSaltSource(saltSource);
+				} else if (encoder != null && "MD5".equalsIgnoreCase(encoder)) {
+					authenticator.setPasswordEncoder(new Md5PasswordEncoder());
+					authenticator.setSaltSource(saltSource);
+				}
 			}
 
-			authenticator.setSaltSource(saltSource);
 			String userName ="";
 			String userPassword = "";
 			if (authentication!=null) {
@@ -616,6 +636,8 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			throw e;
 		}catch (Exception e) {
 			throw e;
+		} catch (Throwable t) {
+			throw new BadCredentialsException("Bad credentials", t);
 		}
 		return authentication;
 	}

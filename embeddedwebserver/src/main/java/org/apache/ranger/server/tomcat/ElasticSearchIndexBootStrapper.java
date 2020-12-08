@@ -25,6 +25,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -121,8 +122,9 @@ public class ElasticSearchIndexBootStrapper extends Thread {
 
 		String providerPath = EmbeddedServerUtil.getConfig(ES_CREDENTIAL_PROVIDER_PATH);
 		String credentialAlias = EmbeddedServerUtil.getConfig(ES_CREDENTIAL_ALIAS, ES_CONFIG_PASSWORD);
+		String keyStoreFileType = EmbeddedServerUtil.getConfig("ranger.keystore.file.type", KeyStore.getDefaultType());
 		if (providerPath != null && credentialAlias != null) {
-			password = CredentialReader.getDecryptedString(providerPath.trim(), credentialAlias.trim());
+			password = CredentialReader.getDecryptedString(providerPath.trim(), credentialAlias.trim(), keyStoreFileType);
 			if (StringUtils.isBlank(password) || "none".equalsIgnoreCase(password.trim())) {
 				password = EmbeddedServerUtil.getConfig(ES_CONFIG_PASSWORD);
 			}

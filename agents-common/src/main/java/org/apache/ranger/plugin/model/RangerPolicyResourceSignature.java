@@ -31,6 +31,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.solr.common.StringUtils;
@@ -49,7 +50,11 @@ public class RangerPolicyResourceSignature {
 		_policy = policy;
 		PolicySerializer serializer = new PolicySerializer(_policy);
 		_string = serializer.toString();
-		_hash = DigestUtils.sha256Hex(_string);
+		if (RangerAdminConfig.getInstance().isFipsEnabled()) {
+			_hash = DigestUtils.sha512Hex(_string);
+		} else {
+			_hash = DigestUtils.sha256Hex(_string);
+		}
 	}
 
 	/**
@@ -63,7 +68,11 @@ public class RangerPolicyResourceSignature {
 		} else {
 			_string = string;
 		}
-                _hash = DigestUtils.sha256Hex(_string);
+		if (RangerAdminConfig.getInstance().isFipsEnabled()) {
+			_hash = DigestUtils.sha384Hex(_string);
+		} else {
+			_hash = DigestUtils.sha256Hex(_string);
+		}
 	}
 	
 	String asString() {
