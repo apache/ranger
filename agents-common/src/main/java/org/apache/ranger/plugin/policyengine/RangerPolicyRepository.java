@@ -1079,12 +1079,14 @@ public class RangerPolicyRepository {
                 LOG.debug("rowFilter policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
             }
 
-            LOG.debug("audit policy evaluation order: " + this.auditPolicyEvaluators.size() + " policies");
-            order = 0;
-            for(RangerPolicyEvaluator policyEvaluator : this.auditPolicyEvaluators) {
-                RangerPolicy policy = policyEvaluator.getPolicy();
+            LOG.debug("audit policy evaluation order: " + ((this.auditPolicyEvaluators != null) ? this.auditPolicyEvaluators.size() : 0  + " policies"));
+            if (this.auditPolicyEvaluators != null) {
+                order = 0;
+                for(RangerPolicyEvaluator policyEvaluator : this.auditPolicyEvaluators) {
+                    RangerPolicy policy = policyEvaluator.getPolicy();
 
-                LOG.debug("rowFilter policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
+                    LOG.debug("rowFilter policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
+                }
             }
         }
     }
