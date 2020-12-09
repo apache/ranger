@@ -491,13 +491,21 @@
 	</named-query>
 
 	<named-query name="XXServiceConfigMap.findByServiceAndConfigKey">
-		<query>select obj from XXServiceConfigMap obj where 
+		<query>select obj from XXServiceConfigMap obj where
 			obj.serviceId = :serviceId and obj.configKey = :configKey</query>
 	</named-query>
 
 	<named-query name="XXServiceConfigMap.findByServiceNameAndConfigKey">
-		<query>select obj from XXServiceConfigMap obj, XXService xSvc where 
+		<query>select obj from XXServiceConfigMap obj, XXService xSvc where
 			xSvc.name = :name and xSvc.id=obj.serviceId and obj.configKey = :configKey</query>
+	</named-query>
+
+	<named-query name="XXServiceConfigMap.findServiceIdsByConfigKeyAndConfigValueAndFilterByServiceType">
+		<query>SELECT xscm.serviceId FROM XXServiceConfigMap xscm, XXService xs, XXServiceDef xsd
+			WHERE xscm.configKey = :configKey AND xscm.configValue = :configValue
+			AND xscm.serviceId = xs.id AND xs.type = xsd.id
+			AND xsd.name != :serviceType
+		</query>
 	</named-query>
 
 	<!-- XXService -->

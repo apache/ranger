@@ -18,16 +18,20 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceConfigMap;
+import org.apache.ranger.services.tag.RangerServiceTag;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
+
+	private static final String SERVICE_CLUSTER_NAME_CONF_KEY = "cluster.name";
 
 	public XXServiceConfigMapDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -76,4 +80,40 @@ public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
 		}
 	}
 
+	/**
+	 * Get resource based service IDs, using supplied clusterName
+	 * @param clusterName
+	 * @return {@link java.util.List List} of service IDs if found, empty {@link java.util.List List} otherwise.
+	 */
+	public List<Long> findServiceIdsByClusterName(String clusterName) {
+		if(clusterName == null) {
+			return Collections.emptyList();
+		}
+
+		return findServiceIdsByConfigKeyAndConfigValueFilterByServiceType(SERVICE_CLUSTER_NAME_CONF_KEY, clusterName, RangerServiceTag.TAG_RESOURCE_NAME);
+	}
+
+	/**
+	 * Get service IDs, using supplied configKey and configValue and are not of provided serviceType.
+	 * Caller of this method must make sure, {@code configKey} and {@code configValue) passed as method parameter are not null.
+	 *
+	 * @param configKey
+	 * @param configValue
+	 * @param serviceType
+	 * @return {@link java.util.List list} of service IDs if found, empty {@link java.util.List list} otherwise.
+	 */
+	private List<Long> findServiceIdsByConfigKeyAndConfigValueFilterByServiceType(String configKey, String configValue, String serviceType) {
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXServiceConfigMap.findServiceIdsByConfigKeyAndConfigValueAndFilterByServiceType", Long.class)
+					.setParameter("configKey", configKey)
+					.setParameter("configValue", configValue)
+					.setParameter("serviceType", serviceType)
+					.getResultList();
+		}
+
+		catch (NoResultException e) {
+			return Collections.emptyList();
+		}
+	}
 }
