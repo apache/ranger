@@ -105,6 +105,7 @@ import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.ServiceDeleteResponse;
 import org.apache.ranger.plugin.model.validation.RangerPolicyValidator;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
@@ -146,6 +147,8 @@ import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -861,71 +864,11 @@ public class ServiceREST {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deleteService(" + id + ")");
 		}
-		RangerAdminOpContext opContext = new RangerAdminOpContext();
-		opContext.setBulkModeContext(true);
-		RangerContextHolder.setOpContext(opContext);
-		RangerPerfTracer perf = null;
 
-		try {
-			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deleteService(serviceId=" + id + ")");
-			}
-			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
-			validator.validate(id, Action.DELETE);
-			UserSessionBase session = ContextUtil.getCurrentUserSession();
-			if (session != null) {
-				XXService service = daoManager.getXXService().getById(id);
-				if (service != null) {
-					//if logged-in user is not the service creator then check admin priv.
-					if (!session.getUserId().equals(service.getAddedByUserId())) {
-						bizUtil.hasAdminPermissions("Services");
-					}
-					EmbeddedServiceDefsUtil embeddedServiceDefsUtil = EmbeddedServiceDefsUtil.instance();
-					if (service.getType().equals(embeddedServiceDefsUtil.getTagServiceDefId())) {
-						List<XXService> referringServices = daoManager.getXXService().findByTagServiceId(id);
-						if (!CollectionUtils.isEmpty(referringServices)) {
-							Set<String> referringServiceNames = new HashSet<String>();
-							for (XXService xXService : referringServices) {
-								referringServiceNames.add(xXService.getName());
-								if (referringServiceNames.size() >= 10) {
-									break;
-								}
-							}
-							if (referringServices.size() <= 10) {
-								throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: " + referringServiceNames, MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
-							} else {
-								throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: " + referringServiceNames + " and more..", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
-							}
-						}
-					}
-					XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
-					if (!session.getUserId().equals(service.getAddedByUserId())) {
-						bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
-						bizUtil.blockAuditorRoleUser();
-					}
-					tagStore.deleteAllTagObjectsForService(service.getName());
-
-					svcStore.deleteService(id);
-				} else {
-					LOG.error("Cannot retrieve service:[" + id + "] for deletion");
-					throw new Exception("deleteService(" + id + ") failed");
-				}
-			} else {
-				LOG.error("Cannot retrieve user session.");
-				throw new Exception("deleteService(" + id + ") failed");
-			}
-		} catch(WebApplicationException excp) {
-			throw excp;
-		} catch(Throwable excp) {
-			LOG.error("deleteService(" + id + ") failed", excp);
-
-			throw restErrorUtil.createRESTException(excp.getMessage());
-		} finally {
-			RangerPerfTracer.log(perf);
-		}
+		String deletedServiceName = deleteServiceById(id);
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.deleteService(" + id + ")");
+			LOG.debug("<== ServiceREST.deleteService() - [id="+deletedServiceName + "],[deletedServiceName="+deletedServiceName+"]");
 		}
 	}
 
@@ -3751,36 +3694,97 @@ public class ServiceREST {
 		return getCSRFPropertiesMap();
 	}
 
-        @GET
-        @Path("/metrics/type/{type}")
-        @Produces({ "application/json", "application/xml" })
-        @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\""+ RangerAPIList.GET_METRICS_BY_TYPE + "\")")
-        public String getMetricByType(@PathParam("type") String type) {
-                if (LOG.isDebugEnabled()) {
-                        LOG.debug("==> ServiceREST.getMetricByType(serviceDefName=" + type + ")");
-                }
-                // as of now we are allowing only users with Admin role to access this
-                // API
-                bizUtil.checkSystemAdminAccess();
-                bizUtil.blockAuditorRoleUser();
-                String ret = null;
-                try {
-                        ret = svcStore.getMetricByType(type);
-                } catch (WebApplicationException excp) {
-                        throw excp;
-                } catch (Throwable excp) {
-                        LOG.error("getMetricByType(" + type + ") failed", excp);
-                        throw restErrorUtil.createRESTException(excp.getMessage());
-                }
-                if (ret == null) {
-                        throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
-                }
+	@GET
+	@Path("/metrics/type/{type}")
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\""+ RangerAPIList.GET_METRICS_BY_TYPE + "\")")
+	public String getMetricByType(@PathParam("type") String type) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getMetricByType(serviceDefName=" + type + ")");
+		}
+		// as of now we are allowing only users with Admin role to access this
+		// API
+		bizUtil.checkSystemAdminAccess();
+		bizUtil.blockAuditorRoleUser();
+		String ret = null;
+		try {
+			ret = svcStore.getMetricByType(type);
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("getMetricByType(" + type + ") failed", excp);
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+		if (ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
 
-                if (LOG.isDebugEnabled()) {
-                        LOG.debug("<== ServiceREST.getMetricByType(" + type + "): " + ret);
-                }
-                return ret;
-        }
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getMetricByType(" + type + "): " + ret);
+		}
+		return ret;
+	}
+
+	/**
+	 * Delete services/ repos associated with cluster.
+	 * Only users with Ranger UserAdmin OR KeyAdmin are allowed to access this API.
+	 * @param clusterName
+	 * @return List of {@link ServiceDeleteResponse serviceDeleteResponse}.
+	 */
+	@DELETE
+	@Path("/cluster-services/{clusterName}")
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_CLUSTER_SERVICES + "\")")
+	public ResponseEntity<List<ServiceDeleteResponse>> deleteClusterServices(@PathParam("clusterName") String clusterName) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.deleteClusterServices("+  clusterName  +")");
+		}
+
+		List<ServiceDeleteResponse> deletedServices = new ArrayList<>();
+		HttpStatus responseStatus = HttpStatus.OK;
+
+		try {
+			//check if user has ADMIN privileges
+			bizUtil.hasAdminPermissions("Services");
+
+			//get all service/ repo IDs to delete
+			List<Long> serviceIdsToBeDeleted = daoManager.getXXServiceConfigMap().findServiceIdsByClusterName(clusterName);
+
+			if (serviceIdsToBeDeleted.isEmpty()) {
+				responseStatus = HttpStatus.NOT_FOUND;
+			} else {
+				//delete each service/ repo one by one
+				for (Long serviceId : serviceIdsToBeDeleted) {
+					ServiceDeleteResponse deleteResponse = new ServiceDeleteResponse(serviceId);
+					try {
+						String serviceName = this.deleteServiceById(serviceId);
+						deleteResponse.setServiceName(serviceName);
+						deleteResponse.setIsDeleted(Boolean.TRUE);
+					} catch (Throwable e) {
+						//log and proceed
+						LOG.warn("Skipping deletion of service with ID="+serviceId);
+						e.printStackTrace();
+						deleteResponse.setIsDeleted(Boolean.FALSE);
+						deleteResponse.setErrorMsg(e.getMessage());
+					}
+					deletedServices.add(deleteResponse);
+
+				}
+			}
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
+			LOG.error("Deleting services associated with cluster=" + clusterName + " failed.", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.deleteClusterServices() - deletedServices: "  +deletedServices);
+		}
+
+		return new ResponseEntity<>(deletedServices, responseStatus);
+	}
 
 	private HashMap<String, Object> getCSRFPropertiesMap() {
 		HashMap<String, Object> map = new HashMap<String, Object>();
@@ -4390,6 +4394,83 @@ public class ServiceREST {
 			LOG.debug("<== ServiceREST.getPolicyMatchByName( " + existingPolicy + ")");
 		}
 		return existingPolicy;
+	}
+
+	private String deleteServiceById(Long id) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.deleteServiceById( " + id + ")");
+		}
+
+		RangerAdminOpContext opContext = new RangerAdminOpContext();
+		opContext.setBulkModeContext(true);
+		RangerContextHolder.setOpContext(opContext);
+
+		RangerPerfTracer perf     = null;
+		String deletedServiceName = null;
+
+		try {
+			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deleteService(serviceId=" + id + ")");
+			}
+			RangerServiceValidator validator = validatorFactory.getServiceValidator(svcStore);
+			validator.validate(id, Action.DELETE);
+			UserSessionBase session = ContextUtil.getCurrentUserSession();
+			if (session != null) {
+				XXService service = daoManager.getXXService().getById(id);
+				if (service != null) {
+					//if logged-in user is not the service creator then check admin priv.
+					if (!session.getUserId().equals(service.getAddedByUserId())) {
+						bizUtil.hasAdminPermissions("Services");
+					}
+					EmbeddedServiceDefsUtil embeddedServiceDefsUtil = EmbeddedServiceDefsUtil.instance();
+					if (service.getType().equals(embeddedServiceDefsUtil.getTagServiceDefId())) {
+						List<XXService> referringServices = daoManager.getXXService().findByTagServiceId(id);
+						if (!CollectionUtils.isEmpty(referringServices)) {
+							Set<String> referringServiceNames = new HashSet<String>();
+							for (XXService xXService : referringServices) {
+								referringServiceNames.add(xXService.getName());
+								if (referringServiceNames.size() >= 10) {
+									break;
+								}
+							}
+							if (referringServices.size() <= 10) {
+								throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: " + referringServiceNames, MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+							} else {
+								throw restErrorUtil.createRESTException("Tag service '" + service.getName() + "' is being referenced by " + referringServices.size() + " services: " + referringServiceNames + " and more..", MessageEnums.OPER_NOT_ALLOWED_FOR_STATE);
+							}
+						}
+					}
+					XXServiceDef xxServiceDef = daoManager.getXXServiceDef().getById(service.getType());
+					if (!session.getUserId().equals(service.getAddedByUserId())) {
+						bizUtil.hasKMSPermissions("Service", xxServiceDef.getImplclassname());
+						bizUtil.blockAuditorRoleUser();
+					}
+					tagStore.deleteAllTagObjectsForService(service.getName());
+					deletedServiceName = service.getName();
+
+					svcStore.deleteService(id);
+				} else {
+					LOG.error("Cannot retrieve service:[" + id + "] for deletion");
+					throw new Exception("deleteService(" + id + ") failed");
+				}
+			} else {
+				LOG.error("Cannot retrieve user session.");
+				throw new Exception("deleteService(" + id + ") failed");
+			}
+		} catch(WebApplicationException excp) {
+			throw excp;
+		} catch(Throwable excp) {
+			LOG.error("deleteService(" + id + ") failed", excp);
+
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.deleteServiceById() - deletedServiceName="+deletedServiceName);
+		}
+		return deletedServiceName;
 	}
 }
 
