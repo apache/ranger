@@ -33,6 +33,7 @@ define(function(require){
 
 	require('backgrid-filter');
 	require('backgrid-paginator');
+	require('Backgrid.ColumnManager');
 
 	var XATableLayout = Backbone.Marionette.Layout.extend(
 	/** @lends XATableLayout */
@@ -55,6 +56,16 @@ define(function(require){
 			className: 'table table-bordered table-condensed backgrid',
 			emptyText : 'No Records found!'
 		},
+
+		columnManagerOpts: {
+            opts: {
+                // State settings
+                saveState: true,
+                loadStateOnInit: true
+            },
+            visibilityControlOpts: {},
+            el: null
+        },
 
 		filterOpts : {
 			placeholder: localization.tt('plcHldr.searchByResourcePath'),
@@ -102,8 +113,8 @@ define(function(require){
 			 * }
 			 *
 			 */
-			_.extend(this, _.pick(options,	'collection', 'columns', 'includePagination', 
-											'includeHeaderSearch', 'includeFilter' ,'scrollToTop', 'paginationCache'));
+			_.extend(this, _.pick(options,	'collection', 'columns', 'includePagination', 'columnManagerOpts',
+											'includeHeaderSearch', 'includeFilter' ,'scrollToTop', 'paginationCache', 'backgridColumnManager'));
 
 			_.extend(this.gridOpts, options.gridOpts, { collection : this.collection, columns : this.columns } );
 			_.extend(this.filterOpts, options.filterOpts);
@@ -137,13 +148,33 @@ define(function(require){
 			if(this.includePagination) {
 				this.renderPagination();
 			}
-			/*if(this.includeFilter){
-				this.renderFilter();
-			}*/
 		},
 
 		/** all post render plugin initialization */
 		initializePlugins: function(){
+			if (this.backgridColumnManager) {
+				this.includeColumnManager()
+			}
+		},
+
+		includeColumnManager : function() {
+			var that = this;
+			var $el = this.columnManagerOpts.el
+			// Create column collection
+			this.columns = new Backgrid.Columns(this.columns);
+			var colManager = new Backgrid.Extension.ColumnManager(this.columns, this.columnManagerOpts.opts);
+			var colVisibilityControl = new Backgrid.Extension.ColumnManagerVisibilityControl(_.extend({
+                columnManager: colManager,
+            }, this.columnManagerOpts.visibilityControlOpts));
+            if (!$el.jquery) {
+                $el = $($el)
+            }
+            if (this.columnManagerOpts.el) {
+                $el.html(colVisibilityControl.render().el);
+            } else {
+                $el.append(colVisibilityControl.render().el);
+            }
+			this.gridOpts.columns = this.columns;
 		},
 
         getGridObj : function(){
@@ -155,7 +186,8 @@ define(function(require){
 
 		renderTable : function(){
 			var that = this;
-			this.rTableList.show(new Backgrid.Grid(this.gridOpts));
+			this.grid = new Backgrid.Grid(this.gridOpts);
+			this.rTableList.show(this.grid);
 		},
 		renderPagination : function(){
 			this.rPagination.show(new Backgrid.Extension.Paginator({

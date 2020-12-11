@@ -54,6 +54,7 @@ define(function(require) {
 	require('bootstrap-datepicker');
 	require('Backbone.BootstrapModal');
 	require('visualsearch');
+	require('Backgrid.ColumnManager');
 	
 	var AuditLayout = Backbone.Marionette.Layout.extend(
 	/** @lends AuditLayout */
@@ -101,6 +102,7 @@ define(function(require) {
             excludeServiceUser : '[data-id="excludeServiceUser"]',
             serviceUsersExclude:'[data-id="serviceUsersExclude"]',
             showPageDetail:'[data-id="showPageDetail"]',
+            colManager: "[data-id='colManager']",
 		},
 
 		/** ui events hash */
@@ -193,6 +195,7 @@ define(function(require) {
 		},
 		/** on render callback */
 		onRender : function() {
+			var that = this;
 			this.ui.tab.find('[href="'+this.currentTab+'"]').addClass('active');
 			if(this.currentTab != '#bigData'){
 				this.onTabChange();
@@ -209,31 +212,10 @@ define(function(require) {
                 }
 				this.renderBigDataTable();
 				this.addSearchForBigDataTab();
-				this.modifyTableForSubcolumns();
+				XAUtils.resizeableColumn(this, 'resourceType');
 			}
 			this.showTagsAttributes();
 
-		},
-		modifyTableForSubcolumns : function(){
-			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
-					<th class="renderable pid"></th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable ruser"></th>\
-					<th class="renderable ruser"></th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable cip">Service</th>\
-					<th class="renderable name">Resource</th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable cip"> </th>\
-					<th class="renderable aip" > </th>\
-					<th class="renderable aip" > </th>\
-					<th class="renderable aip" > </th>\
-					<th class="renderable ruser"></th>\
-                                        <th class="renderable ruser"></th>\
-                                        <th class="renderable ruser"></th>\
-                    </tr>');
 		},
 		modifyPluginStatusTableSubcolumns : function(){
 			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
@@ -277,12 +259,13 @@ define(function(require) {
 					this.ui.visualSearch.show();
 					this.ui.visualSearch.parents('.well').show();
 					this.renderBigDataTable();
-					this.modifyTableForSubcolumns();
 					this.addSearchForBigDataTab();
+					XAUtils.resizeableColumn(this, 'resourceType');
                     this.listenTo(this.accessAuditList, "request", that.updateLastRefresh);
                     this.ui.iconSearchInfo.show();
                     this.showTagsAttributes();
                     this.ui.excludeServiceUser.show();
+                    this.ui.colManager.show();
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
@@ -303,6 +286,7 @@ define(function(require) {
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
                     this.ui.excludeServiceUser.hide();
+                    this.ui.colManager.hide();
 					break;
 				case "#loginSession":
 					this.currentTab = '#loginSession';
@@ -327,6 +311,7 @@ define(function(require) {
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
                     this.ui.excludeServiceUser.hide();
+                    this.ui.colManager.hide();
 					break;
 				case "#agent":
 					this.currentTab = '#agent';
@@ -352,6 +337,7 @@ define(function(require) {
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
                     this.ui.excludeServiceUser.hide();
+                    this.ui.colManager.hide();
 					break;
 				case "#pluginStatus":
 					 this.currentTab = '#pluginStatus';
@@ -378,6 +364,7 @@ define(function(require) {
 					 this.ui.iconSearchInfo.hide();
                      $('.popover').remove();
                      this.ui.excludeServiceUser.hide();
+                     this.ui.colManager.hide();
 					 break;
                 case "#userSync":
                      this.currentTab = '#userSync';
@@ -399,6 +386,7 @@ define(function(require) {
                      this.listenTo(this.userSyncAuditList, "sync reset", that.showPageDetail);
                      this.ui.iconSearchInfo.hide();
                      this.ui.excludeServiceUser.hide();
+                     this.ui.colManager.hide();
                      break;
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
@@ -1228,11 +1216,23 @@ define(function(require) {
 				columns: this.getColumns(),
 				collection: this.accessAuditList,
 				includeFilter : false,
+				backgridColumnManager: true,
 				gridOpts : {
 					row: TableRow,
 					header : XABackgrid,
 					emptyText : 'No Access Audit found!'
-				}
+				},
+				columnManagerOpts: {
+                    opts: {
+                        // initialColumnsVisible: null,
+                        saveState: true,
+                        loadStateOnInit: true,
+                    },
+                    visibilityControlOpts: {
+                        buttonTemplate: _.template("<span class='btn btn-sm'>&nbspColumns&nbsp<i class='fa fa-caret-down'></i></span>")
+                    },
+                    el: this.ui.colManager
+                },
 			}));
             XAUtils.backgridSort(this.accessAuditList);
 		},
@@ -1310,7 +1310,7 @@ define(function(require) {
                         sortable : false,
 					},
 					repoName : {
-						label : 'Name / Type',
+						label : 'Service (Name / Type)',
 						cell: "html",
 						click : false,
 						drag : false,
@@ -1324,7 +1324,7 @@ define(function(require) {
 						})
 					},
 					resourceType: {
-						label : 'Name / Type',
+						label : 'Resource (Name / Type)',
 						cell: "html",
 						click: false,
 						formatter: _.extend({},Backgrid.CellFormatter.prototype,{

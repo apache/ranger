@@ -48,23 +48,28 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-12" data-id="refreshTable">
-            <button class="btn-right link-tag" data-id="refresh" style="margin-top: -3px;" title="Refresh">
-                <i class="fa-fw fa fa-refresh"></i>
-            </button>
+        <div class="col-md-4">
+            <div data-id="excludeServiceUser">
+                <span>Exclude Service Users:</span>
+                <input type="checkbox" data-id="serviceUsersExclude" style="vertical-align: middle;">
+            </div>
+        </div>
+        <div class="col-md-8 m-b-sm">
             <div class="text-right">
-                <span class="pull-right" data-id="lastUpdateTime">Last Updated Time: <label data-id="lastUpdateTimeLabel" class="badge badge-info">{{currentDate}}</label> </span>
-                <span class="pull-right"> &nbsp;|&nbsp; </span>
-                <span class="pull-right">Entries:
+                <span class="m-l-xsm" data-id="lastUpdateTime">Last Updated Time: <label data-id="lastUpdateTimeLabel" class="badge badge-info">{{currentDate}}</label> </span>
+                <span class="m-l-xsm"> &nbsp;|&nbsp; </span>
+                <span class="m-l-xsm">Entries:
                     <label class="badge badge-info" data-id="showPageDetail"></label>
                 </span>
-                <div class="pull-left" data-id="excludeServiceUser">
-                    <span>Exclude Service Users:</span>
-                    <input type="checkbox" data-id="serviceUsersExclude" style="vertical-align: middle;">
+                <button class="link-tag m-l-xsm" data-id="refresh" style="margin-top: -3px;" title="Refresh">
+                    <i class="fa-fw fa fa-refresh"></i>
+                </button>
+                <div class="inline-block m-l-xsm" data-id="colManager">
+                    <div class="columnmanager-visibilitycontrol"></div>
                 </div>
             </div>
         </div>
-      </div>
+    </div>
         <div class="row">
           <div class="col-md-12">
             <div data-id="r_tableLists" class=""></div>
