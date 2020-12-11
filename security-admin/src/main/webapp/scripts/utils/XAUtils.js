@@ -1893,5 +1893,18 @@ define(function(require) {
     	return urlHash.indexOf("?") !== -1 ? urlHash.substring(urlHash.indexOf("?") + 1) : undefined;
     }
 
+    XAUtils.resizeableColumn = function (self, columnName) {
+        self.rTableList.$el.find('.'+columnName).resizable({
+            maxHeight : 20,
+            stop: function (event, ui) {
+                ui.element.css('min-width', ui.size.width);
+                localStorage.setItem(columnName+'ColWidth', ui.size.width);
+            }
+        });
+        if(localStorage.getItem(columnName+'ColWidth') !== null) {
+            self.rTableList.$el.find('.'+columnName).css('min-width', +localStorage.getItem(columnName+'ColWidth'));
+        }
+    }
+
 	return XAUtils;
 });

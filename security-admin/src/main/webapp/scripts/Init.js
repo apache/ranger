@@ -92,6 +92,9 @@ require.config({
         'daterangepicker': {
             deps: ['jquery', 'bootstrap', 'moment', 'momentTz']
         },
+        'Backgrid.ColumnManager' : {
+            deps: ['backbone', 'backgrid', 'underscore', 'jquery']
+        },
     },
 
     paths: {
@@ -140,7 +143,8 @@ require.config({
         'i18nprecompile': '../libs/bower/require-handlebars-plugin/js/i18nprecompile',
         'hbs': '../libs/bower/require-handlebars-plugin/js/hbs',
         'esprima': '../libs/bower/esprima/esprima',
-        'tmpl': '../templates'
+        'tmpl': '../templates',
+        'Backgrid.ColumnManager': '../libs/other/backgrid-column-manager/Backgrid.ColumnManager.min',
     },
 
     hbs: {

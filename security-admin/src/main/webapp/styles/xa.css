@@ -2406,6 +2406,10 @@ textarea:read-only{
   margin-left:10px;
 }
 
+.m-l-xsm {
+  margin-left : 5px;
+}
+
 .m-r-sm{
   margin-right: 10px;
 }
@@ -4502,7 +4506,10 @@ input.textFiledInputPadding:disabled {
     margin-left:750px;
   }
 }
-/*[fieldclass="resorces-css"] .control-label {
+
+.backgrid th:not(.renderable), .backgrid td:not(.renderable){
+    display: none;
+}/*[fieldclass="resorces-css"] .control-label {
   margin-top: 0px;
   margin-right: -15px
 }*/
