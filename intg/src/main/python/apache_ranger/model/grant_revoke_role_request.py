@@ -16,24 +16,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+from apache_ranger.model.ranger_base import *
+from apache_ranger.utils             import *
 
 
-class GrantRevokeRoleRequest:
-    def __init__(self, grantor=None, grantorGroups=None, targetRoles=None, users=None, groups=None, roles=None, grantOption=None, clientIPAddress=None, clientType=None, requestData=None, sessionId=None, clusterName=None):
-        self.grantor         = grantor
-        self.grantorGroups   = grantorGroups if grantorGroups is not None else []
-        self.targetRoles     = targetRoles if targetRoles is not None else []
-        self.users           = users if users is not None else []
-        self.groups          = groups if groups is not None else []
-        self.roles           = roles if roles is not None else []
-        self.grantOption     = grantOption if grantOption is not None else False
-        self.clientIPAddress = clientIPAddress
-        self.clientType      = clientType
-        self.requestData     = requestData
-        self.sessionId       = sessionId
-        self.clusterName     = clusterName
+class GrantRevokeRoleRequest(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.grantor         = attrs.get('grantor')
+        self.grantorGroups   = attrs.get('grantorGroups')
+        self.targetRoles     = attrs.get('targetRoles')
+        self.users           = attrs.get('users')
+        self.groups          = attrs.get('groups')
+        self.roles           = attrs.get('roles')
+        self.grantOption     = non_null(attrs.get('grantOption'), False)
+        self.clientIPAddress = attrs.get('clientIPAddress')
+        self.clientType      = attrs.get('clientType')
+        self.requestData     = attrs.get('requestData')
+        self.sessionId       = attrs.get('sessionId')
+        self.clusterName     = attrs.get('clusterName')
 

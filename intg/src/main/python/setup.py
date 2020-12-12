@@ -16,26 +16,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import setuptools
+from setuptools import setup, find_packages
 
+# External dependencies
+requirements = ['requests>=2.24']
+
+long_description = ''
 with open("README.md", "r") as fh:
     long_description = fh.read()
 
-setuptools.setup(
+setup(
     name="apache-ranger",
-    version="0.0.2",
+    version="0.0.3",
     author="Apache Ranger",
     author_email="dev@ranger.apache.org",
     description="Apache Ranger Python client",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/apache/ranger/tree/master/intg/src/main/python",
-    packages=setuptools.find_packages(),
+    license='Apache LICENSE 2.0',
     classifiers=[
-        "Programming Language :: Python :: 3",
+        "Programming Language :: Python :: 2.7",
         "License :: OSI Approved :: Apache Software License",
         "Operating System :: OS Independent",
     ],
+    packages=find_packages(),
+    install_requires=requirements,
+    include_package_data=True,
+    zip_safe=False,
     keywords='ranger client, apache ranger',
-    python_requires='>=3.6',
+    python_requires='>=2.7',
 )
