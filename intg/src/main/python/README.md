@@ -19,8 +19,7 @@ under the License.
 
 # Apache Ranger - Python client
 
-This is a python library for Apache Ranger. Users can integrate with Apache Ranger using the python client.
-Currently, compatible with Python 3.5+
+Python library for Apache Ranger.
 
 ## Installation
 
@@ -36,33 +35,89 @@ Verify if apache-ranger client is installed:
 
 Package      Version
 ------------ ---------
-apache-ranger 0.0.2
+apache-ranger 0.0.3
 ```
 
 ## Usage
 
-```python init_dev_hive.py```
+```python test_ranger.py```
 ```python
-# init_dev_hive.py
+# test_ranger.py
 
-from apache_ranger.model.ranger_service import RangerService
-from apache_ranger.client.ranger_client import RangerClient
-from apache_ranger.model.ranger_policy  import RangerPolicy, RangerPolicyResource, RangerPolicyItem, RangerPolicyItemAccess
-
-service_name = 'dev_hive'
-
-service = RangerService(name=service_name, type='hive')
-service.configs = {'username':'hive', 'password':'hive', 'jdbc.driverClassName': 'org.apache.hive.jdbc.HiveDriver', 'jdbc.url': 'jdfb:hive2://ranger-hadoop:10000', 'hadoop.security.authorization': 'true'}
-
-policy = RangerPolicy(service=service_name, name='test policy')
-policy.resources = {'database': RangerPolicyResource(['test_db']), 'table': RangerPolicyResource(['test_tbl']), 'column': RangerPolicyResource(['*'])}
-policy.policyItems.append(RangerPolicyItem(users=['admin'], accesses=[RangerPolicyItemAccess('create'), RangerPolicyItemAccess('alter'), RangerPolicyItemAccess('drop')], delegateAdmin=True))
-policy.denyPolicyItems.append(RangerPolicyItem(users=['admin'], accesses=[RangerPolicyItemAccess('select')]))
+from apache_ranger.model.ranger_service import *
+from apache_ranger.client.ranger_client import *
+from apache_ranger.model.ranger_policy  import *
 
 
-ranger_client   = RangerClient('http://localhost:6080', 'admin', 'rangerR0cks!')
-created_service = ranger_client.create_service(service)
-created_policy  = ranger_client.create_policy(policy)
+## Step 1: create a client to connect to Apache Ranger admin
+ranger_url  = 'http://localhost:6080'
+ranger_auth = ('admin', 'rangerR0cks!')
+
+# For Kerberos authentication
+#
+# from requests_kerberos import HTTPKerberosAuth
+#
+# ranger_auth = HTTPKerberosAuth()
+
+ranger = RangerClient(ranger_url, ranger_auth)
+
+# to disable SSL certificate validation (not recommended for production use!)
+#
+# ranger.session.verify = False
+
+
+## Step 2: Let's create a service
+service         = RangerService()
+service.name    = 'test_hive'
+service.type    = 'hive'
+service.configs = {'username':'hive', 'password':'hive', 'jdbc.driverClassName': 'org.apache.hive.jdbc.HiveDriver', 'jdbc.url': 'jdbc:hive2://ranger-hadoop:10000', 'hadoop.security.authorization': 'true'}
+
+print('Creating service: name=' + service.name)
+
+created_service = ranger.create_service(service)
+
+print('    created service: name=' + created_service.name + ', id=' + str(created_service.id))
+
+
+## Step 3: Let's create a policy
+policy           = RangerPolicy()
+policy.service   = service.name
+policy.name      = 'test policy'
+policy.resources = { 'database': RangerPolicyResource({ 'values': ['test_db'] }),
+                     'table':    RangerPolicyResource({ 'values': ['test_tbl'] }),
+                     'column':   RangerPolicyResource({ 'values': ['*'] }) }
+
+allowItem1          = RangerPolicyItem()
+allowItem1.users    = [ 'admin' ]
+allowItem1.accesses = [ RangerPolicyItemAccess({ 'type': 'create' }),
+                        RangerPolicyItemAccess({ 'type': 'alter' }) ]
+
+denyItem1          = RangerPolicyItem()
+denyItem1.users    = [ 'admin' ]
+denyItem1.accesses = [ RangerPolicyItemAccess({ 'type': 'drop' }) ]
+
+policy.policyItems     = [ allowItem1 ]
+policy.denyPolicyItems = [ denyItem1 ]
+
+print('Creating policy: name=' + policy.name)
+
+created_policy = ranger.create_policy(policy)
+
+print('    created policy: name=' + created_policy.name + ', id=' + str(created_policy.id))
+
+
+## Step 4: Delete policy and service created above
+print('Deleting policy: id=' + str(created_policy.id))
+
+ranger.delete_policy_by_id(created_policy.id)
+
+print('    deleted policy: id=' + str(created_policy.id))
+
+print('Deleting service: id=' + str(created_service.id))
+
+ranger.delete_service_by_id(created_service.id)
+
+print('    deleted service: id=' + str(created_service.id))
 
 ```
 For more examples, checkout `sample-client` python  project in [ranger-examples](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_client.py) module.

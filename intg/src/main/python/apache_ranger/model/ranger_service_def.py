@@ -16,121 +16,194 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from apache_ranger.model.ranger_base import RangerBase
-
-
-class RangerDataMaskDef:
-    def __init__(self, maskTypes=None, accessTypes=None, resources=None):
-        self.maskTypes   = maskTypes if maskTypes is not None else []
-        self.accessTypes = accessTypes if accessTypes is not None else []
-        self.resources   = resources if resources is not None else []
-
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+from apache_ranger.model.ranger_base import RangerBase, RangerBaseModelObject
+from apache_ranger.utils             import *
 
 
-class RangerRowFilterDef:
-    def __init__(self, accessTypes=None, resources=None):
-        self.accessTypes = accessTypes if accessTypes is not None else []
-        self.resources   = resources if resources is not None else []
+class RangerServiceDef(RangerBaseModelObject):
+    def __init__(self, attrs={}):
+        RangerBaseModelObject.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.name             = attrs.get('name')
+        self.displayName      = attrs.get('displayName')
+        self.implClass        = attrs.get('implClass')
+        self.label            = attrs.get('label')
+        self.description      = attrs.get('description')
+        self.rbKeyLabel       = attrs.get('rbKeyLabel')
+        self.rbKeyDescription = attrs.get('rbKeyDescription')
+        self.options          = attrs.get('options')
+        self.configs          = attrs.get('configs')
+        self.resources        = attrs.get('resources')
+        self.accessTypes      = attrs.get('accessTypes')
+        self.policyConditions = attrs.get('policyConditions')
+        self.contextEnrichers = attrs.get('contextEnrichers')
+        self.enums            = attrs.get('enums')
+        self.dataMaskDef      = attrs.get('dataMaskDef')
+        self.rowFilterDef     = attrs.get('rowFilterDef')
+
+    def type_coerce_attrs(self):
+        super(RangerServiceDef, self).type_coerce_attrs()
+
+        self.configs          = type_coerce_list(self.configs, RangerResourceDef)
+        self.resources        = type_coerce_list(self.resources, RangerResourceDef)
+        self.accessTypes      = type_coerce_list(self.accessTypes, RangerAccessTypeDef)
+        self.policyConditions = type_coerce_list(self.policyConditions, RangerPolicyConditionDef)
+        self.contextEnrichers = type_coerce_list(self.contextEnrichers, RangerContextEnricherDef)
+        self.enums            = type_coerce_list(self.enums, RangerEnumDef)
+        self.dataMaskDef      = type_coerce(self.dataMaskDef, RangerDataMaskDef)
+        self.rowFilterDef     = type_coerce(self.rowFilterDef, RangerRowFilterDef)
 
 
 class RangerServiceConfigDef:
-    def __init__(self, itemId=None, name=None, type=None, subType=None, mandatory=None, defaultValue=None,
-                 validationRegEx=None, validationMessage=None, uiHint=None, label=None, description=None,
-                 rbKeyLabel=None, rbKeyDescription=None, rbKeyValidationMessage=None):
-        self.itemId                 = itemId
-        self.name                   = name
-        self.type                   = type
-        self.subType                = subType
-        self.mandatory              = mandatory if mandatory is not None else False
-        self.defaultValue           = defaultValue
-        self.validationRegEx        = validationRegEx
-        self.validationMessage      = validationMessage
-        self.uiHint                 = uiHint
-        self.label                  = label
-        self.description            = description
-        self.rbKeyLabel             = rbKeyLabel
-        self.rbKeyDescription       = rbKeyDescription
-        self.rbKeyValidationMessage = rbKeyValidationMessage
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.itemId                 = attrs.get('itemId')
+        self.name                   = attrs.get('name')
+        self.type                   = attrs.get('type')
+        self.subType                = attrs.get('subType')
+        self.mandatory              = attrs.get('mandatory')
+        self.defaultValue           = attrs.get('defaultValue')
+        self.validationRegEx        = attrs.get('validationRegEx')
+        self.validationMessage      = attrs.get('validationMessage')
+        self.uiHint                 = attrs.get('uiHint')
+        self.label                  = attrs.get('label')
+        self.description            = attrs.get('description')
+        self.rbKeyLabel             = attrs.get('rbKeyLabel')
+        self.rbKeyDescription       = attrs.get('rbKeyDescription')
+        self.rbKeyValidationMessage = attrs.get('rbKeyValidationMessage')
 
 
-class RangerAccessTypeDef:
-    def __init__(self, itemId=None, name=None, label=None, rbKeyLabel=None, impliedGrants=None):
-        self.itemId        = itemId
-        self.name          = name
-        self.label         = label
-        self.rbKeyLabel    = rbKeyLabel
-        self.impliedGrants = impliedGrants if impliedGrants is not None else []
+class RangerResourceDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
-
-
-class RangerResourceDef:
-    def __init__(self, itemId=None, name=None, type=None, level=None, parent=None, mandatory=None, lookupSupported=None,
-                 recursiveSupported=None, excludesSupported=None, matcher=None, matcherOptions=None,
-                 validationRegEx=None, validationMessage=None, uiHint=None, label=None, description=None,
-                 rbKeyLabel=None, rbKeyDescription=None, rbKeyValidationMessage=None, accessTypeRestrictions=None,
-                 isValidLeaf=None):
-        self.itemId                 = itemId
-        self.name                   = name
-        self.type                   = type
-        self.level                  = level if level is not None else 1
-        self.parent                 = parent
-        self.mandatory              = mandatory if mandatory is not None else False
-        self.lookupSupported        = lookupSupported if lookupSupported is not None else False
-        self.recursiveSupported     = recursiveSupported if recursiveSupported is not None else False
-        self.excludesSupported      = excludesSupported if excludesSupported is not None else False
-        self.matcher                = matcher
-        self.matcherOptions         = matcherOptions if matcherOptions is not None else {}
-        self.validationRegEx        = validationRegEx
-        self.validationMessage      = validationMessage
-        self.uiHint                 = uiHint
-        self.label                  = label
-        self.description            = description
-        self.rbKeyLabel             = rbKeyLabel
-        self.rbKeyDescription       = rbKeyDescription
-        self.rbKeyValidationMessage = rbKeyValidationMessage
-        self.accessTypeRestrictions = accessTypeRestrictions if accessTypeRestrictions is not None else []
-        self.isValidLeaf            = isValidLeaf
-
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.itemId                 = attrs.get('itemId')
+        self.name                   = attrs.get('name')
+        self.type                   = attrs.get('type')
+        self.level                  = non_null(attrs.get('level'), 1)
+        self.parent                 = attrs.get('parent')
+        self.mandatory              = attrs.get('mandatory')
+        self.lookupSupported        = attrs.get('lookupSupported')
+        self.recursiveSupported     = attrs.get('recursiveSupported')
+        self.excludesSupported      = attrs.get('excludesSupported')
+        self.matcher                = attrs.get('matcher')
+        self.matcherOptions         = attrs.get('matcherOptions')
+        self.validationRegEx        = attrs.get('validationRegEx')
+        self.validationMessage      = attrs.get('validationMessage')
+        self.uiHint                 = attrs.get('uiHint')
+        self.label                  = attrs.get('label')
+        self.description            = attrs.get('description')
+        self.rbKeyLabel             = attrs.get('rbKeyLabel')
+        self.rbKeyDescription       = attrs.get('rbKeyDescription')
+        self.rbKeyValidationMessage = attrs.get('rbKeyValidationMessage')
+        self.accessTypeRestrictions = attrs.get('accessTypeRestrictions')
+        self.isValidLeaf            = attrs.get('isValidLeaf')
 
 
-class RangerServiceDef(RangerBase):
-    def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None,
-                 version=None, isEnabled=None, name=None, displayName=None, implClass=None, label=None,
-                 description=None, rbKeyLabel=None, rbKeyDescription=None, options=None, configs=None, resources=None,
-                 accessTypes=None, policyConditions=None, contextEnrichers=None, enums=None, dataMaskDef=None,
-                 rowFilterDef=None):
-        super().__init__(id, guid, createdBy, updatedBy, createTime, updateTime, version, isEnabled)
+class RangerAccessTypeDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-        self.name             = name
-        self.displayName      = displayName
-        self.implClass        = implClass
-        self.label            = label
-        self.description      = description
-        self.rbKeyLabel       = rbKeyLabel
-        self.rbKeyDescription = rbKeyDescription
-        self.options          = options if options is not None else {}
-        self.configs          = configs if configs is not None else []
-        self.resources        = resources if resources is not None else []
-        self.accessTypes      = accessTypes if accessTypes is not None else []
-        self.policyConditions = policyConditions if policyConditions is not None else []
-        self.contextEnrichers = contextEnrichers if contextEnrichers is not None else []
-        self.enums            = enums if enums is not None else []
-        self.dataMaskDef      = dataMaskDef if dataMaskDef is not None else RangerDataMaskDef()
-        self.rowFilterDef     = rowFilterDef if rowFilterDef is not None else RangerRowFilterDef()
+        self.itemId        = attrs.get('itemId')
+        self.name          = attrs.get('name')
+        self.label         = attrs.get('label')
+        self.rbKeyLabel    = attrs.get('rbKeyLabel')
+        self.impliedGrants = attrs.get('impliedGrants')
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+
+class RangerPolicyConditionDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.itemId                 = attrs.get('itemId')
+        self.name                   = attrs.get('name')
+        self.evaluator              = attrs.get('evaluator')
+        self.evaluatorOptions       = attrs.get('evaluatorOptions')
+        self.validationRegEx        = attrs.get('validationRegEx')
+        self.validationMessage      = attrs.get('validationMessage')
+        self.uiHint                 = attrs.get('uiHint')
+        self.label                  = attrs.get('label')
+        self.description            = attrs.get('description')
+        self.rbKeyLabel             = attrs.get('rbKeyLabel')
+        self.rbKeyDescription       = attrs.get('rbKeyDescription')
+        self.rbKeyValidationMessage = attrs.get('rbKeyValidationMessage')
+
+
+class RangerContextEnricherDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.itemId         = attrs.get('itemId')
+        self.name           = attrs.get('name')
+        self.enricher       = attrs.get('enricher')
+        self.enricherOptions = attrs.get('enricherOptions')
+
+
+class RangerEnumDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.itemId       = attrs.get('itemId')
+        self.name         = attrs.get('name')
+        self.elements     = attrs.get('elements')
+        self.defaultIndex = attrs.get('defaultIndex')
+
+    def type_coerce_attrs(self):
+        super(RangerEnumDef, self).type_coerce_attrs()
+
+        self.elements = type_coerce_list(self.resources, RangerEnumElementDef)
+
+
+class RangerDataMaskDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.maskTypes   = attrs.get('maskTypes')
+        self.accessTypes = attrs.get('accessTypes')
+        self.resources   = attrs.get('resources')
+
+    def type_coerce_attrs(self):
+        super(RangerDataMaskDef, self).type_coerce_attrs()
+
+        self.maskTypes   = type_coerce_list(self.maskTypes, RangerDataMaskTypeDef)
+        self.accessTypes = type_coerce_list(self.accessTypes, RangerAccessTypeDef)
+        self.resources   = type_coerce_list(self.resources, RangerResourceDef)
+
+
+class RangerRowFilterDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.accessTypes = attrs.get('accessTypes')
+        self.resources   = attrs.get('resources')
+
+    def type_coerce_attrs(self):
+        super(RangerRowFilterDef, self).type_coerce_attrs()
+
+        self.accessTypes = type_coerce_list(self.accessTypes, RangerAccessTypeDef)
+        self.resources   = type_coerce_list(self.accessTypes, RangerResourceDef)
+
+
+class RangerEnumElementDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.itemId     = attrs.get('itemId')
+        self.name       = attrs.get('name')
+        self.label      = attrs.get('label')
+        self.rbKeyLabel = attrs.get('rbKeyLabel')
+
+
+class RangerDataMaskTypeDef(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.itemId           = attrs.get('itemId')
+        self.name             = attrs.get('name')
+        self.label            = attrs.get('label')
+        self.description      = attrs.get('description')
+        self.transformer      = attrs.get('transformer')
+        self.dataMaskOptions  = attrs.get('dataMaskOptions')
+        self.rbKeyLabel       = attrs.get('rbKeyLabel')
+        self.rbKeyDescription = attrs.get('rbKeyDescription')
