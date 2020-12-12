@@ -16,33 +16,25 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from apache_ranger.model.ranger_base import RangerBase
+from apache_ranger.model.ranger_base import RangerBase, RangerBaseModelObject
 
 
-class RangerSecurityZoneService:
-    def __init__(self, resources=None):
-        self.resources = resources if resources is not None else []
+class RangerSecurityZoneService(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.resources = attrs.get('resources')
 
 
-class RangerSecurityZone(RangerBase):
-    def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None,
-                 version=None, isEnabled=None, name=None, services=None, tagServices=None, adminUsers=None,
-                 adminUserGroups=None, auditUsers=None, auditUserGroups=None, description=None):
-        super().__init__(id, guid, createdBy, updatedBy, createTime, updateTime, version, isEnabled)
-        self.name = name
-        self.services = services if services is not None else {}
-        self.tagServices = tagServices if tagServices is not None else []
-        self.adminUsers = adminUsers if adminUsers is not None else []
-        self.adminUserGroups = adminUserGroups if adminUserGroups is not None else []
-        self.auditUsers = auditUsers if auditUsers is not None else []
-        self.auditUserGroups = auditUserGroups if auditUserGroups is not None else []
-        self.description = description
-        return
+class RangerSecurityZone(RangerBaseModelObject):
+    def __init__(self, attrs={}):
+        RangerBaseModelObject.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.name            = attrs.get('name')
+        self.services        = attrs.get('services')
+        self.tagServices     = attrs.get('tagServices')
+        self.adminUsers      = attrs.get('adminUsers')
+        self.adminUserGroups = attrs.get('adminUserGroups')
+        self.auditUsers      = attrs.get('auditUsers')
+        self.auditUserGroups = attrs.get('auditUserGroups')
+        self.description     = attrs.get('description')

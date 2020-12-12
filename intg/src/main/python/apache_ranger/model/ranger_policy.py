@@ -16,112 +16,140 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
 
-from apache_ranger.model.ranger_base import RangerBase
-
-
-class RangerPolicyResource:
-    def __init__(self, values=None, isExcludes=None, isRecursive=None):
-        self.values      = values if values is not None else []
-        self.isExcludes  = isExcludes if isExcludes is not None else False
-        self.isRecursive = isRecursive if isRecursive is not None else False
-
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+from apache_ranger.model.ranger_base import *
+from apache_ranger.utils             import *
 
 
-class RangerPolicyItemCondition:
-    def __init__(self, type=None, values=None):
-        self.type   = type
-        self.values = values if values is not None else []
+class RangerPolicy(RangerBaseModelObject):
+    POLICY_TYPE_ACCESS    = 0
+    POLICY_TYPE_DATAMASK  = 1
+    POLICY_TYPE_ROWFILTER = 2
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+    def __init__(self, attrs={}):
+        RangerBaseModelObject.__init__(self, attrs)
+
+        self.service              = attrs.get('service')
+        self.name                 = attrs.get('name')
+        self.policyType           = attrs.get('policyType')
+        self.policyPriority       = attrs.get('policyPriority')
+        self.description          = attrs.get('description')
+        self.resourceSignature    = attrs.get('resourceSignature')
+        self.isAuditEnabled       = attrs.get('isAuditEnabled')
+        self.resources            = attrs.get('resources')
+        self.policyItems          = attrs.get('policyItems')
+        self.denyPolicyItems      = attrs.get('denyPolicyItems')
+        self.allowExceptions      = attrs.get('allowExceptions')
+        self.denyExceptions       = attrs.get('denyExceptions')
+        self.dataMaskPolicyItems  = attrs.get('dataMaskPolicyItems')
+        self.rowFilterPolicyItems = attrs.get('rowFilterPolicyItems')
+        self.serviceType          = attrs.get('serviceType')
+        self.options              = attrs.get('options')
+        self.validitySchedules    = attrs.get('validitySchedules')
+        self.policyLabels         = attrs.get('policyLabels')
+        self.zoneName             = attrs.get('zoneName')
+        self.conditions           = attrs.get('conditions')
+        self.isDenyAllElse        = non_null(attrs.get('isDenyAllElse'), False)
+
+    def type_coerce_attrs(self):
+        super(RangerPolicy, self).type_coerce_attrs()
+
+        self.resources            = type_coerce_dict(self.resources, RangerPolicyResource)
+        self.policyItems          = type_coerce_list(self.policyItems, RangerPolicyItem)
+        self.denyPolicyItems      = type_coerce_list(self.denyPolicyItems, RangerPolicyItem)
+        self.allowExceptions      = type_coerce_list(self.allowExceptions, RangerPolicyItem)
+        self.denyExceptions       = type_coerce_list(self.denyExceptions, RangerPolicyItem)
+        self.dataMaskPolicyItems  = type_coerce_list(self.dataMaskPolicyItems, RangerDataMaskPolicyItem)
+        self.rowFilterPolicyItems = type_coerce_list(self.rowFilterPolicyItems, RangerRowFilterPolicyItem)
+        self.validitySchedules    = type_coerce_list(self.validitySchedules, RangerValiditySchedule)
 
 
-class RangerPolicyItem:
-    def __init__(self, accesses=None, users=None, groups=None, roles=None, conditions=None, delegateAdmin=None):
-        self.accesses      = accesses if accesses is not None else []
-        self.users         = users if users is not None else []
-        self.groups        = groups if groups is not None else []
-        self.roles         = roles if roles is not None else []
-        self.conditions    = conditions if conditions is not None else []
-        self.delegateAdmin = delegateAdmin if delegateAdmin is not None else False
+class RangerPolicyResource(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.values      = attrs.get('values')
+        self.isExcludes  = non_null(attrs.get('isExcludes'), False)
+        self.isRecursive = non_null(attrs.get('isRecursive'), False)
 
 
-class RangerPolicyItemAccess:
-    def __init__(self, type=None, isAllowed=None):
-        self.type      = type
-        self.isAllowed = isAllowed if isAllowed is not None else True
+class RangerPolicyItemCondition(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.type   = attrs.get('type')
+        self.values = attrs.get('values')
 
 
-class RangerPolicyItemDataMaskInfo:
-    def __init__(self, dataMaskType=None, conditionExpr=None, valueExpr=None):
-        self.dataMaskType  = dataMaskType
-        self.conditionExpr = conditionExpr
-        self.valueExpr     = valueExpr
+class RangerPolicyItem(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.accesses      = attrs.get('accesses')
+        self.users         = attrs.get('users')
+        self.groups        = attrs.get('groups')
+        self.roles         = attrs.get('roles')
+        self.conditions    = attrs.get('conditions')
+        self.delegateAdmin = non_null(attrs.get('delegateAdmin'), False)
+
+    def type_coerce_attrs(self):
+        super(RangerPolicyItem, self).type_coerce_attrs()
+
+        self.accesses = type_coerce_list(self.accesses, RangerPolicyItemAccess)
 
 
 class RangerDataMaskPolicyItem(RangerPolicyItem):
-    def __init__(self, dataMaskInfo=None, accesses=None, users=None, groups=None, roles=None, conditions=None, delegateAdmin=None):
-        super().__init__(accesses, users, groups, roles, conditions, delegateAdmin)
+    def __init__(self, attrs={}):
+        RangerPolicyItem.__init__(self, attrs)
 
-        self.dataMaskInfo = dataMaskInfo if dataMaskInfo is not None else RangerPolicyItemDataMaskInfo()
+        self.dataMaskInfo = attrs.get('dataMaskInfo')
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+    def type_coerce_attrs(self):
+        super(RangerDataMaskPolicyItem, self).type_coerce_attrs()
+
+        self.dataMaskInfo = type_coerce(self.dataMaskInfo, RangerPolicyItemDataMaskInfo)
 
 
 class RangerRowFilterPolicyItem(RangerPolicyItem):
-    def __init__(self, rowFilterInfo=None, accesses=None, users=None, groups=None, roles=None, conditions=None, delegateAdmin=None):
-        super().__init__(accesses, users, groups, roles, conditions, delegateAdmin)
+    def __init__(self, attrs={}):
+        RangerPolicyItem.__init__(self, attrs)
 
-        self.rowFilterInfo = rowFilterInfo
+        self.rowFilterInfo = attrs.get('rowFilterInfo')
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+    def type_coerce_attrs(self):
+        super(RangerRowFilterPolicyItem, self).type_coerce_attrs()
+
+        self.rowFilterInfo = type_coerce(self.rowFilterInfo, RangerPolicyItemRowFilterInfo)
 
 
-class RangerPolicy(RangerBase):
-    def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None,
-                 service=None, name=None, description=None, isEnabled=True, isAuditEnabled=None, resources=None,
-                 policyItems=None, dataMaskPolicyItems=None, rowFilterPolicyItems=None, serviceType=None, options=None,
-                 policyLabels=None, zoneName=None, isDenyAllElse=None, validitySchedules=None, version=None,
-                 denyPolicyItems=None, denyExceptions=None, allowExceptions=None, resourceSignature=None,
-                 policyType=None, policyPriority=None, conditions=None):
-        super().__init__(id, guid, createdBy, updatedBy, createTime, updateTime, version, isEnabled)
+class RangerValiditySchedule(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-        self.service              = service
-        self.name                 = name
-        self.policyType           = policyType
-        self.policyPriority       = policyPriority if policyPriority is not None else 0
-        self.description          = description
-        self.resourceSignature    = resourceSignature
-        self.isAuditEnabled       = isAuditEnabled if isAuditEnabled is not None else True
-        self.resources            = resources if resources is not None else {}
-        self.policyItems          = policyItems if policyItems is not None else []
-        self.denyPolicyItems      = denyPolicyItems if denyPolicyItems is not None else []
-        self.allowExceptions      = allowExceptions if allowExceptions is not None else []
-        self.denyExceptions       = denyExceptions if denyExceptions is not None else []
-        self.dataMaskPolicyItems  = dataMaskPolicyItems if dataMaskPolicyItems is not None else []
-        self.rowFilterPolicyItems = rowFilterPolicyItems if rowFilterPolicyItems is not None else []
-        self.serviceType          = serviceType
-        self.options              = options if options is not None else {}
-        self.validitySchedules    = validitySchedules if validitySchedules is not None else []
-        self.policyLabels         = policyLabels if policyLabels is not None else []
-        self.zoneName             = zoneName
-        self.conditions           = conditions
-        self.isDenyAllElse        = isDenyAllElse if isDenyAllElse is not None else False
+        self.startTime = attrs.get('startTime')
+        self.endTime   = attrs.get('endTime')
+        self.timeZone  = attrs.get('timeZone')
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+
+class RangerPolicyItemAccess(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.type      = attrs.get('type')
+        self.isAllowed = non_null(attrs.get('isAllowed'), True)
+
+
+class RangerPolicyItemDataMaskInfo(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.dataMaskType  = attrs.get('dataMaskType')
+        self.conditionExpr = attrs.get('conditionExpr')
+        self.valueExpr     = attrs.get('valueExpr')
+
+
+class RangerPolicyItemRowFilterInfo(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.filterExpr = attrs.get('filterExpr')

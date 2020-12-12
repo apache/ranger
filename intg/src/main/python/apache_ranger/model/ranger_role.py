@@ -16,33 +16,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from apache_ranger.model.ranger_base import RangerBase
-
-
-class RoleMember:
-    def __init__(self, name=None, isAdmin=None):
-        self.name    = name
-        self.isAdmin = isAdmin if isAdmin is not None else False
-
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+from apache_ranger.model.ranger_base import RangerBase, RangerBaseModelObject
+from apache_ranger.utils             import *
 
 
-class RangerRole(RangerBase):
-    def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None,
-                 version=None, isEnabled=None, name=None, description=None, options=None, users=None, groups=None,
-                 roles=None, createdByUser=None):
-        super().__init__(id, guid, createdBy, updatedBy, createTime, updateTime, version, isEnabled)
+class RoleMember(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
 
-        self.name          = name
-        self.description   = description
-        self.options       = options if options is not None else {}
-        self.users         = users if users is not None else []
-        self.groups        = groups if groups is not None else []
-        self.roles         = roles if roles is not None else []
-        self.createdByUser = createdByUser
+        self.name    = attrs.get('name')
+        self.isAdmin = non_null(attrs.get('isAdmin'), False)
 
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+
+class RangerRole(RangerBaseModelObject):
+    def __init__(self, attrs={}):
+        RangerBaseModelObject.__init__(self, attrs)
+
+        self.name          = attrs.get('name')
+        self.description   = attrs.get('description')
+        self.options       = attrs.get('options')
+        self.users         = attrs.get('users')
+        self.groups        = attrs.get('groups')
+        self.roles         = attrs.get('roles')
+        self.createdByUser = attrs.get('createdByUser')

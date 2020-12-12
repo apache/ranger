@@ -18,17 +18,46 @@
 
 import json
 
+from apache_ranger.utils import *
 
-class RangerBase:
-    def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None, version=None, isEnabled=None):
-        self.id         = id
-        self.guid       = guid
-        self.isEnabled  = isEnabled if isEnabled is not None else True
-        self.createdBy  = createdBy
-        self.updatedBy  = updatedBy
-        self.createTime = createTime
-        self.updateTime = updateTime
-        self.version    = version
+
+class RangerBase(dict):
+    def __init__(self, attrs):
+        pass
+
+    def __getattr__(self, attr):
+        return self.get(attr)
+
+    def __setattr__(self, key, value):
+        self.__setitem__(key, value)
+
+    def __setitem__(self, key, value):
+        super(RangerBase, self).__setitem__(key, value)
+        self.__dict__.update({key: value})
+
+    def __delattr__(self, item):
+        self.__delitem__(item)
+
+    def __delitem__(self, key):
+        super(RangerBase, self).__delitem__(key)
+        del self.__dict__[key]
 
     def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        return json.dumps(self)
+
+    def type_coerce_attrs(self):
+        pass
+
+
+class RangerBaseModelObject(RangerBase):
+    def __init__(self, attrs={}):
+        RangerBase.__init__(self, attrs)
+
+        self.id         = attrs.get('id')
+        self.guid       = attrs.get('guid')
+        self.isEnabled  = non_null(attrs.get('isEnabled'), True)
+        self.createdBy  = attrs.get('createdBy')
+        self.updatedBy  = attrs.get('updatedBy')
+        self.createTime = attrs.get('createTime')
+        self.updateTime = attrs.get('updateTime')
+        self.version    = attrs.get('version')

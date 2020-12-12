@@ -10,3 +10,10 @@
 winpkg/target
 .DS_Store
 .idea
+
+#Python
+*.pyc
+**/build
+**/dist
+**/apache_ranger.egg-info
+.python-version

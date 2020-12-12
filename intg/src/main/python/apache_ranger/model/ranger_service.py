@@ -16,28 +16,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-
-from apache_ranger.model.ranger_base import RangerBase
+from apache_ranger.model.ranger_base import RangerBaseModelObject
 
 
-class RangerService(RangerBase):
-    def __init__(self, id=None, guid=None, createdBy=None, updatedBy=None, createTime=None, updateTime=None,
-                 version=None, isEnabled=None, type=None, name=None, displayName=None, description=None,
-                 tagService=None, configs=None, policyVersion=None, policyUpdateTime=None, tagVersion=None,
-                 tagUpdateTime=None):
-        super().__init__(id, guid, createdBy, updatedBy, createTime, updateTime, version, isEnabled)
+class RangerService(RangerBaseModelObject):
+    def __init__(self, attrs={}):
+        RangerBaseModelObject.__init__(self, attrs)
 
-        self.type             = type
-        self.name             = name
-        self.displayName      = displayName
-        self.description      = description
-        self.tagService       = tagService
-        self.configs          = configs if configs is not None else {}
-        self.policyVersion    = policyVersion
-        self.policyUpdateTime = policyUpdateTime
-        self.tagVersion       = tagVersion
-        self.tagUpdateTime    = tagUpdateTime
-
-    def __repr__(self):
-        return json.dumps(self, default=lambda x: x.__dict__, sort_keys=True, indent=4)
+        self.type             = attrs.get('type')
+        self.name             = attrs.get('name')
+        self.displayName      = attrs.get('displayName')
+        self.description      = attrs.get('description')
+        self.tagService       = attrs.get('tagService')
+        self.configs          = attrs.get('configs')
+        self.policyVersion    = attrs.get('policyVersion')
+        self.policyUpdateTime = attrs.get('policyUpdateTime')
+        self.tagVersion       = attrs.get('tagVersion')
+        self.tagUpdateTime    = attrs.get('tagUpdateTime')
