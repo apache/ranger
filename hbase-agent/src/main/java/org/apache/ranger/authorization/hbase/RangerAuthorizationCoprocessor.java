@@ -1180,44 +1180,25 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	}
 
 	@Override
+	public void postGetTableNames(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableDescriptor> descriptors, String regex) throws IOException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> postGetTableNames(count(descriptors)=%s, regex=%s)", descriptors == null ? 0 : descriptors.size(), regex));
+		}
+		checkAccess(ctx, "getTableNames", descriptors, regex);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== postGetTableNames(count(descriptors)=%s, regex=%s)", descriptors == null ? 0 : descriptors.size(), regex));
+		}
+	}
+
+	@Override
 	public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList, List<TableDescriptor> descriptors, String regex) throws IOException {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
 					descriptors == null ? 0 : descriptors.size(), regex));
 		}
 
-		if (CollectionUtils.isNotEmpty(descriptors)) {
-			// Retains only those which passes authorization checks
-			User user = getActiveUser(ctx);
-			String access = _authUtils.getAccess(Action.CREATE);
-			HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
-			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
-				.operation("getTableDescriptors")
-				.otherInformation("regex=" + regex)
-				.remoteAddress(getRemoteAddress())
-				.auditHandler(auditHandler)
-				.user(user)
-				.access(access);
-	
-			Iterator<TableDescriptor> itr = descriptors.iterator();
-			while (itr.hasNext()) {
-				TableDescriptor htd = itr.next();
-				String tableName = htd.getTableName().getNameAsString();
-				session.table(tableName).buildRequest().authorize();
-				if (!session.isAuthorized()) {
-					List<AuthzAuditEvent> events = null;
-					itr.remove();
-					AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent();
-					if (event != null) {
-						events = Lists.newArrayList(event);
-					}
-					auditHandler.logAuthzAudits(events);
-				}
-			}
-			if (descriptors.size() > 0) {
-				session.logCapturedEvents();
-			}
-		}
+		checkAccess(ctx, "getTableDescriptors", descriptors, regex);
 		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("<== postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
@@ -1763,6 +1744,42 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				break;
 		}
 		return ret.toString();
+	}
+
+	private void checkAccess(ObserverContext<MasterCoprocessorEnvironment> ctx, String operation, List<TableDescriptor> descriptors, String regex) {
+
+		if (CollectionUtils.isNotEmpty(descriptors)) {
+			// Retains only those which passes authorization checks
+			User user = getActiveUser(ctx);
+			String access = _authUtils.getAccess(Action.CREATE);
+			HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
+			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
+					.operation(operation)
+					.otherInformation("regex=" + regex)
+					.remoteAddress(getRemoteAddress())
+					.auditHandler(auditHandler)
+					.user(user)
+					.access(access);
+
+			Iterator<TableDescriptor> itr = descriptors.iterator();
+			while (itr.hasNext()) {
+				TableDescriptor htd = itr.next();
+				String tableName = htd.getTableName().getNameAsString();
+				session.table(tableName).buildRequest().authorize();
+				if (!session.isAuthorized()) {
+					List<AuthzAuditEvent> events = null;
+					itr.remove();
+					AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent();
+					if (event != null) {
+						events = Lists.newArrayList(event);
+					}
+					auditHandler.logAuthzAudits(events);
+				}
+			}
+			if (descriptors.size() > 0) {
+				session.logCapturedEvents();
+			}
+		}
 	}
 
 	enum PredicateType {STARTROW, STOPROW, FILTER, COLUMNS, ROW};
