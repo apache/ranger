@@ -2388,6 +2388,15 @@ textarea:read-only{
   display: inline-block;
 }
 
+.sidebar-list .serviceNameEllipsis {
+  max-width: calc(100% - 30px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: sub;
+  display: inline-block;
+}
+
 .resourceGrp {
   display: block;
   padding: 5px;
