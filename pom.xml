@@ -179,7 +179,7 @@
         <scala.xml.version>1.0.4</scala.xml.version>
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
         <servlet.api.version>2.5</servlet.api.version>
-        <slf4j-api.version>1.7.25</slf4j-api.version>
+        <slf4j-api.version>1.7.30</slf4j-api.version>
         <solr.version>7.7.1</solr.version>
         <spring-ldap-core.version>2.3.3.RELEASE</spring-ldap-core.version>
         <springframework.security.version>4.2.18.RELEASE</springframework.security.version>
