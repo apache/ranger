@@ -274,10 +274,18 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 			}
 			if (MapUtils.isNotEmpty(groupMap)) {
 				for (String groupName : groupMap.keySet()) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("adding " + groupUsersCache.get(groupName) + " from " + groupName + " for computing roles during startup");
+					Set<String> groupUsers = null;
+					if (CollectionUtils.isNotEmpty(groupUsersCache.get(groupName))) {
+						groupUsers = new HashSet<>(groupUsersCache.get(groupName));
+					} else if (CollectionUtils.isNotEmpty(deltaGroupUsers.get(groupName))) {
+						groupUsers = new HashSet<>(deltaGroupUsers.get(groupName));
 					}
-					computeRolesForUsers.addAll(groupUsersCache.get(groupName));
+					if (groupUsers != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("adding " + groupUsers + " from " + groupName + " for computing roles during startup");
+						}
+						computeRolesForUsers.addAll(groupUsers);
+					}
 				}
 			}
 		}
@@ -799,17 +807,17 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 				LOG.debug("RESPONSE[" + response + "]");
 			}
 
-			if (response != null) {
+			if (StringUtils.isNotEmpty(response)) {
 				try {
 					ret = Integer.valueOf(response);
 					uploadedCount += pageSize;
 				} catch (NumberFormatException e) {
 					LOG.error("Failed to addOrUpdateUsers " + uploadedCount, e);
-					ret = 0;
+					throw e;
 				}
 			} else {
 				LOG.error("Failed to addOrUpdateUsers " + uploadedCount );
-				ret = 0;
+				throw new Exception("Failed to addOrUpdateUsers " + uploadedCount);
 			}
 			LOG.info("ret = " + ret + " No. of users uploaded to ranger admin= " + (uploadedCount>totalCount?totalCount:uploadedCount));
 		}
@@ -897,17 +905,17 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 				LOG.debug("RESPONSE[" + response + "]");
 			}
 
-			if (response != null) {
+			if (StringUtils.isNotEmpty(response)) {
 				try {
 					ret = Integer.valueOf(response);
 					uploadedCount += pageSize;
 				} catch (NumberFormatException e) {
 					LOG.error("Failed to addOrUpdateGroups " + uploadedCount, e );
-					ret = 0;
+					throw e;
 				}
 			} else {
 				LOG.error("Failed to addOrUpdateGroups " + uploadedCount );
-				ret = 0;
+				throw new Exception("Failed to addOrUpdateGroups " + uploadedCount);
 			}
 			LOG.info("ret = " + ret + " No. of groups uploaded to ranger admin= " + (uploadedCount>totalCount?totalCount:uploadedCount));
 		}
@@ -990,17 +998,17 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 				LOG.debug("RESPONSE[" + response + "]");
 			}
 
-			if (response != null) {
+			if (StringUtils.isNotEmpty(response)) {
 				try {
 					ret = Integer.valueOf(response);
 					uploadedCount += pageSize;
 				} catch (NumberFormatException e) {
 					LOG.error("Failed to addOrUpdateGroupUsers " + uploadedCount, e );
-					ret = 0;
+					throw e;
 				}
 			} else {
 				LOG.error("Failed to addOrUpdateGroupUsers " + uploadedCount );
-				ret = 0;
+				throw new Exception("Failed to addOrUpdateGroupUsers " + uploadedCount);
 			}
 
 			LOG.info("ret = " + ret + " No. of group memberships uploaded to ranger admin= " + (uploadedCount>totalCount?totalCount:uploadedCount));

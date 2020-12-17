@@ -107,6 +107,16 @@ public class XGroupUserService extends
 
 	public void createOrUpdateXGroupUsers(String groupName, Set<String> users, Map<String, Long> usersFromDB) {
 		XXGroup xxGroup = daoManager.getXXGroup().findByGroupName(groupName);
+		if (logger.isDebugEnabled()) {
+			logger.debug("createOrUpdateXGroupUsers(): groupname =  " + groupName + " users = " + users);
+		}
+		if (xxGroup == null) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("createOrUpdateXGroupUsers(): groupname =  " + groupName
+						+ " doesn't exist in database. Hence ignoring group membership updates");
+			}
+			return;
+		}
 		Map<String, XXGroupUser> groupUsers = daoManager.getXXGroupUser().findUsersByGroupName(groupName);
 		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
 		for (String username : users) {
@@ -136,7 +146,7 @@ public class XGroupUserService extends
 				}
 				VXGroupUser vXGroupUser = postCreate(xxGroupUser);
 				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("createXGroupUserFromMap(): Create or update group user mapping with groupname =  " + vXGroupUser.getName()
+					logger.debug(String.format("createOrUpdateXGroupUsers(): Create or update group user mapping with groupname =  " + vXGroupUser.getName()
 							+ " username = %s userId = %d", username, vXGroupUser.getUserId()));
 				}
 			}
