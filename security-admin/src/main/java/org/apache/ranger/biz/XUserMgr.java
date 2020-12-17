@@ -2594,6 +2594,7 @@ public class XUserMgr extends XUserMgrBase {
 		return ret;
 	}
 
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	public int createOrUpdateXUsers(VXUserList users) {
 		xaBizUtil.blockAuditorRoleUser();
 		int ret = 0;
@@ -2697,7 +2698,6 @@ public class XUserMgr extends XUserMgrBase {
 		return groups.getListSize();
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	private void createOrDeleteXGroupUsers(GroupUserInfo groupUserInfo, Map<String, Long> usersFromDB) {
 		checkAdminAccess();
 		xaBizUtil.blockAuditorRoleUser();
@@ -2718,6 +2718,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	public int createOrDeleteXGroupUserList(List<GroupUserInfo> groupUserInfoList) {
 		int updatedGroups = 0;
 		if (CollectionUtils.isNotEmpty(groupUserInfoList)) {
@@ -2732,6 +2733,7 @@ public class XUserMgr extends XUserMgrBase {
 		return updatedGroups;
 	}
 
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	public List<String> updateUserRoleAssignments(UsersGroupRoleAssignments ugRoleAssignments) {
 		List<String> updatedUsers = new ArrayList<>();
 		// For each user get groups and compute roles based on group role assignments
@@ -2874,7 +2876,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	public VXUser updateXUser(VXUser vXUser, VXPortalUser oldUserProfile) {
+	private VXUser updateXUser(VXUser vXUser, VXPortalUser oldUserProfile) {
 		VXPortalUser vXPortalUser = new VXPortalUser();
 		if (oldUserProfile != null && oldUserProfile.getId() != null) {
 			vXPortalUser.setId(oldUserProfile.getId());
@@ -2965,6 +2967,12 @@ public class XUserMgr extends XUserMgrBase {
 
 		// TODO I've to get the transaction log from here.
 		// There is nothing to log anything in XXUser so far.
+		XXUser xUser = daoManager.getXXUser().findByUserName(vXUser.getName());
+		if (xUser == null) {
+			logger.warn("Could not find corresponding xUser for username: [" + vXPortalUser.getLoginId() + "], So not updating this user");
+			return vXUser;
+		}
+		vXUser.setId(xUser.getId());
 		vXUser = xUserService.updateResource(vXUser);
 		vXUser.setUserRoleList(roleList);
 		if (oldUserProfile != null) {
