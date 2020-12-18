@@ -21,7 +21,10 @@ from apache_ranger.utils             import *
 
 
 class RangerServiceDef(RangerBaseModelObject):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBaseModelObject.__init__(self, attrs)
 
         self.name             = attrs.get('name')
@@ -55,7 +58,10 @@ class RangerServiceDef(RangerBaseModelObject):
 
 
 class RangerServiceConfigDef:
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.itemId                 = attrs.get('itemId')
@@ -75,7 +81,10 @@ class RangerServiceConfigDef:
 
 
 class RangerResourceDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.itemId                 = attrs.get('itemId')
@@ -102,7 +111,10 @@ class RangerResourceDef(RangerBase):
 
 
 class RangerAccessTypeDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.itemId        = attrs.get('itemId')
@@ -113,7 +125,10 @@ class RangerAccessTypeDef(RangerBase):
 
 
 class RangerPolicyConditionDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.itemId                 = attrs.get('itemId')
@@ -131,7 +146,10 @@ class RangerPolicyConditionDef(RangerBase):
 
 
 class RangerContextEnricherDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.itemId         = attrs.get('itemId')
@@ -141,7 +159,10 @@ class RangerContextEnricherDef(RangerBase):
 
 
 class RangerEnumDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.itemId       = attrs.get('itemId')
@@ -156,7 +177,10 @@ class RangerEnumDef(RangerBase):
 
 
 class RangerDataMaskDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.maskTypes   = attrs.get('maskTypes')
@@ -172,7 +196,10 @@ class RangerDataMaskDef(RangerBase):
 
 
 class RangerRowFilterDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.accessTypes = attrs.get('accessTypes')
@@ -186,7 +213,10 @@ class RangerRowFilterDef(RangerBase):
 
 
 class RangerEnumElementDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.itemId     = attrs.get('itemId')
@@ -196,7 +226,10 @@ class RangerEnumElementDef(RangerBase):
 
 
 class RangerDataMaskTypeDef(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.itemId           = attrs.get('itemId')

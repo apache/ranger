@@ -20,14 +20,20 @@ from apache_ranger.model.ranger_base import RangerBase, RangerBaseModelObject
 
 
 class RangerSecurityZoneService(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.resources = attrs.get('resources')
 
 
 class RangerSecurityZone(RangerBaseModelObject):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBaseModelObject.__init__(self, attrs)
 
         self.name            = attrs.get('name')
