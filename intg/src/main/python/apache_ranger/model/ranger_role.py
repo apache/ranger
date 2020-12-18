@@ -21,7 +21,10 @@ from apache_ranger.utils             import *
 
 
 class RoleMember(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.name    = attrs.get('name')
@@ -29,7 +32,10 @@ class RoleMember(RangerBase):
 
 
 class RangerRole(RangerBaseModelObject):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBaseModelObject.__init__(self, attrs)
 
         self.name          = attrs.get('name')

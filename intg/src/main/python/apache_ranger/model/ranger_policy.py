@@ -26,7 +26,10 @@ class RangerPolicy(RangerBaseModelObject):
     POLICY_TYPE_DATAMASK  = 1
     POLICY_TYPE_ROWFILTER = 2
 
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBaseModelObject.__init__(self, attrs)
 
         self.service              = attrs.get('service')
@@ -65,7 +68,10 @@ class RangerPolicy(RangerBaseModelObject):
 
 
 class RangerPolicyResource(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.values      = attrs.get('values')
@@ -74,7 +80,10 @@ class RangerPolicyResource(RangerBase):
 
 
 class RangerPolicyItemCondition(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.type   = attrs.get('type')
@@ -82,7 +91,10 @@ class RangerPolicyItemCondition(RangerBase):
 
 
 class RangerPolicyItem(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.accesses      = attrs.get('accesses')
@@ -99,7 +111,10 @@ class RangerPolicyItem(RangerBase):
 
 
 class RangerDataMaskPolicyItem(RangerPolicyItem):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerPolicyItem.__init__(self, attrs)
 
         self.dataMaskInfo = attrs.get('dataMaskInfo')
@@ -111,7 +126,10 @@ class RangerDataMaskPolicyItem(RangerPolicyItem):
 
 
 class RangerRowFilterPolicyItem(RangerPolicyItem):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerPolicyItem.__init__(self, attrs)
 
         self.rowFilterInfo = attrs.get('rowFilterInfo')
@@ -123,7 +141,10 @@ class RangerRowFilterPolicyItem(RangerPolicyItem):
 
 
 class RangerValiditySchedule(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.startTime = attrs.get('startTime')
@@ -132,7 +153,10 @@ class RangerValiditySchedule(RangerBase):
 
 
 class RangerPolicyItemAccess(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.type      = attrs.get('type')
@@ -140,7 +164,10 @@ class RangerPolicyItemAccess(RangerBase):
 
 
 class RangerPolicyItemDataMaskInfo(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.dataMaskType  = attrs.get('dataMaskType')
@@ -149,7 +176,10 @@ class RangerPolicyItemDataMaskInfo(RangerBase):
 
 
 class RangerPolicyItemRowFilterInfo(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.filterExpr = attrs.get('filterExpr')

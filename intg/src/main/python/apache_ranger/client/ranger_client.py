@@ -78,7 +78,10 @@ class RangerClient:
 
         return type_coerce(resp, RangerServiceDef)
 
-    def find_service_defs(self, filter={}):
+    def find_service_defs(self, filter=None):
+        if filter is None:
+            filter = {}
+
         resp = self.__call_api(RangerClient.FIND_SERVICEDEFS, filter)
 
         return type_coerce_list(resp, RangerServiceDef)
@@ -116,7 +119,10 @@ class RangerClient:
     def delete_service(self, serviceName):
         self.__call_api(RangerClient.DELETE_SERVICE_BY_NAME.format_path({ 'name': serviceName }))
 
-    def find_services(self, filter={}):
+    def find_services(self, filter=None):
+        if filter is None:
+            filter = {}
+
         resp = self.__call_api(RangerClient.FIND_SERVICES, filter)
 
         return type_coerce_list(resp, RangerService)
@@ -416,7 +422,10 @@ class RangerClient:
 
 
 class Message(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.name      = attrs.get('name')
@@ -427,7 +436,10 @@ class Message(RangerBase):
 
 
 class RESTResponse(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.httpStatusCode = attrs.get('httpStatusCode')

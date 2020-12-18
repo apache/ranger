@@ -21,7 +21,10 @@ from apache_ranger.utils             import *
 
 
 class GrantRevokeRoleRequest(RangerBase):
-    def __init__(self, attrs={}):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
         RangerBase.__init__(self, attrs)
 
         self.grantor         = attrs.get('grantor')
