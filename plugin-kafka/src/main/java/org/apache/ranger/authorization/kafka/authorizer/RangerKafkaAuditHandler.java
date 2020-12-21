@@ -62,13 +62,13 @@ public class RangerKafkaAuditHandler extends RangerDefaultAuditHandler {
 
     public void flushAudit() {
         if(LOG.isDebugEnabled()) {
-            LOG.info("==> RangerYarnAuditHandler.flushAudit(" + "AuditEvent: " + auditEvent + ")");
+            LOG.info("==> RangerKafkaAuditHandler.flushAudit(" + "AuditEvent: " + auditEvent + ")");
         }
         if (auditEvent != null) {
             super.logAuthzAudit(auditEvent);
         }
         if(LOG.isDebugEnabled()) {
-            LOG.info("<== RangerYarnAuditHandler.flushAudit(" + "AuditEvent: " + auditEvent + ")");
+            LOG.info("<== RangerKafkaAuditHandler.flushAudit(" + "AuditEvent: " + auditEvent + ")");
         }
     }
 }
