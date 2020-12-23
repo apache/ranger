@@ -94,15 +94,15 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 	boolean isCompleteMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
 
-	boolean isAccessAllowed(RangerAccessResource resource, String user, Set<String> userGroups, Set<String> roles, String accessType);
-
 	boolean isAccessAllowed(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
-
-	boolean isAccessAllowed(Long policyId, Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, Set<String> roles, String accessType, Map<String, Object> evalContext);
 
 	void updateAccessResult(RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType, boolean isAllowed, String reason);
 
 	void getResourceAccessInfo(RangerAccessRequest request, RangerResourceAccessInfo result);
+
+	Set<String> getAllowedAccesses(RangerAccessResource resource, String user, Set<String> userGroups, Set<String> roles, Set<String> accessTypes);
+
+	Set<String> getAllowedAccesses(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, Set<String> roles,  Set<String> accessTypes, Map<String, Object> evalContext);
 
 	PolicyACLSummary getPolicyACLSummary();
 

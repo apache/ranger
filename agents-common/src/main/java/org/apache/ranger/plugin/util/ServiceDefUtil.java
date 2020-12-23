@@ -34,6 +34,8 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
@@ -436,6 +438,31 @@ public class ServiceDefUtil {
             }
         }
 
+        return ret;
+    }
+
+    public static Map<String, Collection<String>> getExpandedImpliedGrants(RangerServiceDef serviceDef) {
+        Map<String, Collection<String>> ret = new HashMap<>();
+
+        if(serviceDef != null && !CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
+            for(RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
+                if(!CollectionUtils.isEmpty(accessTypeDef.getImpliedGrants())) {
+
+                    Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
+
+                    if(impliedAccessGrants == null) {
+                        impliedAccessGrants = new HashSet<>();
+
+                        ret.put(accessTypeDef.getName(), impliedAccessGrants);
+                    }
+
+                    impliedAccessGrants.addAll(accessTypeDef.getImpliedGrants());
+                    impliedAccessGrants.add(accessTypeDef.getName());
+                } else {
+                    ret.put(accessTypeDef.getName(), new HashSet<>(Collections.singleton(accessTypeDef.getName())));
+                }
+            }
+        }
         return ret;
     }
 

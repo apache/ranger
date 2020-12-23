@@ -25,15 +25,16 @@ import java.util.Set;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerRoles;
 
 public interface RangerPolicyAdmin {
 
-    boolean isAccessAllowed(RangerAccessResource resource, String zoneName, String user, Set<String> userGroups, String accessType);
+    boolean isDelegatedAdminAccessAllowed(RangerAccessResource resource, String zoneName, String user, Set<String> userGroups, Set<String> accessTypes);
 
-    boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType, Map<String, Object> evalContext);
+    boolean isDelegatedAdminAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext);
 
     List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource, String zoneName, Map<String, Object> evalContext);
 
@@ -48,6 +49,8 @@ public interface RangerPolicyAdmin {
     void setRoles(RangerRoles roles);
 
     String getServiceName();
+
+    RangerServiceDef getServiceDef();
 
     Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
 
