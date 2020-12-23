@@ -309,7 +309,7 @@ class RangerClient:
             ret = None
         elif response.status_code == api.expected_status:
             try:
-                if response.content:
+                if response.content is not None:
                     if LOG.isEnabledFor(logging.DEBUG):
                         LOG.debug("<== __call_api(%s, %s, %s), result=%s", vars(api), params, request_data, response)
 

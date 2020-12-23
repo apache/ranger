@@ -17,7 +17,9 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch
+
+from unittest.mock                      import patch
+from apache_ranger.exceptions           import RangerServiceException
 from apache_ranger.model.ranger_service import RangerService
 from apache_ranger.client.ranger_client import API, HttpMethod, HTTPStatus, RangerClient
 
@@ -30,32 +32,31 @@ class MockResponse:
         return
 
     def json(self):
-        return [self.response.__repr__()]
+        return self.response
 
     def text(self):
         return str(self.content)
 
 
 class TestRangerClient(unittest.TestCase):
-    URL      = "url"
-    USERNAME = "user"
-    PASSWORD = "password"
+    URL  = "url"
+    AUTH = ("user", "password")
 
     @patch('apache_ranger.client.ranger_client.Session')
     def test_get_service_unavailable(self, mock_session):
         mock_session.return_value.get.return_value = MockResponse(HTTPStatus.SERVICE_UNAVAILABLE)
-        result                                     = RangerClient(TestRangerClient.URL, TestRangerClient.USERNAME, TestRangerClient.PASSWORD).find_services({})
+        result                                     = RangerClient(TestRangerClient.URL, TestRangerClient.AUTH).find_services()
 
         self.assertTrue(result is None)
 
 
     @patch('apache_ranger.client.ranger_client.Session')
     def test_get_success(self, mock_session):
-        response                                   = RangerService()
+        response                                   = [ RangerService() ]
         mock_session.return_value.get.return_value = MockResponse(HTTPStatus.OK, response=response, content='Success')
-        result                                     = RangerClient(TestRangerClient.URL, TestRangerClient.USERNAME, TestRangerClient.PASSWORD).find_services({})
+        result                                     = RangerClient(TestRangerClient.URL, TestRangerClient.AUTH).find_services()
 
-        self.assertTrue(response.__repr__() in result)
+        self.assertEqual(response, result)
 
 
     @patch('apache_ranger.client.ranger_client.Session')
@@ -68,18 +69,20 @@ class TestRangerClient(unittest.TestCase):
         mock_session.return_value.get.return_value = mock_response
 
         try:
-            RangerClient(TestRangerClient.URL, TestRangerClient.USERNAME, TestRangerClient.PASSWORD).find_services({})
-        except Exception as e:
-            self.assertTrue(content in repr(e))
+            RangerClient(TestRangerClient.URL, TestRangerClient.AUTH).find_services()
+        except RangerServiceException as e:
+            self.assertTrue(HTTPStatus.INTERNAL_SERVER_ERROR, e.statusCode)
 
 
     @patch('apache_ranger.client.ranger_client.RangerClient.FIND_SERVICES')
     def test_unexpected_http_method(self, mock_api):
         mock_api.method.return_value = "PATCH"
+        mock_api.url                 = TestRangerClient.URL
+        mock_api.path                = RangerClient.URI_SERVICE
 
         try:
-            RangerClient(TestRangerClient.URL, TestRangerClient.USERNAME, TestRangerClient.PASSWORD).find_services({})
-        except Exception as e:
+            RangerClient(TestRangerClient.URL, TestRangerClient.AUTH).find_services()
+        except RangerServiceException as e:
             self.assertTrue('Unsupported HTTP Method' in repr(e))
 
 
@@ -87,7 +90,7 @@ class TestRangerClient(unittest.TestCase):
         params = {'arg1': 1, 'arg2': 2}
 
         try:
-            API("{arg1}test{arg2}path{arg3}", HttpMethod.GET, HTTPStatus.OK).apply_url_params(params)
+            API("{arg1}test{arg2}path{arg3}", HttpMethod.GET, HTTPStatus.OK).format_path(params)
 
             self.fail("Supposed to fail")
         except KeyError as e:
@@ -98,7 +101,7 @@ class TestRangerClient(unittest.TestCase):
         params = {'1', '2'}
 
         try:
-            API("{}test{}path{}", HttpMethod.GET, HTTPStatus.OK).apply_url_params(params)
+            API("{}test{}path{}", HttpMethod.GET, HTTPStatus.OK).format_path(params)
 
             self.fail("Supposed to fail")
         except TypeError as e:
