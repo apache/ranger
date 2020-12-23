@@ -113,7 +113,6 @@ import org.apache.ranger.plugin.model.validation.RangerServiceValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -1224,6 +1223,7 @@ public class ServiceREST {
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(grantRequest.getGrantorGroups()) ? grantRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					String				 ownerUser  = grantRequest.getOwnerUser();
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
+					Set<String>			 accessTypes = grantRequest.getAccessTypes();
 					VXUser               vxUser = xUserService.getXUserByUserName(userName);
 
 					if (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
@@ -1235,7 +1235,7 @@ public class ServiceREST {
 					RangerService rangerService = svcStore.getServiceByName(serviceName);
 
 					String zoneName = getRangerAdminZoneName(serviceName, grantRequest);
-					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource);
+					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
 
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException( "User doesn't have necessary permission to grant access");
@@ -1343,6 +1343,7 @@ public class ServiceREST {
 					String				 ownerUser  = grantRequest.getOwnerUser();
 
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(grantRequest.getResource()), ownerUser);
+					Set<String>			 accessTypes = grantRequest.getAccessTypes();
 					String               zoneName   = getRangerAdminZoneName(serviceName, grantRequest);
 
 					boolean isAllowed = false;
@@ -1352,7 +1353,7 @@ public class ServiceREST {
 							isAllowed = true;
 						}
 					} else {
-						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource);
+						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
 					}
 
 					if (isAllowed) {
@@ -1458,6 +1459,7 @@ public class ServiceREST {
 					Set<String>          userGroups = CollectionUtils.isNotEmpty(revokeRequest.getGrantorGroups()) ? revokeRequest.getGrantorGroups() : userMgr.getGroupsForUser(userName);
 					String				 ownerUser  = revokeRequest.getOwnerUser();
 					RangerAccessResource resource   = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
+					Set<String>			 accessTypes = revokeRequest.getAccessTypes();
 					VXUser vxUser = xUserService.getXUserByUserName(userName);
 
 					if (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
@@ -1469,7 +1471,7 @@ public class ServiceREST {
 					RangerService rangerService = svcStore.getServiceByName(serviceName);
 					String        zoneName      = getRangerAdminZoneName(serviceName, revokeRequest);
 
-					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource);
+					boolean isAdmin = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
 
 					if(!isAdmin) {
 						throw restErrorUtil.createGrantRevokeRESTException("User doesn't have necessary permission to revoke access");
@@ -1541,6 +1543,7 @@ public class ServiceREST {
 					String ownerUser = revokeRequest.getOwnerUser();
 
 					RangerAccessResource resource = new RangerAccessResourceImpl(StringUtil.toStringObjectMap(revokeRequest.getResource()), ownerUser);
+					Set<String>			 accessTypes = revokeRequest.getAccessTypes();
 					String               zoneName = getRangerAdminZoneName(serviceName, revokeRequest);
 
 
@@ -1551,7 +1554,7 @@ public class ServiceREST {
 							isAllowed = true;
 						}
 					} else {
-						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource);
+						isAllowed = bizUtil.isUserRangerAdmin(userName) || bizUtil.isUserServiceAdmin(rangerService, userName) || hasAdminAccess(serviceName, zoneName, userName, userGroups, resource, accessTypes);
 					}
 
 					if (isAllowed) {
@@ -3511,15 +3514,13 @@ public class ServiceREST {
 				List<RangerPolicy> listToFilter = entry.getValue();
 
 				if (CollectionUtils.isNotEmpty(listToFilter)) {
-					boolean isServiceAdminUser = isAdmin || svcStore.isServiceAdminUser(serviceName, userName);
-					if (isAdmin || isKeyAdmin || isAuditAdmin
-							|| isAuditKeyAdmin) {
-						XXService xService = daoManager.getXXService()
-								.findByName(serviceName);
-						Long serviceDefId = xService.getType();
-						boolean isKmsService = serviceDefId
-								.equals(EmbeddedServiceDefsUtil.instance()
-										.getKmsServiceDefId());
+					boolean isServiceAdminUser = svcStore.isServiceAdminUser(serviceName, userName);
+					if (isServiceAdminUser) {
+						ret.addAll(listToFilter);
+					} else if (isAdmin || isKeyAdmin || isAuditAdmin || isAuditKeyAdmin) {
+						XXService xService     = daoManager.getXXService().findByName(serviceName);
+						Long      serviceDefId = xService.getType();
+						boolean   isKmsService = serviceDefId.equals(EmbeddedServiceDefsUtil.instance().getKmsServiceDefId());
 
 						if (isAdmin) {
 							if (!isKmsService) {
@@ -3551,9 +3552,8 @@ public class ServiceREST {
 						Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
 						for (RangerPolicy policy : listToFilter) {
-							if (policyAdmin.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS, evalContext)
-									|| (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())))
-									|| isServiceAdminUser) {
+							if ((policyAdmin.isDelegatedAdminAccessAllowed(policy, userName, userGroups, roles, evalContext))
+									|| (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())))) {
 								ret.add(policy);
 							}
 						}
@@ -3567,7 +3567,7 @@ public class ServiceREST {
 
 		return ret;
 	}
-	
+
 	void ensureAdminAccess(RangerPolicy policy) {
 		boolean isAdmin = bizUtil.isAdmin();
 		boolean isKeyAdmin = bizUtil.isKeyAdmin();
@@ -3651,18 +3651,18 @@ public class ServiceREST {
 
 			Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
-			isAllowed = policyAdmin.isAccessAllowed(policy, userName, userGroups, roles, RangerPolicyEngine.ADMIN_ACCESS, evalContext);
+			isAllowed = policyAdmin.isDelegatedAdminAccessAllowed(policy, userName, userGroups, roles, evalContext);
 		}
 
 		return isAllowed;
 	}
-	private boolean hasAdminAccess(String serviceName, String zoneName, String userName, Set<String> userGroups, RangerAccessResource resource) {
+	private boolean hasAdminAccess(String serviceName, String zoneName, String userName, Set<String> userGroups, RangerAccessResource resource, Set<String> accessTypes) {
 		boolean isAllowed = false;
 
 		RangerPolicyAdmin policyAdmin = getPolicyAdminForDelegatedAdmin(serviceName);
 
 		if(policyAdmin != null) {
-			isAllowed = policyAdmin.isAccessAllowed(resource, zoneName, userName, userGroups, RangerPolicyEngine.ADMIN_ACCESS);
+			isAllowed = CollectionUtils.isNotEmpty(accessTypes) && policyAdmin.isDelegatedAdminAccessAllowed(resource, zoneName, userName, userGroups, accessTypes);
 		}
 
 		return isAllowed;

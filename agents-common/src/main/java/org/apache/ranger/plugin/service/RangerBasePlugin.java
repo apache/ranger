@@ -705,7 +705,7 @@ public class RangerBasePlugin {
 	
 			accessRequest.setResource(new RangerAccessResourceImpl(StringUtil.toStringObjectMap(request.getResource())));
 			accessRequest.setUser(request.getGrantor());
-			accessRequest.setAccessType(RangerPolicyEngine.ADMIN_ACCESS);
+			accessRequest.setAccessType(RangerPolicyEngine.ANY_ACCESS);
 			accessRequest.setAction(action);
 			accessRequest.setClientIPAddress(request.getClientIPAddress());
 			accessRequest.setClientType(request.getClientType());

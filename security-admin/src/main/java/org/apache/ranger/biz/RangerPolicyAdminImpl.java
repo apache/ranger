@@ -20,12 +20,14 @@
 package org.apache.ranger.biz;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -43,12 +45,14 @@ import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -94,32 +98,36 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     @Override
-    public boolean isAccessAllowed(RangerAccessResource resource, String zoneName, String user, Set<String> userGroups, String accessType) {
+    public boolean isDelegatedAdminAccessAllowed(RangerAccessResource resource, String zoneName, String user, Set<String> userGroups, Set<String> accessTypes) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyAdminImpl.isAccessAllowed(" + resource + ", " + zoneName + ", " + user + ", " + userGroups + ", " + accessType + ")");
+            LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + resource + ", " + zoneName + ", " + user + ", " + userGroups + ", " + accessTypes + ")");
         }
 
         boolean          ret  = false;
         RangerPerfTracer perf = null;
 
         if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REQUEST_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyAdminImpl.isAccessAllowed(user=" + user + ",accessType=" + accessType + "resource=" + resource.getAsString() + ")");
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(user=" + user + ",accessTypes=" + accessTypes + "resource=" + resource.getAsString() + ")");
         }
 
         final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForZone(zoneName);
 
         if (matchedRepository != null) {
             Set<String> roles = getRolesFromUserAndGroups(user, userGroups);
+            Set<String> requestedAccesses = new HashSet<>(accessTypes);
 
             for (RangerPolicyEvaluator evaluator : matchedRepository.getLikelyMatchPolicyEvaluators(resource, RangerPolicy.POLICY_TYPE_ACCESS)) {
-                ret = evaluator.isAccessAllowed(resource, user, userGroups, roles, accessType);
 
-                if (ret) {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("Access granted by policy:[" + evaluator.getPolicy() + "]");
+                Set<String> allowedAccesses = evaluator.getAllowedAccesses(resource, user, userGroups, roles, requestedAccesses);
+                if (CollectionUtils.isNotEmpty(allowedAccesses)) {
+                    requestedAccesses.removeAll(allowedAccesses);
+                    if (CollectionUtils.isEmpty(requestedAccesses)) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Access granted by policy:[" + evaluator.getPolicy() + "]");
+                        }
+                        ret = true;
+                        break;
                     }
-
-                    break;
                 }
             }
 
@@ -128,23 +136,23 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         RangerPerfTracer.log(perf);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyAdminImpl.isAccessAllowed(" + resource + ", " + zoneName + ", " + user + ", " + userGroups + ", " + accessType + "): " + ret);
+            LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + resource + ", " + zoneName + ", " + user + ", " + userGroups + ", " + accessTypes + "): " + ret);
         }
 
         return ret;
     }
 
     @Override
-    public boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType, Map<String, Object> evalContext) {
+    public boolean isDelegatedAdminAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyAdminImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ", " + evalContext + ")");
+            LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + evalContext + ")");
         }
 
         boolean          ret  = false;
         RangerPerfTracer perf = null;
 
         if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_REQUEST_LOG)) {
-            perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isAccessAllowed(user=" + user + "," + userGroups + ", roles=" + roles + ",accessType=" + accessType + ")");
+            perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_REQUEST_LOG, "RangerPolicyEngine.isDelegatedAdminAccessAllowed(user=" + user + "," + userGroups + ", roles=" + roles + ")");
         }
 
         final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForMatchedZone(policy);
@@ -153,20 +161,27 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             // RANGER-3082
             // Convert policy resources to by substituting macros with ASTERISK
             Map<String, RangerPolicyResource> modifiedPolicyResources = getPolicyResourcesWithMacrosReplaced(policy.getResources(), wildcardEvalContext);
+            Set<String> accessTypes = getAllAccessTypes(policy, getServiceDef());
 
             for (RangerPolicyEvaluator evaluator : matchedRepository.getPolicyEvaluators()) {
-                ret = evaluator.isAccessAllowed(policy.getId(), modifiedPolicyResources, user, userGroups, roles, accessType, evalContext);
-
-                if (ret) {
-                    break;
+                Set<String> allowedAccesses = evaluator.getAllowedAccesses(modifiedPolicyResources, user, userGroups, roles, accessTypes, evalContext);
+                if (CollectionUtils.isNotEmpty(allowedAccesses)) {
+                    accessTypes.removeAll(allowedAccesses);
+                    if (CollectionUtils.isEmpty(accessTypes)) {
+                        ret = true;
+                        break;
+                    }
                 }
+            }
+            if (CollectionUtils.isNotEmpty(accessTypes)) {
+                LOG.info("Accesses : " + accessTypes + " are not authorized for the policy:[" + policy.getId() + "] by any of delegated-admin policies");
             }
         }
 
         RangerPerfTracer.log(perf);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyAdminImpl.isAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + accessType + ", " + evalContext + "): " + ret);
+            LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + evalContext + "): " + ret);
         }
 
         return ret;
@@ -255,6 +270,11 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     @Override
     public String getServiceName() { return policyEngine.getServiceName(); }
 
+
+    @Override
+    public RangerServiceDef getServiceDef() {
+        return policyEngine.getServiceDef();
+    }
     @Override
     public void setRoles(RangerRoles roles) {
         policyEngine.setRoles(roles);
@@ -485,5 +505,41 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         return ret;
     }
+
+    private Set<String> getAllAccessTypes(RangerPolicy policy, RangerServiceDef serviceDef) {
+        Set<String> ret = new HashSet<>();
+
+        Map<String, Collection<String>> expandedAccesses = ServiceDefUtil.getExpandedImpliedGrants(serviceDef);
+
+        if (MapUtils.isNotEmpty(expandedAccesses)) {
+
+            for (RangerPolicy.RangerPolicyItem item : policy.getPolicyItems()) {
+                List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    ret.addAll(expandedAccesses.get(access.getType()));
+                }
+            }
+            for (RangerPolicy.RangerPolicyItem item : policy.getDenyPolicyItems()) {
+                List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    ret.addAll(expandedAccesses.get(access.getType()));
+                }
+            }
+            for (RangerPolicy.RangerPolicyItem item : policy.getAllowExceptions()) {
+                List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    ret.addAll(expandedAccesses.get(access.getType()));
+                }
+            }
+            for (RangerPolicy.RangerPolicyItem item : policy.getDenyExceptions()) {
+                List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                    ret.addAll(expandedAccesses.get(access.getType()));
+                }
+            }
+        }
+        return ret;
+    }
+
 }
 
