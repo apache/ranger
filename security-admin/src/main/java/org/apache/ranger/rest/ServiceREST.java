@@ -2698,7 +2698,8 @@ public class ServiceREST {
 			for (int i = 0; i < sourceServices.size(); i++) {
 				if (!destinationServices.get(i).isEmpty() ) {
 					SearchFilter filter = new SearchFilter();
-					filter.setParam("zoneName",zoneName);
+					filter.setParam(SearchFilter.ZONE_NAME, zoneName);
+					filter.setParam(SearchFilter.SERVICE_NAME, destinationServices.get(i));
 					RangerService service=getServiceByName(destinationServices.get(i));
 					final RangerPolicyList servicePolicies = getServicePolicies(destinationServices.get(i),filter);
 					if (servicePolicies != null) {
