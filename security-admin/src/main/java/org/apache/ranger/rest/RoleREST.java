@@ -280,6 +280,9 @@ public class RoleREST {
             if (ret == null) {
                 throw restErrorUtil.createRESTException("User doesn't have permissions to get details for " + roleName);
             }
+            if (ret.getName() == null) {
+                throw restErrorUtil.createRESTException("Role with name: " + roleName + " does not exist");
+            }
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -931,16 +934,17 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
         try {
-            if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
-                existingRole = roleStore.getRole(roleName);
-                ensureRoleAccess(effectiveUser, userGroups, existingRole);
-
-            } else {
-                existingRole = roleStore.getRole(roleName);
+            existingRole = roleStore.getRole(roleName);
+            if (!ensureRoleAccess(effectiveUser, userGroups, existingRole)) {
+                LOG.error("User does not have permission for this operation");
+                return null;
             }
         } catch (Exception ex) {
-            LOG.error(ex.getMessage());
-            return null;
+            if (bizUtil.isUserRangerAdmin(effectiveUser)) {
+                return new RangerRole();
+            } else {
+                return null;
+            }
         }
 
         return existingRole;
