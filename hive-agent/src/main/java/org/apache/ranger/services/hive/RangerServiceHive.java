@@ -128,8 +128,11 @@ public class RangerServiceHive extends RangerBaseService {
 
 			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
 				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<>();
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
 				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
-				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_READ)));
+				policyItemForLookupUser.setAccesses(accessListForLookupUser);
 				policyItemForLookupUser.setDelegateAdmin(false);
 				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
 			}
