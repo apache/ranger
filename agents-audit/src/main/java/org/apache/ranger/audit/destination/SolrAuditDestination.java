@@ -26,7 +26,9 @@ import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.utils.InMemoryJAASConfiguration;
-import org.apache.ranger.audit.utils.SolrAppUtil;
+import org.apache.ranger.audit.utils.KerberosAction;
+import org.apache.ranger.audit.utils.KerberosUser;
+import org.apache.ranger.audit.utils.KerberosJAASConfigUser;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpClientUtil;
@@ -62,6 +64,7 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.security.auth.login.LoginException;
 
 import java.util.Arrays;
 import java.util.Optional;
@@ -80,6 +83,7 @@ public class SolrAuditDestination extends AuditDestination {
 	public static final String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 
 	private volatile SolrClient solrClient = null;
+	private volatile KerberosUser kerberosUser = null;
 
 	public SolrAuditDestination() {
 	}
@@ -96,14 +100,25 @@ public class SolrAuditDestination extends AuditDestination {
 	public void stop() {
 		LOG.info("SolrAuditDestination.stop() called..");
 		logStatus();
-		try {
-			if (solrClient != null) {
+
+		if (solrClient != null) {
+			try {
 				solrClient.close();
+			} catch (IOException ioe) {
+				LOG.error("Error while stopping slor!", ioe);
+			} finally {
+				solrClient = null;
 			}
-		} catch (IOException ioe) {
-			LOG.error("Error while stopping slor!", ioe);
-		} finally {
-			solrClient = null;
+		}
+
+		if (kerberosUser != null) {
+			try {
+				kerberosUser.logout();
+			} catch (LoginException excp) {
+				LOG.error("Error logging out keytab user", excp);
+			} finally {
+				kerberosUser = null;
+			}
 		}
 	}
 
@@ -264,7 +279,7 @@ public class SolrAuditDestination extends AuditDestination {
 				docs.add(document);
 			}
 			try {
-				final UpdateResponse response = SolrAppUtil.addDocsToSolr(solrClient, docs);
+				final UpdateResponse response = addDocsToSolr(solrClient, docs);
 
 				if (response.getStatus() != 0) {
 					addFailedCount(events.size());
@@ -345,12 +360,19 @@ public class SolrAuditDestination extends AuditDestination {
 					LOG.warn("No Client JAAS config present in solr audit config. Ranger Audit to Kerberized Solr will fail...");
 				}
 			 }
+
 			 LOG.info("Loading SolrClient JAAS config from Ranger audit config if present...");
-			 InMemoryJAASConfiguration.init(props);
-			} catch (Exception e) {
-				LOG.error("ERROR: Unable to load SolrClient JAAS config from Audit config file. Audit to Kerberized Solr will fail...", e);
-		}
-        finally {
+
+			 InMemoryJAASConfiguration conf = InMemoryJAASConfiguration.init(props);
+
+			 KerberosUser kerberosUser = new KerberosJAASConfigUser("Client", conf);
+
+			 if (kerberosUser.getPrincipal() != null) {
+				this.kerberosUser = kerberosUser;
+			 }
+		} catch (Exception e) {
+			LOG.error("ERROR: Unable to load SolrClient JAAS config from Audit config file. Audit to Kerberized Solr will fail...", e);
+		} finally {
 			 String confFileName = System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG);
 			 LOG.info("In solrAuditDestination.init() (finally) : JAAS Configuration set as [" + confFileName + "]");
 		}
@@ -462,6 +484,27 @@ public class SolrAuditDestination extends AuditDestination {
 			LOG.error("Unable to initialise the SSLContext", e);
 		}
 		return sslContext;
+	}
+
+	private  UpdateResponse addDocsToSolr(final SolrClient solrClient, final Collection<SolrInputDocument> docs) throws Exception {
+		final UpdateResponse ret;
+
+		try {
+			final PrivilegedExceptionAction<UpdateResponse> action = () -> solrClient.add(docs);
+
+			if (kerberosUser != null) {
+				// execute the privileged action as the given keytab user
+				final KerberosAction kerberosAction = new KerberosAction<>(kerberosUser, action, LOG);
+
+				ret = (UpdateResponse) kerberosAction.execute();
+			} else {
+				ret = action.run();
+			}
+		} catch (Exception e) {
+			throw e;
+		}
+
+		return ret;
 	}
 
 	private InputStream getFileInputStream(String fileName) throws IOException {

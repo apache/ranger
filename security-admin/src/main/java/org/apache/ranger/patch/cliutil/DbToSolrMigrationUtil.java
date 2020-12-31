@@ -58,6 +58,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import javax.security.auth.login.Configuration;
+
 @Component
 public class DbToSolrMigrationUtil extends BaseLoader {
 	private static final Logger logger = Logger.getLogger(DbToSolrMigrationUtil.class);
@@ -464,10 +466,15 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 				 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null");
 			 }
 			 logger.info("Loading SolrClient JAAS config from Ranger audit config if present...");
-			 InMemoryJAASConfiguration.init(props);
-			} catch (Exception e) {
-				logger.error("ERROR: Unable to load SolrClient JAAS config from ranger admin config file. Audit migration to Secure Solr will fail...",e);
-			}
+
+			 Configuration conf = InMemoryJAASConfiguration.init(props);
+
+			 if (conf != null) {
+				 Configuration.setConfiguration(conf);
+			 }
+		} catch (Exception e) {
+			logger.error("ERROR: Unable to load SolrClient JAAS config from ranger admin config file. Audit migration to Secure Solr will fail...",e);
+		}
 		logger.info("<==createSolrClient.registerSolrClientJAAS()" );
 	}
 }

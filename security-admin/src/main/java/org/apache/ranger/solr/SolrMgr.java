@@ -35,6 +35,8 @@ import org.apache.solr.client.solrj.impl.SolrHttpClientBuilder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import javax.security.auth.login.Configuration;
+
 /**
  * This class initializes Solr
  *
@@ -171,10 +173,14 @@ public class SolrMgr {
 				 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null");
 			 }
 			 logger.info("Loading SolrClient JAAS config from Ranger audit config if present...");
-			 InMemoryJAASConfiguration.init(props);
-			} catch (Exception e) {
-				logger.error("ERROR: Unable to load SolrClient JAAS config from ranger admin config file. Audit to Kerberized Solr will fail...", e);
-			}
+			 Configuration conf = InMemoryJAASConfiguration.init(props);
+
+			 if (conf != null) {
+				 Configuration.setConfiguration(conf);
+			 }
+		} catch (Exception e) {
+			logger.error("ERROR: Unable to load SolrClient JAAS config from ranger admin config file. Audit to Kerberized Solr will fail...", e);
+		}
 		logger.info("<==SolrMgr.init()" );
 	}
 
