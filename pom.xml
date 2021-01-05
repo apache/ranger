@@ -113,7 +113,7 @@
         <eclipse.jpa.version>2.5.2</eclipse.jpa.version>
         <elasticsearch.version>7.6.0</elasticsearch.version>
         <enunciate.version>2.11.1</enunciate.version>
-        <findbugs.plugin.version>3.0.3</findbugs.plugin.version>
+        <spotbugs.plugin.version>4.5.0.0</spotbugs.plugin.version>
         <google.guava.version>27.0-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
         <gson.version>2.2.4</gson.version>
@@ -1068,11 +1068,11 @@
                 </executions>
             </plugin>
             <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>findbugs-maven-plugin</artifactId>
-                <version>${findbugs.plugin.version}</version>
+                <groupId>com.github.spotbugs</groupId>
+                <artifactId>spotbugs-maven-plugin</artifactId>
+                <version>${spotbugs.plugin.version}</version>
                 <configuration>
-                    <includeFilterFile>./dev-support/findbugsIncludeFile.xml</includeFilterFile>
+                    <includeFilterFile>./dev-support/spotbugsIncludeFile.xml</includeFilterFile>
                 </configuration>
             </plugin>
 
