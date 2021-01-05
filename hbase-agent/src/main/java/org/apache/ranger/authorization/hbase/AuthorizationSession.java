@@ -243,7 +243,7 @@ public class AuthorizationSession {
 		}
 		
 		boolean authorized = isAuthorized();
-		if (_auditHandler != null) {
+		if (_auditHandler != null && isAudited()) {
 			List<AuthzAuditEvent> events = null;
 			/*
 			 * What we log to audit depends on authorization status.  For success we log all accumulated events.  In case of failure
