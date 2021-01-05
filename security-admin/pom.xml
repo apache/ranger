@@ -772,7 +772,7 @@
                     </execution>
                 </executions>
             </plugin>
-            <!--<plugin>
+            <plugin>
                 <groupId>com.github.eirslett</groupId>
                 <artifactId>frontend-maven-plugin</artifactId>
                 <version>1.6</version>
@@ -811,7 +811,7 @@
                         </goals>
                         <configuration>
                             <workingDirectory>${project.build.directory}/jsmain</workingDirectory>
-                            <arguments>run r.js &#45;&#45; -o ../${project.build.finalName}/minify.build.js</arguments>
+                            <arguments>run r.js -- -o ../${project.build.finalName}/minify.build.js</arguments>
                         </configuration>
                     </execution>
                     <execution>
@@ -854,7 +854,7 @@
                         </configuration>
                     </execution>
                 </executions>
-            </plugin>-->
+            </plugin>
         </plugins>
         <resources>
             <resource>
