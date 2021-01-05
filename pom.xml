@@ -169,7 +169,7 @@
         <reload4j.version>1.2.19</reload4j.version>
         <log4j2.version>2.17.2</log4j2.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
-        <maven.pmd.plugin.version>3.7</maven.pmd.plugin.version>
+        <maven.pmd.plugin.version>3.14.0</maven.pmd.plugin.version>
         <metrics.core.version>3.0.2</metrics.core.version>
         <mockito.version>3.0.0</mockito.version>
         <mockito.all.version>1.10.19</mockito.all.version>
