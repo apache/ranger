@@ -160,7 +160,7 @@
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
-        <maven.pmd.plugin.version>3.7</maven.pmd.plugin.version>
+        <maven.pmd.plugin.version>3.14.0</maven.pmd.plugin.version>
         <metrics.core.version>3.0.2</metrics.core.version>
         <mockito.version>3.0.0</mockito.version>
         <mockito.all.version>1.10.19</mockito.all.version>
