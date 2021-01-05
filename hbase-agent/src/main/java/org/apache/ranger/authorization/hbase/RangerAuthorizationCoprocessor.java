@@ -58,10 +58,13 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.wal.WALEdit;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
@@ -1022,6 +1025,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	@Override
 	public void preShutdown(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
 		requirePermission(c, "shutdown", Permission.Action.ADMIN);
+		cleanUp_HBaseRangerPlugin();
 	}
 	@Override
 	public void preSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
@@ -1031,10 +1035,12 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	@Override
 	public void preStopMaster(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
 		requirePermission(c, "stopMaster", Permission.Action.ADMIN);
+		cleanUp_HBaseRangerPlugin();
 	}
 	@Override
 	public void preStopRegionServer(ObserverContext<RegionServerCoprocessorEnvironment> env) throws IOException {
 		requirePermission(env, "stop", Permission.Action.ADMIN);
+		cleanUp_HBaseRangerPlugin();
 	}
 	@Override
 	public void preUnassign(ObserverContext<MasterCoprocessorEnvironment> c, RegionInfo regionInfo, boolean force) throws IOException {
@@ -1645,6 +1651,24 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 		return ret;
 	}
+
+	private void cleanUp_HBaseRangerPlugin() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAuthorizationCoprocessor.cleanUp_HBaseRangerPlugin()");
+		}
+		if (hbasePlugin != null) {
+			hbasePlugin.setHBaseShuttingDown(true);
+			hbasePlugin.cleanup();
+			AuditProviderFactory auditProviderFactory = hbasePlugin.getAuditProviderFactory();
+			if (auditProviderFactory != null) {
+				auditProviderFactory.shutdown();
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAuthorizationCoprocessor.cleanUp_HBaseRangerPlugin() completed!");
+		}
+	}
+
 	private String getCommandString(String operationName, String tableNameStr, Map<String,Object> opMetaData) {
 		StringBuilder ret = new StringBuilder();
 		if (!HbaseConstants.HBASE_META_TABLE.equals(tableNameStr)) {
@@ -1787,10 +1811,30 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 
 class RangerHBasePlugin extends RangerBasePlugin {
+	private static final Log LOG = LogFactory.getLog(RangerHBasePlugin.class);
+	boolean isHBaseShuttingDown  = false;
+
 	public RangerHBasePlugin(String appType) {
 		super("hbase", appType);
 	}
 
+	public void setHBaseShuttingDown(boolean hbaseShuttingDown) {
+		isHBaseShuttingDown = hbaseShuttingDown;
+	}
+
+	@Override
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		RangerAccessResult ret = null;
+		if (isHBaseShuttingDown) {
+			ret = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, this.getServiceName(), this.getServiceDef(), request);
+			ret.setIsAllowed(true);
+			ret.setIsAudited(false);
+			LOG.warn("Auth request came after HBase shutdown....");
+		} else {
+			ret = super.isAccessAllowed(request, resultProcessor);
+		}
+		return ret;
+	}
 }
 
 

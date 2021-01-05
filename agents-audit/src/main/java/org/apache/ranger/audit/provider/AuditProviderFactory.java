@@ -19,6 +19,7 @@
 package org.apache.ranger.audit.provider;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
@@ -71,6 +72,7 @@ public class AuditProviderFactory {
 	private String componentAppType = "";
 	private boolean mInitDone = false;
 	private JVMShutdownHook jvmShutdownHook = null;
+	private ArrayList<String> hbaseAppTypes = new ArrayList<>(Arrays.asList("hbaseMaster","hbaseRegional"));
 
 	public AuditProviderFactory() {
 		LOG.info("AuditProviderFactory: creating..");
@@ -476,7 +478,10 @@ public class AuditProviderFactory {
 	private void installJvmSutdownHook(Properties props) {
 		int shutdownHookMaxWaitSeconds = MiscUtil.getIntProperty(props, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT);
 		jvmShutdownHook = new JVMShutdownHook(mProvider, shutdownHookMaxWaitSeconds);
-		ShutdownHookManager.get().addShutdownHook(jvmShutdownHook, RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY);
+		String appType = this.componentAppType;
+		if (appType != null && !hbaseAppTypes.contains(appType)) {
+			ShutdownHookManager.get().addShutdownHook(jvmShutdownHook, RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY);
+		}
 	}
 
 	private static class RangerAsyncAuditCleanup implements Runnable {

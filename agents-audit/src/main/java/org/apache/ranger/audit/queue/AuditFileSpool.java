@@ -864,6 +864,7 @@ public class AuditFileSpool implements Runnable {
 				}
 			} catch (InterruptedException e) {
 				logger.info("Caught exception in consumer thread. Shutdown might be in progress");
+				break;
 			} catch (Throwable t) {
 				logger.error("Exception in destination writing thread.", t);
 			}
