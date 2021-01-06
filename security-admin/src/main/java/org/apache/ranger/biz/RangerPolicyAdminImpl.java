@@ -163,18 +163,27 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             Map<String, RangerPolicyResource> modifiedPolicyResources = getPolicyResourcesWithMacrosReplaced(policy.getResources(), wildcardEvalContext);
             Set<String> accessTypes = getAllAccessTypes(policy, getServiceDef());
 
-            for (RangerPolicyEvaluator evaluator : matchedRepository.getPolicyEvaluators()) {
-                Set<String> allowedAccesses = evaluator.getAllowedAccesses(modifiedPolicyResources, user, userGroups, roles, accessTypes, evalContext);
-                if (CollectionUtils.isNotEmpty(allowedAccesses)) {
-                    accessTypes.removeAll(allowedAccesses);
-                    if (CollectionUtils.isEmpty(accessTypes)) {
-                        ret = true;
-                        break;
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Checking admin-access for the access-types:[" + accessTypes + "]");
+            }
+
+            if (CollectionUtils.isEmpty(accessTypes)) {
+                LOG.info("access-types to check for admin-access are empty!! Allowing admin access!!");
+                ret = true;
+            } else {
+                for (RangerPolicyEvaluator evaluator : matchedRepository.getPolicyEvaluators()) {
+                    Set<String> allowedAccesses = evaluator.getAllowedAccesses(modifiedPolicyResources, user, userGroups, roles, accessTypes, evalContext);
+                    if (CollectionUtils.isNotEmpty(allowedAccesses)) {
+                        accessTypes.removeAll(allowedAccesses);
+                        if (CollectionUtils.isEmpty(accessTypes)) {
+                            ret = true;
+                            break;
+                        }
                     }
                 }
-            }
-            if (CollectionUtils.isNotEmpty(accessTypes)) {
-                LOG.info("Accesses : " + accessTypes + " are not authorized for the policy:[" + policy.getId() + "] by any of delegated-admin policies");
+                if (CollectionUtils.isNotEmpty(accessTypes)) {
+                    LOG.info("Accesses : " + accessTypes + " are not authorized for the policy:[" + policy.getId() + "] by any of delegated-admin policies");
+                }
             }
         }
 
@@ -513,29 +522,49 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
         if (MapUtils.isNotEmpty(expandedAccesses)) {
 
-            for (RangerPolicy.RangerPolicyItem item : policy.getPolicyItems()) {
-                List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
-                    ret.addAll(expandedAccesses.get(access.getType()));
+            Integer policyType = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
+
+            if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
+                for (RangerPolicy.RangerPolicyItem item : policy.getPolicyItems()) {
+                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                        ret.addAll(expandedAccesses.get(access.getType()));
+                    }
                 }
-            }
-            for (RangerPolicy.RangerPolicyItem item : policy.getDenyPolicyItems()) {
-                List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
-                    ret.addAll(expandedAccesses.get(access.getType()));
+                for (RangerPolicy.RangerPolicyItem item : policy.getDenyPolicyItems()) {
+                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                        ret.addAll(expandedAccesses.get(access.getType()));
+                    }
                 }
-            }
-            for (RangerPolicy.RangerPolicyItem item : policy.getAllowExceptions()) {
-                List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
-                    ret.addAll(expandedAccesses.get(access.getType()));
+                for (RangerPolicy.RangerPolicyItem item : policy.getAllowExceptions()) {
+                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                        ret.addAll(expandedAccesses.get(access.getType()));
+                    }
                 }
-            }
-            for (RangerPolicy.RangerPolicyItem item : policy.getDenyExceptions()) {
-                List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
-                for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
-                    ret.addAll(expandedAccesses.get(access.getType()));
+                for (RangerPolicy.RangerPolicyItem item : policy.getDenyExceptions()) {
+                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                        ret.addAll(expandedAccesses.get(access.getType()));
+                    }
                 }
+            } else if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
+                for (RangerPolicy.RangerPolicyItem item : policy.getDataMaskPolicyItems()) {
+                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                        ret.addAll(expandedAccesses.get(access.getType()));
+                    }
+                }
+            } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+                for (RangerPolicy.RangerPolicyItem item : policy.getRowFilterPolicyItems()) {
+                    List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+                    for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                        ret.addAll(expandedAccesses.get(access.getType()));
+                    }
+                }
+            } else {
+                LOG.error("Unknown policy-type :[" + policyType + "], returning empty access-type set");
             }
         }
         return ret;
