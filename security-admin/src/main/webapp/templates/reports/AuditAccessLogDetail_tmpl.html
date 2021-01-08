@@ -16,6 +16,11 @@
 --}}
 <div id="serviceDetails" class="row">
     <table class="table table-bordered table-condensed">
+        {{#if auditAccessView}}
+            <thead>
+                <h4>Ranger – audit log</h4>
+            </thead>
+        {{/if}}
         <tbody>
             <tr>
                 <td>

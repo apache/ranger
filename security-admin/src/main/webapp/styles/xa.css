@@ -4518,8 +4518,8 @@ input.textFiledInputPadding:disabled {
 
 .backgrid th:not(.renderable), .backgrid td:not(.renderable){
     display: none;
-}/*[fieldclass="resorces-css"] .control-label {
-  margin-top: 0px;
-  margin-right: -15px
-}*/
-/*End of Overriden styles*/
+}
+
+#serviceDetails tbody {
+  background-color: white;
+}

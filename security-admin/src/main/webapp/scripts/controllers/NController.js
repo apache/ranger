@@ -114,6 +114,24 @@ define(function(require) {
                 }));
             });
         },
+        auditEventDetail: function(eventID) {
+            MAppState.set({
+                'currentTab': XAGlobals.AppTabs.AccessManager.value
+            });
+            var view = require('views/reports/AuditAccessLogDetailView');
+            var VXAccessAuditList = require('collections/VXAccessAuditList');
+            var auditList = new VXAccessAuditList();
+            auditList.url = 'service/assets/accessAudit?eventId='+eventID
+            auditList.fetch({
+               cache : false,
+               async : false
+            }).done(function() {
+                App.rContent.show(new view({
+                    auditaccessDetail : auditList.models[0].attributes,
+                    auditAccessView : true,
+                }));
+            })
+        },
         //************** UserProfile Related *********************/
         userProfileAction: function() {
             MAppState.set({
