@@ -2972,6 +2972,7 @@ public class XUserMgr extends XUserMgrBase {
 			logger.warn("Could not find corresponding xUser for username: [" + vXPortalUser.getLoginId() + "], So not updating this user");
 			return vXUser;
 		}
+		logger.info("xUser.getName() = " + xUser.getName() + " vXUser.getName() = " + vXUser.getName());
 		vXUser.setId(xUser.getId());
 		vXUser = xUserService.updateResource(vXUser);
 		vXUser.setUserRoleList(roleList);
@@ -2994,5 +2995,29 @@ public class XUserMgr extends XUserMgrBase {
 		xaBizUtil.createTrxLog(trxLogList);
 
 		return vXUser;
+	}
+
+	public int updateDeletedUsers(Set<String> deletedUsers) {
+		for (String deletedUser : deletedUsers) {
+			XXUser xUser = daoManager.getXXUser().findByUserName(deletedUser);
+			if (xUser != null) {
+				VXUser vObj = xUserService.populateViewBean(xUser);
+				vObj.setIsVisible(RangerCommonEnums.IS_HIDDEN);
+				xUserService.updateResource(vObj);
+			}
+		}
+		return deletedUsers.size();
+	}
+
+	public int updateDeletedGroups(Set<String> deletedGroups) {
+		for (String deletedGroup : deletedGroups) {
+			XXGroup xGroup = daoManager.getXXGroup().findByGroupName(deletedGroup);
+			if (xGroup !=  null) {
+				VXGroup vObj = xGroupService.populateViewBean(xGroup);
+				vObj.setIsVisible(RangerCommonEnums.IS_HIDDEN);
+				xGroupService.updateResource(vObj);
+			}
+		}
+		return deletedGroups.size();
 	}
 }

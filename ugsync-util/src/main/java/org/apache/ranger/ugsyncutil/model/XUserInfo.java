@@ -21,14 +21,17 @@
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 public class XUserInfo {
 	private String id;
 	private String name;
 	private String 	description;
 	private String otherAttributes;
+	private Map<String, String> otherAttrsMap;
 	private String userSource;
 	private String status;
+	private String isVisible;
     private List<String> groupNameList = new ArrayList<String>();
     private List<String> userRoleList = new ArrayList<String>();
 	
@@ -67,6 +70,14 @@ public class XUserInfo {
 		this.status = status;
 	}
 
+	public String getIsVisible() {
+		return isVisible;
+	}
+
+	public void setIsVisible(String isVisible) {
+		this.isVisible = isVisible;
+	}
+
 	public void setGroupNameList(List<String> groupNameList) {
 		this.groupNameList = groupNameList;
 	}
@@ -92,6 +103,14 @@ public class XUserInfo {
     public void setUserRoleList(List<String> userRoleList) {
         this.userRoleList = userRoleList;
     }
+
+	public Map<String, String> getOtherAttrsMap() {
+		return otherAttrsMap;
+	}
+
+	public void setOtherAttrsMap(Map<String, String> otherAttrsMap) {
+		this.otherAttrsMap = otherAttrsMap;
+	}
 
 	public String getOtherAttributes() {
 		return otherAttributes;

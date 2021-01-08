@@ -19,14 +19,18 @@
 
  package org.apache.ranger.ugsyncutil.model;
 
+import java.util.Map;
+
 public class XGroupInfo {
 	
 	private String id;
 	private String name;
 	private String description;
 	private String groupType;
+	private String isVisible;
 	private String groupSource;
 	private String otherAttributes;
+	private Map<String, String> otherAttrsMap;
 	public String getId() {
 		return id;
 	}
@@ -52,11 +56,28 @@ public class XGroupInfo {
 	public void setGroupType(String groupType) {
 		this.groupType = groupType;
 	}
+
+	public String getIsVisible() {
+		return isVisible;
+	}
+
+	public void setIsVisible(String isVisible) {
+		this.isVisible = isVisible;
+	}
+
 	public String getGroupSource() {
 		return groupSource;
 	}
 	public void setGroupSource(String groupSource) {
 		this.groupSource = groupSource;
+	}
+
+	public Map<String, String> getOtherAttrsMap() {
+		return otherAttrsMap;
+	}
+
+	public void setOtherAttrsMap(Map<String, String> otherAttrsMap) {
+		this.otherAttrsMap = otherAttrsMap;
 	}
 
 	public String getOtherAttributes() {

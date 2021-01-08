@@ -40,12 +40,13 @@ import com.google.common.collect.Table;
 import org.apache.log4j.Logger;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.ugsyncutil.model.UnixSyncSourceInfo;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
 public class UnixUserGroupBuilder implements UserGroupSource {
-	
+
 	private static final Logger LOG = Logger.getLogger(UnixUserGroupBuilder.class);
 	private final static String OS = System.getProperty("os.name");
 
@@ -96,6 +97,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private UgsyncAuditInfo ugsyncAuditInfo;
 	private UnixSyncSourceInfo unixSyncSourceInfo;
 	private boolean isStartupFlag = false;
+	private int deleteCycles;
+	private String currentSyncSource;
+	private boolean computeDeletes = false;
 	Set<String> allGroups = new HashSet<>();
 
 
@@ -104,20 +108,13 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		ugbuilder.init();
 		ugbuilder.print();
 	}
-	
+
 	public UnixUserGroupBuilder() {
 		isStartupFlag = true;
 		minimumUserId = Integer.parseInt(config.getMinUserId());
 		minimumGroupId = Integer.parseInt(config.getMinGroupId());
 		unixPasswordFile = config.getUnixPasswordFile();
 		unixGroupFile = config.getUnixGroupFile();
-		ugsyncAuditInfo = new UgsyncAuditInfo();
-		unixSyncSourceInfo = new UnixSyncSourceInfo();
-		ugsyncAuditInfo.setSyncSource("Unix");
-		ugsyncAuditInfo.setUnixSyncSourceInfo(unixSyncSourceInfo);
-		unixSyncSourceInfo.setFileName(unixPasswordFile);
-		unixSyncSourceInfo.setMinUserId(config.getMinUserId());
-		unixSyncSourceInfo.setMinGroupId(config.getMinGroupId());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId);
@@ -126,6 +123,21 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		timeout = config.getUpdateMillisMin();
 		enumerateGroupMembers = config.isGroupEnumerateEnabled();
 
+	}
+
+	@Override
+	public void init() throws Throwable {
+		deleteCycles = 1;
+
+		currentSyncSource = config.getCurrentSyncSource();
+
+		ugsyncAuditInfo = new UgsyncAuditInfo();
+		unixSyncSourceInfo = new UnixSyncSourceInfo();
+		ugsyncAuditInfo.setSyncSource(currentSyncSource);
+		ugsyncAuditInfo.setUnixSyncSourceInfo(unixSyncSourceInfo);
+		unixSyncSourceInfo.setFileName(unixPasswordFile);
+		unixSyncSourceInfo.setMinUserId(config.getMinUserId());
+		unixSyncSourceInfo.setMinGroupId(config.getMinGroupId());
 		if (!config.getUnixBackend().equalsIgnoreCase(BACKEND_PASSWD)) {
 			useNss = true;
 			unixSyncSourceInfo.setUnixBackend("nss");
@@ -134,23 +146,34 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					"instead of standard system mechanisms.");
 			unixSyncSourceInfo.setUnixBackend(BACKEND_PASSWD);
 		}
-
-	}
-
-	@Override
-	public void init() throws Throwable {
 		buildUserGroupInfo();
 	}
 
 	@Override
 	public boolean isChanged() {
-		// If previous update to Ranger admin fails, 
+		computeDeletes = false;
+		// If previous update to Ranger admin fails,
 		// we want to retry the sync process even if there are no changes to the sync files
 		if (!isUpdateSinkSucc) {
 			LOG.info("Previous updateSink failed and hence retry!!");
 			return true;
 		}
-		
+		try {
+			if (config.isUserSyncDeletesEnabled() && deleteCycles >= config.getUserSyncDeletesFrequency()) {
+				deleteCycles = 1;
+				computeDeletes = true;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Compute deleted users/groups is enabled for this sync cycle");
+				}
+				return true;
+			}
+		} catch (Throwable t) {
+			LOG.error("Failed to get information about usersync delete frequency", t);
+		}
+		if (config.isUserSyncDeletesEnabled()) {
+			deleteCycles++;
+		}
+
 		if (useNss)
 			return System.currentTimeMillis() - lastUpdateTime > timeout;
 
@@ -185,7 +208,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			}
 
 			try {
-				sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers);
+				sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers, computeDeletes);
 			} catch (Throwable t) {
 				LOG.error("Failed to update ranger admin. Will retry in next sync cycle!!", t);
 				isUpdateSinkSucc = false;
@@ -198,8 +221,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		}
 		isStartupFlag = false;
 	}
-	
-	
+
+
 	private void buildUserGroupInfo() throws Throwable {
 		groupId2groupNameMap = new HashMap<String, String>();
 		sourceUsers = new HashMap<>();
@@ -239,7 +262,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			print();
 		}
 	}
-	
+
 	private void print() {
 		for(String user : sourceUsers.keySet()) {
 			if (LOG.isDebugEnabled()) {
@@ -255,7 +278,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			}
 		}
 	}
-	
+
 	private void buildUnixUserList(String command) throws Throwable {
 		BufferedReader reader = null;
 		Map<String, String> userName2uid = new HashMap<String, String>();
@@ -316,8 +339,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					String groupName = groupId2groupNameMap.get(groupId);
 					if (groupName != null) {
 						Map<String, String> userAttrMap = new HashMap<>();
-						userAttrMap.put("original_name", userName);
-						userAttrMap.put("full_name", userName);
+						userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+						userAttrMap.put(UgsyncCommonConstants.FULL_NAME, userName);
+						userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
 						sourceUsers.put(userName, userAttrMap);
 						groupUserTable.put(groupName, userName, groupId);
 					} else {
@@ -403,8 +427,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					}
 				}
 				Map<String, String> userAttrMap = new HashMap<>();
-				userAttrMap.put("original_name", userName);
-				userAttrMap.put("full_name", userName);
+				userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+				userAttrMap.put(UgsyncCommonConstants.FULL_NAME, userName);
+				userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
 				sourceUsers.put(userName, userAttrMap);
 			}
 			if (LOG.isDebugEnabled()) {
@@ -439,8 +464,9 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 		groupId2groupNameMap.put(groupId, groupName);
 		Map<String, String> groupAttrMap = new HashMap<>();
-		groupAttrMap.put("original_name", groupName);
-		groupAttrMap.put("full_name", groupName);
+		groupAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, groupName);
+		groupAttrMap.put(UgsyncCommonConstants.FULL_NAME, groupName);
+		groupAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
 		sourceGroups.put(groupName, groupAttrMap);
 
 		if (groupMembers != null && !groupMembers.trim().isEmpty()) {

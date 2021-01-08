@@ -17,21 +17,13 @@
  * under the License.
  */
 
- package org.apache.ranger.usergroupsync;
+package org.apache.ranger.ugsyncutil.util;
 
-import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
+public class UgsyncCommonConstants {
 
-import java.util.Map;
-import java.util.Set;
-
-public interface UserGroupSink {
-	void init() throws Throwable;
-
-	void postUserGroupAuditInfo(UgsyncAuditInfo ugsyncAuditInfo) throws Throwable;
-
-	void addOrUpdateUsersGroups(Map<String, Map<String, String>> sourceGroups,
-								Map<String, Map<String, String>> sourceUsers,
-								Map<String, Set<String>> sourceGroupUsers,
-								boolean computeDeletes) throws Throwable;
+    public static final String ORIGINAL_NAME = "original_name";
+    public static final String FULL_NAME = "full_name";
+    public static final String SYNC_SOURCE = "sync_source";
+    public static final String LDAP_URL = "ldap_url";
 
 }

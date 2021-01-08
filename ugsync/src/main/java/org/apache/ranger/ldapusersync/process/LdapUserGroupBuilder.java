@@ -48,6 +48,7 @@ import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.ugsyncutil.model.LdapSyncSourceInfo;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
@@ -62,7 +63,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	private static final Logger LOG = Logger.getLogger(LdapUserGroupBuilder.class);
 
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
-	
+
 	private static final String DATA_TYPE_BYTEARRAY = "byte[]";
 	private static final String DATE_FORMAT = "yyyyMMddHHmmss";
 	private static final int PAGE_SIZE = 500;
@@ -106,6 +107,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	private String groupCloudIdAttribute;
 	private Set<String> otherGroupAttributes;
 	private int groupHierarchyLevels;
+	private int deleteCycles;
+	private String currentSyncSource;
 
 	private LdapContext ldapContext;
 	StartTlsResponse tls;
@@ -127,6 +130,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	public void init() throws Throwable{
 		deltaSyncUserTime = 0;
 		deltaSyncGroupTime = 0;
+		deleteCycles = 1;
 		DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 		deltaSyncUserTimeStamp = dateFormat.format(new Date(0));
 		deltaSyncGroupTimeStamp = dateFormat.format(new Date(0));
@@ -139,7 +143,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		ldapSyncSourceInfo.setGroupSearchEnabled(Boolean.toString(groupSearchEnabled));
 		ldapSyncSourceInfo.setGroupSearchFirstEnabled(Boolean.toString(groupSearchFirstEnabled));
 		ldapSyncSourceInfo.setGroupHierarchyLevel(Integer.toString(groupHierarchyLevels));
-		ugsyncAuditInfo.setSyncSource("LDAP/AD");
+		ugsyncAuditInfo.setSyncSource(currentSyncSource);
 		ugsyncAuditInfo.setLdapSyncSourceInfo(ldapSyncSourceInfo);
 	}
 
@@ -200,6 +204,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	private void setConfig() throws Throwable {
 		LOG.info("LdapUserGroupBuilder initialization started");
 
+		currentSyncSource = config.getCurrentSyncSource();
 		groupSearchFirstEnabled =   true;
 		userSearchEnabled =   true;
 		groupSearchEnabled =   true;
@@ -316,13 +321,24 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
 		LOG.info("LdapUserGroupBuilder updateSink started");
+		boolean computeDeletes = false;
 		groupUserTable = HashBasedTable.create();
 		sourceGroups = new HashMap<>();
 		sourceUsers = new HashMap<>();
 		sourceGroupUsers = new HashMap<>();
 
-        long highestdeltaSyncGroupTime = getGroups();
-        long highestdeltaSyncUserTime = getUsers();
+		if (config.isUserSyncDeletesEnabled() && deleteCycles >= config.getUserSyncDeletesFrequency()) {
+			deleteCycles = 1;
+			computeDeletes = true;
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Compute deleted users/groups is enabled for this sync cycle");
+			}
+		}
+		if (config.isUserSyncDeletesEnabled()) {
+			deleteCycles++;
+		}
+        long highestdeltaSyncGroupTime = getGroups(computeDeletes);
+        long highestdeltaSyncUserTime = getUsers(computeDeletes);
 
 		if (groupHierarchyLevels > 0) {
 			LOG.info("Going through group hierarchy for nested group evaluation");
@@ -354,7 +370,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		}
 
 		try {
-			sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers);
+			sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers, computeDeletes);
 			DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
 			LOG.info("deltaSyncUserTime = " + deltaSyncUserTime + " and highestdeltaSyncUserTime = " + highestdeltaSyncUserTime);
 			if (deltaSyncUserTime < highestdeltaSyncUserTime) {
@@ -386,7 +402,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		}
 	}
 
-	private long getUsers() throws Throwable {
+	private long getUsers(boolean computeDeletes) throws Throwable {
 		NamingEnumeration<SearchResult> userSearchResultEnum = null;
 		NamingEnumeration<SearchResult> groupSearchResultEnum = null;
 		long highestdeltaSyncUserTime;
@@ -399,7 +415,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						new PagedResultsControl(pagedResultsSize, Control.NONCRITICAL) });
 			}
 			DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
-			if (groupUserTable.rowKeySet().size() != 0 || !config.isDeltaSyncEnabled()) {
+			if (groupUserTable.rowKeySet().size() != 0 || !config.isDeltaSyncEnabled() || (computeDeletes)) {
 				// Fix RANGER-1957: Perform full sync when there are updates to the groups or when incremental sync is not enabled
 				deltaSyncUserTime = 0;
 				deltaSyncUserTimeStamp = dateFormat.format(new Date(0));
@@ -495,8 +511,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						}
 
 						Map<String, String> userAttrMap = new HashMap<>();
-						userAttrMap.put("original_name", userName);
-						userAttrMap.put("full_name", userFullName);
+						userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+						userAttrMap.put(UgsyncCommonConstants.FULL_NAME, userFullName);
+						userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+						userAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
 						Attribute userCloudIdAttr = attributes.get(userCloudIdAttribute);
 						if (userCloudIdAttr != null) {
 							addToAttrMap(userAttrMap, "cloud_id", userCloudIdAttr, config.getUserCloudIdAttributeDataType());
@@ -589,7 +607,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		return highestdeltaSyncUserTime;
 	}
 
-	private long getGroups() throws Throwable {
+	private long getGroups(boolean computeDeletes) throws Throwable {
 		NamingEnumeration<SearchResult> groupSearchResultEnum = null;
         DateFormat dateFormat = new SimpleDateFormat(DATE_FORMAT);
         long highestdeltaSyncGroupTime = deltaSyncGroupTime;
@@ -610,7 +628,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 				extendedGroupSearchFilter = extendedGroupSearchFilter + customFilter;
 			}
 
-			if (!config.isDeltaSyncEnabled()) {
+			if (!config.isDeltaSyncEnabled() || (computeDeletes)) {
 				// Perform full sync when incremental sync is not enabled
 				deltaSyncGroupTime = 0;
 				deltaSyncGroupTimeStamp = dateFormat.format(new Date(0));
@@ -649,8 +667,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 							String groupFullName = (groupEntry.getNameInNamespace());
 							String gName = (String) groupNameAttr.get();
 							Map<String, String> groupAttrMap = new HashMap<>();
-							groupAttrMap.put("original_name", gName);
-							groupAttrMap.put("full_name", groupFullName);
+							groupAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, gName);
+							groupAttrMap.put(UgsyncCommonConstants.FULL_NAME, groupFullName);
+							groupAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+							groupAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
 							Attribute groupCloudIdAttr = attributes.get(groupCloudIdAttribute);
 							if (groupCloudIdAttr != null) {
 								addToAttrMap(groupAttrMap, "cloud_id", groupCloudIdAttr, config.getGroupCloudIdAttributeDataType());
@@ -870,8 +890,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
 
 							Map<String, String> groupAttrMap = new HashMap<>();
-							groupAttrMap.put("original_name", gName);
-							groupAttrMap.put("full_name", groupFullName);
+							groupAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, gName);
+							groupAttrMap.put(UgsyncCommonConstants.FULL_NAME, groupFullName);
+							groupAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+							groupAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
 							for (String otherGroupAttribute : otherGroupAttributes) {
 								Attribute otherGroupAttr = groupEntry.getAttributes().get(otherGroupAttribute);
 								if (otherGroupAttr != null) {
