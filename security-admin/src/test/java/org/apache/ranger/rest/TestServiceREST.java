@@ -1091,9 +1091,9 @@ public class TestServiceREST {
 		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 		Mockito.when(svcStore.getPolicies(filter)).thenReturn(policies);
 		/*here we are setting serviceAdminRole, so we will get the required policy with serviceAdmi role*/
-		Mockito.when(daoManager.getXXGroupUser()).thenReturn(xGroupDao);
+		//Mockito.when(daoManager.getXXGroupUser()).thenReturn(xGroupDao);
 		Mockito.when(svcStore.isServiceAdminUser(rPol.getService(), null)).thenReturn(true);
-		Mockito.doReturn(policyAdmin).when(spySVCRest).getPolicyAdminForDelegatedAdmin("HDFS_1-1-20150316062453");
+		//Mockito.doReturn(policyAdmin).when(spySVCRest).getPolicyAdminForDelegatedAdmin("HDFS_1-1-20150316062453");
 		RangerPolicyList dbRangerPolicy = spySVCRest.getPolicies(request);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy.getListSize(), 1);
