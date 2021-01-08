@@ -3507,8 +3507,8 @@ public class ServiceREST {
 
 					servicePoliciesMap.put(serviceName, policyList);
 				}
-					policyList.add(policy);
-				}
+				policyList.add(policy);
+			}
 
 			for (Map.Entry<String, List<RangerPolicy>> entry : servicePoliciesMap.entrySet()) {
 				String             serviceName  = entry.getKey();
@@ -3518,6 +3518,7 @@ public class ServiceREST {
 					boolean isServiceAdminUser = svcStore.isServiceAdminUser(serviceName, userName);
 					if (isServiceAdminUser) {
 						ret.addAll(listToFilter);
+						continue;
 					} else if (isAdmin || isKeyAdmin || isAuditAdmin || isAuditKeyAdmin) {
 						XXService xService     = daoManager.getXXService().findByName(serviceName);
 						Long      serviceDefId = xService.getType();
