@@ -36,6 +36,10 @@ define(function(require) {
 
             template: AuditAccessLogDetailTmpl,
 
+            breadCrumbs :function(){
+                return 'Audit Access Log Detail'
+            },
+
             templateHelpers: function() {
                 var that = this, result;
                 result = _.filter(XAEnums.AccessResult, function(e){ return e.value === that.auditaccessDetail.accessResult });
@@ -47,6 +51,7 @@ define(function(require) {
                                 this.auditaccessDetail.aclEnforcer === "ranger-acl" && this.auditaccessDetail.requestData) ? true : false,
 
                     tag : this.tags ? this.tags.join() : undefined,
+                    auditAccessView : this.auditAccessView,
                 }
             },
 
@@ -66,7 +71,10 @@ define(function(require) {
              */
             initialize: function(options) {
                 console.log("Initialized a Ranger Audit Access Log Details");
-                _.extend(this, _.pick(options, 'auditaccessDetail'));
+                _.extend(this, _.pick(options, 'auditaccessDetail', 'auditAccessView'));
+                if(_.isUndefined(this.auditAccessView)) {
+                    this.auditAccessView = false
+                }
                 if (this.auditaccessDetail.tags) {
                     var tag = JSON.parse(this.auditaccessDetail.tags);
                     this.tags = _.map(tag, function(m) {

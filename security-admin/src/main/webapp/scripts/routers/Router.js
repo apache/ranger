@@ -41,6 +41,7 @@ function(Backbone, Marionette, localization, MAppState, XAUtil, bootbox){
 			/****** Audit Report related **********************/
 			"!/reports/audit/:tab"					: "auditReportAction",
 			"!/reports/audit/loginSession/:paramName/:id"	: "loginSessionDetail",
+			"!/reports/audit/eventlog/:id"	: "auditEventDetail",
 			
 			/****** User Profile related **********************/
 			"!/userprofile"		: "userProfileAction",

@@ -1148,6 +1148,8 @@ define(function(require) {
 				onClick: function (e) {
                     var self = this ;
                     if($(e.target).hasClass('policyIdColumn') || $(e.target).closest('td').hasClass("policyIdColumn")) {
+                        if($(e.target).is('.fa-external-link'))
+                            return;
                         if(this.model.get('repoType')){
                                     var repoType =  this.model.get('repoType');
                                 }
@@ -1198,10 +1200,12 @@ define(function(require) {
                         var view = new AuditAccessLogDetail({
                             auditaccessDetail : this.model.attributes,
                         });
+                        var url =Backbone.history.location.href.substring(0, Backbone.history.location.href.indexOf('#!'))+'#!/reports/audit/eventlog/'+this.model.get('eventId');
+                        var eventUrl = '<a href="'+url+'" target="_blank" title="Show log details in next tab"> <i class="fa-fw fa fa-external-link pull-right"></i> </a>';
                         var modal = new Backbone.BootstrapModal({
                             animate : true,
                             content     : view,
-                            title: localization.tt("lbl.auditAccessDetail"),
+                            title: localization.tt("lbl.auditAccessDetail") + eventUrl,
                             okText :localization.tt("lbl.ok"),
                             allowCancel : true,
                             escape : true,
@@ -1247,14 +1251,11 @@ define(function(require) {
                                                 }),
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
-								if(rawValue == -1){
+								var serviceDef = that.serviceDefList.findWhere({'id' : model.get('repoType')}),
+								href = 'javascript:void(0)';
+								if(rawValue == -1 || _.isUndefined(serviceDef)){
 									return '--';
-								}	
-								var serviceDef = that.serviceDefList.findWhere({'id' : model.get('repoType')})
-								if(_.isUndefined(serviceDef)){
-									return rawValue;
 								}
-								var href = 'javascript:void(0)';
 								return '<a href="'+href+'" title="'+rawValue+'">'+rawValue+'</a>';
 							}
 						}),
