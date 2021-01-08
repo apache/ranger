@@ -72,7 +72,8 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
         @Override
         public void addOrUpdateUsersGroups(Map<String, Map<String, String>> sourceGroups,
                                            Map<String, Map<String, String>> sourceUsers,
-                                           Map<String, Set<String>> sourceGroupUsers) throws Throwable {
+                                           Map<String, Set<String>> sourceGroupUsers,
+                                           boolean computeDeletes) throws Throwable {
 
                 for (String userdn : sourceUsers.keySet()) {
                         //System.out.println("Username: " + sourceUsers.get(userdn).get("original_name"));

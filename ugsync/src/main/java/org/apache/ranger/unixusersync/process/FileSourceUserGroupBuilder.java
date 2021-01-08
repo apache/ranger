@@ -37,6 +37,7 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.apache.log4j.Logger;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.ugsyncutil.model.FileSyncSourceInfo;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
@@ -62,6 +63,9 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 	private boolean isStartupFlag = false;
 
 	private boolean isUpdateSinkSucc = true;
+	private int deleteCycles;
+	private boolean computeDeletes = false;
+	private String currentSyncSource;
 
 	public static void main(String[] args) throws Throwable {
 		FileSourceUserGroupBuilder filesourceUGBuilder = new FileSourceUserGroupBuilder();
@@ -90,12 +94,14 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 	@Override
 	public void init() throws Throwable {
 		isStartupFlag = true;
+		deleteCycles = 1;
+		currentSyncSource = config.getCurrentSyncSource();
 		if(userGroupFilename == null) {
 			userGroupFilename = config.getUserSyncFileSource();
 		}
 		ugsyncAuditInfo = new UgsyncAuditInfo();
 		fileSyncSourceInfo = new FileSyncSourceInfo();
-		ugsyncAuditInfo.setSyncSource("File");
+		ugsyncAuditInfo.setSyncSource(currentSyncSource);
 		ugsyncAuditInfo.setFileSyncSourceInfo(fileSyncSourceInfo);
 		fileSyncSourceInfo.setFileName(userGroupFilename);
 		buildUserGroupInfo();
@@ -103,13 +109,29 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 	
 	@Override
 	public boolean isChanged() {
+		computeDeletes = false;
 		// If previous update to Ranger admin fails, 
 		// we want to retry the sync process even if there are no changes to the sync files
 		if (!isUpdateSinkSucc) {
 			LOG.info("Previous updateSink failed and hence retry!!");
 			return true;
 		}
-		
+		try {
+			if (config.isUserSyncDeletesEnabled() && deleteCycles >= config.getUserSyncDeletesFrequency()) {
+				deleteCycles = 1;
+				computeDeletes = true;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Compute deleted users/groups is enabled for this sync cycle");
+				}
+				return true;
+			}
+		} catch (Throwable t) {
+			LOG.error("Failed to get information about usersync delete frequency", t);
+		}
+		if (config.isUserSyncDeletesEnabled()) {
+			deleteCycles++;
+		}
+
 		long TempUserGroupFileModifedAt = new File(userGroupFilename).lastModified();
 		if (usergroupFileModified != TempUserGroupFileModifedAt) {
 			return true;
@@ -132,15 +154,17 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 			for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
 				String userName = entry.getKey();
 				Map<String, String> userAttrMap = new HashMap<>();
-				userAttrMap.put("original_name", userName);
-				userAttrMap.put("full_name", userName);
+				userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+				userAttrMap.put(UgsyncCommonConstants.FULL_NAME, userName);
+				userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
 				sourceUsers.put(userName, userAttrMap);
 				List<String> groups = entry.getValue();
 				if (groups != null) {
 					for(String groupName : groups) {
 						Map<String, String> groupAttrMap = new HashMap<>();
-						groupAttrMap.put("original_name", groupName);
-						groupAttrMap.put("full_name", groupName);
+						groupAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, groupName);
+						groupAttrMap.put(UgsyncCommonConstants.FULL_NAME, groupName);
+						groupAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
 						sourceGroups.put(groupName, groupAttrMap);
 						Set<String> groupUsers = sourceGroupUsers.get(groupName);
 						if (CollectionUtils.isNotEmpty(groupUsers)) {
@@ -161,7 +185,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 			}
 
 			try {
-				sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers);
+				sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers, computeDeletes);
 			} catch (Throwable t) {
 				LOG.error("Failed to update ranger admin. Will retry in next sync cycle!!", t);
 				isUpdateSinkSucc = false;

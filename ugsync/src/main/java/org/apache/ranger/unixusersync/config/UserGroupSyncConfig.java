@@ -61,7 +61,7 @@ public class UserGroupSyncConfig  {
 	
 	public static final String UGSYNC_UNIX_GROUP_FILE = "ranger.usersync.unix.group.file";
 	public static final String  DEFAULT_UGSYNC_UNIX_GROUP_FILE =   "/etc/group";
-	
+
 	public static final String  UGSYNC_MIN_USERID_PROP  = 	"ranger.usersync.unix.minUserId";
 
 	public static final String  UGSYNC_MIN_GROUPID_PROP =   "ranger.usersync.unix.minGroupId";
@@ -72,7 +72,7 @@ public class UserGroupSyncConfig  {
 	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"ranger.usersync.policymanager.mockrun";
 
 	public static final String  UGSYNC_TEST_RUN_PROP  = 	"ranger.usersync.policymanager.testrun";
-	
+
 	public static final String UGSYNC_SOURCE_FILE_PROC =	"ranger.usersync.filesource.file";
 
 	public static final String UGSYNC_SOURCE_FILE_DELIMITER = "ranger.usersync.filesource.text.delimiter";
@@ -113,7 +113,7 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
 
 	private static final String LGSYNC_LDAP_URL = "ranger.usersync.ldap.url";
-	
+
 	private static final String LGSYNC_LDAP_DELTASYNC_ENABLED = "ranger.usersync.ldap.deltasync";
 	private static final boolean DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED = false;
 
@@ -269,6 +269,11 @@ public class UserGroupSyncConfig  {
     private static final long    DEFAULT_UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS = 10000L;
     public static final String   UGSYNC_METRICS_ENABLED_PROP = "ranger.usersync.metrics.enabled";
 
+	private static final String UGSYNC_DELETES_ENABLED = "ranger.usersync.deletes.enabled";
+	private static final boolean DEFAULT_UGSYNC_DELETES_ENABLED = false;
+	private static final String  UGSYNC_DELETES_FREQUENCY = "ranger.usersync.deletes.frequency";
+	private static final long    DEFAULT_UGSYNC_DELETES_FREQUENCY = 10L; // After every 10 sync cycles
+
     private Properties prop = new Properties();
 
 	private static volatile UserGroupSyncConfig me = null;
@@ -322,7 +327,7 @@ public class UserGroupSyncConfig  {
 		}
 		return val;
 	}
-	
+
 	public String getUnixPasswordFile() {
 		String val = prop.getProperty(UGSYNC_UNIX_PASSWORD_FILE);
 		if ( val == null ) {
@@ -331,7 +336,7 @@ public class UserGroupSyncConfig  {
 
 		return val;
 	}
-	
+
 	public String getUnixGroupFile() {
 		String val = prop.getProperty(UGSYNC_UNIX_GROUP_FILE);
 		if ( val == null ) {
@@ -368,7 +373,7 @@ public class UserGroupSyncConfig  {
 		String val = prop.getProperty(UGSYNC_MOCK_RUN_PROP);
 		return (val != null && val.trim().equalsIgnoreCase("true"));
 	}
-	
+
 	public boolean isTestRunEnabled() {
 		String val = prop.getProperty(UGSYNC_TEST_RUN_PROP);
 		return (val != null && val.trim().equalsIgnoreCase("true"));
@@ -505,7 +510,7 @@ public class UserGroupSyncConfig  {
 	private String getUserGroupSourceClassName() {
 		String val =  prop.getProperty(UGSYNC_SOURCE_CLASS_PARAM);
 		String className = UGSYNC_SOURCE_CLASS;
-		
+
 		String syncSource = null;
 
 		if(val == null || val.trim().isEmpty()) {
@@ -524,11 +529,11 @@ public class UserGroupSyncConfig  {
 			className = UGSYNC_SOURCE_CLASS;
 		}else if(syncSource!=null && syncSource.equalsIgnoreCase("LDAP")){
 			className = LGSYNC_SOURCE_CLASS;
-		} 
+		}
 
 		return className;
 	}
-	
+
 	public UserGroupSource getUserGroupSource() throws Throwable {
 
 		String className = getUserGroupSourceClassName();
@@ -1078,7 +1083,7 @@ public class UserGroupSyncConfig  {
 		}
 		return starttlsEnabled;
 	}
-	
+
 	public boolean isDeltaSyncEnabled() {
 		boolean deltaSyncEnabled;
 		String val = prop.getProperty(LGSYNC_LDAP_DELTASYNC_ENABLED);
@@ -1149,11 +1154,11 @@ public class UserGroupSyncConfig  {
 	public void setGroupObjectClass(String groupObjectClass) {
 		prop.setProperty(LGSYNC_GROUP_OBJECT_CLASS, groupObjectClass);
 	}
-	
+
 	/* Used only for unit testing */
     	public void setDeltaSync(boolean deltaSyncEnabled) {
         	prop.setProperty(LGSYNC_LDAP_DELTASYNC_ENABLED, String.valueOf(deltaSyncEnabled));
-    	}	
+    	}
 
 	/* Used only for unit testing */
     	public void setUserNameAttribute(String userNameAttr) {
@@ -1216,5 +1221,50 @@ public class UserGroupSyncConfig  {
 	public boolean isUserSyncMetricsEnabled() {
 		String val = prop.getProperty(UGSYNC_METRICS_ENABLED_PROP);
 		return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
+	}
+
+
+	public boolean isUserSyncDeletesEnabled() {
+		boolean isUserSyncDeletesEnabled;
+		String val = prop.getProperty(UGSYNC_DELETES_ENABLED);
+		if(StringUtils.isEmpty(val)) {
+			isUserSyncDeletesEnabled = DEFAULT_UGSYNC_DELETES_ENABLED;
+		} else {
+			isUserSyncDeletesEnabled  = Boolean.valueOf(val);
+		}
+		return isUserSyncDeletesEnabled;
+	}
+
+	/*
+	 * This is the frequency of computing deleted users/groups from the sync source.
+	 * Default and minimum value is 8hrs
+	 * If the delete frequency interval value is less than sync interval and greater than 8hrs,
+	 * then deleted objects are computed at every sync cycle.
+	 */
+	public long getUserSyncDeletesFrequency() throws Throwable {
+		long ret = 1;
+
+		String val = prop.getProperty(UGSYNC_DELETES_FREQUENCY);
+		if (StringUtils.isNotBlank(val)) {
+			ret = Long.valueOf(val);
+			if (!isTestRunEnabled() && ret < DEFAULT_UGSYNC_DELETES_FREQUENCY) {
+				LOG.info("Frequency of computing deletes cannot be set below " + DEFAULT_UGSYNC_DELETES_FREQUENCY);
+				ret = DEFAULT_UGSYNC_DELETES_FREQUENCY;
+			}
+		}
+		return ret;
+	}
+
+	public String getCurrentSyncSource() throws Throwable{
+		String currentSyncSource;
+		String className = getUserGroupSource().getClass().getName();
+		if (LGSYNC_SOURCE_CLASS.equals(className)) {
+			currentSyncSource = "LDAP/AD";
+		} else if (UGSYNC_SOURCE_CLASS.equalsIgnoreCase(className)){
+			currentSyncSource = "Unix";
+		} else {
+			currentSyncSource = "File";
+		}
+		return currentSyncSource;
 	}
 }

@@ -1408,4 +1408,20 @@ public class XUserREST {
 	public List<String> setXUserRolesByName(UsersGroupRoleAssignments ugRoleAssignments) {
 		return xUserMgr.updateUserRoleAssignments(ugRoleAssignments);
 	}
+
+	@POST
+	@Path("/ugsync/groups/visibility")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public int updateDeletedGroups(Set<String> deletedGroups){
+		return xUserMgr.updateDeletedGroups(deletedGroups);
+	}
+
+	@POST
+	@Path("/ugsync/users/visibility")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public int updateDeletedUsers(Set<String> deletedUsers){
+		return xUserMgr.updateDeletedUsers(deletedUsers);
+	}
 }

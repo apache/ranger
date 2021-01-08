@@ -44,6 +44,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.model.GetXGroupListResponse;
 import org.apache.ranger.unixusersync.model.GetXUserListResponse;
@@ -57,7 +58,7 @@ import org.apache.ranger.usergroupsync.UserGroupSink;
 
 public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implements UserGroupSink {
 
-private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.class);
+	private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.class);
 
 	private static final String AUTHENTICATION_TYPE = "hadoop.security.authentication";
 	private String AUTH_KERBEROS = "kerberos";
@@ -80,8 +81,14 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 
 	public static final String PM_UPDATE_USERS_ROLES_URI  = "/service/xusers/users/roleassignments";	// PUT
 
+	private static final String PM_UPDATE_DELETED_GROUPS_URI = "/service/xusers/ugsync/groups/visibility";	// POST
+
+	private static final String PM_UPDATE_DELETED_USERS_URI = "/service/xusers/ugsync/users/visibility";	// POST
+
 	private static final String SOURCE_EXTERNAL ="1";
 	private static final String STATUS_ENABLED = "1";
+	private static final String ISVISIBLE = "1";
+	private static final String ISHIDDEN = "0";
 
 	private static String LOCAL_HOSTNAME = "unknown";
 	private String recordsToPullPerCall = "10";
@@ -107,6 +114,9 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 	private Map<String, Set<String>> deltaGroupUsers;
 	private Set<String> computeRolesForUsers;
 
+	private Map<String, XGroupInfo> deletedGroups;
+	private Map<String, XUserInfo> deletedUsers;
+
 	private int noOfNewUsers;
 	private int noOfNewGroups;
 	private int noOfModifiedUsers;
@@ -116,16 +126,18 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 	private boolean groupNameCaseConversionFlag;
 	private boolean userNameLowerCaseFlag = false;
 	private boolean groupNameLowerCaseFlag = false;
+	private String currentSyncSource;
+	private String ldapUrl;
 
 	private String authenticationType = null;
 	String principal;
 	String keytab;
 	String nameRules;
-    Map<String, String> userMap = new LinkedHashMap<String, String>();
-    Map<String, String> groupMap = new LinkedHashMap<>();
+	Map<String, String> userMap = new LinkedHashMap<String, String>();
+	Map<String, String> groupMap = new LinkedHashMap<>();
 
-    private boolean isRangerCookieEnabled;
-    private String rangerCookieName;
+	private boolean isRangerCookieEnabled;
+	private String rangerCookieName;
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -176,6 +188,11 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		groupCache = new HashMap<>();
 		groupUsersCache = new HashMap<>();
 		isStartupFlag = true;
+		ldapUrl = null;
+		currentSyncSource = config.getCurrentSyncSource();
+		if (StringUtils.equalsIgnoreCase(currentSyncSource, "LDAP/AD")) {
+			ldapUrl = config.getLdapUrl();
+		}
 
 		if (isMockRun) {
 			LOG.setLevel(Level.DEBUG);
@@ -191,7 +208,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		try {
 			principal = SecureClientLogin.getPrincipal(config.getProperty(PRINCIPAL,""), LOCAL_HOSTNAME);
 		} catch (IOException ignored) {
-			 // do nothing
+			// do nothing
 		}
 		keytab = config.getProperty(KEYTAB,"");
 		nameRules = config.getProperty(NAME_RULE,"DEFAULT");
@@ -199,17 +216,17 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 				trustStoreFile, trustStoreFilepwd, trustStoreType, authenticationType, principal, keytab,
 				config.getPolicyMgrUserName(), config.getPolicyMgrPassword());
 
-        String userGroupRoles = config.getGroupRoleRules();
-        if (userGroupRoles != null && !userGroupRoles.isEmpty()) {
-            getRoleForUserGroups(userGroupRoles);
-        }
+		String userGroupRoles = config.getGroupRoleRules();
+		if (userGroupRoles != null && !userGroupRoles.isEmpty()) {
+			getRoleForUserGroups(userGroupRoles);
+		}
 		buildUserGroupInfo();
 
-        if (LOG.isDebugEnabled()) {
+		if (LOG.isDebugEnabled()) {
 			LOG.debug("PolicyMgrUserGroupBuilderOld.init()==> PolMgrBaseUrl : "+policyMgrBaseUrl+" KeyStore File : "+keyStoreFile+" TrustStore File : "+trustStoreFile+ "Authentication Type : "+authenticationType);
 		}
 
-    }
+	}
 
 	@Override
 	public void postUserGroupAuditInfo(UgsyncAuditInfo ugsyncAuditInfo) throws Throwable {
@@ -245,13 +262,35 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 	@Override
 	public void addOrUpdateUsersGroups(Map<String, Map<String, String>> sourceGroups,
 									   Map<String, Map<String, String>> sourceUsers,
-									   Map<String, Set<String>> sourceGroupUsers) throws Throwable {
+									   Map<String, Set<String>> sourceGroupUsers,
+									   boolean computeDeletes) throws Throwable {
 
 		noOfNewUsers = 0;
 		noOfNewGroups = 0;
 		noOfModifiedUsers = 0;
 		noOfModifiedGroups = 0;
 		computeRolesForUsers = new HashSet<>();
+
+		if (!isStartupFlag && computeDeletes) {
+			LOG.info("Computing deleted users/groups");
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Computing deleted users/groups");
+			}
+			if (MapUtils.isNotEmpty(sourceGroups)) {
+				updateDeletedGroups(sourceGroups);
+			}
+			if (MapUtils.isNotEmpty(sourceUsers)) {
+				updateDeletedUsers(sourceUsers);
+			}
+
+			if (MapUtils.isNotEmpty(deletedGroups)) {
+				groupCache.putAll(deletedGroups);
+			}
+
+			if (MapUtils.isNotEmpty(deletedUsers)) {
+				userCache.putAll(deletedUsers);
+			}
+		}
 
 		if (MapUtils.isNotEmpty(sourceGroups)) {
 			addOrUpdateGroups(sourceGroups);
@@ -387,6 +426,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 						LOG.debug("GROUP:  Id:" + g.getId() + ", Name: " + g.getName() + ", Description: "
 								+ g.getDescription());
 					}
+					g.setOtherAttrsMap(gson.fromJson(g.getOtherAttributes(), Map.class));
 					groupCache.put(g.getName(), g);
 				}
 				retrievedCount = groupCache.size();
@@ -440,6 +480,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 						LOG.debug("USER: Id:" + u.getId() + ", Name: " + u.getName() + ", Description: "
 								+ u.getDescription());
 					}
+					u.setOtherAttrsMap(gson.fromJson(u.getOtherAttributes(), Map.class));
 					userCache.put(u.getName(), u);
 				}
 				retrievedCount = userCache.size();
@@ -458,34 +499,34 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		String relativeUrl = PM_GET_ALL_GROUP_USER_MAP_LIST_URI;
 
 		String response = null;
-			ClientResponse clientResp = null;
+		ClientResponse clientResp = null;
 
-			Gson gson = new GsonBuilder().create();
-			if (isRangerCookieEnabled) {
-				response = cookieBasedGetEntity(relativeUrl, 0);
-			} else {
-				try {
-					clientResp = ldapUgSyncClient.get(relativeUrl, null);
-					if (clientResp != null) {
-						response = clientResp.getEntity(String.class);
-					}
-				} catch (Exception e) {
-					LOG.error("Failed to get response, group user mappings from Ranger admin. Error is : " + e.getMessage());
-					throw e;
+		Gson gson = new GsonBuilder().create();
+		if (isRangerCookieEnabled) {
+			response = cookieBasedGetEntity(relativeUrl, 0);
+		} else {
+			try {
+				clientResp = ldapUgSyncClient.get(relativeUrl, null);
+				if (clientResp != null) {
+					response = clientResp.getEntity(String.class);
 				}
+			} catch (Exception e) {
+				LOG.error("Failed to get response, group user mappings from Ranger admin. Error is : " + e.getMessage());
+				throw e;
 			}
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("RESPONSE: [" + response + "]");
-			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("RESPONSE: [" + response + "]");
+		}
 
-			groupUsersCache = gson.fromJson(response, Map.class);
-			if (MapUtils.isEmpty(groupUsersCache)) {
-				groupUsersCache = new HashMap<>();
-			}
+		groupUsersCache = gson.fromJson(response, Map.class);
+		if (MapUtils.isEmpty(groupUsersCache)) {
+			groupUsersCache = new HashMap<>();
+		}
 
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Group User List : " + groupUsersCache.values());
-			}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Group User List : " + groupUsersCache.values());
+		}
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyMgrUserGroupBuilder.buildGroupUserLinkList()");
 		}
@@ -548,27 +589,42 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		deltaGroups = new HashMap<>();
 		// Check if the group exists in cache. If not, mark as new group.
 		// else check if other attributes are updated and mark as updated group
-
+		Gson gson = new Gson();
 		for (String groupDN : sourceGroups.keySet()) {
 			Map<String, String> newGroupAttrs = sourceGroups.get(groupDN);
-			Gson gson = new Gson();
 			String newGroupAttrsStr = gson.toJson(newGroupAttrs);
 			String groupName = groupNameMap.get(groupDN);
 			if (StringUtils.isEmpty(groupName)) {
-				groupName = groupNameTransform(newGroupAttrs.get("original_name"));
-				groupNameMap.put(groupDN, groupName);
+				groupName = groupNameTransform(newGroupAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME));
+				if (StringUtils.isNotEmpty(groupName) && !groupNameMap.containsValue(groupName)) {
+					// This is to avoid updating same groupName with different DN that already exists
+					groupNameMap.put(groupDN, groupName);
+				}
 			}
 			if (!groupCache.containsKey(groupName)) {
-				XGroupInfo newGroup = addXGroupInfo(groupName, newGroupAttrsStr);
+				XGroupInfo newGroup = addXGroupInfo(groupName, newGroupAttrs, newGroupAttrsStr);
 				deltaGroups.put(groupName, newGroup);
 				noOfNewGroups++;
 			} else {
 				XGroupInfo oldGroup = groupCache.get(groupName);
-				String oldGroupAttrs = oldGroup.getOtherAttributes();
-				if (!StringUtils.equalsIgnoreCase(oldGroupAttrs, newGroupAttrsStr)) {
-					oldGroup.setOtherAttributes(newGroupAttrsStr);
-					deltaGroups.put(groupName, oldGroup);
-					noOfModifiedGroups++;
+				Map<String, String> oldGroupAttrs = oldGroup.getOtherAttrsMap();
+				String oldGroupDN = oldGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
+				//LOG.info("DN from source = " + groupDN + " saved DN = " + oldGroupDN);
+				//LOG.info("OldGroupAttr = " + oldGroupAttrs + " newGroupAttrs = " + newGroupAttrs);
+				if (StringUtils.equalsIgnoreCase(groupDN, oldGroupDN)
+						&& StringUtils.equalsIgnoreCase(oldGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
+						&& StringUtils.equalsIgnoreCase(oldGroupAttrs.get(UgsyncCommonConstants.LDAP_URL), newGroupAttrs.get(UgsyncCommonConstants.LDAP_URL))) {
+					String oldGroupAttrsStr = gson.toJson(oldGroupAttrs);
+					if(!StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)) {
+						oldGroup.setOtherAttributes(newGroupAttrsStr);
+						oldGroup.setOtherAttrsMap(newGroupAttrs);
+						deltaGroups.put(groupName, oldGroup);
+						noOfModifiedGroups++;
+					}
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Skipping to update " + groupName + " as same group name with different DN already exists");
+					}
 				}
 			}
 		}
@@ -584,31 +640,42 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		deltaUsers = new HashMap<>();
 		// Check if the user exists in cache. If not, mark as new user.
 		// else check if other attributes are updated and mark as updated user
-
+		Gson gson = new Gson();
 		for (String userDN : sourceUsers.keySet()) {
 			Map<String, String> newUserAttrs = sourceUsers.get(userDN);
-			Gson gson = new Gson();
 			String newUserAttrsStr = gson.toJson(newUserAttrs);
-
 			String userName = userNameMap.get(userDN);
 			if (StringUtils.isEmpty(userName)) {
-				userName = userNameTransform(newUserAttrs.get("original_name"));
-				userNameMap.put(userDN, userName);
+				userName = userNameTransform(newUserAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME));
+				if (StringUtils.isNotEmpty(userName) && !userNameMap.containsValue(userName)) {
+					// This is to avoid updating same username with different DN that already exists
+					userNameMap.put(userDN, userName);
+				}
 			}
 
 			if (!userCache.containsKey(userName)) {
 
-				XUserInfo newUser = addXUserInfo(userName, newUserAttrsStr);
+				XUserInfo newUser = addXUserInfo(userName, newUserAttrs, newUserAttrsStr);
 				deltaUsers.put(userName, newUser);
 				noOfNewUsers++;
 			} else {
-				// Update other attributes if changed
 				XUserInfo oldUser = userCache.get(userName);
-				String oldUserAttrs = oldUser.getOtherAttributes();
-				if (!StringUtils.equalsIgnoreCase(oldUserAttrs, newUserAttrsStr)) {
-					oldUser.setOtherAttributes(newUserAttrsStr);
-					deltaUsers.put(userName, oldUser);
-					noOfModifiedUsers++;
+				Map<String, String> oldUserAttrs = oldUser.getOtherAttrsMap();
+				String oldUserDN = oldUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
+				if (StringUtils.equalsIgnoreCase(userDN, oldUserDN)
+						&& StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
+						&& StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.LDAP_URL), newUserAttrs.get(UgsyncCommonConstants.LDAP_URL))) {
+					String oldUserAttrsStr = gson.toJson(oldUserAttrs);
+					if( !StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)) {
+						oldUser.setOtherAttributes(newUserAttrsStr);
+						oldUser.setOtherAttrsMap(newUserAttrs);
+						deltaUsers.put(userName, oldUser);
+						noOfModifiedUsers++;
+					}
+				} else {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Skipping to update " + userName + " as same username with different DN already exists");
+					}
 				}
 			}
 		}
@@ -691,12 +758,13 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		return deltaGroupUserInfoList;
 	}
 
-	private XUserInfo addXUserInfo(String aUserName, String otherAttributes) {
+	private XUserInfo addXUserInfo(String aUserName, Map<String, String> otherAttrsMap, String otherAttributes) {
 		XUserInfo xuserInfo = new XUserInfo();
 		xuserInfo.setName(aUserName);
 		xuserInfo.setDescription(aUserName + " - add from Unix box");
 		xuserInfo.setUserSource(SOURCE_EXTERNAL);
 		xuserInfo.setStatus(STATUS_ENABLED);
+		xuserInfo.setIsVisible(ISVISIBLE);
 		List<String> roleList = new ArrayList<String>();
 		if (userMap.containsKey(aUserName)) {
 			roleList.add(userMap.get(aUserName));
@@ -705,12 +773,13 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		}
 		xuserInfo.setUserRoleList(roleList);
 		xuserInfo.setOtherAttributes(otherAttributes);
+		xuserInfo.setOtherAttrsMap(otherAttrsMap);
 
 		return xuserInfo;
 	}
 
 
-	private XGroupInfo addXGroupInfo(String aGroupName, String otherAttributes) {
+	private XGroupInfo addXGroupInfo(String aGroupName, Map<String, String> otherAttrsMap, String otherAttributes) {
 
 		XGroupInfo addGroup = new XGroupInfo();
 
@@ -719,9 +788,10 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		addGroup.setDescription(aGroupName + " - add from Unix box");
 
 		addGroup.setGroupType("1");
-
+		addGroup.setIsVisible(ISVISIBLE);
 		addGroup.setGroupSource(SOURCE_EXTERNAL);
 		addGroup.setOtherAttributes(otherAttributes);
+		addGroup.setOtherAttrsMap(otherAttrsMap);
 
 		return addGroup;
 	}
@@ -817,7 +887,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 				}
 			} else {
 				LOG.error("Failed to addOrUpdateUsers " + uploadedCount );
-				throw new Exception("Failed to addOrUpdateUsers " + uploadedCount);
+				throw new Exception("Failed to addOrUpdateUsers" + uploadedCount);
 			}
 			LOG.info("ret = " + ret + " No. of users uploaded to ranger admin= " + (uploadedCount>totalCount?totalCount:uploadedCount));
 		}
@@ -1270,7 +1340,7 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		String jsonString = gson.toJson(obj);
 
 		if ( LOG.isDebugEnabled() ) {
-		   LOG.debug("USER GROUP MAPPING" + jsonString);
+			LOG.debug("USER GROUP MAPPING" + jsonString);
 		}
 		try{
 			clientResp = ldapUgSyncClient.post(apiURL, null, obj);
@@ -1408,74 +1478,74 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		return response;
 	}
 
-    private void getRoleForUserGroups(String userGroupRolesData) {
-        String roleDelimiter = config.getRoleDelimiter();
-        String userGroupDelimiter = config.getUserGroupDelimiter();
-        String userNameDelimiter = config.getUserGroupNameDelimiter();
-        if (roleDelimiter == null || roleDelimiter.isEmpty()) {
-            roleDelimiter = "&";
-        }
-        if (userGroupDelimiter == null || userGroupDelimiter.isEmpty()) {
-            userGroupDelimiter = ":";
-        }
-        if (userNameDelimiter == null || userNameDelimiter.isEmpty()) {
-            userNameDelimiter = ",";
-        }
-        StringTokenizer str = new StringTokenizer(userGroupRolesData,
-                roleDelimiter);
-        int flag = 0;
-        String userGroupCheck = null;
-        String roleName = null;
-        while (str.hasMoreTokens()) {
-            flag = 0;
-            String tokens = str.nextToken();
-            if (tokens != null && !tokens.isEmpty()) {
-                StringTokenizer userGroupRoles = new StringTokenizer(tokens,
-                        userGroupDelimiter);
-                if (userGroupRoles != null) {
-                    while (userGroupRoles.hasMoreElements()) {
-                        String userGroupRolesTokens = userGroupRoles
-                                .nextToken();
-                        if (userGroupRolesTokens != null
-                                && !userGroupRolesTokens.isEmpty()) {
-                            flag++;
-                            switch (flag) {
-                            case 1:
-                                roleName = userGroupRolesTokens;
-                                break;
-                            case 2:
-                                userGroupCheck = userGroupRolesTokens;
-                                break;
-                            case 3:
-                                StringTokenizer userGroupNames = new StringTokenizer(
-                                        userGroupRolesTokens, userNameDelimiter);
-                                if (userGroupNames != null) {
-                                    while (userGroupNames.hasMoreElements()) {
-                                        String userGroup = userGroupNames
-                                                .nextToken();
-                                        if (userGroup != null
-                                                && !userGroup.isEmpty()) {
-                                            if (userGroupCheck.trim().equalsIgnoreCase("u")) {
-                                                userMap.put(userGroup.trim(), roleName.trim());
-                                            } else if (userGroupCheck.trim().equalsIgnoreCase("g")) {
-                                                groupMap.put(userGroup.trim(),
-                                                        roleName.trim());
-                                            }
-                                        }
-                                    }
-                                }
-                                break;
-                            default:
-                                userMap.clear();
-                                groupMap.clear();
-                                break;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
+	private void getRoleForUserGroups(String userGroupRolesData) {
+		String roleDelimiter = config.getRoleDelimiter();
+		String userGroupDelimiter = config.getUserGroupDelimiter();
+		String userNameDelimiter = config.getUserGroupNameDelimiter();
+		if (roleDelimiter == null || roleDelimiter.isEmpty()) {
+			roleDelimiter = "&";
+		}
+		if (userGroupDelimiter == null || userGroupDelimiter.isEmpty()) {
+			userGroupDelimiter = ":";
+		}
+		if (userNameDelimiter == null || userNameDelimiter.isEmpty()) {
+			userNameDelimiter = ",";
+		}
+		StringTokenizer str = new StringTokenizer(userGroupRolesData,
+				roleDelimiter);
+		int flag = 0;
+		String userGroupCheck = null;
+		String roleName = null;
+		while (str.hasMoreTokens()) {
+			flag = 0;
+			String tokens = str.nextToken();
+			if (tokens != null && !tokens.isEmpty()) {
+				StringTokenizer userGroupRoles = new StringTokenizer(tokens,
+						userGroupDelimiter);
+				if (userGroupRoles != null) {
+					while (userGroupRoles.hasMoreElements()) {
+						String userGroupRolesTokens = userGroupRoles
+								.nextToken();
+						if (userGroupRolesTokens != null
+								&& !userGroupRolesTokens.isEmpty()) {
+							flag++;
+							switch (flag) {
+								case 1:
+									roleName = userGroupRolesTokens;
+									break;
+								case 2:
+									userGroupCheck = userGroupRolesTokens;
+									break;
+								case 3:
+									StringTokenizer userGroupNames = new StringTokenizer(
+											userGroupRolesTokens, userNameDelimiter);
+									if (userGroupNames != null) {
+										while (userGroupNames.hasMoreElements()) {
+											String userGroup = userGroupNames
+													.nextToken();
+											if (userGroup != null
+													&& !userGroup.isEmpty()) {
+												if (userGroupCheck.trim().equalsIgnoreCase("u")) {
+													userMap.put(userGroup.trim(), roleName.trim());
+												} else if (userGroupCheck.trim().equalsIgnoreCase("g")) {
+													groupMap.put(userGroup.trim(),
+															roleName.trim());
+												}
+											}
+										}
+									}
+									break;
+								default:
+									userMap.clear();
+									groupMap.clear();
+									break;
+							}
+						}
+					}
+				}
+			}
+		}
+	}
 
 	protected String userNameTransform(String userName) {
 		if (userNameCaseConversionFlag) {
@@ -1511,4 +1581,232 @@ private static final Logger LOG = Logger.getLogger(PolicyMgrUserGroupBuilder.cla
 		return groupName;
 	}
 
+	private void updateDeletedGroups(Map<String, Map<String, String>> sourceGroups) throws Throwable {
+		computeDeletedGroups(sourceGroups);
+		if (MapUtils.isNotEmpty(deletedGroups)) {
+			if (updateDeletedGroups() == 0) {
+				String msg = "Failed to update deleted groups to ranger admin";
+				LOG.error(msg);
+				throw new Exception(msg);
+			}
+		}
+	}
+
+	private void computeDeletedGroups(Map<String, Map<String, String>> sourceGroups) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PolicyMgrUserGroupBuilder.computeDeletedGroups(" + sourceGroups.keySet() + ")");
+		}
+		deletedGroups = new HashMap<>();
+		// Check if the group from cache exists in the sourceGroups. If not, mark as deleted group.
+		for (XGroupInfo groupInfo : groupCache.values()) {
+			Map<String, String> groupOtherAttrs = groupInfo.getOtherAttrsMap();
+			String groupDN = groupOtherAttrs != null ? groupOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+			if (StringUtils.isNotEmpty(groupDN) && !sourceGroups.containsKey(groupDN)
+					&& StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
+					&& StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
+				groupInfo.setIsVisible(ISHIDDEN);
+				deletedGroups.put(groupInfo.getName(), groupInfo);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.computeDeletedGroups(" + deletedGroups + ")");
+		}
+	}
+
+	private int updateDeletedGroups() throws Throwable{
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.updateDeletedGroups(" + deletedGroups + ")");
+		}
+		int ret = 0;
+
+		if (authenticationType != null
+				&& AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
+				&& SecureClientLogin.isKerberosCredentialExists(principal,
+				keytab)) {
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				ret = Subject.doAs(sub, new PrivilegedAction<Integer>() {
+					@Override
+					public Integer run() {
+						try {
+							return getDeletedGroups();
+						} catch (Throwable e) {
+							LOG.error("Failed to add or update deleted groups : ", e);
+						}
+						return 0;
+					}
+				});
+			} catch (Exception e) {
+				LOG.error("Failed to add or update deleted groups : " , e);
+				throw e;
+			}
+		} else {
+			ret = getDeletedGroups();
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.updateDeletedGroups(" + deletedGroups + ")");
+		}
+		return ret;
+	}
+
+
+	private int getDeletedGroups() throws Throwable{
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> PolicyMgrUserGroupBuilder.getDeletedGroups()");
+		}
+		int ret = 0;
+		String response = null;
+		ClientResponse clientRes = null;
+		String relativeUrl = PM_UPDATE_DELETED_GROUPS_URI;
+
+		if(isRangerCookieEnabled){
+			response = cookieBasedUploadEntity(deletedGroups.keySet(), relativeUrl);
+		}
+		else {
+			try {
+				clientRes = ldapUgSyncClient.post(relativeUrl, null, deletedGroups.keySet());
+				if (clientRes != null) {
+					response = clientRes.getEntity(String.class);
+				}
+			}
+			catch(Throwable t){
+				LOG.error("Failed to get response, Error is : ", t);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("RESPONSE[" + response + "]");
+		}
+		if (response != null) {
+			try {
+				ret = Integer.valueOf(response);
+			} catch (NumberFormatException e) {
+				LOG.error("Failed to update deleted groups", e );
+				throw e;
+			}
+		} else {
+			LOG.error("Failed to update deleted groups ");
+			throw new Exception("Failed to update deleted groups ");
+		}
+
+		if(LOG.isDebugEnabled()){
+			LOG.debug("<== PolicyMgrUserGroupBuilder.getDeletedGroups()" + ret);
+		}
+
+		return ret;
+	}
+
+
+	private void updateDeletedUsers(Map<String, Map<String, String>> sourceUsers) throws Throwable {
+		computeDeletedUsers(sourceUsers);
+		if (MapUtils.isNotEmpty(deletedUsers)) {
+			if (updateDeletedUsers() == 0) {
+				String msg = "Failed to update deleted users to ranger admin";
+				LOG.error(msg);
+				throw new Exception(msg);
+			}
+		}
+	}
+
+	private void computeDeletedUsers(Map<String, Map<String, String>> sourceUsers) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("PolicyMgrUserGroupBuilder.computeDeletedUsers(" + sourceUsers.keySet() + ")");
+		}
+		deletedUsers = new HashMap<>();
+		// Check if the group from cache exists in the sourceGroups. If not, mark as deleted group.
+		for (XUserInfo userInfo : userCache.values()) {
+			Map<String, String> userOtherAttrs = userInfo.getOtherAttrsMap();
+			String userDN = userOtherAttrs != null ? userOtherAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
+			if (StringUtils.isNotEmpty(userDN) && !sourceUsers.containsKey(userDN)
+					&& StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
+					&& StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
+				userInfo.setIsVisible(ISHIDDEN);
+				deletedUsers.put(userInfo.getName(), userInfo);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.computeDeletedUsers(" + deletedUsers + ")");
+		}
+	}
+
+	private int updateDeletedUsers() throws Throwable{
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyMgrUserGroupBuilder.updateDeletedUsers(" + deletedUsers + ")");
+		}
+		int ret = 0;
+
+		if (authenticationType != null
+				&& AUTH_KERBEROS.equalsIgnoreCase(authenticationType)
+				&& SecureClientLogin.isKerberosCredentialExists(principal,
+				keytab)) {
+			try {
+				Subject sub = SecureClientLogin.loginUserFromKeytab(principal, keytab, nameRules);
+				ret = Subject.doAs(sub, new PrivilegedAction<Integer>() {
+					@Override
+					public Integer run() {
+						try {
+							return getDeletedUsers();
+						} catch (Throwable e) {
+							LOG.error("Failed to add or update deleted users : ", e);
+						}
+						return 0;
+					}
+				});
+			} catch (Exception e) {
+				LOG.error("Failed to add or update deleted users : " , e);
+				throw e;
+			}
+		} else {
+			ret = getDeletedUsers();
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyMgrUserGroupBuilder.updateDeletedUsers(" + deletedUsers + ")");
+		}
+		return ret;
+	}
+
+
+	private int getDeletedUsers() throws Throwable{
+		if(LOG.isDebugEnabled()){
+			LOG.debug("==> PolicyMgrUserGroupBuilder.getDeletedUsers()");
+		}
+		int ret = 0;
+		String response = null;
+		ClientResponse clientRes = null;
+		String relativeUrl = PM_UPDATE_DELETED_USERS_URI;
+
+		if(isRangerCookieEnabled){
+			response = cookieBasedUploadEntity(deletedUsers.keySet(), relativeUrl);
+		}
+		else {
+			try {
+				clientRes = ldapUgSyncClient.post(relativeUrl, null, deletedUsers.keySet());
+				if (clientRes != null) {
+					response = clientRes.getEntity(String.class);
+				}
+			}
+			catch(Throwable t){
+				LOG.error("Failed to get response, Error is : ", t);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("RESPONSE[" + response + "]");
+		}
+		if (response != null) {
+			try {
+				ret = Integer.valueOf(response);
+			} catch (NumberFormatException e) {
+				LOG.error("Failed to update deleted users", e );
+				throw e;
+			}
+		} else {
+			LOG.error("Failed to update deleted users ");
+			throw new Exception("Failed to update deleted users ");
+		}
+
+		if(LOG.isDebugEnabled()){
+			LOG.debug("<== PolicyMgrUserGroupBuilder.getDeletedUsers()" + ret);
+		}
+
+		return ret;
+	}
 }
