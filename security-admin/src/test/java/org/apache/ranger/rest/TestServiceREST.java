@@ -58,7 +58,6 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXSecurityZoneDao;
 import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
 import org.apache.ranger.db.XXSecurityZoneRefTagServiceDao;
-import org.apache.ranger.db.XXGroupUserDao;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
 import org.apache.ranger.entity.XXPortalUser;
@@ -1078,7 +1077,6 @@ public class TestServiceREST {
 		SearchFilter filter = new SearchFilter();
 		XXService xs = Mockito.mock(XXService.class);
 		xs.setType(3L);
-		XXGroupUserDao xGroupDao = Mockito.mock(XXGroupUserDao.class);
 		ServiceREST spySVCRest = Mockito.spy(serviceREST);
 		List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
 		ServicePolicies svcPolicies = new ServicePolicies();
@@ -1091,9 +1089,7 @@ public class TestServiceREST {
 		Mockito.when(searchUtil.getSearchFilter(request, policyService.sortFields)).thenReturn(filter);
 		Mockito.when(svcStore.getPolicies(filter)).thenReturn(policies);
 		/*here we are setting serviceAdminRole, so we will get the required policy with serviceAdmi role*/
-		//Mockito.when(daoManager.getXXGroupUser()).thenReturn(xGroupDao);
 		Mockito.when(svcStore.isServiceAdminUser(rPol.getService(), null)).thenReturn(true);
-		//Mockito.doReturn(policyAdmin).when(spySVCRest).getPolicyAdminForDelegatedAdmin("HDFS_1-1-20150316062453");
 		RangerPolicyList dbRangerPolicy = spySVCRest.getPolicies(request);
 		Assert.assertNotNull(dbRangerPolicy);
 		Assert.assertEquals(dbRangerPolicy.getListSize(), 1);
