@@ -65,6 +65,7 @@
 					<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
 					<include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
 					<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+					<include>com.google.guava:guava:jar:${google.guava.version}</include>
 					<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 					<include>org.noggit:noggit:jar:${noggit.version}</include>
 					<include>org.codehaus.jackson:jackson-core-asl</include>
