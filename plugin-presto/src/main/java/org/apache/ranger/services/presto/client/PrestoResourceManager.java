@@ -41,18 +41,18 @@ public class PrestoResourceManager {
     Map<String, Object> ret = null;
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("==> PrestoResourceMgr.connectionTest ServiceName: " + serviceName + "Configs" + configs);
+      LOG.debug("==> PrestoResourceManager.connectionTest() ServiceName: " + serviceName + " Configs: " + configs);
     }
 
     try {
       ret = PrestoClient.connectionTest(serviceName, configs);
     } catch (Exception e) {
-      LOG.error("<== PrestoResourceManager.connectionTest Error: " + e);
+      LOG.error("<== PrestoResourceManager.connectionTest() Error: " + e);
       throw e;
     }
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("<== PrestoResourceManager.connectionTest Result : " + ret);
+      LOG.debug("<== PrestoResourceManager.connectionTest() Result : " + ret);
     }
 
     return ret;
@@ -75,7 +75,7 @@ public class PrestoResourceManager {
 
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("<== PrestoResourceMgr.getPrestoResources()  UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
+      LOG.debug("<== PrestoResourceMgr.getPrestoResources() UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
     }
 
     if (userInput != null && resource != null) {
@@ -106,7 +106,7 @@ public class PrestoResourceManager {
       try {
 
         if (LOG.isDebugEnabled()) {
-          LOG.debug("==> PrestoResourceMgr.getPrestoResources() UserInput: " + userInput + " configs: " + configs + " catalogList: " + catalogList + " tableList: "
+          LOG.debug("==> PrestoResourceManager.getPrestoResources() UserInput: \"" + userInput + "\" configs: " + configs + " catalogList: " + catalogList + " tableList: "
             + tableList + " columnList: " + columnList);
         }
 
