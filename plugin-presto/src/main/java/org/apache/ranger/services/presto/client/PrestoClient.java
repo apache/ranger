@@ -212,7 +212,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getCatalogs(ndl, catList);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient getCatalogList() :Unable to get the Database List", he);
+          LOG.error("<== PrestoClient.getCatalogList() :Unable to get the Database List", he);
           throw he;
         }
         return ret;
@@ -294,7 +294,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getSchemas(ndl, cats, shms);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient getSchemaList() :Unable to get the Schema List", he);
+          LOG.error("<== PrestoClient.getSchemaList() :Unable to get the Schema List", he);
         }
         return ret;
       }
@@ -377,7 +377,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getTables(ndl, cats, shms, tbls);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient getTableList() :Unable to get the Column List", he);
+          LOG.error("<== PrestoClient.getTableList() :Unable to get the Column List", he);
           throw he;
         }
         return ret;
@@ -474,7 +474,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getColumns(ndl, cats, shms, tbls, cols);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient getColumnList() :Unable to get the Column List", he);
+          LOG.error("<== PrestoClient.getColumnList() :Unable to get the Column List", he);
           throw he;
         }
         return ret;
@@ -503,7 +503,7 @@ public class PrestoClient extends BaseClient implements Closeable {
       }
 
       if (status) {
-        String msg = "Connection test succesful";
+        String msg = "Connection test successful";
         generateResponseDataMap(status, msg, msg, null, null, resp);
       }
     } catch (Exception e) {
