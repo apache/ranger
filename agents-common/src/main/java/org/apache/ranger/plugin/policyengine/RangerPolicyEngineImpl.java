@@ -582,7 +582,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				ret.setIsAccessDetermined(false); // discard result by tag-policies, to evaluate resource policies for possible override
 			}
 
-			List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchPolicyEvaluators(request.getResource(), policyType);
+			List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchPolicyEvaluators(request, policyType);
 
 			for (RangerPolicyEvaluator evaluator : evaluators) {
 				if (!evaluator.isApplicable(accessTime)) {
@@ -645,7 +645,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		Date                        accessTime       = request.getAccessTime() != null ? request.getAccessTime() : new Date();
 		Set<RangerTagForEval>       tags             = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
-		List<PolicyEvaluatorForTag> policyEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getLikelyMatchPolicyEvaluators(tags, policyType, accessTime);
+		List<PolicyEvaluatorForTag> policyEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getLikelyMatchPolicyEvaluators(request, tags, policyType, accessTime);
 
 		if (CollectionUtils.isNotEmpty(policyEvaluators)) {
 			final boolean useTagPoliciesFromDefaultZone = !policyEngine.isResourceZoneAssociatedWithTagService(zoneName);
@@ -793,7 +793,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.error("policyRepository for zoneName:[" + zoneName + "],  serviceName:[" + policyEngine.getPolicyRepository().getServiceName() + "], policyVersion:[" + getPolicyVersion() + "] is null!! ERROR!");
 		} else {
 			Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(request.getContext());
-			List<PolicyEvaluatorForTag> tagPolicyEvaluators = policyEngine.getTagPolicyRepository() == null ? null : policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(tags, RangerPolicy.POLICY_TYPE_ACCESS, null);
+			List<PolicyEvaluatorForTag> tagPolicyEvaluators = policyEngine.getTagPolicyRepository() == null ? null : policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(request, tags, RangerPolicy.POLICY_TYPE_ACCESS, null);
 
 			if (CollectionUtils.isNotEmpty(tagPolicyEvaluators)) {
 
@@ -832,7 +832,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				}
 			}
 
-			List<RangerPolicyEvaluator> resourcePolicyEvaluators = matchedRepository.getLikelyMatchPolicyEvaluators(request.getResource(), RangerPolicy.POLICY_TYPE_ACCESS);
+			List<RangerPolicyEvaluator> resourcePolicyEvaluators = matchedRepository.getLikelyMatchPolicyEvaluators(request, RangerPolicy.POLICY_TYPE_ACCESS);
 
 			allEvaluators.addAll(resourcePolicyEvaluators);
 		}
@@ -854,7 +854,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 					for (RangerTagForEval tag : tags) {
 						RangerAccessRequest         tagEvalRequest = new RangerTagAccessRequest(tag, policyEngine.getTagPolicyRepository().getServiceDef(), request);
-						List<RangerPolicyEvaluator> evaluators     = policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(tagEvalRequest.getResource(), RangerPolicy.POLICY_TYPE_ACCESS);
+						List<RangerPolicyEvaluator> evaluators     = policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(tagEvalRequest, RangerPolicy.POLICY_TYPE_ACCESS);
 
 						for (RangerPolicyEvaluator evaluator : evaluators) {
 							String policyZoneName = evaluator.getPolicy().getZoneName();
@@ -883,7 +883,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				}
 			}
 
-			List<RangerPolicyEvaluator> resPolicyEvaluators = matchedRepository.getLikelyMatchPolicyEvaluators(request.getResource(), RangerPolicy.POLICY_TYPE_ACCESS);
+			List<RangerPolicyEvaluator> resPolicyEvaluators = matchedRepository.getLikelyMatchPolicyEvaluators(request, RangerPolicy.POLICY_TYPE_ACCESS);
 
 			if (CollectionUtils.isNotEmpty(resPolicyEvaluators)) {
 				for (RangerPolicyEvaluator evaluator : resPolicyEvaluators) {
@@ -905,7 +905,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		if (CollectionUtils.isNotEmpty(tags)) {
 			Date                        accessTime = request.getAccessTime() != null ? request.getAccessTime() : new Date();
-			List<PolicyEvaluatorForTag> evaluators = tagPolicyRepository.getLikelyMatchPolicyEvaluators(tags, RangerPolicy.POLICY_TYPE_AUDIT, accessTime);
+			List<PolicyEvaluatorForTag> evaluators = tagPolicyRepository.getLikelyMatchPolicyEvaluators(request, tags, RangerPolicy.POLICY_TYPE_AUDIT, accessTime);
 
 			if (CollectionUtils.isNotEmpty(evaluators)) {
 				for (PolicyEvaluatorForTag policyEvaluator : evaluators) {
@@ -943,7 +943,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		boolean                     ret        = false;
-		List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchAuditPolicyEvaluators(request.getResource());
+		List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchAuditPolicyEvaluators(request);
 
 		if (CollectionUtils.isNotEmpty(evaluators)) {
 			for (RangerPolicyEvaluator evaluator : evaluators) {

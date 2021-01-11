@@ -250,6 +250,24 @@ final class CaseInsensitiveURLRecursiveWildcardMatcher extends ResourceMatcher {
 
 }
 
+abstract class RecursiveMatcher extends ResourceMatcher {
+    final char levelSeparatorChar;
+    String valueWithoutSeparator;
+    String valueWithSeparator;
+
+    RecursiveMatcher(String value, char levelSeparatorChar) {
+        super(value);
+        this.levelSeparatorChar = levelSeparatorChar;
+    }
+
+    String getStringToCompare(String policyValue) {
+        if (StringUtils.isEmpty(policyValue)) {
+            return policyValue;
+        }
+        return (policyValue.lastIndexOf(levelSeparatorChar) == policyValue.length() - 1) ?
+                policyValue.substring(0, policyValue.length() - 1) : policyValue;
+    }
+}
 
 final class CaseSensitiveURLRecursiveMatcher extends RecursiveMatcher {
     CaseSensitiveURLRecursiveMatcher(String value, char levelSeparatorChar) {

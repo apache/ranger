@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
@@ -500,7 +501,10 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				LOG.debug("RangerAccessResource:[" + accessResource + "] created to represent service-resource[" + serviceResource + "] to find evaluators from trie-map");
 			}
 
-			List<RangerServiceResourceMatcher> oldMatchers = getEvaluators(accessResource, enrichedServiceTags);
+			RangerAccessRequestImpl  request = new RangerAccessRequestImpl();
+			request.setResource(accessResource);
+
+			List<RangerServiceResourceMatcher> oldMatchers = getEvaluators(request, enrichedServiceTags);
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Found [" + oldMatchers.size() + "] matchers for service-resource[" + serviceResource + "]");
@@ -621,7 +625,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			ret = enrichedServiceTags.getTagsForEmptyResourceAndAnyAccess();
 		} else {
 
-			final List<RangerServiceResourceMatcher> serviceResourceMatchers = getEvaluators(resource, enrichedServiceTags);
+			final List<RangerServiceResourceMatcher> serviceResourceMatchers = getEvaluators(request, enrichedServiceTags);
 
 			if (CollectionUtils.isNotEmpty(serviceResourceMatchers)) {
 
@@ -667,11 +671,13 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		return ret;
 	}
 
-	private List<RangerServiceResourceMatcher> getEvaluators(RangerAccessResource resource, EnrichedServiceTags enrichedServiceTags) {
+	private List<RangerServiceResourceMatcher> getEvaluators(RangerAccessRequest request, EnrichedServiceTags enrichedServiceTags) {
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerTagEnricher.getEvaluators(" + (resource != null ? resource.getAsString() : null) + ")");
+			LOG.debug("==> RangerTagEnricher.getEvaluators(request=" + request + ")");
 		}
 		List<RangerServiceResourceMatcher>  ret        = Collections.EMPTY_LIST;
+
+		RangerAccessResource                resource   = request.getResource();
 
 		final Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = enrichedServiceTags.getServiceResourceTrie();
 
@@ -696,7 +702,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 						continue;
 					}
 
-					Set<RangerServiceResourceMatcher> serviceResourceMatchersForResource = trie.getEvaluatorsForResource(resource.getValue(resourceName));
+					Set<RangerServiceResourceMatcher> serviceResourceMatchersForResource = trie.getEvaluatorsForResource(resource.getValue(resourceName), request.getResourceMatchingScope());
 					Set<RangerServiceResourceMatcher> inheritedResourceMatchers = trie.getInheritedEvaluators();
 
 					if (smallestList != null) {
@@ -754,7 +760,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerTagEnricher.getEvaluators(" + (resource != null ? resource.getAsString() : null) + "): evaluatorCount=" + ret.size());
+			LOG.debug("<== RangerTagEnricher.getEvaluators(request=" + request + "): evaluatorCount=" + ret.size());
 		}
 
 		return ret;

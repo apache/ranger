@@ -452,6 +452,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_aws() {
+		String[] awsTestResourceFiles = {"/policyengine/test_policyengine_aws.json"};
+
+		runTestsFromResourceFiles(awsTestResourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
