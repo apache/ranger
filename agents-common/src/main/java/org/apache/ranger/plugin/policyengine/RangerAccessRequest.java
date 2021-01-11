@@ -65,5 +65,5 @@ public interface RangerAccessRequest {
 
 	ResourceMatchingScope getResourceMatchingScope();
 
-	enum ResourceMatchingScope {SELF, SELF_OR_DESCENDANTS}
+	enum ResourceMatchingScope {SELF, SELF_OR_DESCENDANTS, SELF_OR_CHILD}
 }

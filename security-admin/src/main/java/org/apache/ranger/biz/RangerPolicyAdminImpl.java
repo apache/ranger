@@ -36,6 +36,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyRepository;
+import org.apache.ranger.plugin.policyengine.RangerTagAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerTagResource;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
@@ -116,7 +117,10 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             Set<String> roles = getRolesFromUserAndGroups(user, userGroups);
             Set<String> requestedAccesses = new HashSet<>(accessTypes);
 
-            for (RangerPolicyEvaluator evaluator : matchedRepository.getLikelyMatchPolicyEvaluators(resource, RangerPolicy.POLICY_TYPE_ACCESS)) {
+            RangerAccessRequestImpl request = new RangerAccessRequestImpl();
+            request.setResource(resource);
+
+            for (RangerPolicyEvaluator evaluator : matchedRepository.getLikelyMatchPolicyEvaluators(request, RangerPolicy.POLICY_TYPE_ACCESS)) {
 
                 Set<String> allowedAccesses = evaluator.getAllowedAccesses(resource, user, userGroups, roles, requestedAccesses);
                 if (CollectionUtils.isNotEmpty(allowedAccesses)) {
@@ -415,7 +419,8 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
                     for (RangerTagForEval tag : tags) {
                         RangerAccessResource        tagResource      = new RangerTagResource(tag.getType(), policyEngine.getTagPolicyRepository().getServiceDef());
-                        List<RangerPolicyEvaluator> likelyEvaluators = policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(tagResource);
+                        RangerAccessRequest         tagRequest       = new RangerTagAccessRequest(tag, policyEngine.getTagPolicyRepository().getServiceDef(), request);
+                        List<RangerPolicyEvaluator> likelyEvaluators = policyEngine.getTagPolicyRepository().getLikelyMatchPolicyEvaluators(tagRequest);
 
                         for (RangerPolicyEvaluator evaluator : likelyEvaluators) {
                             String policyZoneName = evaluator.getPolicy().getZoneName();
@@ -452,7 +457,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
 
             if (policyEngine.hasResourcePolicies(matchedRepository)) {
-                List<RangerPolicyEvaluator> likelyEvaluators = matchedRepository.getLikelyMatchPolicyEvaluators(request.getResource());
+                List<RangerPolicyEvaluator> likelyEvaluators = matchedRepository.getLikelyMatchPolicyEvaluators(request);
 
                 for (RangerPolicyEvaluator evaluator : likelyEvaluators) {
                     RangerPolicyResourceMatcher matcher = evaluator.getPolicyResourceMatcher();

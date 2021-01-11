@@ -676,7 +676,7 @@ public class RangerPolicyRepository {
 
     RangerPolicyEngineOptions getOptions() { return options; }
 
-    List<PolicyEvaluatorForTag> getLikelyMatchPolicyEvaluators(Set<RangerTagForEval> tags, int policyType, Date accessTime) {
+    List<PolicyEvaluatorForTag> getLikelyMatchPolicyEvaluators(RangerAccessRequest request, Set<RangerTagForEval> tags, int policyType, Date accessTime) {
         List<PolicyEvaluatorForTag> ret = Collections.EMPTY_LIST;
 
         if (CollectionUtils.isNotEmpty(tags) && getServiceDef() != null) {
@@ -685,8 +685,8 @@ public class RangerPolicyRepository {
 
             for (RangerTagForEval tag : tags) {
             	if (tag.isApplicable(accessTime)) {
-		            RangerAccessResource resource = new RangerTagResource(tag.getType(), getServiceDef());
-		            List<RangerPolicyEvaluator> evaluators = getLikelyMatchPolicyEvaluators(resource, policyType);
+		            RangerAccessRequest  tagRequest  = new RangerTagAccessRequest(tag, getServiceDef(), request);
+		            List<RangerPolicyEvaluator> evaluators = getLikelyMatchPolicyEvaluators(tagRequest, policyType);
 
 		            if (CollectionUtils.isNotEmpty(evaluators)) {
 			            for (RangerPolicyEvaluator evaluator : evaluators) {
@@ -723,11 +723,11 @@ public class RangerPolicyRepository {
         return ret;
     }
 
-    public List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(RangerAccessResource resource) {
+    public List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(RangerAccessRequest request) {
         List<RangerPolicyEvaluator> ret = new ArrayList<>();
 
         for (int policyType : RangerPolicy.POLICY_TYPES) {
-            List<RangerPolicyEvaluator> evaluators = getLikelyMatchPolicyEvaluators(resource, policyType);
+            List<RangerPolicyEvaluator> evaluators = getLikelyMatchPolicyEvaluators(request, policyType);
             if (CollectionUtils.isNotEmpty(evaluators)) {
                 ret.addAll(evaluators);
             }
@@ -735,16 +735,16 @@ public class RangerPolicyRepository {
         return ret;
     }
 
-    public List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(RangerAccessResource resource, int policyType) {
+    public List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(RangerAccessRequest request, int policyType) {
         switch (policyType) {
             case RangerPolicy.POLICY_TYPE_ACCESS:
-                return getLikelyMatchAccessPolicyEvaluators(resource);
+                return getLikelyMatchAccessPolicyEvaluators(request);
             case RangerPolicy.POLICY_TYPE_DATAMASK:
-                return getLikelyMatchDataMaskPolicyEvaluators(resource);
+                return getLikelyMatchDataMaskPolicyEvaluators(request);
             case RangerPolicy.POLICY_TYPE_ROWFILTER:
-                return getLikelyMatchRowFilterPolicyEvaluators(resource);
+                return getLikelyMatchRowFilterPolicyEvaluators(request);
             case RangerPolicy.POLICY_TYPE_AUDIT:
-                return getLikelyMatchAuditPolicyEvaluators(resource);
+                return getLikelyMatchAuditPolicyEvaluators(request);
             default:
                 return Collections.EMPTY_LIST;
         }
@@ -757,32 +757,38 @@ public class RangerPolicyRepository {
         return policyEvaluatorsMap.get(id);
     }
 
-    private List<RangerPolicyEvaluator> getLikelyMatchAccessPolicyEvaluators(RangerAccessResource resource) {
-       String resourceStr = resource == null ? null : resource.getAsString();
-
-       return policyResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getPolicyEvaluators() : getLikelyMatchPolicyEvaluators(policyResourceTrie, resource);
-    }
-
-    private List<RangerPolicyEvaluator> getLikelyMatchDataMaskPolicyEvaluators(RangerAccessResource resource) {
+    private List<RangerPolicyEvaluator> getLikelyMatchAccessPolicyEvaluators(RangerAccessRequest request) {
+        RangerAccessResource resource = request.getResource();
         String resourceStr = resource == null ? null : resource.getAsString();
 
-        return dataMaskResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getDataMaskPolicyEvaluators() : getLikelyMatchPolicyEvaluators(dataMaskResourceTrie, resource);
+        return policyResourceTrie == null || StringUtils.isEmpty(resourceStr) ? getPolicyEvaluators() : getLikelyMatchPolicyEvaluators(policyResourceTrie, request);
     }
 
-    private List<RangerPolicyEvaluator> getLikelyMatchRowFilterPolicyEvaluators(RangerAccessResource resource) {
+    private List<RangerPolicyEvaluator> getLikelyMatchDataMaskPolicyEvaluators(RangerAccessRequest request) {
+        RangerAccessResource resource = request.getResource();
         String resourceStr = resource == null ? null : resource.getAsString();
 
-        return rowFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getRowFilterPolicyEvaluators() : getLikelyMatchPolicyEvaluators(rowFilterResourceTrie, resource);
+        return dataMaskResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getDataMaskPolicyEvaluators() : getLikelyMatchPolicyEvaluators(dataMaskResourceTrie, request);
     }
 
-    List<RangerPolicyEvaluator> getLikelyMatchAuditPolicyEvaluators(RangerAccessResource resource) {
+    private List<RangerPolicyEvaluator> getLikelyMatchRowFilterPolicyEvaluators(RangerAccessRequest request) {
+        RangerAccessResource resource = request.getResource();
         String resourceStr = resource == null ? null : resource.getAsString();
 
-        return auditFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getAuditPolicyEvaluators() : getLikelyMatchPolicyEvaluators(auditFilterResourceTrie, resource);
+        return rowFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getRowFilterPolicyEvaluators() : getLikelyMatchPolicyEvaluators(rowFilterResourceTrie, request);
     }
 
-    private List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessResource resource) {
+    List<RangerPolicyEvaluator> getLikelyMatchAuditPolicyEvaluators(RangerAccessRequest request) {
+        RangerAccessResource resource = request.getResource();
+        String resourceStr = resource == null ? null : resource.getAsString();
+
+        return auditFilterResourceTrie == null || StringUtils.isEmpty(resourceStr)  ? getAuditPolicyEvaluators() : getLikelyMatchPolicyEvaluators(auditFilterResourceTrie, request);
+    }
+
+    private List<RangerPolicyEvaluator> getLikelyMatchPolicyEvaluators(Map<String, RangerResourceTrie> resourceTrie, RangerAccessRequest request) {
         List<RangerPolicyEvaluator> ret          = Collections.EMPTY_LIST;
+
+        RangerAccessResource              resource = request.getResource();
 
         RangerPerfTracer perf = null;
 
@@ -802,7 +808,7 @@ public class RangerPolicyRepository {
                     continue;
                 }
 
-                Set<RangerPolicyEvaluator> serviceResourceMatchersForResource = trie.getEvaluatorsForResource(resource.getValue(resourceName));
+                Set<RangerPolicyEvaluator> serviceResourceMatchersForResource = trie.getEvaluatorsForResource(resource.getValue(resourceName), request.getResourceMatchingScope());
                 Set<RangerPolicyEvaluator> inheritedResourceMatchers = trie.getInheritedEvaluators();
 
                 if (smallestList != null) {

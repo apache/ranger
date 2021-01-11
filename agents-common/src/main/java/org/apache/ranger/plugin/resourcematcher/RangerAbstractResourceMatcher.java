@@ -47,6 +47,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	public final static String OPTION_TOKEN_DELIMITER_END    = "tokenDelimiterEnd";
 	public final static String OPTION_TOKEN_DELIMITER_ESCAPE = "tokenDelimiterEscape";
 	public final static String OPTION_TOKEN_DELIMITER_PREFIX = "tokenDelimiterPrefix";
+	public final static String OPTION_SIMULATE_HIERARCHY     = "simulateHierarchy";
 
 	protected RangerResourceDef    resourceDef;
 	protected RangerPolicyResource policyResource;
@@ -64,6 +65,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	protected char    endDelimiterChar   = '}';
 	protected char    escapeChar         = '\\';
 	protected String  tokenPrefix        = "";
+	protected boolean optSimulateHierarchy;
 
 	@Override
 	public void setResourceDef(RangerResourceDef resourceDef) {
@@ -124,6 +126,8 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			}
 		}
 
+		optSimulateHierarchy = getOptionSimulateHierarchy(options);
+
 		resourceMatchers = buildResourceMatchers();
 		isMatchAny = resourceMatchers == null || CollectionUtils.isEmpty(resourceMatchers.getResourceMatchers());
 
@@ -165,6 +169,9 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 	public static String getOptionDelimiterPrefix(Map<String, String> options) {
 		return ServiceDefUtil.getOption(options, OPTION_TOKEN_DELIMITER_PREFIX, "");
+	}
+	public static boolean getOptionSimulateHierarchy(Map<String, String> options) {
+		return ServiceDefUtil.getBooleanOption(options, OPTION_SIMULATE_HIERARCHY, false);
 	}
 	protected ResourceMatcherWrapper buildResourceMatchers() {
 		List<ResourceMatcher> resourceMatchers = new ArrayList<>();
