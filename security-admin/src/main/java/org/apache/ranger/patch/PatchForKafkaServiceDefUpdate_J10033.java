@@ -17,6 +17,7 @@
 
 package org.apache.ranger.patch;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.JsonUtils;
@@ -266,7 +267,7 @@ public class PatchForKafkaServiceDefUpdate_J10033 extends BaseLoader {
 
 		Long xServiceDefId = xXServiceDefObj.getId();
 		List<XXService> xxServices = daoMgr.getXXService().findByServiceDefId(xServiceDefId);
-
+		
 		for (XXService xxService : xxServices) {
 			int resourceMapOrder = 0;
 			XXPolicy xxPolicy = new XXPolicy();
@@ -284,105 +285,133 @@ public class PatchForKafkaServiceDefUpdate_J10033 extends BaseLoader {
 			xxPolicy.setPolicyText(JsonUtils.objectToJson(rangerPolicy));
 			xxPolicy.setResourceSignature(rangerPolicy.getResourceSignature());
 			xxPolicy.setZoneId(1L);
-			XXPolicy createdPolicy = daoMgr.getXXPolicy().create(xxPolicy);
+			boolean policyExist = false;
+			try {
+				List<RangerPolicy> rangerpolicies = svcDBStore.getPoliciesByResourceSignature(xxService.getName(),
+						rangerPolicy.getResourceSignature(), true);
+				if (CollectionUtils.isNotEmpty(rangerpolicies)) {
+					for (RangerPolicy rPolicy : rangerpolicies) {
+						if (rangerPolicy != null) {
+							if (logger.isDebugEnabled()) {
+								logger.debug("print Policy: " + rPolicy);
+								logger.debug("policy found with resource " + rPolicy.getResources()
+										+ " and ResourceSignature " + rPolicy.getResourceSignature()
+										+ " service name : " + rPolicy.getService());
+							}
 
-			XXPolicyItem xxPolicyItem = new XXPolicyItem();
-			xxPolicyItem.setIsEnabled(Boolean.TRUE);
-			xxPolicyItem.setDelegateAdmin(Boolean.TRUE);
-			xxPolicyItem.setItemType(0);
-			xxPolicyItem.setOrder(0);
-			xxPolicyItem.setAddedByUserId(currentUserId);
-			xxPolicyItem.setUpdatedByUserId(currentUserId);
-			xxPolicyItem.setPolicyId(createdPolicy.getId());
-			XXPolicyItem createdXXPolicyItem = daoMgr.getXXPolicyItem().create(xxPolicyItem);
+							if (rPolicy.getResourceSignature().equalsIgnoreCase(rangerPolicy.getResourceSignature())) {
+								policyExist = true;
+							}
 
-			List<String> accessTypes = getAccessTypes();
-			for (int i = 0; i < accessTypes.size(); i++) {
-				XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef().findByNameAndServiceId(accessTypes.get(i),
-						xxPolicy.getService());
-				if (xAccTypeDef == null) {
-					throw new RuntimeException(accessTypes.get(i) + ": is not a valid access-type. policy='"
-							+ xxPolicy.getName() + "' service='" + xxPolicy.getService() + "'");
+						}
+					}
 				}
-				XXPolicyItemAccess xPolItemAcc = new XXPolicyItemAccess();
-				xPolItemAcc.setIsAllowed(Boolean.TRUE);
-				xPolItemAcc.setType(xAccTypeDef.getId());
-				xPolItemAcc.setOrder(i);
-				xPolItemAcc.setAddedByUserId(currentUserId);
-				xPolItemAcc.setUpdatedByUserId(currentUserId);
-				xPolItemAcc.setPolicyitemid(createdXXPolicyItem.getId());
-				daoMgr.getXXPolicyItemAccess().create(xPolItemAcc);
+			} catch (Exception ex) {
+				logger.error(" Error while getting policy using Resource Signature, Servie Name and policy enabled flag" + ex);
 			}
+			
+			if(!policyExist) {
+				XXPolicy createdPolicy = daoMgr.getXXPolicy().create(xxPolicy);
 
-			for (int i = 0; i < DEFAULT_POLICY_USERS.size(); i++) {
-				String user = DEFAULT_POLICY_USERS.get(i);
-				if (StringUtils.isBlank(user)) {
-					continue;
+				XXPolicyItem xxPolicyItem = new XXPolicyItem();
+				xxPolicyItem.setIsEnabled(Boolean.TRUE);
+				xxPolicyItem.setDelegateAdmin(Boolean.TRUE);
+				xxPolicyItem.setItemType(0);
+				xxPolicyItem.setOrder(0);
+				xxPolicyItem.setAddedByUserId(currentUserId);
+				xxPolicyItem.setUpdatedByUserId(currentUserId);
+				xxPolicyItem.setPolicyId(createdPolicy.getId());
+				XXPolicyItem createdXXPolicyItem = daoMgr.getXXPolicyItem().create(xxPolicyItem);
+
+				List<String> accessTypes = getAccessTypes();
+				for (int i = 0; i < accessTypes.size(); i++) {
+					XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef().findByNameAndServiceId(accessTypes.get(i),
+							xxPolicy.getService());
+					if (xAccTypeDef == null) {
+						throw new RuntimeException(accessTypes.get(i) + ": is not a valid access-type. policy='"
+								+ xxPolicy.getName() + "' service='" + xxPolicy.getService() + "'");
+					}
+					XXPolicyItemAccess xPolItemAcc = new XXPolicyItemAccess();
+					xPolItemAcc.setIsAllowed(Boolean.TRUE);
+					xPolItemAcc.setType(xAccTypeDef.getId());
+					xPolItemAcc.setOrder(i);
+					xPolItemAcc.setAddedByUserId(currentUserId);
+					xPolItemAcc.setUpdatedByUserId(currentUserId);
+					xPolItemAcc.setPolicyitemid(createdXXPolicyItem.getId());
+					daoMgr.getXXPolicyItemAccess().create(xPolItemAcc);
 				}
-				XXUser xxUser = daoMgr.getXXUser().findByUserName(user);
-				if (xxUser == null) {
-					throw new RuntimeException(user + ": user does not exist. policy='" + xxPolicy.getName()
-							+ "' service='" + xxPolicy.getService() + "' user='" + user + "'");
+
+				for (int i = 0; i < DEFAULT_POLICY_USERS.size(); i++) {
+					String user = DEFAULT_POLICY_USERS.get(i);
+					if (StringUtils.isBlank(user)) {
+						continue;
+					}
+					XXUser xxUser = daoMgr.getXXUser().findByUserName(user);
+					if (xxUser == null) {
+						throw new RuntimeException(user + ": user does not exist. policy='" + xxPolicy.getName()
+								+ "' service='" + xxPolicy.getService() + "' user='" + user + "'");
+					}
+					XXPolicyItemUserPerm xUserPerm = new XXPolicyItemUserPerm();
+					xUserPerm.setUserId(xxUser.getId());
+					xUserPerm.setPolicyItemId(createdXXPolicyItem.getId());
+					xUserPerm.setOrder(i);
+					xUserPerm.setAddedByUserId(currentUserId);
+					xUserPerm.setUpdatedByUserId(currentUserId);
+					daoMgr.getXXPolicyItemUserPerm().create(xUserPerm);
 				}
-				XXPolicyItemUserPerm xUserPerm = new XXPolicyItemUserPerm();
-				xUserPerm.setUserId(xxUser.getId());
-				xUserPerm.setPolicyItemId(createdXXPolicyItem.getId());
-				xUserPerm.setOrder(i);
-				xUserPerm.setAddedByUserId(currentUserId);
-				xUserPerm.setUpdatedByUserId(currentUserId);
-				daoMgr.getXXPolicyItemUserPerm().create(xUserPerm);
+
+				for (int i = 0; i < DEFAULT_POLICY_GROUP.size(); i++) {
+					String group = DEFAULT_POLICY_GROUP.get(i);
+					if (StringUtils.isBlank(group)) {
+						continue;
+					}
+					XXGroup xxGroup = daoMgr.getXXGroup().findByGroupName(group);
+					if (xxGroup == null) {
+						throw new RuntimeException(group + ": group does not exist. policy='" + xxPolicy.getName()
+								+ "' service='" + xxPolicy.getService() + "' group='" + group + "'");
+					}
+					XXPolicyItemGroupPerm xGroupPerm = new XXPolicyItemGroupPerm();
+					xGroupPerm.setGroupId(xxGroup.getId());
+					xGroupPerm.setPolicyItemId(createdXXPolicyItem.getId());
+					xGroupPerm.setOrder(i);
+					xGroupPerm.setAddedByUserId(currentUserId);
+					xGroupPerm.setUpdatedByUserId(currentUserId);
+					daoMgr.getXXPolicyItemGroupPerm().create(xGroupPerm);
+				}
+
+
+				String policyResourceName = CONSUMERGROUP_RESOURCE_NAME;
+
+				XXResourceDef xResDef = daoMgr.getXXResourceDef().findByNameAndPolicyId(policyResourceName,
+						createdPolicy.getId());
+				if (xResDef == null) {
+					throw new RuntimeException(policyResourceName + ": is not a valid resource-type. policy='"
+							+ createdPolicy.getName() + "' service='" + createdPolicy.getService() + "'");
+				}
+
+				XXPolicyResource xPolRes = new XXPolicyResource();
+
+				xPolRes.setAddedByUserId(currentUserId);
+				xPolRes.setUpdatedByUserId(currentUserId);
+				xPolRes.setIsExcludes(Boolean.FALSE);
+				xPolRes.setIsRecursive(Boolean.FALSE);
+				xPolRes.setPolicyId(createdPolicy.getId());
+				xPolRes.setResDefId(xResDef.getId());
+				xPolRes = daoMgr.getXXPolicyResource().create(xPolRes);
+
+				XXPolicyResourceMap xPolResMap = new XXPolicyResourceMap();
+				xPolResMap.setResourceId(xPolRes.getId());
+				xPolResMap.setValue("*");
+				xPolResMap.setOrder(resourceMapOrder);
+				xPolResMap.setAddedByUserId(currentUserId);
+				xPolResMap.setUpdatedByUserId(currentUserId);
+				daoMgr.getXXPolicyResourceMap().create(xPolResMap);
+				resourceMapOrder++;
+				logger.info("Creating policy for service id : " + xxService.getId());
 			}
-
-			for (int i = 0; i < DEFAULT_POLICY_GROUP.size(); i++) {
-				String group = DEFAULT_POLICY_GROUP.get(i);
-				if (StringUtils.isBlank(group)) {
-					continue;
-				}
-				XXGroup xxGroup = daoMgr.getXXGroup().findByGroupName(group);
-				if (xxGroup == null) {
-					throw new RuntimeException(group + ": group does not exist. policy='" + xxPolicy.getName()
-							+ "' service='" + xxPolicy.getService() + "' group='" + group + "'");
-				}
-				XXPolicyItemGroupPerm xGroupPerm = new XXPolicyItemGroupPerm();
-				xGroupPerm.setGroupId(xxGroup.getId());
-				xGroupPerm.setPolicyItemId(createdXXPolicyItem.getId());
-				xGroupPerm.setOrder(i);
-				xGroupPerm.setAddedByUserId(currentUserId);
-				xGroupPerm.setUpdatedByUserId(currentUserId);
-				daoMgr.getXXPolicyItemGroupPerm().create(xGroupPerm);
-			}
-
-
-			String policyResourceName = CONSUMERGROUP_RESOURCE_NAME;
-
-			XXResourceDef xResDef = daoMgr.getXXResourceDef().findByNameAndPolicyId(policyResourceName,
-					createdPolicy.getId());
-			if (xResDef == null) {
-				throw new RuntimeException(policyResourceName + ": is not a valid resource-type. policy='"
-						+ createdPolicy.getName() + "' service='" + createdPolicy.getService() + "'");
-			}
-
-			XXPolicyResource xPolRes = new XXPolicyResource();
-
-			xPolRes.setAddedByUserId(currentUserId);
-			xPolRes.setUpdatedByUserId(currentUserId);
-			xPolRes.setIsExcludes(Boolean.FALSE);
-			xPolRes.setIsRecursive(Boolean.FALSE);
-			xPolRes.setPolicyId(createdPolicy.getId());
-			xPolRes.setResDefId(xResDef.getId());
-			xPolRes = daoMgr.getXXPolicyResource().create(xPolRes);
-
-			XXPolicyResourceMap xPolResMap = new XXPolicyResourceMap();
-			xPolResMap.setResourceId(xPolRes.getId());
-			xPolResMap.setValue("*");
-			xPolResMap.setOrder(resourceMapOrder);
-			xPolResMap.setAddedByUserId(currentUserId);
-			xPolResMap.setUpdatedByUserId(currentUserId);
-			daoMgr.getXXPolicyResourceMap().create(xPolResMap);
-			resourceMapOrder++;
-			logger.info("Creating policy for service id : " + xxService.getId());
+			logger.info("<== createDefaultPolicyForNewResources ");
 		}
-		logger.info("<== createDefaultPolicyForNewResources ");
+
 	}
 
 
