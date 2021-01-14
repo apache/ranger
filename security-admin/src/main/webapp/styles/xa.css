@@ -1779,7 +1779,7 @@ margin-bottom: 5px;
   top: 7px;
 }
 .expanded-contant .include-toggle{
-  margin-left: 320px;
+  margin-left: 18.4vw;
   margin-top: -29px;
   width:80px;
   position: relative;
@@ -2197,23 +2197,23 @@ input.textFiledInputPadding ~ span {
     font-style: italic;
 }
 .recursive-toggle-1 {
-	margin-left: 385px;
+	margin-left: 23vw;
 	margin-top: -15px;
 	width:110px;
 }
 .recursive-toggle-2 {
-	margin-left: 520px;
+	margin-left: 30vw;
 	margin-top: -13px;
 	width:110px;
 }
 .expanded-contant .recursive-toggle-1{
-  margin-left: 320px;
+  margin-left: 18.4vw;
   margin-top: -15px;
   width:110px;
 }
 .expanded-contant .recursive-toggle-2{
-  margin-left: 460px;
-  margin-top: -15px;
+  margin-left: 25.4vw;
+  margin-top: -17px;
   width:110px;
 }
 .recursive-toggle-hdfs-1{
@@ -2221,12 +2221,18 @@ input.textFiledInputPadding ~ span {
 	margin-top: -29px;
 }
 .recursive-toggle-hdfs-2{
-	margin-left: 443px;
+	margin-left: 30vw;
 	margin-top: -22px;
 }
+.expanded-contant .recursive-toggle-hdfs-2{
+  margin-left: 25.4vw;
+}
 .include-toggle-1{
-  margin-left: 348px;
+  margin-left: 23vw;
   margin-top: -29px;
+}
+.expanded-contant .include-toggle-1{
+  margin-left: 18.4vw;
 }
 .subgridTable{
         width : 25% !important;
@@ -4061,7 +4067,7 @@ button.btn.btn-secondary.dropdown-toggle {
 }
 */
 .ranger-policy .form-group.field-isEnabled .policy-enable-disable{
-    margin-left: 36vw;
+    margin-left: 38vw;
     margin-top: -75px;
     width: 100px
 }
@@ -4071,7 +4077,7 @@ button.btn.btn-secondary.dropdown-toggle {
 }
 
 .ranger-policy .form-group.field-policyPriority .policy-priority{
-    margin-left: 43vw;
+    margin-left: 45vw;
     margin-top: -80px;
     width: 100px
 }
@@ -4079,7 +4085,8 @@ button.btn.btn-secondary.dropdown-toggle {
   margin-left: 37vw;
 }
 
-.field-path .form-control.rosource-boder {
+.field-path .form-control.rosource-boder
+.field-relativepath .form-control.rosource-boder{
     width: 100%;
     margin: 0;
     padding-left: 0;
@@ -4380,7 +4387,7 @@ ul.tagit input[type="text"]{
 }
 
 .include-toggle {
-    margin-left: 21vw;
+    margin-left: 23vw;
 }
 .policy-form [fieldclass="resorces-css"]{
   margin-bottom:40px;
@@ -4415,12 +4422,33 @@ ul.tagit input[type="text"]{
     margin-top: -30px;
 }
 
+.policy-form .form-group.field-relativepath[fieldclass="resorces-with-label-css"] .ui-widget.ui-widget-content {
+    margin-top: -30px;
+}
+
 .form-group.field-path[fieldclass="resorces-with-label-css"]  .recursive-toggle-hdfs-1 {
-    margin-left: 21vw;
+    margin-left: 23.4vw;
     margin-top: -20px;
 }
 
+.form-group.field-relativepath[fieldclass="resorces-with-label-css"]  .recursive-toggle-hdfs-1 {
+    margin-left: 23.4vw;
+    margin-top: -20px;
+}
+
+.expanded-contant .form-group.field-path[fieldclass="resorces-with-label-css"]  .recursive-toggle-hdfs-1 {
+    margin-left: 18.4vw;
+}
+
+.expanded-contant .form-group.field-relativepath[fieldclass="resorces-with-label-css"]  .recursive-toggle-hdfs-1 {
+    margin-left: 18.4vw;
+}
+
 .form-group.field-path[fieldclass="resorces-with-label-css"]{
+  margin-bottom:-20px;
+}
+
+.form-group.field-relativepath[fieldclass="resorces-with-label-css"]{
   margin-bottom:-20px;
 }
 
@@ -4428,7 +4456,15 @@ ul.tagit input[type="text"]{
       margin-bottom: -10px;
 }
 
+.form-group.field-relativepath[fieldclass="resorces-with-label-css"] .form-control.rosource-boder-path{
+      margin-bottom: -10px;
+}
+
 .form-group.field-path[fieldclass="resorces-with-label-css"] {
+    margin-bottom: 10px;
+}
+
+.form-group.field-relativepath[fieldclass="resorces-with-label-css"] {
     margin-bottom: 10px;
 }
 
@@ -4480,12 +4516,12 @@ input.textFiledInputPadding:disabled {
   margin-left: -12px !important;
 }
 
-@media (min-width: 2000px){
+/*@media (min-width: 2000px){
   .expanded-contant .include-toggle{
     margin-left:400px;
   }
   .expanded-contant .recursive-toggle-2{
-    margin-left:500px;
+    margin-left:30vw;
   }
   .recursive-toggle-2 {
     margin-left:600px;
@@ -4497,7 +4533,7 @@ input.textFiledInputPadding:disabled {
     margin-left:500px;
   }
   .expanded-contant .recursive-toggle-2{
-    margin-left:600px;
+    margin-left:30vw;
   }
   .recursive-toggle-2 {
     margin-left:700px;
@@ -4509,12 +4545,12 @@ input.textFiledInputPadding:disabled {
     margin-left:550px;
   }
   .expanded-contant .recursive-toggle-2{
-    margin-left:650px;
+    margin-left:30vw;
   }
   .recursive-toggle-2 {
     margin-left:750px;
   }
-}
+}*/
 
 .backgrid th:not(.renderable), .backgrid td:not(.renderable){
     display: none;
