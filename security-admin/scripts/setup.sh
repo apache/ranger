@@ -430,6 +430,7 @@ create_rollback_point() {
 
 copy_db_connector(){
 	log "[I] Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib ";
+	mkdir -p $app_home/WEB-INF/lib
         cp -f $SQL_CONNECTOR_JAR $app_home/WEB-INF/lib
 	check_ret_status $? "Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib failed"
 	log "[I] Copying ${DB_FLAVOR} Connector to $app_home/WEB-INF/lib DONE";
