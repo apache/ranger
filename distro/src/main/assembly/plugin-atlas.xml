@@ -62,7 +62,7 @@
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-          <include>org.apache.solr:solr-solrj</include>
+          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>org.codehaus.jackson:jackson-core-asl</include>
           <include>org.codehaus.jackson:jackson-mapper-asl</include>
           <include>org.codehaus.jackson:jackson-xc</include>

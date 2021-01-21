@@ -72,7 +72,7 @@
 					<include>org.codehaus.jackson:jackson-jaxrs</include>
 					<include>org.codehaus.jackson:jackson-mapper-asl</include>
 					<include>org.codehaus.jackson:jackson-xc</include>
-					<include>org.apache.solr:solr-solrj</include>
+					<include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
 					<include>commons-codec:commons-codec</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>com.fasterxml.woodstox:woodstox-core</include>
