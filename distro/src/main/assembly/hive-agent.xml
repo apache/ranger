@@ -59,7 +59,7 @@
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.noggit:noggit:jar:${noggit.version}</include>
-          <include>org.apache.solr:solr-solrj</include>
+          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
