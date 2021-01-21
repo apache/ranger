@@ -388,7 +388,6 @@ public class EmbeddedServer {
 		server.getConnector().setAllowTrace(Boolean.valueOf(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.allowTrace", "false")));
 		server.getConnector().setAsyncTimeout(EmbeddedServerUtil.getLongConfig("ranger.service.http.connector.attrib.asyncTimeout", 10000L));
 		server.getConnector().setEnableLookups(Boolean.valueOf(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.enableLookups", "false")));
-		server.getConnector().setMaxHeaderCount(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxHeaderCount", 100));
 		server.getConnector().setMaxParameterCount(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxParameterCount", 10000));
 		server.getConnector().setMaxPostSize(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxPostSize", 2097152));
 		server.getConnector().setMaxSavePostSize(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxSavePostSize", 4096));
@@ -396,6 +395,7 @@ public class EmbeddedServer {
 		server.getConnector().setURIEncoding(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.URIEncoding", "UTF-8"));
 		server.getConnector().setXpoweredBy(false);
 		server.getConnector().setAttribute("server", "Apache Ranger");
+		server.getConnector().setProperty("sendReasonPhrase",EmbeddedServerUtil.getConfig("ranger.service.http.connector.property.sendReasonPhrase", "true"));
 		Iterator<Object> iterator = EmbeddedServerUtil.getRangerConfigProperties().keySet().iterator();
 		String key = null;
 		String property = null;

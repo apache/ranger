@@ -189,7 +189,7 @@
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.0</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
-        <tomcat.embed.version>7.0.105</tomcat.embed.version>
+        <tomcat.embed.version>8.5.61</tomcat.embed.version>
         <testng.version>6.9.4</testng.version>
         <velocity.version>1.7</velocity.version>
         <zookeeper.version>3.4.14</zookeeper.version>
