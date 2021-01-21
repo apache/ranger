@@ -67,7 +67,6 @@
           <include>com.google.code.gson:gson</include>
           <include>org.eclipse.persistence:eclipselink</include>
           <include>org.eclipse.persistence:javax.persistence</include>
-          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>com.sun.jersey:jersey-bundle</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>commons-io:commons-io</include>
@@ -80,7 +79,7 @@
           <include>org.codehaus.jackson:jackson-jaxrs</include>
           <include>org.codehaus.jackson:jackson-mapper-asl</include>
           <include>org.codehaus.jackson:jackson-xc</include>
-          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+          <include>org.apache.solr:solr-solrj</include>
           <include>commons-codec:commons-codec</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>

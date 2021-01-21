@@ -37,7 +37,6 @@
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.eclipse.persistence:eclipselink</include>
-                    <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.googlecode.log4jdbc:log4jdbc</include>
                     <include>log4j:log4j</include>
@@ -194,7 +193,7 @@
                     <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
-                    <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+                    <include>org.apache.solr:solr-solrj</include>
                     <include>org.apache.ranger:ranger-plugins-common</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
@@ -271,7 +270,7 @@
                             <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                             <include>org.noggit:noggit:jar:${noggit.version}</include>
                             <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-                            <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+                            <include>org.apache.solr:solr-solrj</include>
                             <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                             <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                             <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
