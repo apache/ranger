@@ -183,8 +183,13 @@ public class RangerPolicyDeltaUtil {
             boolean isPolicyDeltasExist = CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) || isPolicyDeltasExistInSecurityZones;
 
             if (isPoliciesExist && isPolicyDeltasExist) {
-                LOG.warn("ServicePolicies contain both policies and policy-deltas!!");
+                LOG.warn("ServicePolicies contain both policies and policy-deltas!! Cannot build policy-engine from these servicePolicies. Please check server-side code!");
+                LOG.warn("Downloaded ServicePolicies are [" + servicePolicies + "]");
                 ret = null;
+            } else if (!isPoliciesExist && !isPolicyDeltasExist) {
+                LOG.warn("ServicePolicies do not contain any policies or policy-deltas!! There are no material changes in the policies. There may be service changes!");
+                LOG.warn("Downloaded ServicePolicies are [" + servicePolicies + "]");
+                ret = false;
             } else {
                 ret = isPolicyDeltasExist;
             }
