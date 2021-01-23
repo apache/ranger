@@ -212,7 +212,7 @@ public class RangerBasePlugin {
 				Boolean hasPolicyDeltas = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
 
 				if (hasPolicyDeltas == null) {
-					LOG.warn("Downloaded policies are internally inconsistent!! [" + policies + "]. Please check server-side code! Keeping old policy-engine!");
+					LOG.warn("Downloaded policies do not require policy change !! [" + policies + "]. Keeping old policy-engine!");
 					isNewEngineNeeded = false;
 				} else {
 					if (hasPolicyDeltas.equals(Boolean.TRUE)) {
@@ -230,6 +230,9 @@ public class RangerBasePlugin {
 						}
 					} else {
 						usePolicyDeltas = false;
+						if (policies.getPolicies() == null) {
+							policies.setPolicies(new ArrayList<>());
+						}
 					}
 				}
 			}

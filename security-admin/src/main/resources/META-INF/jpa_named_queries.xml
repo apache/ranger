@@ -1555,7 +1555,7 @@
     <named-query name="XXPolicyChangeLog.findSinceVersion">
         <query>
             select obj.id, obj.changeType, obj.policyVersion, obj.serviceType, obj.policyType, obj.policyId, obj.zoneName from
-            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.policyVersion >= :version order by
+            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.serviceType != 'tag' and obj.policyVersion >= :version order by
             obj.policyVersion
         </query>
     </named-query>
@@ -1563,7 +1563,7 @@
     <named-query name="XXPolicyChangeLog.findGreaterThan">
         <query>
             select obj.id, obj.changeType, obj.policyVersion, obj.serviceType, obj.policyType, obj.policyId, obj.zoneName from
-            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.id > :id order by obj.id
+            XXPolicyChangeLog obj where obj.serviceId = :serviceId and obj.serviceType = 'tag' and obj.id > :id order by obj.id
         </query>
     </named-query>
 
