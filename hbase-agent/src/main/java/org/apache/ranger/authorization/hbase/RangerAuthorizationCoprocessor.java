@@ -70,6 +70,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.AccessResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
@@ -1190,7 +1191,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> postGetTableNames(count(descriptors)=%s, regex=%s)", descriptors == null ? 0 : descriptors.size(), regex));
 		}
-		checkAccess(ctx, "getTableNames", descriptors, regex);
+		checkGetTableInfoAccess(ctx, "getTableNames", descriptors, regex, RangerPolicyEngine.ANY_ACCESS);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("<== postGetTableNames(count(descriptors)=%s, regex=%s)", descriptors == null ? 0 : descriptors.size(), regex));
@@ -1204,11 +1205,24 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					descriptors == null ? 0 : descriptors.size(), regex));
 		}
 
-		checkAccess(ctx, "getTableDescriptors", descriptors, regex);
+		checkGetTableInfoAccess(ctx, "getTableDescriptors", descriptors, regex, _authUtils.getAccess(Action.CREATE));
 		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("<== postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
 					descriptors == null ? 0 : descriptors.size(), regex));
+		}
+	}
+
+	@Override
+	public void postListNamespaceDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx,	List<NamespaceDescriptor> descriptors) throws IOException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
+		}
+
+		checkAccessForNamespaceDescriptor(ctx, "getNameSpaceDescriptors", descriptors);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
 		}
 	}
 
@@ -1770,12 +1784,12 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		return ret.toString();
 	}
 
-	private void checkAccess(ObserverContext<MasterCoprocessorEnvironment> ctx, String operation, List<TableDescriptor> descriptors, String regex) {
+	private void checkGetTableInfoAccess(ObserverContext<MasterCoprocessorEnvironment> ctx, String operation, List<TableDescriptor> descriptors, String regex, String accessPermission) {
 
 		if (CollectionUtils.isNotEmpty(descriptors)) {
 			// Retains only those which passes authorization checks
 			User user = getActiveUser(ctx);
-			String access = _authUtils.getAccess(Action.CREATE);
+			String access = accessPermission;
 			HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
 			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
 					.operation(operation)
@@ -1790,6 +1804,41 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 				TableDescriptor htd = itr.next();
 				String tableName = htd.getTableName().getNameAsString();
 				session.table(tableName).buildRequest().authorize();
+				if (!session.isAuthorized()) {
+					List<AuthzAuditEvent> events = null;
+					itr.remove();
+					AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent();
+					if (event != null) {
+						events = Lists.newArrayList(event);
+					}
+					auditHandler.logAuthzAudits(events);
+				}
+			}
+			if (descriptors.size() > 0) {
+				session.logCapturedEvents();
+			}
+		}
+	}
+
+	private void checkAccessForNamespaceDescriptor(ObserverContext<MasterCoprocessorEnvironment> ctx, String operation, List<NamespaceDescriptor> descriptors) {
+
+		if (CollectionUtils.isNotEmpty(descriptors)) {
+			// Retains only those which passes authorization checks
+			User user = getActiveUser(ctx);
+			String access = _authUtils.getAccess(Action.ADMIN);
+			HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
+			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
+					.operation(operation)
+					.remoteAddress(getRemoteAddress())
+					.auditHandler(auditHandler)
+					.user(user)
+					.access(access);
+
+			Iterator<NamespaceDescriptor> itr = descriptors.iterator();
+			while (itr.hasNext()) {
+				NamespaceDescriptor namespaceDescriptor = itr.next();
+				String namespace = namespaceDescriptor.getName();
+				session.table(namespace).buildRequest().authorize();
 				if (!session.isAuthorized()) {
 					List<AuthzAuditEvent> events = null;
 					itr.remove();
