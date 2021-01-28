@@ -458,28 +458,28 @@ update_properties() {
 	then
                 propertyName=ranger.spnego.kerberos.principal
                 newPropertyValue="${spnego_principal}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 	
         if [ "${audit_solr_collection_name}" != "" ]
         then
                propertyName=ranger.audit.solr.collection.name
                newPropertyValue="${audit_solr_collection_name}"
-               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+               updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
         fi
 
         if [ "${audit_solr_config_name}" != "" ]
         then
                propertyName=ranger.audit.solr.config.name
                newPropertyValue="${audit_solr_config_name}"
-               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+               updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
         fi
 
         if [ "${audit_solr_no_shards}" != "" ]
         then
                propertyName=ranger.audit.solr.no.shards
                newPropertyValue="${audit_solr_no_shards}"
-               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+               updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
         fi
 
 
@@ -487,21 +487,21 @@ update_properties() {
         then
                propertyName=ranger.audit.solr.max.shards.per.node
                newPropertyValue="${audit_solr_max_shards_per_node}"
-               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+               updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
         fi
 
         if [ "${audit_solr_no_replica}" != "" ]
         then
                propertyName=ranger.audit.solr.no.replica
                newPropertyValue="${audit_solr_no_replica}"
-               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+               updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
         fi
 	
 	if [ "${audit_solr_acl_user_list_sasl}" != "" ]
         then
                propertyName=ranger.audit.solr.acl.user.list.sasl
                newPropertyValue="${audit_solr_acl_user_list_sasl}"
-               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+               updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
         fi
 
 
@@ -509,113 +509,113 @@ update_properties() {
 	then
                 propertyName=ranger.spnego.kerberos.keytab
                 newPropertyValue="${spnego_keytab}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	if [ "${token_valid}" != "" ]
 	then
                 propertyName=ranger.admin.kerberos.token.valid.seconds
                 newPropertyValue="${token_valid}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 	
 	if [ "${cookie_domain}" != "" ]
 	then
                 propertyName=ranger.admin.kerberos.cookie.domain
                 newPropertyValue="${cookie_domain}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	if [ "${cookie_path}" != "" ]
 	then
                 propertyName=ranger.admin.kerberos.cookie.path
                 newPropertyValue="${cookie_path}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	if [ "${admin_principal}" != "" ]
 	then
                 propertyName=ranger.admin.kerberos.principal
                 newPropertyValue="${admin_principal}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 	
 	if [ "${admin_keytab}" != "" ]
 	then
                 propertyName=ranger.admin.kerberos.keytab
                 newPropertyValue="${admin_keytab}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	if [ "${lookup_principal}" != "" ]
         then
                 propertyName=ranger.lookup.kerberos.principal
                 newPropertyValue="${lookup_principal}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	if [ "${lookup_keytab}" != "" ]
 	then
                 propertyName=ranger.lookup.kerberos.keytab
                 newPropertyValue="${lookup_keytab}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	if [ "${db_ssl_enabled}" != "" ]
 	then
 		propertyName=ranger.db.ssl.enabled
 		newPropertyValue="${db_ssl_enabled}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.db.ssl.required
 		newPropertyValue="${db_ssl_required}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.db.ssl.verifyServerCertificate
 		newPropertyValue="${db_ssl_verifyServerCertificate}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.db.ssl.auth.type
 		newPropertyValue="${db_ssl_auth_type}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		if [ "${db_ssl_certificate_file}" != "" ]
 		then
 			propertyName=ranger.db.ssl.certificateFile
 			newPropertyValue="${db_ssl_certificate_file}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 		fi
 
 		propertyName=ranger.truststore.file.type
 		newPropertyValue="${javax_net_ssl_trustStore_type}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.keystore.file.type
 		newPropertyValue="${javax_net_ssl_keyStore_type}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 
 	if [ "${DB_FLAVOR}" == "MYSQL" ]
 	then
 		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:log4jdbc:mysql://${DB_HOST}/${db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.MySQLPlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="net.sf.log4jdbc.DriverSpy"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="net.sf.log4jdbc.DriverSpy"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
 		newPropertyValue="select 1;"
@@ -633,23 +633,23 @@ update_properties() {
 			#jdbc:oracle:thin:@//[HOST][:PORT]/SERVICE
 			newPropertyValue="jdbc:oracle:thin:@//${DB_HOST}"
 		fi
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.OraclePlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="oracle.jdbc.OracleDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="oracle.jdbc.OracleDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
 		newPropertyValue="select 1 from dual;"
@@ -665,33 +665,33 @@ update_properties() {
 			if test -f $db_ssl_certificate_file; then
 				propertyName=ranger.jpa.jdbc.url
 				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslrootcert=${db_ssl_certificate_file}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 			else
 				propertyName=ranger.jpa.jdbc.url
 				newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}?ssl=true&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 			fi
 		else
 			propertyName=ranger.jpa.jdbc.url
 			newPropertyValue="jdbc:postgresql://${DB_HOST}/${db_name}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 		fi
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.PostgreSQLPlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="org.postgresql.Driver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="org.postgresql.Driver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
 		newPropertyValue="select 1;"
@@ -702,23 +702,23 @@ update_properties() {
 	then
 		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:sqlserver://${DB_HOST};databaseName=${db_name}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLServerPlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
 		newPropertyValue="select 1;"
@@ -729,23 +729,23 @@ update_properties() {
 	then
 		propertyName=ranger.jpa.jdbc.url
 		newPropertyValue="jdbc:sqlanywhere:database=${db_name};host=${DB_HOST}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.audit.jdbc.dialect
 		newPropertyValue="org.eclipse.persistence.platform.database.SQLAnywherePlatform"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.driver
 		newPropertyValue="sap.jdbc4.sqlanywhere.IDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.audit.jdbc.driver
 		newPropertyValue="sap.jdbc4.sqlanywhere.IDriver"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
 		newPropertyValue="select 1;"
@@ -756,38 +756,38 @@ update_properties() {
 	then
 		propertyName=ranger.audit.solr.urls
 		newPropertyValue=${audit_solr_urls}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.audit.solr.bootstrap.enabled
 		newPropertyValue=${audit_solr_bootstrap_enabled}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	if [ "${audit_store}" == "elasticsearch" ]
 	then
 		propertyName=ranger.audit.elasticsearch.urls
 		newPropertyValue=${audit_elasticsearch_urls}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.audit.elasticsearch.port
 		newPropertyValue=${audit_elasticsearch_port}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.audit.elasticsearch.user
 		newPropertyValue=${audit_elasticsearch_user}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.audit.elasticsearch.password
 		newPropertyValue=${audit_elasticsearch_password}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.audit.elasticsearch.index
 		newPropertyValue=${audit_elasticsearch_index}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.audit.elasticsearch.bootstrap.enabled
 		newPropertyValue=${audit_elasticsearch_bootstrap_enabled}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	fi
 
@@ -795,24 +795,24 @@ update_properties() {
 	then
 		propertyName=ranger.audit.source.type
 		newPropertyValue=${audit_store}
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	propertyName=ranger.externalurl
 	newPropertyValue="${policymgr_external_url}"
-	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	propertyName=ranger.service.http.enabled
 	newPropertyValue="${policymgr_http_enabled}"
-	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	propertyName=ranger.supportedcomponents
 	newPropertyValue="${policymgr_supportedcomponents}"
-	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	propertyName=ranger.jpa.jdbc.user
 	newPropertyValue="${db_user}"
-	updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+	updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	##########
 
@@ -829,19 +829,19 @@ update_properties() {
 
 		propertyName=ranger.credential.provider.path
 		newPropertyValue="${keystore}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.jpa.jdbc.credential.alias
 		newPropertyValue="${db_password_alias}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.credential.provider.path
 		newPropertyValue="${keystore}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		propertyName=ranger.jpa.jdbc.password
 		newPropertyValue="_"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 		if test -f "${keystore}"; then
 			#echo "$keystore found."
@@ -850,12 +850,12 @@ update_properties() {
 		else
 			propertyName=ranger.jpa.jdbc.password
 			newPropertyValue="${db_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 		fi
 	else
 		propertyName=ranger.jpa.jdbc.password
 		newPropertyValue="${db_password}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	fi
 
 	###########
@@ -865,13 +865,13 @@ update_properties() {
 		then
 			propertyName=ranger.audit.solr.zookeepers
 			newPropertyValue=${audit_solr_zookeepers}
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 		fi
 		if [ "${audit_solr_user}" != "" ] && [ "${audit_solr_password}" != "" ]
 		then
 			propertyName=ranger.solr.audit.user
 			newPropertyValue=${audit_solr_user}
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 			if [ "${keystore}" != "" ]
 			then
@@ -883,23 +883,23 @@ update_properties() {
 
 				propertyName=ranger.solr.audit.credential.alias
 				newPropertyValue="${audit_solr_password_alias}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 				propertyName=ranger.solr.audit.user.password
 				newPropertyValue="_"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 				if test -f "${keystore}"; then
 					chown -R ${unix_user}:${unix_group} ${keystore}
 				else
 					propertyName=ranger.solr.audit.user.password
 					newPropertyValue="${audit_solr_password}"
-					updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+					updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 				fi
 			else
 				propertyName=ranger.solr.audit.user.password
 				newPropertyValue="${audit_solr_password}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 			fi
 		fi
 	fi
@@ -920,20 +920,20 @@ update_properties() {
 		fi
 		propertyName=ranger.sso.enabled
 		newPropertyValue="${sso_enabled}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	 
 		propertyName=ranger.sso.providerurl
 		newPropertyValue="${sso_providerurl}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	 
 		propertyName=ranger.sso.publicKey
 		newPropertyValue="${sso_publickey}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 	 
 	 else
                 propertyName=ranger.sso.enabled
                 newPropertyValue="false"
-                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 	fi
 	if [ "${javax_net_ssl_keyStore}" != "" ]  && [ "${javax_net_ssl_keyStorePassword}" != "" ]
@@ -942,17 +942,17 @@ update_properties() {
 
 		propertyName=ranger.keystore.file
 		newPropertyValue="${javax_net_ssl_keyStore}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.keystore.alias
 		newPropertyValue="${javax_net_ssl_keyStoreAlias}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		if [ "${keystore}" != "" ]
 		then
 			propertyName=ranger.keystore.password
 			newPropertyValue="_"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$javax_net_ssl_keyStoreAlias" -v "$javax_net_ssl_keyStorePassword" -c 1
 
@@ -961,12 +961,12 @@ update_properties() {
 			else
 				propertyName=ranger.keystore.password
 				newPropertyValue="${javax_net_ssl_keyStorePassword}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 			fi
 		else
 			propertyName=ranger.keystore.password
 			newPropertyValue="${javax_net_ssl_keyStorePassword}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 		fi
 
 	fi
@@ -976,16 +976,16 @@ update_properties() {
 
 		propertyName=ranger.truststore.file
 		newPropertyValue="${javax_net_ssl_trustStore}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		propertyName=ranger.truststore.alias
 		newPropertyValue="${javax_net_ssl_trustStoreAlias}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 		if [ "${keystore}" != "" ]
 		then
 			propertyName=ranger.truststore.password
 			newPropertyValue="_"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$javax_net_ssl_trustStoreAlias" -v "$javax_net_ssl_trustStorePassword" -c 1
 
@@ -994,12 +994,12 @@ update_properties() {
 			else
 				propertyName=ranger.truststore.password
 				newPropertyValue="${javax_net_ssl_trustStorePassword}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 			fi
 		else
 			propertyName=ranger.truststore.password
 			newPropertyValue="${javax_net_ssl_trustStorePassword}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 		fi
 
 	fi
@@ -1013,30 +1013,30 @@ update_properties() {
 		then
 			propertyName=ranger.service.https.attrib.ssl.enabled
 			newPropertyValue="true"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 			propertyName=ranger.service.https.attrib.client.auth
 			newPropertyValue="want"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 			propertyName=ranger.service.https.attrib.keystore.file
 			newPropertyValue="${policymgr_https_keystore_file}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 			propertyName=ranger.service.https.attrib.keystore.keyalias
 			newPropertyValue="${policymgr_https_keystore_keyalias}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 			policymgr_https_keystore_credential_alias=keyStoreCredentialAlias
 			propertyName=ranger.service.https.attrib.keystore.credential.alias
 			newPropertyValue="${policymgr_https_keystore_credential_alias}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 
 			if [ "${keystore}" != "" ]
 			then
 				propertyName=ranger.service.https.attrib.keystore.pass
 				newPropertyValue="_"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 				$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$policymgr_https_keystore_credential_alias" -v "$policymgr_https_keystore_password" -c 1
 
 				if test -f "${keystore}"; then
@@ -1044,12 +1044,12 @@ update_properties() {
 				else
 					propertyName=ranger.service.https.attrib.keystore.pass
 					newPropertyValue="${policymgr_https_keystore_password}"
-					updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+					updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 				fi
 			else
 				propertyName=ranger.service.https.attrib.keystore.pass
 				newPropertyValue="${policymgr_https_keystore_password}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_ranger
 			fi
 		fi
 	fi
@@ -1058,17 +1058,17 @@ update_properties() {
 	then
 		propertyName=ranger.unixauth.keystore
 		newPropertyValue="${ranger_unixauth_keystore}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		ranger_unixauth_keystore_alias=unixAuthKeyStoreAlias
 		propertyName=ranger.unixauth.keystore.credential.alias
 		newPropertyValue="${ranger_unixauth_keystore_alias}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 		if [ "${keystore}" != "" ]
 		then
 			propertyName=ranger.unixauth.keystore.password
 			newPropertyValue="_"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ranger_unixauth_keystore_alias" -v "$ranger_unixauth_keystore_password" -c 1
 
 			if test -f "${keystore}"; then
@@ -1076,12 +1076,12 @@ update_properties() {
 			else
 				propertyName=ranger.unixauth.keystore.password
 				newPropertyValue="${ranger_unixauth_keystore_password}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 			fi
 		else
 			propertyName=ranger.unixauth.keystore.password
 			newPropertyValue="${ranger_unixauth_keystore_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 		fi
 	fi
 
@@ -1089,18 +1089,18 @@ update_properties() {
 	then
 		propertyName=ranger.unixauth.truststore
 		newPropertyValue="${ranger_unixauth_truststore}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		ranger_unixauth_truststore_alias=unixAuthTrustStoreAlias
 		propertyName=ranger.unixauth.truststore.credential.alias
 		newPropertyValue="${ranger_unixauth_truststore_alias}"
-		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 		if [ "${keystore}" != "" ]
 		then
 			propertyName=ranger.unixauth.truststore.password
 			newPropertyValue="_"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 			$PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "$ranger_unixauth_truststore_alias" -v "$ranger_unixauth_truststore_password" -c 1
 
 			if test -f $keystore; then
@@ -1108,12 +1108,12 @@ update_properties() {
 			else
 				propertyName=ranger.unixauth.truststore.password
 				newPropertyValue="${ranger_unixauth_truststore_password}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 			fi
 		else
 			propertyName=ranger.unixauth.truststore.password
 			newPropertyValue="${ranger_unixauth_truststore_password}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 		fi
 	fi
 
@@ -1127,19 +1127,19 @@ do_unixauth_setup() {
 
                 propertyName=ranger.authentication.method
                 newPropertyValue="${authentication_method}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
                 propertyName=ranger.unixauth.remote.login.enabled
                 newPropertyValue="${remoteLoginEnabled}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
                 propertyName=ranger.unixauth.service.hostname
                 newPropertyValue="${authServiceHostName}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
                 propertyName=ranger.unixauth.service.port
                 newPropertyValue="${authServicePort}"
-                updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+                updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 	else
 		log "[E] $ldap_file does not exists" ; exit 1;
 	fi
@@ -1157,27 +1157,27 @@ do_authentication_setup(){
 			log "[I] $ldap_file file found"
 			propertyName=ranger.ldap.url
 			newPropertyValue="${xa_ldap_url}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			propertyName=ranger.ldap.user.dnpattern
 			newPropertyValue="${xa_ldap_userDNpattern}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			propertyName=ranger.ldap.group.searchbase
 			newPropertyValue="${xa_ldap_groupSearchBase}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			propertyName=ranger.ldap.group.searchfilter
 			newPropertyValue="${xa_ldap_groupSearchFilter}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			propertyName=ranger.ldap.group.roleattribute
 			newPropertyValue="${xa_ldap_groupRoleAttribute}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			propertyName=ranger.authentication.method
 			newPropertyValue="${authentication_method}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			if [ "${xa_ldap_base_dn}" != "" ] && [ "${xa_ldap_bind_dn}" != "" ]  && [ "${xa_ldap_bind_password}" != "" ]
 			then
@@ -1189,19 +1189,19 @@ do_authentication_setup(){
 
 				propertyName=ranger.ldap.base.dn
 				newPropertyValue="${xa_ldap_base_dn}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 				propertyName=ranger.ldap.bind.dn
 				newPropertyValue="${xa_ldap_bind_dn}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 				propertyName=ranger.ldap.referral
 				newPropertyValue="${xa_ldap_referral}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 				propertyName=ranger.ldap.user.searchfilter
 				newPropertyValue="${xa_ldap_userSearchFilter}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 				keystore="${cred_keystore_filename}"
 
@@ -1217,15 +1217,15 @@ do_authentication_setup(){
 					if test -f $to_file_default; then
 						propertyName=ranger.credential.provider.path
 						newPropertyValue="${keystore}"
-						updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+						updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 						propertyName=ranger.ldap.binddn.credential.alias
 						newPropertyValue="${ldap_password_alias}"
-						updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+						updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 						propertyName=ranger.ldap.bind.password
 						newPropertyValue="_"
-						updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+						updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 					else
 						log "[E] $to_file_default does not exists" ; exit 1;
 					fi
@@ -1237,12 +1237,12 @@ do_authentication_setup(){
 					else
 						propertyName=ranger.ldap.bind.password
 						newPropertyValue="${xa_ldap_bind_password}"
-						updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+						updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 					fi
 				else
 					propertyName=ranger.ldap.bind.password
 					newPropertyValue="${xa_ldap_bind_password}"
-					updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+					updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 				fi
 			fi
 		else
@@ -1257,15 +1257,15 @@ do_authentication_setup(){
 			log "[I] $ldap_file file found"
 			propertyName=ranger.ldap.ad.url
 			newPropertyValue="${xa_ldap_ad_url}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			propertyName=ranger.ldap.ad.domain
 			newPropertyValue="${xa_ldap_ad_domain}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			propertyName=ranger.authentication.method
 			newPropertyValue="${authentication_method}"
-			updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+			updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 			if [ "${xa_ldap_ad_base_dn}" != "" ] && [ "${xa_ldap_ad_bind_dn}" != "" ]  && [ "${xa_ldap_ad_bind_password}" != "" ]
 			then
@@ -1276,19 +1276,19 @@ do_authentication_setup(){
 				fi
 				propertyName=ranger.ldap.ad.base.dn
 				newPropertyValue="${xa_ldap_ad_base_dn}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 				propertyName=ranger.ldap.ad.bind.dn
 				newPropertyValue="${xa_ldap_ad_bind_dn}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 				propertyName=ranger.ldap.ad.referral
 				newPropertyValue="${xa_ldap_ad_referral}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 				propertyName=ranger.ldap.ad.user.searchfilter
 				newPropertyValue="${xa_ldap_ad_userSearchFilter}"
-				updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+				updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 
 				keystore="${cred_keystore_filename}"
 
@@ -1304,15 +1304,15 @@ do_authentication_setup(){
 					if test -f $to_file_default; then
 						propertyName=ranger.credential.provider.path
 						newPropertyValue="${keystore}"
-						updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+						updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 						propertyName=ranger.ldap.ad.binddn.credential.alias
 						newPropertyValue="${ad_password_alias}"
-						updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
+						updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 
 						propertyName=ranger.ldap.ad.bind.password
 						newPropertyValue="_"
-						updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+						updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 					else
 						log "[E] $to_file_default does not exists" ; exit 1;
 					fi
@@ -1324,12 +1324,12 @@ do_authentication_setup(){
 					else
 						propertyName=ranger.ldap.ad.bind.password
 						newPropertyValue="${xa_ldap_ad_bind_password}"
-						updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+						updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 					fi
 				else
 					propertyName=ranger.ldap.ad.bind.password
 					newPropertyValue="${xa_ldap_ad_bind_password}"
-					updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+					updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
 				fi
 			fi
 		else
@@ -1346,7 +1346,7 @@ do_authentication_setup(){
                 if test -f $ldap_file; then
                         propertyName=ranger.authentication.method
                         newPropertyValue="${authentication_method}"
-                        updatePropertyToFilePy $propertyName $newPropertyValue $ldap_file
+                        updatePropertyToFilePy $propertyName "${newPropertyValue}" $ldap_file
                 fi
         fi
 	
