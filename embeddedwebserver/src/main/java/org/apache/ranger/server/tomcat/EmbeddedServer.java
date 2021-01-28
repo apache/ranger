@@ -77,7 +77,7 @@ public class EmbeddedServer {
 	private static final String KMS_SERVER_NAME   = "rangerkms";
 	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
 	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
-	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLS";
+	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLSv1.2";
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE = KeyManagerFactory.getDefaultAlgorithm();
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE = TrustManagerFactory.getDefaultAlgorithm();
 
@@ -151,7 +151,7 @@ public class EmbeddedServer {
 			ssl.setSecure(true);
 			ssl.setScheme("https");
 			ssl.setAttribute("SSLEnabled", "true");
-			ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLS"));
+			ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLSv1.2"));
 			ssl.setAttribute("keystoreType", EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
 			ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
 			String clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.clientAuth", "false");
@@ -172,7 +172,7 @@ public class EmbeddedServer {
 			ssl.setAttribute("keystorePass", keystorePass);
 			ssl.setAttribute("keystoreFile", getKeystoreFile());
 
-			String defaultEnabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
+			String defaultEnabledProtocols = "TLSv1.2";
 			String enabledProtocols = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", defaultEnabledProtocols);
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
 			String ciphers = EmbeddedServerUtil.getConfig("ranger.tomcat.ciphers");
