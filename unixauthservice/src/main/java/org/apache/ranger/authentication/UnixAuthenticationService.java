@@ -58,7 +58,7 @@ public class UnixAuthenticationService {
 
 	private static final String serviceName = "UnixAuthenticationService";
 
-	private static final String SSL_ALGORITHM = "TLS";
+	private static final String SSL_ALGORITHM = "TLSv1.2";
 	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.usersync.port";
 
 	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file";
@@ -237,7 +237,7 @@ public class UnixAuthenticationService {
 		String SSLEnabledProp = prop.getProperty(SSL_ENABLED_PARAM);
 		
 		SSLEnabled = (SSLEnabledProp != null &&  (SSLEnabledProp.equalsIgnoreCase("true")));
-		String defaultEnabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
+		String defaultEnabledProtocols = "TLSv1.2";
 		String enabledProtocols = prop.getProperty("ranger.usersync.https.ssl.enabled.protocols", defaultEnabledProtocols);
 		enabledProtocolsList=new ArrayList<String>(Arrays.asList(enabledProtocols.toUpperCase().trim().split("\\s*,\\s*")));
 //		LOG.info("Key:" + keyStorePath);

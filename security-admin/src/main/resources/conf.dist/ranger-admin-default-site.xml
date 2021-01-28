@@ -288,7 +288,7 @@
 
 	<property>
 		<name>ranger.service.https.attrib.ssl.protocol</name>
-		<value>TLS</value>
+		<value>TLSv1.2</value>
 	</property>
 
 	<property>
@@ -592,7 +592,7 @@
 	</property>
         <property>
                 <name>ranger.service.https.attrib.ssl.enabled.protocols</name>
-                <value>SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2</value>
+                <value>TLSv1.2</value>
         </property>
         <!-- Encryption -->
        <property>
