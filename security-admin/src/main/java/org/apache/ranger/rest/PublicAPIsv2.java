@@ -127,7 +127,6 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/servicedef/{id}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json", "application/xml" })
 	public RangerServiceDef getServiceDef(@PathParam("id") Long id) {
 		return serviceREST.getServiceDef(id);
@@ -135,7 +134,6 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/servicedef/name/{name}")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json", "application/xml" })
 	public RangerServiceDef getServiceDefByName(@PathParam("name") String name) {
 		return serviceREST.getServiceDefByName(name);
@@ -143,7 +141,6 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/servicedef/")
-	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json", "application/xml" })
 	public List<RangerServiceDef> searchServiceDefs(@Context HttpServletRequest request) {
 		return serviceREST.getServiceDefs(request).getServiceDefs();
