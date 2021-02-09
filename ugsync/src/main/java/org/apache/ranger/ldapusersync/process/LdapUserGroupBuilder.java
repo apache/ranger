@@ -26,7 +26,9 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Properties;
 import java.util.Set;
 import java.util.HashMap;
@@ -35,6 +37,7 @@ import java.util.UUID;
 import javax.naming.Context;
 import javax.naming.InvalidNameException;
 import javax.naming.NamingEnumeration;
+import javax.naming.NamingException;
 import javax.naming.directory.Attribute;
 import javax.naming.directory.Attributes;
 import javax.naming.directory.SearchControls;
@@ -42,8 +45,10 @@ import javax.naming.directory.SearchResult;
 import javax.naming.ldap.Control;
 import javax.naming.ldap.InitialLdapContext;
 import javax.naming.ldap.LdapContext;
+import javax.naming.ldap.LdapName;
 import javax.naming.ldap.PagedResultsControl;
 import javax.naming.ldap.PagedResultsResponseControl;
+import javax.naming.ldap.Rdn;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
 import org.apache.commons.lang.StringUtils;
@@ -206,7 +211,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
 		currentSyncSource = config.getCurrentSyncSource();
 		groupSearchFirstEnabled =   true;
-		userSearchEnabled =   true;
+		userSearchEnabled =   config.isUserSearchEnabled();;
 		groupSearchEnabled =   true;
     ldapUrl = config.getLdapUrl();
     ldapBindDn = config.getLdapBindDn();
@@ -326,6 +331,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		sourceGroups = new HashMap<>();
 		sourceUsers = new HashMap<>();
 		sourceGroupUsers = new HashMap<>();
+		long highestdeltaSyncUserTime = 0;
 
 		if (config.isUserSyncDeletesEnabled() && deleteCycles >= config.getUserSyncDeletesFrequency()) {
 			deleteCycles = 1;
@@ -338,7 +344,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 			deleteCycles++;
 		}
         long highestdeltaSyncGroupTime = getGroups(computeDeletes);
-        long highestdeltaSyncUserTime = getUsers(computeDeletes);
+		if (userSearchEnabled) {
+			LOG.info("Performing user search to retrieve users from AD/LDAP");
+			highestdeltaSyncUserTime = getUsers(computeDeletes);
+		}
 
 		if (groupHierarchyLevels > 0) {
 			LOG.info("Going through group hierarchy for nested group evaluation");
@@ -719,6 +728,18 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 									continue;
 								}
 								userCount++;
+								if (!userSearchEnabled) {
+									Map<String, String> userAttrMap = new HashMap<>();
+									String userName = getShortName(originalUserFullName);
+									userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+									userAttrMap.put(UgsyncCommonConstants.FULL_NAME, originalUserFullName);
+									userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+									userAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
+									sourceUsers.put(originalUserFullName, userAttrMap);
+									if (LOG.isDebugEnabled()) {
+										LOG.debug("As usersearch is disabled, adding user " + userName + " from group member attribute for group " + gName);
+									}
+								}
 
 								groupUserTable.put(groupFullName, originalUserFullName, originalUserFullName);
 							}
@@ -900,7 +921,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 									groupAttrMap.put(otherGroupAttribute, (String) otherGroupAttr.get());
 								}
 							}
-							sourceGroups.put(gName, groupAttrMap);
+							sourceGroups.put(groupFullName, groupAttrMap);
 
 							NamingEnumeration<?> userEnum = groupMemberAttr.getAll();
 							while (userEnum.hasMore()) {
@@ -909,6 +930,15 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 									continue;
 								}
 								userCount++;
+								if (!userSearchEnabled && !sourceGroups.containsKey(originalUserFullName)) {
+									Map<String, String> userAttrMap = new HashMap<>();
+									String userName = getShortName(originalUserFullName);
+									userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+									userAttrMap.put(UgsyncCommonConstants.FULL_NAME, originalUserFullName);
+									userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+									userAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
+									sourceUsers.put(originalUserFullName, userAttrMap);
+								}
 								groupUserTable.put(groupFullName, originalUserFullName, originalUserFullName);
 
 							}
@@ -985,5 +1015,48 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 			// This should not be reached.
 			LOG.warn("Attribute Type " + attrType + " not supported for " + attrName);
 		}
+	}
+
+	private static String getShortName(String longName) {
+		if (StringUtils.isEmpty(longName)) {
+			return null;
+		}
+		String shortName = "";
+		try {
+			LdapName subjectDN = new LdapName(longName);
+			List<Rdn> rdns = subjectDN.getRdns();
+			for (int i = rdns.size() - 1; i >= 0; i--) {
+				if (StringUtils.isNotEmpty(shortName)) {
+					break;
+				}
+				Rdn rdn = rdns.get(i);
+				Attributes attributes = rdn.toAttributes();
+				try {
+					Attribute uid = attributes.get("uid");
+					if (uid != null) {
+						Object value = uid.get();
+						if (value != null) {
+							shortName = value.toString();
+						}
+					} else {
+						Attribute cn = attributes.get("cn");
+						if (cn != null) {
+							Object value = cn.get();
+							if (value != null) {
+								shortName = value.toString();
+							}
+						}
+					}
+				} catch (NoSuchElementException ignore) {
+					shortName = longName;
+				} catch (NamingException ignore) {
+					shortName = longName;
+				}
+			}
+		} catch (InvalidNameException ex) {
+			shortName = longName;
+		}
+		LOG.info("longName: " + longName + ", userName: " + shortName);
+		return shortName;
 	}
 }
