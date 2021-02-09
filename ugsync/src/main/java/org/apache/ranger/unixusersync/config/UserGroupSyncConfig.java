@@ -789,6 +789,9 @@ public class UserGroupSyncConfig  {
 		} else {
 			userSearchEnabled  = Boolean.valueOf(val);
 		}
+		if (!isGroupSearchFirstEnabled()) {
+			userSearchEnabled = true;
+		}
 		return userSearchEnabled;
 	}
 
