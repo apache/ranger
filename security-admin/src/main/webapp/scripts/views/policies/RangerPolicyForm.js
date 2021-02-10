@@ -597,6 +597,9 @@ define(function(require){
                 this.model.set('zoneName', App.vZone.vZoneName);
             }
 			this.model.set('resources',resources);
+			if(this.model.get('none')) {
+				this.model.unset('none');
+			}
 			this.model.unset('path');
 			
 			//Set UserGroups Permission
