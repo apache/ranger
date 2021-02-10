@@ -532,7 +532,10 @@
                           var Vent = require('modules/Vent');
 			  if(!_.isNull(this.value) && !_.isEmpty(this.value)){
 				this.value.values = _.map(this.value.values, function(val){ return _.escape(val); });
-			    	this.$resource.val(this.value.values.toString())
+					// Set initial value for resources.
+					if (_.isUndefined(def)) {
+						this.$resource.val(this.value.values.toString());
+					}
 			    	//to preserve resources values to text field
 			    	if(!_.isUndefined(this.value.resourceType)){
 			    		this.preserveResourceValues[this.value.resourceType] = this.value.values.toString();	
@@ -636,8 +639,7 @@
 		  					that.$resource.select2('val', val)
 		  				}else{
 							that.$resource.select2('val', "");
-							that.value=[];
-		  				}
+						}
 			  			//reset values
 			  			that.value.isExcludes = false;
 			  			that.value.isRecursive = false;
