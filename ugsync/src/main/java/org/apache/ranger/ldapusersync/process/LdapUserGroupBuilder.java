@@ -211,7 +211,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
 		currentSyncSource = config.getCurrentSyncSource();
 		groupSearchFirstEnabled =   true;
-		userSearchEnabled =   config.isUserSearchEnabled();;
+		userSearchEnabled =   config.isUserSearchEnabled();
 		groupSearchEnabled =   true;
     ldapUrl = config.getLdapUrl();
     ldapBindDn = config.getLdapBindDn();
