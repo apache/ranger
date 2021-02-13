@@ -3124,6 +3124,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				if (isValid) {
 					if (CollectionUtils.isNotEmpty(tagPolicyDeltas)) {
+						// To ensure that resource-policy-deltas with service-type of 'tag' are ignored after validation
+						resourcePolicyDeltas.removeIf(rangerPolicyDelta -> StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, rangerPolicyDelta.getServiceType()));
+
 						resourcePolicyDeltas.addAll(tagPolicyDeltas);
 					}
 					List<RangerPolicyDelta> compressedDeltas = compressDeltas(resourcePolicyDeltas);

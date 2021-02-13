@@ -51,54 +51,72 @@ public class RangerPolicyDeltaUtil {
             perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_DELTA_LOG, "RangerPolicyDelta.applyDeltas()");
         }
 
+        boolean hasExpectedServiceType = false;
+
         if (CollectionUtils.isNotEmpty(deltas)) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("applyDeltas(deltas=" + Arrays.toString(deltas.toArray()) + ", serviceType=" + serviceType +")");
+                LOG.debug("applyDeltas(deltas=" + Arrays.toString(deltas.toArray()) + ", serviceType=" + serviceType + ")");
             }
-            ret = new ArrayList<>(policies);
 
             for (RangerPolicyDelta delta : deltas) {
-                int changeType = delta.getChangeType();
-                if (!serviceType.equals(delta.getServiceType())) {
-                    if (!serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) && !delta.getServiceType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-                        LOG.error("Found unexpected serviceType in policyDelta:[" + delta + "]. Was expecting serviceType:[" + serviceType + "]. Should NOT have come here!! Ignoring delta and continuing");
-                    }
-                    continue;
+                if (serviceType.equals(delta.getServiceType())) {
+                    hasExpectedServiceType = true;
+                    break;
+                } else if (!serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) && !delta.getServiceType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+                    LOG.warn("Found unexpected serviceType in policyDelta:[" + delta + "]. Was expecting serviceType:[" + serviceType + "]. Should NOT have come here!! Ignoring delta and continuing");
                 }
-                if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
-                    if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
-                        if (delta.getPolicy() != null) {
-                            ret.add(delta.getPolicy());
-                        }
-                    } else {
-                        // Either UPDATE or DELETE
-                        Long policyId       = delta.getPolicyId();
+            }
 
-                        Iterator<RangerPolicy> iter = ret.iterator();
-                        while (iter.hasNext()) {
-                            if (policyId.equals(iter.next().getId())) {
-                                iter.remove();
-                                break;
-                            }
-                        }
-                        if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
+            if (hasExpectedServiceType) {
+                ret = new ArrayList<>(policies);
+
+                for (RangerPolicyDelta delta : deltas) {
+                    if (!serviceType.equals(delta.getServiceType())) {
+                        continue;
+                    }
+
+                    int changeType = delta.getChangeType();
+
+                    if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
+                        if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
                             if (delta.getPolicy() != null) {
                                 ret.add(delta.getPolicy());
                             }
+                        } else {
+                            // Either UPDATE or DELETE
+                            Long policyId = delta.getPolicyId();
+
+                            Iterator<RangerPolicy> iter = ret.iterator();
+                            while (iter.hasNext()) {
+                                if (policyId.equals(iter.next().getId())) {
+                                    iter.remove();
+                                    break;
+                                }
+                            }
+                            if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
+                                if (delta.getPolicy() != null) {
+                                    ret.add(delta.getPolicy());
+                                }
+                            }
                         }
+                    } else {
+                        LOG.warn("Found unexpected changeType in policyDelta:[" + delta + "]. Ignoring delta");
                     }
-                } else {
-                    LOG.warn("Found unexpected changeType in policyDelta:[" + delta +"]. Ignoring delta");
                 }
+            } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("applyDeltas - none of the deltas is for " + serviceType + ")");
+                }
+                ret = policies;
             }
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("applyDeltas(deltas=null, serviceType=" + serviceType +")");
+                LOG.debug("applyDeltas(deltas=null, serviceType=" + serviceType + ")");
             }
             ret = policies;
         }
 
-        if (CollectionUtils.isNotEmpty(deltas) && CollectionUtils.isNotEmpty(ret)) {
+        if (CollectionUtils.isNotEmpty(deltas) && hasExpectedServiceType && CollectionUtils.isNotEmpty(ret)) {
             ret.sort(RangerPolicy.POLICY_ID_COMPARATOR);
         }
 
