@@ -33,8 +33,8 @@ BEGIN
 	SET @drpstmt = 'DROP TABLE IF EXISTS ' + @tblname;
 	execute(@drpstmt)
 END
-
 GO
+
 call dbo.removeForeignKeysAndTable('x_rms_notification')
 GO
 call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
@@ -60,8 +60,9 @@ primary key (id),
 CONSTRAINT x_rms_notification_FK_hl_service_id FOREIGN KEY(hl_service_id) REFERENCES x_service(id),
 CONSTRAINT x_rms_notification_FK_ll_service_id FOREIGN KEY(ll_service_id) REFERENCES x_service(id)
 );
+GO
 CREATE INDEX x_rms_service_resource_IDX_service_id ON x_rms_service_resource(service_id);
-
+GO
 
 CREATE TABLE dbo.x_rms_notification (
 id BIGINT IDENTITY NOT NULL ,
@@ -77,11 +78,13 @@ PRIMARY KEY (id),
 CONSTRAINT x_rms_notification_FK_hl_service_id FOREIGN KEY(hl_service_id) REFERENCES x_service(id),
 CONSTRAINT x_rms_notification_FK_ll_service_id FOREIGN KEY(ll_service_id) REFERENCES x_service(id)
 );
+GO
 
 CREATE INDEX x_rms_notification_IDX_notification_id ON x_rms_notification(notification_id);
 CREATE INDEX x_rms_notification_IDX_hms_name_notification_id ON x_rms_notification(hms_name, notification_id);
 CREATE INDEX x_rms_notification_IDX_hl_service_id ON x_rms_notification(hl_service_id);
 CREATE INDEX x_rms_notification_IDX_ll_service_id ON x_rms_notification(ll_service_id);
+GO
 
 CREATE TABLE dbo.x_rms_resource_mapping(
 id BIGINT  IDENTITY NOT NULL ,
@@ -93,9 +96,11 @@ CONSTRAINT x_rms_res_map_UK_hl_res_id_ll_res_id UNIQUE(hl_resource_id, ll_resour
 CONSTRAINT x_rms_res_map_FK_hl_res_id FOREIGN KEY(hl_resource_id) REFERENCES x_rms_service_resource(id),
 CONSTRAINT x_rms_res_map_FK_ll_res_id FOREIGN KEY(ll_resource_id) REFERENCES x_rms_service_resource(id)
 );
+GO
 
 CREATE INDEX x_rms_resource_mapping_IDX_hl_resource_id ON x_rms_resource_mapping(hl_resource_id);
 CREATE INDEX x_rms_resource_mapping_IDX_ll_resource_id ON x_rms_resource_mapping(ll_resource_id);
+GO
 
 CREATE TABLE dbo.x_rms_mapping_provider (
 id BIGINT IDENTITY NOT NULL ,
@@ -105,3 +110,5 @@ last_known_version BIGINT NOT NULL,
 PRIMARY KEY (id),
 CONSTRAINT x_rms_mapping_provider_UK_name UNIQUE(name)
 );
+GO
+EXIT

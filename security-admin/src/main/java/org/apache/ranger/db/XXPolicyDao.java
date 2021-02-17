@@ -274,4 +274,14 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 
 	}
+
+	public List<XXPolicy> getAllByPolicyItem() {
+		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+		try {
+			ret = getEntityManager().createNamedQuery("XXPolicy.getAllByPolicyItem", tClass)
+					.getResultList();
+		} catch (NoResultException excp) {
+		}
+		return ret;
+	}
 }

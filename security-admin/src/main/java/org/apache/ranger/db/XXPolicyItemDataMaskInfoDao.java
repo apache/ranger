@@ -59,4 +59,12 @@ public class XXPolicyItemDataMaskInfoDao extends BaseDao<XXPolicyItemDataMaskInf
 		}
 	}
 
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
+		getEntityManager()
+			.createNamedQuery("XXPolicyItemDataMaskInfo.deleteByPolicyId", tClass)
+			.setParameter("policyId", policyId).executeUpdate();
+	}
 }
