@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.junit.Test;
 
@@ -50,6 +51,37 @@ public class RangerPathResourceMatcherTest {
             { "/app/hbase/test.tbl",  "/app/hive/test.db", true, false, false, "user" },
     };
 
+    Object[][] dataForSelfOrChildScope = {
+            // { resource, policy, optWildcard, recursive, result
+            { "/app/hive/test.db",    "/",                 true, false, false, "user" },
+            { "/app/hive/test.db",    "/",                 true, true,  true, "user" },
+            { "/app/hive/test.db",    "/*",                true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/*",                true, false, true, "user" },
+            { "/app/hive/test.db",    "/app",              true, false, false, "user" },
+            { "/app/hive/test.db",    "/app/",             true, false, false, "user" },
+            { "/app/hive/test.db",    "/app/",             true, true,  true, "user" },
+            { "/app/hive/test.db",    "/app/*",            true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/app/*",            true, false, true, "user" },
+            { "/app/hive/test.db",    "/app/hive/*",       true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/*",       true, false, false, "user" },
+            { "/app/hive/test.db",    "/app/hive/test*",   true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/test*",   true, false, false, "user" },
+            { "/app/hive/test.db",    "/app/hive/test.db", true, false, true, "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/test.db", true, false, false, "user" },
+            { "/app/hbase/test.db",   "/app/hbase",        true, true, true,   "user" },
+            { "/app/hbase/test.db",   "/app/hbase/test.db/test.tbl", true, true, true, "user" },
+            { "/app/hbase/test.db/",  "/app/hbase/test.db/test.tbl", true, true, true, "user" },
+            { "/app/hbase/test.db",   "/app/hbase/test.db/test.tbl/test.col", true, true, false, "user" },
+            { "/app/hbase/test.db",   "/app/h*/test.db/test.tbl",    true, true, true, "user" },
+            { "/app/hbase/test.db",   "/app/hbase/test.db/test.tbl", true, false, true, "user" },
+            { "/app/hbase/test.db/",  "/app/hbase/test.db/test.tbl", true, false, true, "user" },
+            { "/app/hbase/test.db/",  "/app/hbase/test.db/test.tbl", true, false, true, "user" },
+            { "/app/hbase/test.db",   "/app/h*/test.db/test.tbl",    true, false, true, "user" },
+            { "/app/hbase/test.db",   "*/hbase/test.db/test.tbl",    true, false, true, "user" },
+            { "/app/hbase/test.db",   "/app/hbase/test.db/test.t*",  true, false, true, "user" },
+            { "/app/hbase/test.db",   "/app/hbase/test.db/tmp/test.t*",  true, false, false, "user" },
+    };
+
     @Test
     public void testIsMatch() throws Exception {
         for (Object[] row : data) {
@@ -62,6 +94,25 @@ public class RangerPathResourceMatcherTest {
 
             Map<String, Object> evalContext = new HashMap<>();
             RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
+
+            MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);
+            assertEquals(getMessage(row), result, matcher.isMatch(resource, evalContext));
+        }
+    }
+
+    @Test
+    public void testIsMatchForSelfOrChildScope() throws Exception {
+        for (Object[] row : dataForSelfOrChildScope) {
+            String resource = (String)row[0];
+            String policyValue = (String)row[1];
+            boolean optWildcard = (boolean)row[2];
+            boolean isRecursive = (boolean)row[3];
+            boolean result = (boolean)row[4];
+            String user = (String) row[5];
+
+            Map<String, Object> evalContext = new HashMap<>();
+            RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
+            evalContext.put(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING, RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD);
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);
             assertEquals(getMessage(row), result, matcher.isMatch(resource, evalContext));

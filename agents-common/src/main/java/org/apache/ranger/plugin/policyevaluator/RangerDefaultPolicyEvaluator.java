@@ -240,10 +240,10 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					}
 				} else {
 					if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD) {
-						request.getContext().put("Scope", "SELF_OR_ONE_LEVEL");
+						request.getContext().put(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING, RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD);
 					}
 					matchType = resourceMatcher != null ? resourceMatcher.getMatchType(request.getResource(), request.getContext()) : RangerPolicyResourceMatcher.MatchType.NONE;
-					request.getContext().remove("Scope");
+					request.getContext().remove(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING);
 				}
 
 				final boolean isMatched;
