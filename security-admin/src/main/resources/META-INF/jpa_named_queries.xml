@@ -288,6 +288,9 @@
         </query>
 	</named-query>
 
+	<named-query name="XXPolicyItem.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyItem obj WHERE obj.policyId = :policyId</query>
+	</named-query>
 	<!-- XXPolicy -->
 
 	<named-query name="XXPolicy.countById">
@@ -362,6 +365,10 @@
 			from XXPolicy policy, XXService service
 			where service.name = :serviceName and service.id = policy.service
 		</query>
+	</named-query>
+
+	<named-query name="XXPolicy.getAllByPolicyItem">
+		<query>select obj from XXPolicy obj where obj.id in (select item.policyId from XXPolicyItem item) </query>
 	</named-query>
 
 	<!-- XXServiceDef -->
@@ -605,6 +612,10 @@
 		<query>select obj from XXPolicyResource obj where obj.resDefId = :resDefId</query>
 	</named-query>
 
+	<named-query name="XXPolicyResource.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyResource obj WHERE obj.policyId = :policyId</query>
+	</named-query>
+
 	<named-query name="XXPolicyResourceMap.findByPolicyId">
 		<query>select obj from XXPolicyResourceMap obj, XXPolicyResource res
                 where obj.resourceId = res.id
@@ -619,6 +630,10 @@
                   and res.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
                 order by res.policyId, obj.resourceId, obj.order
         </query>
+	</named-query>
+
+	<named-query name="XXPolicyResourceMap.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyResourceMap obj WHERE obj.resourceId in (select res.id from XXPolicyResource res where res.policyId = :policyId)</query>
 	</named-query>
 
 	<!-- XXPolicyItemAccess -->
@@ -637,6 +652,10 @@
 		          and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
 		        order by item.policyId, obj.policyItemId, obj.order
 		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemAccess.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyItemAccess obj WHERE obj.policyItemId in (select item.id from XXPolicyItem item where item.policyId = :policyId)</query>
 	</named-query>
 
 	<!-- XXPolicyRefAccessType -->
@@ -886,6 +905,10 @@
 		</query>
 	</named-query>
 	
+	<named-query name="XXPolicyItemCondition.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyItemCondition obj WHERE obj.policyItemId in (select item.id from XXPolicyItem item where item.policyId = :policyId)</query>
+	</named-query>
+
 	<!-- XXPolicyItemGroupPerm -->
 
 	<named-query name="XXPolicyItemGroupPerm.findByPolicyId">
@@ -902,6 +925,10 @@
 		          and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
 		        order by item.policyId, obj.policyItemId, obj.order
 		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemGroupPerm.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyItemGroupPerm obj WHERE obj.policyItemId in (select item.id from XXPolicyItem item where item.policyId = :policyId)</query>
 	</named-query>
 
 	<!-- XXPolicyItemUserPerm -->
@@ -922,6 +949,9 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXPolicyItemUserPerm.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyItemUserPerm obj WHERE obj.policyItemId in (select item.id from XXPolicyItem item where item.policyId = :policyId)</query>
+	</named-query>
 	<!-- XXPolicyItemDataMaskInfo -->
 
 	<named-query name="XXPolicyItemDataMaskInfo.findByPolicyId">
@@ -940,6 +970,10 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXPolicyItemDataMaskInfo.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyItemDataMaskInfo obj WHERE obj.policyItemId in (select item.id from XXPolicyItem item where item.policyId = :policyId)</query>
+	</named-query>
+
 	<!-- XXPolicyItemRowFilterInfo -->
 
 	<named-query name="XXPolicyItemRowFilterInfo.findByPolicyId">
@@ -956,6 +990,10 @@
 			and item.policyId in (select policy.id from XXPolicy policy where policy.service = :serviceId)
 			order by item.policyId, obj.policyItemId
 		</query>
+	</named-query>
+
+	<named-query name="XXPolicyItemRowFilterInfo.deleteByPolicyId">
+		<query>DELETE FROM XXPolicyItemRowFilterInfo obj WHERE obj.policyItemId in (select item.id from XXPolicyItem item where item.policyId = :policyId)</query>
 	</named-query>
 
 	<!-- XXDataHist -->

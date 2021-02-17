@@ -17,9 +17,9 @@
 DECLARE
 	v_index_exists number:=0;
 BEGIN
-	SELECT COUNT(*) INTO v_index_exists FROM USER_INDEXES WHERE INDEX_NAME = upper('x_rms_svc_res_IDX_resource_signature') AND TABLE_NAME= upper('x_rms_service_resource');
+	SELECT COUNT(*) INTO v_index_exists FROM USER_INDEXES WHERE INDEX_NAME = upper('x_rms_svc_res_IDX_res_sgn') AND TABLE_NAME= upper('x_rms_service_resource');
 	IF (v_index_exists = 0) THEN
-		execute IMMEDIATE 'CREATE INDEX x_rms_svc_res_IDX_resource_signature ON x_rms_service_resource(resource_signature)';
+		execute IMMEDIATE 'CREATE INDEX x_rms_svc_res_IDX_res_sgn ON x_rms_service_resource(resource_signature)';
 		commit;
 	END IF;
 END;/

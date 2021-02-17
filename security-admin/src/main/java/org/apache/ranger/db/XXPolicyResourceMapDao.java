@@ -58,4 +58,13 @@ public class XXPolicyResourceMapDao extends BaseDao<XXPolicyResourceMap> {
 			return new ArrayList<XXPolicyResourceMap>();
 		}
 	}
+
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
+		getEntityManager()
+			.createNamedQuery("XXPolicyResourceMap.deleteByPolicyId", tClass)
+			.setParameter("policyId", policyId).executeUpdate();
+	}
 }

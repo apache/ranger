@@ -59,4 +59,12 @@ public class XXPolicyItemConditionDao extends BaseDao<XXPolicyItemCondition> {
 		}
 	}
 
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
+		getEntityManager()
+			.createNamedQuery("XXPolicyItemCondition.deleteByPolicyId", tClass)
+			.setParameter("policyId", policyId).executeUpdate();
+	}
 }
