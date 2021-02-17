@@ -25,6 +25,8 @@ import java.util.Map;
 import java.util.Set;
 
 public interface RangerAccessRequest {
+	String RANGER_ACCESS_REQUEST_SCOPE_STRING = "Scope";
+
 	RangerAccessResource getResource();
 
 	String getAccessType();
