@@ -133,6 +133,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 				context.setUserSession(userSession);
 			}
 			HttpServletResponse res = (HttpServletResponse)response;
+			res.setHeader("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
 			res.setHeader("X-Frame-Options", "DENY" );
 			res.setHeader("X-XSS-Protection", "1; mode=block");
 			res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
