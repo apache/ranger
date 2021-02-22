@@ -69,6 +69,9 @@ function doLogin() {
 			"cache-control" : "no-cache"
 		},
 		success : function() {
+			if (localStorage && localStorage['backgrid-colmgr']) {
+				delete localStorage['backgrid-colmgr'];
+			}
 			if(location.hash.length > 2)
 				window.location.replace('index.html'+location.hash);
 			else

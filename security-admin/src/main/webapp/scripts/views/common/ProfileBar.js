@@ -66,6 +66,9 @@ define(function(require){
 					"cache-control" : "no-cache"
 				},
 				success : function() {
+					if (localStorage && localStorage['backgrid-colmgr']) {
+						delete localStorage['backgrid-colmgr'];
+					}
 					if(!_.isUndefined(checksso) && checksso){
 						if(checksso == 'false'){
 							window.location.replace('locallogin');
