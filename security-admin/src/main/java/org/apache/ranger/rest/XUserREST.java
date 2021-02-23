@@ -1379,6 +1379,7 @@ public class XUserREST {
 	@Path("/ugsync/users")
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Transactional(readOnly = false, propagation = Propagation.NOT_SUPPORTED)
 	public String addOrUpdateUsers(VXUserList users) {
 		int ret = xUserMgr.createOrUpdateXUsers(users);
 		return String.valueOf(ret);
