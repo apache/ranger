@@ -2053,12 +2053,7 @@ public class TestXUserMgr {
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.findByLoginId(vxUser.getName())).thenReturn(null);
 		Mockito.when(userDao.findByLoginId(vxUser.getName())).thenReturn(null);
-		Mockito.when(userMgr.mapVXPortalUserToXXPortalUser((VXPortalUser) Mockito.any())).thenReturn(xXPortalUser);
-		Mockito.when(userMgr.createUser(xXPortalUser,RangerCommonEnums.STATUS_ENABLED,userRoleList)).thenReturn(xXPortalUser);
 		Mockito.when(xUserService.createResource((VXUser) Mockito.any())).thenReturn(vxUser);
-		Mockito.when(userMgr.mapXXPortalUserToVXPortalUserForDefaultAccount((XXPortalUser) Mockito.any())).thenReturn(userProfile);
-		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xXModuleDefDao);
-		Mockito.when(xXModuleDefDao.getAll()).thenReturn(xXModuleDefs);
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		UserSessionBase userSession = Mockito.mock(UserSessionBase.class);
 		Set<UserSessionBase> userSessions = new HashSet<UserSessionBase>();
@@ -3216,8 +3211,6 @@ public class TestXUserMgr {
 		Mockito.when(xxUserDao.findByUserName(vxUser.getName())).thenReturn(null);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.findByLoginId(vxUser.getName())).thenReturn(null);
-		Mockito.when(userMgr.mapVXPortalUserToXXPortalUser((VXPortalUser) Mockito.any())).thenReturn(xXPortalUser);
-		Mockito.when(userMgr.createUser(xXPortalUser,RangerCommonEnums.STATUS_ENABLED,userRoleList)).thenReturn(xXPortalUser);
 		Mockito.when(xUserService.createResource((VXUser) Mockito.any())).thenReturn(null);
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		UserSessionBase userSession = Mockito.mock(UserSessionBase.class);
