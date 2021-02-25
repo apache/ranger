@@ -324,6 +324,18 @@
             </organization>
         </developer>
         <developer>
+            <id>dhavalshah9131</id>
+            <name>Dhaval Shah</name>
+            <email>dhavalshah9131@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
+        <developer>
             <id>omalley</id>
             <name>Owen O'Malley</name>
             <email>omalley@apache.org</email>
