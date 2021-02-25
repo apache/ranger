@@ -21,7 +21,11 @@ import unittest
 from unittest.mock                      import patch
 from apache_ranger.exceptions           import RangerServiceException
 from apache_ranger.model.ranger_service import RangerService
-from apache_ranger.client.ranger_client import API, HttpMethod, HTTPStatus, RangerClient
+
+try:
+    from apache_ranger.client.ranger_client import API, HttpMethod, HTTPStatus, RangerClient
+except ModuleNotFoundError: # requests not installed
+    exit() # skipping unit tests
 
 
 class MockResponse:
