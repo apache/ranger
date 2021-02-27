@@ -50,7 +50,6 @@ public class AuditProviderFactory {
 			.getLog(AuditProviderFactory.class);
 
 	public static final String AUDIT_IS_ENABLED_PROP = "xasecure.audit.is.enabled";
-	public static final String AUDIT_DB_IS_ENABLED_PROP = "xasecure.audit.db.is.enabled";
 	public static final String AUDIT_HDFS_IS_ENABLED_PROP = "xasecure.audit.hdfs.is.enabled";
 	public static final String AUDIT_LOG4J_IS_ENABLED_PROP = "xasecure.audit.log4j.is.enabled";
 	public static final String AUDIT_KAFKA_IS_ENABLED_PROP = "xasecure.audit.kafka.is.enabled";
@@ -130,8 +129,6 @@ public class AuditProviderFactory {
             return;
         }
 
-		boolean isAuditToDbEnabled = MiscUtil.getBooleanProperty(props,
-				AUDIT_DB_IS_ENABLED_PROP, false);
 		boolean isAuditToHdfsEnabled = MiscUtil.getBooleanProperty(props,
 				AUDIT_HDFS_IS_ENABLED_PROP, false);
 		boolean isAuditToLog4jEnabled = MiscUtil.getBooleanProperty(props,
@@ -280,7 +277,7 @@ public class AuditProviderFactory {
 		} else {
 			LOG.info("No v3 audit configuration found. Trying v2 audit configurations");
 			if (!isEnabled
-					|| !(isAuditToDbEnabled || isAuditToHdfsEnabled
+					|| !(isAuditToHdfsEnabled
 					|| isAuditToKafkaEnabled || isAuditToLog4jEnabled
 					|| isAuditToSolrEnabled || providers.size() == 0)) {
 				LOG.info("AuditProviderFactory: Audit not enabled..");
@@ -288,31 +285,6 @@ public class AuditProviderFactory {
 				mProvider = getDefaultProvider();
 
 				return;
-			}
-
-			if (isAuditToDbEnabled) {
-				LOG.info("DbAuditProvider is enabled");
-				DbAuditProvider dbProvider = new DbAuditProvider();
-
-				boolean isAuditToDbAsync = MiscUtil.getBooleanProperty(props,
-						DbAuditProvider.AUDIT_DB_IS_ASYNC_PROP, false);
-
-				if (isAuditToDbAsync) {
-					int maxQueueSize = MiscUtil.getIntProperty(props,
-							DbAuditProvider.AUDIT_DB_MAX_QUEUE_SIZE_PROP,
-							AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
-					int maxFlushInterval = MiscUtil.getIntProperty(props,
-							DbAuditProvider.AUDIT_DB_MAX_FLUSH_INTERVAL_PROP,
-							AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
-
-					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
-							"DbAuditProvider", maxQueueSize, maxFlushInterval,
-							dbProvider);
-
-					providers.add(asyncProvider);
-				} else {
-					providers.add(dbProvider);
-				}
 			}
 
 			if (isAuditToHdfsEnabled) {
@@ -448,8 +420,6 @@ public class AuditProviderFactory {
 				provider = new ElasticSearchAuditDestination();
 			} else if (providerName.equalsIgnoreCase("kafka")) {
 				provider = new KafkaAuditProvider();
-			} else if (providerName.equalsIgnoreCase("db")) {
-				provider = new DBAuditDestination();
 			} else if (providerName.equalsIgnoreCase("log4j")) {
 				provider = new Log4JAuditDestination();
 			} else if (providerName.equalsIgnoreCase("batch")) {

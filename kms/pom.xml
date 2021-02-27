@@ -402,6 +402,16 @@
             <artifactId>commons-lang3</artifactId>
             <version>${commons.lang3.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>eclipselink</artifactId>
+            <version>${eclipse.jpa.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.persistence</groupId>
+            <artifactId>javax.persistence</artifactId>
+            <version>${javax.persistence.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>

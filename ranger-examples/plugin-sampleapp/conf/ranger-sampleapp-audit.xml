@@ -17,38 +17,6 @@
 -->
 <?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
 <configuration xmlns:xi="http://www.w3.org/2001/XInclude">
-	<!-- DB audit provider configuration -->
-	<property>
-		<name>xasecure.audit.destination.db</name>
-		<value>false</value>
-	</property>	
-	
-	<property>
-		<name>xasecure.audit.destination.db.jdbc.driver</name>
-		<value>com.mysql.jdbc.Driver</value>
-	</property>	
-	
-	<property>
-		<name>xasecure.audit.destination.db.jdbc.url</name>
-		<value>jdbc:mysql://localhost/ranger_audit</value>
-	</property>	
-
-	<property>
-		<name>xasecure.audit.destination.db.password</name>
-		<value>rangerlogger</value>
-	</property>	
-
-	<property>
-		<name>xasecure.audit.destination.db.user</name>
-		<value>rangerlogger</value>
-	</property>	
-
-	<property>
-		<name>xasecure.audit.destination.db.batch.filespool.dir</name>
-		<value>/tmp/audit/db/spool</value>
-	</property>
-
-
 	<!-- HDFS audit provider configuration -->
 	<property>
 		<name>xasecure.audit.destination.hdfs</name>

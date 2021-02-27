@@ -23,7 +23,6 @@ import static org.junit.Assert.assertEquals;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import org.apache.ranger.audit.dao.DaoManager;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
@@ -163,7 +162,6 @@ public class TestXUserREST {
 	@Mock XXResource xXResource;
 	@Mock XXAuditMap XXAuditMap;
 	@Mock XAuditMapService xAuditMapService;
-	@Mock DaoManager daoManager;
 	@Mock XPermMapService xPermMapService;
 	@Mock XXAsset XXAsset;
 	@Mock RangerDaoManager rangerDaoManager;

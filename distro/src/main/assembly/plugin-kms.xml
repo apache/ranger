@@ -56,8 +56,7 @@
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>com.google.code.gson:gson</include>
-          <include>org.eclipse.persistence:eclipselink</include>
-          <include>org.eclipse.persistence:javax.persistence</include>
+          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>commons-collections:commons-collections</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
           <include>com.google.guava:guava:jar:${google.guava.version}</include>

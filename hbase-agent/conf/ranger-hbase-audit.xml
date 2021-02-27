@@ -21,60 +21,6 @@
 		<name>xasecure.audit.is.enabled</name>
 		<value>true</value>
 	</property>	
-	
-
-	<!-- DB audit provider configuration -->
-	<property>
-		<name>xasecure.audit.db.is.enabled</name>
-		<value>false</value>
-	</property>	
-	
-	<property>
-		<name>xasecure.audit.db.is.async</name>
-		<value>true</value>
-	</property>	
-	
-	<property>
-		<name>xasecure.audit.db.async.max.queue.size</name>
-		<value>10240</value>
-	</property>	
-
-	<property>
-		<name>xasecure.audit.db.async.max.flush.interval.ms</name>
-		<value>30000</value>
-	</property>	
-
-	<property>
-		<name>xasecure.audit.db.batch.size</name>
-		<value>100</value>
-	</property>	
-
-	<!--  Properties whose name begin with "xasecure.audit.jpa." are used to configure JPA -->
-	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.url</name>
-		<value>jdbc:mysql://localhost:3306/ranger_audit</value>
-	</property>
-
-	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.user</name>
-		<value>rangerlogger</value>
-	</property>
-
-	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.password</name>
-		<value>none</value>
-	</property>
-
-	<property>
-		<name>xasecure.audit.jpa.javax.persistence.jdbc.driver</name>
-		<value>com.mysql.jdbc.Driver</value>
-	</property>
-
-	<property>
-		<name>xasecure.audit.credential.provider.file</name>
-		<value>jceks://file/etc/ranger/hbasedev/auditcred.jceks</value>
-	</property>
-
 
 	<!-- HDFS audit provider configuration -->
 	<property>

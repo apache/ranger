@@ -59,16 +59,6 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>eclipselink</artifactId>
-            <version>${eclipse.jpa.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.eclipse.persistence</groupId>
-            <artifactId>javax.persistence</artifactId>
-            <version>${javax.persistence.version}</version>
-        </dependency>
-        <dependency>
             <groupId>log4j</groupId>
             <artifactId>log4j</artifactId>
             <version>${log4j.version}</version>
