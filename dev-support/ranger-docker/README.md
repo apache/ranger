@@ -39,7 +39,7 @@ Docker files in this folder create docker images and run them to build Apache Ra
 
    4.2. Execute following command to start Ranger, Ranger enabled HDFS/YARN/HBase/Kafka and dependent services (Solr, DB) in containers:
 
-        docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml up -d
+        docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml up -d
 
 5. Alternatively docker command can be used to build and deploy Apache Ranger.
 
@@ -69,53 +69,69 @@ Docker files in this folder create docker images and run them to build Apache Ra
 
         docker build -f Dockerfile.ranger-solr -t ranger-solr .
 
-   5.6. Execute following command to start a container that runs database for use by Ranger Admin:
+   5.6. Execute following command to build a Docker image **ranger-db**:
 
-        docker run --name ranger-db --hostname ranger-db.example.com --env-file ./.env -d postgres:12
+        docker build -f Dockerfile.ranger-db -t ranger-db .
 
    5.7. Execute following command to start a container that runs Solr for use by Ranger Admin:
 
         docker run --name ranger-solr --hostname ranger-solr.example.com -p 8983:8983 -d ranger-solr solr-precreate ranger_audits /opt/solr/server/solr/configsets/ranger_audits/
 
-   5.8. Execute following command to install and run Ranger services in a container:
+   5.8. Execute following command to start a container that runs database for use by Ranger Admin:
+
+        docker run --name ranger-db --hostname ranger-db.example.com --env-file ./.env -d ranger-db
+
+   5.9. Execute following command to install and run Ranger services in a container:
 
         docker run -it -d --name ranger --hostname ranger.example.com -p 6080:6080 --link ranger-db:ranger-db --link ranger-solr:ranger-solr --env-file ./.env ranger
 
    This might take few minutes to complete.
 
-   5.9. Execute following command to build Docker image **ranger-hadoop**:
+   5.10. Execute following command to build Docker image **ranger-hadoop**:
 
-        docker build -f Dockerfile.ranger-hadoop --build-arg RANGER_VERSION=`cat dist/version` --build-arg HADOOP_VERSION=3.1.1 -t ranger-hadoop .
+         docker build -f Dockerfile.ranger-hadoop --build-arg RANGER_VERSION=`cat dist/version` --build-arg HADOOP_VERSION=3.3.0 -t ranger-hadoop .
 
    This step includes downloading of Hadoop tar balls, and can take a while to complete.
 
-   5.10. Execute following command to install and run Ranger enabled HDFS in a container:
+   5.11. Execute following command to install and run Ranger enabled HDFS in a container:
 
          docker run -it -d --name ranger-hadoop --hostname ranger-hadoop.example.com -p 9000:9000 -p 8088:8088 --link ranger:ranger --link ranger-solr:ranger-solr --env-file ./.env ranger-hadoop
 
    This might take few minutes to complete.
 
-   5.11. Execute following command to build Docker image **ranger-hbase**:
+   5.12. Execute following command to build Docker image **ranger-hbase**:
 
-         docker build -f Dockerfile.ranger-hbase --build-arg RANGER_VERSION=`cat dist/version` --build-arg HBASE_VERSION=2.0.3 -t ranger-hbase .
+         docker build -f Dockerfile.ranger-hbase --build-arg RANGER_VERSION=`cat dist/version` --build-arg HBASE_VERSION=2.2.6 -t ranger-hbase .
 
    This step includes downloading of HBase tar ball, and can take a while to complete.
 
-   5.12. Execute following command to install and run Ranger enabled HBase in a container:
+   5.13. Execute following command to install and run Ranger enabled HBase in a container:
 
          docker run -it -d --name ranger-hbase --hostname ranger-hbase.example.com --link ranger-hadoop:ranger-hadoop --link ranger:ranger --link ranger-solr:ranger-solr --env-file ./.env ranger-hbase
 
    This might take few minutes to complete.
 
-   5.13. Execute following command to build Docker image **ranger-kafka**:
+   5.14. Execute following command to build Docker image **ranger-kafka**:
 
          docker build -f Dockerfile.ranger-kafka --build-arg RANGER_VERSION=`cat dist/version` --build-arg KAFKA_VERSION=2.5.0 -t ranger-kafka .
 
    This step includes downloading of Kafka tar ball, and can take a while to complete.
 
-   5.14. Execute following command to install and run Ranger enabled Kafka in a container:
+   5.15. Execute following command to install and run Ranger enabled Kafka in a container:
 
          docker run -it -d --name ranger-kafka --hostname ranger-kafka.example.com --link ranger-hadoop:ranger-hadoop --link ranger:ranger --link ranger-solr:ranger-solr --env-file ./.env ranger-kafka
+
+   This might take few minutes to complete.
+
+   5.16. Execute following command to build Docker image **ranger-hive**:
+
+         docker build -f Dockerfile.ranger-hive --build-arg RANGER_VERSION=`cat dist/version` --build-arg HIVE_VERSION=3.1.2 --build-arg HIVE_HADOOP_VERSION=3.1.0 -t ranger-hbase .
+
+   This step includes downloading of Hive tar ball and Hadoop tar ball, and can take a while to complete.
+
+   5.17. Execute following command to install and run Ranger enabled Hive in a container:
+
+         docker run -it -d --name ranger-hive --hostname ranger-hive.example.com --link ranger-hadoop:ranger-hadoop --link ranger-hbase:ranger-hbase --link ranger:ranger --link ranger-solr:ranger-solr --env-file ./.env ranger-hive
 
    This might take few minutes to complete.
 

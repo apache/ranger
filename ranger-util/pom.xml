@@ -46,7 +46,7 @@
                         <phase>generate-sources</phase>
                         <configuration>
                             <target>
-                                <exec executable="python" failonerror="true">
+                                <exec executable="python3" failonerror="true">
                                     <arg value="${project.basedir}/src/scripts/saveVersion.py"/>
                                     <arg value="${project.version}"/>
                                     <arg value="${ranger.version.shortname}"/>

@@ -1,0 +1,30 @@
+version: '3'
+services:
+  ranger-hive:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-hive
+      args:
+        - HIVE_HADOOP_VERSION=${HIVE_HADOOP_VERSION}
+        - HIVE_VERSION=${HIVE_VERSION}
+        - RANGER_VERSION=${RANGER_VERSION}
+    image: ranger-hive
+    container_name: ranger-hive
+    hostname: ranger-hive.example.com
+    stdin_open: true
+    tty: true
+    networks:
+      - ranger
+    ports:
+      - "10000:10000"
+    depends_on:
+      - ranger
+      - ranger-hadoop
+      - ranger-hbase
+    environment:
+      - HIVE_HADOOP_VERSION
+      - HIVE_VERSION
+      - RANGER_VERSION
+
+networks:
+  ranger:
