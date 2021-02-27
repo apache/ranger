@@ -20,12 +20,9 @@ FROM ubuntu:20.04
 # Install curl, wget, tzdata, Python, Java, python-requests
 RUN apt-get update && \
     DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata \
-    python python3 python3-pip openjdk-8-jdk bc iputils-ping ssh pdsh && \
-    curl https://bootstrap.pypa.io/get-pip.py --output /tmp/get-pip.py && \
-    python2 /tmp/get-pip.py && \
+    python3 python3-pip openjdk-8-jdk bc iputils-ping ssh pdsh && \
     pip3 install apache-ranger && \
-    pip3 install requests && \
-    pip install requests
+    pip3 install requests
 
 # Set environment variables
 ENV JAVA_HOME      /usr/lib/jvm/java-8-openjdk-amd64

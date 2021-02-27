@@ -16,16 +16,27 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-${HADOOP_HOME}/bin/hdfs dfs -mkdir /hbase
+# setup directories for Ranger audits
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hdfs
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/yarn
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hbaseMaster
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hbaseRegional
 ${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/kafka
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /ranger/audit/hiveServer2
 
-${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /hbase
 ${HADOOP_HOME}/bin/hdfs dfs -chown hdfs:hadoop  /ranger/audit/hdfs
 ${HADOOP_HOME}/bin/hdfs dfs -chown yarn:hadoop  /ranger/audit/yarn
 ${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /ranger/audit/hbaseMaster
 ${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /ranger/audit/hbaseRegional
 ${HADOOP_HOME}/bin/hdfs dfs -chown kafka:hadoop /ranger/audit/kafka
+${HADOOP_HOME}/bin/hdfs dfs -chown hive:hadoop  /ranger/audit/hiveServer2
+
+# setup directories for HBase
+${HADOOP_HOME}/bin/hdfs dfs -mkdir /hbase
+${HADOOP_HOME}/bin/hdfs dfs -chown hbase:hadoop /hbase
+
+# setup directories for Hive
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /user/hive/warehouse
+${HADOOP_HOME}/bin/hdfs dfs -mkdir -p /tmp/hive
+${HADOOP_HOME}/bin/hdfs dfs -chown -R hive:hadoop /tmp/hive /user/hive
+${HADOOP_HOME}/bin/hdfs dfs -chmod 777 /tmp/hive

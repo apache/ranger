@@ -41,13 +41,14 @@ services:
       - /opt/solr/server/solr/configsets/ranger_audits/
 
   ranger-db:
-    image: postgres:12
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-db
+    image: ranger-db
     container_name: ranger-db
     hostname: ranger-db.example.com
     networks:
       - ranger
-    environment:
-      POSTGRES_PASSWORD: rangerR0cks!
 
 networks:
   ranger:
