@@ -50,6 +50,7 @@ import org.junit.Test;
  * e) "jane" can do a select on the table "words", but only get a "hash" of the word, and not the word itself.
  * f) "da_test_user" is delegate admin for rangerauthz database.
  * g) "tom" has all permissions on database "test1" and has all permissions on all databases with regard to UDF
+ * h) "Murray" can do a select on the table "words" but only if the "word" is same as its username i.e. Murray
  *
  * In addition we have some TAG based policies created in Atlas and synced into Ranger:
  *
@@ -602,6 +603,32 @@ public class HIVERangerAuthorizerTest {
         	Assert.assertEquals(79, resultSet.getInt(2));
         } else {
         	Assert.fail("No ResultSet found");
+        }
+
+        statement.close();
+        connection.close();
+    }
+
+    @Test
+    public void testHiveRowFilterWithCurrentUserTransformation() throws Exception {
+
+        // Murray can do a select where the word is Murray
+        String url = "jdbc:hive2://localhost:" + port + "/rangerauthz";
+        Connection connection = DriverManager.getConnection(url, "dave", "dave");
+        Statement statement = connection.createStatement();
+
+        // "Murray" can select where word = "Murray"
+        ResultSet resultSet = statement.executeQuery("SELECT * FROM words where word == 'Murray'");
+        if (resultSet.next()) {
+            Assert.assertEquals("Murray", resultSet.getString(1));
+            Assert.assertEquals(3, resultSet.getInt(2));
+        } else {
+            Assert.fail("No ResultSet found");
+        }
+
+        resultSet = statement.executeQuery("SELECT * FROM words where word == 'Mr.'");
+        if (resultSet.next()) {
+            Assert.fail("Authorization should not be granted for count < 80");
         }
 
         statement.close();

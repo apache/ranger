@@ -74,6 +74,20 @@
             }
           ],
           "users": [
+            "Murray"
+          ],
+          "groups": [],
+          "conditions": [],
+          "delegateAdmin": false
+        },
+        {
+          "accesses": [
+            {
+              "type": "select",
+              "isAllowed": true
+            }
+          ],
+          "users": [
             "jane"
           ],
           "groups": [],
@@ -1851,6 +1865,56 @@
         "dataMaskPolicyItems": [],
         "rowFilterPolicyItems": [],
         "id": 31,
+        "isEnabled": true,
+        "version": 1
+      },
+      {
+        "service": "cl1_hive",
+        "name": "MurrayPolicy",
+        "policyType": 2,
+        "description": "",
+        "isAuditEnabled": true,
+        "resources": {
+          "database": {
+            "values": [
+              "rangerauthz"
+            ],
+            "isExcludes": false,
+            "isRecursive": false
+          },
+          "table": {
+            "values": [
+              "words"
+            ],
+            "isExcludes": false,
+            "isRecursive": false
+          }
+        },
+        "policyItems": [],
+        "denyPolicyItems": [],
+        "allowExceptions": [],
+        "denyExceptions": [],
+        "dataMaskPolicyItems": [],
+        "rowFilterPolicyItems": [
+          {
+            "rowFilterInfo": {
+              "filterExpr": "word \u003d \u0027{USER}\u0027"
+            },
+            "accesses": [
+              {
+                "type": "select",
+                "isAllowed": true
+              }
+            ],
+            "users": [
+              "Murray"
+            ],
+            "groups": [],
+            "conditions": [],
+            "delegateAdmin": false
+          }
+        ],
+        "id": 32,
         "isEnabled": true,
         "version": 1
       }

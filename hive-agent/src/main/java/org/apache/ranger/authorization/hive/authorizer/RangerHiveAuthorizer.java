@@ -80,13 +80,9 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
-import org.apache.ranger.plugin.util.GrantRevokeRequest;
-import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
-import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.*;
 
 import com.google.common.collect.Sets;
-import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.apache.ranger.plugin.util.RangerRequestedResources;
 
 public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class);
@@ -1261,6 +1257,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 			if(isRowFilterEnabled(result)) {
 				ret = result.getFilterExpr();
+				if(StringUtils.isNotBlank(ret)){
+					ret = ret.replace(RangerCommonConstants.CURRENT_USER_IDENTIFIER, ugi.getUserName());
+				}
 			}
 		} finally {
 			auditHandler.flushAudit();
