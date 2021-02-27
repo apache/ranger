@@ -356,49 +356,6 @@ then
 	chown -R ${CFG_OWNER_INF} /etc/${PROJ_NAME}/${REPO_NAME}
 	
 
-	#
-	# We need to do the AUDIT JDBC url 
-	#
-db_flavor=''
-db_flavor=`echo $(getInstallProperty 'XAAUDIT.DB.FLAVOUR') | tr '[:lower:]' '[:upper:]'`
-if [ "${db_flavor}" != "" ]
-then
-    audit_db_hostname=$(getInstallProperty 'XAAUDIT.DB.HOSTNAME')
-    audit_db_name=$(getInstallProperty 'XAAUDIT.DB.DATABASE_NAME')
-	
-	if [ "${db_flavor}" = "MYSQL" ]
-	then
-    	export XAAUDIT_DB_JDBC_URL="jdbc:mysql://${audit_db_hostname}/${audit_db_name}"
-    	export XAAUDIT_DB_JDBC_DRIVER="com.mysql.jdbc.Driver"
-	elif [ "${db_flavor}" = "ORACLE" ]
-	then
-		count=$(grep -o ":" <<< "$audit_db_hostname" | wc -l)
-		#if [[ ${count} -eq 2 ]] ; then
-		if [ ${count} -eq 2 ] || [ ${count} -eq 0 ]; then
-			#jdbc:oracle:thin:@[HOST][:PORT]:SID or #jdbc:oracle:thin:@GL
-			newPropertyValue="jdbc:oracle:thin:@${audit_db_hostname}"
-		else
-			#jdbc:oracle:thin:@//[HOST][:PORT]/SERVICE
-			newPropertyValue="jdbc:oracle:thin:@//${audit_db_hostname}"
-		fi
-		export XAAUDIT_DB_JDBC_URL=${newPropertyValue}
-    	export XAAUDIT_DB_JDBC_DRIVER="oracle.jdbc.OracleDriver"
-    elif [ "${db_flavor}" = "POSTGRES" ]
-	then
-		export XAAUDIT_DB_JDBC_URL="jdbc:postgresql://${audit_db_hostname}/${audit_db_name}"
-		export XAAUDIT_DB_JDBC_DRIVER="org.postgresql.Driver"
-	elif [ "${db_flavor}" = "MSSQL" ]
-	then
-		export XAAUDIT_DB_JDBC_URL="jdbc:sqlserver://${audit_db_hostname};databaseName=${audit_db_name}"
-		export XAAUDIT_DB_JDBC_DRIVER="com.microsoft.sqlserver.jdbc.SQLServerDriver"
-	else
-        echo "Audit is not specified with a valid db_flavor: [${db_flavor}]. Ignoring audit ..."
-        export XAAUDIT_DB_JDBC_URL="jdbc:${db_flavor}://${audit_db_hostname}/${audit_db_name}"
-        export XAAUDIT_DB_JDBC_DRIVER="com.unknown.driver.${db_flavor}"
-	fi
-fi
-
-
 	for f in ${PROJ_INSTALL_DIR}/install/conf.templates/${action}/*.cfg
 	do
 		if [ -f "${f}" ]

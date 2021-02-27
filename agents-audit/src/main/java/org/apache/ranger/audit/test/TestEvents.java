@@ -55,21 +55,11 @@ public class TestEvents {
             } else {
                 LOG.info("Audit properties file missing: " + AUDIT_PROPERTIES_FILE);
 
-                auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.url", "jdbc:mysql://localhost:3306/xa_db");
-                auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.user", "xaaudit");
-                auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.password", "xaaudit");
-                auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.driver", "com.mysql.jdbc.Driver");
-
                 auditProperties.setProperty("xasecure.audit.is.enabled", "true");
                 auditProperties.setProperty("xasecure.audit.log4j.is.enabled", "false");
                 auditProperties.setProperty("xasecure.audit.log4j.is.async", "false");
                 auditProperties.setProperty("xasecure.audit.log4j.async.max.queue.size", "100000");
                 auditProperties.setProperty("xasecure.audit.log4j.async.max.flush.interval.ms", "30000");
-                auditProperties.setProperty("xasecure.audit.db.is.enabled", "false");
-                auditProperties.setProperty("xasecure.audit.db.is.async", "true");
-                auditProperties.setProperty("xasecure.audit.db.async.max.queue.size", "100000");
-                auditProperties.setProperty("xasecure.audit.db.async.max.flush.interval.ms", "30000");
-                auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
             }
 
             AuditProviderFactory factory = new AuditProviderFactory();

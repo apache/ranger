@@ -48,8 +48,6 @@
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                    <include>org.eclipse.persistence:eclipselink</include>
-                    <include>org.eclipse.persistence:javax.persistence</include>
                     <include>commons-collections:commons-collections</include>
                     <include>com.sun.jersey:jersey-bundle</include>
                     <include>commons-io:commons-io</include>

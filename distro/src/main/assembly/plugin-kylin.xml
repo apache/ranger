@@ -57,8 +57,6 @@
             <outputDirectory>lib/ranger-kylin-plugin-impl</outputDirectory>
             <unpack>false</unpack>
             <includes>
-              <include>org.eclipse.persistence:eclipselink</include>
-              <include>org.eclipse.persistence:javax.persistence</include>
               <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
               <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
               <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>

@@ -55,8 +55,6 @@
 					<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 					<include>com.google.code.gson:gson</include>
-					<include>org.eclipse.persistence:eclipselink</include>
-					<include>org.eclipse.persistence:javax.persistence</include>
 					<include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
 					<include>commons-collections:commons-collections</include>
 					<include>com.sun.jersey:jersey-bundle</include>

@@ -21,15 +21,11 @@ package org.apache.ranger.audit.model;
 
 import java.util.Date;
 
-import org.apache.ranger.audit.dao.DaoManager;
-
 public abstract class AuditEventBase {
 
 	protected AuditEventBase() {
 	}
 
-	public abstract void persist(DaoManager daoManager);
-	
 	public abstract String getEventKey();
 	public abstract Date getEventTime ();
 	public abstract void setEventCount(long eventCount);
