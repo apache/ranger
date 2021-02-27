@@ -2029,17 +2029,14 @@ public class TestXUserMgr {
 	public void test49createServiceConfigUser() {
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
-		XXModuleDefDao xXModuleDefDao = Mockito.mock(XXModuleDefDao.class);
 		VXUser vxUser = vxUser();
 		XXUser xXUser = xxUser(vxUser);
 		VXPortalUser userProfile = userProfile();
 		XXPortalUser xXPortalUser = xxPortalUser(userProfile);
-		Collection<String> userRoleList =getRoleList();
 		VXUserPermission vXUserPermission=vxUserPermission();
 		XXUserPermission xUserPermissionObj = xxUserPermission();
 		xUserPermissionObj.setModuleId(vXUserPermission.getModuleId());
 		xUserPermissionObj.setUserId(vXUserPermission.getUserId());
-		List<XXModuleDef> xXModuleDefs = xxModuleDefs();
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(vxUser.getName())).thenReturn(xXUser);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
@@ -3194,7 +3191,6 @@ public class TestXUserMgr {
 		XXUser xXUser = xxUser(vxUser);
 		VXPortalUser userProfile = userProfile();
 		XXPortalUser xXPortalUser = xxPortalUser(userProfile);
-		Collection<String> userRoleList =getRoleList();
 		VXUserPermission vXUserPermission=vxUserPermission();
 		XXUserPermission xUserPermissionObj = xxUserPermission();
 		xUserPermissionObj.setModuleId(vXUserPermission.getModuleId());

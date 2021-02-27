@@ -139,4 +139,6 @@ public interface TagStore {
 
     void deleteAllTagObjectsForService(String serviceName) throws Exception;
 
+    boolean isInPlaceTagUpdateSupported();
+
 }

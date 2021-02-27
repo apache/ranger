@@ -30,6 +30,7 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.TagStore;
+import org.apache.ranger.plugin.util.RangerReadWriteLock;
 import org.apache.ranger.plugin.util.ServiceTags;
 
 public class RangerAdminTagEnricher extends RangerTagEnricher {
@@ -71,9 +72,11 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
         if (tagStore == null || svcStore == null) {
             LOG.error("ServiceDBStore/TagDBStore is not initialized!! Internal Error!");
         } else {
+            super.init();
             try {
                 RangerService service = svcStore.getServiceByName(serviceName);
                 serviceId = service.getId();
+                createLock();
             } catch (Exception e) {
                 LOG.error("Cannot find service with name:[" + serviceName + "]", e);
                 LOG.error("This will cause tag-enricher in Ranger-Admin to fail!!");
@@ -82,6 +85,15 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerAdminTagEnricher.init()");
         }
+    }
+
+    @Override
+    protected RangerReadWriteLock createLock() {
+        boolean useReadWriteLock = tagStore != null && tagStore.isInPlaceTagUpdateSupported();
+
+        LOG.info("Policy-Engine will" + (useReadWriteLock ? " " : " not ") + "use read-write locking to update tags in place when tag-deltas are provided");
+
+        return new RangerReadWriteLock(useReadWriteLock);
     }
 
     @Override

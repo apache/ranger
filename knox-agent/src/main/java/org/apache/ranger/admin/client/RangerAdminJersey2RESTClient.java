@@ -71,8 +71,8 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	String _sslConfigFileName = null;
 	String _serviceName = null;
 	String _clusterName = null;
-	String _supportsPolicyDeltas = null;
-	String _supportsTagDeltas = null;
+	boolean _supportsPolicyDeltas = false;
+	boolean _supportsTagDeltas = false;
 	String _pluginId = null;
 	int	   _restClientConnTimeOutMs;
 	int	   _restClientReadTimeOutMs;
@@ -99,14 +99,8 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		if(StringUtil.isEmpty(_clusterName)){
 			_clusterName =config.get(configPropertyPrefix + ".ambari.cluster.name", "");
 		}
-		_supportsPolicyDeltas = config.get(configPropertyPrefix + ".policy.rest.supports.policy.deltas", "false");
-		if (!"true".equalsIgnoreCase(_supportsPolicyDeltas)) {
-			_supportsPolicyDeltas = "false";
-		}
-		_supportsTagDeltas = config.get(configPropertyPrefix + ".tag.rest.supports.tag.deltas", "false");
-		if (!"true".equalsIgnoreCase(_supportsTagDeltas)) {
-			_supportsTagDeltas = "false";
-		}
+		_supportsPolicyDeltas = config.getBoolean(configPropertyPrefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_POLICY_DELTA, RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_POLICY_DELTA_DEFAULT);
+		_supportsTagDeltas = config.getBoolean(configPropertyPrefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_TAG_DELTA, RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_TAG_DELTA_DEFAULT);
 
 		configURLs = StringUtil.getURLs(tmpUrl);
 		this.lastKnownActiveUrlIndex = new Random().nextInt(configURLs.size());
@@ -141,7 +135,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
 		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName);
-		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, _supportsPolicyDeltas);
+		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_POLICY_DELTAS, Boolean.toString(_supportsPolicyDeltas));
 		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
 		if (isSecureMode) {
@@ -383,7 +377,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_POLICY_VERSION, Long.toString(lastKnownVersion));
 		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
 		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
-		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS, _supportsTagDeltas);
+		queryParams.put(RangerRESTUtils.REST_PARAM_SUPPORTS_TAG_DELTAS, Boolean.toString(_supportsTagDeltas));
 		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
 
 		String relativeURL = null;

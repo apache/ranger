@@ -49,6 +49,7 @@ import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
@@ -74,6 +75,7 @@ public class TagDBStore extends AbstractTagStore {
 
 	private static boolean SUPPORTS_TAG_DELTAS = false;
 	private static boolean IS_SUPPORTS_TAG_DELTAS_INITIALIZED = false;
+	public static boolean SUPPORTS_IN_PLACE_TAG_UPDATES = false;
 
 	@Autowired
 	RangerTagDefService rangerTagDefService;
@@ -1270,13 +1272,23 @@ public class TagDBStore extends AbstractTagStore {
 		return ret;
 	}
 
-	public static boolean isSupportsTagDeltas() {
-        if (!IS_SUPPORTS_TAG_DELTAS_INITIALIZED) {
-            RangerAdminConfig config = RangerAdminConfig.getInstance();
+	private static void initStatics() {
+		if (!IS_SUPPORTS_TAG_DELTAS_INITIALIZED) {
+			RangerAdminConfig config = RangerAdminConfig.getInstance();
 
-            SUPPORTS_TAG_DELTAS = config.getBoolean("ranger.admin.supports.tag.deltas", false);
-            IS_SUPPORTS_TAG_DELTAS_INITIALIZED = true;
-        }
+			SUPPORTS_TAG_DELTAS = config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_TAG_DELTA, RangerCommonConstants.RANGER_ADMIN_SUFFIX_TAG_DELTA_DEFAULT);
+			SUPPORTS_IN_PLACE_TAG_UPDATES    = SUPPORTS_TAG_DELTAS && config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES, RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT);
+			IS_SUPPORTS_TAG_DELTAS_INITIALIZED = true;
+		}
+	}
+
+	public static boolean isSupportsTagDeltas() {
+		initStatics();
         return SUPPORTS_TAG_DELTAS;
     }
+
+	public boolean isInPlaceTagUpdateSupported() {
+		initStatics();
+		return SUPPORTS_IN_PLACE_TAG_UPDATES;
+	}
 }
