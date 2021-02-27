@@ -70,6 +70,7 @@ import org.apache.ranger.db.XXGlobalStateDao;
 import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.entity.XXTagChangeLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
@@ -240,6 +241,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public static final String  SALT            = PropertiesUtil.getProperty("ranger.password.salt", PasswordUtils.DEFAULT_SALT);
 	public static final Integer ITERATION_COUNT = PropertiesUtil.getIntProperty("ranger.password.iteration.count", PasswordUtils.DEFAULT_ITERATION_COUNT);
 	public static boolean SUPPORTS_POLICY_DELTAS = false;
+	public static boolean SUPPORTS_IN_PLACE_POLICY_UPDATES = false;
 	public static Integer RETENTION_PERIOD_IN_DAYS = 7;
 	public static Integer TAG_RETENTION_PERIOD_IN_DAYS = 3;
 
@@ -377,10 +379,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 			synchronized(ServiceDBStore.class) {
 				if(!legacyServiceDefsInitDone) {
 
-					SUPPORTS_POLICY_DELTAS       = config.getBoolean("ranger.admin.supports.policy.deltas", false);
+					SUPPORTS_POLICY_DELTAS       = config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA, RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA_DEFAULT);
 					RETENTION_PERIOD_IN_DAYS     = config.getInt("ranger.admin.delta.retention.time.in.days", 7);
 					TAG_RETENTION_PERIOD_IN_DAYS = config.getInt("ranger.admin.tag.delta.retention.time.in.days", 3);
 					isRolesDownloadedByService   = config.getBoolean("ranger.support.for.service.specific.role.download", false);
+					SUPPORTS_IN_PLACE_POLICY_UPDATES    = SUPPORTS_POLICY_DELTAS && config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES, RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES_DEFAULT);
 
 					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
@@ -2818,7 +2821,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public ServicePolicies getServicePolicyDeltasOrPolicies(String serviceName, Long lastKnownVersion) throws Exception {
 		boolean getOnlyDeltas = false;
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin.supports.policy.deltas\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
+			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA + "\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
 		}
 		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, SUPPORTS_POLICY_DELTAS);
 	}
@@ -2827,7 +2830,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception {
 		boolean getOnlyDeltas = true;
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin.supports.policy.deltas\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
+			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA + "\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
 		}
 		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, SUPPORTS_POLICY_DELTAS);
 	}

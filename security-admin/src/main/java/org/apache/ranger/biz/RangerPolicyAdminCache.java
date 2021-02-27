@@ -158,11 +158,11 @@ public class RangerPolicyAdminCache {
 					oldPolicyAdmin.releaseResources(!isPolicyEngineShared);
 				}
 			} else {
-				LOG.warn("Could not build new policy-engine. Continuing with the old policy-engine, if any");
+				LOG.warn("Could not build new policy-engine.");
 			}
 		}
 
-		return ret != null ? ret : oldPolicyAdmin;
+		return ret;
 	}
 
 	private RangerPolicyAdmin addPolicyAdmin(ServicePolicies policies, RangerRoles roles, RangerPolicyEngineOptions options) {

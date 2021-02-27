@@ -21,7 +21,25 @@ package org.apache.ranger.plugin.util;
 
 public class RangerCommonConstants {
 
-	public static final String PROP_COOKIE_NAME = "ranger.admin.cookie.name";
-	public static final String DEFAULT_COOKIE_NAME = "RANGERADMINSESSIONID";
+	public static final String PROP_COOKIE_NAME                             = "ranger.admin.cookie.name";
+	public static final String DEFAULT_COOKIE_NAME                          = "RANGERADMINSESSIONID";
+	public static final String PLUGIN_CONFIG_SUFFIX_POLICY_DELTA            = ".policy.rest.supports.policy.deltas";
+	public static final String PLUGIN_CONFIG_SUFFIX_TAG_DELTA               = ".tag.rest.supports.policy.deltas";
+	public static final String PLUGIN_CONFIG_SUFFIX_IN_PLACE_POLICY_UPDATES = ".supports.in.place.policy.updates";
+	public static final String PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES    = ".supports.in.place.tag.updates";
+	public static final String RANGER_ADMIN_SUFFIX_POLICY_DELTA             = ".supports.policy.deltas";
+	public static final String RANGER_ADMIN_SUFFIX_TAG_DELTA                = ".supports.tag.deltas";
+	public static final String RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES  = ".supports.in.place.policy.updates";
+	public static final String RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES     = ".supports.in.place.tag.updates";
+
+	public static final boolean PLUGIN_CONFIG_SUFFIX_POLICY_DELTA_DEFAULT            = false;
+	public static final boolean PLUGIN_CONFIG_SUFFIX_TAG_DELTA_DEFAULT               = false;
+	public static final boolean PLUGIN_CONFIG_SUFFIX_IN_PLACE_POLICY_UPDATES_DEFAULT = false;
+	public static final boolean PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT    = false;
+	public static final boolean RANGER_ADMIN_SUFFIX_POLICY_DELTA_DEFAULT             = false;
+	public static final boolean RANGER_ADMIN_SUFFIX_TAG_DELTA_DEFAULT                = false;
+	public static final boolean RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES_DEFAULT  = false;
+	public static final boolean RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT     = false;
+
 
 }
