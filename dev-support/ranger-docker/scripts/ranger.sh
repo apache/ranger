@@ -45,5 +45,7 @@ then
   python3 ${RANGER_SCRIPTS}/ranger-kafka-service-dev_kafka.py
 fi
 
+RANGER_ADMIN_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.server.tomcat.EmbeddedServer" | awk '{print $2}'`
+
 # prevent the container from exiting
-/bin/bash
+tail --pid=$RANGER_ADMIN_PID -f /dev/null

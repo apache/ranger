@@ -15,11 +15,15 @@ services:
     networks:
       - ranger
     ports:
-      - "2181:16181"
+      - "16000:16000"
       - "16010:16010"
       - "16020:16020"
+      - "16030:16030"
     depends_on:
-      - ranger-hadoop
+      ranger-hadoop:
+        condition: service_healthy
+      ranger-zk:
+        condition: service_started
     environment:
       - HBASE_VERSION
       - RANGER_VERSION

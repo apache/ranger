@@ -31,9 +31,4 @@ then
   touch ${KAFKA_HOME}/.setupDone
 fi
 
-su -c "cd ${KAFKA_HOME} && ./bin/zookeeper-server-start.sh config/zookeeper.properties &" kafka
-sleep 30
-su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config ./bin/kafka-server-start.sh config/server.properties &" kafka
-
-# prevent the container from exiting
-/bin/bash
+su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config ./bin/kafka-server-start.sh config/server.properties" kafka

@@ -17,9 +17,9 @@
 FROM ubuntu:20.04
 
 
-# Install curl, wget, tzdata, Python, Java, python-requests
+# Install tzdata, Python, Java, python-requests
 RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -y install curl wget tzdata \
+    DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata \
     python3 python3-pip openjdk-8-jdk bc iputils-ping ssh pdsh && \
     pip3 install apache-ranger && \
     pip3 install requests

@@ -23,16 +23,17 @@ ARG RANGER_VERSION
 COPY ./dist/version                                     /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-hdfs-plugin.tar.gz /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-yarn-plugin.tar.gz /home/ranger/dist/
+COPY ./downloads/hadoop-${HADOOP_VERSION}.tar.gz        /home/ranger/dist/
+
 COPY ./scripts/ranger-hadoop-setup.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hadoop.sh                         /home/ranger/scripts/
 COPY ./scripts/ranger-hadoop-mkdir.sh                   /home/ranger/scripts/
 COPY ./scripts/ranger-hdfs-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/ranger-yarn-plugin-install.properties    /home/ranger/scripts/
 
-RUN curl https://archive.apache.org/dist/hadoop/common/hadoop-${HADOOP_VERSION}/hadoop-${HADOOP_VERSION}.tar.gz  --output /tmp/hadoop-${HADOOP_VERSION}.tar.gz && \
-    tar xvfz /tmp/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/ && \
+RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/ && \
     ln -s /opt/hadoop-${HADOOP_VERSION} /opt/hadoop && \
-    rm -f /tmp/hadoop-${HADOOP_VERSION}.tar.gz && \
+    rm -f /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz && \
     tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-hdfs-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${RANGER_VERSION}-hdfs-plugin /opt/ranger/ranger-hdfs-plugin && \
     rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-hdfs-plugin.tar.gz && \

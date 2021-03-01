@@ -22,15 +22,16 @@ ARG RANGER_VERSION
 
 COPY ./dist/version                                      /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-hbase-plugin.tar.gz /home/ranger/dist/
+COPY ./downloads/hbase-${HBASE_VERSION}-bin.tar.gz       /home/ranger/dist/
+
 COPY ./scripts/ranger-hbase-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-hbase.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-hbase-plugin-install.properties    /home/ranger/scripts/
 COPY ./scripts/hbase-site.xml                            /home/ranger/scripts/
 
-RUN curl https://archive.apache.org/dist/hbase/${HBASE_VERSION}/hbase-${HBASE_VERSION}-bin.tar.gz  --output /tmp/hbase-${HBASE_VERSION}-bin.tar.gz && \
-    tar xvfz /tmp/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/opt/ && \
+RUN tar xvfz /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz --directory=/opt/ && \
     ln -s /opt/hbase-${HBASE_VERSION} /opt/hbase && \
-    rm -f /tmp/hbase-${HBASE_VERSION}-bin.tar.gz && \
+    rm -f /home/ranger/dist/hbase-${HBASE_VERSION}-bin.tar.gz && \
     tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-hbase-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${RANGER_VERSION}-hbase-plugin /opt/ranger/ranger-hbase-plugin && \
     rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-hbase-plugin.tar.gz && \

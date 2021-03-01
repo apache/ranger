@@ -18,9 +18,12 @@ services:
     ports:
       - "10000:10000"
     depends_on:
-      - ranger
-      - ranger-hadoop
-      - ranger-hbase
+      ranger:
+        condition: service_started
+      ranger-zk:
+        condition: service_started
+      ranger-hadoop:
+        condition: service_healthy
     environment:
       - HIVE_HADOOP_VERSION
       - HIVE_VERSION

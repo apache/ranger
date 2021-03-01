@@ -41,10 +41,9 @@
         <value>false</value>
     </property>
 
-    <!-- NOTE: using zookeeper from ranger-hbase! -->
     <property>
         <name>hive.zookeeper.quorum</name>
-        <value>ranger-hbase.example.com</value>
+        <value>ranger-zk.example.com</value>
     </property>
     <property>
         <name>hive.zookeeper.client.port</name>

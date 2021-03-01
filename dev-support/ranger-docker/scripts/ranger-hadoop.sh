@@ -48,5 +48,7 @@ then
   su -c "${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh" hdfs
 fi
 
+NAMENODE_PID=`ps -ef  | grep -v grep | grep -i "org.apache.hadoop.hdfs.server.namenode.NameNode" | awk '{print $2}'`
+
 # prevent the container from exiting
-/bin/bash
+tail --pid=$NAMENODE_PID -f /dev/null

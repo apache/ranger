@@ -42,11 +42,11 @@
     <value>true</value>
   </property>
   <property>
-    <name>hbase.root.dir</name>
-    <value>hdfs://ranger-hadoop:9000/hbase</value>
+    <name>hbase.rootdir</name>
+    <value>hdfs://ranger-hadoop.example.com:9000/hbase</value>
   </property>
   <property>
-    <name>hbase.tmp.dir</name>
-    <value>hdfs://ranger-hadoop:9000/hbase</value>
+    <name>hbase.zookeeper.quorum</name>
+    <value>ranger-zk.example.com</value>
   </property>
 </configuration>
