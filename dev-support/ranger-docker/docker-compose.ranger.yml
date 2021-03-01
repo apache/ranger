@@ -16,13 +16,28 @@ services:
     ports:
       - "6080:6080"
     depends_on:
-      - ranger-base
-      - ranger-db
-      - ranger-solr
+      ranger-zk:
+        condition: service_started
+      ranger-db:
+        condition: service_started
+      ranger-solr:
+        condition: service_started
     environment:
       - RANGER_VERSION
     command:
       - /home/ranger/scripts/ranger.sh
+
+  ranger-zk:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-zk
+    image: ranger-zk
+    container_name: ranger-zk
+    hostname: ranger-zk.example.com
+    networks:
+      - ranger
+    ports:
+      - "2181:2181"
 
   ranger-solr:
     build:

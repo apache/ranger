@@ -22,14 +22,15 @@ ARG RANGER_VERSION
 
 COPY ./dist/version                                      /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-kafka-plugin.tar.gz /home/ranger/dist/
+COPY ./downloads/kafka_2.12-${KAFKA_VERSION}.tgz         /home/ranger/dist/
+
 COPY ./scripts/ranger-kafka-setup.sh                     /home/ranger/scripts/
 COPY ./scripts/ranger-kafka.sh                           /home/ranger/scripts/
 COPY ./scripts/ranger-kafka-plugin-install.properties    /home/ranger/scripts/
 
-RUN curl https://archive.apache.org/dist/kafka/${KAFKA_VERSION}/kafka_2.12-${KAFKA_VERSION}.tgz  --output /tmp/kafka_2.12-${KAFKA_VERSION}.tgz && \
-    tar xvfz /tmp/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/ && \
+RUN tar xvfz /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz --directory=/opt/ && \
     ln -s /opt/kafka_2.12-${KAFKA_VERSION} /opt/kafka && \
-    rm -f /tmp/kafka_2.12-${KAFKA_VERSION}.tgz && \
+    rm -f /home/ranger/dist/kafka_2.12-${KAFKA_VERSION}.tgz && \
     tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-kafka-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${RANGER_VERSION}-kafka-plugin /opt/ranger/ranger-kafka-plugin && \
     rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-kafka-plugin.tar.gz && \

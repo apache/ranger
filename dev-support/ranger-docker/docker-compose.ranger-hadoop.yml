@@ -18,7 +18,14 @@ services:
       - "9000:9000"
       - "8088:8088"
     depends_on:
-      - ranger
+      ranger:
+        condition: service_started
+    healthcheck:
+      test: "hdfs dfs -ls /hbase"
+      interval: 1m30s
+      timeout: 10s
+      retries: 30
+      start_period: 40s
     environment:
       - HADOOP_VERSION
       - RANGER_VERSION

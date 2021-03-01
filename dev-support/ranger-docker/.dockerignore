@@ -7,4 +7,5 @@
 !dist/ranger-*-hive-plugin.tar.gz
 !dist/ranger-*-hbase-plugin.tar.gz
 !dist/ranger-*-kafka-plugin.tar.gz
+!downloads/*
 !scripts/*

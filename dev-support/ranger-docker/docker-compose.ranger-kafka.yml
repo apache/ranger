@@ -15,7 +15,10 @@ services:
     networks:
       - ranger
     depends_on:
-      - ranger
+      ranger:
+        condition: service_started
+      ranger-zk:
+        condition: service_started
     environment:
       - KAFKA_VERSION
       - RANGER_VERSION
