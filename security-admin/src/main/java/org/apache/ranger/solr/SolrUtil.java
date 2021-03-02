@@ -54,6 +54,9 @@ public class SolrUtil {
 	@Autowired
 	StringUtil stringUtil;
 
+	@Autowired
+	SolrMgr solrMgr;
+
 	SimpleDateFormat dateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 
@@ -69,24 +72,24 @@ public class SolrUtil {
 		}
 	}
 
-	public QueryResponse runQuery(SolrClient solrClient, SolrQuery solrQuery) throws Throwable {
-	    if (solrQuery != null) {
-	        try {
-	            QueryRequest req = new QueryRequest(solrQuery, METHOD.POST);
-	            String username = PropertiesUtil.getProperty("ranger.solr.audit.user");
-	            String password = PropertiesUtil.getProperty("ranger.solr.audit.user.password");
-	            if (username != null && password != null) {
-	                req.setBasicAuthCredentials(username, password);
-	            }
+    public QueryResponse runQuery(SolrClient solrClient, SolrQuery solrQuery) throws Throwable {
+        if (solrQuery != null) {
+            try {
+                QueryRequest req      = new QueryRequest(solrQuery, METHOD.POST);
+                String       username = PropertiesUtil.getProperty("ranger.solr.audit.user");
+                String       password = PropertiesUtil.getProperty("ranger.solr.audit.user.password");
+                if (username != null && password != null) {
+                    req.setBasicAuthCredentials(username, password);
+                }
 
-	            return req.process(solrClient);
-	        } catch (Throwable e) {
-	            logger.error("Error from Solr server. ", e);
-	            throw e;
-	        }
-	    }
-	    return null;
-	}
+                return solrMgr.queryToSolr(req);
+            } catch (Throwable e) {
+                logger.error("Error from Solr server. ", e);
+                throw e;
+            }
+        }
+        return null;
+    }
 
 	public QueryResponse searchResources(SearchCriteria searchCriteria,
 			List<SearchField> searchFields, List<SortField> sortFieldList,
