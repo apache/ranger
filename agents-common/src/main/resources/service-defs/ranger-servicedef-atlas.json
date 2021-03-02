@@ -38,7 +38,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "Type Name",
 			"description": "Type Name",
@@ -56,7 +56,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "Entity Type",
 			"description": "Entity Type"
@@ -74,7 +74,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "Entity Classification",
 			"description": "Entity Classification"
@@ -97,7 +97,7 @@
 			},
 			"label": "Entity ID",
 			"description": "Entity ID",
-			"accessTypeRestrictions": ["entity-read", "entity-create", "entity-update", "entity-delete", "entity-add-classification", "entity-update-classification", "entity-remove-classification"]
+			"accessTypeRestrictions": ["entity-read", "entity-create", "entity-update", "entity-delete"]
 		},
 		{
 			"itemId": 6,
@@ -129,7 +129,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 					"wildCard": "true",
-					"ignoreCase": "true"
+					"ignoreCase": "false"
 			},
 			"label": "Relationship Type",
 			"description": "Relationship Type"
@@ -147,7 +147,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "End1 Entity Type",
 			"description": "End1 Entity Type"
@@ -165,7 +165,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "End1 Entity Classification",
 			"description": "End1 Entity Classification"
@@ -201,7 +201,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "End2 Entity Type",
 			"description": "End2 Entity Type"
@@ -219,7 +219,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "End2 Entity Classification",
 			"description": "End2 Entity Classification"
@@ -291,6 +291,30 @@
 			"description": "Business Metadata",
 			"accessTypeRestrictions": [
 				"entity-update-business-metadata"
+			]
+		},
+		{
+			"itemId": 16,
+			"name": "classification",
+			"type": "string",
+			"level": 40,
+			"mandatory": true,
+			"parent": "entity",
+			"isValidLeaf": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": {
+				"wildCard": "true",
+				"ignoreCase": "false"
+			},
+			"label": "Targetted classifications",
+			"description": "Targetted classifications",
+			"accessTypeRestrictions": [
+				"entity-add-classification",
+				"entity-update-classification",
+				"entity-remove-classification"
 			]
 		}
 	],
