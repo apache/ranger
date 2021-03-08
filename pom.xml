@@ -144,6 +144,7 @@
         <jersey-core.version>1.19.3</jersey-core.version>
         <jersey-server.version>1.19.3</jersey-server.version>
         <jersey-spring.version>1.19.3</jersey-spring.version>
+        <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jettison.version>1.1</jettison.version>
         <jetty-client.version>9.4.31.v20200723</jetty-client.version>
         <jline.version>0.9.94</jline.version>

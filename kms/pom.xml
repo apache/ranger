@@ -263,6 +263,11 @@
             <artifactId>jersey-json</artifactId>
             <version>${jersey-bundle.version}</version>
         </dependency>
+		<dependency>
+			<groupId>com.sun.xml.bind</groupId>
+			<artifactId>jaxb-impl</artifactId>
+			<version>${jaxb-impl.version}</version>
+		</dependency>
         <dependency>
             <groupId>jline</groupId>
             <artifactId>jline</artifactId>
