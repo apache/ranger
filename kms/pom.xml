@@ -386,7 +386,7 @@
         <dependency>
             <groupId>org.apache.directory.api</groupId>
             <artifactId>api-i18n</artifactId>
-            <version>1.0.0-M20</version>
+            <version>1.0.3</version>
         </dependency>
         <dependency>
             <groupId>com.webcohesion.enunciate</groupId>
