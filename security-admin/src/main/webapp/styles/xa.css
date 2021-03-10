@@ -4552,10 +4552,18 @@ input.textFiledInputPadding:disabled {
   }
 }*/
 
-.backgrid th:not(.renderable), .backgrid td:not(.renderable){
+.audit-logs .backgrid th:not(.renderable), .audit-logs .backgrid td:not(.renderable){
     display: none;
 }
 
 #serviceDetails tbody {
   background-color: white;
+}
+
+.report-table .subgrid-custom-cell{
+  display: table-cell!important;
+}
+
+.report-table .backgrid-subgrid-custom-row th:not(.renderable), .report-table .backgrid-subgrid-custom-row td:not(.renderable){
+  display: table-cell!important;
 }
