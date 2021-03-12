@@ -19,6 +19,9 @@ language: java
 cache:
   directories:
   - $HOME/.m2
+arch:
+  - amd64
+  - arm64
 jdk:
   - oraclejdk8
   - oraclejdk11
@@ -31,6 +34,8 @@ env:
 #  - KEY=hadoop.version VALUE=2.8.0
 
 before_install:
+  - curl -sL https://www.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz | tar zx
+    && export PATH="${PWD}/apache-maven-3.6.3/bin:${PATH}"
   - export MAVEN_OPTS="-Xmx1200M -XX:MaxPermSize=768m -Xms512m"
 
 install:
