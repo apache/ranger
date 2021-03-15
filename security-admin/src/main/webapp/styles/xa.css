@@ -4567,3 +4567,100 @@ input.textFiledInputPadding:disabled {
 .report-table .backgrid-subgrid-custom-row th:not(.renderable), .report-table .backgrid-subgrid-custom-row td:not(.renderable){
   display: table-cell!important;
 }
+
+.zoneResources-form .select2-container {
+  float: left;
+}
+
+.zoneResources-form .form-group.field-path[fieldclass="resorces-with-label-css"] .include-toggle {
+  left: -7vw;
+  top: 7vh;
+}
+
+.zoneResources-form .form-horizontal .form-group{
+  float:none;
+}
+
+.zoneResources-form .control-label{
+  padding-top: 1px;
+}
+
+.zoneResources-form .recursive-toggle-2 {
+  left: -7vw;
+  position: relative;
+}
+
+.width-75 {
+  width: 75px
+}
+
+.width-170 {
+  width: 170px
+}
+
+.min-width-150 {
+  min-width: 150px
+}
+
+.zoneResources-form .form-group.field-path[fieldclass="resorces-with-label-css"] .recursive-toggle-hdfs-1 {
+  margin-left: 14vw;
+  margin-top: 0px;
+}
+
+.zoneResources-form .include-toggle {
+  left: -7vw;
+}
+
+.zoneResources-form .form-group.field-path[fieldclass="resorces-with-label-css"] .include-toggle {
+  left: -7vw;
+  top: 2vw;
+}
+
+.select2-text-hidden {
+  display:none !important;
+}
+
+.resourcesFilter {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.zoneResources-form [fieldclass="resorces-with-label-css"] > .control-label{
+  top:10px;
+}
+
+.zoneResources-form [fieldclass="resorces-with-label-css"] .include-toggle{
+  margin-top: 0px;
+}
+
+.zoneResources-form [fieldclass="resorces-css"] .include-toggle{
+  top: 0px;
+}
+
+.zoneResources-form [fieldclass="resorces-with-label-css"] .recursive-toggle-1{
+  margin-left: 16vw;
+}
+
+@media  screen and (max-width: 1366px) {
+  .zoneResources-form [fieldclass="resorces-css"] .include-toggle{
+    margin-left: 28vw;
+  }
+
+  .zoneResources-form [fieldclass="resorces-with-label-css"] .include-toggle{
+    margin-left: 28vw;
+  }
+  .zoneResources-form .form-group.field-path[fieldclass="resorces-with-label-css"] .recursive-toggle-hdfs-1{
+    margin-left: 21vw;
+  }
+  .zoneResources-form [fieldclass="resorces-with-label-css"] .recursive-toggle-1 {
+    margin-left: 21vw;
+  }
+  .zoneResources-form [fieldclass="resorces-with-label-css"] .recursive-toggle-2 {
+    left:0px;
+  }
+  .zoneResources-form [fieldclass="resorces-css"] .recursive-toggle-2 {
+    left:0px;
+  }
+}

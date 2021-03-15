@@ -1640,27 +1640,26 @@ define(function(require) {
         });
     }
 
-    XAUtils.getUsersGroupsList = function($select, domElement){
+    XAUtils.getUsersGroupsList = function($select, domElement, width, auditFilter){
         var that = domElement,
             tags = [],
             placeholder = $select === 'users' ? "Select User" : $select === 'groups' ? "Select Group" : "Select Role",
             searchUrl = $select === 'users' ? "service/xusers/lookup/users" : $select === 'groups' ? "service/xusers/lookup/groups"
                 : "service/roles/roles";
-            // if(that.model && !_.isEmpty(that.model.get('name'))){
-            //     tags.push({
-            //         'id': _.escape(that.model.get('name')),
-            //         'text': _.escape(that.model.get('name'))
-            //     });
-            //     domElement.ui['selectUsersOrGroups'].val(tags.map(function(val) {
-            //         return val.text
-            //     }));
-            // }
+            if(that.model && !_.isEmpty(that.model.get($select))){
+                _.map (that.model.get($select) , function(name){
+                    tags.push({
+	                    'id': _.escape(name),
+	                    'text': _.escape(name)
+	                });
+                })
+            }
 
         return {
             closeOnSelect : true,
             placeholder   : placeholder,
             tags : true,
-            width : '300px',
+            width : width,
             initSelection: function(element, callback) {
                 callback(tags);
             },
@@ -1686,7 +1685,9 @@ define(function(require) {
                     if (data.totalCount != "0") {
                         //remove users {USER} and {OWNER}
                         if ($select == 'users' || $select == 'groups') {
-                            data.vXStrings = _.reject(data.vXStrings, function(m){return (m.value == '{USER}' || m.value == '{OWNER}')})
+                            if (_.isUndefined(auditFilter)) {
+                                data.vXStrings = _.reject(data.vXStrings, function(m){return (m.value == '{USER}' || m.value == '{OWNER}')})
+                            }
                             results = data.vXStrings.map(function(m) {
                                 return {
                                     id: _.escape(m.value),

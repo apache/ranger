@@ -27,7 +27,8 @@ define(function(require){
 
 	var localization	= require('utils/XALangSupport');
 	var BackboneFormDataType	= require('models/BackboneFormDataType');
-	var ConfigurationList		= require('views/service/ConfigurationList')
+	var ConfigurationList		= require('views/service/ConfigurationList');
+	var AuditFilterConfig		= require('views/service/AuditFilterConfig')
 
 	require('backbone-forms');
 	require('backbone-forms.list');
@@ -62,6 +63,7 @@ define(function(require){
 			console.log("initialized a ServiceForm Form View");
 			_.extend(this, _.pick(options, 'rangerServiceDefModel'));
 			this.extraConfigColl = new Backbone.Collection();
+			this.auditFilterColl = new Backbone.Collection();
 			this.setupFormForEditMode();
     		Backbone.Form.prototype.initialize.call(this, options);
 
@@ -98,9 +100,16 @@ define(function(require){
 			this.setupForm();
 			this.initializePlugins();
 			this.renderCustomFields();
+			this.renderAuditFilterFields();
 		},
 		setupFormForEditMode : function() {
+			var that = this;
 			if(!this.model.isNew()){
+
+				if(this.model.get('configs')['ranger.plugin.audit.filters']) {
+					var auditFilterCollValue = this.model.get('configs')['ranger.plugin.audit.filters'];
+					delete this.model.get('configs')['ranger.plugin.audit.filters']
+				}
 				_.each(this.model.get('configs'),function(value, name){
 					var configObj = _.findWhere(this.rangerServiceDefModel.get('configs'),{'name' : name });
 					if(!_.isUndefined(configObj) && configObj.type == 'bool'){
@@ -112,6 +121,14 @@ define(function(require){
 						}
 					}
 				},this);
+
+				if(auditFilterCollValue) {
+					auditFilterCollValue = JSON.parse(auditFilterCollValue);
+					console.log(auditFilterCollValue);
+					auditFilterCollValue.forEach(function(model) {
+						that.auditFilterColl.add(new Backbone.Model(model));
+					})
+				}
 			}
 		},
 		setupForm : function() {
@@ -135,6 +152,15 @@ define(function(require){
 				collection : this.extraConfigColl,
 				model 	   : this.model,
 				fieldLabel : localization.tt('lbl.addNewConfig')
+			}).render().el);
+		},
+
+		/**Audit filters rendering**/
+		renderAuditFilterFields: function(){
+			this.$('[data-customfields="aduitFilterConfig"]').html(new AuditFilterConfig({
+				collection : this.auditFilterColl,
+				rangerServiceDefModel : this.rangerServiceDefModel,
+				serviceName : (!_.isUndefined(this.model) && !_.isEmpty(this.model.get('name')) ? this.model.get('name') : ''),
 			}).render().el);
 		},
 
@@ -185,6 +211,13 @@ define(function(require){
 			this.extraConfigColl.each(function(obj){
 				if(!_.isEmpty(obj.attributes)) config[obj.get('name')] = obj.get('value');
 			});
+			if (this.auditFilterColl.length > 0) {
+				var auditFiltter = [];
+				this.auditFilterColl.each(function (e) {
+					auditFiltter.push(e.attributes);
+				})
+				config['ranger.plugin.audit.filters'] = JSON.stringify(auditFiltter);
+			}
 			this.model.set('configs',config);
 
 			//Set service type
