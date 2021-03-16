@@ -1158,7 +1158,9 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
                 children.values().stream().forEach(c -> c.collectChildEvaluators(sep, 0, childEvaluators));
             } else if (sepPos == (str.length() - 1)) { // ex: str=/tmp/test/, startIdx=5
-                childEvaluators.addAll(this.evaluators);
+                if (this.evaluators != null) {
+                    childEvaluators.addAll(this.evaluators);
+                }
             }
         }
 
