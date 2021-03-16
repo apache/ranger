@@ -92,6 +92,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
   private String userSearchFilter;
   private String extendedUserSearchFilter;
   private SearchControls userSearchControls;
+  private Set<String> userGroupNameAttributeSet;
   private Set<String> otherUserAttributes;
 
   private boolean pagedResultsEnabled = true;
@@ -212,7 +213,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		currentSyncSource = config.getCurrentSyncSource();
 		groupSearchFirstEnabled =   true;
 		userSearchEnabled =   config.isUserSearchEnabled();
-		groupSearchEnabled =   true;
+		groupSearchEnabled =   config.isGroupSearchEnabled();
     ldapUrl = config.getLdapUrl();
     ldapBindDn = config.getLdapBindDn();
     ldapBindPassword = config.getLdapBindPassword();
@@ -231,6 +232,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 
 		Set<String> userSearchAttributes = new HashSet<String>();
 		userSearchAttributes.add(userNameAttribute);
+		userGroupNameAttributeSet = config.getUserGroupNameAttributeSet();
+		for (String useGroupNameAttribute : userGroupNameAttributeSet) {
+			userSearchAttributes.add(useGroupNameAttribute);
+		}
 		userSearchAttributes.add(userCloudIdAttribute);
 		otherUserAttributes = config.getOtherUserAttributes();
 		for (String otherUserAttribute : otherUserAttributes) {
@@ -287,6 +292,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 					+ ",  extendedUserSearchFilter: " + extendedUserSearchFilter
 					+ ",  userNameAttribute: " + userNameAttribute
 					+ ",  userSearchAttributes: " + userSearchAttributes
+					+ ",  userGroupNameAttributeSet: " + userGroupNameAttributeSet
 			+ ",  otherUserAttributes: " + otherUserAttributes
           + ",  pagedResultsEnabled: " + pagedResultsEnabled
           + ",  pagedResultsSize: " + pagedResultsSize
@@ -332,6 +338,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		sourceUsers = new HashMap<>();
 		sourceGroupUsers = new HashMap<>();
 		long highestdeltaSyncUserTime = 0;
+		long highestdeltaSyncGroupTime = 0;
 
 		if (config.isUserSyncDeletesEnabled() && deleteCycles >= config.getUserSyncDeletesFrequency()) {
 			deleteCycles = 1;
@@ -343,7 +350,9 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		if (config.isUserSyncDeletesEnabled()) {
 			deleteCycles++;
 		}
-        long highestdeltaSyncGroupTime = getGroups(computeDeletes);
+		if (groupSearchEnabled) {
+			highestdeltaSyncGroupTime = getGroups(computeDeletes);
+		}
 		if (userSearchEnabled) {
 			LOG.info("Performing user search to retrieve users from AD/LDAP");
 			highestdeltaSyncUserTime = getUsers(computeDeletes);
@@ -515,6 +524,31 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 								if (currentDeltaSyncTime > highestdeltaSyncUserTime) {
 									highestdeltaSyncUserTime = currentDeltaSyncTime;
 									deltaSyncUserTimeStamp = timeStampVal;
+								}
+							}
+						}
+
+						// Get all the groups from the group name attribute of the user only when group search is not enabled.
+						if (!groupSearchEnabled) {
+							for (String useGroupNameAttribute : userGroupNameAttributeSet) {
+								Attribute userGroupfAttribute = userEntry.getAttributes().get(useGroupNameAttribute);
+								if (userGroupfAttribute != null) {
+									NamingEnumeration<?> groupEnum = userGroupfAttribute.getAll();
+									while (groupEnum.hasMore()) {
+										String groupDN = (String) groupEnum.next();
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("Adding " + groupDN + " to " + userName);
+										}
+										Map<String, String> groupAttrMap = new HashMap<>();
+										String groupName = getShortName(groupDN);
+										groupAttrMap.put("original_name", groupName);
+										groupAttrMap.put("full_name", groupDN);
+										sourceGroups.put(groupDN, groupAttrMap);
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("As groupsearch is disabled, adding group " + groupName + " from user memberof attribute for user " + userName);
+										}
+										groupUserTable.put(groupDN, userFullName, userFullName);
+									}
 								}
 							}
 						}
