@@ -6,9 +6,9 @@
  * to you under the Apache License, Version 2.0 (the
  * "License"); you may not use this file except in compliance
  * with the License.  You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing,
  * software distributed under the License is distributed on an
  * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
@@ -22,7 +22,7 @@
  */
 define(function(require) {
     'use strict';
-    
+
     var Backbone        = require('backbone');
     var App             = require('App');
     var XAEnums         = require('utils/XAEnums');
@@ -31,7 +31,7 @@ define(function(require) {
     var ServiceAuditFilterResourcesForm = require('views/service/ServiceAuditFilterResources');
     var RangerPolicyResource = require('models/RangerPolicyResource');
     require('bootstrap-editable');
-            
+
     var AuditConfigItem = Backbone.Marionette.ItemView.extend({
         _msvName : 'FormInputItem',
 
@@ -67,10 +67,10 @@ define(function(require) {
         initialize : function(options) {
             _.extend(this, _.pick(options,'rangerServiceDefModel', 'accessTypes', 'serviceName'));
         },
- 
+
         onRender : function() {
             var accessResultVal = _.map(XAEnums.AccessResult, function(m){
-                return {'id' : m.label ,'text': m.label}
+                return {'id' : m.auditFilterLabel ,'text': m.auditFilterLabel}
             })
             if (this.model && !_.isUndefined(this.model.get('accessResult'))) {
                 this.ui.accessResult.val(this.model.get('accessResult'));
@@ -94,8 +94,8 @@ define(function(require) {
         setupFormForEditMode : function () {
             var that = this;
             if(!this.model.isEmpty()) {
-                if (this.model.get('isAudited')) {
-                    this.$el.find('[data-js="isAudited"]').val(this.model.get('isAudited'));
+                if (this.model && !_.isUndefined(this.model.get('isAudited'))) {
+                    this.$el.find('[data-js="isAudited"]').val(this.model.get('isAudited') == true ? "Yes" : "No");
                 }
                 if (this.model.get('users')) {
                     this.ui.selectUsers.val(_.map(this.model.get('users'), function(name){ return _.escape(name)}));
@@ -119,9 +119,9 @@ define(function(require) {
 
         evIsAudited : function (e) {
             if(_.isUndefined(e)) {
-                this.model.set('isAudited',this.$el.find('[data-js="isAudited"]').val());
+                this.model.set('isAudited',this.$el.find('[data-js="isAudited"]').val() == "Yes" ? true : false);
             }else {
-                this.model.set('isAudited', e.currentTarget.value);
+                this.model.set('isAudited', e.currentTarget.value == "Yes" ? true : false);
             }
         },
 
@@ -304,7 +304,7 @@ define(function(require) {
         },
 
         displayResources : function(tmpResource) {
-            var $dataResources; 
+            var $dataResources;
             $dataResources = '<div class="resourceGrp"><div>'
                 _.filter(tmpResource, function(key, value) {
                     var $toggleBtn =''
@@ -347,20 +347,29 @@ define(function(require) {
                 placeholder : 'Select Action',
                 allowClear: true,
                 width : '200px',
-                tokenSeparators: ["," , " "],
+                tokenSeparators: [","],
                 tags : [],
                 dropdownCssClass: 'select2-text-hidden',
                 initSelection : function (element, callback) {
                     callback(tags);
                 },
                 createSearchChoice : function(term, data) {
+                    term = _.escape(term.trim());
                     if ($(data).filter(function() {
-                        return this.text.localeCompare(term)===0; 
-                    }).length===0)
-                        {return {id:term, text:term};}
+                        return this.text.localeCompare(term) === 0;
+                    }).length === 0) {
+                        if(term == ''){
+                            return null;
+                        }else{
+                            return {
+                                id : term,
+                                text: term
+                            };
+                        }
+                    }
                 },
             })
-            if (this.model.get('actions')) {
+            if (this.model && this.model.get('actions')) {
                 _.each(this.model.get('actions') , function(name){
                     tags.push( { 'id' : _.escape( name ), 'text' : _.escape( name ) } );
                 });
@@ -380,7 +389,7 @@ define(function(require) {
                 emptyAuditFilterCol : this.collection.length == 0 ? true : false,
             }
         },
-        
+
         getItemView : function(item){
             if(!item){
                 return;
@@ -432,7 +441,7 @@ define(function(require) {
             });
         }
     });
-    
+
     return AuditFilterList;
 
 });

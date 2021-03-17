@@ -123,7 +123,7 @@ define(function(require){
 				},this);
 
 				if(auditFilterCollValue) {
-					auditFilterCollValue = JSON.parse(auditFilterCollValue);
+					auditFilterCollValue = JSON.parse((auditFilterCollValue).replace(/'/g, '"'));
 					console.log(auditFilterCollValue);
 					auditFilterCollValue.forEach(function(model) {
 						that.auditFilterColl.add(new Backbone.Model(model));
@@ -216,7 +216,7 @@ define(function(require){
 				this.auditFilterColl.each(function (e) {
 					auditFiltter.push(e.attributes);
 				})
-				config['ranger.plugin.audit.filters'] = JSON.stringify(auditFiltter);
+				config['ranger.plugin.audit.filters'] = (JSON.stringify(auditFiltter)).replace(/"/g, "'");
 			}
 			this.model.set('configs',config);
 
