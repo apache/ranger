@@ -127,7 +127,7 @@
         <hbase-shaded-netty>3.3.0</hbase-shaded-netty>
         <hbase-shaded-miscellaneous>3.3.0</hbase-shaded-miscellaneous>
         <libfb303.version>0.9.3</libfb303.version>
-        <libthrift.version>0.13.0</libthrift.version>
+        <libthrift.version>0.14.1</libthrift.version>
         <htrace-core.version>4.1.0-incubating</htrace-core.version>
         <httpcomponents.httpclient.version>4.5.6</httpcomponents.httpclient.version>
         <httpcomponents.httpcore.version>4.4.6</httpcomponents.httpcore.version>
