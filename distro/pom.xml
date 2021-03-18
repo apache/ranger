@@ -40,8 +40,8 @@
                         <artifactId>maven-assembly-plugin</artifactId>
                         <version>${assembly.plugin.version}</version>
                         <configuration>
-                          <finalName>ranger-${project.version}</finalName>
-                          <outputDirectory>../target</outputDirectory>
+                            <finalName>ranger-${project.version}</finalName>
+                            <outputDirectory>../target</outputDirectory>
                         </configuration>
                         <executions>
                             <execution>
@@ -75,6 +75,7 @@
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                        <descriptor>src/main/assembly/sample-client.xml</descriptor>
                                     </descriptors>
                                 </configuration>
                             </execution>

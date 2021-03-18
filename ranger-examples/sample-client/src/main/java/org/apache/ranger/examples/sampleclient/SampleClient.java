@@ -42,12 +42,16 @@ public class SampleClient {
         Options options  = new Options();
 
         Option host = OptionBuilder.hasArgs(1).isRequired().withLongOpt("host").withDescription("hostname").create('h');
+        Option auth = OptionBuilder.hasArgs(1).isRequired().withLongOpt("authType").withDescription("Authentication Type").create('k');
         Option user = OptionBuilder.hasArgs(1).isRequired().withLongOpt("user").withDescription("username").create('u');
         Option pass = OptionBuilder.hasArgs(1).isRequired().withLongOpt("pass").withDescription("password").create('p');
+        Option conf = OptionBuilder.hasArgs(1).withLongOpt("config").withDescription("configuration").create('c');
 
         options.addOption(host);
+        options.addOption(auth);
         options.addOption(user);
         options.addOption(pass);
+        options.addOption(conf);
 
         CommandLineParser parser = new BasicParser();
         CommandLine cmd;
@@ -61,8 +65,10 @@ public class SampleClient {
         String hostName = cmd.getOptionValue('h');
         String userName = cmd.getOptionValue('u');
         String password = cmd.getOptionValue('p');
+        String cfg      = cmd.getOptionValue('c');
+        String authType = cmd.getOptionValue('k');
 
-        RangerClient rangerClient = new RangerClient(hostName, userName, password);
+        RangerClient rangerClient = new RangerClient(hostName, authType, userName, password, cfg);
 
         String serviceDefName     = "sampleServiceDef";
         String serviceName        = "sampleService";
