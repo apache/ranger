@@ -541,8 +541,10 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 										}
 										Map<String, String> groupAttrMap = new HashMap<>();
 										String groupName = getShortName(groupDN);
-										groupAttrMap.put("original_name", groupName);
-										groupAttrMap.put("full_name", groupDN);
+										groupAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, groupName);
+										groupAttrMap.put(UgsyncCommonConstants.FULL_NAME, groupDN);
+										groupAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+										groupAttrMap.put(UgsyncCommonConstants.LDAP_URL, config.getLdapUrl());
 										sourceGroups.put(groupDN, groupAttrMap);
 										if (LOG.isDebugEnabled()) {
 											LOG.debug("As groupsearch is disabled, adding group " + groupName + " from user memberof attribute for user " + userName);
