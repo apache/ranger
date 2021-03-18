@@ -93,7 +93,7 @@
                     <include>jline:jline</include>
                     <include>com.jcraft:jsch</include>
                     <include>com.google.code.findbugs:jsr305</include>
-                    <include>io.netty:netty</include>
+                    <include>io.netty:netty-all</include>
                     <include>com.thoughtworks.paranamer:paranamer</include>
                     <include>org.xerial.snappy:snappy-java</include>
                     <include>xmlenc:xmlenc</include>
