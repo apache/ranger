@@ -40,11 +40,35 @@ while getopts "n:h" opt; do
   esac
 done
 
-prompt="Sample Authentication User Name:"
-read -p "$prompt" userName
-prompt="Sample Authentication User Password:"
-read -p "$prompt" -s password
+if [[ $HOST == https*  ]] ;
+then
+  prompt="SSL Configuration File:"
+  read -p "$prompt" config
+  JAVA_CMD="$JAVA_CMD -c $config"
+fi
+prompt="Kerberos Login (y/n)? "
+read -p "$prompt" -n 1 -r
 printf "\n"
-JAVA_CMD="$JAVA_CMD -u $userName -p $password"
+if [[ $REPLY =~ ^[Yy]$ ]]
+then
+  prompt="Sample Kerberos Principal:"
+  read -r -p "$prompt" userName
+  prompt="Sample Kerberos Keytab:"
+  read -r -p "$prompt" password
+  printf "\n"
+  JAVA_CMD="$JAVA_CMD -k kerberos -u $userName -p $password"
+elif [[ $REPLY =~ ^[Nn]$ ]]
+then
+  prompt="Sample Authentication User Name:"
+  read -r -p "$prompt" userName
+  prompt="Sample Authentication User Password:"
+  read -r -p "$prompt" -s password
+  printf "\n"
+  JAVA_CMD="$JAVA_CMD -k basic -u $userName -p $password"
+else
+  printf "Incorrect response \n"
+  exit
+fi
+
 printf "Java command : $JAVA_CMD\n"
 $JAVA_CMD

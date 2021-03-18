@@ -141,30 +141,23 @@ public class RangerClient {
     private boolean isSecureMode = false;
     private Subject sub = null;
 
-    public RangerClient(String configFile) {
-        RangerClientConfig cfg = new RangerClientConfig(configFile);
-        restClient             = new RangerRESTClient(cfg.getURL(), cfg.getSslConfigFile(), new Configuration());
+    public RangerClient(String hostName, String authType, String username, String password, String configFile) {
+        restClient = new RangerRESTClient(hostName, configFile, new Configuration());
 
-        String authenticationType = cfg.getAuthenticationType();
-        String principal          = cfg.getPrincipal();
-        String keytab             = cfg.getKeytab();
-
-        if (AUTH_KERBEROS.equalsIgnoreCase(authenticationType) && SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
-            isSecureMode = true;
-            try {
-                sub = SecureClientLogin.loginUserFromKeytab(principal,keytab);
-            } catch (IOException e) {
-                LOG.error(e.getMessage());
-            }
-        } else LOG.error("Authentication credentials missing/invalid");
+        if (AUTH_KERBEROS.equalsIgnoreCase(authType)) {
+            if (SecureClientLogin.isKerberosCredentialExists(username, password)) {
+                isSecureMode = true;
+                try {
+                    sub = SecureClientLogin.loginUserFromKeytab(username, password);
+                } catch (IOException e) {
+                    LOG.error(e.getMessage());
+                }
+            } else LOG.error("Authentication credentials missing/invalid");
+        } else {
+            restClient.setBasicAuthInfo(username, password);
+        }
     }
 
-
-    public RangerClient(String hostname, String username, String password) {
-        restClient = new RangerRESTClient(hostname, "", new Configuration());
-
-        restClient.setBasicAuthInfo(username, password);
-   }
 
     public RangerClient(RangerRESTClient restClient) {
         this.restClient = restClient;
