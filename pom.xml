@@ -169,7 +169,7 @@
         <noggit.version>0.8</noggit.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
-        <presto.version>333</presto.version>
+        <trino.version>354</trino.version>
         <poi.version>4.1.2</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
@@ -198,13 +198,13 @@
         <kstruct.gethostname4j.version>0.0.2</kstruct.gethostname4j.version>
         <jna.version>5.2.0</jna.version>
         <jna-platform.version>5.2.0</jna-platform.version>
-        <!-- presto plugin deps -->
-        <presto.airlift.version>0.192</presto.airlift.version>
-        <presto.bval-jsr.version>2.0.0</presto.bval-jsr.version>
-        <presto.guice.version>4.2.2</presto.guice.version>
-        <presto.guava.version>26.0-jre</presto.guava.version>
-        <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
-        <presto.re2j.version>1.1</presto.re2j.version>
+        <!-- trino plugin deps -->
+        <trino.airlift.version>0.192</trino.airlift.version>
+        <trino.bval-jsr.version>2.0.0</trino.bval-jsr.version>
+        <trino.guice.version>4.2.2</trino.guice.version>
+        <trino.guava.version>26.0-jre</trino.guava.version>
+        <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
+        <trino.re2j.version>1.1</trino.re2j.version>
 
     <!-- Azure Key Vault dependencies -->
         <com.microsoft.azure.version>1.22.0</com.microsoft.azure.version>
@@ -250,7 +250,7 @@
                 <module>plugin-solr</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
-                <module>plugin-presto</module>
+                <module>plugin-trino</module>
                 <module>plugin-kudu</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
@@ -271,7 +271,7 @@
                 <module>ranger-solr-plugin-shim</module>
                 <module>ranger-atlas-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
-                <module>ranger-presto-plugin-shim</module>
+                <module>ranger-trino-plugin-shim</module>
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
                 <module>plugin-atlas</module>
@@ -502,7 +502,7 @@
             </modules>
         </profile>
         <profile>
-            <id>ranger-presto-plugin</id>
+            <id>ranger-trino-plugin</id>
             <modules>
                 <module>agents-audit</module>
                 <module>agents-common</module>
@@ -511,8 +511,8 @@
                 <module>credentialbuilder</module>
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
-                <module>plugin-presto</module>
-                <module>ranger-presto-plugin-shim</module>
+                <module>plugin-trino</module>
+                <module>ranger-trino-plugin-shim</module>
             </modules>
         </profile>
         <profile>
@@ -573,8 +573,8 @@
                 <module>ranger-sqoop-plugin-shim</module>
                 <module>plugin-kylin</module>
                 <module>ranger-kylin-plugin-shim</module>
-                <module>plugin-presto</module>
-                <module>ranger-presto-plugin-shim</module>
+                <module>plugin-trino</module>
+                <module>ranger-trino-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <!--
@@ -628,7 +628,7 @@
                 <module>plugin-solr</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
-                <module>plugin-presto</module>
+                <module>plugin-trino</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -648,7 +648,7 @@
                 <module>ranger-solr-plugin-shim</module>
                 <module>ranger-atlas-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
-                <module>ranger-presto-plugin-shim</module>
+                <module>ranger-trino-plugin-shim</module>
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
                 <module>plugin-atlas</module>

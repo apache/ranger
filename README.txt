@@ -22,6 +22,27 @@ Apache Ranger is currently NOT setup to use pull requests to take in the changes
 Please use the apache review board to submit your code changes for review and commit. https://reviews.apache.org
 Also create a jira to go along with the review and mention it in the review board review. https://issues.apache.org/jira/browse/RANGER
 
+Updated Build Process
+====================
+Note:
+
+As this repo was changed from original fork to build 'ranger-<version>-trino-plugin.tar.gz' which depends on JDK11. You might encounter error in the build process for 'hive-agent' module. Ranger uses hive version 3.1.2 which still requires JDK8 while building so to avoid this error please use this instruction. You can use original build process on JDK8 to seperately build the 'ranger-<version>hive-plugin.tar.gz'.
+
+Additionally please refer this JIRA ticket 
+https://issues.apache.org/jira/browse/RANGER-3182
+
+1. Check out the code from GIT repository
+
+2. On the root folder, please execute the following Maven command:
+
+   $ mvn clean compile package assembly:assembly install -pl '!hive-agent'
+
+3. After the above build command execution, you should see the following TAR files in the target folder:
+
+
+   ranger-<version>-trino-plugin.tar.gz
+along with other plugins.
+
 Build Process
 =============
 
@@ -102,4 +123,3 @@ Installation Process
 
    If the install.sh file does not exists, 
        Execute ./enable-<component>-plugin.sh
-

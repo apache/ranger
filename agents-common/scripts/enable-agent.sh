@@ -212,7 +212,7 @@ elif [ "${HCOMPONENT_NAME}" = "kylin" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/tomcat/webapps/kylin/WEB-INF/lib
 elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugins
-elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
+elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugin/ranger
     if [ ! -d "${HCOMPONENT_LIB_DIR}" ]; then
         echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
@@ -246,7 +246,7 @@ elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
 	echo "INFO: Changing ownership of $HCOMPONENT_CONF_DIR to $CFG_OWNER_INF"
 	chown $CFG_OWNER_INF $HCOMPONENT_CONF_DIR
     fi
-elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
+elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
 fi
 
@@ -781,7 +781,7 @@ then
 	fi
 fi
 
-if [ "${HCOMPONENT_NAME}" = "presto" ]
+if [ "${HCOMPONENT_NAME}" = "trino" ]
 then
 	if [ "${action}" = "enable" ]
 	then
@@ -804,7 +804,7 @@ then
 	echo "Add or Update properties file: [${fn}] ... "
 	addOrUpdatePropertyToFile access-control.name $controlName ${fn}
 	echo "Linking config files"
-	cd ${HCOMPONENT_LIB_DIR}/ranger-presto-plugin-impl/
+	cd ${HCOMPONENT_LIB_DIR}/ranger-trino-plugin-impl/
 	ln -sf ${HCOMPONENT_CONF_DIR} conf
 fi
 

@@ -49,7 +49,7 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,ozone,kudu,schema-registry";
+	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,trino,ozone,kudu,schema-registry";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
@@ -71,7 +71,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_KYLIN_NAME  = "kylin";
 	public static final String EMBEDDED_SERVICEDEF_ABFS_NAME  = "abfs";
 	public static final String EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME = "elasticsearch";
-	public static final String EMBEDDED_SERVICEDEF_PRESTO_NAME  = "presto";
+	public static final String EMBEDDED_SERVICEDEF_TRINO_NAME  = "trino";
 	public static final String EMBEDDED_SERVICEDEF_OZONE_NAME  = "ozone";
 	public static final String EMBEDDED_SERVICEDEF_KUDU_NAME  = "kudu";
 
@@ -89,7 +89,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String SCHEMA_REGISTRY_IMPL_CLASS_NAME  = "org.apache.ranger.services.schemaregistry.RangerServiceSchemaRegistry";
 	public static final String NIFI_IMPL_CLASS_NAME  = "org.apache.ranger.services.nifi.RangerServiceNiFi";
 	public static final String ATLAS_IMPL_CLASS_NAME  = "org.apache.ranger.services.atlas.RangerServiceAtlas";
-	public static final String PRESTO_IMPL_CLASS_NAME  = "org.apache.ranger.services.presto.RangerServicePresto";
+	public static final String TRINO_IMPL_CLASS_NAME  = "org.apache.ranger.services.trino.RangerServiceTrino";
 	public static final String OZONE_IMPL_CLASS_NAME  = "org.apache.ranger.services.ozone.RangerServiceOzone";
 	public static final String KUDU_IMPL_CLASS_NAME  = "org.apache.ranger.services.kudu.RangerServiceKudu";
 
@@ -114,7 +114,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef kylinServiceDef;
 	private RangerServiceDef abfsServiceDef;
 	private RangerServiceDef elasticsearchServiceDef;
-	private RangerServiceDef prestoServiceDef;
+	private RangerServiceDef trinoServiceDef;
 	private RangerServiceDef ozoneServiceDef;
 	private RangerServiceDef kuduServiceDef;
 
@@ -164,7 +164,7 @@ public class EmbeddedServiceDefsUtil {
 			kylinServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KYLIN_NAME);
 			abfsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ABFS_NAME);
 			elasticsearchServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME);
-			prestoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_PRESTO_NAME);
+			trinoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TRINO_NAME);
 			ozoneServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_OZONE_NAME);
 			kuduServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
 
@@ -246,7 +246,7 @@ public class EmbeddedServiceDefsUtil {
 
 	public long getAbfsServiceDefId() { return getId(abfsServiceDef); }
 
-	public long getPrestoServiceDefId() { return getId(prestoServiceDef); }
+	public long getTrinoServiceDefId() { return getId(trinoServiceDef); }
 
 	public long getOzoneServiceDefId() { return getId(ozoneServiceDef); }
 
