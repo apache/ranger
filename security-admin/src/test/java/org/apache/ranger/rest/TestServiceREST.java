@@ -1891,7 +1891,6 @@ public class TestServiceREST {
 		String pluginId = "1";
 		Mockito.when(serviceUtil.isValidateHttpsAuthentication(serviceName, request)).thenReturn(true);
 		Mockito.when(svcStore.getServicePoliciesIfUpdated(Mockito.anyString(), Mockito.anyLong(), Mockito.anyBoolean())).thenReturn(servicePolicies);
-		Mockito.when(zoneStore.getSecurityZonesForService(serviceName)).thenReturn(null);
 		ServicePolicies dbServicePolicies = serviceREST.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, 0L,
 				pluginId, "", "", true, capabilityVector, request);
 		Assert.assertNotNull(dbServicePolicies);
@@ -1967,7 +1966,6 @@ public class TestServiceREST {
 		Mockito.when(svcStore.getServiceByNameForDP(serviceName)).thenReturn(rs);
 		Mockito.when(bizUtil.isUserAllowed(rs, ServiceREST.Allowed_User_List_For_Grant_Revoke)).thenReturn(true);
 		Mockito.when(svcStore.getServicePoliciesIfUpdated(Mockito.anyString(), Mockito.anyLong(), Mockito.anyBoolean())).thenReturn(sp);
-		Mockito.when(zoneStore.getSecurityZonesForService(serviceName)).thenReturn(null);
         	ServicePolicies dbServiceSecurePolicies = serviceREST.getSecureServicePoliciesIfUpdated(serviceName,
                 		lastKnownVersion, 0L, pluginId, "", "", true, capabilityVector, request);
 		Assert.assertNotNull(dbServiceSecurePolicies);

@@ -295,7 +295,7 @@ public class RangerBasePlugin {
 
 					pluginContext.notifyAuthContextChanged();
 
-					if (oldPolicyEngine != null) {
+					if (oldPolicyEngine != null && oldPolicyEngine != newPolicyEngine) {
 						((RangerPolicyEngineImpl) oldPolicyEngine).releaseResources(!isPolicyEngineShared);
 					}
 

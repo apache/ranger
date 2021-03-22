@@ -594,7 +594,7 @@ public class PolicyEngine {
         List<RangerPolicyDelta> defaultZoneDeltas               = new ArrayList<>();
         List<RangerPolicyDelta> defaultZoneDeltasForTagPolicies = new ArrayList<>();
 
-        getDeltasSortedByZones(servicePolicies, defaultZoneDeltas, defaultZoneDeltasForTagPolicies);
+        getDeltasSortedByZones(other, servicePolicies, defaultZoneDeltas, defaultZoneDeltasForTagPolicies);
 
         if (other.policyRepository != null && CollectionUtils.isNotEmpty(defaultZoneDeltas)) {
             this.policyRepository = new RangerPolicyRepository(other.policyRepository, defaultZoneDeltas, policyVersion);
@@ -604,6 +604,10 @@ public class PolicyEngine {
 
         if (servicePolicies.getTagPolicies() != null && CollectionUtils.isNotEmpty(defaultZoneDeltasForTagPolicies)) {
             if (other.tagPolicyRepository == null) {
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Current policy-engine does not have any tagPolicyRepository");
+                }
                 // Only creates are expected
                 List<RangerPolicy> tagPolicies = new ArrayList<>();
 
@@ -619,9 +623,15 @@ public class PolicyEngine {
 
                 this.tagPolicyRepository = new RangerPolicyRepository(servicePolicies.getTagPolicies(), this.pluginContext, servicePolicies.getServiceDef(), servicePolicies.getServiceName());
             } else {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Current policy-engine has a tagPolicyRepository");
+                }
                 this.tagPolicyRepository = new RangerPolicyRepository(other.tagPolicyRepository, defaultZoneDeltasForTagPolicies, policyVersion);
             }
         } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Either no associated tag repository or no changes to tag policies");
+            }
             this.tagPolicyRepository = shareWith(other.tagPolicyRepository);
         }
 
@@ -777,42 +787,32 @@ public class PolicyEngine {
     }
 
     void updatePolicyEngine(ServicePolicies servicePolicies) {
-
-        long                    policyVersion                   = servicePolicies.getPolicyVersion() != null ? servicePolicies.getPolicyVersion() : -1L;
         List<RangerPolicyDelta> defaultZoneDeltas               = new ArrayList<>();
         List<RangerPolicyDelta> defaultZoneDeltasForTagPolicies = new ArrayList<>();
 
-        getDeltasSortedByZones(servicePolicies, defaultZoneDeltas, defaultZoneDeltasForTagPolicies);
+        getDeltasSortedByZones(this, servicePolicies, defaultZoneDeltas, defaultZoneDeltasForTagPolicies);
 
         if (this.policyRepository != null && CollectionUtils.isNotEmpty(defaultZoneDeltas)) {
-            this.policyRepository.reinit(defaultZoneDeltas, policyVersion);
+            this.policyRepository.reinit(defaultZoneDeltas);
         }
 
         if (servicePolicies.getTagPolicies() != null && CollectionUtils.isNotEmpty(defaultZoneDeltasForTagPolicies)) {
             if (this.tagPolicyRepository != null) {
-                this.tagPolicyRepository.reinit(defaultZoneDeltasForTagPolicies, policyVersion);
+                this.tagPolicyRepository.reinit(defaultZoneDeltasForTagPolicies);
             } else {
                 LOG.error("No previous tagPolicyRepository to update! Should not have come here!!");
             }
         }
 
-        // Set all repositories to shared
-        if (policyRepository != null) {
-            policyRepository.setShared();
-        }
-        for (RangerPolicyRepository zoneRepository : zonePolicyRepositories.values()) {
-            if (zoneRepository != null) {
-                zoneRepository.setShared();
-            }
-        }
-        if (tagPolicyRepository != null) {
-            tagPolicyRepository.setShared();
-        }
-
         reorderPolicyEvaluators();
     }
 
-    private void getDeltasSortedByZones(ServicePolicies servicePolicies, List<RangerPolicyDelta> defaultZoneDeltas, List<RangerPolicyDelta> defaultZoneDeltasForTagPolicies) {
+    private void getDeltasSortedByZones(PolicyEngine current, ServicePolicies servicePolicies, List<RangerPolicyDelta> defaultZoneDeltas, List<RangerPolicyDelta> defaultZoneDeltasForTagPolicies) {
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getDeltasSortedByZones()");
+        }
+
         long                    policyVersion                   = servicePolicies.getPolicyVersion() != null ? servicePolicies.getPolicyVersion() : -1L;
 
         if (CollectionUtils.isNotEmpty(defaultZoneDeltas)) {
@@ -850,11 +850,19 @@ public class PolicyEngine {
                 }
             }
 
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Security zones found in the service-policies:[" + zoneDeltasMap.keySet() + "]");
+            }
+
             for (Map.Entry<String, List<RangerPolicyDelta>> entry : zoneDeltasMap.entrySet()) {
                 final String                  zoneName        = entry.getKey();
                 final List<RangerPolicyDelta> zoneDeltas      = entry.getValue();
-                final RangerPolicyRepository  otherRepository = this.zonePolicyRepositories.get(zoneName);
+                final RangerPolicyRepository  otherRepository = current.zonePolicyRepositories.get(zoneName);
                 final RangerPolicyRepository  policyRepository;
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("zoneName:[" + zoneName + "], zoneDeltas:[" + Arrays.toString(zoneDeltas.toArray()) + "], doesOtherRepositoryExist:[" + (otherRepository != null) + "]");
+                }
 
                 if (CollectionUtils.isNotEmpty(zoneDeltas)) {
                     if (otherRepository == null) {
@@ -870,7 +878,7 @@ public class PolicyEngine {
 
                         servicePolicies.getSecurityZones().get(zoneName).setPolicies(policies);
 
-                        policyRepository = new RangerPolicyRepository(servicePolicies, this.pluginContext, zoneName);
+                        policyRepository = new RangerPolicyRepository(servicePolicies, current.pluginContext, zoneName);
                     } else {
                         policyRepository = new RangerPolicyRepository(otherRepository, zoneDeltas, policyVersion);
                     }
@@ -884,12 +892,25 @@ public class PolicyEngine {
 
         List<RangerPolicyDelta> unzonedDeltas = servicePolicies.getPolicyDeltas();
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("ServicePolicies.policyDeltas:[" + Arrays.toString(servicePolicies.getPolicyDeltas().toArray()) + "]");
+        }
+
         for (RangerPolicyDelta delta : unzonedDeltas) {
             if (servicePolicies.getServiceDef().getName().equals(delta.getServiceType())) {
                 defaultZoneDeltas.add(delta);
             } else {
                 defaultZoneDeltasForTagPolicies.add(delta);
             }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("defaultZoneDeltas:[" + Arrays.toString(defaultZoneDeltas.toArray()) + "]");
+            LOG.debug("defaultZoneDeltasForTagPolicies:[" + Arrays.toString(defaultZoneDeltasForTagPolicies.toArray()) + "]");
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getDeltasSortedByZones()");
         }
     }
 }
