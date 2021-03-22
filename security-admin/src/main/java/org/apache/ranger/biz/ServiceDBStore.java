@@ -2775,31 +2775,65 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		if (ret != null) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking if resource-service:[" + ret.getServiceName() +"] is disabled");
+				LOG.debug("Checking if resource-service:[" + ret.getServiceName() + "] is disabled");
 			}
 			if (!serviceDbObj.getIsenabled()) {
 				ret = ServicePolicies.copyHeader(ret);
-			} else if (ret.getTagPolicies() != null) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Checking if tag-service:[" + ret.getTagPolicies().getServiceName() +"] is disabled");
-				}
-				String tagServiceName = ret.getTagPolicies().getServiceName();
-				if (StringUtils.isNotEmpty(tagServiceName)) {
-					XXService tagService = daoMgr.getXXService().findByName(tagServiceName);
-					if (tagService == null || !tagService.getIsenabled()) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("tag-service:[" + tagServiceName +"] is disabled");
-						}
-						ServicePolicies copy = ServicePolicies.copyHeader(ret);
-						copy.setTagPolicies(null);
-						List<RangerPolicy> copyPolicies = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
-						List<RangerPolicyDelta> copyPolicyDeltas = ret.getPolicyDeltas() != null ? new ArrayList<>(ret.getPolicyDeltas()) : null;
-						copy.setPolicies(copyPolicies);
-						copy.setPolicyDeltas(copyPolicyDeltas);
-						ret = copy;
+				ret.setTagPolicies(null);
+			} else {
+				boolean isTagServiceActive = true;
+
+				if (ret.getTagPolicies() != null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Checking if tag-service:[" + ret.getTagPolicies().getServiceName() + "] is disabled");
 					}
+					String tagServiceName = ret.getTagPolicies().getServiceName();
+
+					if (StringUtils.isNotEmpty(tagServiceName)) {
+						XXService tagService = daoMgr.getXXService().findByName(tagServiceName);
+						if (tagService == null || !tagService.getIsenabled()) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("tag-service:[" + tagServiceName + "] is disabled");
+							}
+							isTagServiceActive = false;
+						}
+					} else {
+						isTagServiceActive = false;
+					}
+				} else {
+					isTagServiceActive = false;
+				}
+
+				if (!isTagServiceActive) {
+					ServicePolicies copy = ServicePolicies.copyHeader(ret);
+					copy.setTagPolicies(null);
+					List<RangerPolicy> copyPolicies = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
+					List<RangerPolicyDelta> copyPolicyDeltas = ret.getPolicyDeltas() != null ? new ArrayList<>(ret.getPolicyDeltas()) : null;
+					copy.setPolicies(copyPolicies);
+					copy.setPolicyDeltas(copyPolicyDeltas);
+					ret = copy;
 				}
 			}
+
+			Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = securityZoneStore.getSecurityZonesForService(serviceName);
+			ServicePolicies updatedServicePolicies = ret;
+			if (MapUtils.isNotEmpty(securityZones)) {
+				updatedServicePolicies = getUpdatedServicePoliciesForZones(ret, securityZones);
+				patchAssociatedTagServiceInSecurityZoneInfos(updatedServicePolicies);
+			}
+
+			if (lastKnownVersion == null || lastKnownVersion == -1L || needsBackwardCompatibility) {
+				ret = filterServicePolicies(updatedServicePolicies);
+			} else {
+				ret = updatedServicePolicies;
+			}
+
+			ret.setServiceConfig(getServiceConfigForPlugin(ret.getServiceId()));
+
+			if (ret.getTagPolicies() != null && ret.getTagPolicies().getServiceId() != null) {
+				ret.getTagPolicies().setServiceConfig(getServiceConfigForPlugin(ret.getTagPolicies().getServiceId()));
+			}
+
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -5517,4 +5551,205 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 	}
+
+	private static ServicePolicies getUpdatedServicePoliciesForZones(ServicePolicies servicePolicies, Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones) {
+		final ServicePolicies ret;
+
+		if (MapUtils.isNotEmpty(securityZones)) {
+			ret = new ServicePolicies();
+
+			ret.setServiceDef(servicePolicies.getServiceDef());
+			ret.setServiceId(servicePolicies.getServiceId());
+			ret.setServiceName(servicePolicies.getServiceName());
+			ret.setAuditMode(servicePolicies.getAuditMode());
+			ret.setPolicyVersion(servicePolicies.getPolicyVersion());
+			ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
+			ret.setTagPolicies(servicePolicies.getTagPolicies());
+
+			Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
+
+			if (CollectionUtils.isEmpty(servicePolicies.getPolicyDeltas())) {
+				List<RangerPolicy> allPolicies = new ArrayList<>(servicePolicies.getPolicies());
+
+				for (Map.Entry<String, RangerSecurityZone.RangerSecurityZoneService> entry : securityZones.entrySet()) {
+					List<RangerPolicy> zonePolicies = extractZonePolicies(allPolicies, entry.getKey());
+
+					if (CollectionUtils.isNotEmpty(zonePolicies)) {
+						allPolicies.removeAll(zonePolicies);
+					}
+
+					ServicePolicies.SecurityZoneInfo securityZoneInfo = new ServicePolicies.SecurityZoneInfo();
+
+					securityZoneInfo.setZoneName(entry.getKey());
+					securityZoneInfo.setPolicies(zonePolicies);
+					securityZoneInfo.setResources(entry.getValue().getResources());
+					securityZoneInfo.setContainsAssociatedTagService(false);
+					securityZonesInfo.put(entry.getKey(), securityZoneInfo);
+				}
+
+				ret.setPolicies(allPolicies);
+			} else {
+				List<RangerPolicyDelta> allPolicyDeltas = new ArrayList<>(servicePolicies.getPolicyDeltas());
+
+				for (Map.Entry<String, RangerSecurityZone.RangerSecurityZoneService> entry : securityZones.entrySet()) {
+					List<RangerPolicyDelta> zonePolicyDeltas = extractZonePolicyDeltas(allPolicyDeltas, entry.getKey());
+
+					if (CollectionUtils.isNotEmpty(zonePolicyDeltas)) {
+						allPolicyDeltas.removeAll(zonePolicyDeltas);
+					}
+
+					ServicePolicies.SecurityZoneInfo securityZoneInfo = new ServicePolicies.SecurityZoneInfo();
+
+					securityZoneInfo.setZoneName(entry.getKey());
+					securityZoneInfo.setPolicyDeltas(zonePolicyDeltas);
+					securityZoneInfo.setResources(entry.getValue().getResources());
+					securityZoneInfo.setContainsAssociatedTagService(false);
+					securityZonesInfo.put(entry.getKey(), securityZoneInfo);
+				}
+
+				ret.setPolicyDeltas(allPolicyDeltas);
+			}
+
+			ret.setSecurityZones(securityZonesInfo);
+		} else {
+			ret = servicePolicies;
+		}
+
+		return ret;
+	}
+
+	private void patchAssociatedTagServiceInSecurityZoneInfos(ServicePolicies servicePolicies) {
+		if (servicePolicies != null && MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
+
+			// Get list of zones that associated tag-service (if any) is associated with
+			List<String> zonesInAssociatedTagService = new ArrayList<>();
+
+			String tagServiceName = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceName() : null;
+
+			if (StringUtils.isNotEmpty(tagServiceName)) {
+				try {
+					RangerService tagService = getServiceByName(tagServiceName);
+					if (tagService != null && tagService.getIsEnabled()) {
+						zonesInAssociatedTagService = daoMgr.getXXSecurityZoneDao().findZonesByTagServiceName(tagServiceName);
+					}
+				} catch (Exception exception) {
+					LOG.warn("Could not get service associated with [" + tagServiceName + "]", exception);
+				}
+			}
+
+			if (CollectionUtils.isNotEmpty(zonesInAssociatedTagService)) {
+				for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> entry : servicePolicies.getSecurityZones().entrySet()) {
+					String zoneName = entry.getKey();
+					ServicePolicies.SecurityZoneInfo securityZoneInfo = entry.getValue();
+
+					securityZoneInfo.setContainsAssociatedTagService(zonesInAssociatedTagService.contains(zoneName));
+				}
+			}
+		}
+	}
+
+	private static List<RangerPolicy> extractZonePolicies(final List<RangerPolicy> allPolicies, final String zoneName) {
+		final List<RangerPolicy> ret = new ArrayList<>();
+
+		for (RangerPolicy policy : allPolicies) {
+			if (policy.getIsEnabled() && StringUtils.equals(policy.getZoneName(), zoneName)) {
+				ret.add(policy);
+			}
+		}
+
+		return ret;
+	}
+
+	private static List<RangerPolicyDelta> extractZonePolicyDeltas(final List<RangerPolicyDelta> allPolicyDeltas, final String zoneName) {
+		final List<RangerPolicyDelta> ret = new ArrayList<>();
+
+		for (RangerPolicyDelta delta : allPolicyDeltas) {
+			if (StringUtils.equals(delta.getZoneName(), zoneName) && !StringUtils.equals(delta.getServiceType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+				ret.add(delta);
+			}
+		}
+
+		return ret;
+	}
+
+	private ServicePolicies filterServicePolicies(ServicePolicies servicePolicies) {
+		ServicePolicies ret = null;
+		boolean containsDisabledResourcePolicies = false;
+		boolean containsDisabledTagPolicies = false;
+
+		if (servicePolicies != null) {
+			List<RangerPolicy> policies = null;
+
+			policies = servicePolicies.getPolicies();
+			if (CollectionUtils.isNotEmpty(policies)) {
+				for (RangerPolicy policy : policies) {
+					if (!policy.getIsEnabled()) {
+						containsDisabledResourcePolicies = true;
+						break;
+					}
+				}
+			}
+
+			if (servicePolicies.getTagPolicies() != null) {
+				policies = servicePolicies.getTagPolicies().getPolicies();
+				if (CollectionUtils.isNotEmpty(policies)) {
+					for (RangerPolicy policy : policies) {
+						if (!policy.getIsEnabled()) {
+							containsDisabledTagPolicies = true;
+							break;
+						}
+					}
+				}
+			}
+
+			if (!containsDisabledResourcePolicies && !containsDisabledTagPolicies) {
+				ret = servicePolicies;
+			} else {
+				ret = new ServicePolicies();
+
+				ret.setServiceDef(servicePolicies.getServiceDef());
+				ret.setServiceId(servicePolicies.getServiceId());
+				ret.setServiceName(servicePolicies.getServiceName());
+				ret.setPolicyVersion(servicePolicies.getPolicyVersion());
+				ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
+				ret.setPolicies(servicePolicies.getPolicies());
+				ret.setTagPolicies(servicePolicies.getTagPolicies());
+				ret.setSecurityZones(servicePolicies.getSecurityZones());
+
+				if (containsDisabledResourcePolicies) {
+					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
+					for (RangerPolicy policy : servicePolicies.getPolicies()) {
+						if (policy.getIsEnabled()) {
+							filteredPolicies.add(policy);
+						}
+					}
+					ret.setPolicies(filteredPolicies);
+				}
+
+				if (containsDisabledTagPolicies) {
+					ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
+
+					tagPolicies.setServiceDef(servicePolicies.getTagPolicies().getServiceDef());
+					tagPolicies.setServiceId(servicePolicies.getTagPolicies().getServiceId());
+					tagPolicies.setServiceName(servicePolicies.getTagPolicies().getServiceName());
+					tagPolicies.setPolicyVersion(servicePolicies.getTagPolicies().getPolicyVersion());
+					tagPolicies.setPolicyUpdateTime(servicePolicies.getTagPolicies().getPolicyUpdateTime());
+
+					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
+					for (RangerPolicy policy : servicePolicies.getTagPolicies().getPolicies()) {
+						if (policy.getIsEnabled()) {
+							filteredPolicies.add(policy);
+						}
+					}
+					tagPolicies.setPolicies(filteredPolicies);
+
+					ret.setTagPolicies(tagPolicies);
+				}
+			}
+		}
+
+		return ret;
+	}
+
+
 }

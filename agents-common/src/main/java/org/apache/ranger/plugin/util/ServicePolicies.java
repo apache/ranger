@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.util;
 
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -31,6 +32,8 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -48,6 +51,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServicePolicies implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
+	private static final Log LOG = LogFactory.getLog(ServicePolicies.class);
 
 	private String             serviceName;
 	private Long               serviceId;
@@ -408,9 +412,19 @@ public class ServicePolicies implements java.io.Serializable {
 
 		final List<RangerPolicy> newTagPolicies;
 		if (servicePolicies.getTagPolicies() != null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("applyingDeltas for tag policies");
+			}
 			newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(oldTagPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getTagPolicies().getServiceDef().getName());
 		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No need to apply deltas for tag policies");
+			}
 			newTagPolicies = oldTagPolicies;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("New tag policies:[" + Arrays.toString(newTagPolicies.toArray()) + "]");
 		}
 
 		if (ret.getTagPolicies() != null) {
@@ -427,7 +441,15 @@ public class ServicePolicies implements java.io.Serializable {
 				List<RangerPolicy> zoneResourcePolicies = policyEngine.getResourcePolicies(zoneName);
 				// There are no separate tag-policy-repositories for each zone
 
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Applying deltas for security-zone:[" + zoneName + "]");
+				}
+
 				final List<RangerPolicy> newZonePolicies = RangerPolicyDeltaUtil.applyDeltas(zoneResourcePolicies, zoneInfo.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("New resource policies for security-zone:[" + zoneName + "], zoneResourcePolicies:[" + Arrays.toString(newZonePolicies.toArray())+ "]");
+				}
 
 				SecurityZoneInfo newZoneInfo = new SecurityZoneInfo();
 

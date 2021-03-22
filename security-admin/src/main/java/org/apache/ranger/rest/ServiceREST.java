@@ -65,7 +65,6 @@ import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.PolicyRefUpdater;
 import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
-import org.apache.ranger.biz.RangerPolicyAdminCache;
 import org.apache.ranger.biz.RangerPolicyAdminCacheForEngineOptions;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.SecurityZoneDBStore;
@@ -102,7 +101,6 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
-import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.ServiceDeleteResponse;
@@ -3029,32 +3027,14 @@ public class ServiceREST {
 				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion + ",lastActivationTime=" + lastActivationTime + ")");
 				}
-				ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, !supportsPolicyDeltas);
+				ret = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, !supportsPolicyDeltas);
 
-				if (servicePolicies == null) {
+				if (ret == null) {
 					downloadedVersion = lastKnownVersion;
 					httpCode = HttpServletResponse.SC_NOT_MODIFIED;
 					logMsg = "No change since last update";
 				} else {
-					Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
-					ServicePolicies updatedServicePolicies = servicePolicies;
-					if (MapUtils.isNotEmpty(securityZones)) {
-						updatedServicePolicies = RangerPolicyAdminCache.getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
-						patchAssociatedTagServiceInSecurityZoneInfos(updatedServicePolicies);
-					}
-					downloadedVersion = updatedServicePolicies.getPolicyVersion();
-					if (lastKnownVersion == -1L || !supportsPolicyDeltas) {
-						ret = filterServicePolicies(updatedServicePolicies);
-					} else {
-						ret = updatedServicePolicies;
-					}
-
-					ret.setServiceConfig(svcStore.getServiceConfigForPlugin(ret.getServiceId()));
-
-					if (ret.getTagPolicies() != null && ret.getTagPolicies().getServiceId() != null) {
-						ret.getTagPolicies().setServiceConfig(svcStore.getServiceConfigForPlugin(ret.getTagPolicies().getServiceId()));
-					}
-
+					downloadedVersion = ret.getPolicyVersion();
 					httpCode = HttpServletResponse.SC_OK;
 					logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : (ret.getPolicyDeltas() != null ? ret.getPolicyDeltas().size() : 0)) + " policies. Policy version=" + ret.getPolicyVersion();
 				}
@@ -3158,30 +3138,13 @@ public class ServiceREST {
 					}
 				}
 				if (isAllowed) {
-					ServicePolicies servicePolicies = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, !supportsPolicyDeltas);
-					if (servicePolicies == null) {
+					ret  = svcStore.getServicePoliciesIfUpdated(serviceName, lastKnownVersion, !supportsPolicyDeltas);
+					if (ret == null) {
 						downloadedVersion = lastKnownVersion;
 						httpCode = HttpServletResponse.SC_NOT_MODIFIED;
 						logMsg = "No change since last update";
 					} else {
-						Map<String, RangerSecurityZone.RangerSecurityZoneService> securityZones = zoneStore.getSecurityZonesForService(serviceName);
-						ServicePolicies updatedServicePolicies = servicePolicies;
-						if (MapUtils.isNotEmpty(securityZones)) {
-							updatedServicePolicies = RangerPolicyAdminCache.getUpdatedServicePoliciesForZones(servicePolicies, securityZones);
-							patchAssociatedTagServiceInSecurityZoneInfos(updatedServicePolicies);
-						}
-						downloadedVersion = updatedServicePolicies.getPolicyVersion();
-						if (lastKnownVersion == -1L || !supportsPolicyDeltas) {
-							ret = filterServicePolicies(updatedServicePolicies);
-						} else {
-							ret = updatedServicePolicies;
-						}
-
-						ret.setServiceConfig(svcStore.getServiceConfigForPlugin(ret.getServiceId()));
-
-						if (ret.getTagPolicies() != null && ret.getTagPolicies().getServiceId() != null) {
-							ret.getTagPolicies().setServiceConfig(svcStore.getServiceConfigForPlugin(ret.getTagPolicies().getServiceId()));
-						}
+						downloadedVersion = ret.getPolicyVersion();
 
 						httpCode = HttpServletResponse.SC_OK;
 						logMsg = "Returning " + (ret.getPolicies() != null ? ret.getPolicies().size() : (ret.getPolicyDeltas() != null ? ret.getPolicyDeltas().size() : 0)) + " policies. Policy version=" + ret.getPolicyVersion();
@@ -3824,85 +3787,6 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private ServicePolicies filterServicePolicies(ServicePolicies servicePolicies) {
-		ServicePolicies ret = null;
-		boolean containsDisabledResourcePolicies = false;
-		boolean containsDisabledTagPolicies = false;
-
-		if (servicePolicies != null) {
-			List<RangerPolicy> policies = null;
-
-			policies = servicePolicies.getPolicies();
-			if (CollectionUtils.isNotEmpty(policies)) {
-				for (RangerPolicy policy : policies) {
-					if (!policy.getIsEnabled()) {
-						containsDisabledResourcePolicies = true;
-						break;
-					}
-				}
-			}
-
-			if (servicePolicies.getTagPolicies() != null) {
-				policies = servicePolicies.getTagPolicies().getPolicies();
-				if (CollectionUtils.isNotEmpty(policies)) {
-					for (RangerPolicy policy : policies) {
-						if (!policy.getIsEnabled()) {
-							containsDisabledTagPolicies = true;
-							break;
-						}
-					}
-				}
-			}
-
-			if (!containsDisabledResourcePolicies && !containsDisabledTagPolicies) {
-				ret = servicePolicies;
-			} else {
-				ret = new ServicePolicies();
-
-				ret.setServiceDef(servicePolicies.getServiceDef());
-				ret.setServiceId(servicePolicies.getServiceId());
-				ret.setServiceName(servicePolicies.getServiceName());
-				ret.setPolicyVersion(servicePolicies.getPolicyVersion());
-				ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
-				ret.setPolicies(servicePolicies.getPolicies());
-				ret.setTagPolicies(servicePolicies.getTagPolicies());
-				ret.setSecurityZones(servicePolicies.getSecurityZones());
-
-				if (containsDisabledResourcePolicies) {
-					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
-					for (RangerPolicy policy : servicePolicies.getPolicies()) {
-						if (policy.getIsEnabled()) {
-							filteredPolicies.add(policy);
-						}
-					}
-					ret.setPolicies(filteredPolicies);
-				}
-
-				if (containsDisabledTagPolicies) {
-					ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
-
-					tagPolicies.setServiceDef(servicePolicies.getTagPolicies().getServiceDef());
-					tagPolicies.setServiceId(servicePolicies.getTagPolicies().getServiceId());
-					tagPolicies.setServiceName(servicePolicies.getTagPolicies().getServiceName());
-					tagPolicies.setPolicyVersion(servicePolicies.getTagPolicies().getPolicyVersion());
-					tagPolicies.setPolicyUpdateTime(servicePolicies.getTagPolicies().getPolicyUpdateTime());
-
-					List<RangerPolicy> filteredPolicies = new ArrayList<RangerPolicy>();
-					for (RangerPolicy policy : servicePolicies.getTagPolicies().getPolicies()) {
-						if (policy.getIsEnabled()) {
-							filteredPolicies.add(policy);
-						}
-					}
-					tagPolicies.setPolicies(filteredPolicies);
-
-					ret.setTagPolicies(tagPolicies);
-				}
-			}
-		}
-
-		return ret;
-	}
-
 	private void validateGrantRevokeRequest(GrantRevokeRequest request, final boolean hasAdminPrivilege, final String loggedInUser) {
 		if (request != null) {
 			validateUsersGroupsAndRoles(request.getUsers(),request.getGroups(), request.getRoles());
@@ -4044,33 +3928,6 @@ public class ServiceREST {
 				if (!EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME.equals(xServiceDef.getImplclassname())) {
 					throw restErrorUtil.createRESTException("Only KMS Policies/Services/Service-Defs are accessible for user '"
 							+ userName + "'.", MessageEnums.OPER_NO_PERMISSION);
-				}
-			}
-		}
-	}
-
-	private void patchAssociatedTagServiceInSecurityZoneInfos(ServicePolicies servicePolicies) {
-		if (servicePolicies != null && MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
-			// Get list of zones that associated tag-service (if any) is associated with
-			List<String> zonesInAssociatedTagService = new ArrayList<>();
-
-			String tagServiceName = servicePolicies.getTagPolicies() != null ? servicePolicies.getTagPolicies().getServiceName() : null;
-			if (StringUtils.isNotEmpty(tagServiceName)) {
-				try {
-					RangerService tagService = svcStore.getServiceByName(tagServiceName);
-					if (tagService != null && tagService.getIsEnabled()) {
-						zonesInAssociatedTagService = daoManager.getXXSecurityZoneDao().findZonesByTagServiceName(tagServiceName);
-					}
-				} catch (Exception exception) {
-					LOG.warn("Could not get service associated with [" + tagServiceName + "]", exception);
-				}
-			}
-			if (CollectionUtils.isNotEmpty(zonesInAssociatedTagService)) {
-				for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> entry : servicePolicies.getSecurityZones().entrySet()) {
-					String zoneName = entry.getKey();
-					ServicePolicies.SecurityZoneInfo securityZoneInfo = entry.getValue();
-
-					securityZoneInfo.setContainsAssociatedTagService(zonesInAssociatedTagService.contains(zoneName));
 				}
 			}
 		}

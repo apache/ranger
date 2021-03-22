@@ -159,9 +159,9 @@ public class RangerPolicyRepository {
 
         final boolean isExistingPolicies = CollectionUtils.isNotEmpty(this.policies);
 
-        List<RangerContextEnricher> newContextEnrichers = updateResourceTrie(deltas, policyVersion);
+        updateResourceTrie(deltas);
 
-        if (newContextEnrichers != null && CollectionUtils.isNotEmpty(this.policies)) {
+        if (CollectionUtils.isNotEmpty(this.policies)) {
             this.contextEnrichers = isExistingPolicies ? shareWith(other) : buildContextEnrichers(options);
         } else {
             this.contextEnrichers = null;
@@ -1430,23 +1430,21 @@ public class RangerPolicyRepository {
         }
     }
 
-    void reinit(List<RangerPolicyDelta> deltas, long policyVersion) {
+    void reinit(List<RangerPolicyDelta> deltas) {
         final boolean isExistingPolicies = CollectionUtils.isNotEmpty(this.policies);
 
-        List<RangerContextEnricher> newContextEnrichers = updateResourceTrie(deltas, policyVersion);
+        updateResourceTrie(deltas);
 
-        if (newContextEnrichers != null && CollectionUtils.isNotEmpty(this.policies)) {
-            this.contextEnrichers = isExistingPolicies ? newContextEnrichers : buildContextEnrichers(options);
+        if (StringUtils.isEmpty(zoneName) && CollectionUtils.isNotEmpty(this.policies)) {
+            if (!isExistingPolicies) {
+                this.contextEnrichers = buildContextEnrichers(options);
+            }
         } else {
             this.contextEnrichers = null;
         }
     }
 
-    private List<RangerContextEnricher> updateResourceTrie(List<RangerPolicyDelta> deltas, long policyVersion) {
-
-        final List<RangerContextEnricher> ret;
-
-        final boolean isExistingPolicies = CollectionUtils.isNotEmpty(this.policies);
+    private void updateResourceTrie(List<RangerPolicyDelta> deltas) {
 
         boolean[] flags = new boolean[RangerPolicy.POLICY_TYPES.length];
 
@@ -1538,25 +1536,5 @@ public class RangerPolicyRepository {
                 entry.getValue().wrapUpUpdate();
             }
         }
-
-        if (StringUtils.isEmpty(zoneName)) {
-            if (isExistingPolicies) {
-                if (CollectionUtils.isNotEmpty(this.policies)) {
-                    ret = this.contextEnrichers; // Handled by caller
-                } else {
-                    ret = null;
-                }
-            } else {
-                if (CollectionUtils.isNotEmpty(this.policies)) {
-                    ret = new ArrayList<>(); // Handled by caller
-                } else {
-                    ret = null;
-                }
-            }
-        } else {
-            ret = null;
-        }
-
-        return ret;
     }
 }
