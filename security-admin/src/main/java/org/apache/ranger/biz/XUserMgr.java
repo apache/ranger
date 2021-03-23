@@ -2643,8 +2643,8 @@ public class XUserMgr extends XUserMgrBase {
 			if (vXUser == null || vXUser.getName() == null
 					|| "null".equalsIgnoreCase(vXUser.getName())
 					|| vXUser.getName().trim().isEmpty()) {
-				throw restErrorUtil.createRESTException("Please provide a valid "
-						+ "username.", MessageEnums.INVALID_INPUT_DATA);
+				logger.warn("Ignoring invalid username " + vXUser==null? null : vXUser.getName());
+				continue;
 			}
 			checkAccess(vXUser.getName());
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
@@ -2795,6 +2795,12 @@ public class XUserMgr extends XUserMgrBase {
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	public int createOrUpdateXGroups(VXGroupList groups) {
 		for (VXGroup vXGroup : groups.getList()) {
+            if (vXGroup == null || vXGroup.getName() == null
+                    || "null".equalsIgnoreCase(vXGroup.getName())
+                    || vXGroup.getName().trim().isEmpty()) {
+                logger.warn("Ignoring invalid groupname " + vXGroup==null? null : vXGroup.getName());
+                continue;
+            }
 			createXGroupWithoutLogin(vXGroup);
 		}
 		try {
@@ -2820,7 +2826,16 @@ public class XUserMgr extends XUserMgrBase {
 
 		if (CollectionUtils.isNotEmpty(groupUserInfo.getDelUsers())) {
 			for (String username : groupUserInfo.getDelUsers()) {
-				deleteXGroupAndXUser(groupName, username);
+				try {
+					deleteXGroupAndXUser(groupName, username);
+				} catch (Exception excp) {
+					logger.warn("Ignoring invalid group/user found while updating group memberships group = "
+							+ groupName + " and user = " + username);
+					if (logger.isDebugEnabled()) {
+						logger.debug("createOrDeleteXGroupUsers(): Ignoring invalid group/user found while updating group memberships "
+								+ groupName + " and " + username, excp);
+					}
+				}
 			}
 		}
 	}
@@ -3084,7 +3099,14 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		logger.info("xUser.getName() = " + xUser.getName() + " vXUser.getName() = " + vXUser.getName());
 		vXUser.setId(xUser.getId());
+		try {
 		vXUser = xUserService.updateResource(vXUser);
+		} catch (Exception ex) {
+			logger.warn("Failed to update username " + vXUser.getName());
+			if (logger.isDebugEnabled()) {
+				logger.debug("Failed to update username " + vXUser.getName(), ex);
+			}
+		}
 		vXUser.setUserRoleList(roleList);
 		if (oldUserProfile != null) {
 			if (oldUserProfile.getUserSource() == RangerCommonEnums.USER_APP) {

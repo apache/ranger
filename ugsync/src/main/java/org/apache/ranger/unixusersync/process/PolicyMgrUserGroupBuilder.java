@@ -31,6 +31,7 @@ import java.util.HashSet;
 import java.util.ArrayList;
 import java.util.StringTokenizer;
 import java.util.LinkedHashMap;
+import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
 import javax.servlet.http.HttpServletResponse;
@@ -85,6 +86,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 	private static final String PM_UPDATE_DELETED_USERS_URI = "/service/xusers/ugsync/users/visibility";	// POST
 
+	private static final Pattern USER_OR_GROUP_NAME_VALIDATION_REGEX =
+			Pattern.compile("^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s,._\\-+/@= ]|[\u00C0-\u017F])+$", Pattern.CASE_INSENSITIVE);
+
 	private static final String SOURCE_EXTERNAL ="1";
 	private static final String STATUS_ENABLED = "1";
 	private static final String ISVISIBLE = "1";
@@ -128,6 +132,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	private boolean groupNameLowerCaseFlag = false;
 	private String currentSyncSource;
 	private String ldapUrl;
+	private boolean isUserSyncNameValidationEnabled = false;
 
 	private String authenticationType = null;
 	String principal;
@@ -177,6 +182,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	}
 
 	synchronized public void init() throws Throwable {
+		isUserSyncNameValidationEnabled = config.isUserSyncNameValidationEnabled();
 		recordsToPullPerCall = config.getMaxRecordsPerAPICall();
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
 		isMockRun = config.isMockRunEnabled();
@@ -595,11 +601,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			String newGroupAttrsStr = gson.toJson(newGroupAttrs);
 			String groupName = groupNameMap.get(groupDN);
 			if (StringUtils.isEmpty(groupName)) {
-				groupName = groupNameTransform(newGroupAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME));
-				if (StringUtils.isNotEmpty(groupName) && !groupNameMap.containsValue(groupName)) {
-					// This is to avoid updating same groupName with different DN that already exists
-					groupNameMap.put(groupDN, groupName);
+				groupName = groupNameTransform(newGroupAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
+				if (!isValidString(groupName)) {
+					LOG.warn("Ignoring invalid group " + groupName + " Full name = " + groupDN);
+					continue;
 				}
+				groupNameMap.put(groupDN, groupName);
 			}
 			if (!groupCache.containsKey(groupName)) {
 				XGroupInfo newGroup = addXGroupInfo(groupName, newGroupAttrs, newGroupAttrsStr);
@@ -646,11 +653,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			String newUserAttrsStr = gson.toJson(newUserAttrs);
 			String userName = userNameMap.get(userDN);
 			if (StringUtils.isEmpty(userName)) {
-				userName = userNameTransform(newUserAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME));
-				if (StringUtils.isNotEmpty(userName) && !userNameMap.containsValue(userName)) {
-					// This is to avoid updating same username with different DN that already exists
-					userNameMap.put(userDN, userName);
+				userName = userNameTransform(newUserAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
+				if (!isValidString(userName)) {
+					LOG.warn("Ignoring invalid user " + userName + " Full name = " + userDN);
+					continue;
 				}
+				userNameMap.put(userDN, userName);
 			}
 
 			if (!userCache.containsKey(userName)) {
@@ -1579,6 +1587,16 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 
 		return groupName;
+	}
+
+	private boolean isValidString(final String name) {
+		if (StringUtils.isBlank(name)) {
+			return false;
+		}
+		if (isUserSyncNameValidationEnabled) {
+			return USER_OR_GROUP_NAME_VALIDATION_REGEX.matcher(name).matches();
+		}
+		return true;
 	}
 
 	private void updateDeletedGroups(Map<String, Map<String, String>> sourceGroups) throws Throwable {

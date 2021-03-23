@@ -128,7 +128,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
 		XXUser xUser = daoManager.getXXUser().findByUserName(vObj.getName());
 		if (xUser != null) {
-			throw restErrorUtil.createRESTException("XUser already exists",
+			throw restErrorUtil.createRESTException(vObj.getName() + " already exists",
 					MessageEnums.ERROR_DUPLICATE_OBJECT);
 		}
 
