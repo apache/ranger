@@ -602,6 +602,25 @@ public class PolicyEngine {
             this.policyRepository = shareWith(other.policyRepository);
         }
 
+        if (MapUtils.isEmpty(zonePolicyRepositories) && MapUtils.isNotEmpty(other.zonePolicyRepositories)) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Existing engine contains some zonePolicyRepositories and new engine contains no zonePolicyRepositories");
+            }
+            for (Map.Entry<String, RangerPolicyRepository> entry : other.zonePolicyRepositories.entrySet()) {
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("Copying over zoneRepository for zone :[" + entry.getKey() + "]");
+                }
+                RangerPolicyRepository otherZonePolicyRepository = entry.getValue();
+                RangerPolicyRepository zonePolicyRepository = shareWith(otherZonePolicyRepository);
+                this.zonePolicyRepositories.put(entry.getKey(), zonePolicyRepository);
+            }
+        } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Existing engine contains no zonePolicyRepositories or new engine contains some zonePolicyRepositories");
+                LOG.debug("Not copying zoneRepositories from existing engine, as they are already copied or modified");
+            }
+        }
+
         if (servicePolicies.getTagPolicies() != null && CollectionUtils.isNotEmpty(defaultZoneDeltasForTagPolicies)) {
             if (other.tagPolicyRepository == null) {
 
