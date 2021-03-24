@@ -22,6 +22,7 @@ import subprocess
 from os.path import basename
 import time
 import socket
+import glob
 globalDict = {}
 
 os_name = platform.system()
@@ -139,6 +140,22 @@ def dbversionBasedOnUserName(userName):
 	if userName == "keyadmin" :
 		version = 'DEFAULT_KEYADMIN_UPDATE'
 	return version
+
+def set_env_val(command):
+	proc = subprocess.Popen(command, stdout = subprocess.PIPE)
+	for line in proc.stdout:
+		(key, _, value) = line.partition("=")
+		os.environ[key] = value.rstrip()
+	proc.communicate()
+
+def run_env_file(path):
+	for filename in glob.glob(path):
+		log("[I] Env filename : "+filename, "info")
+		if not os.path.exists(filename):
+			log("[I] File dose not exist : "+filename, "info")
+		else:
+			command = shlex.split("env -i /bin/bash -c 'source "+filename+" && env'")
+			set_env_val(command)
 
 class BaseDB(object):
 
@@ -1263,6 +1280,19 @@ def main(argv):
 						xa_sqlObj.is_new_install(xa_db_host, db_user, db_password, db_name)
 
 			if str(argv[i]) == "-changepassword":
+				rangerAdminConf="/etc/ranger/admin/conf"
+				if os.path.exists(rangerAdminConf):
+					RANGER_ADMIN_ENV_PATH = rangerAdminConf
+				else:
+					RANGER_ADMIN_ENV_PATH = RANGER_ADMIN_CONF
+				log("[I] RANGER_ADMIN_ENV_PATH : "+RANGER_ADMIN_ENV_PATH,"info")
+				if not os.path.exists(RANGER_ADMIN_ENV_PATH):
+					log("[I] path  dose not exist" +RANGER_ADMIN_ENV_PATH,"info")
+				else:
+					env_file_path = RANGER_ADMIN_ENV_PATH + '/' + 'ranger-admin-env*.sh'
+					log("[I] env_file_path : " +env_file_path,"info")
+					run_env_file(env_file_path)
+
 				if len(argv)>5:
 					isValidPassWord = False
 					for j in range(len(argv)):
