@@ -19,6 +19,7 @@ package org.apache.ranger.services.yarn.client.json.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -39,18 +40,24 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 public class YarnSchedulerResponse implements java.io.Serializable {
     private static final long serialVersionUID = 1L;
 
+    private static final String FAIR_SCHEDULER = "fairScheduler";
+
+    private static final String CAPACITY_SCHEDULER = "capacityScheduler";
+
+    private static final String CAPACITY_SCHEDULER_LEAF_QUEUE = "capacitySchedulerLeafQueueInfo";
+
     private YarnScheduler scheduler = null;
 
     public YarnScheduler getScheduler() { return scheduler; }
 
     public List<String> getQueueNames() {
-    	List<String> ret = new ArrayList<String>();
+        List<String> ret = new ArrayList<String>();
 
-    	if(scheduler != null) {
-    		scheduler.collectQueueNames(ret);
-    	}
+        if(scheduler != null) {
+            scheduler.collectQueueNames(ret);
+        }
 
-    	return ret;
+        return ret;
     }
 
 
@@ -67,9 +74,9 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         public YarnSchedulerInfo getSchedulerInfo() { return schedulerInfo; }
 
         public void collectQueueNames(List<String> queueNames) {
-        	if(schedulerInfo != null) {
-        		schedulerInfo.collectQueueNames(queueNames, null);
-        	}
+            if(schedulerInfo != null) {
+                schedulerInfo.collectQueueNames(queueNames, null);
+            }
         }
     }
 
@@ -81,6 +88,13 @@ public class YarnSchedulerResponse implements java.io.Serializable {
     public static class YarnSchedulerInfo implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
+        //support fair schedule
+        private String type = null;
+        public String getType() {return type;}
+
+        private RootQueue rootQueue = null;
+        public  RootQueue getRootQueue() { return rootQueue; }
+
         private String     queueName = null;
         private YarnQueues queues    = null;
 
@@ -89,15 +103,24 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         public YarnQueues getQueues() { return queues; }
 
         public void collectQueueNames(List<String> queueNames, String parentQueueName) {
-        	if(queueName != null) {
-        		String queueFqdn = parentQueueName == null ? queueName : parentQueueName + "." + queueName;
 
-        		queueNames.add(queueFqdn);
+            if(type != null && type.equals(FAIR_SCHEDULER)){
 
-            	if(queues != null) {
-            		queues.collectQueueNames(queueNames, queueFqdn);
-            	}
-        	}
+                if(rootQueue != null) {
+                    rootQueue.collectQueueNames(queueNames);
+                }
+            } else if(type != null && type.equals(CAPACITY_SCHEDULER) || Objects.equals(type, CAPACITY_SCHEDULER_LEAF_QUEUE)){
+
+                if(queueName != null) {
+                    String queueFqdn = parentQueueName == null ? queueName : parentQueueName + "." + queueName;
+
+                    queueNames.add(queueFqdn);
+
+                    if(queues != null) {
+                        queues.collectQueueNames(queueNames, queueFqdn);
+                    }
+                }
+            }
         }
     }
 
@@ -114,11 +137,65 @@ public class YarnSchedulerResponse implements java.io.Serializable {
         public List<YarnSchedulerInfo> getQueue() { return queue; }
 
         public void collectQueueNames(List<String> queueNames, String parentQueueName) {
-        	if(queue != null) {
-        		for(YarnSchedulerInfo schedulerInfo : queue) {
-        			schedulerInfo.collectQueueNames(queueNames, parentQueueName);
-        		}
-        	}
+            if(queue != null) {
+                for(YarnSchedulerInfo schedulerInfo : queue) {
+                    schedulerInfo.collectQueueNames(queueNames, parentQueueName);
+                }
+            }
+        }
+    }
+
+    @JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+    @JsonIgnoreProperties(ignoreUnknown=true)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class RootQueue implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private String     queueName = null;
+
+        private ChildQueues childQueues = null;
+
+        public String getQueueName() {
+            return queueName;
+        }
+
+        public ChildQueues getChildQueues() {
+            return childQueues;
+        }
+
+        public void collectQueueNames(List<String> queueNames) {
+            if (queueName != null){
+                queueNames.add(queueName);
+
+                if (childQueues != null) {
+                    childQueues.collectQueueNames(queueNames);
+                }
+            }
+        }
+    }
+
+    @JsonAutoDetect(getterVisibility= JsonAutoDetect.Visibility.NONE, setterVisibility= JsonAutoDetect.Visibility.NONE, fieldVisibility= JsonAutoDetect.Visibility.ANY)
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+    @JsonIgnoreProperties(ignoreUnknown=true)
+    @XmlRootElement
+    @XmlAccessorType(XmlAccessType.FIELD)
+    public static class ChildQueues implements java.io.Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private List<RootQueue> queue = null;
+
+        public List<RootQueue> getQueue() {
+            return queue;
+        }
+
+        public void collectQueueNames(List<String> queueNames) {
+            if(queue != null) {
+                for (RootQueue queue : queue) {
+                    queue.collectQueueNames(queueNames);
+                }
+            }
         }
     }
 }
