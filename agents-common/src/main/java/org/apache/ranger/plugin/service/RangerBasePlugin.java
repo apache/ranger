@@ -880,6 +880,7 @@ public class RangerBasePlugin {
 			result.setPolicyId(chainedResult.getPolicyId());
 			result.setPolicyVersion(chainedResult.getPolicyVersion());
 			result.setPolicyPriority(chainedResult.getPolicyPriority());
+			result.setZoneName(chainedResult.getZoneName());
 		}
 
 		if (!result.getIsAuditedDetermined() && chainedResult.getIsAuditedDetermined()) {
