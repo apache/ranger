@@ -63,6 +63,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
     private static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 
     private Map<Long, Set<String>> serviceNamesInZones = new HashMap<>();
+    private Map<Long, Set<String>> tagServiceNamesInZones = new HashMap<>();
 
     static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 
@@ -91,6 +92,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
         RangerSecurityZone existingZone = new RangerSecurityZone();
         existingZone = mapEntityToViewBean(existingZone, entityObj);
         serviceNamesInZones.put(entityObj.getId(), existingZone.getServices().keySet());
+        tagServiceNamesInZones.put(entityObj.getId(), new HashSet<>(existingZone.getTagServices()));
     }
 
     @Override
@@ -149,15 +151,23 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
     public RangerSecurityZone postUpdate(XXSecurityZone xObj) {
         // Update ServiceVersionInfo for all affected services
         RangerSecurityZone ret = super.postUpdate(xObj);
+
         Set<String> oldServiceNames = new HashSet(serviceNamesInZones.remove(xObj.getId()));
         Set<String> updatedServiceNames = ret.getServices().keySet();
+
+        Set<String> oldTagServiceNames = new HashSet(tagServiceNamesInZones.remove(xObj.getId()));
+        Set<String> updatedTagServiceNames = ret.getServices().keySet();
 
         Collection<String> newServiceNames = CollectionUtils.subtract(updatedServiceNames, oldServiceNames);
         Collection<String> deletedServiceNames = CollectionUtils.subtract(oldServiceNames, updatedServiceNames);
 
+        Collection<String> deletedTagServiceNames = CollectionUtils.subtract(oldTagServiceNames, updatedTagServiceNames);
+
         try {
             serviceDBStore.createZoneDefaultPolicies(newServiceNames, ret);
             serviceDBStore.deleteZonePolicies(deletedServiceNames, ret.getId());
+
+            serviceDBStore.deleteZonePolicies(deletedTagServiceNames, ret.getId());
 
             oldServiceNames.addAll(updatedServiceNames);
             updateServiceInfos(oldServiceNames);
@@ -174,13 +184,14 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
         XXSecurityZone ret = super.preDelete(id);
         RangerSecurityZone viewObject = new RangerSecurityZone();
         viewObject = mapEntityToViewBean(viewObject, ret);
-        Set<String> serviceNames = viewObject.getServices().keySet();
+        Set<String> allServiceNames = new HashSet<>(viewObject.getTagServices());
+        allServiceNames.addAll(viewObject.getServices().keySet());
 
         // Delete default zone policies
 
         try {
-            serviceDBStore.deleteZonePolicies(serviceNames, id);
-            updateServiceInfos(serviceNames);
+            serviceDBStore.deleteZonePolicies(allServiceNames, id);
+            updateServiceInfos(allServiceNames);
         } catch (Exception exception) {
             logger.error("preDelete processing failed for security-zone:[" + viewObject + "]", exception);
             ret = null;
