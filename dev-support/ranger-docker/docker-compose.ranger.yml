@@ -16,12 +16,9 @@ services:
     ports:
       - "6080:6080"
     depends_on:
-      ranger-zk:
-        condition: service_started
-      ranger-db:
-        condition: service_started
-      ranger-solr:
-        condition: service_started
+      - "ranger-zk"
+      - "ranger-db"
+      - "ranger-solr"
     environment:
       - RANGER_VERSION
     command:
