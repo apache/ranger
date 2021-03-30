@@ -34,6 +34,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.StreamCapabilities;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.utils.RollingTimeUtil;
@@ -73,6 +74,8 @@ public class HDFSAuditDestination extends AuditDestination {
 	private Date nextRollOverTime = null;
 
 	private boolean rollOverByDuration  = false;
+
+	private boolean isHFlushCapableStream    = false;
 
 	@Override
 	public void init(Properties prop, String propPrefix) {
@@ -299,6 +302,7 @@ public class HDFSAuditDestination extends AuditDestination {
 			ostream = fileSystem.create(hdfPath);
 			logWriter = new PrintWriter(ostream);
 			currentFileName = fullPath;
+			isHFlushCapableStream = ostream.hasCapability(StreamCapabilities.HFLUSH);
 		}
 		return logWriter;
 	}
@@ -374,7 +378,13 @@ public class HDFSAuditDestination extends AuditDestination {
 						// 1) PrinterWriter does not have bufferring of its own so
 						// we need to flush its underlying stream
 						// 2) HDFS flush() does not really flush all the way to disk.
-						ostream.hflush();
+						if (isHFlushCapableStream) {
+							//Checking HFLUSH capability of the stream because of HADOOP-13327.
+							//For S3 filesystem, hflush throws UnsupportedOperationException and hence we call flush.
+							ostream.hflush();
+						} else {
+							ostream.flush();
+						}
 					logger.info("Flush HDFS audit logs completed.....");
 				}
 			} catch (IOException e) {
