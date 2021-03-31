@@ -17,6 +17,7 @@
  */
 package org.apache.ranger.audit.provider;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -150,6 +151,19 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 				provider.logJSON(events);
 			} catch (Throwable excp) {
 				logFailedEventJSON(events, excp);
+			}
+		}
+		return true;
+	}
+
+
+	@Override
+	public boolean logFile(File file) {
+		for (AuditHandler provider : mProviders) {
+			try {
+				provider.logFile(file);
+			} catch (Throwable excp) {
+			   logFailedEventJSON(file.getAbsolutePath(), excp);
 			}
 		}
 		return true;

@@ -35,6 +35,7 @@ import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
 import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
 import org.apache.ranger.audit.queue.AuditBatchQueue;
+import org.apache.ranger.audit.queue.AuditFileQueue;
 import org.apache.ranger.audit.queue.AuditQueue;
 import org.apache.ranger.audit.queue.AuditSummaryQueue;
 
@@ -58,6 +59,8 @@ public class AuditProviderFactory {
 	public static final String AUDIT_DEST_BASE = "xasecure.audit.destination";
 	public static final String AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC = "xasecure.audit.shutdown.hook.max.wait.seconds";
 	public static final String AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP = "xasecure.audit.provider.filecache.is.enabled";
+	public static final String FILE_QUEUE_TYPE	  = "filequeue";
+	public static final String DEFAULT_QUEUE_TYPE = "memoryqueue";
 	public static final int AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT = 30;
 
 	public static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT = 10 * 1024;
@@ -423,7 +426,7 @@ public class AuditProviderFactory {
 			} else if (providerName.equalsIgnoreCase("log4j")) {
 				provider = new Log4JAuditDestination();
 			} else if (providerName.equalsIgnoreCase("batch")) {
-				provider = new AuditBatchQueue(consumer);
+				provider = getAuditProvider(props, propPrefix, consumer);
 			} else if (providerName.equalsIgnoreCase("async")) {
 				provider = new AuditAsyncQueue(consumer);
 			} else {
@@ -439,6 +442,30 @@ public class AuditProviderFactory {
 			}
 		}
 		return provider;
+	}
+
+	private AuditHandler getAuditProvider(Properties props, String propPrefix, AuditHandler consumer) {
+		AuditHandler ret       = null;
+		String       queueType = MiscUtil.getStringProperty(props, propPrefix + "." + "queuetype", DEFAULT_QUEUE_TYPE);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> AuditProviderFactory.getAuditProvider()  propPerfix=  " + propPrefix + ", " + " queueType=  " + queueType);
+		}
+
+		if (FILE_QUEUE_TYPE.equalsIgnoreCase(queueType)) {
+			AuditFileQueue auditFileQueue      = new AuditFileQueue(consumer);
+			String         propPrefixFileQueue = propPrefix + "." + FILE_QUEUE_TYPE;
+			auditFileQueue.init(props, propPrefixFileQueue);
+			ret = new AuditBatchQueue(auditFileQueue);
+		} else {
+			ret = new AuditBatchQueue(consumer);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== AuditProviderFactory.getAuditProvider()");
+		}
+
+		return ret;
 	}
 
 	private AuditHandler getDefaultProvider() {
