@@ -18,6 +18,7 @@
  */
 package org.apache.ranger;
 
+import com.sun.jersey.api.client.GenericType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.ClientResponse;
@@ -179,11 +180,11 @@ public class RangerClient {
     }
 
     public void deleteServiceDef(long serviceDefId) throws RangerServiceException {
-        callAPI(DELETE_SERVICEDEF_BY_ID.applyUrlFormat(serviceDefId), null, null, null);
+        callAPI(DELETE_SERVICEDEF_BY_ID.applyUrlFormat(serviceDefId), null);
     }
 
     public void deleteServiceDef(String serviceDefName) throws RangerServiceException {
-        callAPI(DELETE_SERVICEDEF_BY_NAME.applyUrlFormat(serviceDefName), null, null, null);
+        callAPI(DELETE_SERVICEDEF_BY_NAME.applyUrlFormat(serviceDefName), null);
     }
 
     public RangerServiceDef getServiceDef(long serviceDefId) throws RangerServiceException {
@@ -195,7 +196,7 @@ public class RangerClient {
     }
 
     public List<RangerServiceDef> findServiceDefs(Map<String, String> filter) throws RangerServiceException {
-        return callAPI(FIND_SERVICEDEFS, filter, null, List.class);
+        return callAPI(FIND_SERVICEDEFS, filter, null, new GenericType<List<RangerServiceDef>>(){});
     }
 
 
@@ -215,11 +216,11 @@ public class RangerClient {
     }
 
     public void deleteService(long serviceId) throws RangerServiceException {
-        callAPI(DELETE_SERVICE_BY_ID.applyUrlFormat(serviceId), null, null, null);
+        callAPI(DELETE_SERVICE_BY_ID.applyUrlFormat(serviceId), null);
     }
 
     public void deleteService(String serviceName) throws RangerServiceException {
-        callAPI(DELETE_SERVICE_BY_NAME.applyUrlFormat(serviceName), null, null, null);
+        callAPI(DELETE_SERVICE_BY_NAME.applyUrlFormat(serviceName), null);
     }
 
     public RangerService getService(long serviceId) throws RangerServiceException {
@@ -231,7 +232,7 @@ public class RangerClient {
     }
 
     public List<RangerService> findServices(Map<String, String> filter) throws RangerServiceException {
-        return callAPI(FIND_SERVICES, filter, null, List.class);
+        return callAPI(FIND_SERVICES, filter, null, new GenericType<List<RangerService>>(){});
     }
 
 
@@ -255,7 +256,7 @@ public class RangerClient {
     }
 
     public void deletePolicy(long policyId) throws RangerServiceException {
-        callAPI(DELETE_POLICY_BY_ID.applyUrlFormat(policyId), null, null, null);
+        callAPI(DELETE_POLICY_BY_ID.applyUrlFormat(policyId), null);
     }
 
     public void deletePolicy(String serviceName, String policyName) throws RangerServiceException {
@@ -264,7 +265,7 @@ public class RangerClient {
         queryParams.put(PARAM_POLICY_NAME, policyName);
         queryParams.put("servicename", serviceName);
 
-        callAPI(DELETE_POLICY_BY_NAME, queryParams, null, null);
+        callAPI(DELETE_POLICY_BY_NAME, queryParams);
     }
 
     public RangerPolicy getPolicy(long policyId) throws RangerServiceException {
@@ -276,11 +277,12 @@ public class RangerClient {
     }
 
     public List<RangerPolicy> getPoliciesInService(String serviceName) throws RangerServiceException {
-        return callAPI(GET_POLICIES_IN_SERVICE.applyUrlFormat(serviceName), null, null, List.class);
+        return callAPI(GET_POLICIES_IN_SERVICE.applyUrlFormat(serviceName), null,
+                null, new GenericType<List<RangerPolicy>>(){});
     }
 
     public List<RangerPolicy> findPolicies(Map<String, String> filter) throws RangerServiceException {
-        return callAPI(FIND_POLICIES, filter, null, List.class);
+        return callAPI(FIND_POLICIES, filter, null, new GenericType<List<RangerPolicy>>(){});
     }
 
 
@@ -300,11 +302,11 @@ public class RangerClient {
     }
 
     public void deleteSecurityZone(long zoneId) throws RangerServiceException {
-        callAPI(DELETE_ZONE_BY_ID.applyUrlFormat(zoneId), null, null, null);
+        callAPI(DELETE_ZONE_BY_ID.applyUrlFormat(zoneId), null);
     }
 
     public void deleteSecurityZone(String zoneName) throws RangerServiceException {
-        callAPI(DELETE_ZONE_BY_NAME.applyUrlFormat(zoneName), null, null, null);
+        callAPI(DELETE_ZONE_BY_NAME.applyUrlFormat(zoneName), null);
     }
 
     public RangerSecurityZone getSecurityZone(long zoneId) throws RangerServiceException {
@@ -316,7 +318,7 @@ public class RangerClient {
     }
 
     public List<RangerSecurityZone> findSecurityZones(Map<String, String> filter) throws RangerServiceException {
-        return callAPI(FIND_ZONES, filter, null, List.class);
+        return callAPI(FIND_ZONES, filter, null, new GenericType<List<RangerSecurityZone>>(){});
     }
 
     /*
@@ -331,7 +333,7 @@ public class RangerClient {
     }
 
     public void deleteRole(long roleId) throws RangerServiceException {
-        callAPI(DELETE_ROLE_BY_ID.applyUrlFormat(roleId), null, null, null);
+        callAPI(DELETE_ROLE_BY_ID.applyUrlFormat(roleId), null);
     }
 
     public void deleteRole(String roleName, String execUser, String serviceName) throws RangerServiceException {
@@ -340,7 +342,7 @@ public class RangerClient {
         queryParams.put(PARAM_EXEC_USER, execUser);
         queryParams.put(PARAM_SERVICE_NAME, serviceName);
 
-        callAPI(DELETE_ROLE_BY_NAME.applyUrlFormat(roleName), queryParams, null, null);
+        callAPI(DELETE_ROLE_BY_NAME.applyUrlFormat(roleName), queryParams);
     }
 
     public RangerRole getRole(long roleId) throws RangerServiceException {
@@ -370,7 +372,7 @@ public class RangerClient {
     }
 
     public List<RangerRole> findRoles(Map<String, String> filter) throws RangerServiceException {
-        return callAPI(FIND_ROLES, filter, null, List.class);
+        return callAPI(FIND_ROLES, filter, null, new GenericType<List<RangerRole>>(){});
     }
 
     public RESTResponse grantRole(String serviceName, GrantRevokeRoleRequest request) throws RangerServiceException {
@@ -395,7 +397,7 @@ public class RangerClient {
         queryParams.put(PARAM_DAYS, String.valueOf(days));
         queryParams.put(PARAM_RELOAD_SERVICE_POLICIES_CACHE, String.valueOf(reloadServicePoliciesCache));
 
-        callAPI(DELETE_POLICY_DELTAS, queryParams, null, null);
+        callAPI(DELETE_POLICY_DELTAS, queryParams);
     }
 
     private ClientResponse invokeREST(API api, Map<String, String> params, Object request) throws RangerServiceException {
@@ -429,11 +431,10 @@ public class RangerClient {
         return clientResponse;
     }
 
-    private <T> T callAPI(API api, Map<String, String> params, Object request, Class<T> responseType) throws RangerServiceException {
-        T ret = null;
+    private ClientResponse getResponse(API api, Map<String, String> params, Object request) throws RangerServiceException {
+        final ClientResponse clientResponse;
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> callAPI({},{},{},{})",api, params, request, responseType);
             LOG.debug("------------------------------------------------------");
             LOG.debug("Call         : {} {}", api.getMethod(), api.getNormalizedPath());
             LOG.debug("Content-type : {} ", api.getConsumes());
@@ -442,8 +443,6 @@ public class RangerClient {
                 LOG.debug("Request      : {}", request);
             }
         }
-
-        final ClientResponse clientResponse;
 
         if (isSecureMode) {
             clientResponse = Subject.doAs(sub, (PrivilegedAction<ClientResponse>) () -> {
@@ -457,30 +456,83 @@ public class RangerClient {
         } else clientResponse = invokeREST(api,params,request);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("method={}, path={}, contentType={}, accept={}, httpStatus={}", api.getMethod(), api.getNormalizedPath(), api.getConsumes(), api.getProduces(), (clientResponse != null ? clientResponse.getStatus() : "null"));
+            LOG.debug("method={}, path={}, contentType={}, accept={}, httpStatus={}",
+                    api.getMethod(), api.getNormalizedPath(),
+                    api.getConsumes(), api.getProduces(),
+                    (clientResponse != null ? clientResponse.getStatus() : "null"));
         }
 
         if (clientResponse == null) {
             throw new RangerServiceException(api, null);
         } else if (clientResponse.getStatus() == api.getExpectedStatus().getStatusCode()) {
-            if (responseType != null) {
-                ret = clientResponse.getEntity(responseType);
-
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Response: {}", restClient.toJson(ret));
-                    LOG.debug("------------------------------------------------------");
-                }
-            }
+            return clientResponse;
         } else if (clientResponse.getStatus() == ClientResponse.Status.SERVICE_UNAVAILABLE.getStatusCode()) {
             LOG.error("Ranger Admin unavailable. HTTP Status: {}", clientResponse.getStatus());
         } else {
             throw new RangerServiceException(api, clientResponse);
         }
 
+        return clientResponse;
+    }
+
+    private <T> T callAPI(API api, Map<String, String> params, Object request, Class<T> responseType) throws RangerServiceException {
+        T ret = null;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> callAPI({},{},{},{})",api, params, request, responseType);
+        }
+
+        final ClientResponse clientResponse = getResponse(api, params, request);
+
+        if (responseType != null) {
+            ret = clientResponse.getEntity(responseType);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Response: {}", restClient.toJson(ret));
+                LOG.debug("------------------------------------------------------");
+            }
+        }
+
         if(LOG.isDebugEnabled()){
             LOG.debug("<== callAPI({},{},{},{}), result = {}", api, params, request, responseType, ret);
         }
         return ret;
+    }
+
+    private <T> T callAPI(API api, Map<String, String> params, Object request, GenericType<T> responseType) throws RangerServiceException {
+        T ret = null;
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> callAPI({},{},{},{})",api, params, request, responseType);
+        }
+
+        final ClientResponse clientResponse = getResponse(api, params, request);
+
+        if (responseType != null) {
+            ret = clientResponse.getEntity(responseType);
+
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Response: {}", restClient.toJson(ret));
+                LOG.debug("------------------------------------------------------");
+            }
+        }
+
+        if(LOG.isDebugEnabled()){
+            LOG.debug("<== callAPI({},{},{},{}), result = {}", api, params, request, responseType, ret);
+        }
+        return ret;
+    }
+
+    private void callAPI(API api, Map<String, String> params) throws RangerServiceException {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> callAPI({},{},{},{})",api, params);
+        }
+
+        getResponse(api, params, null);
+
+        if(LOG.isDebugEnabled()){
+            LOG.debug("<== callAPI({},{},{},{}), result = {}", api, params);
+        }
     }
 
     public static class API {

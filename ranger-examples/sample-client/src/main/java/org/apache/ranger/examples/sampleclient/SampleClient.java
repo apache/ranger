@@ -189,6 +189,9 @@ public class SampleClient {
          */
         List<RangerRole> allRoles = rangerClient.findRoles(filter);
         LOG.info("List of Roles {}", gsonBuilder.toJson(allRoles));
+        for (RangerRole role : allRoles) {
+            LOG.info("Role is : {}", role.getName());
+        }
 
         /*
         Delete a role in Ranger
