@@ -192,7 +192,7 @@
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <tomcat.embed.version>8.5.63</tomcat.embed.version>
         <testng.version>6.9.4</testng.version>
-        <velocity.version>1.7</velocity.version>
+        <velocity.version>2.3</velocity.version>
         <zookeeper.version>3.4.14</zookeeper.version>
         <codehaus.woodstox.stax2api.version>3.1.4</codehaus.woodstox.stax2api.version>
         <fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>

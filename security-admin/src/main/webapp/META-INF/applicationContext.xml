@@ -215,6 +215,7 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 			<value>resource.loader=class
 				class.resource.loader.class=org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</value>
 		</property>
+		<property name="overrideLogging" value="false" />
 	</bean>
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
 		<property name="basenames">
