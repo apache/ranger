@@ -118,6 +118,13 @@ define(function(require) {
             });
             var view = require('views/reports/AuditAccessLogDetailView');
             var VXAccessAuditList = require('collections/VXAccessAuditList');
+            var RangerServiceDefList = require('collections/RangerServiceDefList');
+            var serviceDefList = new RangerServiceDefList();
+            serviceDefList.fetch({
+                cache : false,
+                async:false,
+                data :{'pageSource':'Audit'}
+            });
             var auditList = new VXAccessAuditList();
             auditList.url = 'service/assets/accessAudit?eventId='+eventID
             auditList.fetch({
@@ -127,6 +134,7 @@ define(function(require) {
                 App.rContent.show(new view({
                     auditaccessDetail : auditList.models[0].attributes,
                     auditAccessView : true,
+                    serviceDefList : serviceDefList
                 }));
             })
         },
