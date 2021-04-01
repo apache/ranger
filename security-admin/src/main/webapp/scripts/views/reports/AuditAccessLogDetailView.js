@@ -27,6 +27,8 @@ define(function(require) {
         var XAGlobals = require('utils/XAGlobals');
         var localization = require('utils/XALangSupport');
         var XAUtils = require('utils/XAUtils');
+        var RangerPolicy = require('models/RangerPolicy');
+        var RangerPolicyRO = require('views/policies/RangerPolicyRO');
 
         var AuditAccessLogDetailTmpl = require('hbs!tmpl/reports/AuditAccessLogDetail_tmpl');
 
@@ -38,6 +40,11 @@ define(function(require) {
 
             breadCrumbs :function(){
                 return 'Audit Access Log Detail'
+            },
+
+            /** Layout sub regions */
+            regions: {
+                'policyDetailsView' :'div[data-id="PolicyDetaissInfo"]'
             },
 
             templateHelpers: function() {
@@ -52,17 +59,20 @@ define(function(require) {
 
                     tag : this.tags ? this.tags.join() : undefined,
                     auditAccessView : this.auditAccessView,
+                    policyDetailsView : (this.auditAccessView && this.auditaccessDetail.policyId !== -1) ? true : false,
                 }
             },
 
             ui: {
                 copyQuery : '[data-name="copyQuery"]',
+                policyDetails : '[data-js="policyDetails"]',
             },
 
             /** ui events hash */
             events : function() {
                 var events = {};
                 events['click ' + this.ui.copyQuery] = 'copyQuery';
+                events['click ' + this.ui.policyDetails] = 'policyDetails';
                 return events
             },
             /**
@@ -71,7 +81,7 @@ define(function(require) {
              */
             initialize: function(options) {
                 console.log("Initialized a Ranger Audit Access Log Details");
-                _.extend(this, _.pick(options, 'auditaccessDetail', 'auditAccessView'));
+                _.extend(this, _.pick(options, 'auditaccessDetail', 'auditAccessView', 'serviceDefList'));
                 if(_.isUndefined(this.auditAccessView)) {
                     this.auditAccessView = false
                 }
@@ -81,12 +91,47 @@ define(function(require) {
                         return m.type
                     });
                 }
+                if(this.auditAccessView && this.auditaccessDetail.policyId !== -1) {
+                    this.policyDetails();
+                }
             },
 
             copyQuery: function(e) {
                 XAUtils.copyToClipboard(e , this.auditaccessDetail.requestData);
             },
 
+            policyDetails : function() {
+                var that = this
+                if(this.auditaccessDetail.repoType){
+                    var repoType =  this.auditaccessDetail.repoType;
+                }
+                var policyId = this.auditaccessDetail.policyId;
+                if(policyId == -1){
+                        return;
+                }
+                var eventTime = this.auditaccessDetail.eventTime;
+                var policyVersion = this.auditaccessDetail.policyVersion;
+                var application = this.auditaccessDetail.agentId;
+                var policy = new RangerPolicy({
+                        id: policyId,
+                        version:policyVersion
+                });
+                var policyVersionList = policy.fetchVersions();
+                this.policyDetailsTbl = new RangerPolicyRO({
+                    policy: policy,
+                    policyVersionList : policyVersionList,
+                    serviceDefList: that.serviceDefList,
+                    eventTime : eventTime,
+                    repoType : repoType
+                });
+            },
+
+            /** on render callback */
+            onRender: function() {
+                if(this.auditAccessView && this.auditaccessDetail.policyId !== -1) {
+                    this.policyDetailsView.show(this.policyDetailsTbl);
+                }
+            },
             /** on close */
             onClose: function() {}
     });

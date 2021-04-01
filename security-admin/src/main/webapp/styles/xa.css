@@ -4560,6 +4560,10 @@ input.textFiledInputPadding:disabled {
   background-color: white;
 }
 
+#policyDetails {
+    background-color: white;
+}
+
 .report-table .subgrid-custom-cell{
   display: table-cell!important;
 }
@@ -4663,4 +4667,8 @@ input.textFiledInputPadding:disabled {
   .zoneResources-form [fieldclass="resorces-css"] .recursive-toggle-2 {
     left:0px;
   }
+}
+
+.clearBoth {
+  clear: both;
 }
