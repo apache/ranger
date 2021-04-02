@@ -1149,6 +1149,8 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
 
         void collectChildEvaluators(Character sep, int startIdx, Set<U> childEvaluators) {
+            setupIfNeeded(getParent());
+
             final int sepPos = startIdx < str.length() ? str.indexOf(sep, startIdx) : -1;
 
             if (sepPos == -1) { // ex: startIdx=5, path(str)=/tmp/test, path(a child) could be: /tmp/test.txt, /tmp/test/, /tmp/test/a, /tmp/test/a/b

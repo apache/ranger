@@ -283,6 +283,9 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		}
 		@Override
 		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> StringResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+			}
 			String expandedValue = getExpandedValue(evalContext);
 			boolean ret = function.apply(resourceValue, expandedValue);
 			if (!ret) {
@@ -297,6 +300,9 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 						ret = function.apply(resourceValue, shorterExpandedValue);
 					}
 				}
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== StringResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
 			}
 			return ret;
 		}
@@ -314,6 +320,9 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		}
 		@Override
 		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> WildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+			}
 			String expandedValue = getExpandedValue(evalContext);
 			boolean ret = function.apply(resourceValue, expandedValue, ioCase);
 			if (!ret) {
@@ -328,6 +337,9 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 						ret = function.apply(resourceValue, shorterExpandedValue, ioCase);
 					}
 				}
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== WildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
 			}
 			return ret;
 		}
@@ -344,6 +356,9 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		}
 		@Override
 		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> RecursiveWildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+			}
 			String expandedValue = getExpandedValue(evalContext);
 			boolean ret = function.apply(resourceValue, expandedValue, pathSeparatorChar, ioCase);
 			if (!ret) {
@@ -358,6 +373,9 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 						ret = function.apply(resourceValue, shorterExpandedValue, pathSeparatorChar, ioCase);
 					}
 				}
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RecursiveWildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
 			}
 			return ret;
 		}
@@ -386,6 +404,9 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 		@Override
 		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> RecursivePathResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+			}
 			final String noSeparator;
 			if (getNeedsDynamicEval()) {
 				String expandedPolicyValue = getExpandedValue(evalContext);
@@ -414,13 +435,12 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 								resourceValue = resourceValue.substring(0, resourceValue.length() - 1);
 							}
 							ret = primaryFunction.apply(resourceValue, shorterExpandedValue);
-							if (!ret) {
-								final String shortedExpandedValueWithSeparator = getNeedsDynamicEval() ? shorterExpandedValue + pathSeparatorChar : shorterExpandedValue;
-								ret = fallbackFunction.apply(resourceValue, shortedExpandedValueWithSeparator);
-							}
 						}
 					}
 				}
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RecursivePathResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValueWithoutTrailingSeparatorChar=" + noSeparator + ") : result:[" + ret + "]");
 			}
 
 			return ret;
