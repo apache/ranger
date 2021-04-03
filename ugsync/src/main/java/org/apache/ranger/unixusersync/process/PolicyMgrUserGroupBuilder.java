@@ -669,7 +669,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			} else {
 				XUserInfo oldUser = userCache.get(userName);
 				Map<String, String> oldUserAttrs = oldUser.getOtherAttrsMap();
-				String oldUserDN = oldUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
+				String oldUserDN = oldUserAttrs != null ? oldUserAttrs.get(UgsyncCommonConstants.FULL_NAME) : null;
 				if (StringUtils.equalsIgnoreCase(userDN, oldUserDN)
 						&& StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
 						&& StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.LDAP_URL), newUserAttrs.get(UgsyncCommonConstants.LDAP_URL))) {
