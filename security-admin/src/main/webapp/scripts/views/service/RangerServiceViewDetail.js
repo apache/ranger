@@ -35,12 +35,25 @@ define(function(require) {
 
                 template: RangerServiceViewDetailTmpl,
                 templateHelpers: function() {
-                    var that = this, tagDetails = [];
+                    var that = this, tagDetails = []; this.isExcludes = "", this.isRecursive = "";
                     if(this.rangerService.get('tagService') && !_.isEmpty(this.rangerService.get('tagService'))) {
                         tagDetails = this.rangerSeviceList.find(function(m) {
                             return m.get('name') == that.rangerService.get('tagService')
                         })
                     }
+                    _.filter(this.auditFilters, function(model, modVal) {
+                        model.isAudited = model.isAudited ? 'Yes' : 'No'
+                        _.filter(model.resources, function(key){
+                            var $toggleBtn =''
+                            if(!_.isUndefined(key.isExcludes)) {
+                                key.isExcludes = key.isExcludes ? XAEnums.ExcludeStatus.STATUS_EXCLUDE.label : XAEnums.ExcludeStatus.STATUS_INCLUDE.label;
+                            }
+                            if (!_.isUndefined(key.isRecursive)) {
+                                key.isRecursive = key.isRecursive ? XAEnums.RecursiveStatus.STATUS_RECURSIVE.label : XAEnums.RecursiveStatus.STATUS_NONRECURSIVE.label;
+                            }
+                            key.values = key.values.join(', ')
+                        })
+                    })
                     return {
                        configsList : this.conf,
                        customConfigs : this.customConfigs,
@@ -49,7 +62,8 @@ define(function(require) {
                        isEnabled   : this.rangerService.get('isEnabled'),
                        tagService  : (!_.isEmpty(tagDetails)) ? tagDetails.get('displayName') : false,
                        displayName : this.rangerService.get('displayName'),
-                   }
+                       auditFilters : this.auditFilters,
+                    }
                 },
 
                 /**
@@ -75,10 +89,12 @@ define(function(require) {
                         customConfigs = _.omit(customConfigs , m.name);
                     })
                     this.conf = configs;
-                    if(_.isEmpty(customConfigs)){
-                        this.customConfigs = false
-                    }else{
-                        this.customConfigs = customConfigs;
+                    this.auditFilters = (_.isEmpty(customConfigs) && _.isUndefined(customConfigs['ranger.plugin.audit.filters'])) ?
+                        false : customConfigs['ranger.plugin.audit.filters'];
+                    this.customConfigs = _.isEmpty(_.omit(customConfigs, 'ranger.plugin.audit.filters')) ?
+                        false : _.omit(customConfigs, 'ranger.plugin.audit.filters');
+                    if(this.auditFilters){
+                        this.auditFilters = JSON.parse((this.auditFilters).replace(/'/g, '"'));
                     }
                 },
                 /** on close */

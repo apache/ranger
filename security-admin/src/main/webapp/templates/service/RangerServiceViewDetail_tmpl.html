@@ -126,3 +126,104 @@
         </tbody>
     </table>
 </div>
+<div id="auditFilters">
+    <p class="formHeader">
+        {{tt 'h.auditFilter'}}  :
+    </p>
+    <div class="table-responsive">
+        <table class="table table-permission table-condensed table-read-only">
+            <thead>
+                <tr>
+                    <th>Is Audited</th>
+                    <th>Access Result</th>
+                    <th>Resources</th>
+                    <th>Operations</th>
+                    <th>Permissions</th>
+                    <th>Users</th>
+                    <th>Groups</th>
+                    <th>Roles</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#each auditFilters}}
+                    <tr>
+                        <td>
+                            {{#if this.isAudited}}
+                                <span class="badge badge-info">{{this.isAudited}}</span>
+                            {{else}}
+                                --
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if this.accessResult}}
+                                <span class="badge badge-info">{{this.accessResult}}</span>
+                            {{else}}
+                                --
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if this.resources}}
+                            <div class="resource-list min-width-150">
+                                <div class="resourceGrp ui-sortable-handle">
+                                    {{#each this.resources}}
+                                        <div class="resourcesFilter"><div><b>{{@key}}</b>:{{this.values}}</div>
+                                            {{#if this.isExcludes}}<span class="badge badge-dark pull-right">{{this.isExcludes}}</span> {{/if}}{{#if this.isRecursive}}<span class="badge badge-dark pull-right">{{this.isRecursive}}</span>{{/if}}
+                                        </div>
+                                    {{/each}}
+                                </div>
+                            </div>
+                            {{else}}
+                              --
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if this.actions}}
+                              {{#each this.actions}}
+                               <span class="badge badge-info">{{this}}</span>
+                              {{/each}}
+                            {{else}}
+                              --
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if this.accessTypes}}
+                              {{#each this.accessTypes}}
+                               <span class="badge badge-info">{{this}}</span>
+                              {{/each}}
+                            {{else}}
+                              --
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if this.users}}
+                              {{#each this.users}}
+                               <span class="badge badge-info">{{this}}</span>
+                              {{/each}}
+                            {{else}}
+                              --
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if this.groups}}
+                              {{#each this.groups}}
+                               <span class="badge badge-info">{{this}}</span>
+                              {{/each}}
+                            {{else}}
+                                 --
+                            {{/if}}
+                        </td>
+                        <td>
+                            {{#if this.roles}}
+                              {{#each this.roles}}
+                               <span class="badge badge-info">{{this}}</span>
+                              {{/each}}
+                            {{else}}
+                                 --
+                            {{/if}}
+                        </td>
+                    </tr>
+                {{/each}}
+            </tbody>
+        </table>
+    </div>
+</div>

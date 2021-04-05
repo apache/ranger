@@ -84,7 +84,11 @@ define(function(require) {
             });
             this.setupFormForEditMode();
             this.evIsAudited();
-            this.renderPermissions();
+            if(XAUtil.isTagBasedDef(this.rangerServiceDefModel)){
+                this.renderPermsForTagBasedService();
+            } else {
+                this.renderPermissions();
+            }
             this.ui.selectUsers.select2(XAUtil.getUsersGroupsList("users", this, '250px', "auditFilter"));
             this.ui.selectGroups.select2(XAUtil.getUsersGroupsList("groups", this, '250px', "auditFilter"));
             this.ui.selectRoles.select2(XAUtil.getUsersGroupsList("roles", this, '250px', "auditFilter"));
@@ -228,20 +232,86 @@ define(function(require) {
             });
         },
 
+        renderPermsForTagBasedService :function() {
+            var that = this;
+            this.permsIds = [];
+            if (this.model && this.model.get('accessTypes')) {
+                this.permsIds = this.model.get('accessTypes');
+            }
+            this.ui.addPerms.attr('data-type','tagchecklist')
+            this.ui.addPerms.attr('title','Components Permissions')
+            this.perms =  _.map(this.accessTypes,function(m){return {text : m.label, value : m.name}});
+            var select2optn = { width :'600px' };
+            //create x-editable for permissions
+            this.ui.addPerms.editable({
+                emptytext : 'Add Permissions',
+                source: this.perms,
+                value : this.permsIds,
+                select2option : select2optn,
+                placement : 'top',
+                showbuttons : 'bottom',
+                display: function(values,srcData) {
+                    if(_.contains(values,"on")) values = _.without(values,"on");
+                    if(_.isNull(values) || _.isEmpty(values)){
+                        $(this).empty();
+                        that.model.unset('accessTypes');
+                        that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
+                        that.ui.addPermissionsSpan.attr('title','add');
+                        return;
+                    }
+                    //To remove selectall options
+                    values = _.uniq(values);
+                    if(values.indexOf("selectall") >= 0){
+                        values.splice(values.indexOf("selectall"), 1)
+                    }
+                    var permTypeArr = [];
+                    var valArr = _.map(values, function(id){
+                        if(!_.isUndefined(id)){
+                            var obj = _.findWhere(srcData,{'value' : id});
+                            permTypeArr.push({permType : obj.value});
+                            return "<span class='badge badge-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
+                        }
+                    });
+                    // Save form data to model
+                    that.model.set('accessTypes', values);
+                    $(this).html(_.uniq(valArr).join(" "));
+                    that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
+                    that.ui.addPermissionsSpan.attr('title','edit');
+                },
+            }).on('hidden',function(e){
+                    // $(e.currentTarget).parent().find('.tag-condition-popover').remove()
+                    $('.popover').parent().remove()
+            }).on('click', function(e) {
+                e.stopPropagation();
+                if($('.popover')){
+                    $('.tag-condition-popover').remove()
+                }
+                //Sticky popup
+                var pop = $('.popover')
+                pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
+                pop.addClass('tag-fixed-popover');
+                pop.find('.arrow').removeClass('arrow')
+            });
+            that.ui.addPermissionsSpan.click(function(e) {
+                e.stopPropagation();
+                if($('.popover')){
+                    $('.tag-condition-popover').remove()
+                }
+                that.$('a[data-js="permissions"]').editable('toggle');
+                var pop = $('.popover')
+                pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
+                pop.addClass('tag-fixed-popover');
+                pop.find('.arrow').removeClass('arrow')
+            });
+        },
+
         eGetResources :function () {
             var model = null;
             if (!_.isUndefined(this.model.get('resources'))) {
-                this.model.set('policyType', 0);
-                this.model.set('id', 'resource' + this.model.collection.length);
                 model = $.extend(true, {}, this.model);
-                // model = _.clone(resourceModel)
-                // _.each(model.get('resources'), function(val, key, obj) {
-                //     obj[key] = {
-                //         'values': val
-                //     };
-                // });
+                model.set('policyType', 0);
+                model.set('id', 'resource' + this.model.collection.length);
             }
-            // this.rangerServiceDefModel.get('resources')[0].lookupSupported = false
             if (_.isEmpty(this.serviceName)) {
                 this.rangerServiceDefModel.get('resources').map( function(m){
                     m.lookupSupported = false;
@@ -329,6 +399,7 @@ define(function(require) {
             if(this.model && !_.isUndefined(this.model.get('resources')))  {
                 this.model.unset('resources');
             }
+            this.ui.addResources.find('i').attr('class', 'fa-fw fa fa-plus');
         },
 
         evSelectUserGroupRole : function (e) {
@@ -337,6 +408,10 @@ define(function(require) {
         evDelete : function(){
             var that = this;
             this.collection.remove(this.model);
+            if (this.collection.length == 0) {
+                var $data = '<tr><td class="emptySet text-muted" colspan="9">No Audit Filter Data Found !!</td></tr>'
+                $(".auditFilterData").html($data)
+            }
         },
         selectOparations : function() {
             var that = this;
@@ -344,7 +419,7 @@ define(function(require) {
             this.ui.oparations.select2({
                 multiple: true,
                 closeOnSelect : true,
-                placeholder : 'Select Action',
+                placeholder : 'Type Action Name',
                 allowClear: true,
                 width : '200px',
                 tokenSeparators: [","],
