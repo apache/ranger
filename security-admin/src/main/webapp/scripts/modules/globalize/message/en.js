@@ -397,8 +397,10 @@ define(function(require) {
                 nifiResource                :'NiFi Resource Identifier.',
                 securityZone				:'Security Zone',
                 zoneCreate					:'Create Zone',
-                zoneEdit					:'Zone Edit'
-                        },
+                zoneEdit					:'Zone Edit',
+                bucket                      :'Name of the S3 bucket.',
+                auditFilter                 :'Audit Filter'
+            },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
 				areYouSureWantToDelete	  : 'Are you sure want to delete ?',

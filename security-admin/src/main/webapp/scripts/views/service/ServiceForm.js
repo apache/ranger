@@ -129,6 +129,20 @@ define(function(require){
 						that.auditFilterColl.add(new Backbone.Model(model));
 					})
 				}
+			} else {
+				var configs = this.rangerServiceDefModel.get('configs');
+				var auditFilterCollValueIndex = _.findIndex(configs,function(m){
+					return m.name == 'ranger.plugin.audit.filters'
+				})
+				if(auditFilterCollValueIndex != -1) {
+					var auditFilterCollValue = configs[auditFilterCollValueIndex];
+					configs.splice(auditFilterCollValueIndex, 1);
+					auditFilterCollValue = JSON.parse((auditFilterCollValue.defaultValue).replace(/'/g, '"'));
+					console.log(auditFilterCollValue);
+					auditFilterCollValue.forEach(function(model) {
+						that.auditFilterColl.add(new Backbone.Model(model));
+					})
+				}
 			}
 		},
 		setupForm : function() {
