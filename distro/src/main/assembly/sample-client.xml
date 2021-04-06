@@ -20,8 +20,8 @@
     <formats>
         <format>tar.gz</format>
     </formats>
-    <baseDirectory>${project.name}-${project.version}-sample-client</baseDirectory>
-    <includeBaseDirectory>false</includeBaseDirectory>
+    <baseDirectory>${project.parent.name}-${project.version}-sample-client</baseDirectory>
+    <includeBaseDirectory>true</includeBaseDirectory>
     <moduleSets>
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
