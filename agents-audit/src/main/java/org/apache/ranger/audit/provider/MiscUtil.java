@@ -339,6 +339,19 @@ public class MiscUtil {
 		return ret;
 	}
 
+	public static String getStringProperty(Properties props, String propName, String defValue) {
+		String ret = defValue;
+
+		if (props != null && propName != null) {
+			String val = props.getProperty(propName);
+			if (val != null) {
+				ret = val;
+			}
+		}
+
+		return ret;
+	}
+
 	public static boolean getBooleanProperty(Properties props, String propName,
 			boolean defValue) {
 		boolean ret = defValue;

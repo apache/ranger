@@ -1,21 +1,21 @@
 /*
- * Licensed to the Apache Software Foundation (ASF) under one
- * or more contributor license agreements.  See the NOTICE file
- * distributed with this work for additional information
- * regarding copyright ownership.  The ASF licenses this file
- * to you under the Apache License, Version 2.0 (the
- * "License"); you may not use this file except in compliance
- * with the License.  You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing,
- * software distributed under the License is distributed on an
- * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
- * KIND, either express or implied.  See the License for the
- * specific language governing permissions and limitations
- * under the License.
- */
+* Licensed to the Apache Software Foundation (ASF) under one
+* or more contributor license agreements.  See the NOTICE file
+* distributed with this work for additional information
+* regarding copyright ownership.  The ASF licenses this file
+* to you under the Apache License, Version 2.0 (the
+* "License"); you may not use this file except in compliance
+* with the License.  You may obtain a copy of the License at
+*
+* http://www.apache.org/licenses/LICENSE-2.0
+*
+* Unless required by applicable law or agreed to in writing,
+* software distributed under the License is distributed on an
+* "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+* KIND, either express or implied.  See the License for the
+* specific language governing permissions and limitations
+* under the License.
+*/
 
 package org.apache.ranger.audit.queue;
 
@@ -25,12 +25,28 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
-import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
 
-import java.io.*;
-import java.util.*;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
@@ -38,33 +54,31 @@ import java.util.concurrent.TimeUnit;
 /**
  * This class temporarily stores logs in Local file system before it despatches each logs in file to the AuditBatchQueue Consumer.
  * This gets instantiated only when AuditFileCacheProvider is enabled (xasecure.audit.provider.filecache.is.enabled).
- * When AuditFileCacheProvider is all the logs are stored in local file system before sent to destination.
+ * When AuditFileCacheProvider is enabled all the logs are stored in local file system before sent to destination.
  */
 
-public class AuditFileCacheProviderSpool implements Runnable {
-    private static final Log logger = LogFactory.getLog(AuditFileCacheProviderSpool.class);
+public class AuditFileQueueSpool implements Runnable {
+    private static final Log logger = LogFactory.getLog(AuditFileQueueSpool.class);
 
     public enum SPOOL_FILE_STATUS {
         pending, write_inprogress, read_inprogress, done
     }
 
-    public static final String PROP_FILE_SPOOL_LOCAL_DIR				= "filespool.dir";
-    public static final String PROP_FILE_SPOOL_LOCAL_FILE_NAME 			= "filespool.filename.format";
-    public static final String PROP_FILE_SPOOL_ARCHIVE_DIR 				= "filespool.archive.dir";
-    public static final String PROP_FILE_SPOOL_ARCHIVE_MAX_FILES_COUNT	= "filespool.archive.max.files";
-    public static final String PROP_FILE_SPOOL_FILENAME_PREFIX 			= "filespool.file.prefix";
-    public static final String PROP_FILE_SPOOL_FILE_ROLLOVER 			= "filespool.file.rollover.sec";
-    public static final String PROP_FILE_SPOOL_INDEX_FILE 				= "filespool.index.filename";
-    public static final String PROP_FILE_SPOOL_DEST_RETRY_MS 			= "filespool.destination.retry.ms";
-    public static final String PROP_FILE_SPOOL_BATCH_SIZE               = "filespool.buffer.size";
+    public static final String PROP_FILE_SPOOL_LOCAL_DIR			   = "filespool.dir";
+    public static final String PROP_FILE_SPOOL_LOCAL_FILE_NAME 		   = "filespool.filename.format";
+    public static final String PROP_FILE_SPOOL_ARCHIVE_DIR 			   = "filespool.archive.dir";
+    public static final String PROP_FILE_SPOOL_ARCHIVE_MAX_FILES_COUNT = "filespool.archive.max.files";
+    public static final String PROP_FILE_SPOOL_FILENAME_PREFIX 		   = "filespool.file.prefix";
+    public static final String PROP_FILE_SPOOL_FILE_ROLLOVER 		   = "filespool.file.rollover.sec";
+    public static final String PROP_FILE_SPOOL_INDEX_FILE 			   = "filespool.index.filename";
+    public static final String PROP_FILE_SPOOL_DEST_RETRY_MS 		   = "filespool.destination.retry.ms";
+    public static final String PROP_FILE_SPOOL_BATCH_SIZE              = "filespool.buffer.size";
+    public static final String FILE_QUEUE_PROVIDER_NAME 			   = "AuditFileQueueSpool";
+    public static final String DEFAULT_AUDIT_FILE_TYPE                 = "json";
 
-    public static final String AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP = "xasecure.audit.provider.filecache.is.enabled";
-    public static final String FILE_CACHE_PROVIDER_NAME 				= "AuditFileCacheProviderSpool";
-
-    AuditHandler consumerProvider = null;
-
-    BlockingQueue<AuditIndexRecord> indexQueue 		= new LinkedBlockingQueue<AuditIndexRecord>();
-    List<AuditIndexRecord> 			indexRecords	= new ArrayList<AuditIndexRecord>();
+    AuditHandler                    consumerProvider = null;
+    BlockingQueue<AuditIndexRecord> indexQueue 		 = new LinkedBlockingQueue<AuditIndexRecord>();
+    List<AuditIndexRecord> 			indexRecords	 = new ArrayList<AuditIndexRecord>();
 
     // Folder and File attributes
     File 	logFolder 			= null;
@@ -74,17 +88,18 @@ public class AuditFileCacheProviderSpool implements Runnable {
     String 	indexFileName 		= null;
     File 	indexFile 			= null;
     String 	indexDoneFileName 	= null;
+    String  auditFileType       = null;
     File 	indexDoneFile 		= null;
     int 	retryDestinationMS 	= 30 * 1000; // Default 30 seconds
     int 	fileRolloverSec 	= 24 * 60 * 60; // In seconds
     int 	maxArchiveFiles 	= 100;
     int 	errorLogIntervalMS 	= 30 * 1000; // Every 30 seconds
-    int     auditBatchSize      = 1000;
     long 	lastErrorLogMS 		= 0;
     boolean isAuditFileCacheProviderEnabled = false;
     boolean closeFile 			= false;
     boolean isPending 			= false;
     long	lastAttemptTime 	= 0;
+    long    bufferSize          = 1000;
     boolean initDone 			= false;
 
     PrintWriter		 logWriter = null;
@@ -101,7 +116,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
 
     private Gson gson = null;
 
-    public AuditFileCacheProviderSpool(AuditHandler consumerProvider) {
+    public AuditFileQueueSpool(AuditHandler consumerProvider) {
         this.consumerProvider = consumerProvider;
     }
 
@@ -110,7 +125,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     }
 
     public boolean init(Properties props, String basePropertyName) {
-        logger.debug("==> AuditFileCacheProviderSpool.init()");
+        logger.debug("==> AuditFileQueueSpool.init()");
 
         if (initDone) {
             logger.error("init() called more than once. queueProvider="
@@ -143,20 +158,19 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     + PROP_FILE_SPOOL_FILE_ROLLOVER, fileRolloverSec);
             maxArchiveFiles = MiscUtil.getIntProperty(props, propPrefix + "."
                     + PROP_FILE_SPOOL_ARCHIVE_MAX_FILES_COUNT, maxArchiveFiles);
-            isAuditFileCacheProviderEnabled = MiscUtil.getBooleanProperty(props, AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP, false);
             logger.info("retryDestinationMS=" + retryDestinationMS
-                    + ", queueName=" + FILE_CACHE_PROVIDER_NAME);
+                    + ", queueName=" + FILE_QUEUE_PROVIDER_NAME);
             logger.info("fileRolloverSec=" + fileRolloverSec + ", queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
             logger.info("maxArchiveFiles=" + maxArchiveFiles + ", queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
 
             if (logFolderProp == null || logFolderProp.isEmpty()) {
                 logger.fatal("Audit spool folder is not configured. Please set "
                         + propPrefix
                         + "."
                         + PROP_FILE_SPOOL_LOCAL_DIR
-                        + ". queueName=" + FILE_CACHE_PROVIDER_NAME);
+                        + ". queueName=" + FILE_QUEUE_PROVIDER_NAME);
                 return false;
             }
             logFolder = new File(logFolderProp);
@@ -166,19 +180,19 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     logger.fatal("File Spool folder not found and can't be created. folder="
                             + logFolder.getAbsolutePath()
                             + ", queueName="
-                            + FILE_CACHE_PROVIDER_NAME);
+                            + FILE_QUEUE_PROVIDER_NAME);
                     return false;
                 }
             }
             logger.info("logFolder=" + logFolder + ", queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
 
             if (logFileNameFormat == null || logFileNameFormat.isEmpty()) {
                 logFileNameFormat = "spool_" + "%app-type%" + "_"
                         + "%time:yyyyMMdd-HHmm.ss%.log";
             }
             logger.info("logFileNameFormat=" + logFileNameFormat
-                    + ", queueName=" + FILE_CACHE_PROVIDER_NAME);
+                    + ", queueName=" + FILE_QUEUE_PROVIDER_NAME);
 
             if (archiveFolderProp == null || archiveFolderProp.isEmpty()) {
                 archiveFolder = new File(logFolder, "archive");
@@ -191,16 +205,16 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     logger.error("File Spool archive folder not found and can't be created. folder="
                             + archiveFolder.getAbsolutePath()
                             + ", queueName="
-                            + FILE_CACHE_PROVIDER_NAME);
+                            + FILE_QUEUE_PROVIDER_NAME);
                     return false;
                 }
             }
             logger.info("archiveFolder=" + archiveFolder + ", queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
 
             if (indexFileName == null || indexFileName.isEmpty()) {
                 if (fileNamePrefix == null || fileNamePrefix.isEmpty()) {
-                    fileNamePrefix = FILE_CACHE_PROVIDER_NAME + "_"
+                    fileNamePrefix = FILE_QUEUE_PROVIDER_NAME + "_"
                             + consumerProvider.getName();
                 }
                 indexFileName = "index_" + fileNamePrefix + "_" + "%app-type%"
@@ -219,7 +233,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 }
             }
             logger.info("indexFile=" + indexFile + ", queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
 
             int lastDot = indexFileName.lastIndexOf('.');
             if (lastDot < 0) {
@@ -237,7 +251,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 }
             }
             logger.info("indexDoneFile=" + indexDoneFile + ", queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
 
             // Load index file
             loadIndexFile();
@@ -250,7 +264,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     currentWriterIndexRecord = auditIndexRecord;
                     logger.info("currentWriterIndexRecord="
                             + currentWriterIndexRecord.filePath
-                            + ", queueName=" + FILE_CACHE_PROVIDER_NAME);
+                            + ", queueName=" + FILE_QUEUE_PROVIDER_NAME);
                 }
                 if (auditIndexRecord.status
                         .equals(SPOOL_FILE_STATUS.read_inprogress)) {
@@ -271,18 +285,23 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 }
             }
 
+            auditFileType = MiscUtil.getStringProperty(props, propPrefix + ".filetype", DEFAULT_AUDIT_FILE_TYPE);
+            if (auditFileType == null) {
+                auditFileType = DEFAULT_AUDIT_FILE_TYPE;
+            }
+
         } catch (Throwable t) {
             logger.fatal("Error initializing File Spooler. queue="
-                    + FILE_CACHE_PROVIDER_NAME, t);
+                    + FILE_QUEUE_PROVIDER_NAME, t);
             return false;
         }
 
-        auditBatchSize = MiscUtil.getIntProperty(props, propPrefix
-                + "." + PROP_FILE_SPOOL_BATCH_SIZE, auditBatchSize);
+        bufferSize = MiscUtil.getLongProperty(props, propPrefix
+                + "." + PROP_FILE_SPOOL_BATCH_SIZE, bufferSize);
 
         initDone = true;
 
-        logger.debug("<== AuditFileCacheProviderSpool.init()");
+        logger.debug("<== AuditFileQueueSpool.init()");
         return true;
     }
 
@@ -292,16 +311,16 @@ public class AuditFileCacheProviderSpool implements Runnable {
     public void start() {
         if (!initDone) {
             logger.error("Cannot start Audit File Spooler. Initilization not done yet. queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
             return;
         }
 
         logger.info("Starting writerThread, queueName="
-                + FILE_CACHE_PROVIDER_NAME + ", consumer="
+                + FILE_QUEUE_PROVIDER_NAME + ", consumer="
                 + consumerProvider.getName());
 
         // Let's start the thread to read
-        destinationThread = new Thread(this, FILE_CACHE_PROVIDER_NAME + "_"
+        destinationThread = new Thread(this, FILE_QUEUE_PROVIDER_NAME + "_"
                 + consumerProvider.getName() + "_destWriter");
         destinationThread.setDaemon(true);
         destinationThread.start();
@@ -310,10 +329,10 @@ public class AuditFileCacheProviderSpool implements Runnable {
     public void stop() {
         if (!initDone) {
             logger.error("Cannot stop Audit File Spooler. Initilization not done. queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
             return;
         }
-        logger.info("Stop called, queueName=" + FILE_CACHE_PROVIDER_NAME
+        logger.info("Stop called, queueName=" + FILE_QUEUE_PROVIDER_NAME
                 + ", consumer=" + consumerProvider.getName());
 
         isDrain = true;
@@ -334,7 +353,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 }
                 try {
                     logger.info("Closing open file, queueName="
-                            + FILE_CACHE_PROVIDER_NAME + ", consumer="
+                            + FILE_QUEUE_PROVIDER_NAME + ", consumer="
                             + consumerProvider.getName());
 
                     out.flush();
@@ -358,7 +377,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     public void flush() {
         if (!initDone) {
             logger.error("Cannot flush Audit File Spooler. Initilization not done. queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
             return;
         }
         PrintWriter out = getOpenLogFileStream();
@@ -376,7 +395,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     public boolean isPending() {
         if (!initDone) {
             logError("isPending(): File Spooler not initialized. queueName="
-                    + FILE_CACHE_PROVIDER_NAME);
+                    + FILE_QUEUE_PROVIDER_NAME);
             return false;
         }
 
@@ -499,7 +518,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             }
             fileName = newFileName;
             logger.info("Creating new file. queueName="
-                    + FILE_CACHE_PROVIDER_NAME + ", fileName=" + fileName);
+                    + FILE_QUEUE_PROVIDER_NAME + ", fileName=" + fileName);
             // Open the file
             logWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
                     outLogFile),"UTF-8")));
@@ -520,7 +539,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 // This means the process just started. We need to open the file
                 // in append mode.
                 logger.info("Opening existing file for append. queueName="
-                        + FILE_CACHE_PROVIDER_NAME + ", fileName="
+                        + FILE_QUEUE_PROVIDER_NAME + ", fileName="
                         + currentWriterIndexRecord.filePath);
                 logWriter = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
                         currentWriterIndexRecord.filePath, true),"UTF-8")));
@@ -549,7 +568,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 currentWriterIndexRecord.writeCompleteTime = new Date();
                 saveIndexFile();
                 logger.info("Adding file to queue. queueName="
-                        + FILE_CACHE_PROVIDER_NAME + ", fileName="
+                        + FILE_QUEUE_PROVIDER_NAME + ", fileName="
                         + currentWriterIndexRecord.filePath);
                 indexQueue.add(currentWriterIndexRecord);
                 currentWriterIndexRecord = null;
@@ -562,7 +581,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 - currentWriterIndexRecord.fileCreateTime.getTime() > fileRolloverSec * 1000) {
             closeFile = true;
             logger.info("Closing file. Rolling over. queueName="
-                    + FILE_CACHE_PROVIDER_NAME + ", fileName="
+                    + FILE_QUEUE_PROVIDER_NAME + ", fileName="
                     + currentWriterIndexRecord.filePath);
         }
     }
@@ -576,7 +595,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
         logger.info("Loading index file. fileName=" + indexFile.getPath());
         BufferedReader br = null;
         try {
-             br = new BufferedReader(new InputStreamReader(new FileInputStream(indexFile), "UTF-8"));
+            br = new BufferedReader(new InputStreamReader(new FileInputStream(indexFile), "UTF-8"));
             indexRecords.clear();
             String line;
             while ((line = br.readLine()) != null) {
@@ -611,7 +630,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             AuditIndexRecord record = iter.next();
             if (record.id.equals(indexRecord.id)) {
                 logger.info("Removing file from index. file=" + record.filePath
-                        + ", queueName=" + FILE_CACHE_PROVIDER_NAME
+                        + ", queueName=" + FILE_QUEUE_PROVIDER_NAME
                         + ", consumer=" + consumerProvider.getName());
 
                 iter.remove();
@@ -639,7 +658,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     void appendToDoneFile(AuditIndexRecord indexRecord)
             throws FileNotFoundException, IOException {
         logger.info("Moving to done file. " + indexRecord.filePath
-                + ", queueName=" + FILE_CACHE_PROVIDER_NAME + ", consumer="
+                + ", queueName=" + FILE_QUEUE_PROVIDER_NAME + ", consumer="
                 + consumerProvider.getName());
         String line = gson.toJson(indexRecord);
         PrintWriter out = new PrintWriter(new BufferedWriter(new OutputStreamWriter(new FileOutputStream(
@@ -783,7 +802,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     logger.info("Destination is down. sleeping for "
                             + retryDestinationMS
                             + " milli seconds. indexQueue=" + indexQueue.size()
-                            + ", queueName=" + FILE_CACHE_PROVIDER_NAME
+                            + ", queueName=" + FILE_QUEUE_PROVIDER_NAME
                             + ", consumer=" + consumerProvider.getName());
                     Thread.sleep(retryDestinationMS);
                 }
@@ -817,38 +836,19 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(
                             currentConsumerIndexRecord.filePath),"UTF-8"));
                     try {
-                        int startLine = currentConsumerIndexRecord.linePosition;
-                        String line;
-                        int currLine = 0;
-                        List<AuditEventBase> events = new ArrayList<>();
-                        while ((line = br.readLine()) != null) {
-                            currLine++;
-                            if (currLine < startLine) {
-                                continue;
-                            }
-                            AuditEventBase event = MiscUtil.fromJson(line, AuthzAuditEvent.class);
-                            events.add(event);
-
-                            if (events.size() == auditBatchSize) {
-                                boolean ret = sendEvent(events,
-                                        currentConsumerIndexRecord, currLine);
-                                if (!ret) {
-                                    throw new Exception("Destination down");
-                                }
-                                events.clear();
-                            }
-                        }
-                        if (events.size() > 0) {
-                            boolean ret = sendEvent(events,
-                                    currentConsumerIndexRecord, currLine);
-                            if (!ret) {
-                                throw new Exception("Destination down");
-                            }
-                            events.clear();
+                        if (auditFileType.equalsIgnoreCase(DEFAULT_AUDIT_FILE_TYPE)) {
+                            // if Audit File format is JSON each audit file in the Local Spool Location will be copied
+                            // to HDFS location as JSON
+                            File srcFile = new File(currentConsumerIndexRecord.filePath);
+                            logFile(srcFile);
+                        } else {
+                            // If Audit File format is ORC, each records in audit files in the Local Spool Location will be
+                            // read and converted into ORC format and pushed into an ORC file.
+                            logEvent(br);
                         }
                         logger.info("Done reading file. file="
                                 + currentConsumerIndexRecord.filePath
-                                + ", queueName=" + FILE_CACHE_PROVIDER_NAME
+                                + ", queueName=" + FILE_QUEUE_PROVIDER_NAME
                                 + ", consumer=" + consumerProvider.getName());
                         // The entire file is read
                         currentConsumerIndexRecord.status = SPOOL_FILE_STATUS.done;
@@ -859,7 +859,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     } catch (Exception ex) {
                         isDestDown = true;
                         logError("Destination down. queueName="
-                                + FILE_CACHE_PROVIDER_NAME + ", consumer="
+                                + FILE_QUEUE_PROVIDER_NAME + ", consumer="
                                 + consumerProvider.getName());
                         lastAttemptTime = System.currentTimeMillis();
                         // Update the index file
@@ -883,8 +883,40 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 logger.error("Exception in destination writing thread.", t);
             }
         }
-        logger.info("Exiting file spooler. provider=" + FILE_CACHE_PROVIDER_NAME
+        logger.info("Exiting file spooler. provider=" + FILE_QUEUE_PROVIDER_NAME
                 + ", consumer=" + consumerProvider.getName());
+    }
+
+    private void logEvent(BufferedReader br) throws Exception {
+        String line;
+        int    currLine  = 0;
+        int    startLine = currentConsumerIndexRecord.linePosition;
+        List<AuditEventBase> events = new ArrayList<>();
+        while ((line = br.readLine()) != null) {
+            currLine++;
+            if (currLine < startLine) {
+                continue;
+            }
+            AuditEventBase event = MiscUtil.fromJson(line, AuthzAuditEvent.class);
+            events.add(event);
+
+            if (events.size() == bufferSize) {
+                boolean ret = sendEvent(events,
+                        currentConsumerIndexRecord, currLine);
+                if (!ret) {
+                    throw new Exception("Destination down");
+                }
+                events.clear();
+            }
+        }
+        if (events.size() > 0) {
+            boolean ret = sendEvent(events,
+                    currentConsumerIndexRecord, currLine);
+            if (!ret) {
+                throw new Exception("Destination down");
+            }
+            events.clear();
+        }
     }
 
     private boolean sendEvent(List<AuditEventBase> events, AuditIndexRecord indexRecord,
@@ -895,7 +927,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             if (!ret) {
                 // Need to log error after fixed interval
                 logError("Error sending logs to consumer. provider="
-                        + FILE_CACHE_PROVIDER_NAME + ", consumer="
+                        + FILE_QUEUE_PROVIDER_NAME + ", consumer="
                         + consumerProvider.getName());
             } else {
                 // Update index and save
@@ -908,17 +940,78 @@ public class AuditFileCacheProviderSpool implements Runnable {
                 if (isDestDown) {
                     isDestDown = false;
                     logger.info("Destination up now. " + indexRecord.filePath
-                            + ", queueName=" + FILE_CACHE_PROVIDER_NAME
+                            + ", queueName=" + FILE_QUEUE_PROVIDER_NAME
                             + ", consumer=" + consumerProvider.getName());
                 }
             }
         } catch (Throwable t) {
             logger.error("Error while sending logs to consumer. provider="
-                    + FILE_CACHE_PROVIDER_NAME + ", consumer="
+                    + FILE_QUEUE_PROVIDER_NAME + ", consumer="
                     + consumerProvider.getName() + ", log=" + events, t);
         }
 
         return ret;
     }
 
+    private void logFile(File file) throws Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> AuditFileQueueSpool.logFile()");
+        }
+        int    currLine  = 0;
+        int    startLine = currentConsumerIndexRecord.linePosition;
+
+        if (currLine < startLine) {
+            currLine++;
+        }
+
+        boolean ret = sendFile(file,currentConsumerIndexRecord, currLine);
+        if (!ret) {
+            throw new Exception("Destination down");
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== AuditFileQueueSpool.logFile()");
+        }
+    }
+
+    private boolean sendFile(File file, AuditIndexRecord indexRecord,
+                             int currLine) {
+        boolean ret = true;
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> AuditFileQueueSpool.sendFile()");
+        }
+
+        try {
+            ret = consumerProvider.logFile(file);
+            if (!ret) {
+                // Need to log error after fixed interval
+                logError("Error sending log file to consumer. provider="
+                        + FILE_QUEUE_PROVIDER_NAME + ", consumer="
+                        + consumerProvider.getName()+ ", logFile=" + file.getName());
+            } else {
+                // Update index and save
+                indexRecord.linePosition = currLine;
+                indexRecord.status = SPOOL_FILE_STATUS.read_inprogress;
+                indexRecord.lastSuccessTime = new Date();
+                indexRecord.lastAttempt = true;
+                saveIndexFile();
+
+                if (isDestDown) {
+                    isDestDown = false;
+                    logger.info("Destination up now. " + indexRecord.filePath
+                            + ", queueName=" + FILE_QUEUE_PROVIDER_NAME
+                            + ", consumer=" + consumerProvider.getName());
+                }
+            }
+        } catch (Throwable t) {
+            logger.error("Error sending log file to consumer. provider="
+                    + FILE_QUEUE_PROVIDER_NAME + ", consumer="
+                    + consumerProvider.getName() + ", logFile=" + file.getName(), t);
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== AuditFileQueueSpool.sendFile() " + ret );
+        }
+        return ret;
+    }
 }

@@ -25,6 +25,8 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 
 import com.google.gson.GsonBuilder;
 
+//import java.io.File;
+import java.io.File;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -190,6 +192,11 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		}
 		return log(eventList);
 	}
+
+   @Override
+	public boolean logFile(File file) {
+		return logFile(file);
+     }
 
 	public String getParentPath() {
 		return parentPath;
