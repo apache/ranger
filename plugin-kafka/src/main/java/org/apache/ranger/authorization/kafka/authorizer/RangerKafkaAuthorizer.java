@@ -22,32 +22,25 @@ package org.apache.ranger.authorization.kafka.authorizer;
 import java.util.Date;
 import java.util.Map;
 
-import javax.security.auth.Subject;
-
+import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.network.ListenerName;
 import org.apache.kafka.common.security.JaasContext;
-import org.apache.kafka.common.security.auth.KafkaPrincipal;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
-
+import scala.collection.immutable.HashSet;
+import scala.collection.immutable.Set;
 import kafka.security.auth.*;
 import kafka.network.RequestChannel.Session;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.kafka.common.config.SaslConfigs;
-import org.apache.kafka.common.security.authenticator.LoginManager;
-import org.apache.kafka.common.security.kerberos.KerberosLogin;
+import org.apache.kafka.common.security.auth.KafkaPrincipal;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
-
 import org.apache.ranger.plugin.util.RangerPerfTracer;
-import scala.collection.immutable.HashSet;
-import scala.collection.immutable.Set;
 
 public class RangerKafkaAuthorizer implements Authorizer {
 	private static final Log logger = LogFactory
@@ -99,13 +92,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 										: SecurityProtocol.SASL_PLAINTEXT.name();
 						final String saslMechanism = SaslConfigs.GSSAPI_MECHANISM;
 						JaasContext context = JaasContext.loadServerContext(new ListenerName(listenerName), saslMechanism, configs);
-						LoginManager loginManager = LoginManager.acquireLoginManager(context, saslMechanism, KerberosLogin.class, configs);
-						Subject subject = loginManager.subject();
-						UserGroupInformation ugi = MiscUtil
-								.createUGIFromSubject(subject);
-						if (ugi != null) {
-							MiscUtil.setUGILoginUser(ugi, subject);
-						}
+						MiscUtil.setUGIFromJAASConfig(context.name());
 						logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
 					} catch (Throwable t) {
 						logger.error("Error getting principal.", t);
