@@ -16,7 +16,7 @@
 DECLARE
         v_count number:=0;
 BEGIN
-        select count(*) into v_count from user_tab_cols where table_name='x_service_def' and column_name='display_name';
+        select count(*) into v_count from user_tab_cols where table_name='X_SERVICE_DEF' and column_name='DISPLAY_NAME';
         if (v_count = 0) then
                 execute immediate 'ALTER TABLE x_service_def ADD display_name VARCHAR(1024) DEFAULT NULL NULL';
                 execute immediate 'UPDATE x_service_def SET display_name=name';
@@ -24,7 +24,7 @@ BEGIN
         end if;
 
         v_count:=0;
-        select count(*) into v_count from user_tab_cols where table_name='x_service' and column_name='display_name';
+        select count(*) into v_count from user_tab_cols where table_name='X_SERVICE' and column_name='DISPLAY_NAME';
         if (v_count = 0) then
                 execute immediate 'ALTER TABLE x_service ADD display_name VARCHAR(255) DEFAULT NULL NULL';
                 execute immediate 'UPDATE x_service SET display_name=name';
@@ -32,19 +32,19 @@ BEGIN
         commit;
 
         v_count:=0;
-        select count(*) into v_count from user_tab_cols where table_name='x_portal_user' and column_name='other_attributes';
+        select count(*) into v_count from user_tab_cols where table_name='X_PORTAL_USER' and column_name='OTHER_ATTRIBUTES';
         if (v_count = 0) then
                 execute immediate 'ALTER TABLE x_portal_user ADD other_attributes VARCHAR(4000) DEFAULT NULL NULL';
         end if;
 
         v_count:=0;
-        select count(*) into v_count from user_tab_cols where table_name='x_user' and column_name='other_attributes';
+        select count(*) into v_count from user_tab_cols where table_name='X_USER' and column_name='OTHER_ATTRIBUTES';
         if (v_count = 0) then
                 execute immediate 'ALTER TABLE x_user ADD other_attributes VARCHAR(4000) DEFAULT NULL NULL';
         end if;
 
         v_count:=0;
-        select count(*) into v_count from user_tab_cols where table_name='X_GROUP' and column_name='other_attributes';
+        select count(*) into v_count from user_tab_cols where table_name='X_GROUP' and column_name='OTHER_ATTRIBUTES';
         if (v_count = 0) then
                 execute immediate 'ALTER TABLE X_GROUP ADD other_attributes VARCHAR(4000) DEFAULT NULL NULL';
         end if;
