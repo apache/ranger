@@ -283,14 +283,14 @@ public class MetricUtil extends BaseLoader  {
 						vXMetricPolicyCount.setTotalCount(paginatedSvcsList.getTotalCount());
 						Map<String, VXMetricServiceCount> servicesWithPolicy = new HashMap<String, VXMetricServiceCount>();
 						for (int k = 2; k >= 0; k--) {
-							String serviceType = String.valueOf(k);
-							VXMetricServiceCount vXMetricServiceCount = getVXMetricServiceCount(serviceType);
+							String policyType = String.valueOf(k);
+							VXMetricServiceCount vXMetricServiceCount = getVXMetricServiceCount(policyType);
 							if (k == 2) {
 								servicesWithPolicy.put("rowFilteringPolicies", vXMetricServiceCount); }
 							else if (k == 1) {
 								servicesWithPolicy.put("maskingPolicies", vXMetricServiceCount); }
 							else if (k == 0) {
-								servicesWithPolicy.put("resourcePolicy", vXMetricServiceCount);}
+								servicesWithPolicy.put("resourceAccessPolicies", vXMetricServiceCount);}
 						}
 						boolean tagFlag = false;
 						if (tagFlag == false) {
@@ -302,7 +302,7 @@ public class MetricUtil extends BaseLoader  {
 							VXMetricServiceCount vXMetricServiceCount = new VXMetricServiceCount();
 							vXMetricServiceCount.setServiceBasedCountList(tagMap);
 							vXMetricServiceCount.setTotalCount(tagCount);
-							servicesWithPolicy.put("tagBasedPolicies", vXMetricServiceCount);
+							servicesWithPolicy.put("tagAccessPolicies", vXMetricServiceCount);
 							tagFlag = true;
 						}
 						vXMetricPolicyCount.setPolicyCountList(servicesWithPolicy);
@@ -433,7 +433,7 @@ public class MetricUtil extends BaseLoader  {
 		}		
 	}
 	
-	private VXMetricServiceCount getVXMetricServiceCount(String serviceType)
+	private VXMetricServiceCount getVXMetricServiceCount(String policyType)
 			throws Exception {
 		SearchFilter policyFilter1 = new SearchFilter();
 		policyFilter1.setMaxRows(200);
@@ -441,7 +441,7 @@ public class MetricUtil extends BaseLoader  {
 		policyFilter1.setGetCount(true);
 		policyFilter1.setSortBy("serviceId");
 		policyFilter1.setSortType("asc");
-		policyFilter1.setParam("policyType", serviceType);
+		policyFilter1.setParam("policyType", policyType);
 		PList<RangerPolicy> policies = svcStore.getPaginatedPolicies(policyFilter1);
 		PList<RangerService> paginatedSvcsSevice = svcStore.getPaginatedServices(policyFilter1);
 
@@ -490,6 +490,8 @@ public class MetricUtil extends BaseLoader  {
 			searchCriteriaWithType.getParamList().put("accessResult", accessResult);
 			searchCriteriaWithType.addParam("startDate", startDate);
 			searchCriteriaWithType.addParam("endDate", endDate);
+			searchCriteriaWithType.setMaxRows(0);
+			searchCriteriaWithType.setGetCount(true);
 			VXAccessAuditList vXAccessAuditListwithType = assetMgr.getAccessLogs(searchCriteriaWithType);
 			long toltalCountOfRepo = vXAccessAuditListwithType.getTotalCount();
 			if (toltalCountOfRepo != 0) {
