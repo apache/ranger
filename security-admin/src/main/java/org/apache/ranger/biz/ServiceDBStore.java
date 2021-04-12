@@ -5175,14 +5175,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                         vXMetricPolicyWithServiceNameCount.setTotalCount(paginatedSvcsList.getTotalCount());
                         Map<String, VXMetricServiceNameCount> servicesWithPolicy = new HashMap<String, VXMetricServiceNameCount>();
                         for (int k = 2; k >= 0; k--) {
-                                String serviceType = String.valueOf(k);
-                                VXMetricServiceNameCount vXMetricServiceNameCount = getVXMetricServiceCount(serviceType);
+                                String policyType = String.valueOf(k);
+                                VXMetricServiceNameCount vXMetricServiceNameCount = getVXMetricServiceCount(policyType);
                                 if (k == 2) {
 					servicesWithPolicy.put("rowFilteringPolicies", vXMetricServiceNameCount);
                                 } else if (k == 1) {
 					servicesWithPolicy.put("maskingPolicies", vXMetricServiceNameCount);
                                 } else if (k == 0) {
-					servicesWithPolicy.put("resourcePolicy", vXMetricServiceNameCount);
+					servicesWithPolicy.put("resourceAccessPolicies", vXMetricServiceNameCount);
                                 }
                         }
                         Map<String, Map<String,Long>> tagMap = new HashMap<String, Map<String,Long>>();
@@ -5206,7 +5206,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                             VXMetricServiceNameCount vXMetricServiceNameCount = new VXMetricServiceNameCount();
                             vXMetricServiceNameCount.setServiceBasedCountList(tagMap);
                             vXMetricServiceNameCount.setTotalCount(tagCount);
-                            servicesWithPolicy.put("tagBasedPolicies", vXMetricServiceNameCount);
+                            servicesWithPolicy.put("tagAccessPolicies", vXMetricServiceNameCount);
                             tagFlag = true;
                         }
                         vXMetricPolicyWithServiceNameCount.setPolicyCountList(servicesWithPolicy);
@@ -5339,14 +5339,14 @@ public class ServiceDBStore extends AbstractServiceStore {
         return  ret;
     }
 
-    private VXMetricServiceNameCount getVXMetricServiceCount(String serviceType) throws Exception {
+    private VXMetricServiceNameCount getVXMetricServiceCount(String policyType) throws Exception {
             SearchFilter policyFilter1 = new SearchFilter();
             policyFilter1.setMaxRows(200);
             policyFilter1.setStartIndex(0);
             policyFilter1.setGetCount(true);
             policyFilter1.setSortBy("serviceId");
             policyFilter1.setSortType("asc");
-            policyFilter1.setParam("policyType", serviceType);
+            policyFilter1.setParam("policyType", policyType);
             PList<RangerPolicy> policies = getPaginatedPolicies(policyFilter1);
             PList<RangerService> paginatedSvcsSevice = getPaginatedServices(policyFilter1);
             List<RangerService> rangerServiceList = paginatedSvcsSevice.getList();
@@ -5404,6 +5404,8 @@ public class ServiceDBStore extends AbstractServiceStore {
                 searchCriteriaWithType.getParamList().put("accessResult", accessResult);
                 searchCriteriaWithType.addParam("startDate", startDate);
                 searchCriteriaWithType.addParam("endDate", endDate);
+                searchCriteriaWithType.setMaxRows(0);
+                searchCriteriaWithType.setGetCount(true);
                 VXAccessAuditList vXAccessAuditListwithType = assetMgr.getAccessLogs(searchCriteriaWithType);
                 long toltalCountOfRepo = vXAccessAuditListwithType.getTotalCount();
                 if (toltalCountOfRepo != 0) {
