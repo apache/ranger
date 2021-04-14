@@ -75,6 +75,9 @@ public class EmbeddedServer {
 	private static final String ADMIN_NAME_RULES = "hadoop.security.auth_to_local";
 	private static final String ADMIN_SERVER_NAME = "rangeradmin";
 	private static final String KMS_SERVER_NAME   = "rangerkms";
+	private static final String ACCESS_LOG_PREFIX = "ranger.accesslog.prefix";
+	private static final String ACCESS_LOG_DATE_FORMAT = "ranger.accesslog.dateformat";
+	private static final String ACCESS_LOG_PATTERN = "ranger.accesslog.pattern";
 	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
 	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
 	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLSv1.2";
@@ -199,12 +202,13 @@ public class EmbeddedServer {
 		valve.setAsyncSupported(true);
 		valve.setBuffered(false);
 		valve.setEnabled(true);
-		valve.setFileDateFormat(EmbeddedServerUtil.getConfig("ranger.accesslog.dateformat", "yyyy-MM-dd.HH"));
+		valve.setPrefix(EmbeddedServerUtil.getConfig(ACCESS_LOG_PREFIX,"access-" + hostName +"-"));
+		valve.setFileDateFormat(EmbeddedServerUtil.getConfig(ACCESS_LOG_DATE_FORMAT, "yyyy-MM-dd.HH"));
 		valve.setDirectory(logDirectory.getAbsolutePath());
 		valve.setSuffix(".log");
 
 		String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b" : "%h %l %u %t \"%r\" %s %b";
-		String logPattern = EmbeddedServerUtil.getConfig("ranger.accesslog.pattern", defaultAccessLogPattern);
+		String logPattern = EmbeddedServerUtil.getConfig(ACCESS_LOG_PATTERN, defaultAccessLogPattern);
 		valve.setPattern(logPattern);
 
 		server.getHost().getPipeline().addValve(valve);
