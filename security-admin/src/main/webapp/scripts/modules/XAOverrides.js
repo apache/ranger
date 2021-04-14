@@ -29,6 +29,7 @@
 	require('jquery-toggles');
 
 	Backbone.history.getHash = function(window) {
+		$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
 		var pathStripper = /#.*$/;
 		var match = (window || this).location.href.match(/#(.*)$/);
 		return match ? this.decodeFragment(match[1].replace(pathStripper, '')) : '';

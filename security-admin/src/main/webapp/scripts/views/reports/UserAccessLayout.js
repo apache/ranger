@@ -752,6 +752,9 @@ define(function(require) {'use strict';
 		},
 		onDownload: function(e){
 			var that = this, url = '';
+			if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+				$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+			}
 			if(!this.allowDownload){
 				return XAUtil.alertBoxWithTimeSet(localization.tt('msg.noPolicytoExport'))
 			}

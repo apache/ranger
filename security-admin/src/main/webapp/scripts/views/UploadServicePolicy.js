@@ -245,6 +245,9 @@ define(function(require){
 				compString = _.map(_.groupBy(selectedZoneServices, function(m){return m.get('type')}), function(m, key){return key}).toString();
 			}
 			XAUtil.blockUI();
+			if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+				$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+			}
 			$.ajax({
 				type: 'POST',
 				url: url+"&serviceType="+compString,

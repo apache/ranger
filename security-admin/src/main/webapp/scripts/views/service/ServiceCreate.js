@@ -177,7 +177,9 @@ define(function(require){
 				msg :'Are you sure want to delete ?',
 				callback : function(){
 					XAUtil.blockUI();
-
+					if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+						$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+					}
 					that.model.destroy({
 						success: function(model, response) {
 							XAUtil.blockUI('unblock');
