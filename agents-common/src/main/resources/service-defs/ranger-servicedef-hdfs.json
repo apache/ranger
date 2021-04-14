@@ -180,6 +180,19 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Common Name for Certificate"
+		},
+
+		{
+			"itemId": 12,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true}, {'actions':['delete','rename'],'isAudited':true}, {'users':['hdfs'], 'actions': ['listStatus', 'getfileinfo', 'listCachePools','listCacheDirectives'], 'isAudited': false}, {'actions': ['getfileinfo'], 'isAudited':false} ]"
 		}
 	],
 

@@ -211,6 +211,19 @@
 			"type":"string",
 			"mandatory":false,
 			"label":"Ranger Plugin SSL CName"
+		},
+
+		{
+			"itemId": 5,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['atlas'],'actions':['publish'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_HOOK']}},'users':['atlas'],'actions':['consume'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_HOOK']}},'users':['hive','hbase','impala','nifi'],'actions':['publish'],'isAudited':false},{'resources':{'topic':{'values':['ATLAS_ENTITIES']}},'users':['rangertagsync'],'actions':['consume'],'isAudited':false},{'resources':{'consumergroup':{'values':['*']}},'users':['atlas','rangertagsync'],'actions':['consume'],'isAudited':false},{'users':['kafka'],'isAudited':false}]"
 		}
 	],
 	"enums":[

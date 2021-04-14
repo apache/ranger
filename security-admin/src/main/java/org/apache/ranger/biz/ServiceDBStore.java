@@ -246,6 +246,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public static Integer TAG_RETENTION_PERIOD_IN_DAYS = 3;
 
 	private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
+	public static final String RANGER_PLUGIN_AUDIT_FILTERS  = "ranger.plugin.audit.filters";
 
 	static {
 		try {
@@ -3450,6 +3451,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 				throw restErrorUtil.createRESTException(
 						"Please provide value of mandatory: "+ svcConfDef.getName(),
 						MessageEnums.INVALID_INPUT_DATA);
+			}
+
+			if (StringUtils.equals(svcConfDef.getName(), RANGER_PLUGIN_AUDIT_FILTERS) && !configs.containsKey(RANGER_PLUGIN_AUDIT_FILTERS)) {
+				if (svcConfDef.getDefaultvalue() != null) {
+					configs.put(RANGER_PLUGIN_AUDIT_FILTERS, svcConfDef.getDefaultvalue());
+				}
 			}
 		}
 		Map<String, String> validConfigs = new HashMap<String, String>();

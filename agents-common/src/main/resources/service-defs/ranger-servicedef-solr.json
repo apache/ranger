@@ -95,6 +95,19 @@
 			"validationMessage":"",
 			"uiHint":"",
 			"label":"Ranger Plugin SSL CName"
+		},
+
+		{
+			"itemId":600,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['hive','hdfs','kafka','hbase','solr','rangerraz','knox','atlas'] ,'isAudited':false} ]"
 		}
 		
 	],

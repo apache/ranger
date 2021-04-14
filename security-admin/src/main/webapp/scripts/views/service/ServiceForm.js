@@ -110,6 +110,13 @@ define(function(require){
 					var auditFilterCollValue = this.model.get('configs')['ranger.plugin.audit.filters'];
 					delete this.model.get('configs')['ranger.plugin.audit.filters']
 				}
+				var configs = this.rangerServiceDefModel.get('configs');
+				var auditFilterCollValueIndex = _.findIndex(configs,function(m){
+					return m.name == 'ranger.plugin.audit.filters'
+				})
+				if(auditFilterCollValueIndex != -1) {
+					configs.splice(auditFilterCollValueIndex, 1);
+				}
 				_.each(this.model.get('configs'),function(value, name){
 					var configObj = _.findWhere(this.rangerServiceDefModel.get('configs'),{'name' : name });
 					if(!_.isUndefined(configObj) && configObj.type == 'bool'){
@@ -231,6 +238,8 @@ define(function(require){
 					auditFiltter.push(e.attributes);
 				})
 				config['ranger.plugin.audit.filters'] = (JSON.stringify(auditFiltter)).replace(/"/g, "'");
+			} else {
+				config['ranger.plugin.audit.filters'] = "";
 			}
 			this.model.set('configs',config);
 

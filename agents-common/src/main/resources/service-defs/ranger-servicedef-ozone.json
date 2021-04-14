@@ -199,6 +199,19 @@
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":""
+		},
+
+		{
+			"itemId": 7,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['om'] ,'isAudited':false} ]"
 		}
 	],
 
