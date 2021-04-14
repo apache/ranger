@@ -410,7 +410,9 @@ define(function(require) {
             this.collection.remove(this.model);
             if (this.collection.length == 0) {
                 var $data = '<tr><td class="emptySet text-muted" colspan="9">No Audit Filter Data Found !!</td></tr>'
-                $(".auditFilterData").html($data)
+                $(".auditFilterData").html($data);
+                $('input[data-id="renderAuditFilter"]').prop('checked', false);
+                $('input[data-id="renderAuditFilter"]').trigger('change')
             }
         },
         selectOparations : function() {
@@ -496,6 +498,9 @@ define(function(require) {
         addNew : function(){
             var that =this;
             this.$el.find('.emptySet').remove();
+            if (!$('input[data-id="renderAuditFilter"]').is(":checked")) {
+                $('input[data-id="renderAuditFilter"]').prop('checked', true);
+            }
             this.$('table').show();
             this.collection.add(new Backbone.Model());
         },

@@ -59,6 +59,13 @@ define(function(require){
 				serviceConfig : serviceConfig.slice(0,-1)
 			};
 		},
+		ui : {
+			renderAuditFilter : '[data-id="renderAuditFilter"]',
+		},
+		events : {
+			'change [data-id="renderAuditFilter"]'  : 'renderAuditFilter',
+		},
+
 		initialize: function(options) {
 			console.log("initialized a ServiceForm Form View");
 			_.extend(this, _.pick(options, 'rangerServiceDefModel'));
@@ -75,6 +82,9 @@ define(function(require){
 			this.on('isEnabled:change', function(form, fieldEditor){
 				this.evIsEnabledChange(form, fieldEditor);
 			});
+			// this.on('change [data-id="renderAuditFilter"]', function(){
+			// 	this.renderAuditFilter();
+			// })
 		},
 
 		/** schema for the form
@@ -101,11 +111,11 @@ define(function(require){
 			this.initializePlugins();
 			this.renderCustomFields();
 			this.renderAuditFilterFields();
+			this.renderAuditFilter();
 		},
 		setupFormForEditMode : function() {
 			var that = this;
 			if(!this.model.isNew()){
-
 				if(this.model.get('configs')['ranger.plugin.audit.filters']) {
 					var auditFilterCollValue = this.model.get('configs')['ranger.plugin.audit.filters'];
 					delete this.model.get('configs')['ranger.plugin.audit.filters']
@@ -131,7 +141,6 @@ define(function(require){
 
 				if(auditFilterCollValue) {
 					auditFilterCollValue = JSON.parse((auditFilterCollValue).replace(/'/g, '"'));
-					console.log(auditFilterCollValue);
 					auditFilterCollValue.forEach(function(model) {
 						that.auditFilterColl.add(new Backbone.Model(model));
 					})
@@ -183,6 +192,28 @@ define(function(require){
 				rangerServiceDefModel : this.rangerServiceDefModel,
 				serviceName : (!_.isUndefined(this.model) && !_.isEmpty(this.model.get('name')) ? this.model.get('name') : ''),
 			}).render().el);
+		},
+
+		renderAuditFilter : function(e) {
+			var that = this;
+			if (_.isUndefined(e)) {
+				if(this.auditFilterColl.length > 0) {
+					this.$el.find('input[data-id="renderAuditFilter"]').prop('checked', true);
+				}
+			} else {
+				if ($(e.currentTarget).is(":checked")) {
+					if (!_.isUndefined(this.newauditFilterColl) && this.newauditFilterColl.length > 0) {
+						this.$el.find('.emptySet').remove();
+						this.newauditFilterColl.forEach(function(model){
+							that.auditFilterColl.add(model);
+						})
+					}
+				} else {
+					this.newauditFilterColl= this.auditFilterColl.clone();
+					this.auditFilterColl.reset()
+					this.renderAuditFilterFields()
+				}
+			}
 		},
 
 		/** all post render plugin initialization */
