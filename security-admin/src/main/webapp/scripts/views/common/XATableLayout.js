@@ -198,6 +198,9 @@ define(function(require){
 			}));
 		},
 		showHidePager : function(){
+			if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+				$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+			}
 			$('.popover').remove();
 			if(this.collection.state && this.collection.state.totalRecords > XAGlobals.settings.PAGE_SIZE)	{
 				this.$el.find(this.rPagination.el).show()

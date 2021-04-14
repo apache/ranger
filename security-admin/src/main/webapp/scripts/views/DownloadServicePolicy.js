@@ -81,6 +81,9 @@ define(function(require){
                                 var exportUrl = urlString +urls+ '?serviceName='+serviceName;
                         }
 			XAUtil.blockUI();
+            if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+                $('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+            }
 			$.ajax({
 		        type: "GET",
                         url:exportUrl+'&checkPoliciesExists=true',

@@ -130,7 +130,8 @@ define(function(require) {
 			console.log("initialized a AuditLayout Layout");
 
             _.extend(this, _.pick(options, 'accessAuditList','tab'));
-                        var that = this;
+            var that = this;
+            $('.latestResponse').hide();
 			this.bindEvents();
                         this.currentTab = '#'+this.tab.split('?')[0];
 			var date = new Date().toString();
@@ -2293,6 +2294,7 @@ define(function(require) {
 			clearInterval(this.timerId);
 			clearInterval(this.clearTimeUpdateInterval);
             XAUtils.removeUnwantedDomElement();
+            $('.latestResponse').show();
 		}
 	});
 

@@ -2688,6 +2688,8 @@ textarea:read-only{
   z-index: 10;
   background: #eeeeee;
   padding-top: 14px;
+  width: 70%;
+  display: inline-block;
 }
 
 #zoneServiceAccordion .accordion-inner{
@@ -4671,4 +4673,22 @@ input.textFiledInputPadding:disabled {
 
 .clearBoth {
   clear: both;
+}
+
+
+.latestResponse {
+  width: 29%;
+  display: inline-block;
+  text-align: right;
+  top: -10px;
+  position: relative;
+}
+
+.headerBreadcrumbs {
+  position: sticky;
+  top: 42px;
+  z-index: 10;
+  background: #eeeeee;
+  width: 100%;
+  display: inline-block;
 }
