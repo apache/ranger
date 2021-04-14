@@ -441,6 +441,19 @@
 			"type": "string",
 			"mandatory": false,
 			"label": "Common Name for Certificate"
+		},
+
+		{
+			"itemId": 5,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['atlas'] ,'isAudited':false} ]"
 		}
 	],
 	"options": {

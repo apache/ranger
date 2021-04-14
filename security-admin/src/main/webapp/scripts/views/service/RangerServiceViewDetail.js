@@ -89,10 +89,11 @@ define(function(require) {
                         customConfigs = _.omit(customConfigs , m.name);
                     })
                     this.conf = configs;
-                    this.auditFilters = (_.isEmpty(customConfigs) && _.isUndefined(customConfigs['ranger.plugin.audit.filters'])) ?
-                        false : customConfigs['ranger.plugin.audit.filters'];
-                    this.customConfigs = _.isEmpty(_.omit(customConfigs, 'ranger.plugin.audit.filters')) ?
-                        false : _.omit(customConfigs, 'ranger.plugin.audit.filters');
+                    this.auditFilters = (_.isEmpty(this.conf) && _.isUndefined(this.conf['Ranger Default Audit Filters'])) ?
+                        false : this.conf['Ranger Default Audit Filters'];
+                    this.conf = _.omit(this.conf, 'Ranger Default Audit Filters')
+                    this.customConfigs = _.isEmpty(_.omit(customConfigs, 'Ranger Default Audit Filters')) ?
+                        false : _.omit(customConfigs, 'Ranger Default Audit Filters');
                     if(this.auditFilters){
                         this.auditFilters = JSON.parse((this.auditFilters).replace(/'/g, '"'));
                     }
