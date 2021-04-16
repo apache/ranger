@@ -15,18 +15,21 @@
 
 
 sudo: false
+dist: bionic
 language: java
+
 cache:
   directories:
   - $HOME/.m2
-jdk:
-  - oraclejdk8
-  - oraclejdk11
-  - openjdk10
-  - openjdk11
 
+jdk:
+  - openjdk8
+  - openjdk11
+  - openjdk16
+  
 env:
   - KEY=default VALUE=default
+  
 # Environment to testing with different versions, disabled because ranger is not compatible
 #  - KEY=hadoop.version VALUE=2.8.0
 
@@ -34,12 +37,12 @@ before_install:
   - export MAVEN_OPTS="-Xmx1200M -XX:MaxPermSize=768m -Xms512m"
 
 install:
-  - mvn package -D$KEY=$VALUE -DskipTests -Dmaven.javadoc.skip=true -B -V
+  - mvn verify -D$KEY=$VALUE -DskipTests -Dmaven.javadoc.skip=true -B -V
 
 # KafkaRangerAuthorizerGSSTest is a failing test, TestLdapUserGroup needs too much memory for travis
 script:
   - mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl !plugin-kafka,!ugsync,!hive-agent
   - mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl plugin-kafka -Dtest="*,!KafkaRangerAuthorizerGSSTest"
   - mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl ugsync -Dtest="*,!TestLdapUserGroup"
-  - if [[ "$TRAVIS_JDK_VERSION" != "oraclejdk8" ]]; then mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl hive-agent -Dtest="*,!HIVERangerAuthorizerTest" -DfailIfNoTests=false ; fi
-  - if [[ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]]; then mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl hive-agent ; fi
+  - if [[ "$TRAVIS_JDK_VERSION" != "openjdk8" ]]; then mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl hive-agent -Dtest="*,!HIVERangerAuthorizerTest" -DfailIfNoTests=false ; fi
+  - if [[ "$TRAVIS_JDK_VERSION" == "openjdk8" ]]; then mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl hive-agent ; fi
