@@ -25,7 +25,6 @@ cache:
 jdk:
   - openjdk8
   - openjdk11
-  - openjdk16
   
 env:
   - KEY=default VALUE=default
