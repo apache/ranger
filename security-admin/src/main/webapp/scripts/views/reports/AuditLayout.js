@@ -909,7 +909,8 @@ define(function(require) {
 								objectId   : self.model.get('objectId'),
 								objectCreatedDate : objectCreatedDate,
 								userName :self.model.get('owner'),
-								action : action
+								action : action,
+								repoName : self.model.get('parentObjectName'),
 							});
 						} else if (self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value){
 							var view = new vOperationDiffDetail({

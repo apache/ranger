@@ -69,6 +69,7 @@ define(function(require){
 					zoneName: zoneName,
 					newPolicyConditions: this.newConditions,
 					oldPolicyCondition: this.oldConditions,
+					repoName: this.repoName,
 
         		};
         },
@@ -96,7 +97,7 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a PlugableServiceDiffDetail ItemView");
-                        _.extend(this, _.pick(options, 'classType','objectName','objectId','objectCreatedDate','action','userName','policyId','policyLabels'));
+                        _.extend(this, _.pick(options, 'classType','objectName','objectId','objectCreatedDate','action','userName','policyId','policyLabels','repoName'));
 			this.bindEvents();
 			this.initializeServiceDef();
 			this.getTemplateForView();
