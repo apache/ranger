@@ -72,6 +72,7 @@ public class SolrCollectionBootstrapper extends Thread {
 	final static String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 	public static final String DEFAULT_COLLECTION_NAME = "ranger_audits";
 	public static final String DEFAULT_CONFIG_NAME = "ranger_audits";
+	public static final int DEFAULT_VALUE = 1;
 	public static final long DEFAULT_SOLR_TIME_INTERVAL_MS = 60000L;
 	private static final int TRY_UNTIL_SUCCESS  = -1;
 	public static final int DEFAULT_SOLR_BOOTSTRP_MAX_RETRY  = TRY_UNTIL_SUCCESS;
@@ -94,7 +95,6 @@ public class SolrCollectionBootstrapper extends Thread {
 	String solr_config_name;
 	Path path_for_cloud_mode;
 	int no_of_replicas;
-	int no_of_shards;
 	int max_node_per_shards;
 	int max_retry;
 	int retry_counter = 0;
@@ -128,12 +128,10 @@ public class SolrCollectionBootstrapper extends Thread {
 				+ solr_collection_name);
 		solr_config_name = EmbeddedServerUtil.getConfig(SOLR_CONFIG_NAME, DEFAULT_CONFIG_NAME);
 		logger.info("Solr Config name provided is : " + solr_config_name);
-		no_of_replicas = EmbeddedServerUtil.getIntConfig(SOLR_NO_REPLICA, 1);
+		no_of_replicas = EmbeddedServerUtil.getIntConfig(SOLR_NO_REPLICA, DEFAULT_VALUE);
 		logger.info("No. of replicas provided is : " + no_of_replicas);
 
-		no_of_shards = EmbeddedServerUtil.getIntConfig(SOLR_NO_SHARDS, 1);
-		logger.info("No. of shards provided is : " + no_of_shards);
-		max_node_per_shards = EmbeddedServerUtil.getIntConfig(SOLR_MAX_SHARD_PER_NODE, 1);
+		max_node_per_shards = EmbeddedServerUtil.getIntConfig(SOLR_MAX_SHARD_PER_NODE, DEFAULT_VALUE);
 		logger.info("Max no of nodes per shards provided is : "
 				+ max_node_per_shards);
 
@@ -342,6 +340,12 @@ public class SolrCollectionBootstrapper extends Thread {
 			List<String> allCollectionList = getCollections();
 			if (allCollectionList != null) {
 				if (!allCollectionList.contains(solr_collection_name)) {
+
+					int shardsCalculation = solrCloudClient != null
+							? solrCloudClient.getClusterStateProvider().getLiveNodes().size()
+							: DEFAULT_VALUE;
+					int no_of_shards = EmbeddedServerUtil.getIntConfig(SOLR_NO_SHARDS, shardsCalculation);
+					logger.info("No. of shards provided is : " + no_of_shards);
 
 					CollectionAdminRequest.Create createCollection = CollectionAdminRequest
 							.createCollection(solr_collection_name,
