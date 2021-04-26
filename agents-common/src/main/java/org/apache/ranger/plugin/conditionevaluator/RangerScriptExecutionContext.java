@@ -113,14 +113,10 @@ public final class RangerScriptExecutionContext {
 
 	public String getResource() {
 		String ret = null;
-		Object val = getRequestContext().get(RangerAccessRequestUtil.KEY_CONTEXT_RESOURCE);
+		RangerAccessResource val = RangerAccessRequestUtil.getCurrentResourceFromContext(getRequestContext());
 
 		if(val != null) {
-			if(val instanceof RangerAccessResource) {
-				ret = ((RangerAccessResource)val).getAsString();
-			} else {
-				ret = val.toString();
-			}
+			ret = val.getAsString();
 		}
 
 		return ret;
@@ -165,12 +161,9 @@ public final class RangerScriptExecutionContext {
 	public String getSessionId() { return accessRequest.getSessionId(); }
 
 	public RangerTagForEval getCurrentTag() {
-		RangerTagForEval ret = null;
-		Object    val = getRequestContext().get(RangerAccessRequestUtil.KEY_CONTEXT_TAG_OBJECT);
+		RangerTagForEval ret = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
 
-		if(val instanceof RangerTagForEval) {
-			ret = (RangerTagForEval)val;
-		} else {
+		if(ret == null ) {
 			if (LOG.isDebugEnabled()) {
 				logDebug("RangerScriptExecutionContext.getCurrentTag() - No current TAG object. Script execution must be for resource-based policy.");
 			}
@@ -221,6 +214,33 @@ public final class RangerScriptExecutionContext {
 		return ret;
 	}
 
+	public List<Map<String, String>> getTagAttributesForAllMatchingTags(final String tagType) {
+		List<Map<String, String>> ret = null;
+
+		if (StringUtils.isNotBlank(tagType)) {
+			Set<RangerTagForEval> tagObjectList = getAllTags();
+
+			// Assumption: There is exactly one tag with given tagType in the list of tags - may not be true ***TODO***
+			// This will get attributes of the first tagType that matches
+			if (CollectionUtils.isNotEmpty(tagObjectList)) {
+				for (RangerTagForEval tag : tagObjectList) {
+					if (tag.getType().equals(tagType)) {
+						Map<String, String> tagAttributes = tag.getAttributes();
+						if (tagAttributes != null) {
+							if (ret == null) {
+								ret = new ArrayList<>();
+							}
+							ret.add(tagAttributes);
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
+
 	public Set<String> getAttributeNames(final String tagType) {
 		Set<String>         ret        = null;
 		Map<String, String> attributes = getTagAttributes(tagType);
@@ -240,6 +260,22 @@ public final class RangerScriptExecutionContext {
 
 			if (attributes != null) {
 				ret = attributes.get(attributeName);
+			}
+		}
+		return ret;
+	}
+
+	public List<String> getAttributeValueForAllMatchingTags(final String tagType, final String attributeName) {
+		List<String> ret = null;
+
+		if (StringUtils.isNotBlank(tagType) || StringUtils.isNotBlank(attributeName)) {
+			Map<String, String> attributes = getTagAttributes(tagType);
+
+			if (attributes != null && attributes.get(attributeName) != null) {
+				if (ret == null) {
+					ret = new ArrayList<>();
+				}
+				ret.add(attributes.get(attributeName));
 			}
 		}
 		return ret;
