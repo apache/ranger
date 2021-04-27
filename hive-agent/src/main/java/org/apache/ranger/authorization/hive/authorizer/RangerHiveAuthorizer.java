@@ -717,7 +717,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
 			String                  user           = ugi.getShortUserName();
 			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
-			Set<String>             roles          = getCurrentRoles();
+			Set<String>             roles          = getCurrentRolesForUser(user, groups);
 
 			if(LOG.isDebugEnabled()) {
 				LOG.debug(toString(hiveOpType, inputHObjs, outputHObjs, context, sessionContext));
@@ -1059,7 +1059,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
 			String user = ugi.getShortUserName();
 			Set<String> groups = Sets.newHashSet(ugi.getGroupNames());
-			Set<String> roles  = getCurrentRoles();
+			Set<String> roles  = getCurrentRolesForUser(user, groups);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug(String.format("filterListCmdObjects: user[%s], groups[%s], roles[%s] ", user, groups, roles));
 			}
@@ -1252,7 +1252,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
 			String                  user           = ugi.getShortUserName();
 			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
-			Set<String>             roles          = getCurrentRoles();
+			Set<String>             roles          = getCurrentRolesForUser(user, groups);
 			HiveObjectType          objectType     = HiveObjectType.TABLE;
 			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName);
 			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, roles, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
@@ -1293,7 +1293,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
 			String                  user           = ugi.getShortUserName();
 			Set<String>             groups         = Sets.newHashSet(ugi.getGroupNames());
-			Set<String>             roles          = getCurrentRoles();
+			Set<String>             roles          = getCurrentRolesForUser(user, groups);
 			HiveObjectType          objectType     = HiveObjectType.COLUMN;
 			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName, columnName);
 			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, roles, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
@@ -2929,9 +2929,27 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		LOG.info("Current user : " + currentUserName + ", Current Roles : " + currentRoles);
 	}
 
+	private Set<String> getCurrentRolesForUser(String user, Set<String> groups) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerHiveAuthorizer.getCurrentRolesForUser()");
+		}
+
+		Set<String>  ret  = hivePlugin.getRolesFromUserAndGroups(user, groups);
+
+		if (CollectionUtils.isNotEmpty(ret) && CollectionUtils.isNotEmpty(currentRoles) && ret.containsAll(currentRoles)) {
+			ret = currentRoles;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerHiveAuthorizer.getCurrentRolesForUser() User: " + currentUserName + ", User Roles: " + ret);
+		}
+
+		return ret;
+	}
+
 	private Set<String> getCurrentRoleNamesFromRanger() throws HiveAuthzPluginException {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("RangerHiveAuthorizer.getCurrentRoleNamesFromRanger()");
+			LOG.debug("==> RangerHiveAuthorizer.getCurrentRoleNamesFromRanger()");
 		}
 		boolean result = false;
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
@@ -2946,7 +2964,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 		try {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== getCurrentRoleNamesFromRanger() for user " + user +", userGroups: " + groups);
+				LOG.debug("==> RangerHiveAuthorizer.getCurrentRoleNamesFromRanger() for user " + user + ", userGroups: " + groups);
 			}
 			Set<String> userRoles = new HashSet<String>(getRolesforUserAndGroups(user, groups));
 			for (String role : userRoles) {
@@ -2966,7 +2984,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			auditHandler.flushAudit();
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerHiveAuthorizer.getCurrentRoleNamesFromRanger() for user: " + user + ", roleNames: " + ret);
+			LOG.debug("<== RangerHiveAuthorizer.getCurrentRoleNamesFromRanger() for user: " + user + ", userGroups: " + groups + ", roleNames: " + ret);
 		}
 		return ret;
 	}
