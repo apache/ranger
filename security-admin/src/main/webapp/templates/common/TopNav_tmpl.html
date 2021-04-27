@@ -44,16 +44,18 @@
                     {{/hasAccessToTab}}
                 </ul>
             </li>
-            {{^hideSecurityZoneTab}}
-                <li>
-                    <a href="#!/zones/zone/list" id="nav6">
-                        <span class="zone-icon fa-stack fa-lg">
-                          <i class="fa fa-square-o fa-stack-2x"></i>
-                          <i class="fa fa-bolt fa-stack-1x"></i>
-                        </span>{{tt 'h.securityZone'}}
-                    </a>
-                </li>
-            {{/hideSecurityZoneTab}}
+            {{#hasAccessToTab  'Security Zone'}}
+                {{^hideSecurityZoneTab}}
+                    <li>
+                        <a href="#!/zones/zone/list" id="nav6">
+                            <span class="zone-icon fa-stack fa-lg">
+                              <i class="fa fa-square-o fa-stack-2x"></i>
+                              <i class="fa fa-bolt fa-stack-1x"></i>
+                            </span>{{tt 'h.securityZone'}}
+                        </a>
+                    </li>
+                {{/hideSecurityZoneTab}}
+            {{/hasAccessToTab}}
             <li class="dropdown">
                 <a href="javascript:;" id="nav5"><i class="fa-fw fa fa-gear"></i> {{tt 'h.settings'}} </a>
                 <ul class="dropdown-menu">
@@ -89,16 +91,18 @@
                     {{/hasAccessToTab}}
                 </ul>
             </li>
-            {{^hideSecurityZoneTab}}
-                <li>
-                    <a href="#!/zones/zone/list" id="nav6">
-                        <span class="zone-icon fa-stack fa-lg">
-                          <i class="fa fa-square-o fa-stack-2x"></i>
-                          <i class="fa fa-bolt fa-stack-1x"></i>
-                        </span>{{tt 'h.securityZone'}}
-                    </a>
-                </li>
-            {{/hideSecurityZoneTab}}
+            {{#hasAccessToTab  'Security Zone'}}
+                {{^hideSecurityZoneTab}}
+                    <li>
+                        <a href="#!/zones/zone/list" id="nav6">
+                            <span class="zone-icon fa-stack fa-lg">
+                              <i class="fa fa-square-o fa-stack-2x"></i>
+                              <i class="fa fa-bolt fa-stack-1x"></i>
+                            </span>{{tt 'h.securityZone'}}
+                        </a>
+                    </li>
+                {{/hideSecurityZoneTab}}
+            {{/hasAccessToTab}}
             {{#hasAccessToTab  'Users/Groups'}}
                 <li><a href="#!/users/usertab" id="nav5"><i class="fa-fw fa fa-gear"></i> {{tt 'h.settings'}} </a></li>
             {{/hasAccessToTab}}

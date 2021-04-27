@@ -72,6 +72,7 @@ define(function(require){
 			'Encryption'     : {'Key Manager' : ['kmsManagerAction','kmsKeyCreateAction'] },
 			'Settings'		 : {'Users/Groups' : ['userManagerAction','userCreateAction','userEditAction','groupCreateAction','groupEditAction'],
 								'Permissions' : ['modulePermissionsAction','modulePermissionEditAction'] },
+			'Security Zone'  : ['zoneManagmentAction', 'RangerZoneCreateAction', 'RangerZoneEditAction'],
 		};
 	
 	XAGlobals.ActionType = {
