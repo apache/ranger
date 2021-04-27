@@ -106,6 +106,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
         if (url.endsWith("/")) {
             url = url.substring(0, url.length() - 1);
         }
+        if (StringUtil.isEmpty(url)) {
+            LOG.error("Nessary parameter is not configured : " + propertyPrefix + ".policy.rest.url");
+        }
 
 		init(url, sslConfigFileName, restClientConnTimeOutMs , restClientReadTimeOutMs, config);
 
