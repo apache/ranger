@@ -943,6 +943,7 @@ CREATE TABLE dbo.x_service_resource(
 	CONSTRAINT x_service_res_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_service_res_UK_guid UNIQUE NONCLUSTERED (guid)
 )
+CREATE UNIQUE INDEX x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
 GO
 CREATE TABLE dbo.x_tag_resource_map(
 	id bigint IDENTITY NOT NULL,
@@ -2266,6 +2267,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('049',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('050',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('051',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
