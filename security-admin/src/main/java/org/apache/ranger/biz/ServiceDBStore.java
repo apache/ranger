@@ -2931,11 +2931,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (ret != null) {
-			ret.setPolicyVersion(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyVersion());
 			ret.setPolicyUpdateTime(serviceVersionInfoDbObj == null ? null : serviceVersionInfoDbObj.getPolicyUpdateTime());
 			ret.setAuditMode(auditMode);
 			if (ret.getTagPolicies() != null) {
-				ret.getTagPolicies().setPolicyVersion(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyVersion());
 				ret.getTagPolicies().setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
 				ret.getTagPolicies().setAuditMode(auditMode);
 			}
@@ -3131,6 +3129,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			List<RangerPolicyDelta> resourcePolicyDeltas;
 			List<RangerPolicyDelta> tagPolicyDeltas = null;
+			Long                    retrievedPolicyVersion = null;
+			Long                    retrievedTagPolicyVersion = null;
 
 			String componentServiceType = serviceDef.getName();
 
@@ -3140,7 +3140,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (CollectionUtils.isNotEmpty(resourcePolicyDeltas)) {
 				isValid = RangerPolicyDeltaUtil.isValidDeltas(resourcePolicyDeltas, componentServiceType);
 
-				if (!isValid) {
+				if (isValid) {
+					retrievedPolicyVersion = resourcePolicyDeltas.get(resourcePolicyDeltas.size() - 1).getPoliciesVersion();
+				} else {
 					LOG.warn("Resource policy-Deltas :[" + resourcePolicyDeltas + "] from version :[" + lastKnownVersion + "] are not valid");
 				}
 
@@ -3154,7 +3156,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 						isValid = RangerPolicyDeltaUtil.isValidDeltas(tagPolicyDeltas, tagServiceType);
 
-						if (!isValid) {
+						if (isValid) {
+							retrievedTagPolicyVersion = tagPolicyDeltas.get(tagPolicyDeltas.size() - 1).getPoliciesVersion();
+						} else {
 							LOG.warn("Tag policy-Deltas :[" + tagPolicyDeltas + "] for service-version :[" + lastKnownVersion + "] and delta-id :[" + id + "] are not valid");
 						}
 					}
@@ -3167,7 +3171,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 						resourcePolicyDeltas.addAll(tagPolicyDeltas);
 					}
+
 					List<RangerPolicyDelta> compressedDeltas = compressDeltas(resourcePolicyDeltas);
+
 					if (compressedDeltas != null) {
 						ret = new ServicePolicies();
 						ret.setServiceId(service.getId());
@@ -3175,6 +3181,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						ret.setServiceDef(serviceDef);
 						ret.setPolicies(null);
 						ret.setPolicyDeltas(compressedDeltas);
+						ret.setPolicyVersion(retrievedPolicyVersion);
 
 						if (tagServiceDef != null && tagService != null) {
 							ServicePolicies.TagPolicies tagPolicies = new ServicePolicies.TagPolicies();
@@ -3182,6 +3189,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							tagPolicies.setServiceId(tagService.getId());
 							tagPolicies.setServiceName(tagService.getName());
 							tagPolicies.setPolicies(null);
+							tagPolicies.setPolicyVersion(retrievedTagPolicyVersion);
 							ret.setTagPolicies(tagPolicies);
 						}
 					} else {

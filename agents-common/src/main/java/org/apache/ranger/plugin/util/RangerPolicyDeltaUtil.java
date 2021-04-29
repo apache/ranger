@@ -78,26 +78,49 @@ public class RangerPolicyDeltaUtil {
                     int changeType = delta.getChangeType();
 
                     if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
-                        if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
-                            if (delta.getPolicy() != null) {
-                                ret.add(delta.getPolicy());
-                            }
-                        } else {
-                            // Either UPDATE or DELETE
-                            Long policyId = delta.getPolicyId();
+                        Long policyId = delta.getPolicyId();
 
-                            Iterator<RangerPolicy> iter = ret.iterator();
-                            while (iter.hasNext()) {
-                                if (policyId.equals(iter.next().getId())) {
-                                    iter.remove();
-                                    break;
-                                }
+                        if (policyId == null) {
+                            continue;
+                        }
+
+                        List<RangerPolicy>     deletedPolicies = new ArrayList<>();
+
+                        Iterator<RangerPolicy> iter = ret.iterator();
+
+                        while (iter.hasNext()) {
+                            RangerPolicy policy = iter.next();
+                            if (policyId.equals(policy.getId())) {
+                                deletedPolicies.add(policy);
+                                iter.remove();
                             }
-                            if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
-                                if (delta.getPolicy() != null) {
-                                    ret.add(delta.getPolicy());
+                        }
+
+                        switch(changeType) {
+                            case RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE: {
+                                if (CollectionUtils.isNotEmpty(deletedPolicies)) {
+                                    LOG.warn("Unexpected: found existing policy for CHANGE_TYPE_POLICY_CREATE: " + Arrays.toString(deletedPolicies.toArray()));
                                 }
+                                break;
                             }
+                            case RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE: {
+                                if (CollectionUtils.isEmpty(deletedPolicies) || deletedPolicies.size() > 1) {
+                                    LOG.warn("Unexpected: found no policy or multiple policies for CHANGE_TYPE_POLICY_UPDATE: " + Arrays.toString(deletedPolicies.toArray()));
+                                }
+                                break;
+                            }
+                            case RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE: {
+                                if (CollectionUtils.isEmpty(deletedPolicies) || deletedPolicies.size() > 1) {
+                                    LOG.warn("Unexpected: found no policy or multiple policies for CHANGE_TYPE_POLICY_DELETE: " + Arrays.toString(deletedPolicies.toArray()));
+                                }
+                                break;
+                            }
+                            default:
+                                break;
+                        }
+
+                        if (changeType != RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
+                            ret.add(delta.getPolicy());
                         }
                     } else {
                         LOG.warn("Found unexpected changeType in policyDelta:[" + delta + "]. Ignoring delta");
@@ -111,7 +134,7 @@ public class RangerPolicyDeltaUtil {
             }
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("applyDeltas(deltas=null, serviceType=" + serviceType + ")");
+                LOG.warn("Unexpected : applyDeltas called with deltas=null");
             }
             ret = policies;
         }

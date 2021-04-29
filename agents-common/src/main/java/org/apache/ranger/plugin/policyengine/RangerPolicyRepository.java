@@ -1210,6 +1210,7 @@ public class RangerPolicyRepository {
             }
 
             if (policyDeltaType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
+                removeEvaluatorFromTrie(oldEvaluator, trie, resourceDefName);
                 addEvaluatorToTrie(newEvaluator, trie, resourceDefName);
             } else if (policyDeltaType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
                 removeEvaluatorFromTrie(oldEvaluator, trie, resourceDefName);
@@ -1229,6 +1230,8 @@ public class RangerPolicyRepository {
         if (newEvaluator != null) {
             RangerPolicy.RangerPolicyResource resource = newEvaluator.getPolicyResource().get(resourceDefName);
             trie.add(resource, newEvaluator);
+        } else {
+            LOG.warn("Unexpected: newPolicyEvaluator is null for resource:[" + resourceDefName + "]");
         }
     }
 
@@ -1300,7 +1303,7 @@ public class RangerPolicyRepository {
         while (iterator.hasNext()) {
             if (id.equals(iterator.next().getId())) {
                 iterator.remove();
-                break;
+                //break;
             }
         }
 
@@ -1355,12 +1358,17 @@ public class RangerPolicyRepository {
 
         switch (changeType) {
             case RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE:
+                if (currentEvaluator != null) {
+                    removePolicy(policyId);
+                }
                 if (policy != null) {
                     newEvaluator = addPolicy(policy);
                 }
                 break;
             case RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE: {
-                removePolicy(policyId);
+                if (currentEvaluator != null) {
+                    removePolicy(policyId);
+                }
                 if (policy != null) {
                     newEvaluator = addPolicy(policy);
                 }
@@ -1471,24 +1479,25 @@ public class RangerPolicyRepository {
 
                         continue;
                     }
+                    evaluator = getPolicyEvaluator(policyId);
+                    if (evaluator != null) {
+                        LOG.warn("Unexpected: Found evaluator for policy-id:[" + policyId + "], changeType=CHANGE_TYPE_POLICY_CREATE");
+                    }
+
                     break;
 
                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE:
                     evaluator = getPolicyEvaluator(policyId);
 
                     if (evaluator == null) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Could not find evaluator for policy-id:[" + policyId + "]");
-                        }
+                        LOG.warn("Unexpected:  Did not find evaluator for policy-id:[" + policyId + "], changeType=CHANGE_TYPE_POLICY_UPDATE");
                     }
                     break;
 
                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE:
                     evaluator = getPolicyEvaluator(policyId);
                     if (evaluator == null) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Could not find evaluator for policy-id:[" + policyId + "]");
-                        }
+                        LOG.warn("Unexpected:  Did not find evaluator for policy-id:[" + policyId + "], changeType=CHANGE_TYPE_POLICY_DELETE");
                     }
                     break;
 
