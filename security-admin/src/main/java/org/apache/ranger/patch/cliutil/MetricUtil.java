@@ -381,6 +381,7 @@ public class MetricUtil extends BaseLoader  {
 										String serviceDef = rangerServiceDef.getName();
 										if (!StringUtils.isEmpty(serviceDef)) {
 											policyFilter1.setParam("serviceType", serviceDef);
+											policyFilter1.setParam("denyCondition", "true");
 											PList<RangerPolicy> policiesList = svcStore.getPaginatedPolicies(policyFilter1);
 											if (policiesList != null && policiesList.getListSize() > 0) {
 												int policyListCount = policiesList.getListSize();
