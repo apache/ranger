@@ -124,11 +124,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		setImplClass(other.getImplClass());
 		setLabel(other.getLabel());
 		setDescription(other.getDescription());
-		setConfigs(other.getConfigs());
+		setRbKeyLabel(other.getRbKeyLabel());
+		setRbKeyDescription(other.getRbKeyDescription());
 		setOptions(other.getOptions());
+		setConfigs(other.getConfigs());
 		setResources(other.getResources());
 		setAccessTypes(other.getAccessTypes());
 		setPolicyConditions(other.getPolicyConditions());
+		setContextEnrichers(other.getContextEnrichers());
 		setEnums(other.getEnums());
 		setDataMaskDef(other.getDataMaskDef());
 		setRowFilterDef(other.getRowFilterDef());

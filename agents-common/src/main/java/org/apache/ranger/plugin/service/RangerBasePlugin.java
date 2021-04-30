@@ -95,6 +95,25 @@ public class RangerBasePlugin {
 		this.chainedPlugins = initChainedPlugins();
 	}
 
+	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles) {
+		this(pluginConfig);
+
+		init();
+
+		setPolicies(policies);
+		setRoles(roles);
+
+		if (tags != null) {
+			RangerTagEnricher tagEnricher = getTagEnricher();
+
+			if (tagEnricher != null) {
+				tagEnricher.setServiceTags(tags);
+			} else {
+				LOG.warn("RangerBasePlugin(tagsVersion=" + tags.getTagVersion() + "): no tag enricher found. Plugin will not enforce tag-based policies");
+			}
+		}
+	}
+
 	public static AuditHandler getAuditProvider(String serviceName) {
 		AuditProviderFactory providerFactory = RangerBasePlugin.getAuditProviderFactory(serviceName);
 		AuditHandler         ret             = providerFactory.getAuditProvider();
@@ -179,14 +198,37 @@ public class RangerBasePlugin {
 			}
 		}
 
-		refresher = new PolicyRefresher(this);
-		LOG.info("Created PolicyRefresher Thread(" + refresher.getName() + ")");
-		refresher.setDaemon(true);
-		refresher.startRefresher();
+		if (!pluginConfig.getPolicyEngineOptions().disablePolicyRefresher) {
+			refresher = new PolicyRefresher(this);
+			LOG.info("Created PolicyRefresher Thread(" + refresher.getName() + ")");
+			refresher.setDaemon(true);
+			refresher.startRefresher();
+		}
 
 		for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
 			chainedPlugin.init();
 		}
+	}
+
+	public long getPoliciesVersion() {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+		Long               ret          = policyEngine != null ? policyEngine.getPolicyVersion() : null;
+
+		return ret != null ? ret : -1L;
+	}
+
+	public long getTagsVersion() {
+		RangerTagEnricher tagEnricher = getTagEnricher();
+		Long              ret         = tagEnricher != null ? tagEnricher.getServiceTagsVersion() : null;
+
+		return ret != null ? ret : -1L;
+	}
+
+	public long getRolesVersion() {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+		Long               ret          = policyEngine != null ? policyEngine.getRoleVersion() : null;
+
+		return ret != null ? ret : -1L;
 	}
 
 	public void setPolicies(ServicePolicies policies) {
@@ -680,7 +722,9 @@ public class RangerBasePlugin {
 			// Synch-up policies
 			long oldPolicyVersion = policyEngine.getPolicyVersion();
 
-			refresher.syncPoliciesWithAdmin(accessTrigger);
+			if (refresher != null) {
+				refresher.syncPoliciesWithAdmin(accessTrigger);
+			}
 
 			policyEngine = this.policyEngine; // might be updated in syncPoliciesWithAdmin()
 
@@ -795,7 +839,7 @@ public class RangerBasePlugin {
 		int counter;
 	}
 
-	private RangerTagEnricher getTagEnricher() {
+	public RangerTagEnricher getTagEnricher() {
 		RangerTagEnricher ret         = null;
 		RangerAuthContext authContext = getCurrentRangerAuthContext();
 

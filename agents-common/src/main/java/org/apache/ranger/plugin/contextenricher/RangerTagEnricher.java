@@ -77,7 +77,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 
 	private static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
-	private static final String TAG_RETRIEVER_CLASSNAME_OPTION       = "tagRetrieverClassName";
+	public  static final String TAG_RETRIEVER_CLASSNAME_OPTION       = "tagRetrieverClassName";
 	private static final String TAG_DISABLE_TRIE_PREFILTER_OPTION    = "disableTrieLookupPrefilter";
 
 	private RangerTagRefresher                 tagRefresher;
@@ -349,7 +349,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 	}
 
-	protected Long getServiceTagsVersion() {
+	public Long getServiceTagsVersion() {
 		EnrichedServiceTags localEnrichedServiceTags = enrichedServiceTags;
 		return localEnrichedServiceTags != null ? localEnrichedServiceTags.getServiceTags().getTagVersion() : -1L;
 	}

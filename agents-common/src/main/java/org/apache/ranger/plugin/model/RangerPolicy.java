@@ -155,17 +155,18 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setResourceSignature(other.getResourceSignature());
 		setIsAuditEnabled(other.getIsAuditEnabled());
 		setResources(other.getResources());
+		setConditions(other.getConditions());
 		setPolicyItems(other.getPolicyItems());
 		setDenyPolicyItems(other.getDenyPolicyItems());
 		setAllowExceptions(other.getAllowExceptions());
 		setDenyExceptions(other.getDenyExceptions());
 		setDataMaskPolicyItems(other.getDataMaskPolicyItems());
 		setRowFilterPolicyItems(other.getRowFilterPolicyItems());
+		setServiceType(other.getServiceType());
 		setOptions(other.getOptions());
 		setValiditySchedules(other.getValiditySchedules());
 		setPolicyLabels(other.getPolicyLabels());
 		setZoneName(other.getZoneName());
-		setConditions(other.getConditions());
 		setIsDenyAllElse(other.getIsDenyAllElse());
 	}
 
