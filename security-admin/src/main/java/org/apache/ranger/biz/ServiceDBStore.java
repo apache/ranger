@@ -2447,7 +2447,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceId + ")");
 		}
-		String zoneName = filter.getParam("zoneName");
+		String zoneName = filter.getParam(SearchFilter.FETCH_ZONE_NAME);
+		String denyCondition = filter.getParam(SearchFilter.FETCH_DENY_CONDITION);
 		XXService service = daoMgr.getXXService().getById(serviceId);
 
 		if (service == null) {
@@ -2456,7 +2457,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		List<RangerPolicy> ret = getServicePolicies(service, filter);
 		if(!"true".equalsIgnoreCase(filter.getParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES))) {
-			if(StringUtils.isBlank(zoneName)) {
+			if(StringUtils.isBlank(zoneName) && StringUtils.isBlank(denyCondition)) {
 				ret = noZoneFilter(ret);
 			}
 		}
@@ -5269,6 +5270,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                             policyFilter1.setGetCount(true);
                             policyFilter1.setSortBy("serviceId");
                             policyFilter1.setSortType("asc");
+                            policyFilter1.setParam("denyCondition", "true");
                             int denyCount = 0;
                             Map<String, Integer> denyconditionsonMap = new HashMap<String, Integer>();
                             PList<RangerServiceDef> paginatedSvcDefs = getPaginatedServiceDefs(policyFilter1);

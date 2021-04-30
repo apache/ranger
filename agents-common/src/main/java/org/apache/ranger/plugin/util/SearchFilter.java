@@ -86,8 +86,10 @@ public class SearchFilter {
 	public static final String PLUGIN_ENTITY_TYPE        = "pluginEntityType";
 	public static final String PLUGIN_IP_ADDRESS         = "pluginIpAddress";
 	public static final String CLUSTER_NAME              = "clusterName";
-	public static final String FETCH_ZONE_UNZONE_POLICIES        = "fetchZoneAndUnzonePolicies";
+	public static final String FETCH_ZONE_UNZONE_POLICIES= "fetchZoneAndUnzonePolicies";
 	public static final String FETCH_TAG_POLICIES        = "fetchTagPolicies";
+	public static final String FETCH_ZONE_NAME			 = "zoneName";
+	public static final String FETCH_DENY_CONDITION      = "denyCondition";
 
 	public static final String SERVICE_DISPLAY_NAME			= "serviceDisplayName";			// search, sort
 	public static final String SERVICE_DISPLAY_NAME_PARTIAL	= "serviceDisplayNamePartial";	// search

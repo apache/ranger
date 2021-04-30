@@ -582,9 +582,10 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		RangerServiceDefList retList = new RangerServiceDefList();
 		int startIndex = searchFilter.getStartIndex();
 		int pageSize = searchFilter.getMaxRows();
+		String denyCondition = searchFilter.getParam(SearchFilter.FETCH_DENY_CONDITION);
 		searchFilter.setStartIndex(0);
 		searchFilter.setMaxRows(Integer.MAX_VALUE);
-	
+
 		boolean isAuditPage=false;
 		if(searchFilter.getParam("pageSource")!=null){
 			isAuditPage=true;
@@ -593,7 +594,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 				retList);
 		List<T> permittedServiceDefs = new ArrayList<T>();
 		for (T xSvcDef : xSvcDefList) {
-			if (bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage) ) {
+			if ((bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage)) || ("true".equals(denyCondition))) {
 				permittedServiceDefs.add(xSvcDef);
 			}
 		}
