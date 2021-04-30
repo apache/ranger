@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -55,6 +56,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static org.apache.ranger.plugin.contextenricher.RangerTagEnricher.TAG_RETRIEVER_CLASSNAME_OPTION;
 import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.PLUGIN_AUDIT_FILTER;
 
 public class RangerPolicyRepository {
@@ -174,7 +176,7 @@ public class RangerPolicyRepository {
         this.policyVersion = policyVersion;
     }
 
-    RangerPolicyRepository(ServicePolicies servicePolicies, RangerPluginContext pluginContext) {
+    public RangerPolicyRepository(ServicePolicies servicePolicies, RangerPluginContext pluginContext) {
         this(servicePolicies, pluginContext, null);
     }
 
@@ -1004,6 +1006,17 @@ public class RangerPolicyRepository {
                 if (enricherDef == null) {
                     continue;
                 }
+
+                if (options.disableTagRetriever && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
+                    if (MapUtils.isNotEmpty(enricherDef.getEnricherOptions())) {
+                        Map<String, String> enricherOptions = new HashMap<>(enricherDef.getEnricherOptions());
+
+                        enricherOptions.remove(TAG_RETRIEVER_CLASSNAME_OPTION);
+
+                        enricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), enricherDef.getEnricher(), enricherOptions);
+                    }
+                }
+
                 if (!options.disableContextEnrichers || options.enableTagEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
                     // This will be true only if the engine is initialized within ranger-admin
                     RangerServiceDef.RangerContextEnricherDef contextEnricherDef = enricherDef;

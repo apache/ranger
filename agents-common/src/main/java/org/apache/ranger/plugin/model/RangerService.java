@@ -87,8 +87,12 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		setName(other.getName());
 		setDisplayName(other.getDisplayName());
 		setDescription(other.getDescription());
+		setTagService(other.getTagService());
 		setConfigs(other.getConfigs());
-		setTagService(other.tagService);
+		setPolicyVersion(other.getPolicyVersion());
+		setPolicyUpdateTime(other.getPolicyUpdateTime());
+		setTagVersion(other.getTagVersion());
+		setTagUpdateTime(other.getTagUpdateTime());
 	}
 
 	/**
