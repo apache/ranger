@@ -220,7 +220,7 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Ranger Default Audit Filters",
-			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*', '*_acl_*', 'hbase:meta', 'hbase:acl']}}, 'users':['hbase'], 'isAudited': false }, {'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS']},'column-family':{'values':['*']},'column':{'values':['*']}},'users':['atlas'],'isAudited':false},{'users':['hbase'], 'actions':['balance'],'isAudited':false}]"
+			"defaultValue": "[{'accessResult': 'DENIED', 'isAudited': true},{'resources':{'table':{'values':['*-ROOT-*','*.META.*', '*_acl_*', 'hbase:meta', 'hbase:acl', 'default', 'hbase']}}, 'users':['hbase'], 'isAudited': false }, {'resources':{'table':{'values':['atlas_janus','ATLAS_ENTITY_AUDIT_EVENTS']},'column-family':{'values':['*']},'column':{'values':['*']}},'users':['atlas', 'hbase'],'isAudited':false},{'users':['hbase'], 'actions':['balance'],'isAudited':false}]"
 		}
 	],
 
