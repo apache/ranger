@@ -184,9 +184,6 @@ public class SolrAuditDestination extends AuditDestination {
 							LOG.fatal("Can't connect to Solr server. ZooKeepers="
 									+ zkHosts, t);
 						}
-						finally {
-							resetInitializerInSOLR();
-						}
 					} else if (solrURLs != null && !solrURLs.isEmpty()) {
 						try {
 							LOG.info("Connecting to Solr using URLs=" + solrURLs);
@@ -213,47 +210,11 @@ public class SolrAuditDestination extends AuditDestination {
 							LOG.fatal("Can't connect to Solr server. URL="
 									+ solrURLs, t);
 						}
-						finally {
-							resetInitializerInSOLR();
-						}
 					}
 				}
 			}
 		}
 	}
-
-
-    private void resetInitializerInSOLR() {
-		javax.security.auth.login.Configuration solrConfig = javax.security.auth.login.Configuration.getConfiguration();
-		String solrConfigClassName = solrConfig.getClass().getName();
-		String solrJassConfigEnd = "SolrJaasConfiguration";
-		if (solrConfigClassName.endsWith(solrJassConfigEnd)) {
-			try {
-				Field f = solrConfig.getClass().getDeclaredField("initiateAppNames");
-				if (f != null) {
-					f.setAccessible(true);
-					HashSet<String> val = new HashSet<String>();
-					f.set(solrConfig, val);
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debug("resetInitializerInSOLR: successfully reset the initiateAppNames");
-					}
-
-				} else {
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debug("resetInitializerInSOLR: not applying on class [" + solrConfigClassName + "] as it does not have initiateAppNames variable name.");
-					}
-				}
-			} catch (Throwable t) {
-				logError("resetInitializerInSOLR: Unable to reset SOLRCONFIG.initiateAppNames to be empty", t);
-			}
-		}
-		else {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug("resetInitializerInSOLR: not applying on class [" + solrConfigClassName + "] as it does not endwith [" + solrJassConfigEnd + "]");
-			}
-		}
-
-    }
 
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
