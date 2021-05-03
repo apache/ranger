@@ -224,7 +224,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 			logger.info("init(): KerberosName.rules="
 					+ MiscUtil.getKerberosNamesRules());
 		} catch (Throwable t) {
-			logger.fatal("Error creating and initializing RangerBasePlugin()");
+			logger.fatal("Error creating and initializing RangerBasePlugin()", t);
 		}
 	}
 
