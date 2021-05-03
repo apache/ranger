@@ -156,7 +156,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
         Set<String> updatedServiceNames = ret.getServices().keySet();
 
         Set<String> oldTagServiceNames = new HashSet(tagServiceNamesInZones.remove(xObj.getId()));
-        Set<String> updatedTagServiceNames = ret.getServices().keySet();
+        Set<String> updatedTagServiceNames = new HashSet<String>(ret.getTagServices());
 
         Collection<String> newServiceNames = CollectionUtils.subtract(updatedServiceNames, oldServiceNames);
         Collection<String> deletedServiceNames = CollectionUtils.subtract(oldServiceNames, updatedServiceNames);
