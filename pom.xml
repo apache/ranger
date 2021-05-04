@@ -154,7 +154,7 @@
         <kafka.version>2.4.0</kafka.version>
         <kerby.version>1.0.0</kerby.version>
         <knox.gateway.version>1.2.0</knox.gateway.version>
-        <kylin.version>2.6.4</kylin.version>
+        <kylin.version>2.6.6</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
@@ -169,7 +169,7 @@
         <noggit.version>0.8</noggit.version>
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
-        <trino.version>354</trino.version>
+        <trino.version>355</trino.version>
         <poi.version>4.1.2</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
@@ -179,7 +179,7 @@
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.25</slf4j-api.version>
-        <solr.version>7.7.1</solr.version>
+        <solr.version>8.8.2</solr.version>
         <spring-ldap-core.version>2.3.3.RELEASE</spring-ldap-core.version>
         <springframework.security.version>4.2.17.RELEASE</springframework.security.version>
         <springframework.test.version>4.3.27.RELEASE</springframework.test.version>
