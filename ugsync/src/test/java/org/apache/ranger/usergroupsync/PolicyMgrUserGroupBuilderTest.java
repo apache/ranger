@@ -30,6 +30,8 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
         private Set<String> allGroups;
         private Set<String> allUsers;
         private Map<String, Set<String>> groupUsers;
+        private Set<String> invalidGroups;
+        private Set<String> invalidUsers;
 
         public PolicyMgrUserGroupBuilderTest() {
                 super();
@@ -40,6 +42,8 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
                 allGroups = new HashSet<>();
                 allUsers = new HashSet<>();
                 groupUsers = new HashMap<>();
+                invalidGroups = new HashSet<>();
+                invalidUsers = new HashSet<>();
         }
 
         public int getTotalUsers() {
@@ -57,6 +61,14 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
 
         public Set<String> getAllUsers() {
                 return allUsers;
+        }
+
+        public int getTotalInvalidGroups() {
+                return invalidGroups.size();
+        }
+
+        public int getTotalInvalidUsers() {
+                return invalidUsers.size();
         }
 
         public int getGroupsWithNoUsers() {
@@ -77,11 +89,19 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
 
                 for (String userdn : sourceUsers.keySet()) {
                         //System.out.println("Username: " + sourceUsers.get(userdn).get("original_name"));
-                        allUsers.add(userNameTransform(sourceUsers.get(userdn).get("original_name")));
+                        String username = userNameTransform(sourceUsers.get(userdn).get("original_name"));
+                        allUsers.add(username);
+                        if (!isValidString(username)) {
+                                invalidUsers.add(username);
+                        }
                 }
                 for (String groupdn : sourceGroups.keySet()) {
                         //System.out.println("Groupname: " + sourceGroups.get(groupdn).get("original_name"));
-                        allGroups.add(groupNameTransform(sourceGroups.get(groupdn).get("original_name")));
+                        String groupname = groupNameTransform(sourceGroups.get(groupdn).get("original_name"));
+                        allGroups.add(groupname);
+                        if (!isValidString(groupname)) {
+                                invalidGroups.add(groupname);
+                        }
                 }
                 groupUsers = sourceGroupUsers;
                 //System.out.println("Username: " + user + " and associated groups: " + groups);

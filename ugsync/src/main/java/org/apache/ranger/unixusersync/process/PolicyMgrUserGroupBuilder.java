@@ -602,35 +602,38 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			String groupName = groupNameMap.get(groupDN);
 			if (StringUtils.isEmpty(groupName)) {
 				groupName = groupNameTransform(newGroupAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
-				if (!isValidString(groupName)) {
-					LOG.warn("Ignoring invalid group " + groupName + " Full name = " + groupDN);
-					continue;
-				}
-				groupNameMap.put(groupDN, groupName);
 			}
-			if (!groupCache.containsKey(groupName)) {
-				XGroupInfo newGroup = addXGroupInfo(groupName, newGroupAttrs, newGroupAttrsStr);
-				deltaGroups.put(groupName, newGroup);
-				noOfNewGroups++;
+			if (!isValidString(groupName)) {
+				LOG.warn("Ignoring invalid group " + groupName + " Full name = " + groupDN);
 			} else {
-				XGroupInfo oldGroup = groupCache.get(groupName);
-				Map<String, String> oldGroupAttrs = oldGroup.getOtherAttrsMap();
-				String oldGroupDN = oldGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
-				//LOG.info("DN from source = " + groupDN + " saved DN = " + oldGroupDN);
-				//LOG.info("OldGroupAttr = " + oldGroupAttrs + " newGroupAttrs = " + newGroupAttrs);
-				if (StringUtils.equalsIgnoreCase(groupDN, oldGroupDN)
-						&& StringUtils.equalsIgnoreCase(oldGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
-						&& StringUtils.equalsIgnoreCase(oldGroupAttrs.get(UgsyncCommonConstants.LDAP_URL), newGroupAttrs.get(UgsyncCommonConstants.LDAP_URL))) {
-					String oldGroupAttrsStr = gson.toJson(oldGroupAttrs);
-					if(!StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)) {
-						oldGroup.setOtherAttributes(newGroupAttrsStr);
-						oldGroup.setOtherAttrsMap(newGroupAttrs);
-						deltaGroups.put(groupName, oldGroup);
-						noOfModifiedGroups++;
-					}
+				if (!groupCache.containsKey(groupName)) {
+					XGroupInfo newGroup = addXGroupInfo(groupName, newGroupAttrs, newGroupAttrsStr);
+					deltaGroups.put(groupName, newGroup);
+					noOfNewGroups++;
+					groupNameMap.put(groupDN, groupName);
 				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Skipping to update " + groupName + " as same group name with different DN already exists");
+					XGroupInfo oldGroup = groupCache.get(groupName);
+					String oldGroupAttrsStr = oldGroup.getOtherAttributes();
+					if (!StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)) {
+						Map<String, String> oldGroupAttrs = oldGroup.getOtherAttrsMap();
+						String oldGroupDN = oldGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
+						if (StringUtils.equalsIgnoreCase(groupDN, oldGroupDN)
+								&& (StringUtils.isEmpty(oldGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
+								|| StringUtils.equalsIgnoreCase(oldGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE),
+								newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE)))) {
+							oldGroup.setOtherAttributes(newGroupAttrsStr);
+							oldGroup.setOtherAttrsMap(newGroupAttrs);
+							deltaGroups.put(groupName, oldGroup);
+							noOfModifiedGroups++;
+							groupNameMap.put(groupDN, groupName);
+						} else {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Skipping to update " + groupName + " as same group name with different DN or sync source already exists");
+								LOG.debug("old group DN = " + oldGroupDN + " and new group DN = " + groupDN);
+							}
+						}
+					} else {
+						groupNameMap.put(groupDN, groupName);
 					}
 				}
 			}
@@ -654,35 +657,39 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			String userName = userNameMap.get(userDN);
 			if (StringUtils.isEmpty(userName)) {
 				userName = userNameTransform(newUserAttrs.get(UgsyncCommonConstants.ORIGINAL_NAME).trim());
-				if (!isValidString(userName)) {
-					LOG.warn("Ignoring invalid user " + userName + " Full name = " + userDN);
-					continue;
-				}
-				userNameMap.put(userDN, userName);
 			}
-
-			if (!userCache.containsKey(userName)) {
-
-				XUserInfo newUser = addXUserInfo(userName, newUserAttrs, newUserAttrsStr);
-				deltaUsers.put(userName, newUser);
-				noOfNewUsers++;
+			if (!isValidString(userName)) {
+				LOG.warn("Ignoring invalid user " + userName + " Full name = " + userDN);
 			} else {
-				XUserInfo oldUser = userCache.get(userName);
-				Map<String, String> oldUserAttrs = oldUser.getOtherAttrsMap();
-				String oldUserDN = oldUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
-				if (StringUtils.equalsIgnoreCase(userDN, oldUserDN)
-						&& StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
-						&& StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.LDAP_URL), newUserAttrs.get(UgsyncCommonConstants.LDAP_URL))) {
-					String oldUserAttrsStr = gson.toJson(oldUserAttrs);
-					if( !StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)) {
-						oldUser.setOtherAttributes(newUserAttrsStr);
-						oldUser.setOtherAttrsMap(newUserAttrs);
-						deltaUsers.put(userName, oldUser);
-						noOfModifiedUsers++;
-					}
+				if (!userCache.containsKey(userName)) {
+
+					XUserInfo newUser = addXUserInfo(userName, newUserAttrs, newUserAttrsStr);
+					deltaUsers.put(userName, newUser);
+					noOfNewUsers++;
+					userNameMap.put(userDN, userName);
 				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Skipping to update " + userName + " as same username with different DN already exists");
+					XUserInfo oldUser = userCache.get(userName);
+					String oldUserAttrsStr = oldUser.getOtherAttributes();
+					if (!StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)) {
+						Map<String, String> oldUserAttrs = oldUser.getOtherAttrsMap();
+						String oldUserDN = oldUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
+						if (StringUtils.equalsIgnoreCase(userDN, oldUserDN)
+								&& (StringUtils.isEmpty(oldUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
+								|| StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE),
+								newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE)))) {
+							oldUser.setOtherAttributes(newUserAttrsStr);
+							oldUser.setOtherAttrsMap(newUserAttrs);
+							deltaUsers.put(userName, oldUser);
+							noOfModifiedUsers++;
+							userNameMap.put(userDN, userName);
+						} else {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Skipping to update " + userName + " as same username with different DN or sync source already exists");
+								LOG.debug("old user DN = " + oldUserDN + " and new user DN = " + userDN);
+							}
+						}
+					} else {
+						userNameMap.put(userDN, userName);
 					}
 				}
 			}
@@ -1589,7 +1596,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		return groupName;
 	}
 
-	private boolean isValidString(final String name) {
+	protected boolean isValidString(final String name) {
 		if (StringUtils.isBlank(name)) {
 			return false;
 		}
@@ -1826,5 +1833,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 
 		return ret;
+	}
+
+	//Only for testing purpose
+	protected void setUserSyncNameValidationEnabled(boolean isNameValidationEnabled) {
+		config.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, "isNameValidationEnabled");
+		this.isUserSyncNameValidationEnabled = config.isUserSyncNameValidationEnabled();
 	}
 }

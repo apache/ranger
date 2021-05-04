@@ -20,6 +20,7 @@
  package org.apache.ranger.ugsyncutil.model;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -28,7 +29,7 @@ public class XUserInfo {
 	private String name;
 	private String 	description;
 	private String otherAttributes;
-	private Map<String, String> otherAttrsMap;
+	private Map<String, String> otherAttrsMap = new HashMap<>();
 	private String userSource;
 	private String status;
 	private String isVisible;
@@ -109,7 +110,9 @@ public class XUserInfo {
 	}
 
 	public void setOtherAttrsMap(Map<String, String> otherAttrsMap) {
-		this.otherAttrsMap = otherAttrsMap;
+		if (otherAttrsMap != null) {
+			this.otherAttrsMap = otherAttrsMap;
+		}
 	}
 
 	public String getOtherAttributes() {
