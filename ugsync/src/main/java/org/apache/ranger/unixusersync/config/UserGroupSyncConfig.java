@@ -273,7 +273,7 @@ public class UserGroupSyncConfig  {
 	private static final boolean DEFAULT_UGSYNC_DELETES_ENABLED = false;
 	private static final String  UGSYNC_DELETES_FREQUENCY = "ranger.usersync.deletes.frequency";
 	private static final long    DEFAULT_UGSYNC_DELETES_FREQUENCY = 10L; // After every 10 sync cycles
-	private static final String UGSYNC_NAME_VALIDATION_ENABLED = "ranger.usersync.name.validation.enabled";
+	public static final String UGSYNC_NAME_VALIDATION_ENABLED = "ranger.usersync.name.validation.enabled";
 	private static final boolean DEFAULT_UGSYNC_NAME_VALIDATION_ENABLED = false;
 
     private Properties prop = new Properties();

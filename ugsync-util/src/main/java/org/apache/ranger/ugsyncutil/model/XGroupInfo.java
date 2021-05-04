@@ -19,6 +19,7 @@
 
  package org.apache.ranger.ugsyncutil.model;
 
+import java.util.HashMap;
 import java.util.Map;
 
 public class XGroupInfo {
@@ -30,7 +31,7 @@ public class XGroupInfo {
 	private String isVisible;
 	private String groupSource;
 	private String otherAttributes;
-	private Map<String, String> otherAttrsMap;
+	private Map<String, String> otherAttrsMap = new HashMap<>();
 	public String getId() {
 		return id;
 	}
@@ -77,7 +78,9 @@ public class XGroupInfo {
 	}
 
 	public void setOtherAttrsMap(Map<String, String> otherAttrsMap) {
-		this.otherAttrsMap = otherAttrsMap;
+		if (otherAttrsMap != null) {
+			this.otherAttrsMap = otherAttrsMap;
+		}
 	}
 
 	public String getOtherAttributes() {
