@@ -337,13 +337,6 @@ public class buildks {
         	}
         	if(valueOption==null || !"-value".equalsIgnoreCase(valueOption.trim()))
         	{
-        		System.out.println("Invalid value option switch in credential creation command!!");
-        		System.out.println("Expected:'-value' Found:'"+valueOption+"'");
-				displaySyntax("create", storeType);
-        		return false;
-        	}
-        	if(valueOption==null || !"-value".equalsIgnoreCase(valueOption.trim()))
-        	{
         		System.out.println("Invalid value option in credential creation command!!");
         		System.out.println("Expected:'-value' Found:'"+valueOption+"'");
 				displaySyntax("create", storeType);
