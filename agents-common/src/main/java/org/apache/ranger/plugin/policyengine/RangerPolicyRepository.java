@@ -1473,10 +1473,7 @@ public class RangerPolicyRepository {
             switch (changeType) {
                 case RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE:
                     if (delta.getPolicy() == null) {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Could not find policy for policy-id:[" + policyId + "]");
-                        }
-
+                        LOG.warn("Could not find policy for policy-id:[" + policyId + "]");
                         continue;
                     }
                     evaluator = getPolicyEvaluator(policyId);
