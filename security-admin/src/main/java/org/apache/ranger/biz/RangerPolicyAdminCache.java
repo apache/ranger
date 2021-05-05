@@ -125,7 +125,7 @@ public class RangerPolicyAdminCache {
 					ret = addPolicyAdmin(policies, roles, options);
 				}
 			} else {
-				LOG.warn("Provided policies are internally inconsistent!! [" + policies + "]. Please check code that computes policy-deltas! Keeping old policy-engine!");
+				LOG.warn("Provided policies do not require policy change !! [" + policies + "]. Keeping old policy-engine!");
 				ret = null;
 			}
 

@@ -150,18 +150,16 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                             break;
                         }
                     } else {
-                        LOG.warn("Policy:[" + policyId + "] not found - log-record - id:[" + logRecordId + "], PolicyChangeType:[" + policyChangeType + "]");
                         if (policyChangeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE || policyChangeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
-                            LOG.warn("Ignoring POLICY_CREATE or POLICY_UPDATE type change for policy-id:[" + policyId + "] as it was not found.. probably already deleted");
-                            continue;
-                        } else {
-                            // policyChangeType is DELETE
-                            policy = new RangerPolicy();
-                            policy.setId(policyId);
-                            policy.setServiceType(serviceType);
-                            policy.setPolicyType((Integer) log[POLICY_CHANGE_LOG_RECORD_POLICY_TYPE_COLUMN_NUMBER]);
-                            policy.setZoneName((String) log[POLICY_CHANGE_LOG_RECORD_ZONE_NAME_COLUMN_NUMBER]);
+                            LOG.warn((policyChangeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE ? "POLICY_CREATE" : "POLICY_UPDATE") + " type change for policy-id:[" + policyId + "], log-id:[" + logRecordId + "] was not found.. probably already deleted");
+                            // Create a placeholder delta with a dummy policy as the created/updated policy cannot be found - If there is a subsequent POLICY_DELETE, this delta will be cleaned-up in ServiceDBStore.compressDeltas()
                         }
+                        // Create a placeholder delta with a dummy policy
+                        policy = new RangerPolicy();
+                        policy.setId(policyId);
+                        policy.setServiceType(serviceType);
+                        policy.setPolicyType((Integer) log[POLICY_CHANGE_LOG_RECORD_POLICY_TYPE_COLUMN_NUMBER]);
+                        policy.setZoneName((String) log[POLICY_CHANGE_LOG_RECORD_ZONE_NAME_COLUMN_NUMBER]);
                     }
 
                     ret.add(new RangerPolicyDelta(logRecordId, policyChangeType, policiesVersion, policy));

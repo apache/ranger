@@ -305,7 +305,9 @@ public class RangerBasePlugin {
 				}
 
 			} else {
-				LOG.warn("Returning without saving policies to cache. Leaving current policy engine as-is");
+				LOG.warn("Leaving current policy engine as-is");
+				LOG.warn("Policies are not saved to cache. policyVersion in the policy-cache may be different than in Ranger-admin, even though the policies are the same!");
+				LOG.warn("Ranger-PolicyVersion:[" + (policies != null ? policies.getPolicyVersion() : -1L) + "], Cached-PolicyVersion:[" + (this.policyEngine != null ? this.policyEngine.getPolicyVersion() : -1L) + "]");
 			}
 
 		} catch (Exception e) {
