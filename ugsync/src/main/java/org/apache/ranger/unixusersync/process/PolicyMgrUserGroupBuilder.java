@@ -1836,8 +1836,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	}
 
 	//Only for testing purpose
-	protected void setUserSyncNameValidationEnabled(boolean isNameValidationEnabled) {
-		config.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, "isNameValidationEnabled");
+	protected void setUserSyncNameValidationEnabled(String isNameValidationEnabled) {
+		config.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, isNameValidationEnabled);
 		this.isUserSyncNameValidationEnabled = config.isUserSyncNameValidationEnabled();
 	}
 }

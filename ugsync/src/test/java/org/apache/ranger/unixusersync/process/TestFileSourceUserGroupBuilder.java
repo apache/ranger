@@ -183,7 +183,7 @@ public class TestFileSourceUserGroupBuilder {
 
         PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
         sink.init();
-        sink.setUserSyncNameValidationEnabled(true);
+        sink.setUserSyncNameValidationEnabled("true");
         fileBuilder.updateSink(sink);
 
         assertEquals(2, sink.getTotalInvalidGroups());
