@@ -1039,9 +1039,6 @@
   <!-- The update.autoCreateFields property can be turned to false to disable schemaless mode -->
   <updateRequestProcessorChain name="add-unknown-fields-to-the-schema" default="${update.autoCreateFields:true}"
            processor="uuid,remove-blank,field-name-mutating,parse-boolean,parse-long,parse-double,parse-date,add-schema-fields">
-    <processor class="solr.LogUpdateProcessorFactory"/>
-    <processor class="solr.DistributedUpdateProcessorFactory"/>
-    <processor class="solr.RunUpdateProcessorFactory"/>
     <processor class="solr.DefaultValueUpdateProcessorFactory">
     	<str name="fieldName">_ttl_</str>
     	<str name="value">+90DAYS</str>
@@ -1054,6 +1051,9 @@
     <processor class="solr.FirstFieldValueUpdateProcessorFactory">
     	<str name="fieldName">_expire_at_</str>
     </processor>
+    <processor class="solr.LogUpdateProcessorFactory"/>
+    <processor class="solr.DistributedUpdateProcessorFactory"/>
+    <processor class="solr.RunUpdateProcessorFactory"/>
   </updateRequestProcessorChain>
 
   <!-- Deduplication
