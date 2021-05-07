@@ -453,7 +453,9 @@ public class RangerClient {
                 }
                 return null;
             });
-        } else clientResponse = invokeREST(api,params,request);
+        } else {
+            clientResponse = invokeREST(api,params,request);
+        }
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("method={}, path={}, contentType={}, accept={}, httpStatus={}",
