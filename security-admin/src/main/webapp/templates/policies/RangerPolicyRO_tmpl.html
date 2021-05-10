@@ -62,9 +62,11 @@
                         {{tt 'lbl.policyName'}}
                     </td>
                     <td>
-                        <span class="badge badge-dark pull-right">{{PolicyDetails.policyPriority}}</span>
-                        <span class="badge badge-dark pull-right m-r-xs">{{PolicyDetails.isEnabled}}</span>
-                        {{PolicyDetails.name}}
+                        <span>{{PolicyDetails.name}}</span>
+                        <div class="text-right">
+                            <span class="badge badge-dark">{{PolicyDetails.policyPriority}}</span>
+                            <span class="badge badge-dark m-r-xs">{{PolicyDetails.isEnabled}}</span>
+                        </div>
                     </td>
                 </tr>
                 <tr>
