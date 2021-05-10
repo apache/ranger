@@ -244,6 +244,7 @@ define(function(require) {
 
             onView: function(e) {
                 var that = this;
+                XAUtil.blockUI();
                 var policyId = $(e.currentTarget).data('id');
                 var rangerPolicy = new RangerPolicy({
                     id: policyId
@@ -251,6 +252,7 @@ define(function(require) {
                 rangerPolicy.fetch({
                     cache: false,
                 }).done(function() {
+                    XAUtil.blockUI('unblock');
                     var policyVersionList = rangerPolicy.fetchVersions();
                     var view = new RangerPolicyRO({
                         model: rangerPolicy,
