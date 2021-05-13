@@ -118,6 +118,16 @@ public class SampleClient {
         LOG.info("New Service created successfully {}", gsonBuilder.toJson(createdService));
 
         /*
+        All Services
+         */
+        List<RangerService> services = rangerClient.findServices(filter);
+        String allServiceNames = "";
+        for (RangerService svc: services) {
+            allServiceNames = allServiceNames.concat(svc.getName() + " ");
+        }
+        LOG.info("List of Services : {}", allServiceNames);
+
+        /*
         Policy Management
          */
 
@@ -189,6 +199,11 @@ public class SampleClient {
          */
         List<RangerRole> allRoles = rangerClient.findRoles(filter);
         LOG.info("List of Roles {}", gsonBuilder.toJson(allRoles));
+        String allRoleNames = "";
+        for (RangerRole role: allRoles) {
+            allRoleNames = allRoleNames.concat(role.getName() + " ");
+        }
+        LOG.info("List of Roles : {}", allRoleNames);
 
         /*
         Delete a role in Ranger
