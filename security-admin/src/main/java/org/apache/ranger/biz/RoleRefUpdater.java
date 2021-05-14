@@ -48,6 +48,7 @@ import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXGroup;
+import org.apache.ranger.view.VXUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -118,21 +119,15 @@ public class RoleRefUpdater {
 					if (createNonExistUserGroup && xaBizUtil.checkAdminAccess()) {
 						LOG.warn("User specified in role does not exist in ranger admin, creating new user, User = "
 								+ roleUser);
-						// Schedule another transaction and let this transaction complete (and commit) successfully!
+
 						final RoleUserCreateContext roleUserCreateContext = new RoleUserCreateContext(roleUser, roleId);
-						Runnable CreateAndAssociateUser = new Runnable () {
+						Runnable createAndAssociateUser = new Runnable() {
 							@Override
 							public void run() {
-								Runnable realTask = new Runnable () {
-									@Override
-									public void run() {
-										doCreateAndAssociateRoleUser(roleUserCreateContext);
-									}
-								};
-								transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
+								doCreateAndAssociateRoleUser(roleUserCreateContext);
 							}
-                        };
-						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(CreateAndAssociateUser);
+						};
+						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndAssociateUser);
 
 					} else {
 						throw restErrorUtil.createRESTException("user with name: " + roleUser + " does not exist ",
@@ -165,21 +160,15 @@ public class RoleRefUpdater {
 						vxGroupNew.setName(roleGroup);
 						vxGroupNew.setDescription(roleGroup);
 						vxGroupNew.setGroupSource(RangerCommonEnums.GROUP_EXTERNAL);
-						// Schedule another transaction and let this transaction complete (and commit) successfully!
+
 						final RoleGroupCreateContext roleGroupCreateContext = new RoleGroupCreateContext(vxGroupNew, roleId);
 
 						Runnable createAndAssociateRoleGroup = new Runnable() {
-                            @Override
-                            public void run() {
-                                Runnable realTask = new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        doCreateAndAssociateRoleGroup(roleGroupCreateContext);
-                                    }
-                                };
-                                transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
-                            }
-                        };
+							@Override
+							public void run() {
+								doCreateAndAssociateRoleGroup(roleGroupCreateContext);
+							}
+						};
 						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndAssociateRoleGroup);
 
 					} else {
@@ -284,34 +273,25 @@ public class RoleRefUpdater {
 		if (xGroup != null) {
 			groupRoleAssociation(context.roleId, xGroup.getId(), context.group.getName());
 		} else {
-			try {
-				// Create group
-				VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(context.group);
-				if (null != vXGroup) {
+			// Create group
+			VXGroup vXGroup = xGroupService.createXGroupWithOutLogin(context.group);
+			if (null != vXGroup) {
+				try {
 					List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup, "create");
 					xaBizUtil.createTrxLog(trxLogList);
+				} catch (Throwable t) {
+					// Ignore
 				}
-			} catch (Exception exception) {
-				LOG.error("Failed to create Group or to associate group and role, RoleGroupContext:[" + context + "]",
-						exception);
-			} finally {
-				// This transaction may still fail at commit time because another transaction
-				// has already created the group
-				// So, associate the group to role in a different transaction
-				Runnable associateRoleGroup = new Runnable() {
-                    @Override
-					public void run() {
-						Runnable realTask = new Runnable() {
-							@Override
-							public void run() {
-								doAssociateRoleGroup(context);
-							}
-						};
-						transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
-					}
-                };
-				rangerTransactionSynchronizationAdapter.executeOnTransactionCompletion(associateRoleGroup);
+				doAssociateRoleGroup(context);
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Group:[" + context.group + "] creation failed!");
+					throw new RuntimeException("Group:[" + context.group + "] creation failed!");
+				}
 			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<=== doCreateAndAssociateRoleGroup()");
 		}
 	}
 
@@ -329,6 +309,9 @@ public class RoleRefUpdater {
 			} catch (Exception exception) {
 				LOG.error("Failed to associate group and role, RoleGroupContext:[" + context + "]", exception);
 			}
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<=== doAssociateRoleGroup()");
 		}
 	}
 
@@ -371,32 +354,20 @@ public class RoleRefUpdater {
 		if (xUser != null) {
 			userRoleAssociation(context.roleId, xUser.getId(), context.userName);
 		} else {
-			try {
-				// Create External user
-				xUserMgr.createServiceConfigUser(context.userName);
-			} catch (Exception exception) {
-				LOG.error("Failed to create User or to associate user and role, RoleUserContext:[" + context + "]",
-						exception);
-			} finally {
-				// This transaction may still fail at commit time because another transaction
-				// has already created the user
-				// So, associate the user to role in a different transaction
-				Runnable associateRoleUser = new Runnable() {
-					@Override
-					public void run() {
-						Runnable realTask = new Runnable() {
-							@Override
-							public void run() {
-								doAssociateRoleUser(context);
-							}
-						};
-						transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
-					}
-                };
-				rangerTransactionSynchronizationAdapter.executeOnTransactionCompletion(associateRoleUser);
+			// Create External user
+			VXUser vXUser = xUserMgr.createServiceConfigUser(context.userName);
+			if (vXUser != null) {
+				doAssociateRoleUser(context);
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("ServiceConfigUser:[" + context.userName + "] creation failed!");
+				}
+				throw new RuntimeException("ServiceConfigUser:[" + context.userName + "] creation failed!");
 			}
 		}
-
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<=== doCreateAndAssociateRoleUser()");
+		}
 	}
 
 	void doAssociateRoleUser(final RoleUserCreateContext context) {
@@ -413,6 +384,9 @@ public class RoleRefUpdater {
 			} catch (Exception exception) {
 				LOG.error("Failed to associate user and role, RoleUserContext:[" + context + "]", exception);
 			}
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<=== doAssociateRoleUser()");
 		}
 	}
 
