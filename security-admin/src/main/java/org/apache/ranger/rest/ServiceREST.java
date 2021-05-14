@@ -760,7 +760,7 @@ public class ServiceREST {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Tag service may need to be created and linked with this service:[" + service.getName() + "]");
 				}
-				scheduleCreateOrGetTagService(service);
+				createOrGetTagService(service);
 			}
 
 			ret = svcStore.createService(service);
@@ -3934,9 +3934,9 @@ public class ServiceREST {
 		}
 	}
 
-	private void scheduleCreateOrGetTagService(RangerService resourceService) {
+	private void createOrGetTagService(RangerService resourceService) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> scheduleCreateOrGetTagService(resourceService=" + resourceService.getName() + ")");
+			LOG.debug("==> createOrGetTagService(resourceService=" + resourceService.getName() + ")");
 		}
 		final boolean isAutoCreateTagService = config.getBoolean("ranger.tagservice.auto.create", true);
 
@@ -3968,13 +3968,7 @@ public class ServiceREST {
 					Runnable createAndLinkTagServiceTask = new Runnable() {
 						@Override
 						public void run() {
-							Runnable realTask = new Runnable() {
-								@Override
-								public void run() {
-									doCreateAndLinkTagService(context);
-								}
-							};
-							transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
+							doCreateAndLinkTagService(context);
 						}
 					};
 
@@ -3986,7 +3980,7 @@ public class ServiceREST {
 			}
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== scheduleCreateOrGetTagService(resourceService=" + resourceService.getName() + ")");
+			LOG.debug("<== createOrGetTagService(resourceService=" + resourceService.getName() + ")");
 		}
 	}
 
@@ -4031,39 +4025,32 @@ public class ServiceREST {
 		}
 
 		if (resourceService != null) {
-
-			RangerService tagService = new RangerService();
-
-			tagService.setName(context.tagServiceName);
-			tagService.setDisplayName(context.tagServiceName);//set DEFAULT display name
-			tagService.setType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
-
-			LOG.info("creating tag-service [" + context.tagServiceName + "]");
-
-			RangerService service;
-
 			try {
-				service = svcStore.createService(tagService);
-				LOG.info("Created tag-service:[" + service.getName() + "]");
+				String tagServiceName = context.tagServiceName;
+
+				RangerService tagService = svcStore.getServiceByName(tagServiceName);
+
+				if (tagService == null) {
+					tagService = new RangerService();
+
+					tagService.setName(context.tagServiceName);
+					tagService.setDisplayName(context.tagServiceName);//set DEFAULT display name
+					tagService.setType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
+
+					LOG.info("creating tag-service [" + context.tagServiceName + "]");
+
+					svcStore.createService(tagService);
+				}
 			} catch (Exception e) {
-				LOG.info("Failed to create tag-service " + context.tagServiceName, e);
+				throw new RuntimeException(e);
 			}
 
 			if (context.isAutoLinkTagService) {
-				Runnable linkTagServiceTask = new Runnable() {
-					@Override
-					public void run() {
-						Runnable realTask = new Runnable() {
-							@Override
-							public void run() {
-								doLinkTagService(context);
-							}
-						};
-						transactionService.scheduleToExecuteInOwnTransaction(realTask, 0L);
-					}
-				};
-				rangerTransactionSynchronizationAdapter.executeOnTransactionCompletion(linkTagServiceTask);
+				doLinkTagService(context);
 			}
+
+		} else {
+			LOG.info("Resource service :[" + context.resourceServiceName + "] not found! Returning without linking tag service!!");
 		}
 
 		if (LOG.isDebugEnabled()) {
