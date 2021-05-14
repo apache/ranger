@@ -280,6 +280,7 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		ldapBuilder.updateSink(sink);
 		assertEquals(1, sink.getTotalUsers());
 		assertEquals(3, sink.getTotalGroups());
+		assertEquals(3, sink.getTotalGroupUsers());
 	}
 
 	@Test
