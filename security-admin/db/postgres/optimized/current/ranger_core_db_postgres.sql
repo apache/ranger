@@ -1476,7 +1476,8 @@ service_type varchar(256) DEFAULT NULL NULL,
 policy_type int DEFAULT NULL NULL,
 zone_name varchar(256) DEFAULT NULL NULL,
 policy_id bigint DEFAULT NULL NULL,
-primary key (id)
+primary key (id),
+CONSTRAINT x_policy_change_log_uk_service_id_policy_version UNIQUE(service_id, policy_version)
 );
 commit;
 
@@ -1584,7 +1585,8 @@ change_type int NOT NULL,
 service_tags_version bigint DEFAULT '0' NOT NULL,
 service_resource_id bigint DEFAULT NULL NULL,
 tag_id bigint DEFAULT NULL NULL,
-primary key (id)
+primary key (id),
+CONSTRAINT x_tag_change_log_uk_service_id_service_tags_version UNIQUE(service_id, service_tags_version)
 );
 commit;
 
@@ -1888,6 +1890,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('049',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('050',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('051',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('052',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

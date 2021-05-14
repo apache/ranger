@@ -3480,7 +3480,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		updatePolicyVersion(service, policyDeltaType, policy, updateServiceInfoRoleVersion);
 	}
 
-	public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, POLICY_AND_TAG_VERSION, ROLE_VERSION }
+	public enum VERSION_TYPE { POLICY_VERSION, TAG_VERSION, ROLE_VERSION }
 
 	private void updatePolicyVersion(RangerService service, Integer policyDeltaType, RangerPolicy policy, boolean updateServiceInfoRoleVersion) throws Exception {
 		if(service == null || service.getId() == null) {
@@ -3543,13 +3543,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 		Date now = new Date();
 
 		if (serviceVersionInfoDbObj != null) {
-			if (versionType == VERSION_TYPE.POLICY_VERSION || versionType == VERSION_TYPE.POLICY_AND_TAG_VERSION) {
+			if (versionType == VERSION_TYPE.POLICY_VERSION) {
 				nextPolicyVersion = getNextVersion(serviceVersionInfoDbObj.getPolicyVersion());
 
 				serviceVersionInfoDbObj.setPolicyVersion(nextPolicyVersion);
 				serviceVersionInfoDbObj.setPolicyUpdateTime(now);
 			}
-			if (versionType == VERSION_TYPE.TAG_VERSION || versionType == VERSION_TYPE.POLICY_AND_TAG_VERSION) {
+			if (versionType == VERSION_TYPE.TAG_VERSION) {
 				serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
 				serviceVersionInfoDbObj.setTagUpdateTime(now);
 			}
@@ -3584,7 +3584,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (service != null) {
-			persistChangeLog(service, versionType, versionType == VERSION_TYPE.TAG_VERSION ? serviceVersionInfoDbObj.getTagVersion() : serviceVersionInfoDbObj.getPolicyVersion(), serviceVersionUpdater);
+			if (versionType == VERSION_TYPE.POLICY_VERSION) {
+				persistChangeLog(service, versionType, serviceVersionInfoDbObj.getPolicyVersion(), serviceVersionUpdater);
+			} else if (versionType == VERSION_TYPE.TAG_VERSION) {
+				persistChangeLog(service, versionType, serviceVersionInfoDbObj.getTagVersion(), serviceVersionUpdater);
+			}
 		}
 	}
 
@@ -4974,11 +4978,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (CollectionUtils.isNotEmpty(allServiceIds)) {
 			for (Long serviceId : allServiceIds) {
 				ServiceVersionUpdater updater = new ServiceVersionUpdater(daoMgr, serviceId, VERSION_TYPE.POLICY_VERSION, null, policyChangeType, null);
-				if (policyChangeType == RangerPolicyDelta.CHANGE_TYPE_RANGER_ADMIN_START) {
-					persistChangeLog(updater);
-				} else {
-					persistVersionChange(updater);
-				}
+				persistVersionChange(updater);
 			}
 		}
 
@@ -4998,11 +4998,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (CollectionUtils.isNotEmpty(allServiceIds)) {
 			for (Long serviceId : allServiceIds) {
 				ServiceVersionUpdater updater = new ServiceVersionUpdater(daoMgr, serviceId, VERSION_TYPE.TAG_VERSION, tagChangeType, null, null);
-				if (tagChangeType == ServiceTags.TagsChangeType.RANGER_ADMIN_START) {
-					persistChangeLog(updater);
-				} else {
-					persistVersionChange(updater);
-				}
+				persistVersionChange(updater);
 			}
 		}
 
