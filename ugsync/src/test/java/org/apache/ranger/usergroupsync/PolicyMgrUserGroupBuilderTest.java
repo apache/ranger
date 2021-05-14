@@ -55,6 +55,14 @@ public class PolicyMgrUserGroupBuilderTest extends PolicyMgrUserGroupBuilder {
                 return allGroups.size();
         }
 
+        public int getTotalGroupUsers() {
+                int totalGroupUsers = 0;
+                for (String group : groupUsers.keySet()) {
+                        totalGroupUsers += groupUsers.get(group).size();
+                }
+                return totalGroupUsers;
+        }
+
         public Set<String> getAllGroups() {
                 return allGroups;
         }

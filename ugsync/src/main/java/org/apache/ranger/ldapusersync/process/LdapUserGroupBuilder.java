@@ -51,6 +51,8 @@ import javax.naming.ldap.PagedResultsResponseControl;
 import javax.naming.ldap.Rdn;
 import javax.naming.ldap.StartTlsRequest;
 import javax.naming.ldap.StartTlsResponse;
+
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
@@ -572,6 +574,19 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						}
 
 						sourceUsers.put(userFullName, userAttrMap);
+						if ((groupUserTable.containsColumn(userFullName) || groupUserTable.containsColumn(userName))) {
+							//Update the username in the groupUserTable with the one from username attribute.
+							Map<String, String> userMap = groupUserTable.column(userFullName);
+							if (MapUtils.isEmpty(userMap)) {
+								userMap = groupUserTable.column(userName);
+							}
+							for (Map.Entry<String, String> entry : userMap.entrySet()) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Updating groupUserTable " + entry.getValue() + " with: " + userName + " for " + entry.getKey());
+								}
+								groupUserTable.put(entry.getKey(), userFullName, userFullName);
+							}
+						}
 						counter++;
 
                         if (counter <= 2000) {
