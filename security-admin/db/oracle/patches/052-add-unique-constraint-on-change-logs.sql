@@ -26,7 +26,7 @@ BEGIN
 	select count(*) into v_count from user_ind_columns where table_name='X_TAG_CHANGE_LOG' and index_name='X_TAG_CHANGE_LOG_UK_SERVICE_ID_SERVICE_TAGS_VERSION';
 	if (v_count = 0) THEN
 		execute immediate 'TRUNCATE TABLE X_TAG_CHANGE_LOG';
-		execute immediate 'CREATE UNIQUE INDEX X_TAG_CHANGE_LOG_UK_SERVICE_ID_SERVICE_TAGS_VERSION ON X_POLICY_CHANGE_LOG(service_id, service_tags_version)';
+		execute immediate 'CREATE UNIQUE INDEX X_TAG_CHANGE_LOG_UK_SERVICE_ID_SERVICE_TAGS_VERSION ON X_TAG_CHANGE_LOG(service_id, service_tags_version)';
 		commit;
 	end if;
 END;/
