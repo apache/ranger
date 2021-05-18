@@ -21,26 +21,23 @@ package org.apache.ranger.services.solr.client;
 
 import java.util.Map;
 
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.commons.lang.StringUtils;
 
 public class ServiceSolrConnectionMgr {
 
+	private static final String SOLR_ZOOKEEPER_QUORUM = "solr.zookeeper.quorum";
+	private static final String SOLR_URL = "solr.url";
+
 	static public ServiceSolrClient getSolrClient(String serviceName,
 			Map<String, String> configs) throws Exception {
-		String url = configs.get("solr.url");
-		if (url != null) {
-			//TODO: Determine whether the instance is SolrCloud
-			boolean isSolrCloud = true;
-			HttpSolrClient.Builder builder = new HttpSolrClient.Builder();
-			builder.withBaseSolrUrl(url);
-			SolrClient solrClient = builder.build();
-			ServiceSolrClient serviceSolrClient = new ServiceSolrClient(
-					solrClient, isSolrCloud, configs);
+		String solr_url = configs.get(SOLR_URL);
+		String zk_url = configs.get(SOLR_ZOOKEEPER_QUORUM);
+		if (solr_url != null || zk_url != null) {
+			final boolean isSolrCloud = StringUtils.isNotEmpty(zk_url);
+			final String url = isSolrCloud ? zk_url : solr_url;
+			ServiceSolrClient serviceSolrClient = new ServiceSolrClient(serviceName, configs, url, isSolrCloud);
 			return serviceSolrClient;
 		}
-		// TODO: Need to add method to create SolrClient using ZooKeeper for
-		// SolrCloud
 		throw new Exception("Required properties are not set for "
 				+ serviceName + ". URL or Zookeeper information not provided.");
 	}
