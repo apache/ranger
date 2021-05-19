@@ -997,9 +997,7 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 		}
 
 		if (result != null) {
-			if(! isAuditEnabled && result.getIsAudited()) {
-				isAuditEnabled = true;
-			}
+			isAuditEnabled = result.getIsAudited();
 
 			if (auditEvent == null) {
 				auditEvent = super.getAuthzEvents(result);
