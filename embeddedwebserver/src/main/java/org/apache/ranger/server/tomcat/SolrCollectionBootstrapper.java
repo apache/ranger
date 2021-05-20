@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -291,6 +293,9 @@ public class SolrCollectionBootstrapper extends Thread {
 						byte[] arrByte = Files.readAllBytes(file.toPath());
 						ByteBuffer byteBuffer = ByteBuffer.wrap(arrByte);
 						Set<String> nodes = solrCloudClient.getClusterStateProvider().getLiveNodes();
+						if (CollectionUtils.isEmpty(nodes)) {
+							throw new Exception("No live SolrServers available");
+						}
 						String baseUrl = null;
 						String[] nodeArr = nodes.toArray(new String[0]);
 						/* getting nodes URL as 'solr_8983', so converting it to 'solr/9893' */
