@@ -20,19 +20,16 @@
 import json
 import logging
 import os
-
-from requests import Session, Response
-
 from apache_ranger.exceptions                 import RangerServiceException
 from apache_ranger.model.ranger_base          import RangerBase
-from apache_ranger.model.ranger_role          import RangerRole
 from apache_ranger.model.ranger_policy        import RangerPolicy
+from apache_ranger.model.ranger_role          import RangerRole
+from apache_ranger.model.ranger_security_zone import RangerSecurityZone
 from apache_ranger.model.ranger_service       import RangerService
 from apache_ranger.model.ranger_service_def   import RangerServiceDef
-from apache_ranger.model.ranger_security_zone import RangerSecurityZone
 from apache_ranger.utils                      import *
-
-
+from requests                                 import Session
+from requests                                 import Response
 
 LOG = logging.getLogger(__name__)
 
@@ -62,11 +59,11 @@ class RangerClient:
 
         return type_coerce(resp, RangerServiceDef)
 
-    def delete_service_def_by_id(self, serviceDefId):
-        self.__call_api(RangerClient.DELETE_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }))
+    def delete_service_def_by_id(self, serviceDefId, params=None):
+        self.__call_api(RangerClient.DELETE_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }), params)
 
-    def delete_service_def(self, serviceDefName):
-        self.__call_api(RangerClient.DELETE_SERVICEDEF_BY_NAME.format_path({ 'name': serviceDefName }))
+    def delete_service_def(self, serviceDefName, params=None):
+        self.__call_api(RangerClient.DELETE_SERVICEDEF_BY_NAME.format_path({ 'name': serviceDefName }), params)
 
     def get_service_def_by_id(self, serviceDefId):
         resp = self.__call_api(RangerClient.GET_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }))
@@ -79,9 +76,6 @@ class RangerClient:
         return type_coerce(resp, RangerServiceDef)
 
     def find_service_defs(self, filter=None):
-        if filter is None:
-            filter = {}
-
         resp = self.__call_api(RangerClient.FIND_SERVICEDEFS, filter)
 
         return type_coerce_list(resp, RangerServiceDef)
@@ -103,13 +97,13 @@ class RangerClient:
 
         return type_coerce(resp, RangerService)
 
-    def update_service_by_id(self, serviceId, service):
-        resp = self.__call_api(RangerClient.UPDATE_SERVICE_BY_ID.format_path({ 'id': serviceId }), request_data=service)
+    def update_service_by_id(self, serviceId, service, params=None):
+        resp = self.__call_api(RangerClient.UPDATE_SERVICE_BY_ID.format_path({ 'id': serviceId }), params, service)
 
         return type_coerce(resp, RangerService)
 
-    def update_service(self, serviceName, service):
-        resp = self.__call_api(RangerClient.UPDATE_SERVICE_BY_NAME.format_path({ 'name': serviceName }), request_data=service)
+    def update_service(self, serviceName, service, params=None):
+        resp = self.__call_api(RangerClient.UPDATE_SERVICE_BY_NAME.format_path({ 'name': serviceName }), params, service)
 
         return type_coerce(resp, RangerService)
 
@@ -120,17 +114,14 @@ class RangerClient:
         self.__call_api(RangerClient.DELETE_SERVICE_BY_NAME.format_path({ 'name': serviceName }))
 
     def find_services(self, filter=None):
-        if filter is None:
-            filter = {}
-
         resp = self.__call_api(RangerClient.FIND_SERVICES, filter)
 
         return type_coerce_list(resp, RangerService)
 
 
     # Policy APIs
-    def create_policy(self, policy):
-        resp = self.__call_api(RangerClient.CREATE_POLICY, request_data=policy)
+    def create_policy(self, policy, params=None):
+        resp = self.__call_api(RangerClient.CREATE_POLICY, params, policy)
 
         return type_coerce(resp, RangerPolicy)
 
@@ -144,8 +135,8 @@ class RangerClient:
 
         return type_coerce(resp, RangerPolicy)
 
-    def get_policies_in_service(self, serviceName):
-        resp = self.__call_api(RangerClient.GET_POLICIES_IN_SERVICE.format_path({ 'serviceName': serviceName }))
+    def get_policies_in_service(self, serviceName, params=None):
+        resp = self.__call_api(RangerClient.GET_POLICIES_IN_SERVICE.format_path({ 'serviceName': serviceName }), params)
 
         return type_coerce_list(resp, RangerPolicy)
 
@@ -159,8 +150,8 @@ class RangerClient:
 
         return type_coerce(resp, RangerPolicy)
 
-    def apply_policy(self, policy):
-        resp = self.__call_api(RangerClient.APPLY_POLICY, request_data=policy)
+    def apply_policy(self, policy, params=None):
+        resp = self.__call_api(RangerClient.APPLY_POLICY, params, policy)
 
         return type_coerce(resp, RangerPolicy)
 
@@ -170,7 +161,7 @@ class RangerClient:
     def delete_policy(self, serviceName, policyName):
         self.__call_api(RangerClient.DELETE_POLICY_BY_NAME, { 'servicename': serviceName, 'policyname': policyName })
 
-    def find_policies(self, filter={}):
+    def find_policies(self, filter=None):
         resp = self.__call_api(RangerClient.FIND_POLICIES, filter)
 
         return type_coerce_list(resp, RangerPolicy)
@@ -208,20 +199,25 @@ class RangerClient:
 
         return type_coerce(resp, RangerSecurityZone)
 
-    def find_security_zones(self, filter={}):
+    def find_security_zones(self, filter=None):
         resp = self.__call_api(RangerClient.FIND_ZONES, filter)
 
         return type_coerce_list(resp, RangerSecurityZone)
 
 
     # Role APIs
-    def create_role(self, serviceName, role):
-        resp = self.__call_api(RangerClient.CREATE_ROLE, { 'serviceName': serviceName }, role)
+    def create_role(self, serviceName, role, params=None):
+        if params is None:
+            params = {}
+
+        params['serviceName'] = serviceName
+
+        resp = self.__call_api(RangerClient.CREATE_ROLE, params, role)
 
         return type_coerce(resp, RangerRole)
 
-    def update_role(self, roleId, role):
-        resp = self.__call_api(RangerClient.UPDATE_ROLE_BY_ID.format_path({ 'id': roleId }), request_data=role)
+    def update_role(self, roleId, role, params=None):
+        resp = self.__call_api(RangerClient.UPDATE_ROLE_BY_ID.format_path({ 'id': roleId }), params, role)
 
         return type_coerce(resp, RangerRole)
 
@@ -246,23 +242,23 @@ class RangerClient:
 
         return resp
 
-    def get_user_roles(self, user):
-        ret = self.__call_api(RangerClient.GET_USER_ROLES.format_path({ 'name': user }))
+    def get_user_roles(self, user, filters=None):
+        ret = self.__call_api(RangerClient.GET_USER_ROLES.format_path({ 'name': user }), filters)
 
         return list(ret) if ret is not None else None
 
-    def find_roles(self, filter={}):
+    def find_roles(self, filter=None):
         resp = self.__call_api(RangerClient.FIND_ROLES, filter)
 
         return type_coerce_list(resp, RangerRole)
 
-    def grant_role(self, serviceName, request):
-        resp = self.__call_api(RangerClient.GRANT_ROLE.format_path({ 'name': serviceName }), request_data=request)
+    def grant_role(self, serviceName, request, params=None):
+        resp = self.__call_api(RangerClient.GRANT_ROLE.format_path({ 'name': serviceName }), params, request)
 
         return type_coerce(resp, RESTResponse)
 
-    def revoke_role(self, serviceName, request):
-        resp = self.__call_api(RangerClient.REVOKE_ROLE.format_path({ 'name': serviceName }), request_data=request)
+    def revoke_role(self, serviceName, request, params=None):
+        resp = self.__call_api(RangerClient.REVOKE_ROLE.format_path({ 'name': serviceName }), params, request)
 
         return type_coerce(resp, RESTResponse)
 
@@ -309,15 +305,15 @@ class RangerClient:
             ret = None
         elif response.status_code == api.expected_status:
             try:
-                if response.content is not None:
+                if response.status_code == HTTPStatus.NO_CONTENT or response.content is None:
+                    ret = None
+                else:
                     if LOG.isEnabledFor(logging.DEBUG):
                         LOG.debug("<== __call_api(%s, %s, %s), result=%s", vars(api), params, request_data, response)
 
                         LOG.debug(response.json())
 
                     ret = response.json()
-                else:
-                    ret = None
             except Exception as e:
                 print(e)
 
