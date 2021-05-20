@@ -4118,7 +4118,9 @@ public class ServiceREST {
 
 		if (StringUtils.isEmpty(ret)) {
 			RangerPolicyAdmin policyAdmin = getPolicyAdmin(serviceName);
-			ret = policyAdmin.getUniquelyMatchedZoneName(grantRevokeRequest);
+			if (policyAdmin != null) {
+				ret = policyAdmin.getUniquelyMatchedZoneName(grantRevokeRequest);
+			}
 		}
 
 		return ret;
