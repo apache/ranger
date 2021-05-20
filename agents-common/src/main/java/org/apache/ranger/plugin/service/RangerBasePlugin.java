@@ -254,8 +254,25 @@ public class RangerBasePlugin {
 				Boolean hasPolicyDeltas = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
 
 				if (hasPolicyDeltas == null) {
-					LOG.warn("Downloaded policies do not require policy change !! [" + policies + "]. Keeping old policy-engine!");
-					isNewEngineNeeded = false;
+					LOG.info("Downloaded policies do not require policy change !! [" + policies + "]");
+
+					if (this.policyEngine == null) {
+
+						LOG.info("There are no material changes, and current policy-engine is null! Creating a policy-engine with default service policies");
+						ServicePolicies defaultSvcPolicies = getDefaultSvcPolicies();
+
+						if (defaultSvcPolicies == null) {
+							LOG.error("Could not get default Service Policies. Keeping old policy-engine! This is a FATAL error as the old policy-engine is null!");
+							isNewEngineNeeded = false;
+						} else {
+							defaultSvcPolicies.setPolicyVersion(policies.getPolicyVersion());
+							policies = defaultSvcPolicies;
+							isNewEngineNeeded = true;
+						}
+					} else {
+						LOG.info("Keeping old policy-engine!");
+						isNewEngineNeeded = false;
+					}
 				} else {
 					if (hasPolicyDeltas.equals(Boolean.TRUE)) {
 						// Rebuild policies from deltas
@@ -271,7 +288,6 @@ public class RangerBasePlugin {
 							isNewEngineNeeded = false;
 						}
 					} else {
-						usePolicyDeltas = false;
 						if (policies.getPolicies() == null) {
 							policies.setPolicies(new ArrayList<>());
 						}
