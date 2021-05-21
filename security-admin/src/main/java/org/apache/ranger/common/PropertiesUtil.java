@@ -321,7 +321,8 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	keySet = props.keySet();
 	for (Object key : keySet) {
 		String keyStr = key.toString();
-		logger.debug("PropertiesUtil:[" + keyStr + "][" + props.get(keyStr) + "]");
+                logger.debug("PropertiesUtil:[" + keyStr + "][" +
+                    (keyStr.contains("password") || keyStr.contains("keystore.pass")   ? "********]" : props.get(keyStr)) + "]");
 	}
 
 	super.processProperties(beanFactory, props);
