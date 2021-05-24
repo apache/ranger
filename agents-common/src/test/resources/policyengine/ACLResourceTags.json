@@ -32,6 +32,12 @@
         "attributeDefs": [ { "name": "activation_date", "type": "datetime" } ],
         "id": 5,
         "guid": "tagdefinition-restricted-final-guid"
+      },
+      "6": {
+        "name": "DATA_QUALITY",
+        "attributeDefs": [ { "name": "score", "type": "float" } ],
+        "id": 5,
+        "guid": "tagdefinition-data_quality-guid"
       }
     },
     "tags": {
@@ -70,6 +76,18 @@
         "attributes": { "expiry": "2026/06/15" },
         "id": 6,
         "guid": "tag-pii-final-6-guid"
+      },
+      "7": {
+        "type": "DATA_QUALITY",
+        "attributes": { "score": "0.8" },
+        "id": 7,
+        "guid": "tag-data_quality-7-guid"
+      },
+      "8": {
+        "type": "RESTRICTED",
+        "validityPeriods": [{"startTime": "2018/01/12 14:32:00", "endTime": "2030/01/12 14:32:00"}],
+        "id": 8,
+        "guid": "tag-restricted-8-guid"
       }
     },
     "serviceResources": [
@@ -188,7 +206,27 @@
         },
         "id": 12,
         "guid": "finance.sales.invoice_id-guid"
-     }
+     },
+     {
+        "serviceName": "cl1_hive",
+        "resourceElements": {
+          "database": { "values": [ "employee" ] },
+          "table": { "values": [ "personal" ] },
+          "column": { "values": [ "mrn" ] }
+        },
+        "id": 13,
+        "guid": "employee.personal.mrn-guid"
+     },
+      {
+        "serviceName": "cl1_hive",
+        "resourceElements": {
+          "database": { "values": [ "finance" ] },
+          "table": { "values": [ "forecast" ] },
+          "column": { "values": [ "revenue" ] }
+        },
+        "id": 14,
+        "guid": "finance.forecast.revenue-guid"
+      }
     ],
     "resourceToTagIds": {
       "1": [ 1 ],
@@ -201,7 +239,9 @@
       "9": [ 5 ],
       "10": [ 6 ],
       "11": [ 6 ],
-      "12": [ 5 ]
+      "12": [ 5 ],
+      "13": [ 7 ],
+      "14": [ 8 ]
     }
 }
 
