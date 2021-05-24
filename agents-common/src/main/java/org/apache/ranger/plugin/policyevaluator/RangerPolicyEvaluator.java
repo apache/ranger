@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -32,18 +33,25 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+
 
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS;
@@ -155,12 +163,12 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 				return true;
 			}
 		}
-		for (RangerPolicy.RangerDataMaskPolicyItem policyItem : policy.getDataMaskPolicyItems()) {
+		for (RangerDataMaskPolicyItem policyItem : policy.getDataMaskPolicyItems()) {
 			if (hasRoles(policyItem)) {
 				return true;
 			}
 		}
-		for (RangerPolicy.RangerRowFilterPolicyItem policyItem : policy.getRowFilterPolicyItems()) {
+		for (RangerRowFilterPolicyItem policyItem : policy.getRowFilterPolicyItems()) {
 			if (hasRoles(policyItem)) {
 				return true;
 			}
@@ -223,14 +231,16 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	}
 
 	class PolicyACLSummary {
-		private final Map<String, Map<String, AccessResult>> usersAccessInfo = new HashMap<>();
+		private final Map<String, Map<String, AccessResult>> usersAccessInfo  = new HashMap<>();
 		private final Map<String, Map<String, AccessResult>> groupsAccessInfo = new HashMap<>();
 		private final Map<String, Map<String, AccessResult>> rolesAccessInfo  = new HashMap<>();
+		private final List<RowFilterResult>                  rowFilters       = new ArrayList<>();
+		private final List<DataMaskResult>                   dataMasks        = new ArrayList<>();
 
 		private enum AccessorType { USER, GROUP, ROLE }
 
 		public static class AccessResult {
-			private int result;
+			private       int     result;
 			private final boolean hasSeenDeny;
 
 			public AccessResult(int result) {
@@ -238,8 +248,8 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 			}
 
 			public AccessResult(int result, boolean hasSeenDeny) {
+				this.result      = result;
 				this.hasSeenDeny = hasSeenDeny;
-				setResult(result);
 			}
 
 			public int getResult() {
@@ -253,6 +263,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 			public boolean getHasSeenDeny() {
 				return hasSeenDeny;
 			}
+
 			@Override
 			public String toString() {
 				if (result == RangerPolicyEvaluator.ACCESS_ALLOWED)
@@ -279,6 +290,10 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 		public Map<String, Map<String, AccessResult>> getRolesAccessInfo() {
 			return rolesAccessInfo;
 		}
+
+		public List<RowFilterResult> getRowFilters() { return rowFilters; }
+
+		public List<DataMaskResult> getDataMasks() { return dataMasks; }
 
 		void processPolicyItem(RangerPolicyItem policyItem, int policyItemType, boolean isConditional) {
 			final Integer result;
@@ -353,6 +368,52 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 					}
 				}
 			}
+		}
+
+		void processRowFilterPolicyItem(RangerRowFilterPolicyItem policyItem) {
+			Set<String> users       = new HashSet<>(policyItem.getUsers());
+			Set<String> groups      = new HashSet<>(policyItem.getGroups());
+			Set<String> roles       = new HashSet<>(policyItem.getRoles());
+			Set<String> accessTypes = new HashSet<>();
+
+			policyItem.getAccesses().forEach(accessType -> accessTypes.add(accessType.getType()));
+
+			if (users.contains(RangerPolicyEngine.USER_CURRENT)) { // replace with public group
+				users.remove(RangerPolicyEngine.USER_CURRENT);
+
+				groups.add(RangerPolicyEngine.GROUP_PUBLIC);
+			}
+
+			RowFilterResult filterResult = new RowFilterResult(users, groups, roles, accessTypes, policyItem.getRowFilterInfo());
+
+			if (RangerPolicyEvaluator.hasContextSensitiveSpecification(policyItem)) {
+				filterResult.setIsConditional(true);
+			}
+
+			rowFilters.add(filterResult);
+		}
+
+		void processDataMaskPolicyItem(RangerDataMaskPolicyItem policyItem) {
+			Set<String> users       = new HashSet<>(policyItem.getUsers());
+			Set<String> groups      = new HashSet<>(policyItem.getGroups());
+			Set<String> roles       = new HashSet<>(policyItem.getRoles());
+			Set<String> accessTypes = new HashSet<>();
+
+			policyItem.getAccesses().forEach(accessType -> accessTypes.add(accessType.getType()));
+
+			if (users.contains(RangerPolicyEngine.USER_CURRENT)) { // replace with public group
+				users.remove(RangerPolicyEngine.USER_CURRENT);
+
+				groups.add(RangerPolicyEngine.GROUP_PUBLIC);
+			}
+
+			DataMaskResult dataMaskResult = new DataMaskResult(users, groups, roles, accessTypes, policyItem.getDataMaskInfo());
+
+			if (RangerPolicyEvaluator.hasContextSensitiveSpecification(policyItem)) {
+				dataMaskResult.setIsConditional(true);
+			}
+
+			dataMasks.add(dataMaskResult);
 		}
 
 		void finalizeAcls(final boolean isDenyAllElse, final Set<String> allAccessTypeNames) {

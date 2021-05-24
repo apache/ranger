@@ -1588,8 +1588,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		@Override
 		public boolean equals(Object obj) {
-			if(! super.equals(obj))
-				return false;
 			if (this == obj)
 				return true;
 			if (obj == null)
@@ -1671,8 +1669,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		@Override
 		public boolean equals(Object obj) {
-			if(! super.equals(obj))
-				return false;
 			if (this == obj)
 				return true;
 			if (obj == null)

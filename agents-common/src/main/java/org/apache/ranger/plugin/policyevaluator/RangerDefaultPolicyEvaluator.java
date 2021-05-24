@@ -571,6 +571,15 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 					ret.processPolicyItem(policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS, false);
 				}
 			}
+
+			for (RangerRowFilterPolicyItem policyItem : getPolicy().getRowFilterPolicyItems()) {
+				ret.processRowFilterPolicyItem(policyItem);
+			}
+
+			for (RangerDataMaskPolicyItem policyItem : getPolicy().getDataMaskPolicyItems()) {
+				ret.processDataMaskPolicyItem(policyItem);
+			}
+
 			final boolean isDenyAllElse = Boolean.TRUE.equals(getPolicy().getIsDenyAllElse());
 
 			final Set<String> allAccessTypeNames;
