@@ -28,11 +28,11 @@ import java.util.List;
 public class RangerPluginCapability {
 
     /*
-    	- tag-policies
+    - tag-policies
 	- allowExceptions/deny/denyExceptions
 	- masking/row-filtering
 	- Macros - like ${USER}
-       	- tag-based masking/row-filtering
+	- tag-based masking/row-filtering
 	- audit mode support
 	- service-def changes - isValidLeaf
 	- validity periods
@@ -42,6 +42,11 @@ public class RangerPluginCapability {
 	- deny AllElse policies
 	- roles
 	- role download timer
+	- Audit-excluded-users
+	- Chained plugins
+	- Super-user permission
+	- UserStore download
+	- Audit-policies
      */
     private final long pluginCapabilities;
     private static final String baseRangerCapabilities = computeBaseCapabilities();
@@ -59,9 +64,14 @@ public class RangerPluginCapability {
         RANGER_PLUGIN_CAPABILITY_POLICY_LEVEL_CONDITION("Policy-level Condition"),
         RANGER_PLUGIN_CAPABILITY_DENY_ALL_ELSE_POLICY("Deny-all-else Policy"),
         RANGER_PLUGIN_CAPABILITY_ROLE("Role"),
-        RANGER_PLUGIN_CAPABILITY_ROLE_DOWNLOAD_TIMER("Role Timer");
+        RANGER_PLUGIN_CAPABILITY_ROLE_DOWNLOAD_TIMER("Role Timer"),
+        RANGER_PLUGIN_CAPABILITY_AUDIT_EXCLUDED_USERS("Audit-Excluded Users"),
+        RANGER_PLUGIN_CAPABILITY_CHAINED_PLUGINS("Chained Plugins"),
+        RANGER_PLUGIN_CAPABILITY_SUPERUSER_PERMISSIONS("Super-user Permissions"),
+        RANGER_PLUGIN_CAPABILITY_USERSTORE_DOWNLOAD("UserStore Download"),
+        RANGER_PLUGIN_CAPABILITY_AUDIT_POLICY("Audit Policy");
 
-        private String name;
+        private final String name;
         RangerPluginFeature(String name) {
             this.name = name;
         }
@@ -160,7 +170,12 @@ public class RangerPluginCapability {
                 , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_POLICY_LEVEL_CONDITION.getName()
                 , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_DENY_ALL_ELSE_POLICY.getName()
                 , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_ROLE.getName()
-                , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_ROLE_DOWNLOAD_TIMER.getName());
+                , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_ROLE_DOWNLOAD_TIMER.getName()
+                , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_AUDIT_EXCLUDED_USERS.getName()
+                , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_CHAINED_PLUGINS.getName()
+                , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_SUPERUSER_PERMISSIONS.getName()
+                , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_USERSTORE_DOWNLOAD.getName()
+                , RangerPluginFeature.RANGER_PLUGIN_CAPABILITY_AUDIT_POLICY.getName());
 
         return Long.toHexString(new RangerPluginCapability(baseCapabilities).getPluginCapabilities());
     }
