@@ -31,6 +31,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -317,7 +318,9 @@ public class RangerResourceACLs {
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class DataMaskResult {
+	public static class DataMaskResult implements Serializable {
+		private static final long serialVersionUID = 1L;
+
 		private final Set<String>                  users;
 		private final Set<String>                  groups;
 		private final Set<String>                  roles;
@@ -432,7 +435,9 @@ public class RangerResourceACLs {
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	public static class RowFilterResult {
+	public static class RowFilterResult implements Serializable {
+		private static final long serialVersionUID = 1L;
+
 		private final Set<String>                   users;
 		private final Set<String>                   groups;
 		private final Set<String>                   roles;
