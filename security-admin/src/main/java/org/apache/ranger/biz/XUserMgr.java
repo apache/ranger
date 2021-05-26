@@ -3028,7 +3028,7 @@ public class XUserMgr extends XUserMgrBase {
 		} else {
 			vXPortalUser.setPublicScreenName(vXUser.getName());
 		}
-		vXPortalUser.setUserSource(oldUserProfile.getUserSource());
+		vXPortalUser.setUserSource(vXUser.getUserSource());
 
 		String hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		String password = vXUser.getPassword();
@@ -3038,7 +3038,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		else if(oldUserProfile != null && oldUserProfile.getUserSource() == RangerCommonEnums.USER_EXTERNAL && password != null){
 			vXPortalUser.setPassword(oldUserProfile.getPassword());
-			logger.debug("User is trrying to change external user password which we are not allowing it to change");
+			logger.debug("User is trying to change external user password which we are not allowing it to change");
 		}
 		else if(password != null){
 			validatePassword(vXUser);

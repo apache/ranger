@@ -624,11 +624,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					String oldGroupAttrsStr = oldGroup.getOtherAttributes();
 					if (!StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)) {
 						Map<String, String> oldGroupAttrs = oldGroup.getOtherAttrsMap();
-						String oldGroupDN = oldGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
-						if (StringUtils.equalsIgnoreCase(groupDN, oldGroupDN)
+						String oldGroupDN = oldGroupAttrs != null ? oldGroupAttrs.get(UgsyncCommonConstants.FULL_NAME) : groupName;
+						if (oldGroupAttrs == null || (StringUtils.equalsIgnoreCase(groupDN, oldGroupDN)
 								&& (StringUtils.isEmpty(oldGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
 								|| StringUtils.equalsIgnoreCase(oldGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE),
-								newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE)))) {
+								newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))))) {
 							oldGroup.setOtherAttributes(newGroupAttrsStr);
 							oldGroup.setOtherAttrsMap(newGroupAttrs);
 							deltaGroups.put(groupName, oldGroup);
@@ -680,13 +680,14 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					String oldUserAttrsStr = oldUser.getOtherAttributes();
 					if (!StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)) {
 						Map<String, String> oldUserAttrs = oldUser.getOtherAttrsMap();
-						String oldUserDN = oldUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
-						if (StringUtils.equalsIgnoreCase(userDN, oldUserDN)
+						String oldUserDN = oldUserAttrs != null ? oldUserAttrs.get(UgsyncCommonConstants.FULL_NAME) : userName;
+						if (oldUserAttrs == null || (StringUtils.equalsIgnoreCase(userDN, oldUserDN)
 								&& (StringUtils.isEmpty(oldUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))
 								|| StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE),
-								newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE)))) {
+								newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))))) {
 							oldUser.setOtherAttributes(newUserAttrsStr);
 							oldUser.setOtherAttrsMap(newUserAttrs);
+							oldUser.setUserSource(SOURCE_EXTERNAL);
 							deltaUsers.put(userName, oldUser);
 							noOfModifiedUsers++;
 							userNameMap.put(userDN, userName);
@@ -1640,8 +1641,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					&& StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
 					&& StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
 				if (groupInfo.getIsVisible() != ISHIDDEN) {
-					groupInfo.setIsVisible(ISHIDDEN);
-					deletedGroups.put(groupInfo.getName(), groupInfo);
+				groupInfo.setIsVisible(ISHIDDEN);
+				deletedGroups.put(groupInfo.getName(), groupInfo);
 				} else {
 					LOG.info("group " + groupInfo.getName() + " already marked for delete ");
 				}
@@ -1761,8 +1762,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					&& StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
 					&& StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
 				if (userInfo.getIsVisible() != ISHIDDEN) {
-					userInfo.setIsVisible(ISHIDDEN);
-					deletedUsers.put(userInfo.getName(), userInfo);
+				userInfo.setIsVisible(ISHIDDEN);
+				deletedUsers.put(userInfo.getName(), userInfo);
 				} else {
 					LOG.info("user " + userInfo.getName() + " already marked for delete ");
 				}
