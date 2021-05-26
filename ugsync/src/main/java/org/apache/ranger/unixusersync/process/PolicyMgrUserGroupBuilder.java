@@ -125,6 +125,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	private int noOfNewGroups;
 	private int noOfModifiedUsers;
 	private int noOfModifiedGroups;
+	private int noOfDeletedUsers = 0;
+	private int noOfDeletedGroups = 0;
 
 	private boolean userNameCaseConversionFlag;
 	private boolean groupNameCaseConversionFlag;
@@ -246,14 +248,20 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			case "LDAP/AD":
 				ugsyncAuditInfo.getLdapSyncSourceInfo().setTotalUsersSynced(noOfCachedUsers);
 				ugsyncAuditInfo.getLdapSyncSourceInfo().setTotalGroupsSynced(noOfCachedGroups);
+				ugsyncAuditInfo.getLdapSyncSourceInfo().setTotalUsersDeleted(noOfDeletedUsers);
+				ugsyncAuditInfo.getLdapSyncSourceInfo().setTotalGroupsDeleted(noOfDeletedGroups);
 				break;
 			case "Unix":
 				ugsyncAuditInfo.getUnixSyncSourceInfo().setTotalUsersSynced(noOfCachedUsers);
 				ugsyncAuditInfo.getUnixSyncSourceInfo().setTotalGroupsSynced(noOfCachedGroups);
+				ugsyncAuditInfo.getUnixSyncSourceInfo().setTotalUsersDeleted(noOfDeletedUsers);
+				ugsyncAuditInfo.getUnixSyncSourceInfo().setTotalGroupsDeleted(noOfDeletedGroups);
 				break;
 			case "File" :
 				ugsyncAuditInfo.getFileSyncSourceInfo().setTotalUsersSynced(noOfCachedUsers);
 				ugsyncAuditInfo.getFileSyncSourceInfo().setTotalGroupsSynced(noOfCachedGroups);
+				ugsyncAuditInfo.getFileSyncSourceInfo().setTotalUsersDeleted(noOfDeletedUsers);
+				ugsyncAuditInfo.getFileSyncSourceInfo().setTotalGroupsDeleted(noOfDeletedGroups);
 				break;
 			default:
 				break;
@@ -1615,6 +1623,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				throw new Exception(msg);
 			}
 		}
+		LOG.info("No. of groups marked for delete = " + deletedGroups.size());
+		noOfDeletedGroups += deletedGroups.size();
 	}
 
 	private void computeDeletedGroups(Map<String, Map<String, String>> sourceGroups) {
@@ -1629,8 +1639,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			if (StringUtils.isNotEmpty(groupDN) && !sourceGroups.containsKey(groupDN)
 					&& StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
 					&& StringUtils.equalsIgnoreCase(groupOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
-				groupInfo.setIsVisible(ISHIDDEN);
-				deletedGroups.put(groupInfo.getName(), groupInfo);
+				if (groupInfo.getIsVisible() != ISHIDDEN) {
+					groupInfo.setIsVisible(ISHIDDEN);
+					deletedGroups.put(groupInfo.getName(), groupInfo);
+				} else {
+					LOG.info("group " + groupInfo.getName() + " already marked for delete ");
+				}
 			}
 		}
 		if (LOG.isDebugEnabled()) {
@@ -1730,6 +1744,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				throw new Exception(msg);
 			}
 		}
+		LOG.info("No. of users marked for delete = " + deletedUsers.size());
+		noOfDeletedUsers += deletedUsers.size();
 	}
 
 	private void computeDeletedUsers(Map<String, Map<String, String>> sourceUsers) {
@@ -1744,8 +1760,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			if (StringUtils.isNotEmpty(userDN) && !sourceUsers.containsKey(userDN)
 					&& StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.SYNC_SOURCE), currentSyncSource)
 					&& StringUtils.equalsIgnoreCase(userOtherAttrs.get(UgsyncCommonConstants.LDAP_URL), ldapUrl)) {
-				userInfo.setIsVisible(ISHIDDEN);
-				deletedUsers.put(userInfo.getName(), userInfo);
+				if (userInfo.getIsVisible() != ISHIDDEN) {
+					userInfo.setIsVisible(ISHIDDEN);
+					deletedUsers.put(userInfo.getName(), userInfo);
+				} else {
+					LOG.info("user " + userInfo.getName() + " already marked for delete ");
+				}
 			}
 		}
 		if (LOG.isDebugEnabled()) {

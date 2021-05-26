@@ -49,6 +49,8 @@ public class VXLdapSyncSourceInfo implements java.io.Serializable  {
 	private String groupHierarchyLevel;
 	private long totalUsersSynced;
 	private long totalGroupsSynced;
+	private long totalUsersDeleted;
+	private long totalGroupsDeleted;
 
 	public VXLdapSyncSourceInfo() {
 	}
@@ -133,6 +135,22 @@ public class VXLdapSyncSourceInfo implements java.io.Serializable  {
 		this.userSearchEnabled = userSearchEnabled;
 	}
 
+	public long getTotalUsersDeleted() {
+		return totalUsersDeleted;
+	}
+
+	public void setTotalUsersDeleted(long totalUsersDeleted) {
+		this.totalUsersDeleted = totalUsersDeleted;
+	}
+
+	public long getTotalGroupsDeleted() {
+		return totalGroupsDeleted;
+	}
+
+	public void setTotalGroupsDeleted(long totalGroupsDeleted) {
+		this.totalGroupsDeleted = totalGroupsDeleted;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -151,6 +169,8 @@ public class VXLdapSyncSourceInfo implements java.io.Serializable  {
 		sb.append("\", \"groupHierarchyLevel\":\"").append(groupHierarchyLevel);
 		sb.append("\", \"totalUsersSynced\":\"").append(totalUsersSynced);
 		sb.append("\", \"totalGroupsSynced\":\"").append(totalGroupsSynced);
+		sb.append("\", \"totalUsersDeleted\":\"").append(totalUsersDeleted);
+		sb.append("\", \"totalGroupsDeleted\":\"").append(totalGroupsDeleted);
 		sb.append("\"}");
 		return sb;
 	}

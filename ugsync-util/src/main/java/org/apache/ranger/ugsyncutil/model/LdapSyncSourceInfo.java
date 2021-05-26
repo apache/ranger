@@ -31,6 +31,8 @@ public class LdapSyncSourceInfo {
 
 	private long totalUsersSynced;
 	private long totalGroupsSynced;
+	private long totalUsersDeleted;
+	private long totalGroupsDeleted;
 
 	public String getLdapUrl() {
 		return ldapUrl;
@@ -112,6 +114,22 @@ public class LdapSyncSourceInfo {
 		this.userSearchEnabled = userSearchEnabled;
 	}
 
+	public long getTotalUsersDeleted() {
+		return totalUsersDeleted;
+	}
+
+	public void setTotalUsersDeleted(long totalUsersDeleted) {
+		this.totalUsersDeleted = totalUsersDeleted;
+	}
+
+	public long getTotalGroupsDeleted() {
+		return totalGroupsDeleted;
+	}
+
+	public void setTotalGroupsDeleted(long totalGroupsDeleted) {
+		this.totalGroupsDeleted = totalGroupsDeleted;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -130,6 +148,8 @@ public class LdapSyncSourceInfo {
 		sb.append(", groupHierarchyLevel= ").append(groupHierarchyLevel);
 		sb.append(", totalUsersSynced= ").append(totalUsersSynced);
 		sb.append(", totalGroupsSynced= ").append(totalGroupsSynced);
+		sb.append(", totalUsersDeleted= ").append(totalUsersDeleted);
+		sb.append(", totalGroupsDeleted= ").append(totalGroupsDeleted);
 		sb.append("]");
 		return sb;
 	}

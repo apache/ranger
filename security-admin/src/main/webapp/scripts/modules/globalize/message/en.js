@@ -267,6 +267,8 @@ define(function(require) {
                 editValidityPeriod              : ' Edit Validity Period',
                 totalUsersSynced                : 'Total number of users synced',
                 totalGroupsSynced               : 'Total number of groups synced',
+                totalUsersDeleted               : 'Total number of users marked for delete',
+                totalGroupsDeleted              : 'Total number of groups marked for delete',
                 addPolicyCondition              : 'Add Policy Condition',
                 editPolicyCondition             : 'Edit Policy Condition',
                 agentHost	                    :'Agent Host Name',
