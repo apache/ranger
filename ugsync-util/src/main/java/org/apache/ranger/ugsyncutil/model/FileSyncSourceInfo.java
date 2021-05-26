@@ -25,6 +25,8 @@ public class FileSyncSourceInfo {
 	private String lastModified;
 	private long totalUsersSynced;
 	private long totalGroupsSynced;
+	private long totalUsersDeleted;
+	private long totalGroupsDeleted;
 
 	public String getFileName() {
 		return fileName;
@@ -66,6 +68,22 @@ public class FileSyncSourceInfo {
 		this.totalGroupsSynced = totalGroupsSynced;
 	}
 
+	public long getTotalUsersDeleted() {
+		return totalUsersDeleted;
+	}
+
+	public void setTotalUsersDeleted(long totalUsersDeleted) {
+		this.totalUsersDeleted = totalUsersDeleted;
+	}
+
+	public long getTotalGroupsDeleted() {
+		return totalGroupsDeleted;
+	}
+
+	public void setTotalGroupsDeleted(long totalGroupsDeleted) {
+		this.totalGroupsDeleted = totalGroupsDeleted;
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -79,6 +97,8 @@ public class FileSyncSourceInfo {
 		sb.append(", lastModified= ").append(lastModified);
 		sb.append(", totalUsersSynced= ").append(totalUsersSynced);
 		sb.append(", totalGroupsSynced= ").append(totalGroupsSynced);
+		sb.append(", totalUsersDeleted= ").append(totalUsersDeleted);
+		sb.append(", totalGroupsDeleted= ").append(totalGroupsDeleted);
 		sb.append("]");
 		return sb;
 	}
