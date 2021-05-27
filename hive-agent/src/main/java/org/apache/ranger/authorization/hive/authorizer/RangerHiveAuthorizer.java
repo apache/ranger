@@ -67,6 +67,7 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveResourceACLs;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -864,7 +865,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             }
 
             if (shouldCheckAccess) {
-              if (!isURIAccessAllowed(user, permission, path, fs)) {
+              if (!isURIAccessAllowed(user, permission, path, fs, RangerHivePlugin.URIPermissionCoarseCheck)) {
                 throw new HiveAccessControlException(
                     String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
                         permission.name(), path));
@@ -962,7 +963,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             }
 
             if (shouldCheckAccess) {
-              if (!isURIAccessAllowed(user, permission, path, fs)) {
+              if (!isURIAccessAllowed(user, permission, path, fs, RangerHivePlugin.URIPermissionCoarseCheck)) {
                 throw new HiveAccessControlException(
                     String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
                         permission.name(), path));
@@ -2090,41 +2091,46 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	}
 
   private boolean isURIAccessAllowed(String userName, FsAction action, Path filePath, FileSystem fs) {
-        boolean ret = false;
+		return isURIAccessAllowed(userName, action, filePath, fs, false);
+	}
 
-        if(action == FsAction.NONE) {
-            ret = true;
-        } else {
-            try {
-                FileStatus[] filestat = fs.globStatus(filePath);
+	private boolean isURIAccessAllowed(String userName, FsAction action, Path filePath, FileSystem fs, boolean coarseCheck) {
+		boolean ret = false;
+		boolean recurse = !coarseCheck;
 
-                if(filestat != null && filestat.length > 0) {
-                    boolean isDenied = false;
+		if(action == FsAction.NONE) {
+			ret = true;
+		} else {
+			try {
+				FileStatus[] filestat = fs.globStatus(filePath);
 
-                    for(FileStatus file : filestat) {
-                        if (FileUtils.isOwnerOfFileHierarchy(fs, file, userName) ||
-							FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action)) {
-								continue;
+				if(filestat != null && filestat.length > 0) {
+					boolean isDenied = false;
+
+					for(FileStatus file : filestat) {
+						if (FileUtils.isOwnerOfFileHierarchy(fs, file, userName) ||
+								FileUtils.isActionPermittedForFileHierarchy(fs, file, userName, action, recurse)) {
+							continue;
 						} else {
 							isDenied = true;
 							break;
 						}
-                     }
-                     ret = !isDenied;
-                } else { // if given path does not exist then check for parent
-                    FileStatus file = FileUtils.getPathOrParentThatExists(fs, filePath);
+					}
+					ret = !isDenied;
+				} else { // if given path does not exist then check for parent
+					FileStatus file = FileUtils.getPathOrParentThatExists(fs, filePath);
 
-                    FileUtils.checkFileAccessWithImpersonation(fs, file, action, userName);
-                    ret = true;
-                }
-            } catch(Exception excp) {
+					FileUtils.checkFileAccessWithImpersonation(fs, file, action, userName);
+					ret = true;
+				}
+			} catch(Exception excp) {
 				ret = false;
-                LOG.error("Error getting permissions for " + filePath, excp);
-            }
-        }
+				LOG.error("Error getting permissions for " + filePath, excp);
+			}
+		}
 
-        return ret;
-    }
+		return ret;
+	}
 
 	private boolean isPathInFSScheme(String uri) {
 		// This is to find if HIVE URI operation done is for hdfs,file scheme
@@ -3225,6 +3231,7 @@ class HiveObj {
 }
 
 class RangerHivePlugin extends RangerBasePlugin {
+	public static boolean URIPermissionCoarseCheck = RangerHadoopConstants.HIVE_URI_PERMISSION_COARSE_CHECK_DEFAULT_VALUE;
 	public static boolean UpdateXaPoliciesOnGrantRevoke = RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	public static boolean BlockUpdateIfRowfilterColumnMaskSpecified = RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE;
 	public static String DescribeShowTableAuth = RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP_DEFAULT_VALUE;
@@ -3242,6 +3249,7 @@ class RangerHivePlugin extends RangerBasePlugin {
 	public void init() {
 		super.init();
 
+		RangerHivePlugin.URIPermissionCoarseCheck = getConfig().getBoolean(RangerHadoopConstants.HIVE_URI_PERMISSION_COARSE_CHECK, RangerHadoopConstants.HIVE_URI_PERMISSION_COARSE_CHECK_DEFAULT_VALUE);
 		RangerHivePlugin.UpdateXaPoliciesOnGrantRevoke = getConfig().getBoolean(RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP, RangerHadoopConstants.HIVE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE);
 		RangerHivePlugin.BlockUpdateIfRowfilterColumnMaskSpecified = getConfig().getBoolean(RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_PROP, RangerHadoopConstants.HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE);
 		RangerHivePlugin.DescribeShowTableAuth = getConfig().get(RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP, RangerHadoopConstants.HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP_DEFAULT_VALUE);
