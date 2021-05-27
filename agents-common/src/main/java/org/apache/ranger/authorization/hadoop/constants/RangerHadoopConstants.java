@@ -42,6 +42,8 @@ public class RangerHadoopConstants {
 	public static final boolean HIVE_BLOCK_UPDATE_IF_ROWFILTER_COLUMNMASK_SPECIFIED_DEFAULT_VALUE = true;
 	public static final String  HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP	= "xasecure.hive.describetable.showcolumns.authorization.option";
 	public static final String  HIVE_DESCRIBE_TABLE_SHOW_COLUMNS_AUTH_OPTION_PROP_DEFAULT_VALUE	= "NONE";
+	public static final String  HIVE_URI_PERMISSION_COARSE_CHECK = "xasecure.hive.uri.permission.coarse.check";
+	public static final boolean HIVE_URI_PERMISSION_COARSE_CHECK_DEFAULT_VALUE = false;
 
 	public static final String  HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_PROP 	     = "xasecure.hbase.update.xapolicies.on.grant.revoke";
 	public static final boolean HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE = true;

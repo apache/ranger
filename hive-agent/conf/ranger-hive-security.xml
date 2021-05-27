@@ -86,4 +86,12 @@
 			RangerRestClient read Timeout in Milli Seconds
 		</description>
 	</property>
+
+	<property>
+		<name>xasecure.hive.uri.permission.coarse.check</name>
+		<value>false</value>
+		<description>
+			Skip recursive permission check for URIs.
+		</description>
+	</property>
 </configuration>
