@@ -118,14 +118,16 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
         final boolean isParentTransactionCommitted = status == STATUS_COMMITTED;
 
         if (isParentTransactionCommitted) {
-            // Run tasks scheduled to run after transaction is successfully committed
-            runRunnables(RUNNABLES_AFTER_COMMIT.get(), true);
+            List<Runnable> runnablesAfterCommit = RUNNABLES_AFTER_COMMIT.get();
             RUNNABLES_AFTER_COMMIT.remove();
+            // Run tasks scheduled to run after transaction is successfully committed
+            runRunnables(runnablesAfterCommit, true);
         }
 
-        // Run other tasks scheduled to run after transaction completes
-        runRunnables(RUNNABLES.get(), false);
+        List<Runnable> runnables = RUNNABLES.get();
         RUNNABLES.remove();
+        // Run other tasks scheduled to run after transaction completes
+        runRunnables(runnables, false);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerTransactionSynchronizationAdapter.afterCompletion(status=" + (status == STATUS_COMMITTED ? "COMMITTED" : "ROLLED_BACK") + ")");
