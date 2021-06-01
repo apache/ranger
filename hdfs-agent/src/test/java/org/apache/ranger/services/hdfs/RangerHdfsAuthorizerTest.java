@@ -197,6 +197,10 @@ public class RangerHdfsAuthorizerTest {
                         "                <name>hdfs.version</name>\n" +
                         "                <value>hdfs_version_3.0</value>\n" +
                         "        </property>\n" +
+                        "        <property>\n" +
+                        "                <name>xasecure.add-hadoop-authorization</name>\n" +
+                        "                <value>true</value>\n" +
+                        "        </property>\n" +
                         "</configuration>\n");
             }
 
@@ -206,7 +210,7 @@ public class RangerHdfsAuthorizerTest {
             Assert.fail("Cannot create hdfs-version-site file:[" + exception.getMessage() + "]");
         }
 
-        AccessControlEnforcer accessControlEnforcer = Mockito.mock(AccessControlEnforcer.class);
+        AccessControlEnforcer accessControlEnforcer = null;
         rangerControlEnforcer = authorizer.getExternalAccessControlEnforcer(accessControlEnforcer);
     }
 

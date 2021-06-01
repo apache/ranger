@@ -36,6 +36,7 @@ import org.apache.hadoop.security.authorize.AccessControlList;
 import org.apache.hadoop.yarn.security.*;
 import org.apache.hadoop.yarn.security.PrivilegedEntity.EntityType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -86,9 +87,10 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 			}
 		}
 
-		this.yarnAuthEnabled = yarnPlugin.getConfig().getBoolean(RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_DEFAULT);
-		this.yarnModuleName  = yarnPlugin.getConfig().get(RangerHadoopConstants.AUDITLOG_YARN_MODULE_ACL_NAME_PROP , RangerHadoopConstants.DEFAULT_YARN_MODULE_ACL_NAME);
-
+		RangerPluginConfig    pluginConfig = yarnPlugin.getConfig();
+		this.yarnAuthEnabled               = pluginConfig.getBoolean(RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_PROP, RangerHadoopConstants.RANGER_ADD_YARN_PERMISSION_DEFAULT);
+		this.yarnModuleName                = pluginConfig.get(RangerHadoopConstants.AUDITLOG_YARN_MODULE_ACL_NAME_PROP, RangerHadoopConstants.DEFAULT_YARN_MODULE_ACL_NAME);
+		pluginConfig.setIsFallbackSupported(this.yarnAuthEnabled);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerYarnAuthorizer.init()");

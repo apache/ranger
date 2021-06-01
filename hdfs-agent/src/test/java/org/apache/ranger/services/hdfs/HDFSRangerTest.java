@@ -34,10 +34,9 @@ import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.fs.permission.FsAction;
 import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.ipc.RemoteException;
+import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
-import org.apache.ranger.authorization.hadoop.exceptions.RangerAccessControlException;
 import org.junit.Assert;
 
 /**
@@ -142,9 +141,9 @@ public class HDFSRangerTest {
                 try {
                     fs.append(file);
                     Assert.fail("Failure expected on an incorrect permission");
-                } catch (RemoteException ex) {
+                } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertTrue(RangerAccessControlException.class.getName().equals(ex.getClassName()));
+                    Assert.assertTrue(AccessControlException.class.getName().equals(ex.getClass().getName()));
                 }
 
                 fs.close();
@@ -224,9 +223,9 @@ public class HDFSRangerTest {
                     RemoteIterator<LocatedFileStatus> iter = fs.listFiles(file.getParent(), false);
                     Assert.assertTrue(iter.hasNext());
                     Assert.fail("Failure expected on an incorrect permission");
-                } catch (RemoteException ex) {
+                } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertTrue(RangerAccessControlException.class.getName().equals(ex.getClassName()));
+                    Assert.assertTrue(AccessControlException.class.getName().equals(ex.getClass().getName()));
                 }
 
                 fs.close();
@@ -310,9 +309,9 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
                     Assert.fail("Failure expected on an incorrect permission");
-                } catch (RemoteException ex) {
+                } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertTrue(RangerAccessControlException.class.getName().equals(ex.getClassName()));
+                    Assert.assertTrue(AccessControlException.class.getName().equals(ex.getClass().getName()));
                 }
 
                 fs.close();
@@ -334,9 +333,9 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
                     Assert.fail("Failure expected on an incorrect permission");
-                } catch (RemoteException ex) {
+                } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertTrue(RangerAccessControlException.class.getName().equals(ex.getClassName()));
+                    Assert.assertTrue(AccessControlException.class.getName().equals(ex.getClass().getName()));
                 }
 
                 fs.close();
@@ -438,9 +437,9 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
                     Assert.fail("Failure expected on an incorrect permission");
-                } catch (RemoteException ex) {
+                } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertTrue(RangerAccessControlException.class.getName().equals(ex.getClassName()));
+                    Assert.assertTrue(AccessControlException.class.getName().equals(ex.getClass().getName()));
                 }
 
                 fs.close();
@@ -477,9 +476,9 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
                     Assert.fail("Failure expected on an incorrect permission");
-                } catch (RemoteException ex) {
+                } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertTrue(RangerAccessControlException.class.getName().equals(ex.getClassName()));
+                    Assert.assertTrue(AccessControlException.class.getName().equals(ex.getClass().getName()));
                 }
 
                 fs.close();
@@ -501,9 +500,9 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
                     Assert.fail("Failure expected on an incorrect permission");
-                } catch (RemoteException ex) {
+                } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertTrue(RangerAccessControlException.class.getName().equals(ex.getClassName()));
+                    Assert.assertTrue(AccessControlException.class.getName().equals(ex.getClass().getName()));
                 }
 
                 fs.close();
@@ -525,9 +524,9 @@ public class HDFSRangerTest {
                 try {
                     fs.open(file);
                     Assert.fail("Failure expected on an incorrect permission");
-                } catch (RemoteException ex) {
+                } catch (AccessControlException ex) {
                     // expected
-                    Assert.assertTrue(RangerAccessControlException.class.getName().equals(ex.getClassName()));
+                    Assert.assertTrue(AccessControlException.class.getName().equals(ex.getClass().getName()));
                 }
 
                 fs.close();

@@ -713,6 +713,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				} else if (isAllowedByTags) {
 					ret.setIsAllowed(true);
 				}
+				if (!ret.getIsAllowed() &&
+						!getIsFallbackSupported()) {
+					ret.setIsAccessDetermined(true);
+				}
 			}
 
 			if (ret.getIsAllowed()) {
@@ -1173,6 +1177,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				resourceACLs.getDataMasks().add(dataMaskResult);
 			}
 		}
+	}
+
+	private boolean getIsFallbackSupported() {
+		return policyEngine.getPluginContext().getConfig().getIsFallbackSupported();
 	}
 
 	private static class ServiceConfig {
