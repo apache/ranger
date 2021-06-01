@@ -33,6 +33,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.http.HttpEntity;
@@ -232,34 +233,34 @@ public class SolrCollectionBootstrapper extends Thread {
 		HttpClientUtil.setHttpClientBuilder(kb);
 	}
 
-        public static Map postDataAndGetResponse(CloudSolrClient cloudClient,
-                      String uri, ByteBuffer bytarr) throws IOException {
-                    HttpPost httpPost = null;
-                    HttpEntity entity;
-                    String response = null;
-                    Map m = null;
-                    try {
-                      httpPost = new HttpPost(uri);
+	public static Map postDataAndGetResponse(CloudSolrClient cloudClient,
+			String uri, ByteBuffer bytarr) throws IOException {
+		HttpPost httpPost = null;
+		HttpEntity entity;
+		String response = null;
+		Map m = null;
+		try {
+			httpPost = new HttpPost(uri);
 
-                      httpPost.setHeader("Content-Type", "application/octet-stream");
+			httpPost.setHeader("Content-Type", "application/octet-stream");
 
-                      httpPost.setEntity(new ByteArrayEntity(bytarr.array(), bytarr
-                          .arrayOffset(), bytarr.limit()));
-                      entity = cloudClient.getLbClient().getHttpClient().execute(httpPost)
-                          .getEntity();
-                      try {
-                        response = EntityUtils.toString(entity, StandardCharsets.UTF_8);
-                        m = (Map) ObjectBuilder.getVal(new JSONParser(
-                            new StringReader(response)));
-                      } catch (JSONParser.ParseException e) {
-                        logger.severe("Error response: " + response);
-                        throw new AssertionError(e);
-                      }
-                    } finally {
-                      httpPost.releaseConnection();
-                    }
-                    return m;
-                  }
+			httpPost.setEntity(new ByteArrayEntity(bytarr.array(), bytarr
+					.arrayOffset(), bytarr.limit()));
+			entity = cloudClient.getLbClient().getHttpClient().execute(httpPost)
+					.getEntity();
+			try {
+				response = EntityUtils.toString(entity, StandardCharsets.UTF_8);
+				m = (Map) ObjectBuilder.getVal(new JSONParser(
+						new StringReader(response)));
+			} catch (JSONParser.ParseException e) {
+				logger.severe("Error response: " + response);
+			}
+		}finally {
+			httpPost.releaseConnection();
+		}
+		return m;
+	}
+
 	private boolean uploadConfiguration() {
 		try {
 			solrCloudClient.connect();
@@ -270,32 +271,39 @@ public class SolrCollectionBootstrapper extends Thread {
 
                 boolean configExists = zkConfigManager.configExists(solr_config_name);
                 if (!configExists) {
-                    logger.info("Config does not exist with name " + solr_config_name);
-                    String zipOfConfigs = null;
-                    String[] files = configSetFolder.list();
-                    for (String file : files) {
-                            if(file != null) {
-                                    if (file.equals("solr_audit_conf.zip")) {
-                                            zipOfConfigs = file;
-                                            break;
-                                    }
-                            }
-                    }
-                    if(zipOfConfigs == null) {
-                            throw new FileNotFoundException("Could Not Find Configs Zip File : "+ getConfigSetFolder());
-                    }
-                    File file = new File(configSetFolder + "/" + zipOfConfigs);
-                    byte[] arrByte = Files.readAllBytes(file.toPath());
-                    ByteBuffer byteBuffer = ByteBuffer.wrap(arrByte);
-                    Set<String> nodes = solrCloudClient.getClusterStateProvider().getLiveNodes();
-                    String baseUrl = null;
-                    String[] nodeArr = nodes.toArray(new String[0]);
-                    /*getting nodes URL as 'solr_8983', so converting it to 'solr/9893'*/
-                    baseUrl = nodeArr[0].replaceAll("_", "/");
-                    String protocol = isSSLEnabled ? "https": "http";
-                    String uploadConfigsUrl = String.format("%s://%s/admin/configs?action=UPLOAD&name=%s", protocol, baseUrl.toString(),solr_config_name);
-                    postDataAndGetResponse(solrCloudClient,uploadConfigsUrl ,byteBuffer);
-					return true;
+					try {
+						logger.info("Config does not exist with name " + solr_config_name);
+						String zipOfConfigs = null;
+						String[] files = configSetFolder.list();
+						for (String file : files) {
+							if (file != null) {
+								if (file.equals("solr_audit_conf.zip")) {
+									zipOfConfigs = file;
+									break;
+								}
+							}
+						}
+						if (zipOfConfigs == null) {
+							throw new FileNotFoundException(
+									"Could Not Find Configs Zip File : " + getConfigSetFolder());
+						}
+						File file = new File(configSetFolder + "/" + zipOfConfigs);
+						byte[] arrByte = Files.readAllBytes(file.toPath());
+						ByteBuffer byteBuffer = ByteBuffer.wrap(arrByte);
+						Set<String> nodes = solrCloudClient.getClusterStateProvider().getLiveNodes();
+						String baseUrl = null;
+						String[] nodeArr = nodes.toArray(new String[0]);
+						/* getting nodes URL as 'solr_8983', so converting it to 'solr/9893' */
+						baseUrl = nodeArr[0].replaceAll("_", "/");
+						String protocol = isSSLEnabled ? "https" : "http";
+						String uploadConfigsUrl = String.format("%s://%s/admin/configs?action=UPLOAD&name=%s", protocol,
+								baseUrl.toString(), solr_config_name);
+						postDataAndGetResponse(solrCloudClient, uploadConfigsUrl, byteBuffer);
+						return true;
+					} catch (Exception ex) {
+						logger.log(Level.SEVERE, "Error while uploading configs : ", ex);
+						return false;
+					}
 				}
                 else {
                 	logger.info("Config already exists with name " + solr_config_name );
@@ -369,13 +377,35 @@ public class SolrCollectionBootstrapper extends Thread {
 								+ createResponse);
 						return false;
 					} else {
-						logger.info("Created collection "
-								+ solr_collection_name + " with config name "
-								+ solr_config_name + " replicas =  "
-								+ no_of_replicas + " Shards = " + no_of_shards
-								+ " max node per shards  = "
-								+ max_node_per_shards);
-						return true;
+						allCollectionList = getCollections();
+						if (allCollectionList != null) {
+							if(allCollectionList.contains(solr_collection_name)){
+								logger.info("Created collection "
+										+ solr_collection_name + " with config name "
+										+ solr_config_name + " replicas =  "
+										+ no_of_replicas + " Shards = " + no_of_shards
+										+ " max node per shards  = "
+										+ max_node_per_shards);
+								return true;
+							} else {
+								logger.severe("Collection does not exist. collectionName="
+										+ solr_collection_name
+										+ " , solr config name = "
+										+ solr_config_name
+										+ " , replicas = "
+										+ no_of_replicas
+										+ ", shards="
+										+ no_of_shards
+										+ " , max node per shards = "
+										+ max_node_per_shards
+										+ ", response="
+										+ createResponse);
+								return false;
+							}
+						} else {
+							logger.severe("Error while getting collection list after creating collection");
+							return false;
+						}
 					}
 				} else {
 					logger.info("Collection already exists with name "
