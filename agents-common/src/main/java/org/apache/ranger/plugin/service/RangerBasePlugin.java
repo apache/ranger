@@ -89,6 +89,7 @@ public class RangerBasePlugin {
 
 		setSuperUsersAndGroups(superUsers, superGroups);
 		setAuditExcludedUsersGroupsRoles(auditExcludeUsers, auditExcludeGroups, auditExcludeRoles);
+		setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
 
 		RangerScriptExecutionContext.init(pluginConfig);
 
@@ -164,6 +165,10 @@ public class RangerBasePlugin {
 
 	public void setSuperUsersAndGroups(Set<String> users, Set<String> groups) {
 		pluginConfig.setSuperUsersGroups(users, groups);
+	}
+
+	public void setIsFallbackSupported(boolean isFallbackSupported) {
+		pluginConfig.setIsFallbackSupported(isFallbackSupported);
 	}
 
 	public RangerServiceDef getServiceDef() {

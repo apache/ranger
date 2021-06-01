@@ -240,7 +240,7 @@
             "/tmp/tmpdir4", "/tmp/tmpdir5"
           ],
           "isExcludes": false,
-          "isRecursive": false
+          "isRecursive": true
         }
       },
       "policyItems": [],
