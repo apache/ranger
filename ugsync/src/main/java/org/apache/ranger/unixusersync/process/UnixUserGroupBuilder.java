@@ -473,6 +473,8 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			for (String user : groupMembers.split(",")) {
 				groupUserTable.put(groupName, user, groupId);
 			}
+		} else {
+			sourceGroupUsers.put(groupName, new HashSet<String>());
 		}
 	}
 
