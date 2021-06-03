@@ -1477,6 +1477,7 @@ ul.tabs > li > a {
 }
 .change-row {
   background-color: #fef7cd;
+  white-space: nowrap;
 }
 .add-text {
   background-color: #e1f2d3;
