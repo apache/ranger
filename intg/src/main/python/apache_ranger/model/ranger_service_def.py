@@ -209,7 +209,7 @@ class RangerRowFilterDef(RangerBase):
         super(RangerRowFilterDef, self).type_coerce_attrs()
 
         self.accessTypes = type_coerce_list(self.accessTypes, RangerAccessTypeDef)
-        self.resources   = type_coerce_list(self.accessTypes, RangerResourceDef)
+        self.resources   = type_coerce_list(self.resources, RangerResourceDef)
 
 
 class RangerEnumElementDef(RangerBase):
