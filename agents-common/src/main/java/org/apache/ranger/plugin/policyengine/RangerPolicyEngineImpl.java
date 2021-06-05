@@ -422,6 +422,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public RangerRoles getRangerRoles() {
+		return policyEngine.getPluginContext().getAuthContext().getRangerRolesUtil().getRoles();
+	}
+
+	@Override
+	public RangerPluginContext getPluginContext() {
+		return policyEngine.getPluginContext();
+	}
+
+	@Override
 	public String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.getUniquelyMatchedZoneName(" + grantRevokeRequest + ")");
@@ -546,6 +556,19 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.releaseResources(isForced=" + isForced + ")");
 		}
+	}
+
+	public boolean isServiceAdmin(String userName) {
+		boolean ret = serviceConfig.isServiceAdmin(userName);
+
+		if (!ret) {
+
+			RangerPluginConfig pluginConfig = policyEngine.getPluginContext().getConfig();
+
+			ret = pluginConfig.isServiceAdmin(userName);
+		}
+
+		return ret;
 	}
 
 	PolicyEngine getPolicyEngine() {
@@ -1189,6 +1212,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		private final Set<String> auditExcludedRoles;
 		private final Set<String> superUsers;
 		private final Set<String> superGroups;
+		private final Set<String> serviceAdmins;
 
 		public ServiceConfig(Map<String, String> svcConfig) {
 			if (svcConfig != null) {
@@ -1197,12 +1221,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				auditExcludedRoles  = StringUtil.toSet(svcConfig.get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_ROLES));
 				superUsers          = StringUtil.toSet(svcConfig.get(RangerPolicyEngine.PLUGIN_SUPER_USERS));
 				superGroups         = StringUtil.toSet(svcConfig.get(RangerPolicyEngine.PLUGIN_SUPER_GROUPS));
+				serviceAdmins       = StringUtil.toSet(svcConfig.get(RangerPolicyEngine.PLUGIN_SERVICE_ADMINS));
 			} else {
 				auditExcludedUsers  = Collections.emptySet();
 				auditExcludedGroups = Collections.emptySet();
 				auditExcludedRoles  = Collections.emptySet();
 				superUsers          = Collections.emptySet();
 				superGroups         = Collections.emptySet();
+				serviceAdmins       = Collections.emptySet();
 			}
 		}
 
@@ -1212,6 +1238,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			auditExcludedRoles  = other == null || CollectionUtils.isEmpty(other.auditExcludedRoles) ? Collections.emptySet() : new HashSet<>(other.auditExcludedRoles);
 			superUsers          = other == null || CollectionUtils.isEmpty(other.superUsers) ? Collections.emptySet() : new HashSet<>(other.superUsers);
 			superGroups         = other == null || CollectionUtils.isEmpty(other.superGroups) ? Collections.emptySet() : new HashSet<>(other.superGroups);
+			serviceAdmins       = other == null || CollectionUtils.isEmpty(other.serviceAdmins) ? Collections.emptySet() : new HashSet<>(other.serviceAdmins);
 		}
 
 		public boolean isAuditExcludedUser(String userName) {
@@ -1232,6 +1259,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		public boolean hasSuperGroup(Set<String> userGroups) {
 			return userGroups != null && userGroups.size() > 0 && superGroups.size() > 0 && CollectionUtils.containsAny(userGroups, superGroups);
+		}
+
+		public boolean isServiceAdmin(String userName) {
+			return serviceAdmins.contains(userName);
 		}
 	}
 }

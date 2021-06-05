@@ -86,10 +86,12 @@ public class RangerBasePlugin {
 		Set<String> auditExcludeUsers  = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".audit.exclude.users"));
 		Set<String> auditExcludeGroups = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".audit.exclude.groups"));
 		Set<String> auditExcludeRoles  = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".audit.exclude.roles"));
+		Set<String> serviceAdmins      = toSet(pluginConfig.get(pluginConfig.getPropertyPrefix() + ".service.admins"));
 
 		setSuperUsersAndGroups(superUsers, superGroups);
 		setAuditExcludedUsersGroupsRoles(auditExcludeUsers, auditExcludeGroups, auditExcludeRoles);
 		setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
+		setServiceAdmins(serviceAdmins);
 
 		RangerScriptExecutionContext.init(pluginConfig);
 
@@ -169,6 +171,10 @@ public class RangerBasePlugin {
 
 	public void setIsFallbackSupported(boolean isFallbackSupported) {
 		pluginConfig.setIsFallbackSupported(isFallbackSupported);
+	}
+
+	public void setServiceAdmins(Set<String> users) {
+		pluginConfig.setServiceAdmins(users);
 	}
 
 	public RangerServiceDef getServiceDef() {
@@ -546,6 +552,75 @@ public class RangerBasePlugin {
 		}
 
 		return null;
+	}
+
+	public RangerRoles getRangerRoles() {
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			return policyEngine.getRangerRoles();
+		}
+
+		return null;
+	}
+
+	public Set<RangerRole> getRangerRoleForPrincipal(String principal, String type) {
+		Set<RangerRole>  		 ret                 = new HashSet<>();
+		Set<RangerRole>			 rangerRoles		 = null;
+		Map<String, Set<String>> roleMapping         = null;
+		RangerRoles		 		 roles 		         = getRangerRoles();
+		if (roles != null) {
+			rangerRoles = roles.getRangerRoles();
+		}
+
+		if (rangerRoles != null) {
+			RangerPluginContext rangerPluginContext = policyEngine.getPluginContext();
+			if (rangerPluginContext != null) {
+				RangerAuthContext rangerAuthContext = rangerPluginContext.getAuthContext();
+				if (rangerAuthContext != null) {
+					RangerRolesUtil rangerRolesUtil = rangerAuthContext.getRangerRolesUtil();
+					if (rangerRolesUtil != null) {
+						switch (type) {
+							case "USER":
+								roleMapping = rangerRolesUtil.getUserRoleMapping();
+								break;
+							case "GROUP":
+								roleMapping = rangerRolesUtil.getGroupRoleMapping();
+								break;
+							case "ROLE":
+								roleMapping = rangerRolesUtil.getRoleRoleMapping();
+								break;
+						}
+					}
+				}
+			}
+			if (roleMapping != null) {
+				Set<String>  principalRoles = roleMapping.get(principal);
+				if (CollectionUtils.isNotEmpty(principalRoles)) {
+					for (String role : principalRoles) {
+						for (RangerRole rangerRole : rangerRoles) {
+							if (rangerRole.getName().equals(role)) {
+								ret.add(rangerRole);
+							}
+						}
+					}
+				}
+			}
+		}
+		return ret;
+	}
+
+	public boolean isServiceAdmin(String userName) {
+		boolean ret = false;
+
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if(policyEngine != null) {
+			RangerPolicyEngineImpl rangerPolicyEngine = (RangerPolicyEngineImpl) policyEngine;
+			ret = rangerPolicyEngine.isServiceAdmin(userName);
+		}
+
+		return ret;
 	}
 
 	public RangerRole createRole(RangerRole request, RangerAccessResultProcessor resultProcessor) throws Exception {
