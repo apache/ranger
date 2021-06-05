@@ -45,6 +45,7 @@ public interface RangerPolicyEngine {
 	String PLUGIN_SUPER_USERS          = "ranger.plugin.super.users";
 	String PLUGIN_SUPER_GROUPS         = "ranger.plugin.super.groups";
 	String PLUGIN_AUDIT_FILTER         = "ranger.plugin.audit.filters";
+	String PLUGIN_SERVICE_ADMINS	   = "ranger.plugin.service.admins";
 
 	String USER_CURRENT   = "{" + RangerAccessRequestUtil.KEY_USER + "}";
 	String RESOURCE_OWNER = "{OWNER}";
@@ -70,6 +71,10 @@ public interface RangerPolicyEngine {
 	RangerResourceACLs getResourceACLs(RangerAccessRequest request);
 
 	Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
+
+	RangerRoles getRangerRoles();
+
+	RangerPluginContext getPluginContext();
 
 	String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest);
 

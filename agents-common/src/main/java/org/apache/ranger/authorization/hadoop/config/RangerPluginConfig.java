@@ -53,6 +53,7 @@ public class RangerPluginConfig extends RangerConfiguration {
     private       Set<String>               auditExcludedRoles  = Collections.emptySet();
     private       Set<String>               superUsers          = Collections.emptySet();
     private       Set<String>               superGroups         = Collections.emptySet();
+    private       Set<String>               serviceAdmins       = Collections.emptySet();
 
 
     public RangerPluginConfig(String serviceType, String serviceName, String appId, String clusterName, String clusterType, RangerPolicyEngineOptions policyEngineOptions) {
@@ -198,6 +199,10 @@ public class RangerPluginConfig extends RangerConfiguration {
         }
     }
 
+    public void setServiceAdmins(Set<String> users) {
+        serviceAdmins  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
+    }
+
     public boolean isAuditExcludedUser(String userName) {
         return auditExcludedUsers.contains(userName);
     }
@@ -216,6 +221,10 @@ public class RangerPluginConfig extends RangerConfiguration {
 
     public boolean hasSuperGroup(Set<String> userGroups) {
         return userGroups != null && userGroups.size() > 0 && superGroups.size() > 0 && CollectionUtils.containsAny(userGroups, superGroups);
+    }
+
+    public boolean isServiceAdmin(String userName) {
+        return serviceAdmins.contains(userName);
     }
 
     private void addResourcesForServiceType(String serviceType) {
