@@ -132,7 +132,7 @@ require.config({
         'bootstrap-notify': '../libs/bower/bootstrap-notify/js/bootstrap-notify',
         'jquery.cookie': '../libs/other/jquery-cookie/js/jquery.cookie',
         'jquery-toggles': '../libs/bower/jquery-toggles/js/toggles.min',
-        'tag-it': '../libs/bower/tag-it/js/tag-it.min',
+        'tag-it': '../libs/bower/tag-it/js/tag-it',
         'select2': '../libs/bower/select2/select2',
         'bootbox': '../libs/bower/bootbox/js/bootbox',
         'visualsearch': '../libs/other/visualsearch/js/visualsearch',

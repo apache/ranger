@@ -1515,7 +1515,7 @@ define(function(require) {
                 closeOnSelect : true,
                 width :'220px',
                 allowClear: true,
-                tokenSeparators: ["," , " "],
+                tokenSeparators: [" "],
                 minimumInputLength: 1,
                 initSelection : function (element, callback) {
                     var data = [];
@@ -1525,9 +1525,11 @@ define(function(require) {
                         return;
                     }
                     //this is form multi-select value
-                    $(element.val().split(",")).each(function () {
-                        data.push({id: this, text: this});
-                    });
+                    if(_.isArray(JSON.parse(element.val()))) {
+                        $(JSON.parse(element.val())).each(function () {
+                            data.push({id: this, text: this});
+                        })
+                    }
                     callback(data);
                 },
                 createSearchChoice: function(term, data) {
