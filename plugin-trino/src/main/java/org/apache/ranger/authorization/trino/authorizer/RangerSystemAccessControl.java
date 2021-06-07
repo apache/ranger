@@ -22,6 +22,7 @@ import io.trino.spi.connector.CatalogSchemaName;
 import io.trino.spi.connector.CatalogSchemaRoutineName;
 import io.trino.spi.connector.CatalogSchemaTableName;
 import io.trino.spi.connector.SchemaTableName;
+import io.trino.spi.eventlistener.EventListener;
 import io.trino.spi.security.AccessDeniedException;
 import io.trino.spi.security.TrinoPrincipal;
 import io.trino.spi.security.Privilege;
@@ -224,6 +225,11 @@ public class RangerSystemAccessControl
   }
 
   @Override
+  public Iterable<EventListener> getEventListeners() {
+    return SystemAccessControl.super.getEventListeners();
+  }
+
+  @Override
   public Set<String> filterCatalogs(SystemSecurityContext context, Set<String> catalogs) {
     LOG.debug("==> RangerSystemAccessControl.filterCatalogs("+ catalogs + ")");
     Set<String> filteredCatalogs = new HashSet<>(catalogs.size());
@@ -292,6 +298,16 @@ public class RangerSystemAccessControl
       LOG.debug("RangerSystemAccessControl.checkCanSetSystemSessionProperty(" + catalogName + ") denied");
       AccessDeniedException.denySetCatalogSessionProperty(catalogName, propertyName);
     }
+  }
+
+  @Override
+  public void checkCanGrantSchemaPrivilege(SystemSecurityContext context, Privilege privilege, CatalogSchemaName schema, TrinoPrincipal grantee, boolean grantOption) {
+    SystemAccessControl.super.checkCanGrantSchemaPrivilege(context, privilege, schema, grantee, grantOption);
+  }
+
+  @Override
+  public void checkCanRevokeSchemaPrivilege(SystemSecurityContext context, Privilege privilege, CatalogSchemaName schema, TrinoPrincipal revokee, boolean grantOption) {
+    SystemAccessControl.super.checkCanRevokeSchemaPrivilege(context, privilege, schema, revokee, grantOption);
   }
 
   @Override
@@ -443,6 +459,11 @@ public class RangerSystemAccessControl
   }
 
   @Override
+  public void checkCanUpdateTableColumns(SystemSecurityContext securityContext, CatalogSchemaTableName table, Set<String> updatedColumnNames) {
+    SystemAccessControl.super.checkCanUpdateTableColumns(securityContext, table, updatedColumnNames);
+  }
+
+  @Override
   public void checkCanGrantTablePrivilege(SystemSecurityContext context, Privilege privilege, CatalogSchemaTableName table, TrinoPrincipal grantee, boolean withGrantOption) {
     if (!hasPermission(createResource(table), context, TrinoAccessType.GRANT)) {
       LOG.debug("RangerSystemAccessControl.checkCanGrantTablePrivilege(" + table + ") denied");
@@ -464,6 +485,11 @@ public class RangerSystemAccessControl
       LOG.debug("RangerSystemAccessControl.checkCanSetTableComment(" + table.toString() + ") denied");
       AccessDeniedException.denyCommentTable(table.toString());
     }
+  }
+
+  @Override
+  public void checkCanSetColumnComment(SystemSecurityContext context, CatalogSchemaTableName table) {
+    SystemAccessControl.super.checkCanSetColumnComment(context, table);
   }
 
   /**
@@ -501,6 +527,21 @@ public class RangerSystemAccessControl
     }
   }
 
+  @Override
+  public void checkCanCreateMaterializedView(SystemSecurityContext context, CatalogSchemaTableName materializedView) {
+    SystemAccessControl.super.checkCanCreateMaterializedView(context, materializedView);
+  }
+
+  @Override
+  public void checkCanRefreshMaterializedView(SystemSecurityContext context, CatalogSchemaTableName materializedView) {
+    SystemAccessControl.super.checkCanRefreshMaterializedView(context, materializedView);
+  }
+
+  @Override
+  public void checkCanDropMaterializedView(SystemSecurityContext context, CatalogSchemaTableName materializedView) {
+    SystemAccessControl.super.checkCanDropMaterializedView(context, materializedView);
+  }
+
   /**
    * This is evaluated against the table name as ownership information is not available
    */
@@ -510,6 +551,11 @@ public class RangerSystemAccessControl
       LOG.debug("RangerSystemAccessControl.checkCanRenameView(" + view.toString() + ") denied");
       AccessDeniedException.denyRenameView(view.toString(), newView.toString());
     }
+  }
+
+  @Override
+  public void checkCanSetViewAuthorization(SystemSecurityContext context, CatalogSchemaTableName view, TrinoPrincipal principal) {
+    SystemAccessControl.super.checkCanSetViewAuthorization(context, view, principal);
   }
 
   /** COLUMN **/
@@ -535,6 +581,11 @@ public class RangerSystemAccessControl
       LOG.debug("RangerSystemAccessControl.checkCanDropColumn(" + table.getSchemaTableName().getTableName() + ") denied");
       AccessDeniedException.denyDropColumn(table.getSchemaTableName().getTableName());
     }
+  }
+
+  @Override
+  public void checkCanSetTableAuthorization(SystemSecurityContext context, CatalogSchemaTableName table, TrinoPrincipal principal) {
+    SystemAccessControl.super.checkCanSetTableAuthorization(context, table, principal);
   }
 
   /**
@@ -610,6 +661,16 @@ public class RangerSystemAccessControl
       LOG.debug("RangerSystemAccessControl.checkCanKillQueryOwnedBy(" + queryOwner + ") denied");
       AccessDeniedException.denyImpersonateUser(context.getIdentity().getUser(), queryOwner);
     }
+  }
+
+  @Override
+  public void checkCanReadSystemInformation(SystemSecurityContext context) {
+    SystemAccessControl.super.checkCanReadSystemInformation(context);
+  }
+
+  @Override
+  public void checkCanWriteSystemInformation(SystemSecurityContext context) {
+    SystemAccessControl.super.checkCanWriteSystemInformation(context);
   }
 
   /** FUNCTIONS **/
