@@ -358,8 +358,13 @@ define(function(require) {
                 var tmpObj = that.form.model.get(obj.name);
                 if (!_.isUndefined(tmpObj) && _.isObject(tmpObj) && !_.isEmpty(tmpObj.resource)) {
                     tmpResource[obj.name] ={}, resource[obj.name] ={};
-                    tmpResource[obj.name].values = tmpObj.resource.split(',');
-                    resource[obj.name].values = tmpObj.resource.split(',');
+                    if (obj.type == "path") {
+                        tmpResource[obj.name].values = tmpObj.resource;
+                        resource[obj.name].values = tmpObj.resource;
+                    } else {
+                        tmpResource[obj.name].values = _.map(tmpObj.resource, function(val){return val.text});
+                        resource[obj.name].values = _.map(tmpObj.resource, function(val){return val.text});
+                    }
                     if (obj.excludesSupported) {
                         resource[obj.name]['isExcludes'] = tmpObj.isExcludes;
                     }

@@ -979,6 +979,10 @@ ul.tagit li.tagit-choice .tagit-close {
   border-radius: 0 !important;
 }
 
+.ui-menu.ui-widget.ui-widget-content.ui-autocomplete.ui-front.tagit-autocomplete {
+  width: 50% !important;
+}
+
 table.backgrid tr > td > .label {
   float: left;
   margin: 0 3px 2px 0;

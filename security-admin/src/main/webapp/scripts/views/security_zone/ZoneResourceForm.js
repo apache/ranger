@@ -240,14 +240,6 @@ define(function(require) {
                 if (!this.model.isNew() && !_.isUndefined(this.model.get('path'))) {
                     defaultValue = this.model.get('path').values;
                 }
-
-                function split(val) {
-                    return val.split(/,\s*/);
-                }
-
-                function extractLast(term) {
-                    return split(term).pop();
-                }
                 var tagitOpts = {}
                 if (!_.isUndefined(options.lookupURL) && options.lookupURL) {
                     tagitOpts["autocomplete"] = {
@@ -255,12 +247,12 @@ define(function(require) {
                         source: function(request, response) {
                             var url = "service/plugins/services/lookupResource/" + that.rangerService.get('name');
                             var context = {
-                                'userInput': extractLast(request.term),
+                                'userInput': request.term,
                                 'resourceName': that.pathFieldName,
                                 'resources': {}
                             };
-                            var val = that.fields[that.pathFieldName].editor.getValue();
-                            context.resources[that.pathFieldName] = _.isNull(val) || _.isEmpty(val) ? [] : val.resource.split(",");
+                            var val = that.fields[that.pathFieldName].editor.getValue('pathField');
+                            context.resources[that.pathFieldName] = _.isNull(val) || _.isEmpty(val) ? [] : val.resource;
                             var p = $.ajax({
                                 url: url,
                                 type: "POST",
@@ -286,8 +278,8 @@ define(function(require) {
                         },
                         search: function() {
                             $('.tagit-autocomplete').addClass('tagit-position');
-                            if (!_.isUndefined(this.value) && (/[ ,]+/).test(this.value)) {
-                                var values = this.value.trim().split(/[ ,]+/);
+                            if(!_.isUndefined(this.value) && this.value.includes('||')) {
+                                var values = this.value.trim().split('||');
                                 if (values.length > 1) {
                                     for (var i = 0; i < values.length; i++) {
                                         that.fields[that.pathFieldName].editor.$el.find('[data-js="resource"]').tagit("createTag", values[i]);
@@ -297,11 +289,6 @@ define(function(require) {
                                     return val
                                 }
                             }
-                            var term = extractLast(_.escape(this.value));
-                            $(this).addClass('working');
-                            if (term.length < 1) {
-                                return false;
-                            }
                         },
                     }
                 }
@@ -310,13 +297,14 @@ define(function(require) {
                     that.fields[that.pathFieldName].$el.removeClass('error');
                     that.fields[that.pathFieldName].$el.find('.help-inline').html('');
                     var tags = [];
-                    console.log(ui.tag);
                     if (!_.isUndefined(options.regExpValidation) && !options.regExpValidation.regexp.test(ui.tagLabel)) {
                         that.fields[that.pathFieldName].$el.addClass('error');
                         that.fields[that.pathFieldName].$el.find('.help-inline').html(options.regExpValidation.message);
                         return false;
                     }
                 }
+                tagitOpts['singleFieldDelimiter'] = '||';
+                tagitOpts['singleField'] = false;
                 this.fields[that.pathFieldName].editor.$el.find('[data-js="resource"]').tagit(tagitOpts).on('change', function(e) {
                     //check dirty field for tagit input type : `path`
                     XAUtil.checkDirtyField($(e.currentTarget).val(), defaultValue.toString(), $(e.currentTarget));
@@ -344,7 +332,7 @@ define(function(require) {
                         multiple: true,
                         minimumInputLength: 1,
                         width: '220px',
-                        tokenSeparators: [",", " "],
+                        tokenSeparators: [" "],
                         initSelection: function(element, callback) {
                             var data = [];
                             //to set single select value
@@ -356,12 +344,11 @@ define(function(require) {
                                 return;
                             }
                             //this is form multi-select value
-                            $(element.val().split(",")).each(function() {
-                                data.push({
-                                    id: this,
-                                    text: this
-                                });
-                            });
+                            if(_.isArray(JSON.parse(element.val()))) {
+                                $(JSON.parse(element.val())).each(function () {
+                                    data.push({id: this, text: this});
+                                })
+                            }
                             callback(data);
                         },
                         createSearchChoice: function(term, data) {
@@ -474,7 +461,7 @@ define(function(require) {
                     } else {
                         val = this.fields[name].getValue();
                     }
-                    resources[name] = _.isNull(val) ? [] : val.resource.split(',');
+                    resources[name] = _.isNull(val) ? [] : val.resource;
                     if (!_.isEmpty(currentResource.parent)) {
                         name = currentResource.parent;
                     } else {

@@ -528,25 +528,33 @@
 		  	this.renderSameLevelResource();
 		    return this;
 		  },
-                  renderResource : function(def) {
-			  var that = this;
-                          var Vent = require('modules/Vent');
-			  if(!_.isNull(this.value) && !_.isEmpty(this.value)){
-				this.value.values = _.map(this.value.values, function(val){ return _.escape(val); });
-					// Set initial value for resources.
-					if (_.isUndefined(def)) {
-						this.$resource.val(this.value.values.toString());
+			renderResource : function(def) {
+				var that = this;
+				var Vent = require('modules/Vent');
+				if(!_.isNull(this.value) && !_.isEmpty(this.value)){
+					if (!_.isUndefined(this.key) && (this.key == "path" || this.key == "relativepath")) {
+						this.value.values = this.value.values.join('||');
+						// Set initial value for resources.
+						if (_.isUndefined(def)) {
+							this.$resource.val((this.value.values));
+						}
+					} else {
+						this.value.values = _.map(this.value.values, function(val){ return  _.escape(val)});
+						// Set initial value for resources.
+						if (_.isUndefined(def)) {
+							this.$resource.val(JSON.stringify(this.value.values));
+						}
 					}
 			    	//to preserve resources values to text field
 			    	if(!_.isUndefined(this.value.resourceType)){
-			    		this.preserveResourceValues[this.value.resourceType] = this.value.values.toString();	
+			    		this.preserveResourceValues[this.value.resourceType] = this.value.values;
 			    	}else{
-			    		this.preserveResourceValues[this.name] = this.value.values.toString(); 
+			    		this.preserveResourceValues[this.name] = this.value.values;
 			    	}
 			    }
 			  	//check dirtyField for input
 			  	this.$resource.on('change', function(e) {
-			  		if(_.isUndefined(that.resourceOpts.select2Opts)){
+					if(_.isUndefined(that.resourceOpts.select2Opts)){
 //			  			that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
 			  		}
 			  	});
@@ -559,7 +567,11 @@
                         if(_.has(def, 'validationRegEx') && !_.isEmpty(def.validationRegEx)){
                             opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(def.validationRegEx), 'message' : def.validationMessage};
                         }
-                        opts['lookupURL'] = "service/plugins/services/lookupResource/"+this.form.rangerService.get('name');
+                        if(!_.isUndefined(this.form.serviceName)) {
+                            opts['lookupURL'] = "service/plugins/services/lookupResource/"+this.form.serviceName;
+                        } else {
+                            opts['lookupURL'] = "service/plugins/services/lookupResource/"+this.form.rangerService.get('name');
+                        }
                         opts['type'] = def.name;
                         this.resourceOpts['select2Opts'] = that.form.getPlugginAttr(true, opts);
                     }else{
@@ -636,8 +648,8 @@
 			  		}
 			  		this.$resourceType.on('change', function(e,onChangeResources) {
 		  				if(!_.isUndefined(that.preserveResourceValues[e.currentTarget.value])){
-		  					var val = _.isEmpty(that.preserveResourceValues[e.currentTarget.value]) ? '' : that.preserveResourceValues[e.currentTarget.value].split(','); 
-		  					that.$resource.select2('val', val)
+							var val = _.isEmpty(that.preserveResourceValues[e.currentTarget.value]) ? '' : that.preserveResourceValues[e.currentTarget.value];
+							that.$resource.val(JSON.stringify(val))
 		  				}else{
 							that.$resource.select2('val', "");
 						}
@@ -683,13 +695,17 @@
 					});
 			  	}
 		  },
-		  getValue: function() {
+		  getValue: function(fieldName) {
 			  var that = this;
 			  //checkParent
 			  if(this.$el.parents('.form-group').hasClass('hideResource')){
 				  return null;
 			  }
-			  this.value['resource'] = this.$resource.val();
+			if (that.key == "path" || that.key == "relativepath") {
+				this.value['resource'] = this.$resource.tagit("assignedTags");
+			} else {
+				this.value['resource'] = this.$resource.select2('data');
+			}
 			  //validation
 			  
 			  

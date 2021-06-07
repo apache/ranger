@@ -241,7 +241,6 @@
                     // Tab will also create a tag, unless the tag input is empty,
                     // in which case it isn't caught.
                     if (
-                        (event.which === $.ui.keyCode.COMMA && event.shiftKey === false) ||
                         event.which === $.ui.keyCode.ENTER ||
                         (
                             event.which == $.ui.keyCode.TAB &&
@@ -297,7 +296,7 @@
                 this.tagInput.autocomplete(autocompleteOptions).bind('autocompleteopen.tagit', function(event, ui) {
                     that.tagInput.data('autocomplete-open', true);
                 }).bind('autocompleteclose.tagit', function(event, ui) {
-                    that.tagInput.data('autocomplete-open', false)
+                    that.tagInput.data('autocomplete-open', false);
                 });
 
                 this.tagInput.autocomplete('widget').addClass('tagit-autocomplete');
@@ -588,4 +587,3 @@
 
     });
 })(jQuery);
-
