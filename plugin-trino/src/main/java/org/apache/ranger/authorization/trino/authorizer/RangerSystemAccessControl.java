@@ -665,12 +665,12 @@ public class RangerSystemAccessControl
 
   @Override
   public void checkCanReadSystemInformation(SystemSecurityContext context) {
-    SystemAccessControl.super.checkCanReadSystemInformation(context);
+//    SystemAccessControl.super.checkCanReadSystemInformation(context);
   }
 
   @Override
   public void checkCanWriteSystemInformation(SystemSecurityContext context) {
-    SystemAccessControl.super.checkCanWriteSystemInformation(context);
+//    SystemAccessControl.super.checkCanWriteSystemInformation(context);
   }
 
   /** FUNCTIONS **/
