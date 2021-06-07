@@ -612,24 +612,6 @@ public class RangerSystemAccessControl
     }
   }
 
-  @Override
-  public void checkCanReadSystemInformation(SystemSecurityContext context)
-  {
-    if (!hasPermission(createSystemPropertyResource(propertyName), context, TrinoAccessType.ALTER)) {
-      LOG.debug("RangerSystemAccessControl.checkCanSetSystemSessionProperty denied");
-      AccessDeniedException.denyReadSystemInformationAccess();
-    }
-  }
-
-  @Override
-  public void checkCanWriteSystemInformation(SystemSecurityContext context)
-  {
-    if (!hasPermission(createSystemPropertyResource(propertyName), context, TrinoAccessType.ALTER)) {
-      LOG.debug("RangerSystemAccessControl.checkCanSetSystemSessionProperty denied");
-      AccessDeniedException.denyReadSystemInformationAccess();
-    }
-  }
-
   /** FUNCTIONS **/
   @Override
   public void checkCanGrantExecuteFunctionPrivilege(SystemSecurityContext context, String function, TrinoPrincipal grantee, boolean grantOption) {
