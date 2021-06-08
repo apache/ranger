@@ -53,7 +53,7 @@ public abstract  class AbstractTagSource implements TagSource {
 		return this.name;
 	}
 
-	protected void updateSink(final ServiceTags toUpload) {
+	protected void updateSink(final ServiceTags toUpload) throws Exception {
 		if (toUpload == null) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("No ServiceTags to upload");
@@ -75,6 +75,7 @@ public abstract  class AbstractTagSource implements TagSource {
 				String toUploadJSON = new Gson().toJson(toUpload);
 				LOG.error("Failed to upload serviceTags: " + toUploadJSON);
 				LOG.error("Exception : ", exception);
+				throw exception;
 			}
 		}
 	}

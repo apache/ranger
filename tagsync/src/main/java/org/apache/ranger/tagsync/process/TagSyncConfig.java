@@ -116,6 +116,12 @@ public class TagSyncConfig extends Configuration {
     private static final long    DEFAULT_TAGSYNC_METRICS_FREQUENCY__TIME_IN_MILLIS = 10000L;
     private static final String  TAGSYNC_METRICS_ENABLED_PROP = "ranger.tagsync.metrics.enabled";
 
+	private static final int     DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE = 1;
+	private static final String  TAGSYNC_SINK_MAX_BATCH_SIZE_PROP    = "ranger.tagsync.dest.ranger.max.batch.size";
+
+
+
+
 	private Properties props;
 
 	static {
@@ -432,6 +438,20 @@ public class TagSyncConfig extends Configuration {
 
 	static public String getTagsyncKerberosIdentity(Properties prop) {
 		return prop.getProperty(TAGSYNC_KERBEROS_IDENTITY);
+	}
+
+	public static int getSinkMaxBatchSize(Properties prop) {
+		int ret = DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE;
+
+		String maxBatchSizeStr = prop.getProperty(TAGSYNC_SINK_MAX_BATCH_SIZE_PROP);
+
+		if (StringUtils.isNotEmpty(maxBatchSizeStr)) {
+			try {
+				ret = Integer.valueOf(maxBatchSizeStr);
+			} catch (Exception e) {
+			}
+		}
+		return ret;
 	}
 
 	private TagSyncConfig() {

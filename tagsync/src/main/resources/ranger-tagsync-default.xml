@@ -41,4 +41,8 @@
 		<name>ranger.tagsync.dest.ranger.session.cookie.name</name>
 		<value>RANGERADMINSESSIONID</value>
 	</property>
+	<property>
+		<name>ranger.tagsync.dest.ranger.max.batch.size</name>
+		<value>1</value>
+	</property>
 </configuration>
