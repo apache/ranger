@@ -230,6 +230,10 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 				LOG.error("Interrupted..: ", exception);
 				return;
 			}
+			catch (Exception e) {
+				LOG.error("Caught exception..", e);
+				return;
+			}
 		}
 	}
 
@@ -258,7 +262,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 		return ret;
 	}
 
-	public void synchUp() {
+	public void synchUp() throws Exception {
 		if (isChanged()) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Begin: update tags from source==>sink");

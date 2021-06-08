@@ -160,7 +160,7 @@ public class AtlasNotificationMapper {
     }
 
     @SuppressWarnings("unchecked")
-    static private ServiceTags buildServiceTagsForEntityDeleteNotification(RangerAtlasEntityWithTags entityWithTags) {
+    static ServiceTags buildServiceTagsForEntityDeleteNotification(RangerAtlasEntityWithTags entityWithTags) {
         final ServiceTags ret;
 
         RangerAtlasEntity   entity = entityWithTags.getEntity();
@@ -260,39 +260,36 @@ public class AtlasNotificationMapper {
 
         if (serviceResource != null) {
 
-            List<RangerTag>     tags        = getTags(entityWithTags);
-            List<RangerTagDef>  tagDefs     = getTagDefs(entityWithTags);
-            String              serviceName = serviceResource.getServiceName();
+            List<RangerTag>    tags = getTags(entityWithTags);
+            List<RangerTagDef> tagDefs = getTagDefs(entityWithTags);
+            String             serviceName = serviceResource.getServiceName();
 
             ret = createOrGetServiceTags(serviceTagsMap, serviceName);
 
-            if (serviceTagsMap == null || CollectionUtils.isNotEmpty(tags)) {
+            serviceResource.setId((long) ret.getServiceResources().size());
+            ret.getServiceResources().add(serviceResource);
 
-                serviceResource.setId((long) ret.getServiceResources().size());
-                ret.getServiceResources().add(serviceResource);
+            List<Long> tagIds = new ArrayList<>();
 
-                List<Long> tagIds = new ArrayList<>();
+            if (CollectionUtils.isNotEmpty(tags)) {
+                for (RangerTag tag : tags) {
+                    tag.setId((long) ret.getTags().size());
+                    ret.getTags().put(tag.getId(), tag);
 
-                if (CollectionUtils.isNotEmpty(tags)) {
-                    for (RangerTag tag : tags) {
-                        tag.setId((long) ret.getTags().size());
-                        ret.getTags().put(tag.getId(), tag);
-
-                        tagIds.add(tag.getId());
-                    }
-                }
-                ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);
-
-                if (CollectionUtils.isNotEmpty(tagDefs)) {
-                    for (RangerTagDef tagDef : tagDefs) {
-                        tagDef.setId((long) ret.getTagDefinitions().size());
-                        ret.getTagDefinitions().put(tagDef.getId(), tagDef);
-                    }
+                    tagIds.add(tag.getId());
                 }
             } else {
                 if (LOG.isDebugEnabled()) {
-                    LOG.debug("Entity " + entityWithTags + " does not have any tags associated with it when full-sync is being done.");
-                    LOG.debug("Will not add this entity to serviceTags, so that this entity, if exists,  will be removed from ranger");
+                    LOG.debug("Entity " + entityWithTags + " does not have any tags associated with it");
+                }
+            }
+
+            ret.getResourceToTagIds().put(serviceResource.getId(), tagIds);
+
+            if (CollectionUtils.isNotEmpty(tagDefs)) {
+                for (RangerTagDef tagDef : tagDefs) {
+                    tagDef.setId((long) ret.getTagDefinitions().size());
+                    ret.getTagDefinitions().put(tagDef.getId(), tagDef);
                 }
             }
         } else {

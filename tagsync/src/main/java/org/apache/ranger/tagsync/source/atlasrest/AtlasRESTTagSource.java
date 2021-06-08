@@ -189,30 +189,29 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 	}
 
 	@Override
-	public void run() {
+    public void run() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> AtlasRESTTagSource.run()");
+        }
+        while (true) {
+            try {
+                synchUp();
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> AtlasRESTTagSource.run()");
-		}
+                LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
 
-		while (true) {
+                Thread.sleep(sleepTimeBetweenCycleInMillis);
 
-			synchUp();
+            } catch (InterruptedException exception) {
+                LOG.error("Interrupted..: ", exception);
+                return;
+            } catch (Exception e) {
+                LOG.error("Caught exception", e);
+                return;
+            }
+        }
+    }
 
-			LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
-
-			try {
-
-				Thread.sleep(sleepTimeBetweenCycleInMillis);
-
-			} catch (InterruptedException exception) {
-				LOG.error("Interrupted..: ", exception);
-				return;
-			}
-		}
-	}
-
-	public void synchUp() {
+	public void synchUp() throws Exception {
 
 		List<RangerAtlasEntityWithTags> rangerAtlasEntities = getAtlasActiveEntities();
 
