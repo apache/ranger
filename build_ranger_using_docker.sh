@@ -40,7 +40,8 @@ if [ $# -eq 0 ]; then
 fi
 
 image_name="ranger_dev"
-remote_home=
+remote_user=builder
+remote_home=/home/builder
 container_name="--name ranger_build"
 
 if [ ! -d security-admin ]; then
@@ -55,7 +56,8 @@ if [ $build_image -eq 1 ]; then
     echo "Creating image $image_name ..."
     docker rmi -f $image_name
 
-docker build -t $image_name - <<Dockerfile
+# align the UID inside/outside container to get permission to modify folder from host
+docker build --build-arg UID=$UID -t $image_name - <<Dockerfile
 FROM centos
 
 RUN mkdir /tools
@@ -98,26 +100,17 @@ RUN ln -sf /tools/apache-maven-3.6.3 /tools/maven
 ENV  PATH /tools/maven/bin:$PATH
 ENV MAVEN_OPTS "-Xmx2048m -XX:MaxPermSize=512m"
 
-# Setup gosu for easier command execution
-RUN gpg --keyserver pool.sks-keyservers.net --recv-keys B42F6819007F00F88E364FD4036A9C25BF357DD4 \
-    && curl -o /usr/local/bin/gosu -SL "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64" \
-    && curl -o /usr/local/bin/gosu.asc -SL "https://github.com/tianon/gosu/releases/download/1.10/gosu-amd64.asc" \
-    && gpg --verify /usr/local/bin/gosu.asc \
-    && rm /usr/local/bin/gosu.asc \
-    && rm -r /root/.gnupg/ \
-    && chmod +x /usr/local/bin/gosu
-
-RUN useradd -ms /bin/bash builder
-RUN usermod -g root builder
+# set 0 to make fail-fast if UID is not overwritten
+ARG UID=0
+RUN useradd -u $UID -ms /bin/bash $remote_user
+RUN usermod -g root $remote_user
 RUN mkdir -p /scripts
-
-RUN echo "#!/bin/bash" > /scripts/mvn.sh
-RUN echo 'set -x; if [ "\$1" = "mvn" ]; then usermod -u \$(stat -c "%u" pom.xml) builder; gosu builder bash -c '"'"'ln -sf /.m2 \$HOME'"'"'; exec gosu builder "\$@"; fi; exec "\$@" ' >> /scripts/mvn.sh
 
 RUN chmod -R 777 /scripts
 RUN chmod -R 777 /tools
 
-ENTRYPOINT ["/scripts/mvn.sh"]
+USER $remote_user
+
 Dockerfile
 
 fi
