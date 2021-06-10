@@ -2429,7 +2429,7 @@ public class XUserMgr extends XUserMgrBase {
 			if(StringUtils.isNotEmpty(group)) {
 				policyItem.getGroups().remove(group);
 			}
-			if(policyItem.getUsers().isEmpty() && policyItem.getGroups().isEmpty()) {
+			if(policyItem.getUsers().isEmpty() && policyItem.getGroups().isEmpty() && policyItem.getRoles().isEmpty()) {
 				if(itemsToRemove == null) {
 					itemsToRemove = new ArrayList<T>();
 				}
