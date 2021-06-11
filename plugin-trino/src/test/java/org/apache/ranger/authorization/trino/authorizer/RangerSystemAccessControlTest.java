@@ -15,24 +15,24 @@
  * limitations under the License.
  */
 
-package org.apache.ranger.authorization.presto.authorizer;
+package org.apache.ranger.authorization.trino.authorizer;
 
 import com.google.common.collect.ImmutableSet;
-import io.prestosql.spi.connector.CatalogSchemaName;
-import io.prestosql.spi.connector.CatalogSchemaRoutineName;
-import io.prestosql.spi.connector.CatalogSchemaTableName;
-import io.prestosql.spi.connector.SchemaTableName;
-import io.prestosql.spi.security.AccessDeniedException;
-import io.prestosql.spi.security.Identity;
-import io.prestosql.spi.security.PrestoPrincipal;
-import io.prestosql.spi.security.SystemSecurityContext;
+import io.trino.spi.connector.CatalogSchemaName;
+import io.trino.spi.connector.CatalogSchemaRoutineName;
+import io.trino.spi.connector.CatalogSchemaTableName;
+import io.trino.spi.connector.SchemaTableName;
+import io.trino.spi.security.AccessDeniedException;
+import io.trino.spi.security.Identity;
+import io.trino.spi.security.TrinoPrincipal;
+import io.trino.spi.security.SystemSecurityContext;
 
-import static io.prestosql.spi.security.PrincipalType.USER;
-import static io.prestosql.spi.security.Privilege.SELECT;
+import static io.trino.spi.security.PrincipalType.USER;
+import static io.trino.spi.security.Privilege.SELECT;
 import static org.junit.Assert.*;
 
-import io.prestosql.spi.security.ViewExpression;
-import io.prestosql.spi.type.VarcharType;
+import io.trino.spi.security.ViewExpression;
+import io.trino.spi.type.VarcharType;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -120,7 +120,7 @@ public class RangerSystemAccessControlTest {
     } catch (AccessDeniedException expected) {
     }
 
-    accessControlManager.checkCanSetSchemaAuthorization(context(alice), aliceSchema, new PrestoPrincipal(USER, "principal"));
+    accessControlManager.checkCanSetSchemaAuthorization(context(alice), aliceSchema, new TrinoPrincipal(USER, "principal"));
     accessControlManager.checkCanShowCreateSchema(context(alice), aliceSchema);
   }
 
@@ -156,8 +156,8 @@ public class RangerSystemAccessControlTest {
     accessControlManager.checkCanCreateViewWithSelectFromColumns(context(alice), aliceTable, ImmutableSet.of());
     accessControlManager.checkCanCreateViewWithSelectFromColumns(context(alice), aliceView, ImmutableSet.of());
     accessControlManager.checkCanSetCatalogSessionProperty(context(alice), aliceCatalog, "property");
-    accessControlManager.checkCanGrantTablePrivilege(context(alice), SELECT, aliceTable, new PrestoPrincipal(USER, "grantee"), true);
-    accessControlManager.checkCanRevokeTablePrivilege(context(alice), SELECT, aliceTable, new PrestoPrincipal(USER, "revokee"), true);
+    accessControlManager.checkCanGrantTablePrivilege(context(alice), SELECT, aliceTable, new TrinoPrincipal(USER, "grantee"), true);
+    accessControlManager.checkCanRevokeTablePrivilege(context(alice), SELECT, aliceTable, new TrinoPrincipal(USER, "revokee"), true);
 
     try {
       accessControlManager.checkCanCreateView(context(bob), aliceView);
@@ -185,7 +185,7 @@ public class RangerSystemAccessControlTest {
     assertFalse(ret.isPresent());
 
     accessControlManager.checkCanExecuteFunction(context(alice), functionName);
-    accessControlManager.checkCanGrantExecuteFunctionPrivilege(context(alice), functionName, new PrestoPrincipal(USER, "grantee"), true);
+    accessControlManager.checkCanGrantExecuteFunctionPrivilege(context(alice), functionName, new TrinoPrincipal(USER, "grantee"), true);
     accessControlManager.checkCanExecuteProcedure(context(alice), aliceProcedure);
   }
 

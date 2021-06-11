@@ -13,12 +13,12 @@
  */
 package org.apache.ranger.authorization.trino.authorizer;
 
-import io.prestosql.spi.Plugin;
-import io.prestosql.spi.security.SystemAccessControlFactory;
+import io.trino.spi.Plugin;
+import io.trino.spi.security.SystemAccessControlFactory;
 
 import java.util.ArrayList;
 
-public class PrestoRangerPlugin
+public class TrinoRangerPlugin
         implements Plugin
 {
     @Override

@@ -17,9 +17,9 @@
 -->
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <artifactId>ranger-presto-plugin-shim</artifactId>
-    <name>Presto Security Plugin Shim</name>
-    <description>Presto Security Plugin Shim</description>
+    <artifactId>ranger-trino-plugin-shim</artifactId>
+    <name>Trino Security Plugin Shim</name>
+    <description>Trino Security Plugin Shim</description>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -37,9 +37,9 @@
             <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>io.prestosql</groupId>
-            <artifactId>presto-spi</artifactId>
-            <version>${presto.version}</version>
+            <groupId>io.trino</groupId>
+            <artifactId>trino-spi</artifactId>
+            <version>${trino.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
@@ -49,44 +49,44 @@
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>bootstrap</artifactId>
-            <version>${presto.airlift.version}</version>
+            <version>${trino.airlift.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>log</artifactId>
-            <version>${presto.airlift.version}</version>
+            <version>${trino.airlift.version}</version>
         </dependency>
 
         <dependency>
             <groupId>io.airlift</groupId>
             <artifactId>configuration</artifactId>
-            <version>${presto.airlift.version}</version>
+            <version>${trino.airlift.version}</version>
         </dependency>
 
         <!-- for the assembly -->
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>${presto.guava.version}</version>
+            <version>${trino.guava.version}</version>
         </dependency>
 
         <dependency>
             <groupId>com.google.inject</groupId>
             <artifactId>guice</artifactId>
-            <version>${presto.guice.version}</version>
+            <version>${trino.guice.version}</version>
         </dependency>
 
         <dependency>
             <groupId>javax.validation</groupId>
             <artifactId>validation-api</artifactId>
-            <version>${presto.validation-api.version}</version>
+            <version>${trino.validation-api.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.bval</groupId>
             <artifactId>bval-jsr</artifactId>
-            <version>${presto.bval-jsr.version}</version>
+            <version>${trino.bval-jsr.version}</version>
         </dependency>
 
         <dependency>

@@ -75,7 +75,7 @@
 
     <property>
         <name>xasecure.audit.hdfs.config.local.buffer.directory</name>
-        <value>/var/log/presto/audit</value>
+        <value>/var/log/trino/audit</value>
     </property>
 
     <property>
@@ -100,7 +100,7 @@
 
     <property>
         <name>xasecure.audit.hdfs.config.local.archive.directory</name>
-        <value>/var/log/presto/audit/archive</value>
+        <value>/var/log/trino/audit/archive</value>
     </property>
 
     <property>
@@ -167,29 +167,29 @@
     </property>
 
 
-    <!-- presto audit provider configuration -->
+    <!-- trino audit provider configuration -->
     <property>
-        <name>xasecure.audit.presto.is.enabled</name>
+        <name>xasecure.audit.trino.is.enabled</name>
         <value>false</value>
     </property>
 
     <property>
-        <name>xasecure.audit.presto.async.max.queue.size</name>
+        <name>xasecure.audit.trino.async.max.queue.size</name>
         <value>1</value>
     </property>
 
     <property>
-        <name>xasecure.audit.presto.async.max.flush.interval.ms</name>
+        <name>xasecure.audit.trino.async.max.flush.interval.ms</name>
         <value>1000</value>
     </property>
 
     <property>
-        <name>xasecure.audit.presto.broker_list</name>
+        <name>xasecure.audit.trino.broker_list</name>
         <value>localhost:9092</value>
     </property>
 
     <property>
-        <name>xasecure.audit.presto.topic_name</name>
+        <name>xasecure.audit.trino.topic_name</name>
         <value>ranger_audits</value>
     </property>
 

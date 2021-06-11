@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ranger.services.presto;
+package org.apache.ranger.services.trino;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -28,7 +28,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
-import org.apache.ranger.services.presto.client.PrestoResourceManager;
+import org.apache.ranger.services.trino.client.TrinoResourceManager;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -36,15 +36,15 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class RangerServicePresto extends RangerBaseService {
-  private static final Log LOG = LogFactory.getLog(RangerServicePresto.class);
+public class RangerServiceTrino extends RangerBaseService {
+  private static final Log LOG = LogFactory.getLog(RangerServiceTrino.class);
 
   public static final String ACCESS_TYPE_SELECT  = "select";
 
   @Override
   public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
     if (LOG.isDebugEnabled()) {
-      LOG.debug("==> RangerServicePresto.getDefaultRangerPolicies()");
+      LOG.debug("==> RangerServiceTrino.getDefaultRangerPolicies()");
     }
 
     List<RangerPolicy> ret = super.getDefaultRangerPolicies();
@@ -61,7 +61,7 @@ public class RangerServicePresto extends RangerBaseService {
     }
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("<== RangerServicePresto.getDefaultRangerPolicies()");
+      LOG.debug("<== RangerServiceTrino.getDefaultRangerPolicies()");
     }
     return ret;
   }
@@ -72,7 +72,7 @@ public class RangerServicePresto extends RangerBaseService {
     String serviceName = getServiceName();
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("RangerServicePresto.validateConfig(): Service: " +
+      LOG.debug("RangerServiceTrino.validateConfig(): Service: " +
         serviceName);
     }
 
@@ -81,15 +81,15 @@ public class RangerServicePresto extends RangerBaseService {
         if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
           configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
         }
-        ret = PrestoResourceManager.connectionTest(serviceName, configs);
+        ret = TrinoResourceManager.connectionTest(serviceName, configs);
       } catch (HadoopException he) {
-        LOG.error("<== RangerServicePresto.validateConfig Error:" + he);
+        LOG.error("<== RangerServiceTrino.validateConfig Error:" + he);
         throw he;
       }
     }
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("RangerServicePresto.validateConfig(): Response: " +
+      LOG.debug("RangerServiceTrino.validateConfig(): Response: " +
         ret);
     }
     return ret;
@@ -110,14 +110,14 @@ public class RangerServicePresto extends RangerBaseService {
         if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
           configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
         }
-        ret  = PrestoResourceManager.getPrestoResources(serviceName, serviceType, configs,context);
+        ret  = TrinoResourceManager.getTrinoResources(serviceName, serviceType, configs,context);
       } catch (Exception e) {
-        LOG.error( "<==RangerServicePresto.lookupResource Error : " + e);
+        LOG.error( "<== RangerServiceTrino.lookupResource Error : " + e);
         throw e;
       }
     }
     if(LOG.isDebugEnabled()) {
-      LOG.debug("<== RangerServicePresto.lookupResource Response: (" + ret + ")");
+      LOG.debug("<== RangerServiceTrino.lookupResource Response: (" + ret + ")");
     }
     return ret;
   }

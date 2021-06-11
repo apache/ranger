@@ -17,15 +17,15 @@
 -->
 <configuration>
   <property>
-    <name>ranger.plugin.presto.service.name</name>
-    <value>prestoservice</value>
+    <name>ranger.plugin.trino.service.name</name>
+    <value>trinoservice</value>
     <description>
-      Name of the Ranger service containing policies for this Presto instance
+      Name of the Ranger service containing policies for this trino instance
     </description>
   </property>
 
   <property>
-    <name>ranger.plugin.presto.policy.source.impl</name>
+    <name>ranger.plugin.trino.policy.source.impl</name>
     <value>org.apache.ranger.admin.client.RangerAdminRESTClient</value>
     <description>
       Class to retrieve policies from the source
@@ -33,7 +33,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.presto.policy.rest.url</name>
+    <name>ranger.plugin.trino.policy.rest.url</name>
     <value>http://localhost:6080</value>
     <description>
       URL to Ranger Admin
@@ -41,7 +41,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.presto.policy.rest.ssl.config.file</name>
+    <name>ranger.plugin.trino.policy.rest.ssl.config.file</name>
     <value>/etc/hadoop/conf/ranger-policymgr-ssl.xml</value>
     <description>
       Path to the file containing SSL details to contact Ranger Admin
@@ -49,7 +49,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.presto.policy.pollIntervalMs</name>
+    <name>ranger.plugin.trino.policy.pollIntervalMs</name>
     <value>30000</value>
     <description>
       How often to poll for changes in policies?
@@ -57,7 +57,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.presto.policy.rest.client.connection.timeoutMs</name>
+    <name>ranger.plugin.trino.policy.rest.client.connection.timeoutMs</name>
     <value>30000</value>
     <description>
       S3 Plugin RangerRestClient Connection Timeout in Milli Seconds
@@ -65,7 +65,7 @@
   </property>
 
   <property>
-    <name>ranger.plugin.presto.policy.rest.client.read.timeoutMs</name>
+    <name>ranger.plugin.trino.policy.rest.client.read.timeoutMs</name>
     <value>30000</value>
     <description>
       S3 Plugin RangerRestClient read Timeout in Milli Seconds

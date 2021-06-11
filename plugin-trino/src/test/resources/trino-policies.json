@@ -1,17 +1,17 @@
 {
-  "serviceName": "cl1_presto",
+  "serviceName": "cl1_trino",
   "serviceId": 16,
   "policyUpdateTime": "20180304-09:49:38.000-+0000",
   "policies": [
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "checkCanImpersonateUser",
       "policyType": 0,
       "policyPriority": 0,
       "description": "",
       "isAuditEnabled": true,
       "resources": {
-        "prestouser": {
+        "trinouser": {
           "values": [
             "bob"
           ],
@@ -41,7 +41,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -53,7 +53,7 @@
       "version": 1
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "checkFunction",
       "policyType": 0,
       "policyPriority": 0,
@@ -94,7 +94,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -106,7 +106,7 @@
       "version": 1
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "alice-schema",
       "policyType": 0,
       "policyPriority": 0,
@@ -174,7 +174,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -186,7 +186,7 @@
       "version": 1
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "alice-catalog",
       "policyType": 0,
       "policyPriority": 0,
@@ -247,7 +247,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -259,7 +259,7 @@
       "version": 2
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "alice-table",
       "policyType": 0,
       "policyPriority": 0,
@@ -335,7 +335,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -347,7 +347,7 @@
       "version": 2
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "alice-procedure",
       "policyType": 0,
       "policyPriority": 0,
@@ -398,7 +398,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -410,7 +410,7 @@
       "version": 2
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "alice-view",
       "policyType": 0,
       "policyPriority": 0,
@@ -465,7 +465,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -477,7 +477,7 @@
       "version": 1
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "alice-session-property",
       "policyType": 0,
       "policyPriority": 0,
@@ -525,7 +525,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -537,7 +537,7 @@
       "version": 1
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "open-to-all",
       "policyType": 0,
       "policyPriority": 0,
@@ -575,7 +575,7 @@
       "denyExceptions": [],
       "dataMaskPolicyItems": [],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -587,7 +587,7 @@
       "version": 1
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "test-mask",
       "policyType": 1,
       "policyPriority": 0,
@@ -648,7 +648,7 @@
         }
       ],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -660,7 +660,7 @@
       "version": 1
     },
     {
-      "service": "cl1_presto",
+      "service": "cl1_trino",
       "name": "test-mask-cast",
       "policyType": 1,
       "policyPriority": 0,
@@ -722,7 +722,7 @@
         }
       ],
       "rowFilterPolicyItems": [],
-      "serviceType": "presto",
+      "serviceType": "trino",
       "options": {},
       "validitySchedules": [],
       "policyLabels": [],
@@ -741,11 +741,11 @@
   "queryTimeMS": 1585212824007,
   "serviceDef": {
     "id": 17,
-    "name": "presto",
-    "displayName": "presto",
-    "implClass": "org.apache.ranger.services.presto.RangerServicePresto",
-    "label": "Presto",
-    "description": "Presto",
+    "name": "trino",
+    "displayName": "trino",
+    "implClass": "org.apache.ranger.services.trino.RangerServicetrino",
+    "label": "trino",
+    "description": "trino",
     "guid": "379a9fe5-1b6e-4091-a584-4890e245e6c1",
     "resources": [
       {
@@ -767,8 +767,8 @@
         "validationRegEx": "",
         "validationMessage": "",
         "uiHint": "",
-        "label": "Presto Catalog",
-        "description": "Presto Catalog"
+        "label": "trino Catalog",
+        "description": "trino Catalog"
       },
       {
         "itemId": 2,
@@ -789,8 +789,8 @@
         "validationRegEx": "",
         "validationMessage": "",
         "uiHint": "",
-        "label": "Presto Schema",
-        "description": "Presto Schema"
+        "label": "trino Schema",
+        "description": "trino Schema"
       },
       {
         "itemId": 3,
@@ -811,8 +811,8 @@
         "validationRegEx": "",
         "validationMessage": "",
         "uiHint": "",
-        "label": "Presto Table",
-        "description": "Presto Table"
+        "label": "trino Table",
+        "description": "trino Table"
       },
       {
         "itemId": 4,
@@ -832,12 +832,12 @@
         "validationRegEx": "",
         "validationMessage": "",
         "uiHint": "",
-        "label": "Presto Column",
-        "description": "Presto Column"
+        "label": "trino Column",
+        "description": "trino Column"
       },
       {
         "itemId": 5,
-        "name": "prestouser",
+        "name": "trinouser",
         "type": "string",
         "level": 10,
         "parent": "",
@@ -853,8 +853,8 @@
         "validationRegEx": "",
         "validationMessage": "",
         "uiHint": "",
-        "label": "Presto User",
-        "description": "Presto User",
+        "label": "trino User",
+        "description": "trino User",
         "accessTypeRestrictions": ["impersonate"]
       },
       {
@@ -876,7 +876,7 @@
         "validationMessage": "",
         "uiHint": "",
         "label": "System Property",
-        "description": "Presto System Property",
+        "description": "trino System Property",
         "accessTypeRestrictions": ["alter"]
       },
       {
@@ -898,7 +898,7 @@
         "validationMessage": "",
         "uiHint": "",
         "label": "Catalog Session Property",
-        "description": "Presto Catalog Session Property",
+        "description": "trino Catalog Session Property",
         "accessTypeRestrictions": ["alter"]
       },
       {
@@ -919,8 +919,8 @@
         "validationRegEx": "",
         "validationMessage": "",
         "uiHint": "",
-        "label": "Presto Function",
-        "description": "Presto Function",
+        "label": "trino Function",
+        "description": "trino Function",
         "accessTypeRestrictions": ["execute", "grant"]
       },
       {
@@ -1056,7 +1056,7 @@
         "validationRegEx": "",
         "validationMessage": "",
         "uiHint": "",
-        "defaultValue": "io.prestosql.jdbc.PrestoDriver"
+        "defaultValue": "io.trino.jdbc.trinoDriver"
       },
       {
         "itemId": 4,

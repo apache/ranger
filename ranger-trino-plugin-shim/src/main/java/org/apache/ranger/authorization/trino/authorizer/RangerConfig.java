@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ranger.authorization.presto.authorizer;
+package org.apache.ranger.authorization.trino.authorizer;
 
 import io.airlift.configuration.Config;
 import io.airlift.configuration.ConfigDescription;
@@ -50,7 +50,7 @@ public class RangerConfig {
   public boolean isUseUgi() { return useUgi; }
 
   @Config("ranger.use_ugi")
-  @ConfigDescription("Use Hadoop User Group Information instead of Presto groups")
+  @ConfigDescription("Use Hadoop User Group Information instead of Trino groups")
   @SuppressWarnings("unused")
   public RangerConfig setUseUgi(boolean useUgi) {
     this.useUgi = useUgi;
@@ -58,7 +58,7 @@ public class RangerConfig {
   }
 
   @Config("ranger.hadoop_config")
-  @ConfigDescription("Path to hadoop configuration. Defaults to presto-ranger-site.xml in classpath")
+  @ConfigDescription("Path to hadoop configuration. Defaults to trino-ranger-site.xml in classpath")
   @SuppressWarnings("unused")
   public RangerConfig setHadoopConfigPath(String hadoopConfigPath) {
     this.hadoopConfigPath = hadoopConfigPath;

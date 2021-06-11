@@ -20,7 +20,7 @@
     <!--  The following properties are used for 2-way SSL client server validation -->
     <property>
         <name>xasecure.policymgr.clientssl.keystore</name>
-        <value>prestoservice-clientcert.jks</value>
+        <value>trinoservice-clientcert.jks</value>
         <description>
             Java Keystore files
         </description>
@@ -34,14 +34,14 @@
     </property>
     <property>
         <name>xasecure.policymgr.clientssl.keystore.credential.file</name>
-        <value>jceks://file/tmp/keystore-prestoservice-ssl.jceks</value>
+        <value>jceks://file/tmp/keystore-trinoservice-ssl.jceks</value>
         <description>
             java  keystore credential file
         </description>
     </property>
     <property>
         <name>xasecure.policymgr.clientssl.truststore.credential.file</name>
-        <value>jceks://file/tmp/truststore-prestoservice-ssl.jceks</value>
+        <value>jceks://file/tmp/truststore-trinoservice-ssl.jceks</value>
         <description>
             java  truststore credential file
         </description>

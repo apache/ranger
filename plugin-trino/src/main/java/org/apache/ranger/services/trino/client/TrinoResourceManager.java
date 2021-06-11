@@ -45,7 +45,7 @@ public class TrinoResourceManager {
     }
 
     try {
-      ret = TrinoCient.connectionTest(serviceName, configs);
+      ret = TrinoClient.connectionTest(serviceName, configs);
     } catch (Exception e) {
       LOG.error("<== TrinoResourceManager.connectionTest Error: " + e);
       throw e;
@@ -58,7 +58,7 @@ public class TrinoResourceManager {
     return ret;
   }
 
-  public static List<String> getPrestoResources(String serviceName, String serviceType, Map<String, String> configs, ResourceLookupContext context) throws Exception {
+  public static List<String> getTrinoResources(String serviceName, String serviceType, Map<String, String> configs, ResourceLookupContext context) throws Exception {
 
     String userInput = context.getUserInput();
     String resource = context.getResourceName();
@@ -75,7 +75,7 @@ public class TrinoResourceManager {
 
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("<== TrinoResourceMgr.getPrestoResources()  UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
+      LOG.debug("<== TrinoResourceMgr.getTrinoResources()  UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
     }
 
     if (userInput != null && resource != null) {
@@ -106,11 +106,11 @@ public class TrinoResourceManager {
       try {
 
         if (LOG.isDebugEnabled()) {
-          LOG.debug("==> TrinoResourceMgr.getPrestoResources() UserInput: " + userInput + " configs: " + configs + " catalogList: " + catalogList + " tableList: "
+          LOG.debug("==> TrinoResourceMgr.getTrinoResources() UserInput: " + userInput + " configs: " + configs + " catalogList: " + catalogList + " tableList: "
             + tableList + " columnList: " + columnList);
         }
 
-        final TrinoClient trinoClient = new TrinoResourceManager().getPrestoConnection(serviceName, serviceType, configs);
+        final TrinoClient trinoClient = new TrinoConnectionManager().getTrinoConnection(serviceName, serviceType, configs);
 
         Callable<List<String>> callableObj = null;
 
@@ -124,7 +124,7 @@ public class TrinoResourceManager {
         final List<String> finalTableList = tableList;
         final List<String> finalColumnList = columnList;
 
-        if (prestoClient != null) {
+        if (trinoClient != null) {
           if (catalogName != null && !catalogName.isEmpty()) {
             finalCatalogName = catalogName;
             callableObj = new Callable<List<String>>() {

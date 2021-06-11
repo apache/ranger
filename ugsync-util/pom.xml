@@ -48,6 +48,11 @@
             <artifactId>jackson-jaxrs</artifactId>
             <version>${codehaus.jackson.version}</version>
         </dependency>
+        <dependency>
+            <groupId>jakarta.xml.bind</groupId>
+            <artifactId>jakarta.xml.bind-api</artifactId>
+            <version>${jakarta.xml.bind-api.version}</version>
+        </dependency>
     </dependencies>
 
 </project>

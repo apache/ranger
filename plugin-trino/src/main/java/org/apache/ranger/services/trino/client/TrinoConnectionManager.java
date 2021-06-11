@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ranger.services.presto.client;
+package org.apache.ranger.services.trino.client;
 
 import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.TimedEventUtil;
@@ -27,49 +27,49 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-public class PrestoConnectionManager {
-  private static final Logger LOG = Logger.getLogger(PrestoConnectionManager.class);
+public class TrinoConnectionManager {
+  private static final Logger LOG = Logger.getLogger(TrinoConnectionManager.class);
 
-  protected ConcurrentMap<String, PrestoClient> prestoConnectionCache;
+  protected ConcurrentMap<String, TrinoClient> trinoConnectionCache;
   protected ConcurrentMap<String, Boolean> repoConnectStatusMap;
 
-  public PrestoConnectionManager() {
-    prestoConnectionCache = new ConcurrentHashMap<>();
+  public TrinoConnectionManager() {
+    trinoConnectionCache = new ConcurrentHashMap<>();
     repoConnectStatusMap = new ConcurrentHashMap<>();
   }
 
-  public PrestoClient getPrestoConnection(final String serviceName, final String serviceType, final Map<String, String> configs) {
-    PrestoClient prestoClient = null;
+  public TrinoClient getTrinoConnection(final String serviceName, final String serviceType, final Map<String, String> configs) {
+    TrinoClient trinoClient = null;
 
     if (serviceType != null) {
-      prestoClient = prestoConnectionCache.get(serviceName);
-      if (prestoClient == null) {
+      trinoClient = trinoConnectionCache.get(serviceName);
+      if (trinoClient == null) {
         if (configs != null) {
-          final Callable<PrestoClient> connectPresto = new Callable<PrestoClient>() {
+          final Callable<TrinoClient> connectTrino = new Callable<TrinoClient>() {
             @Override
-            public PrestoClient call() throws Exception {
-              return new PrestoClient(serviceName, configs);
+            public TrinoClient call() throws Exception {
+              return new TrinoClient(serviceName, configs);
             }
           };
           try {
-            prestoClient = TimedEventUtil.timedTask(connectPresto, 5, TimeUnit.SECONDS);
+            trinoClient = TimedEventUtil.timedTask(connectTrino, 5, TimeUnit.SECONDS);
           } catch (Exception e) {
-            LOG.error("Error connecting to Presto repository: " +
+            LOG.error("Error connecting to Trino repository: " +
             serviceName + " using config: " + configs, e);
           }
 
-          PrestoClient oldClient = null;
-          if (prestoClient != null) {
-            oldClient = prestoConnectionCache.putIfAbsent(serviceName, prestoClient);
+          TrinoClient oldClient = null;
+          if (trinoClient != null) {
+            oldClient = trinoConnectionCache.putIfAbsent(serviceName, trinoClient);
           } else {
-            oldClient = prestoConnectionCache.get(serviceName);
+            oldClient = trinoConnectionCache.get(serviceName);
           }
 
           if (oldClient != null) {
-            if (prestoClient != null) {
-              prestoClient.close();
+            if (trinoClient != null) {
+              trinoClient.close();
             }
-            prestoClient = oldClient;
+            trinoClient = oldClient;
           }
           repoConnectStatusMap.put(serviceName, true);
         } else {
@@ -78,16 +78,16 @@ public class PrestoConnectionManager {
         }
       } else {
         try {
-          prestoClient.getCatalogList("*", null);
+          trinoClient.getCatalogList("*", null);
         } catch (Exception e) {
-          prestoConnectionCache.remove(serviceName);
-          prestoClient.close();
-          prestoClient = getPrestoConnection(serviceName, serviceType, configs);
+          trinoConnectionCache.remove(serviceName);
+          trinoClient.close();
+          trinoClient = getTrinoConnection(serviceName, serviceType, configs);
         }
       }
     } else {
       LOG.error("Asset not found with name " + serviceName, new Throwable());
     }
-    return prestoClient;
+    return trinoClient;
   }
 }

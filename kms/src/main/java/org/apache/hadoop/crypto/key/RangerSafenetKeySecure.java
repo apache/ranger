@@ -68,9 +68,9 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
 		try {
 			int javaVersion = getJavaVersion();
 			/*Minimum java requirement for Ranger KMS is Java 8 and Maximum java supported by Ranger KMS is Java 11*/
-			if(javaVersion == 8){
+			/*if(javaVersion == 8){
 				provider = new sun.security.pkcs11.SunPKCS11(pkcs11CfgFilePath);
-			}else if(javaVersion == 9 || javaVersion == 10 || javaVersion == 11){
+			}else*/ if(javaVersion == 9 || javaVersion == 10 || javaVersion == 11){
 				Class<Provider> cls = Provider.class;
 				Method configureMethod = null;
 				configureMethod = cls.getDeclaredMethod("configure", String.class);

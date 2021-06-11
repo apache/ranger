@@ -11,13 +11,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.apache.ranger.authorization.presto.authorizer;
+package org.apache.ranger.authorization.trino.authorizer;
 
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import io.airlift.bootstrap.Bootstrap;
-import io..spi.security.SystemAccessControl;
-import io.prestosql.spi.security.SystemAccessControlFactory;
+import io.trino.spi.security.SystemAccessControl;
+import io.trino.spi.security.SystemAccessControlFactory;
 
 import java.util.Map;
 
