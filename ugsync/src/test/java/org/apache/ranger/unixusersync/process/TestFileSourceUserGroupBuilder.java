@@ -75,7 +75,7 @@ public class TestFileSourceUserGroupBuilder {
         assertTrue(sink.getAllUsers().contains("user4"));
 
         assertTrue(sink.getAllGroups().contains("group1"));
-        assertTrue(sink.getAllGroups().contains("group2"));*/
+        assertTrue(sink.getAllGroups().contains("group2"));
     }
 
     @Test
