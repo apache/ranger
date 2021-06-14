@@ -57,6 +57,12 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     private static final Log LOG      = LogFactory.getLog(RangerAtlasAuthorizer.class);
     private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("atlasauth.request");
 
+    private static final  Set<AtlasPrivilege> CLASSIFICATION_PRIVILEGES = new HashSet<AtlasPrivilege>() {{
+        add(AtlasPrivilege.ENTITY_ADD_CLASSIFICATION);
+        add(AtlasPrivilege.ENTITY_REMOVE_CLASSIFICATION);
+        add(AtlasPrivilege.ENTITY_UPDATE_CLASSIFICATION);
+    }};
+
     private static volatile RangerBasePlugin atlasPlugin = null;
 
     @Override
@@ -372,7 +378,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             LOG.debug("==> isAccessAllowed(" + request + ")");
         }
 
-        boolean ret = true;
+        boolean ret = false;
 
         try {
             final String                   action         = request.getAction() != null ? request.getAction().getType() : null;
@@ -400,31 +406,25 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                 rangerResource.setValue(RESOURCE_ENTITY_LABEL, request.getLabel());
             } else if (AtlasPrivilege.ENTITY_UPDATE_BUSINESS_METADATA.equals(request.getAction())) {
                 rangerResource.setValue(RESOURCE_ENTITY_BUSINESS_METADATA, request.getBusinessMetadata());
+            } else if (StringUtils.isNotEmpty(classification) && CLASSIFICATION_PRIVILEGES.contains(request.getAction())) {
+                rangerResource.setValue(RESOURCE_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classification));
             }
 
-            if (StringUtils.isNotEmpty(classification)) {
-                rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classification));
-
-                ret = checkAccess(rangerRequest, auditHandler);
-            }
-
-            if (ret) {
-                if (CollectionUtils.isNotEmpty(request.getEntityClassifications())) {
-                    // check authorization for each classification
-                    for (String classificationToAuthorize : request.getEntityClassifications()) {
-                        rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
-
-                        ret = checkAccess(rangerRequest, auditHandler);
-
-                        if (!ret) {
-                            break;
-                        }
-                    }
-                } else {
-                    rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, ENTITY_NOT_CLASSIFIED);
+            if (CollectionUtils.isNotEmpty(request.getEntityClassifications())) {
+                // check authorization for each classification
+                for (String classificationToAuthorize : request.getEntityClassifications()) {
+                    rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
 
                     ret = checkAccess(rangerRequest, auditHandler);
+
+                    if (!ret) {
+                        break;
+                    }
                 }
+            } else {
+                rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, ENTITY_NOT_CLASSIFIED );
+
+                ret = checkAccess(rangerRequest, auditHandler);
             }
 
         } finally {
