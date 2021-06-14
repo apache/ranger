@@ -182,7 +182,7 @@ public class RangerPluginConfig extends RangerConfiguration {
     public void setAuditExcludedUsersGroupsRoles(Set<String> users, Set<String> groups, Set<String> roles) {
         auditExcludedUsers  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
         auditExcludedGroups = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(groups);
-        auditExcludedRoles  = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(roles);
+        auditExcludedRoles  = CollectionUtils.isEmpty(roles) ? Collections.emptySet() : new HashSet<>(roles);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("auditExcludedUsers=" + auditExcludedUsers + ", auditExcludedGroups=" + auditExcludedGroups + ", auditExcludedRoles=" + auditExcludedRoles);
