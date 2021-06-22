@@ -15,16 +15,16 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-IF NOT EXISTS(select * from sys.indexes where name='x_policy_change_log_uk_service_id_policy_version')
+IF NOT EXISTS(select * from sys.indexes where name='x_policy_change_log_uk_service_id_policy_version' AND object_id = OBJECT_ID('x_policy_change_log'))
 BEGIN
-	TRUNCATE x_policy_change_log;
-	CREATE NONCLUSTERED UNIQUE INDEX [x_policy_change_log_uk_service_id_policy_version] ON [x_policy_change_log]([service_id, policy_version] ASC)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY];
+	TRUNCATE TABLE x_policy_change_log;
+	CREATE UNIQUE NONCLUSTERED INDEX [x_policy_change_log_uk_service_id_policy_version] ON [x_policy_change_log]([service_id] ASC, [policy_version] ASC)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY];
 END
 GO
-IF NOT EXISTS(select * from sys.indexes where name='x_tag_change_log_uk_service_id_service_tags_version')
+IF NOT EXISTS(select * from sys.indexes where name='x_tag_change_log_uk_service_id_service_tags_version'  AND object_id = OBJECT_ID('x_tag_change_log'))
 BEGIN
-	TRUNCATE x_tag_change_log;
-	CREATE NONCLUSTERED UNIQUE INDEX [x_tag_change_log_uk_service_id_service_tags_version] ON [x_tag_change_log]([service_id, service_tags_version] ASC)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY];
+	TRUNCATE TABLE x_tag_change_log;
+	CREATE UNIQUE NONCLUSTERED INDEX [x_tag_change_log_uk_service_id_service_tags_version] ON [x_tag_change_log]([service_id] ASC, [service_tags_version] ASC)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY];
 END
 GO
 exit

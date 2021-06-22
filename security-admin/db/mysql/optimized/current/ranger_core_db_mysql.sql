@@ -1560,7 +1560,7 @@ CREATE TABLE IF NOT EXISTS `x_tag_change_log` (
 primary key (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-CREATE UNIQUE INDEX x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
+CREATE UNIQUE INDEX x_service_resource_IDX_svc_id_resource_signature ON x_service_resource(service_id, resource_signature);
 CREATE INDEX x_tag_change_log_IDX_service_id ON x_tag_change_log(service_id);
 CREATE INDEX x_tag_change_log_IDX_tag_version ON x_tag_change_log(service_tags_version);
 CREATE UNIQUE INDEX x_tag_change_log_uk_service_id_service_tags_version ON x_tag_change_log(service_id, service_tags_version);

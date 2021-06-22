@@ -1965,11 +1965,10 @@ CREATE TABLE [dbo].[x_service_resource](
 CONSTRAINT [x_service_resource$x_service_res_UK_guid] UNIQUE NONCLUSTERED
 (
         [guid] ASC
-)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY],
-CONSTRAINT [x_service_resource$x_service_res_IDX_resource_signature] UNIQUE NONCLUSTERED
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+CONSTRAINT [x_service_resource$x_service_res_IDX_svc_id_resource_signature] UNIQUE NONCLUSTERED
 (
-        [resource_signature] ASC
+        [service_id] ASC, [resource_signature] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
@@ -2444,9 +2443,9 @@ CREATE NONCLUSTERED INDEX [x_policy_change_log_IDX_policy_version] ON [x_policy_
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 
 GO
-CREATE NONCLUSTERED UNIQUE INDEX [x_policy_change_log_uk_service_id_policy_version] ON [x_policy_change_log]
+CREATE UNIQUE NONCLUSTERED INDEX [x_policy_change_log_uk_service_id_policy_version] ON [x_policy_change_log]
 (
-   [service_id,policy_version] ASC
+   [service_id] ASC,[policy_version] ASC
 )
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 
@@ -2622,9 +2621,9 @@ CREATE NONCLUSTERED INDEX [x_tag_change_log_IDX_tag_version] ON [x_tag_change_lo
 )
 
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
-CREATE NONCLUSTERED UNIQUE INDEX [x_tag_change_log_uk_service_id_service_tags_version] ON [x_tag_change_log]
+CREATE UNIQUE NONCLUSTERED INDEX [x_tag_change_log_uk_service_id_service_tags_version] ON [x_tag_change_log]
 (
-   [service_id, service_tags_version] ASC
+   [service_id] ASC, [service_tags_version] ASC
 )
 
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]

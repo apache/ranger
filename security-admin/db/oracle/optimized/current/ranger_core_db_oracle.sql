@@ -1235,7 +1235,7 @@ CONSTRAINT x_service_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_p
 CONSTRAINT x_service_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
 );
 
-CREATE UNIQUE INDEX x_svc_res_IDX_res_sgn ON x_service_resource(resource_signature);
+CREATE UNIQUE INDEX x_svc_res_IDX_svc_id_res_sgn ON x_service_resource(service_id, resource_signature);
 
 CREATE TABLE x_tag_resource_map(
 id NUMBER(20) NOT NULL,

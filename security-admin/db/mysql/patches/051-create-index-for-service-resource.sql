@@ -17,9 +17,12 @@ drop procedure if exists create_index_for_x_service_resource;
 
 delimiter ;;
 create procedure create_index_for_x_service_resource() begin
-if not exists (SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE() AND table_name='x_service_resource' AND index_name='x_service_resource_IDX_resource_signature') then
-	CREATE UNIQUE INDEX x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
- end if;
+if exists (SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE() AND table_name='x_service_resource' AND index_name='x_service_resource_IDX_resource_signature') then
+	DROP INDEX x_service_resource_IDX_resource_signature on x_service_resource;
+end if;
+if not exists (SELECT * FROM INFORMATION_SCHEMA.STATISTICS WHERE table_schema=DATABASE() AND table_name='x_service_resource' AND index_name='x_service_resource_IDX_svc_id_resource_signature') then
+	CREATE UNIQUE INDEX x_service_resource_IDX_svc_id_resource_signature ON x_service_resource(service_id, resource_signature);
+end if;
 end;;
 
 delimiter ;

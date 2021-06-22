@@ -17,11 +17,16 @@ select 'delimiter start';
 CREATE OR REPLACE FUNCTION create_index_for_x_service_resource()
 RETURNS void AS $$
 DECLARE
-	v_index_exists integer := 0;
+	v_attnum1 integer := 0;
 BEGIN
-	select count(*) into v_index_exists from pg_class where relname = 'x_service_resource_idx_resource_signature';
-	IF v_index_exists = 0 THEN
-		CREATE UNIQUE INDEX x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
+	select attnum into v_attnum1 from pg_attribute where attrelid in(select oid from pg_class where relname='x_service_resource') and attname in('resource_signature');
+	IF v_attnum1 > 0 THEN
+		IF exists (select * from pg_index where indrelid in(select oid from pg_class where relname='x_service_resource') and indkey[0]=v_attnum1 and indisunique=true) THEN
+			DROP INDEX IF EXISTS x_service_resource_IDX_resource_signature;
+		END IF;
+	END IF;
+	IF not exists (select * from pg_constraint where conrelid in(select oid from pg_class where relname='x_service_resource') and lower(conname)=lower('x_service_resource_IDX_svc_id_resource_signature') and contype='u') THEN
+		ALTER TABLE x_service_resource ADD CONSTRAINT x_service_resource_IDX_svc_id_resource_signature UNIQUE(service_id, resource_signature);
 	END IF;
 END;
 $$ LANGUAGE plpgsql;
