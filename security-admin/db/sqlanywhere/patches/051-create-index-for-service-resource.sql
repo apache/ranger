@@ -14,7 +14,8 @@
 -- limitations under the License.
 
 CREATE INDEX IF NOT EXISTS x_service_resource_IDX_guid ON x_service_resource(guid);
-CREATE INDEX IF NOT EXISTS x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
+DROP INDEX IF EXISTS x_service_resource_IDX_resource_signature;
+CREATE UNIQUE INDEX IF NOT EXISTS x_service_resource_IDX_svc_id_resource_signature ON x_service_resource(service_id, resource_signature);
 GO
 
 EXIT

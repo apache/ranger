@@ -943,7 +943,7 @@ CREATE TABLE dbo.x_service_resource(
 	CONSTRAINT x_service_res_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_service_res_UK_guid UNIQUE NONCLUSTERED (guid)
 )
-CREATE UNIQUE INDEX x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
+CREATE UNIQUE INDEX x_service_resource_IDX_svc_id_resource_signature ON x_service_resource(service_id, resource_signature);
 GO
 CREATE TABLE dbo.x_tag_resource_map(
 	id bigint IDENTITY NOT NULL,

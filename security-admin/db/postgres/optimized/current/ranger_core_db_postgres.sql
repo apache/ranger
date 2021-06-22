@@ -1092,10 +1092,9 @@ primary key (id),
 CONSTRAINT x_service_res_UK_guid UNIQUE (guid),
 CONSTRAINT x_service_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id),
 CONSTRAINT x_service_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_service_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+CONSTRAINT x_service_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_service_resource_IDX_svc_id_resource_signature UNIQUE (service_id, resource_signature)
 );
-
-CREATE UNIQUE INDEX x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
 
 CREATE SEQUENCE x_tag_resource_map_seq;
 CREATE TABLE x_tag_resource_map(
