@@ -156,6 +156,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		// we want to retry the sync process even if there are no changes to the sync files
 		if (!isUpdateSinkSucc) {
 			LOG.info("Previous updateSink failed and hence retry!!");
+			isUpdateSinkSucc = true;
 			return true;
 		}
 		try {
@@ -198,7 +199,6 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		Date syncTime = new Date(System.currentTimeMillis());
 		unixSyncSourceInfo.setLastModified(formatter.format(lastModifiedTime));
 		unixSyncSourceInfo.setSyncTime(formatter.format(syncTime));
-		isUpdateSinkSucc = true;
 		if (isChanged() || isStartupFlag) {
 			buildUserGroupInfo();
 			if (LOG.isDebugEnabled()) {

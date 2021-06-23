@@ -114,6 +114,7 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 		// we want to retry the sync process even if there are no changes to the sync files
 		if (!isUpdateSinkSucc) {
 			LOG.info("Previous updateSink failed and hence retry!!");
+			isUpdateSinkSucc = true;
 			return true;
 		}
 		try {
@@ -141,7 +142,6 @@ public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  impleme
 
 	@Override
 	public void updateSink(UserGroupSink sink) throws Throwable {
-		isUpdateSinkSucc = true;
 		DateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 		Date lastModifiedTime = new Date(usergroupFileModified);
 		Date syncTime = new Date(System.currentTimeMillis());
