@@ -436,7 +436,8 @@ define(function(require) {
 
             getDataParams: function(term, options) {
                 var resources = {},
-                    resourceName = options.type;
+                    resourceName = options.type,
+                    dataResources = {};
                 var isParent = true,
                     name = options.type,
                     val = null,
@@ -469,10 +470,17 @@ define(function(require) {
                     }
                     isCurrentSameLevelField = false;
                 }
+                if(resources && !_.isEmpty(resources)) {
+                    _.each(resources, function(val, key) {
+                        dataResources[key] = _.map(val, function(obj){
+                            return obj.text
+                        })
+                    })
+                }
                 var context = {
                     'userInput': term,
                     'resourceName': resourceName,
-                    'resources': resources
+                    'resources': dataResources
                 };
                 return JSON.stringify(context);
             },
