@@ -19,6 +19,9 @@
 
 package org.apache.ranger.biz;
 
+import java.io.UnsupportedEncodingException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,21 +64,16 @@ import org.apache.ranger.view.VXPortalUserList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUserPermission;
-import org.apache.velocity.Template;
-import org.apache.velocity.app.VelocityEngine;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
+import org.springframework.security.crypto.codec.Hex;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
 
 @Component
 public class UserMgr {
 
 	private static final Logger logger = Logger.getLogger(UserMgr.class);
-	private static final Md5PasswordEncoder md5Encoder = new Md5PasswordEncoder();
-	private static final ShaPasswordEncoder sha256Encoder = new ShaPasswordEncoder(256);
 	@Autowired
 	RangerDaoManager daoManager;
 
@@ -93,10 +91,6 @@ public class UserMgr {
 
 	@Autowired
 	SessionMgr sessionMgr;
-
-	@Autowired
-	VelocityEngine velocityEngine;
-	Template t;
 
 	@Autowired
 	DateUtil dateUtil;
@@ -1146,9 +1140,9 @@ public class UserMgr {
 			String sha256PasswordUpdateDisable = PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
 
 			if ("false".equalsIgnoreCase(sha256PasswordUpdateDisable)) {
-				saltEncodedpasswd = sha256Encoder.encodePassword(password, loginId);
+				saltEncodedpasswd = encodeString(password, loginId, "MD5");
 			} else {
-				saltEncodedpasswd = md5Encoder.encodePassword(password, loginId);
+				saltEncodedpasswd = encodeString(password, loginId, "SHA-256");
 			}
 		}
 		
@@ -1158,7 +1152,7 @@ public class UserMgr {
 	public String encryptWithOlderAlgo(String loginId, String password) {
 		String saltEncodedpasswd = "";
 
-		saltEncodedpasswd = md5Encoder.encodePassword(password, loginId);
+		saltEncodedpasswd = encodeString(password, loginId, "MD5");
 
 		return saltEncodedpasswd;
 	}
@@ -1503,4 +1497,31 @@ public class UserMgr {
         	
         			return isNewPasswordDifferent;
         	}
+
+	private String mergeTextAndSalt(String text, Object salt, boolean strict) {
+		if (text == null) {
+			text = "";
+		}
+
+		if ((strict) && (salt != null) && ((salt.toString().lastIndexOf("{") != -1) || (salt.toString().lastIndexOf("}") != -1))) {
+			throw new IllegalArgumentException("Cannot use { or } in salt.toString()");
+		}
+
+		if ((salt == null) || ("".equals(salt))) {
+			return text;
+		}
+		return text + "{" + salt.toString() + "}";
 	}
+
+	private String encodeString(String text, String salt, String algorithm) {
+		String mergedString = mergeTextAndSalt(text, salt, false);
+		try {
+			MessageDigest digest = MessageDigest.getInstance(algorithm);
+			return new String(Hex.encode(digest.digest(mergedString.getBytes("UTF-8"))));
+		} catch (UnsupportedEncodingException e) {
+			throw restErrorUtil.createRESTException("UTF-8 not supported");
+		} catch (NoSuchAlgorithmException e) {
+			throw restErrorUtil.createRESTException("algorithm `" + algorithm + "' not supported");
+		}
+	}
+}

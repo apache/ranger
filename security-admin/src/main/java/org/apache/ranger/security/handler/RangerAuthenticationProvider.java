@@ -58,9 +58,6 @@ import org.springframework.security.ldap.userdetails.DefaultLdapAuthoritiesPopul
 import org.springframework.security.ldap.search.FilterBasedLdapUserSearch;
 import org.springframework.security.provisioning.JdbcUserDetailsManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
-import org.springframework.security.authentication.dao.ReflectionSaltSource;
-import org.springframework.security.authentication.encoding.Md5PasswordEncoder;
-import org.springframework.security.authentication.encoding.ShaPasswordEncoder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.apache.ranger.biz.UserMgr;
@@ -589,20 +586,17 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			DaoAuthenticationProvider authenticator = new DaoAuthenticationProvider();
 			authenticator.setUserDetailsService(userDetailsService);
 			if (this.isFipsEnabled) {
-				if (authentication.getCredentials() != null && !authentication.isAuthenticated()) {
+				if (authentication != null && authentication.getCredentials() != null && !authentication.isAuthenticated()) {
 					Pbkdf2PasswordEncoderCust passwordEncoder = new Pbkdf2PasswordEncoderCust(authentication.getName());
 					passwordEncoder.setEncodeHashAsBase64(true);
 					authenticator.setPasswordEncoder(passwordEncoder);
 				}
 			} else {
-				ReflectionSaltSource saltSource = new ReflectionSaltSource();
-				saltSource.setUserPropertyToUse("username");
-				if (encoder != null && "SHA256".equalsIgnoreCase(encoder)) {
-					authenticator.setPasswordEncoder(new ShaPasswordEncoder(256));
-					authenticator.setSaltSource(saltSource);
-				} else if (encoder != null && "MD5".equalsIgnoreCase(encoder)) {
-					authenticator.setPasswordEncoder(new Md5PasswordEncoder());
-					authenticator.setSaltSource(saltSource);
+				if (encoder != null && "SHA256".equalsIgnoreCase(encoder) && authentication != null) {
+					authenticator.setPasswordEncoder(new RangerCustomPasswordEncoder(authentication.getName(),"SHA-256"));
+
+				} else if (encoder != null && "MD5".equalsIgnoreCase(encoder)  && authentication != null) {
+					authenticator.setPasswordEncoder(new RangerCustomPasswordEncoder(authentication.getName(),"MD5"));
 				}
 			}
 
