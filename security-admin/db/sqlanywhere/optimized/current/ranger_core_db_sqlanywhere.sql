@@ -34,12 +34,33 @@ BEGIN
 	SET @drpstmt = 'DROP TABLE IF EXISTS ' + @tblname;
 	execute(@drpstmt)
 END
+
 GO
-call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
+DROP VIEW IF EXISTS dbo.vx_trx_log
+GO
+call dbo.removeForeignKeysAndTable('x_rms_mapping_provider')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_notification')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_service_resource')
+GO
+call dbo.removeForeignKeysAndTable('x_tag_change_log')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_role')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_role')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_group')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_user')
+GO
+call dbo.removeForeignKeysAndTable('x_role')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_change_log')
 GO
-call dbo.removeForeignKeysAndTable('x_tag_change_log')
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_group')
 GO
@@ -69,15 +90,7 @@ call dbo.removeForeignKeysAndTable('x_policy_item_datamask')
 GO
 call dbo.removeForeignKeysAndTable('x_datamask_type_def')
 GO
-call dbo.removeForeignKeysAndTable('x_service_resource_element_val')
-GO
 call dbo.removeForeignKeysAndTable('x_tag_resource_map')
-GO
-call dbo.removeForeignKeysAndTable('x_tag_attr')
-GO
-call dbo.removeForeignKeysAndTable('x_tag_attr_def')
-GO
-call dbo.removeForeignKeysAndTable('x_service_resource_element')
 GO
 call dbo.removeForeignKeysAndTable('x_service_resource')
 GO
@@ -131,9 +144,9 @@ call dbo.removeForeignKeysAndTable('x_security_zone_ref_group')
 GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_user')
 GO
-call dbo.removeForeignKeysAndTable('x_security_zone_ref_service')
-GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_tag_srvc')
+GO
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_service')
 GO
 call dbo.removeForeignKeysAndTable('x_ranger_global_state')
 GO
@@ -147,8 +160,6 @@ call dbo.removeForeignKeysAndTable('x_audit_map')
 GO
 call dbo.removeForeignKeysAndTable('x_perm_map')
 GO
-DROP VIEW IF EXISTS dbo.vx_trx_log
-GO
 call dbo.removeForeignKeysAndTable('x_trx_log')
 GO
 call dbo.removeForeignKeysAndTable('x_resource')
@@ -156,18 +167,6 @@ GO
 call dbo.removeForeignKeysAndTable('x_policy_export_audit')
 GO
 call dbo.removeForeignKeysAndTable('x_group_users')
-GO
-
-call dbo.removeForeignKeysAndTable('x_role_ref_role')
-GO
-call dbo.removeForeignKeysAndTable('x_policy_ref_role')
-GO
-call dbo.removeForeignKeysAndTable('x_role_ref_group')
-GO
-call dbo.removeForeignKeysAndTable('x_role_ref_user')
-GO
-call dbo.removeForeignKeysAndTable('x_role')
-
 GO
 call dbo.removeForeignKeysAndTable('x_user')
 GO
@@ -2062,37 +2061,6 @@ GO
 CREATE NONCLUSTERED INDEX x_tag_change_log_IDX_tag_version ON dbo.x_tag_change_log(service_tags_version ASC);
 GO
 CREATE NONCLUSTERED INDEX x_tag_change_log_uk_service_id_service_tags_version ON dbo.x_tag_change_log((service_id, service_tags_version) ASC);
-GO
-
-CREATE OR REPLACE PROCEDURE dbo.removeForeignKeysAndTable (IN table_name varchar(100))
-AS
-BEGIN
-	DECLARE @stmt VARCHAR(300)
-	DECLARE @tblname VARCHAR(300)
-	DECLARE @drpstmt VARCHAR(1000)
-	DECLARE cur CURSOR FOR select 'alter table dbo.' + table_name + ' drop constraint ' + role from SYS.SYSFOREIGNKEYS where foreign_creator ='dbo' and foreign_tname = table_name
-	OPEN cur WITH HOLD
-		fetch cur into @stmt
-		WHILE (@@sqlstatus = 0)
-		BEGIN
-			execute(@stmt)
-			fetch cur into @stmt
-		END
-	close cur
-	DEALLOCATE CURSOR cur
-	SET @tblname ='dbo.' + table_name;
-	SET @drpstmt = 'DROP TABLE IF EXISTS ' + @tblname;
-	execute(@drpstmt)
-END
-
-GO
-call dbo.removeForeignKeysAndTable('x_rms_notification')
-GO
-call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
-GO
-call dbo.removeForeignKeysAndTable('x_rms_mapping_provider')
-GO
-call dbo.removeForeignKeysAndTable('x_rms_service_resource')
 GO
 
 CREATE TABLE dbo.x_rms_service_resource(

@@ -13,9 +13,18 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
-DROP TABLE IF EXISTS x_policy_change_log;
+DROP TABLE IF EXISTS x_rms_mapping_provider CASCADE;
+DROP TABLE IF EXISTS x_rms_resource_mapping CASCADE;
+DROP TABLE IF EXISTS x_rms_notification CASCADE;
+DROP TABLE IF EXISTS x_rms_service_resource CASCADE;
 DROP TABLE IF EXISTS x_tag_change_log;
+DROP TABLE IF EXISTS x_role_ref_role CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_role CASCADE;
+DROP TABLE IF EXISTS x_role_ref_group CASCADE;
+DROP TABLE IF EXISTS x_role_ref_user CASCADE;
+DROP TABLE IF EXISTS x_role CASCADE;
+DROP TABLE IF EXISTS x_policy_change_log;
+DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
@@ -30,11 +39,7 @@ DROP TABLE IF EXISTS x_service_version_info;
 DROP TABLE IF EXISTS x_policy_item_rowfilter;
 DROP TABLE IF EXISTS x_policy_item_datamask;
 DROP TABLE IF EXISTS x_datamask_type_def;
-DROP TABLE IF EXISTS x_service_resource_element_val CASCADE;
 DROP TABLE IF EXISTS x_tag_resource_map CASCADE;
-DROP TABLE IF EXISTS x_tag_attr CASCADE;
-DROP TABLE IF EXISTS x_tag_attr_def CASCADE;
-DROP TABLE IF EXISTS x_service_resource_element CASCADE;
 DROP TABLE IF EXISTS x_service_resource CASCADE;
 DROP TABLE IF EXISTS x_tag CASCADE;
 DROP TABLE IF EXISTS x_tag_def CASCADE;
@@ -61,8 +66,8 @@ DROP TABLE IF EXISTS x_service_config_def CASCADE;
 DROP TABLE IF EXISTS x_policy CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_group CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_user CASCADE;
-DROP TABLE IF EXISTS x_security_zone_ref_service CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_tag_srvc CASCADE;
+DROP TABLE IF EXISTS x_security_zone_ref_service CASCADE;
 DROP TABLE IF EXISTS x_ranger_global_state CASCADE;
 DROP TABLE IF EXISTS x_security_zone CASCADE;
 DROP TABLE IF EXISTS x_service CASCADE;
@@ -72,13 +77,6 @@ DROP TABLE IF EXISTS x_perm_map CASCADE;
 DROP TABLE IF EXISTS x_trx_log CASCADE;
 DROP TABLE IF EXISTS x_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_export_audit CASCADE;
-
-DROP TABLE IF EXISTS x_role_ref_role CASCADE;
-DROP TABLE IF EXISTS x_policy_ref_role CASCADE;
-DROP TABLE IF EXISTS x_role_ref_group CASCADE;
-DROP TABLE IF EXISTS x_role_ref_user CASCADE;
-DROP TABLE IF EXISTS x_role CASCADE;
-
 DROP TABLE IF EXISTS x_group_users CASCADE;
 DROP TABLE IF EXISTS x_user CASCADE;
 DROP TABLE IF EXISTS x_group_groups;
@@ -91,11 +89,6 @@ DROP TABLE IF EXISTS xa_access_audit CASCADE;
 DROP TABLE IF EXISTS x_portal_user_role CASCADE;
 DROP TABLE IF EXISTS x_portal_user CASCADE;
 DROP TABLE IF EXISTS x_db_version_h CASCADE;
-
-DROP TABLE IF EXISTS x_rms_service_resource CASCADE;
-DROP TABLE IF EXISTS x_rms_notification CASCADE;
-DROP TABLE IF EXISTS x_rms_resource_mapping CASCADE;
-DROP TABLE IF EXISTS x_rms_mapping_provider CASCADE;
 
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_user_seq;
@@ -152,13 +145,11 @@ DROP SEQUENCE IF EXISTS x_trx_log_seq;
 DROP SEQUENCE IF EXISTS x_resource_seq;
 DROP SEQUENCE IF EXISTS x_policy_export_seq;
 DROP SEQUENCE IF EXISTS x_group_users_seq;
-
 DROP SEQUENCE IF EXISTS x_role_ref_role_SEQ;
 DROP SEQUENCE IF EXISTS x_policy_ref_role_SEQ;
 DROP SEQUENCE IF EXISTS x_role_ref_group_SEQ;
 DROP SEQUENCE IF EXISTS x_role_ref_user_SEQ;
 DROP SEQUENCE IF EXISTS x_role_SEQ;
-
 DROP SEQUENCE IF EXISTS x_user_seq;
 DROP SEQUENCE IF EXISTS x_group_groups_seq;
 DROP SEQUENCE IF EXISTS x_group_seq;
@@ -169,7 +160,6 @@ DROP SEQUENCE IF EXISTS x_asset_seq;
 DROP SEQUENCE IF EXISTS xa_access_audit_seq;
 DROP SEQUENCE IF EXISTS x_portal_user_role_seq;
 DROP SEQUENCE IF EXISTS x_portal_user_seq;
-
 DROP SEQUENCE IF EXISTS X_RMS_SERVICE_RESOURCE_SEQ;
 DROP SEQUENCE IF EXISTS X_RMS_NOTIFICATION_SEQ;
 DROP SEQUENCE IF EXISTS X_RMS_RESOURCE_MAPPING_SEQ;

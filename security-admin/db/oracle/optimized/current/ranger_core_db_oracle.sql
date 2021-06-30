@@ -204,9 +204,18 @@ END;/
 /
 
 call spdropview('vx_trx_log');
-call spdroptable('x_security_zone_ref_resource');
-call spdroptable('x_policy_change_log');
+call spdroptable('X_RMS_MAPPING_PROVIDER');
+call spdroptable('X_RMS_RESOURCE_MAPPING');
+call spdroptable('X_RMS_NOTIFICATION');
+call spdroptable('X_RMS_SERVICE_RESOURCE');
 call spdroptable('x_tag_change_log');
+call spdroptable('x_role_ref_role');
+call spdroptable('x_policy_ref_role');
+call spdroptable('x_role_ref_group');
+call spdroptable('x_role_ref_user');
+call spdroptable('x_role');
+call spdroptable('x_policy_change_log');
+call spdroptable('x_security_zone_ref_resource');
 call spdroptable('x_policy_ref_group');
 call spdroptable('x_policy_ref_user');
 call spdroptable('x_policy_ref_datamask_type');
@@ -221,11 +230,7 @@ call spdroptable('x_service_version_info');
 call spdroptable('x_policy_item_rowfilter');
 call spdroptable('x_policy_item_datamask');
 call spdroptable('x_datamask_type_def');
-call spdroptable('x_service_resource_element_val');
 call spdroptable('x_tag_resource_map');
-call spdroptable('x_tag_attr');
-call spdroptable('x_tag_attr_def');
-call spdroptable('x_service_resource_element');
 call spdroptable('x_service_resource');
 call spdroptable('x_tag');
 call spdroptable('x_tag_def');
@@ -252,8 +257,8 @@ call spdroptable('x_service_config_def');
 call spdroptable('x_policy');
 call spdroptable('x_security_zone_ref_group');
 call spdroptable('x_security_zone_ref_user');
-call spdroptable('x_security_zone_ref_service');
 call spdroptable('x_security_zone_ref_tag_srvc');
+call spdroptable('x_security_zone_ref_service');
 call spdroptable('x_ranger_global_state');
 call spdroptable('x_security_zone');
 call spdroptable('x_service');
@@ -264,13 +269,6 @@ call spdroptable('x_trx_log');
 call spdroptable('x_resource');
 call spdroptable('x_policy_export_audit');
 call spdroptable('x_group_users');
-
-call spdroptable('x_role_ref_role');
-call spdroptable('x_policy_ref_role');
-call spdroptable('x_role_ref_group');
-call spdroptable('x_role_ref_user');
-call spdroptable('x_role');
-
 call spdroptable('x_user');
 call spdroptable('x_group_groups');
 call spdroptable('x_group');
@@ -1510,7 +1508,7 @@ policy_id NUMBER(20) DEFAULT NULL NULL,
 );
 CREATE INDEX x_plcy_chng_log_IDX_service_id ON x_policy_change_log(service_id);
 CREATE INDEX x_plcy_chng_log_IDX_policy_ver ON x_policy_change_log(policy_version);
-CREATE UNIQUE INDEX X_POLICY_CHANGE_LOG_UK_SERVICE_ID_POLICY_VERSION ON x_policy_change_log(service_id, policy_version);
+CREATE UNIQUE INDEX XPLCYCHNGLOG_UK_SRVCID_PLCYVER ON x_policy_change_log(service_id, policy_version);
 COMMIT;
 
 CREATE TABLE x_tag_change_log (
@@ -1525,7 +1523,7 @@ primary key (id)
 );
 CREATE INDEX x_tag_chng_log_IDX_service_id ON x_tag_change_log(service_id);
 CREATE INDEX x_tag_chng_log_IDX_tag_ver ON x_tag_change_log(service_tags_version);
-CREATE UNIQUE INDEX X_TAG_CHANGE_LOG_UK_SERVICE_ID_SERVICE_TAGS_VERSION ON x_tag_change_log(service_id, service_tags_version);
+CREATE UNIQUE INDEX XTAGCHNGLOG_UK_SRVCID_TAGVER ON x_tag_change_log(service_id, service_tags_version);
 COMMIT;
 
 CREATE TABLE x_role(
@@ -1810,45 +1808,16 @@ end;
 END; /
 /
 
-CREATE OR REPLACE PROCEDURE spdropsequence(ObjName IN varchar2)
-IS
-v_counter integer;
-BEGIN
-    select count(*) into v_counter from user_sequences where sequence_name = upper(ObjName);
-      if (v_counter > 0) then
-        execute immediate 'DROP SEQUENCE ' || ObjName;
-      end if;
-END;/
-/
-
 call spdropsequence('X_RMS_SERVICE_RESOURCE_SEQ');
 call spdropsequence('X_RMS_NOTIFICATION_SEQ');
 call spdropsequence('X_RMS_RESOURCE_MAPPING_SEQ');
 call spdropsequence('X_RMS_MAPPING_PROVIDER_SEQ');
-
 commit;
 
 CREATE SEQUENCE X_RMS_SERVICE_RESOURCE_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_RMS_NOTIFICATION_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_RMS_RESOURCE_MAPPING_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
 CREATE SEQUENCE X_RMS_MAPPING_PROVIDER_SEQ START WITH 1 INCREMENT BY 1 NOCACHE NOCYCLE;
-
-
-CREATE OR REPLACE PROCEDURE spdroptable(ObjName IN varchar2)
-IS
-v_counter integer;
-BEGIN
-    select count(*) into v_counter from user_tables where table_name = upper(ObjName);
-     if (v_counter > 0) then
-     execute immediate 'drop table ' || ObjName || ' cascade constraints';
-     end if;
-END;/
-/
-
-call spdroptable('X_RMS_NOTIFICATION');
-call spdroptable('X_RMS_RESOURCE_MAPPING');
-call spdroptable('X_RMS_MAPPING_PROVIDER');
-call spdroptable('X_RMS_SERVICE_RESOURCE');
 
 CREATE TABLE x_rms_service_resource(
 id NUMBER(20) NOT NULL,
@@ -1868,7 +1837,7 @@ CONSTRAINT x_rms_svc_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_ser
 );
 
 CREATE INDEX x_rms_svc_res_IDX_service_id ON x_rms_service_resource(service_id);
-CREATE INDEX x_rms_svc_res_IDX_resource_signature ON x_rms_service_resource(resource_signature);
+CREATE INDEX x_rms_svc_res_IDX_res_sign ON x_rms_service_resource(resource_signature);
 
 CREATE TABLE x_rms_notification (
 id NUMBER(20) NOT NULL,
