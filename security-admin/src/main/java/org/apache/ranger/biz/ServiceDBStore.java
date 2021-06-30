@@ -4044,7 +4044,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		response.setContentType("text/csv");
 
 		final String LINE_SEPARATOR = "\n";
-                final String FILE_HEADER = "ID|Name|Resources|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|"
+                final String FILE_HEADER = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|"
                                 + "isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name";
 		StringBuilder csvBuffer = new StringBuilder();
 		csvBuffer.append(FILE_HEADER);
@@ -4139,8 +4139,10 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
                 final String COMMA_DELIMITER = "|";
                 final String LINE_SEPARATOR = "\n";
+                List<String> roles = new ArrayList<String>();
                 List<String> groups = new ArrayList<String>();
                 List<String> users = new ArrayList<String>();
+                String roleNames = "";
                 String groupNames = "";
                 String userNames = "";
                 String policyLabelName = "";
@@ -4205,6 +4207,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                         resourceKeyVal = resourceKeyVal.substring(1);
                         if (policyItem != null && dataMaskPolicyItem == null
                                         && rowFilterPolicyItem == null) {
+                                roles = policyItem.getRoles();
                                 groups = policyItem.getGroups();
                                 users = policyItem.getUsers();
                                 accesses = policyItem.getAccesses();
@@ -4212,6 +4215,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 conditionsList = policyItem.getConditions();
                         } else if (dataMaskPolicyItem != null && policyItem == null
                                         && rowFilterPolicyItem == null) {
+                                roles = dataMaskPolicyItem.getRoles();
                                 groups = dataMaskPolicyItem.getGroups();
                                 users = dataMaskPolicyItem.getUsers();
                                 accesses = dataMaskPolicyItem.getAccesses();
@@ -4229,6 +4233,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 }
                         } else if (rowFilterPolicyItem != null && policyItem == null
                                         && dataMaskPolicyItem == null) {
+                                roles = rowFilterPolicyItem.getRoles();
                                 groups = rowFilterPolicyItem.getGroups();
                                 users = rowFilterPolicyItem.getUsers();
                                 accesses = rowFilterPolicyItem.getAccesses();
@@ -4245,6 +4250,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 }
                                 accessType = accessType.substring(0,
                                                 accessType.lastIndexOf("#"));
+                        }
+                        if (CollectionUtils.isNotEmpty(roles)) {
+                            for (String role : roles) {
+                                role = role.replace("|", "");
+                                role = role.replace("#", "");
+                                roleNames = roleNames + role + "#";
+                            }
+                            roleNames = roleNames.substring(0, roleNames.lastIndexOf("#"));
                         }
                         if (CollectionUtils.isNotEmpty(groups)) {
                                 for (String group : groups) {
@@ -4321,6 +4334,8 @@ public class ServiceDBStore extends AbstractServiceStore {
                 csvBuffer.append(policyName);
                 csvBuffer.append(COMMA_DELIMITER);
                 csvBuffer.append(resourceKeyVal);
+                csvBuffer.append(COMMA_DELIMITER);
+                csvBuffer.append(roleNames);
                 csvBuffer.append(COMMA_DELIMITER);
                 csvBuffer.append(groupNames);
                 csvBuffer.append(COMMA_DELIMITER);
@@ -4470,6 +4485,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		List<String> groups = new ArrayList<String>();
 		List<String> users = new ArrayList<String>();
+		List<String> roles = new ArrayList<String>();
+		String roleNames = "";
 		String groupNames = "";
                 String policyConditionTypeValue = "";
 		String userNames = "";
@@ -4525,12 +4542,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 			resourceKeyVal = resourceKeyVal.substring(1);
 			cell.setCellValue(resourceKeyVal);
 			if (policyItem != null && dataMaskPolicyItem == null && rowFilterPolicyItem == null) {
+				roles = policyItem.getRoles();
 				groups = policyItem.getGroups();
 				users = policyItem.getUsers();
 				accesses = policyItem.getAccesses();
                                 delegateAdmin = policyItem.getDelegateAdmin();
                                 conditionsList = policyItem.getConditions();
 			} else if (dataMaskPolicyItem != null && policyItem == null && rowFilterPolicyItem == null) {
+				roles = dataMaskPolicyItem.getRoles();
 				groups = dataMaskPolicyItem.getGroups();
 				users = dataMaskPolicyItem.getUsers();
 				accesses = dataMaskPolicyItem.getAccesses();
@@ -4544,9 +4563,10 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 if (conditionExpr != null && !conditionExpr.isEmpty() && valueExpr != null && !valueExpr.isEmpty()) {
                                         maskingInfo = maskingInfo + "; conditionExpr=[" + conditionExpr + "]";
                                 }
-                                cell = row.createCell(17);
+                                cell = row.createCell(18);
                                 cell.setCellValue(maskingInfo);
 			} else if (rowFilterPolicyItem != null && policyItem == null && dataMaskPolicyItem == null) {
+				roles = rowFilterPolicyItem.getRoles();
 				groups = rowFilterPolicyItem.getGroups();
 				users = rowFilterPolicyItem.getUsers();
 				accesses = rowFilterPolicyItem.getAccesses();
@@ -4554,7 +4574,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 conditionsList = rowFilterPolicyItem.getConditions();
                                 filterInfo = rowFilterPolicyItem.getRowFilterInfo();
                                 String filterExpr = filterInfo.getFilterExpr();
-                                cell = row.createCell(18);
+                                cell = row.createCell(19);
                                 cell.setCellValue(filterExpr);
 			}
 			if (CollectionUtils.isNotEmpty(accesses)) {
@@ -4563,6 +4583,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 					accessType = accessType + " ,";
 				}
 				accessType = accessType.substring(0, accessType.lastIndexOf(","));
+			}
+			if (CollectionUtils.isNotEmpty(roles)) {
+				roleNames = roleNames + roles.toString();
+				StringTokenizer roleToken = new StringTokenizer(roleNames, "[]");
+				while(roleToken.hasMoreTokens()) {
+					roleNames = roleToken.nextToken().toString();
+				}
 			}
 			if (CollectionUtils.isNotEmpty(groups)) {
 				groupNames = groupNames + groups.toString();
@@ -4586,12 +4613,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 conditionKeyValue = conditionType + "=" + conditionValue;
                         }
 			cell = row.createCell(3);
-			cell.setCellValue(groupNames);
+			cell.setCellValue(roleNames);
 			cell = row.createCell(4);
-			cell.setCellValue(userNames);
+			cell.setCellValue(groupNames);
 			cell = row.createCell(5);
-			cell.setCellValue(accessType.trim());
+			cell.setCellValue(userNames);
 			cell = row.createCell(6);
+			cell.setCellValue(accessType.trim());
+			cell = row.createCell(7);
 			XXService xxservice = daoMgr.getXXService().findByName(policy.getService());
 			String ServiceType = "";
 			if (xxservice != null) {
@@ -4611,7 +4640,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                         }
 
 			cell.setCellValue(ServiceType);
-			cell = row.createCell(7);
+			cell = row.createCell(8);
 
 		}
 		if (policy.getIsEnabled()) {
@@ -4628,7 +4657,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                         }
                 }
 		cell.setCellValue(policyStatus);
-                cell = row.createCell(8);
+                cell = row.createCell(9);
                 int policyTypeInt = policy.getPolicyType();
                 switch (policyTypeInt) {
                         case RangerPolicy.POLICY_TYPE_ACCESS:
@@ -4644,25 +4673,25 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 break;
                 }
                 cell.setCellValue(policyType);
-                cell = row.createCell(9);
-                cell.setCellValue(delegateAdmin.toString().toUpperCase());
                 cell = row.createCell(10);
-                cell.setCellValue(isRecursiveValue);
+                cell.setCellValue(delegateAdmin.toString().toUpperCase());
                 cell = row.createCell(11);
-                cell.setCellValue(isExcludesValue);
+                cell.setCellValue(isRecursiveValue);
                 cell = row.createCell(12);
+                cell.setCellValue(isExcludesValue);
+                cell = row.createCell(13);
                 serviceName = policy.getService();
                 cell.setCellValue(serviceName);
-                cell = row.createCell(13);
+                cell = row.createCell(14);
                 description = policy.getDescription();
                 cell.setCellValue(description);
-                cell = row.createCell(14);
-                cell.setCellValue(isAuditEnabled.toString().toUpperCase());
                 cell = row.createCell(15);
-                cell.setCellValue(conditionKeyValue.trim());
+                cell.setCellValue(isAuditEnabled.toString().toUpperCase());
                 cell = row.createCell(16);
+                cell.setCellValue(conditionKeyValue.trim());
+                cell = row.createCell(17);
                 cell.setCellValue(policyConditionTypeValue);
-                cell = row.createCell(19);
+                cell = row.createCell(20);
                 cell.setCellValue(policyLabelNames);
 
         }
@@ -4687,71 +4716,75 @@ public class ServiceDBStore extends AbstractServiceStore {
 		cellResources.setCellStyle(cellStyle);
 		cellResources.setCellValue("Resources");
 
-		Cell cellGroups = row.createCell(3);
+		Cell cellRoles = row.createCell(3);
+		cellRoles.setCellStyle(cellStyle);
+		cellRoles.setCellValue("Roles");
+
+		Cell cellGroups = row.createCell(4);
 		cellGroups.setCellStyle(cellStyle);
 		cellGroups.setCellValue("Groups");
 
-		Cell cellUsers = row.createCell(4);
+		Cell cellUsers = row.createCell(5);
 		cellUsers.setCellStyle(cellStyle);
 		cellUsers.setCellValue("Users");
 
-		Cell cellAccesses = row.createCell(5);
+		Cell cellAccesses = row.createCell(6);
 		cellAccesses.setCellStyle(cellStyle);
 		cellAccesses.setCellValue("Accesses");
 
-		Cell cellServiceType = row.createCell(6);
+		Cell cellServiceType = row.createCell(7);
 		cellServiceType.setCellStyle(cellStyle);
 		cellServiceType.setCellValue("Service Type");
 
-		Cell cellStatus = row.createCell(7);
+		Cell cellStatus = row.createCell(8);
 		cellStatus.setCellStyle(cellStyle);
 		cellStatus.setCellValue("Status");
 
-                Cell cellPolicyType = row.createCell(8);
+                Cell cellPolicyType = row.createCell(9);
                 cellPolicyType.setCellStyle(cellStyle);
                 cellPolicyType.setCellValue("Policy Type");
 
-                Cell cellDelegateAdmin = row.createCell(9);
+                Cell cellDelegateAdmin = row.createCell(10);
                 cellDelegateAdmin.setCellStyle(cellStyle);
                 cellDelegateAdmin.setCellValue("Delegate Admin");
 
-                Cell cellIsRecursive = row.createCell(10);
+                Cell cellIsRecursive = row.createCell(11);
                 cellIsRecursive.setCellStyle(cellStyle);
                 cellIsRecursive.setCellValue("isRecursive");
 
-                Cell cellIsExcludes = row.createCell(11);
+                Cell cellIsExcludes = row.createCell(12);
                 cellIsExcludes.setCellStyle(cellStyle);
                 cellIsExcludes.setCellValue("isExcludes");
 
-                Cell cellServiceName = row.createCell(12);
+                Cell cellServiceName = row.createCell(13);
                 cellServiceName.setCellStyle(cellStyle);
                 cellServiceName.setCellValue("Service Name");
 
-                Cell cellDescription = row.createCell(13);
+                Cell cellDescription = row.createCell(14);
                 cellDescription.setCellStyle(cellStyle);
                 cellDescription.setCellValue("Description");
 
-                Cell cellisAuditEnabled = row.createCell(14);
+                Cell cellisAuditEnabled = row.createCell(15);
                 cellisAuditEnabled.setCellStyle(cellStyle);
                 cellisAuditEnabled.setCellValue("isAuditEnabled");
 
-                Cell cellPolicyConditions = row.createCell(15);
+                Cell cellPolicyConditions = row.createCell(16);
                 cellPolicyConditions.setCellStyle(cellStyle);
                 cellPolicyConditions.setCellValue("Policy Conditions");
 
-                Cell cellPolicyConditionType = row.createCell(16);
+                Cell cellPolicyConditionType = row.createCell(17);
                 cellPolicyConditionType.setCellStyle(cellStyle);
                 cellPolicyConditionType.setCellValue("Policy Condition Type");
 
-                Cell cellMaskingOptions = row.createCell(17);
+                Cell cellMaskingOptions = row.createCell(18);
                 cellMaskingOptions.setCellStyle(cellStyle);
                 cellMaskingOptions.setCellValue("Masking Options");
 
-                Cell cellRowFilterExpr = row.createCell(18);
+                Cell cellRowFilterExpr = row.createCell(19);
                 cellRowFilterExpr.setCellStyle(cellStyle);
                 cellRowFilterExpr.setCellValue("Row Filter Expr");
 
-                Cell cellPolicyLabelName = row.createCell(19);
+                Cell cellPolicyLabelName = row.createCell(20);
                 cellPolicyLabelName.setCellStyle(cellStyle);
                 cellPolicyLabelName.setCellValue("Policy Labels Name");
         }
