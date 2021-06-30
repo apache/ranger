@@ -14,9 +14,18 @@
 -- limitations under the License.
 
 DROP VIEW IF EXISTS `vx_trx_log`;
-DROP TABLE IF EXISTS `x_security_zone_ref_resource`;
-DROP TABLE IF EXISTS `x_policy_change_log`;
+DROP TABLE IF EXISTS `x_rms_mapping_provider`;
+DROP TABLE IF EXISTS `x_rms_resource_mapping`;
+DROP TABLE IF EXISTS `x_rms_notification`;
+DROP TABLE IF EXISTS `x_rms_service_resource`;
 DROP TABLE IF EXISTS `x_tag_change_log`;
+DROP TABLE IF EXISTS `x_role_ref_role`;
+DROP TABLE IF EXISTS `x_policy_ref_role`;
+DROP TABLE IF EXISTS `x_role_ref_group`;
+DROP TABLE IF EXISTS `x_role_ref_user`;
+DROP TABLE IF EXISTS `x_role`;
+DROP TABLE IF EXISTS `x_policy_change_log`;
+DROP TABLE IF EXISTS `x_security_zone_ref_resource`;
 DROP TABLE IF EXISTS `x_policy_ref_group`;
 DROP TABLE IF EXISTS `x_policy_ref_user`;
 DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
@@ -31,11 +40,7 @@ DROP TABLE IF EXISTS `x_service_version_info`;
 DROP TABLE IF EXISTS `x_policy_item_rowfilter`;
 DROP TABLE IF EXISTS `x_policy_item_datamask`;
 DROP TABLE IF EXISTS `x_datamask_type_def`;
-DROP TABLE IF EXISTS `x_service_resource_element_val`;
 DROP TABLE IF EXISTS `x_tag_resource_map`;
-DROP TABLE IF EXISTS `x_tag_attr`;
-DROP TABLE IF EXISTS `x_tag_attr_def`;
-DROP TABLE IF EXISTS `x_service_resource_element`;
 DROP TABLE IF EXISTS `x_service_resource`;
 DROP TABLE IF EXISTS `x_tag`;
 DROP TABLE IF EXISTS `x_tag_def`;
@@ -62,8 +67,8 @@ DROP TABLE IF EXISTS `x_service_config_def`;
 DROP TABLE IF EXISTS `x_policy`;
 DROP TABLE IF EXISTS `x_security_zone_ref_group`;
 DROP TABLE IF EXISTS `x_security_zone_ref_user`;
-DROP TABLE IF EXISTS `x_security_zone_ref_service`;
 DROP TABLE IF EXISTS `x_security_zone_ref_tag_srvc`;
+DROP TABLE IF EXISTS `x_security_zone_ref_service`;
 DROP TABLE IF EXISTS `x_ranger_global_state`;
 DROP TABLE IF EXISTS `x_security_zone`;
 DROP TABLE IF EXISTS `x_service`;
@@ -77,11 +82,6 @@ DROP TABLE IF EXISTS `x_group_users`;
 DROP TABLE IF EXISTS `x_user`;
 DROP TABLE IF EXISTS `x_group_groups`;
 DROP TABLE IF EXISTS `x_group`;
-DROP TABLE IF EXISTS `x_role_ref_role`;
-DROP TABLE IF EXISTS `x_policy_ref_role`;
-DROP TABLE IF EXISTS `x_role_ref_group`;
-DROP TABLE IF EXISTS `x_role_ref_user`;
-DROP TABLE IF EXISTS `x_role`;
 DROP TABLE IF EXISTS `x_db_base`;
 DROP TABLE IF EXISTS `x_cred_store`;
 DROP TABLE IF EXISTS `x_auth_sess`;
@@ -1081,9 +1081,6 @@ CONSTRAINT `x_group_module_perm_FK_module_id` FOREIGN KEY (`module_id`) REFERENC
 CONSTRAINT `x_group_module_perm_FK_user_id` FOREIGN KEY (`group_id`) REFERENCES `x_group` (`id`) ON DELETE CASCADE ON UPDATE CASCADE
 )ROW_FORMAT=DYNAMIC;
 
--- -----------------------------------------------------
--- Table `x_tag_def`
--- -----------------------------------------------------
 CREATE TABLE IF NOT EXISTS `x_tag_def` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
 `guid` VARCHAR(64) NOT NULL,
@@ -1104,9 +1101,7 @@ KEY `x_tag_def_IDX_upd_by_id` (`upd_by_id`),
 CONSTRAINT `x_tag_def_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_tag_def_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
--- -----------------------------------------------------
--- Table `x_tag`
--- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `x_tag` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
 `guid` VARCHAR(64) NOT NULL,
@@ -1128,9 +1123,7 @@ CONSTRAINT `x_tag_FK_type` FOREIGN KEY (`type`) REFERENCES `x_tag_def` (`id`),
 CONSTRAINT `x_tag_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_tag_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
--- -----------------------------------------------------
--- Table `x_service_resource`
--- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `x_service_resource` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
 `guid` VARCHAR(64) NOT NULL,
@@ -1152,9 +1145,7 @@ CONSTRAINT `x_service_res_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `
 CONSTRAINT `x_service_res_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_res_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`)
 )ROW_FORMAT=DYNAMIC;
--- -----------------------------------------------------
--- Table `x_tag_resource_map`
--- -----------------------------------------------------
+
 CREATE TABLE IF NOT EXISTS `x_tag_resource_map` (
 `id` BIGINT(20) NOT NULL AUTO_INCREMENT,
 `guid` VARCHAR(64) NOT NULL,
@@ -1322,7 +1313,6 @@ CREATE TABLE IF NOT EXISTS `x_ugsync_audit_info`(
  KEY `x_ugsync_audit_info_uname`(`user_name`)
 )ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_ref_resource`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_resource` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -1341,7 +1331,6 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_resource` (
   CONSTRAINT `x_policy_ref_res_FK_resource_def_id` FOREIGN KEY (`resource_def_id`) REFERENCES `x_resource_def` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_ref_access_type`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_access_type` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -1360,7 +1349,6 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_access_type` (
   CONSTRAINT `x_policy_ref_access_FK_access_def_id` FOREIGN KEY (`access_def_id`) REFERENCES `x_access_type_def` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_ref_condition`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_condition` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -1379,7 +1367,6 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_condition` (
   CONSTRAINT `x_policy_ref_condition_FK_condition_def_id` FOREIGN KEY (`condition_def_id`) REFERENCES `x_policy_condition_def` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_ref_datamask_type`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_datamask_type` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -1398,7 +1385,6 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_datamask_type` (
   CONSTRAINT `x_policy_ref_datamask_FK_datamask_def_id` FOREIGN KEY (`datamask_def_id`) REFERENCES `x_datamask_type_def` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_ref_user`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_user` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -1417,7 +1403,6 @@ CREATE TABLE IF NOT EXISTS `x_policy_ref_user` (
   CONSTRAINT `x_policy_ref_user_FK_user_id` FOREIGN KEY (`user_id`) REFERENCES `x_user` (`id`)
 ) ROW_FORMAT=DYNAMIC;
 
-DROP TABLE IF EXISTS `x_policy_ref_group`;
 CREATE TABLE IF NOT EXISTS `x_policy_ref_group` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
   `guid` varchar(1024) DEFAULT NULL,
@@ -1617,11 +1602,6 @@ RETURN myid;
 END $$
 
 DELIMITER ;
-
-DROP TABLE IF EXISTS `x_rms_notification`;
-DROP TABLE IF EXISTS `x_rms_resource_mapping`;
-DROP TABLE IF EXISTS `x_rms_mapping_provider`;
-DROP TABLE IF EXISTS `x_rms_service_resource`;
 
 CREATE TABLE `x_rms_service_resource` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,

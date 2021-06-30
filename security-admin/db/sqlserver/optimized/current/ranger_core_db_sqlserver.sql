@@ -621,13 +621,57 @@ IF (OBJECT_ID('vx_trx_log') IS NOT NULL)
 BEGIN
     DROP VIEW [dbo].[vx_trx_log]
 END
-IF (OBJECT_ID('x_policy_change_log') IS NOT NULL)
+IF (OBJECT_ID('x_rms_mapping_provider') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_policy_change_log]
+    DROP TABLE [dbo].[x_rms_mapping_provider]
+END
+IF (OBJECT_ID('x_rms_resource_mapping') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_rms_resource_mapping]
+END
+IF (OBJECT_ID('x_rms_notification') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_rms_notification]
+END
+IF (OBJECT_ID('x_rms_service_resource') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_rms_service_resource]
 END
 IF (OBJECT_ID('x_tag_change_log') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_tag_change_log]
+END
+IF (OBJECT_ID('x_role_ref_role') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_role_ref_role]
+END
+
+IF (OBJECT_ID('x_policy_ref_role') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_role]
+END
+
+IF (OBJECT_ID('x_role_ref_group') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_role_ref_group]
+END
+
+IF (OBJECT_ID('x_role_ref_user') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_role_ref_user]
+END
+
+IF (OBJECT_ID('x_role') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_role]
+END
+IF (OBJECT_ID('x_policy_change_log') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_change_log]
+END
+IF (OBJECT_ID('x_security_zone_ref_resource') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_security_zone_ref_resource]
 END
 IF (OBJECT_ID('x_policy_ref_group') IS NOT NULL)
 BEGIN
@@ -685,25 +729,9 @@ IF (OBJECT_ID('x_datamask_type_def') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_datamask_type_def]
 END
-IF (OBJECT_ID('x_service_resource_element_val') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_service_resource_element_val]
-END
 IF (OBJECT_ID('x_tag_resource_map') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_tag_resource_map]
-END
-IF (OBJECT_ID('x_tag_attr') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_tag_attr]
-END
-IF (OBJECT_ID('x_tag_attr_def') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_tag_attr_def]
-END
-IF (OBJECT_ID('x_service_resource_element') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_service_resource_element]
 END
 IF (OBJECT_ID('x_service_resource') IS NOT NULL)
 BEGIN
@@ -797,37 +825,25 @@ IF (OBJECT_ID('x_service_config_def') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_service_config_def]
 END
-IF (OBJECT_ID('x_policy_label_map') IS NOT NULL)
-BEGIN
-        DROP TABLE [dbo].[x_policy_label_map]
-END
-IF (OBJECT_ID('x_policy_label') IS NOT NULL)
-BEGIN
-        DROP TABLE [dbo].[x_policy_label]
-END
 IF (OBJECT_ID('x_policy') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_policy]
 END
-IF (OBJECT_ID('x_security_zone_ref_service') IS NOT NULL)
+IF (OBJECT_ID('x_security_zone_ref_group') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_security_zone_ref_service]
-END
-IF (OBJECT_ID('x_security_zone_ref_tag_srvc') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_security_zone_ref_tag_srvc]
-END
-IF (OBJECT_ID('x_security_zone_ref_resource') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_security_zone_ref_resource]
+    DROP TABLE [dbo].[x_security_zone_ref_group]
 END
 IF (OBJECT_ID('x_security_zone_ref_user') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_security_zone_ref_user]
 END
-IF (OBJECT_ID('x_security_zone_ref_group') IS NOT NULL)
+IF (OBJECT_ID('x_security_zone_ref_tag_srvc') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_security_zone_ref_group]
+    DROP TABLE [dbo].[x_security_zone_ref_tag_srvc]
+END
+IF (OBJECT_ID('x_security_zone_ref_service') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_security_zone_ref_service]
 END
 IF (OBJECT_ID('x_ranger_global_state') IS NOT NULL)
 BEGIN
@@ -869,32 +885,6 @@ IF (OBJECT_ID('x_group_users') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_group_users]
 END
-
-IF (OBJECT_ID('x_role_ref_role') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_role_ref_role]
-END
-
-IF (OBJECT_ID('x_policy_ref_role') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_policy_ref_role]
-END
-
-IF (OBJECT_ID('x_role_ref_group') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_role_ref_group]
-END
-
-IF (OBJECT_ID('x_role_ref_user') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_role_ref_user]
-END
-
-IF (OBJECT_ID('x_role') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_role]
-END
-
 IF (OBJECT_ID('x_user') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_user]
@@ -3892,26 +3882,6 @@ GO
 IF (OBJECT_ID('x_rms_res_map_FK_ll_res_id') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_rms_resource_mapping] DROP CONSTRAINT x_rms_res_map_FK_ll_res_id
-END
-GO
-IF (OBJECT_ID('x_rms_notification') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_rms_notification]
-END
-GO
-IF (OBJECT_ID('x_rms_resource_mapping') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_rms_resource_mapping]
-END
-GO
-IF (OBJECT_ID('x_rms_mapping_provider') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_rms_mapping_provider]
-END
-GO
-IF (OBJECT_ID('x_rms_service_resource') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_rms_service_resource]
 END
 GO
 
