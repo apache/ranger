@@ -69,7 +69,7 @@ then
 	JAVA_CMD="$JAVA_CMD -p $password"
 fi
 
-if [${AUTH} == 1]
+if [ ${AUTH} == 1 ]
 then
 	prompt="Sample Authentication User Password:"
 	read -p "$prompt" -s authPassword
