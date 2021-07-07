@@ -3156,4 +3156,13 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		return deletedGroups.size();
 	}
+
+	public VXUserList lookupXUsers(SearchCriteria searchCriteria) {
+		VXUserList vXUserList = new VXUserList();
+		if (StringUtils.isBlank(searchCriteria.getSortBy())) {
+			searchCriteria.setSortBy("id");
+		}
+		vXUserList = xUserService.lookupXUsers(searchCriteria, vXUserList);
+		return vXUserList;
+	}
 }

@@ -434,7 +434,7 @@ public class XUserREST {
 		searchUtil.extractString(request, searchCriteria, "name", "User name",null);
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
 		try {
-			VXUserList vXUserList = xUserMgr.searchXUsers(searchCriteria);
+			VXUserList vXUserList = xUserMgr.lookupXUsers(searchCriteria);
 			VXString VXString = null;
 			for (VXUser vxUser : vXUserList.getList()) {
 				VXString = new VXString();

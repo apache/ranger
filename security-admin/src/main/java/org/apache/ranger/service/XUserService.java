@@ -32,6 +32,7 @@ import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.StringUtil;
@@ -44,6 +45,7 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.VXUserList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -404,5 +406,21 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
                 }catch(Exception ex){}
                 return xXPortalUserIdXXUserMap;
         }
+
+	public VXUserList lookupXUsers(SearchCriteria searchCriteria, VXUserList vXUserList) {
+		List<VXUser> xUserList = new ArrayList<VXUser>();
+
+		@SuppressWarnings("unchecked")
+		List<XXUser> resultList = (List<XXUser>) searchResources(searchCriteria, searchFields, sortFields, vXUserList);
+
+		for (XXUser xXUser : resultList) {
+			VXUser vObj = super.mapEntityToViewBean(createViewObject(), xXUser);
+			vObj.setIsVisible(xXUser.getIsVisible());
+			xUserList.add(vObj);
+		}
+
+		vXUserList.setVXUsers(xUserList);
+		return vXUserList;
+	}
 
 }
