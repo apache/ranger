@@ -390,7 +390,7 @@ public class KeyAuthorizationKeyProvider extends KeyProviderCryptoExtension {
 
   @Override
   public String toString() {
-    return provider.toString();
+    return this.getClass().getName() + ":" + provider.toString();
   }
 
 }
