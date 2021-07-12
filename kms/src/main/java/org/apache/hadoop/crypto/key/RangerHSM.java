@@ -68,10 +68,11 @@ public class RangerHSM implements RangerKMSMKI {
             ByteArrayInputStream is1 = new ByteArrayInputStream(("tokenlabel:" + partitionName).getBytes());
             logger.debug("Loading HSM tokenlabel : " + partitionName);
             myStore = KeyStore.getInstance("Luna");
-            myStore.load(is1, passwd.toCharArray());
             if (myStore == null) {
                 logger.error("Luna not found. Please verify the Ranger KMS HSM configuration setup.");
-            }
+			} else {
+				myStore.load(is1, passwd.toCharArray());
+			}
         } catch (KeyStoreException kse) {
             logger.error("Unable to create keystore object : " + kse.getMessage());
         } catch (NoSuchAlgorithmException nsae) {

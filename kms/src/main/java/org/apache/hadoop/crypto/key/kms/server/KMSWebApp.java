@@ -20,6 +20,7 @@ package org.apache.hadoop.crypto.key.kms.server;
 import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
+import com.google.common.base.Preconditions;
 
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
@@ -174,6 +175,11 @@ public class KMSWebApp implements ServletContextListener {
       LOG.info("----------------Instantiating key provider ---------------");
       KeyProvider keyProvider =
           KeyProviderFactory.get(new URI(providerString), kmsConf);
+      Preconditions.checkNotNull(keyProvider, String.format("No" +
+              " KeyProvider has been initialized, please" +
+              " check whether %s '%s' is configured correctly in" +
+              " kms-site.xml.", KMSConfiguration.KEY_PROVIDER_URI,
+          providerString));
       LOG.info("keyProvider = "+keyProvider.toString());
       if (kmsConf.getBoolean(KMSConfiguration.KEY_CACHE_ENABLE,
           KMSConfiguration.KEY_CACHE_ENABLE_DEFAULT)) {
