@@ -326,10 +326,18 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 						}
 					} else {
 
-						resourcePath = DFSUtil.byteArray2PathString(components, 0, i);
+						if (snapshotId != Snapshot.CURRENT_STATE_ID) {
+							resourcePath = DFSUtil.byteArray2PathString(pathByNameArr);
 
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("INodeAttributes array is used to figure out path to resource, resourcePath:[" + resourcePath +"]");
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("pathByNameArr array is used to figure out path to resource, resourcePath:[" + resourcePath +"]");
+							}
+						} else {
+							resourcePath = DFSUtil.byteArray2PathString(components, 0, i);
+
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("INodeAttributes array is used to figure out path to resource, resourcePath:[" + resourcePath +"]");
+							}
 						}
 					}
 
