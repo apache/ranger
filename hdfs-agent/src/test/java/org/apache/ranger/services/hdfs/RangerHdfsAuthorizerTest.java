@@ -33,6 +33,7 @@ import org.apache.hadoop.hdfs.server.namenode.INode;
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributeProvider;
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributeProvider.AccessControlEnforcer;
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributes;
+import org.apache.hadoop.hdfs.server.namenode.snapshot.Snapshot;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer;
@@ -48,7 +49,7 @@ import org.mockito.Mockito;
  */
 public class RangerHdfsAuthorizerTest {
 
-    private final static int SNAPSHOT_ID = 1;
+    private final static int SNAPSHOT_ID = Snapshot.CURRENT_STATE_ID;
     private final static String FILE_OWNER = "fileOwner";
     private final static String FILE_GROUP = "superGroup";
     private static final FsPermission READ_ONLY = new FsPermission(FsAction.READ, FsAction.NONE, FsAction.NONE);
