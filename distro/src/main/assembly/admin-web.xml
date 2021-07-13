@@ -243,7 +243,6 @@
           <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>commons-codec:commons-codec</include>
-          <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -298,7 +297,6 @@
           <include>org.apache.commons:commons-lang3</include>
           <include>org.apache.hadoop:hadoop-common</include>
           <include>org.apache.hadoop:hadoop-auth</include>
-          <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>

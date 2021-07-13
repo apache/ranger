@@ -63,7 +63,6 @@
                     <include>org.codehaus.jackson:jackson-mapper-asl</include>
                     <include>org.codehaus.jackson:jackson-xc</include>
                     <include>org.apache.ranger:ranger-plugins-audit</include>
-                    <include>org.apache.htrace:htrace-core4</include>
                     <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
                     <include>net.java.dev.jna:jna:jar:${jna.version}</include>
                     <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
