@@ -121,7 +121,8 @@ public class RoleDBStore implements RoleStore {
         Runnable roleVersionUpdater = new RoleVersionUpdater(daoMgr);
         transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
 
-        RangerRole createdRole = roleService.create(role);
+        roleService.create(role);
+        RangerRole createdRole = getRole(role.getName());
         if (createdRole == null) {
             throw new Exception("Cannot create role:[" + role + "]");
         }

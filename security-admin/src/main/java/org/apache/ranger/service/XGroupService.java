@@ -125,10 +125,11 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 			xxGroup.setUpdatedByUserId(createdByUserId);
 		}
 		if (groupExists) {
-			xxGroup = getDao().update(xxGroup);
+			getDao().update(xxGroup);
 		} else {
-			xxGroup = getDao().create(xxGroup);
+			getDao().create(xxGroup);
 		}
+		xxGroup = daoManager.getXXGroup().findByGroupName(vxGroup.getName());
 		vxGroup = postCreate(xxGroup);
 		return vxGroup;
 	}

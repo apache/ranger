@@ -29,6 +29,8 @@ import java.util.List;
 
 import javax.persistence.Query;
 import javax.servlet.http.HttpServletResponse;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
@@ -157,21 +159,20 @@ public class UserMgr {
 		String saltEncodedpasswd = encrypt(user.getLoginId(),
 				user.getPassword());
 		user.setPassword(saltEncodedpasswd);
-		user = daoManager.getXXPortalUser().create(user);
-
-		// Create the UserRole for this user
-		List<XXPortalUserRole> gjUserRoleList = new ArrayList<XXPortalUserRole>();
-		if (userRoleList != null) {
-			for (String userRole : userRoleList) {
-				XXPortalUserRole gjUserRole = addUserRole(user.getId(),
-						userRole);
-				if (gjUserRole != null) {
-					gjUserRoleList.add(gjUserRole);
+		daoManager.getXXPortalUser().create(user);
+		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(user.getLoginId());
+		// Create the XXPortalUserRole entries for this user
+		if (xXPortalUser != null && xXPortalUser.getId() != null) {
+			if (CollectionUtils.isNotEmpty(userRoleList)) {
+				for (String userRole : userRoleList) {
+					addUserRole(xXPortalUser.getId(), userRole);
 				}
 			}
+		} else {
+			logger.error("XXPortalUser user creation failed for user=" + user.getLoginId());
 		}
 
-		return user;
+		return xXPortalUser;
 	}
 
 	public XXPortalUser createUser(VXPortalUser userProfile, int userStatus) {
