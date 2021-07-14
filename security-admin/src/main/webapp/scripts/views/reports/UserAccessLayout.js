@@ -1043,6 +1043,7 @@ define(function(require) {'use strict';
 			params = {
 				group : groups,
 				user : users,
+				role : roles,
 				polResource : rxName,
 				policyNamePartial : policyName,
 				policyType: policyType,
