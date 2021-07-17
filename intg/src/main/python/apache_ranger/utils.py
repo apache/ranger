@@ -89,5 +89,6 @@ class HttpMethod(enum.Enum):
 class HTTPStatus:
     OK                    = 200
     NO_CONTENT            = 204
+    SERVICE_NOT_FOUND     = 404
     INTERNAL_SERVER_ERROR = 500
     SERVICE_UNAVAILABLE   = 503
