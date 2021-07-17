@@ -325,7 +325,7 @@ class RangerClient:
 
             ret = None
         elif response.status_code == HTTPStatus.SERVICE_NOT_FOUND:
-            LOG.error("Ranger service not found. HTTP Status: %s", HTTPStatus.SERVICE_UNAVAILABLE)
+            LOG.error("Ranger service not found. HTTP Status: %s", HTTPStatus.SERVICE_NOT_FOUND)
 
             ret = None
             
