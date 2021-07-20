@@ -78,6 +78,24 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setClusterName(null);
 	}
 
+	public RangerAccessRequestImpl(RangerAccessRequest request) {
+		setResource(request.getResource());
+		setAccessType(request.getAccessType());
+		setUser(request.getUser());
+		setUserGroups(request.getUserGroups());
+		setUserRoles(request.getUserRoles());
+		setForwardedAddresses(request.getForwardedAddresses());
+		setAccessTime(request.getAccessTime());
+		setRemoteIPAddress(request.getRemoteIPAddress());
+		setClientType(request.getClientType());
+		setAction(request.getAction());
+		setRequestData(request.getRequestData());
+		setSessionId(request.getSessionId());
+		setContext(request.getContext());
+		setClusterName(request.getClusterName());
+		setResourceMatchingScope(request.getResourceMatchingScope());
+	}
+
 	@Override
 	public RangerAccessResource getResource() {
 		return resource;

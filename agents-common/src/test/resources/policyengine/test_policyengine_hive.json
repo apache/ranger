@@ -126,7 +126,7 @@
         "resource":{"elements":{}},
         "accessType":"","user":"user5","userGroups":["users"],"requestData":"show databases"
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":9}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":200}
     }
   ,
     {"name":"ALLOW '_any access to db1' for user5: match when request has less levels than policy",

@@ -661,11 +661,59 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + ")");
 		}
 
-		final Date               accessTime  = request.getAccessTime() != null ? request.getAccessTime() : new Date();
-		final RangerAccessResult ret         = createAccessResult(request, policyType);
-		final boolean            isSuperUser = isSuperUser(request.getUser(), request.getUserGroups());
+		RangerAccessResult ret = createAccessResult(request, policyType);
 
-		// for superusers, set access as allowed
+		if (request.isAccessTypeAny()) {
+			RangerAccessResult denyResult  = null;
+			RangerAccessResult allowResult = null;
+
+			List<RangerServiceDef.RangerAccessTypeDef> allAccessDefs = getServiceDef().getAccessTypes();
+
+			for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : allAccessDefs) {
+				RangerAccessRequestImpl requestForOneAccessType = new RangerAccessRequestImpl(request);
+				RangerAccessRequestUtil.setIsAnyAccessInContext(requestForOneAccessType.getContext(), Boolean.TRUE);
+
+				requestForOneAccessType.setAccessType(accessTypeDef.getName());
+
+				RangerAccessResult resultForOneAccessType = evaluatePoliciesForOneAccessTypeNoAudit(requestForOneAccessType, policyType, zoneName, policyRepository, tagPolicyRepository);
+
+				ret.setAuditResultFrom(resultForOneAccessType);
+
+				if (resultForOneAccessType.getIsAccessDetermined()) {
+					if (resultForOneAccessType.getIsAllowed()) {
+						allowResult = resultForOneAccessType;
+						break;
+					} else if (denyResult == null) {
+						denyResult = resultForOneAccessType;
+					}
+				}
+			}
+
+			if (allowResult != null) {
+				ret = allowResult;
+			} else if (denyResult != null) {
+				ret = denyResult;
+			}
+		} else {
+			ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	private RangerAccessResult evaluatePoliciesForOneAccessTypeNoAudit(RangerAccessRequest request, int policyType, String zoneName, RangerPolicyRepository policyRepository, RangerPolicyRepository tagPolicyRepository) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evaluatePoliciesForOneAccessTypeNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + ")");
+		}
+
+		final boolean            isSuperUser = isSuperUser(request.getUser(), request.getUserGroups());
+		final Date               accessTime = request.getAccessTime() != null ? request.getAccessTime() : new Date();
+		final RangerAccessResult ret        = createAccessResult(request, policyType);
+
 		if (isSuperUser || StringUtils.equals(request.getAccessType(), RangerPolicyEngine.SUPER_USER_ACCESS)) {
 			ret.setIsAllowed(isSuperUser);
 			ret.setIsAccessDetermined(true);
@@ -694,9 +742,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			boolean findAuditByResource = !ret.getIsAuditedDetermined();
 			boolean foundInCache        = findAuditByResource && policyRepository.setAuditEnabledFromCache(request, ret);
 
-			if (!isSuperUser) {
-				ret.setIsAccessDetermined(false); // discard result by tag-policies, to evaluate resource policies for possible override
-			}
+			ret.setIsAccessDetermined(false); // discard result by tag-policies, to evaluate resource policies for possible override
 
 			List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchPolicyEvaluators(request, policyType);
 
@@ -752,7 +798,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + "): " + ret);
+			LOG.debug("<== RangerPolicyEngineImpl.evaluatePoliciesForOneAccessTypeNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + "): " + ret);
 		}
 
 		return ret;

@@ -248,12 +248,12 @@
     }
     ,
     {
-      "name":"ALLOW 'use default;' for hive",
+      "name":"DENY 'use default;' for hive",
       "request":{
         "resource":{"elements":{"database":"default"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"'use default;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
     }
     ,
     {
@@ -284,12 +284,12 @@
     }
     ,
     {
-      "name":"ALLOW 'show databases;' for hive",
+      "name":"DENY 'show databases;' for hive",
       "request":{
         "resource":{"elements":{}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"'show databases;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
+      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
     }
   ]
 }

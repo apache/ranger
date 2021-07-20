@@ -44,6 +44,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_OWNER = "OWNER";
 	public static final String KEY_ROLES = "ROLES";
 	public static final String KEY_CONTEXT_ACCESSTYPES = "ACCESSTYPES";
+	public static final String KEY_CONTEXT_IS_ANY_ACCESS = "ISANYACCESS";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
@@ -174,5 +175,13 @@ public class RangerAccessRequestUtil {
 		}
 
 		return ret;
+	}
+
+	public static void setIsAnyAccessInContext(Map<String, Object> context, Boolean value) {
+		context.put(KEY_CONTEXT_IS_ANY_ACCESS, value);
+	}
+
+	public static Boolean getIsAnyAccessInContext(Map<String, Object> context) {
+		return (Boolean)context.get(KEY_CONTEXT_IS_ANY_ACCESS);
 	}
 }
