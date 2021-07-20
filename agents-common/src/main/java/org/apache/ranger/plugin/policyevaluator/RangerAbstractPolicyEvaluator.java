@@ -19,8 +19,6 @@
 
 package org.apache.ranger.plugin.policyevaluator;
 
-
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,7 +30,9 @@ import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyEvaluator.class);
@@ -54,7 +54,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			LOG.debug("==> RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
 		}
 
-		this.policy          = policy;
+		this.policy          = getPrunedPolicy(policy);
 		this.serviceDef      = serviceDef;
 		this.leafResourceDef = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
 
@@ -103,6 +103,62 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 
 	public boolean hasDeny() {
 		return policy != null && (policy.getIsDenyAllElse() || CollectionUtils.isNotEmpty(policy.getDenyPolicyItems()));
+	}
+
+	private RangerPolicy getPrunedPolicy(final RangerPolicy policy) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractPolicyEvaluator.getPrunedPolicy(" + policy + ")");
+		}
+
+		final RangerPolicy                        ret;
+
+		final boolean                             isPruningNeeded;
+		final List<RangerPolicy.RangerPolicyItem> prunedAllowItems;
+		final List<RangerPolicy.RangerPolicyItem> prunedDenyItems;
+		final List<RangerPolicy.RangerPolicyItem> prunedAllowExceptions;
+		final List<RangerPolicy.RangerPolicyItem> prunedDenyExceptions;
+
+		final RangerPluginContext pluginContext = getPluginContext();
+
+		if (pluginContext != null && pluginContext.getConfig().getPolicyEngineOptions().evaluateDelegateAdminOnly) {
+			prunedAllowItems      = policy.getPolicyItems().stream().filter(RangerPolicy.RangerPolicyItem::getDelegateAdmin).collect(Collectors.toList());
+			prunedDenyItems       = policy.getDenyPolicyItems().stream().filter(RangerPolicy.RangerPolicyItem::getDelegateAdmin).collect(Collectors.toList());
+			prunedAllowExceptions = policy.getAllowExceptions().stream().filter(RangerPolicy.RangerPolicyItem::getDelegateAdmin).collect(Collectors.toList());
+			prunedDenyExceptions  = policy.getDenyExceptions().stream().filter(RangerPolicy.RangerPolicyItem::getDelegateAdmin).collect(Collectors.toList());
+
+			isPruningNeeded = prunedAllowItems.size() != policy.getPolicyItems().size()
+					|| prunedDenyItems.size() != policy.getDenyPolicyItems().size()
+					|| prunedAllowExceptions.size() != policy.getAllowExceptions().size()
+					|| prunedDenyExceptions.size() != policy.getDenyExceptions().size();
+		} else {
+			prunedAllowItems      = null;
+			prunedDenyItems       = null;
+			prunedAllowExceptions = null;
+			prunedDenyExceptions  = null;
+			isPruningNeeded       = false;
+		}
+
+		if (!isPruningNeeded) {
+			ret = policy;
+		} else {
+			ret = new RangerPolicy();
+			ret.updateFrom(policy);
+
+			ret.setId(policy.getId());
+			ret.setGuid(policy.getGuid());
+			ret.setVersion(policy.getVersion());
+			ret.setServiceType(policy.getServiceType());
+
+			ret.setPolicyItems(prunedAllowItems);
+			ret.setDenyPolicyItems(prunedDenyItems);
+			ret.setAllowExceptions(prunedAllowExceptions);
+			ret.setDenyExceptions(prunedDenyExceptions);
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractPolicyEvaluator.getPrunedPolicy(isPruningNeeded=" + isPruningNeeded + ") : " + ret);
+		}
+
+		return ret;
 	}
 
 	@Override

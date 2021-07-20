@@ -28,7 +28,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -902,8 +901,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			return;
 		}
 
-		prunePolicyItems(policy);
-
 		preprocessPolicyItems(policy.getPolicyItems(), impliedAccessGrants);
 		preprocessPolicyItems(policy.getDenyPolicyItems(), impliedAccessGrants);
 		preprocessPolicyItems(policy.getAllowExceptions(), impliedAccessGrants);
@@ -971,15 +968,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		}
 
 		return ret;
-	}
-
-	private void prunePolicyItems(RangerPolicy policy) {
-		if (getPluginContext().getConfig().getPolicyEngineOptions().evaluateDelegateAdminOnly) {
-			policy.setPolicyItems(policy.getPolicyItems().stream().filter(RangerPolicyItem::getDelegateAdmin).collect(Collectors.toList()));
-			policy.setDenyPolicyItems(policy.getDenyPolicyItems().stream().filter(RangerPolicyItem::getDelegateAdmin).collect(Collectors.toList()));
-			policy.setAllowExceptions(policy.getAllowExceptions().stream().filter(RangerPolicyItem::getDelegateAdmin).collect(Collectors.toList()));
-			policy.setDenyExceptions(policy.getDenyExceptions().stream().filter(RangerPolicyItem::getDelegateAdmin).collect(Collectors.toList()));
-		}
 	}
 
 	private RangerPolicyItemAccess getAccess(RangerPolicyItem policyItem, String accessType) {
