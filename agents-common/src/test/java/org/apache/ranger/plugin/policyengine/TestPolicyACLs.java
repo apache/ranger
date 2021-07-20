@@ -259,7 +259,9 @@ public class TestPolicyACLs {
 				} else if (!(MapUtils.isEmpty(acls.getRoleACLs()) && MapUtils.isEmpty(oneTest.rolePermissions))) {
 					roleACLsMatched = false;
 				}
-				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name, userACLsMatched && groupACLsMatched && roleACLsMatched && rowFiltersMatched && dataMaskingMatched);
+
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - userACLsMatched=" + userACLsMatched + "; groupACLsMatched=" + groupACLsMatched + "; roleACLsMatched=" + roleACLsMatched + "; rowFiltersMatched=" + rowFiltersMatched + "; dataMaskingMatched=" + dataMaskingMatched,
+						   userACLsMatched && groupACLsMatched && roleACLsMatched && rowFiltersMatched && dataMaskingMatched);
 			}
 		}
 	}
