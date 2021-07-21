@@ -669,7 +669,6 @@ public class RangerSystemAccessControl
       LOG.debug("RangerSystemAccessControl.checkCanReadSystemInformation(" + context.getIdentity().getUser() + ") denied");
       AccessDeniedException.denyImpersonateUser(context.getIdentity().getUser(), "trino");
     }
-    LOG.debug("RangerSystemAccessControl.checkCanReadSystemInformation(" + context.getIdentity().getUser() + ") allowed");
   }
 
   @Override
@@ -678,7 +677,6 @@ public class RangerSystemAccessControl
       LOG.debug("RangerSystemAccessControl.checkCanWriteSystemInformation(" + context.getIdentity().getUser() + ") denied");
       AccessDeniedException.denyImpersonateUser(context.getIdentity().getUser(), "trino");
     }
-    LOG.debug("RangerSystemAccessControl.checkCanReadSystemInformation(" + context.getIdentity().getUser() + ") allowed");
   }
 
   /** FUNCTIONS **/
