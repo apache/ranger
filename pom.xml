@@ -238,20 +238,8 @@
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
                 <module>kms</module>
-                <module>hbase-agent</module>
-                <module>hdfs-agent</module>
-                <module>hive-agent</module>
-                <module>knox-agent</module>
-                <module>storm-agent</module>
-                <module>plugin-yarn</module>
-                <module>plugin-ozone</module>
                 <module>security-admin</module>
-                <module>plugin-kafka</module>
-                <module>plugin-solr</module>
-                <module>plugin-nifi</module>
-                <module>plugin-nifi-registry</module>
                 <module>plugin-trino</module>
-                <module>plugin-kudu</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -259,29 +247,11 @@
                 <module>ranger-util</module>
                 <module>plugin-kms</module>
                 <module>tagsync</module>
-                <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
-                <module>ranger-hive-plugin-shim</module>
-                <module>ranger-hbase-plugin-shim</module>
-                <module>ranger-knox-plugin-shim</module>
-                <module>ranger-yarn-plugin-shim</module>
-                <module>ranger-ozone-plugin-shim</module>
-                <module>ranger-storm-plugin-shim</module>
-                <module>ranger-kafka-plugin-shim</module>
-                <module>ranger-solr-plugin-shim</module>
-                <module>ranger-atlas-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-trino-plugin-shim</module>
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
-                <module>plugin-atlas</module>
-                <module>plugin-schema-registry</module>
-                <module>plugin-sqoop</module>
-                <module>ranger-sqoop-plugin-shim</module>
-                <module>plugin-kylin</module>
-                <module>ranger-kylin-plugin-shim</module>
-                <module>plugin-elasticsearch</module>
-                <module>ranger-elasticsearch-plugin-shim</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -532,19 +502,7 @@
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
                 <module>kms</module>
-                <module>hbase-agent</module>
-                <module>hdfs-agent</module>
-                <module>hive-agent</module>
-                <module>knox-agent</module>
-                <module>storm-agent</module>
-                <module>plugin-yarn</module>
-                <module>plugin-ozone</module>
                 <module>security-admin</module>
-                <module>plugin-kafka</module>
-                <module>plugin-solr</module>
-                <module>plugin-nifi</module>
-                <module>plugin-nifi-registry</module>
-                <module>plugin-kudu</module>
                 <module>ugsync</module>
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
@@ -553,30 +511,12 @@
                 <module>ranger-util</module>
                 <module>plugin-kms</module>
                 <module>tagsync</module>
-                <module>ranger-hdfs-plugin-shim</module>
                 <module>ranger-plugin-classloader</module>
-                <module>ranger-hive-plugin-shim</module>
-                <module>ranger-hbase-plugin-shim</module>
-                <module>ranger-knox-plugin-shim</module>
-                <module>ranger-yarn-plugin-shim</module>
-                <module>ranger-ozone-plugin-shim</module>
-                <module>ranger-storm-plugin-shim</module>
-                <module>ranger-kafka-plugin-shim</module>
-                <module>ranger-solr-plugin-shim</module>
-                <module>ranger-atlas-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
-                <module>plugin-atlas</module>
-                <module>plugin-schema-registry</module>
-                <module>plugin-sqoop</module>
-                <module>ranger-sqoop-plugin-shim</module>
-                <module>plugin-kylin</module>
-                <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-trino</module>
                 <module>ranger-trino-plugin-shim</module>
-                <module>plugin-elasticsearch</module>
-                <module>ranger-elasticsearch-plugin-shim</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
