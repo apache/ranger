@@ -266,7 +266,7 @@ public class EmbeddedServer {
                        if (!workDirPath.isEmpty() && new File(workDirPath).exists()) {
                            webappCtx.setWorkDir(workDirPath);
                        } else {
-                            if (LOG.getLevel().equals(Level.FINE)) {
+                            if (LOG.isLoggable(Level.FINE)) {
                                 LOG.fine("Skipping to set tomcat server work directory, '" + workDirPath +
                                     "', as it is blank or directory does not exist.");
                             }
