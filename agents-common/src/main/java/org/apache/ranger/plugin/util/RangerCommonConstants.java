@@ -48,6 +48,8 @@ public class RangerCommonConstants {
 	public static final boolean RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT     = false;
 	public static final boolean PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT    = false;
 
+	public static final boolean POLICY_REST_CLIENT_SESSION_COOKIE_ENABLED            = true;
+
 	public static final String SCRIPT_OPTION_ENABLE_JSON_CTX        = "enableJsonCtx";
 	public static final String SCRIPT_VAR_CONTEXT                   = "_ctx";
 	public static final String SCRIPT_VAR_CONTEXT_JSON              = "_ctx_json";

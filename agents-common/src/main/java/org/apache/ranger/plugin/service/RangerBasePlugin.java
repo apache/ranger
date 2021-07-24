@@ -140,6 +140,10 @@ public class RangerBasePlugin {
 		return pluginConfig.getClusterName();
 	}
 
+	public RangerPluginContext getPluginContext() {
+		return pluginContext;
+	}
+
 	public RangerAuthContext getCurrentRangerAuthContext() { return currentAuthContext; }
 
 	// For backward compatibility

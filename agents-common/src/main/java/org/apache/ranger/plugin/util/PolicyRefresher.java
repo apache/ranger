@@ -33,6 +33,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 
 import com.google.gson.Gson;
@@ -89,8 +90,10 @@ public class PolicyRefresher extends Thread {
 			LOG.fatal("PolicyRefresher(): failed to create GsonBuilder object", excp);
 		}
 
+		RangerPluginContext pluginContext  = plugIn.getPluginContext();
+		RangerAdminClient   adminClient    = pluginContext.getAdminClient();
+		this.rangerAdmin                   = (adminClient != null) ? adminClient : pluginContext.createAdminClient(pluginConfig);
 		this.gson                          = gson;
-		this.rangerAdmin                   = RangerBasePlugin.createAdminClient(pluginConfig);
 		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
 		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 
