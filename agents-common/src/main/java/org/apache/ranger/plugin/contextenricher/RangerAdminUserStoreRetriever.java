@@ -24,7 +24,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.RangerUserStore;
 
 import java.nio.channels.ClosedByInterruptException;
@@ -45,7 +45,10 @@ public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
                 pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
             }
 
-            adminClient = RangerBasePlugin.createAdminClient(pluginConfig);
+            RangerPluginContext pluginContext = getPluginContext();
+            RangerAdminClient	rangerAdmin  = pluginContext.getAdminClient();
+            this.adminClient                 = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
+
         } else {
             LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving userstore. Will NOT be able to retrieve userstore.");
         }

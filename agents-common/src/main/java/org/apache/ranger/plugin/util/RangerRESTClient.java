@@ -472,6 +472,32 @@ public class RangerRESTClient {
 		return finalResponse;
 	}
 
+	public ClientResponse get(String relativeUrl, Map<String, String> params, Cookie sessionId) throws Exception{
+		ClientResponse finalResponse = null;
+		int startIndex = this.lastKnownActiveUrlIndex;
+		int currentIndex = 0;
+
+		for (int index = 0; index < configuredURLs.size(); index++) {
+			try {
+				currentIndex = (startIndex + index) % configuredURLs.size();
+
+				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeUrl);
+				webResource = setQueryParams(webResource, params);
+				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+				finalResponse = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON).get(ClientResponse.class);
+
+				if (finalResponse != null) {
+					setLastKnownActiveUrlIndex(currentIndex);
+					break;
+				}
+			} catch (ClientHandlerException ex) {
+				LOG.warn("Failed to communicate with Ranger Admin, URL : "+configuredURLs.get(currentIndex));
+				processException(index, ex);
+			}
+		}
+		return finalResponse;
+	}
+
 	public ClientResponse post(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;

@@ -19,14 +19,22 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.admin.client.RangerAdminRESTClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.service.RangerAuthContextListener;
 
 public class RangerPluginContext {
+	private static final Log LOG = LogFactory.getLog(RangerPluginContext.class);
+
 	private final RangerPluginConfig        config;
 	private       RangerAuthContext         authContext;
 	private       RangerAuthContextListener authContextListener;
+	private 	  RangerAdminClient         adminClient;
 
 
 	public RangerPluginContext(RangerPluginConfig config) {
@@ -57,4 +65,54 @@ public class RangerPluginContext {
 		}
 	}
 
+	public RangerAdminClient getAdminClient() {
+		return adminClient;
+	}
+
+	public void setAdminClient(RangerAdminClient adminClient) {
+		this.adminClient = adminClient;
+	}
+
+	public RangerAdminClient createAdminClient(RangerPluginConfig pluginConfig) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.createAdminClient(" + pluginConfig.getServiceName() + ", " + pluginConfig.getAppId() + ", " + pluginConfig.getPropertyPrefix() + ")");
+		}
+
+		RangerAdminClient ret              = null;
+		String            propertyName     = pluginConfig.getPropertyPrefix() + ".policy.source.impl";
+		String            policySourceImpl = pluginConfig.get(propertyName);
+
+		if(StringUtils.isEmpty(policySourceImpl)) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("Value for property[%s] was null or empty. Unexpected! Will use policy source of type[%s]", propertyName, RangerAdminRESTClient.class.getName()));
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug(String.format("Value for property[%s] was [%s].", propertyName, policySourceImpl));
+			}
+
+			try {
+				@SuppressWarnings("unchecked")
+				Class<RangerAdminClient> adminClass = (Class<RangerAdminClient>)Class.forName(policySourceImpl);
+
+				ret = adminClass.newInstance();
+			} catch (Exception excp) {
+				LOG.error("failed to instantiate policy source of type '" + policySourceImpl + "'. Will use policy source of type '" + RangerAdminRESTClient.class.getName() + "'", excp);
+			}
+		}
+
+		if(ret == null) {
+			ret = new RangerAdminRESTClient();
+		}
+
+		ret.init(pluginConfig.getServiceName(), pluginConfig.getAppId(), pluginConfig.getPropertyPrefix(), pluginConfig);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.createAdminClient(" + pluginConfig.getServiceName() + ", " + pluginConfig.getAppId() + ", " + pluginConfig.getPropertyPrefix() + "): policySourceImpl=" + policySourceImpl + ", client=" + ret);
+		}
+
+		setAdminClient(ret);
+
+		return ret;
+	}
 }

@@ -96,6 +96,7 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
                 userStoreRetriever.setServiceDef(serviceDef);
                 userStoreRetriever.setAppId(appId);
                 userStoreRetriever.setPluginConfig(getPluginConfig());
+                userStoreRetriever.setPluginContext(getPluginContext());
                 userStoreRetriever.init(enricherDef.getEnricherOptions());
 
                 userStoreRefresher = new RangerUserStoreRefresher(userStoreRetriever, this, null, -1L, userStoreDownloadQueue, cacheFile);
