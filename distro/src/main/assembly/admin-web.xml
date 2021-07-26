@@ -603,5 +603,12 @@
       <fileMode>0755</fileMode>
       <directoryMode>0755</directoryMode>
     </fileSet>
+
+    <fileSet>
+      <outputDirectory>stability-tests</outputDirectory>
+      <directory>${project.parent.basedir}/security-admin/src/test/resources/stability-tests</directory>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
   </fileSets>
 </assembly>
