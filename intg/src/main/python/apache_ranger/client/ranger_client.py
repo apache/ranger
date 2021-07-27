@@ -19,7 +19,10 @@
 
 import json
 import logging
-import os
+try:
+    from urllib.parse import urljoin
+except ImportError:
+    from urlparse import urljoin
 from apache_ranger.exceptions                 import RangerServiceException
 from apache_ranger.model.ranger_base          import RangerBase
 from apache_ranger.model.ranger_policy        import RangerPolicy
@@ -279,7 +282,7 @@ class RangerClient:
         if request_data:
             params['data'] = json.dumps(request_data)
 
-        path = os.path.join(self.url, api.path)
+        path = urljoin(self.url, api.path)
 
         if LOG.isEnabledFor(logging.DEBUG):
             LOG.debug("------------------------------------------------------")
