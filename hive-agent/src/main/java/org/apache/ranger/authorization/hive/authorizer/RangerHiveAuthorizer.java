@@ -109,8 +109,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private static final String CMD_SHOW_ROLES         = "show roles";
 	private static final String CMD_SHOW_ROLE_GRANT    = "show role grant %s";
 	private static final String CMD_SHOW_PRINCIPALS    = "show principals %s";
-	private static final String CMD_GRANT_ROLE         = "grant role %s to %s ";
-	private static final String CMD_REVOKE_ROLE        = "revoke role %s from %s";
+	private static final String CMD_GRANT_ROLE         = "grant %s to %s ";
+	private static final String CMD_REVOKE_ROLE        = "revoke %s from %s";
 
 	private static final Set<String> RESERVED_ROLE_NAMES;
 
@@ -2870,7 +2870,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				ret = String.format(CMD_GRANT_ROLE, roleName, user);
 				break;
 			case REVOKE_ROLE:
-				ret = String.format(CMD_REVOKE_ROLE, user, roleName);
+				ret = String.format(CMD_REVOKE_ROLE, roleName, user);
 				break;
 		}
 
