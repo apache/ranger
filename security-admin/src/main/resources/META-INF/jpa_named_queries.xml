@@ -497,6 +497,10 @@
 		<query>select obj from XXServiceConfigMap obj where obj.serviceId = :serviceId</query>
 	</named-query>
 
+	<named-query name="XXServiceConfigMap.findByConfigKey">
+		<query>select obj from XXServiceConfigMap obj where obj.configKey = :configKey</query>
+	</named-query>
+
 	<named-query name="XXServiceConfigMap.findByServiceAndConfigKey">
 		<query>select obj from XXServiceConfigMap obj where
 			obj.serviceId = :serviceId and obj.configKey = :configKey</query>

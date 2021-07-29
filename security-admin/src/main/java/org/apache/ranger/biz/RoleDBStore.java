@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -81,6 +82,9 @@ public class RoleDBStore implements RoleStore {
     
     @Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+
+	@Autowired
+	ServiceDBStore svcStore;
 
     RangerAdminConfig config;
 
@@ -197,6 +201,8 @@ public class RoleDBStore implements RoleStore {
 
         RangerRole role = roleService.read(xxRole.getId());
         roleRefUpdater.cleanupRefTables(role);
+		// delete role from audit filter configs
+		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
         roleService.delete(role);
 
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
@@ -213,6 +219,8 @@ public class RoleDBStore implements RoleStore {
         transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
 
         roleRefUpdater.cleanupRefTables(role);
+		// delete role from audit filter configs
+		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
         roleService.delete(role);
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
         bizUtil.createTrxLog(trxLogList);

@@ -33,6 +33,7 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.*;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
@@ -2153,6 +2154,8 @@ public class XUserMgr extends XUserMgrBase {
 					}
 				}
 			}
+			//delete group from audit filter configs
+			svcStore.updateServiceAuditConfig(vXGroup.getName(), REMOVE_REF_TYPE.GROUP);
 			//delete XXGroup
 			xXGroupDao.remove(id);
 			//Create XXTrxLog
@@ -2345,6 +2348,8 @@ public class XUserMgr extends XUserMgrBase {
 					throw restErrorUtil.createRESTException(excp.getMessage());
 				}
 			}
+			//delete user from audit filter configs
+			svcStore.updateServiceAuditConfig(vXUser.getName(), REMOVE_REF_TYPE.USER);
 			//delete XXUser entry of user
 			xXUserDao.remove(id);
 			//delete XXPortal entry of user

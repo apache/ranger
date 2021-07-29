@@ -116,4 +116,17 @@ public class XXServiceConfigMapDao extends BaseDao<XXServiceConfigMap> {
 			return Collections.emptyList();
 		}
 	}
+
+	public List<XXServiceConfigMap> findByConfigKey(String configKey) {
+		if(configKey == null) {
+			return Collections.emptyList();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXServiceConfigMap.findByConfigKey", tClass)
+					.setParameter("configKey", configKey).getResultList();
+		} catch (NoResultException e) {
+			return Collections.emptyList();
+		}
+	}
 }
