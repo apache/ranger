@@ -61,6 +61,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -133,6 +134,7 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -5799,5 +5801,129 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
+	private List<XXServiceConfigMap> getAuditFiltersServiceConfigByName(String searchUsrGrpRoleName) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("===> ServiceDBStore.getAuditFiltersServiceConfigByName( searchUsrGrpRoleName : "
+					+ searchUsrGrpRoleName + ")");
+		}
+		List<XXServiceConfigMap> configMapToBeModified = null;
 
+		if (StringUtils.isNotBlank(searchUsrGrpRoleName)) {
+			configMapToBeModified = new ArrayList<XXServiceConfigMap>();
+			XXServiceConfigMapDao configDao = daoMgr.getXXServiceConfigMap();
+			List<XXServiceConfigMap> configs = configDao.findByConfigKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS);
+			for (XXServiceConfigMap configMap : configs) {
+				if (StringUtils.contains(configMap.getConfigvalue(), searchUsrGrpRoleName)) {
+					configMapToBeModified.add(configMap);
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<=== ServiceDBStore.getAuditFiltersServiceConfigByName( searchUsrGrpRoleName : "
+					+ searchUsrGrpRoleName + ") configMapToBeModified : " + configMapToBeModified);
+		}
+		return configMapToBeModified;
+	}
+
+	public enum REMOVE_REF_TYPE { USER, GROUP, ROLE }
+
+	public void updateServiceAuditConfig(String searchUsrGrpRoleName, REMOVE_REF_TYPE removeRefType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("===> ServiceDBStore.updateServiceAuditConfig( searchUsrGrpRoleName : " + searchUsrGrpRoleName + " removeRefType : "
+					+ removeRefType + ")");
+		}
+		List<XXServiceConfigMap> configMapToBeModified = getAuditFiltersServiceConfigByName(searchUsrGrpRoleName);
+		if (CollectionUtils.isNotEmpty(configMapToBeModified)) {
+			for (XXServiceConfigMap xConfigMap : configMapToBeModified) {
+				String jsonStr = xConfigMap.getConfigvalue() != null ? xConfigMap.getConfigvalue() : null;
+				if (StringUtils.isNotBlank(jsonStr)) {
+					List<AuditFilter> auditFilters = JsonUtils.jsonToAuditFilterList(jsonStr);
+					int filterCount = auditFilters != null ? auditFilters.size() : 0;
+					RangerService rangerService = null;
+					if (filterCount > 0) {
+						String userName = null;
+						String groupName = null;
+						String roleName = null;
+						if (removeRefType == REMOVE_REF_TYPE.USER) {
+							userName = searchUsrGrpRoleName;
+						} else if (removeRefType == REMOVE_REF_TYPE.GROUP) {
+							groupName = searchUsrGrpRoleName;
+						} else if (removeRefType == REMOVE_REF_TYPE.ROLE) {
+							roleName = searchUsrGrpRoleName;
+						}
+						removeUserGroupRoleReferences(auditFilters, userName, groupName, roleName);
+						String updatedJsonStr = JsonUtils.listToJson(auditFilters);
+						XXService xService = daoMgr.getXXService().getById(xConfigMap.getServiceId());
+						rangerService = svcService.getPopulatedViewObject(xService);
+						Map<String, String> configs = rangerService.getConfigs();
+						if (configs.containsKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
+							updatedJsonStr = StringUtils.isBlank(updatedJsonStr) ? ""
+									: updatedJsonStr.replaceAll("\"", "'");
+
+							configs.put(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS, updatedJsonStr);
+
+							try {
+								LOG.info("==>ServiceDBStore.updateServiceAuditConfig updating audit-filter of service : "+rangerService.getName()  +" as part of delete request for : " + searchUsrGrpRoleName);
+								updateService(rangerService, null);
+							} catch (Throwable excp) {
+								LOG.error("updateService(" + rangerService + ") failed", excp);
+
+								throw restErrorUtil.createRESTException(excp.getMessage());
+							}
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("ServiceDBStore.updateServiceAuditConfig audit filter count is zero ");
+						}
+					}
+				}
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.info("ServiceDBStore.updateServiceAuditConfig no service audit filter Config map found for : "
+					+ searchUsrGrpRoleName);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<=== ServiceDBStore.updateServiceAuditConfig( searchUsrGrpRoleName : " + searchUsrGrpRoleName + " removeRefType : "
+					+ removeRefType  + ")");
+		}
+	}
+
+	private void removeUserGroupRoleReferences(List<AuditFilter> auditFilters, String user, String group, String role) {
+		List<AuditFilter> itemsToRemove = null;
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("===> ServiceDBStore.removeUserGroupRoleReferences( user : "+ user + " group : "+ group + " role : " + role + " auditFilters : " + auditFilters +")");
+		}
+		for (AuditFilter auditFilter : auditFilters) {
+			boolean isAuditFilterModified = false;
+			if (StringUtils.isNotEmpty(user) && CollectionUtils.isNotEmpty(auditFilter.getUsers())) {
+				auditFilter.getUsers().remove(user);
+				isAuditFilterModified = true;
+			}
+			if (StringUtils.isNotEmpty(group) && CollectionUtils.isNotEmpty(auditFilter.getGroups())) {
+				auditFilter.getGroups().remove(group);
+				isAuditFilterModified = true;
+			}
+			if (StringUtils.isNotEmpty(role) && CollectionUtils.isNotEmpty(auditFilter.getRoles())) {
+				auditFilter.getRoles().remove(role);
+				isAuditFilterModified = true;
+			}
+			if (isAuditFilterModified && CollectionUtils.isEmpty(auditFilter.getUsers())
+					&& CollectionUtils.isEmpty(auditFilter.getGroups())
+					&& CollectionUtils.isEmpty(auditFilter.getRoles())) {
+				if (itemsToRemove == null) {
+					itemsToRemove = new ArrayList<AuditFilter>();
+				}
+				itemsToRemove.add(auditFilter);
+			}
+		}
+		if (CollectionUtils.isNotEmpty(itemsToRemove)) {
+			auditFilters.removeAll(itemsToRemove);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<=== ServiceDBStore.removeUserGroupRoleReferences( user : "+ user + " group : "+ group + " role : " + role + " auditFilters : " + auditFilters +")");
+		}
+	}
 }
