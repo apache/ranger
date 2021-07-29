@@ -343,7 +343,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerHiveAuthorizer.getAllRoles()");
 		}
-		List<String>           ret          = null;
+		List<String>           ret          = new ArrayList<>();
 		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
 		List<String> 		   userNames    = null;
 		boolean	               result       = false;
@@ -360,13 +360,20 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		try {
 			if (!hivePlugin.isServiceAdmin(currentUserName)) {
-				throw new HiveAccessControlException("RangerHiveAuthorizer.getPrincipalGrantInfoForRole(): User information not available...");
+				throw new HiveAccessControlException("RangerHiveAuthorizer.getAllRoles(): User not authorized to run show roles...");
 			}
 
-			Set<String> groups = Sets.newHashSet(ugi.getGroupNames());
-			userNames          = Arrays.asList(currentUserName);
-			Set<String> roles  = hivePlugin.getRolesFromUserAndGroups(currentUserName, groups);
-			ret = new ArrayList<>(roles);
+			userNames = Arrays.asList(currentUserName);
+
+			RangerRoles rangerRoles = hivePlugin.getRangerRoles();
+			if (rangerRoles != null) {
+				Set<RangerRole> roles = rangerRoles.getRangerRoles();
+				if (CollectionUtils.isNotEmpty(roles)) {
+					for (RangerRole rangerRole : roles) {
+						ret.add(rangerRole.getName());
+					}
+				}
+			}
 			result = true;
 
 		} catch(Exception excp) {
