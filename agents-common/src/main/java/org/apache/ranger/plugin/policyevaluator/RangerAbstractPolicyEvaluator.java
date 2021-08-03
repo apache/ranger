@@ -59,7 +59,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 		this.leafResourceDef = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
+			LOG.debug("<== RangerAbstractPolicyEvaluator.init(" + this.policy + ", " + serviceDef + ")");
 		}
 	}
 
