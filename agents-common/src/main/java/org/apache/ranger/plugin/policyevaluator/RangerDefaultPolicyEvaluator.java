@@ -123,6 +123,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		super.init(policy, serviceDef, options);
 
+		policy = getPolicy();
+
 		preprocessPolicy(policy, serviceDef);
 
 		resourceMatcher = new RangerDefaultPolicyResourceMatcher();
