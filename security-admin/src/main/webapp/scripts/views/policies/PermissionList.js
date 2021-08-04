@@ -174,12 +174,15 @@ define(function(require) {
 			}
 		},
 		dropDownChange : function($select){
-			var that = this;
+			var that = this, otherName, otherName2;
 			$select.on('change',function(e){
-                                var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group' :
+                var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group' :
                                 (($(e.currentTarget).attr('data-js') == that.ui.selectUsers.attr('data-js')) ? 'user' : 'role');
-				var otherName = (name == 'user') ? 'group': 'user';
-                                var otherName2 = (name == 'user') ? 'role': 'user';
+				var nameList = ['user', 'group', 'role'];
+				nameList.splice(nameList.indexOf(name),1);
+				otherName = nameList.pop();
+				otherName2 = nameList.pop();
+
 				that.checkDirtyFieldForDropDown(e);
 				
 				if(_.isNull(that.model.get(otherName+'Name'))){
