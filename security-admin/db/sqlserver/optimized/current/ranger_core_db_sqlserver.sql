@@ -966,6 +966,7 @@ CREATE TABLE [dbo].[x_portal_user](
         [user_src] [int] DEFAULT 0 NOT NULL,
         [notes] [varchar](4000) DEFAULT NULL NULL,
         [other_attributes] [varchar](4000) DEFAULT NULL NULL,
+        [sync_source] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1118,6 +1119,7 @@ CREATE TABLE [dbo].[x_group](
         [group_src] [int] DEFAULT 0 NOT NULL,
         [is_visible] [int] DEFAULT 1 NOT NULL,
         [other_attributes] [varchar](4000) DEFAULT NULL NULL,
+        [sync_source] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1161,6 +1163,7 @@ CREATE TABLE [dbo].[x_user](
         [cred_store_id] [bigint] DEFAULT NULL NULL,
         [is_visible] [int] DEFAULT 1 NOT NULL,
         [other_attributes] [varchar](4000) DEFAULT NULL NULL,
+        [sync_source] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -4095,6 +4098,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('052',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('053',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('054',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);

@@ -29,6 +29,7 @@ public class XUserInfo {
 	private String name;
 	private String 	description;
 	private String otherAttributes;
+	private String syncSource;
 	private Map<String, String> otherAttrsMap = new HashMap<>();
 	private String userSource;
 	private String status;
@@ -39,18 +40,23 @@ public class XUserInfo {
 	public String getId() {
 		return id;
 	}
+
 	public void setId(String id) {
 		this.id = id;
 	}
+
 	public String getName() {
 		return name;
 	}
+
 	public void setName(String name) {
 		this.name = name;
 	}
+
 	public String getDescription() {
 		return description;
 	}
+
 	public void setDescription(String description) {
 		this.description = description;
 	}
@@ -122,6 +128,10 @@ public class XUserInfo {
 	public void setOtherAttributes(String otherAttributes) {
 		this.otherAttributes = otherAttributes;
 	}
+
+	public String getSyncSource() { return syncSource; }
+
+	public void setSyncSource(String syncSource) { this.syncSource = syncSource; }
 
 	@Override
     public String toString() {

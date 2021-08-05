@@ -74,10 +74,12 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,
 				"XXGroupUser groupUser", "obj.id = groupUser.parentGroupId"));
 
+		searchFields.add(new SearchField("syncSource", "obj.syncSource",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
-		 sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
+		sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
 	}
 
 	@Override

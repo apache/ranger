@@ -254,8 +254,8 @@ public class XUserREST {
 				request, xGroupService.sortFields);
 		searchUtil.extractString(request, searchCriteria, "name", "group name", null);
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "Group Visibility");
-//		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", null);
 		searchUtil.extractInt(request, searchCriteria, "groupSource", "group source");
+		searchUtil.extractString(request, searchCriteria, "syncSource", "Sync Source", null);
 		return xUserMgr.searchXGroups(searchCriteria);
 	}
 
@@ -384,9 +384,10 @@ public class XUserREST {
 		searchUtil.extractInt(request, searchCriteria, "userSource", "User Source");
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
 		searchUtil.extractInt(request, searchCriteria, "status", "User Status");
-		List<String> userRolesList = searchUtil.extractStringList(request, searchCriteria, "userRoleList", "User Role List", "userRoleList", null,
-				null);
+		List<String> userRolesList = searchUtil.extractStringList(request, searchCriteria, "userRoleList",
+				"User Role List", "userRoleList", null, null);
 		searchUtil.extractRoleString(request, searchCriteria, "userRole", "Role", null);
+		searchUtil.extractString(request, searchCriteria, "syncSource", "Sync Source", null);
 
 		if (CollectionUtils.isNotEmpty(userRolesList) && CollectionUtils.size(userRolesList) == 1 && userRolesList.get(0).equalsIgnoreCase(UserRoleParamName)) {
 			if (!(searchCriteria.getParamList().containsKey("name"))) {

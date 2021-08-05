@@ -92,6 +92,11 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 	protected String otherAttributes;
 
 	/**
+	 * Sync Source
+	 */
+	protected String syncSource;
+
+	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXUser ( ) {
@@ -306,6 +311,17 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 	}
 
 	/**
+	 * @return {@link String} - sync Source.
+	 */
+	public String getSyncSource() { return syncSource; }
+
+	/**
+	 * This method sets additional attributes.
+	 * @param syncSource
+	 */
+	public void setSyncSource(String syncSource) { this.syncSource = syncSource; }
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -323,6 +339,7 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 		str += "groupNameList={" + groupNameList + "} ";
         str += "roleList={" + userRoleList + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
+		str += "syncSource={" + syncSource + "} ";
 		str += "}";
 		return str;
 	}

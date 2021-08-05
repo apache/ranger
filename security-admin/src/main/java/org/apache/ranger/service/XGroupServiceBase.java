@@ -53,6 +53,7 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		mObj.setCredStoreId( vObj.getCredStoreId());
 		mObj.setGroupSource(vObj.getGroupSource());
 		mObj.setOtherAttributes(vObj.getOtherAttributes());
+		mObj.setSyncSource(vObj.getSyncSource());
 		return mObj;
 	}
 
@@ -65,6 +66,7 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		vObj.setCredStoreId( mObj.getCredStoreId());
 		vObj.setGroupSource(mObj.getGroupSource());
 		vObj.setOtherAttributes(mObj.getOtherAttributes());
+		vObj.setSyncSource(mObj.getSyncSource());
 		return vObj;
 	}
 
@@ -73,11 +75,9 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 	 * @return
 	 */
 	public VXGroupList searchXGroups(SearchCriteria searchCriteria) {
-		VXGroupList returnList = new VXGroupList();
+		VXGroupList returnList   = new VXGroupList();
 		List<VXGroup> xGroupList = new ArrayList<VXGroup>();
-
-		List<T> resultList = searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+		List<T> resultList       = searchResources(searchCriteria, searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
 		for (T gjXGroup : resultList) {

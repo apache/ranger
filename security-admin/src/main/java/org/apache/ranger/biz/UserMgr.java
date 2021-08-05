@@ -596,6 +596,7 @@ public class UserMgr {
 		gjUser.setUserSource(userProfile.getUserSource());
 		gjUser.setPublicScreenName(userProfile.getPublicScreenName());
 		gjUser.setOtherAttributes(userProfile.getOtherAttributes());
+		gjUser.setSyncSource(userProfile.getSyncSource());
 		if (userProfile.getFirstName() != null
 				&& userProfile.getLastName() != null
 				&& !userProfile.getFirstName().trim().isEmpty()
@@ -1289,7 +1290,7 @@ public class UserMgr {
 		userProfile.setLastName(user.getLastName());
 		userProfile.setPublicScreenName(user.getPublicScreenName());
 		userProfile.setOtherAttributes(user.getOtherAttributes());
-
+		userProfile.setSyncSource(user.getSyncSource());
 		List<XXPortalUserRole> gjUserRoleList = daoManager
 				.getXXPortalUserRole().findByParentId(user.getId());
 

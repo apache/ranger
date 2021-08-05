@@ -92,6 +92,12 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	protected String otherAttributes;
 
 	/**
+	 * sync Source Attribute.
+	 *
+	 */
+	protected String syncSource;
+
+	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXPortalUser ( ) {
@@ -316,6 +322,21 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	}
 
 	/**
+	 * @return {@link String} - sync Source attribute.
+	 */
+	public String getSyncSource() {
+		return syncSource;
+	}
+
+	/**
+	 * This method sets sync Source attribute.
+	 * @param syncSource
+	 */
+	public void setSyncSource(final String syncSource) {
+		this.syncSource = syncSource;
+	}
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -332,6 +353,7 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 		str += "notes={" + notes + "} ";
 		str += "userRoleList={" + userRoleList + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
+		str += "syncSource={" + syncSource + "} ";
 		str += "}";
 		return str;
 	}

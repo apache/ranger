@@ -73,6 +73,11 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
 	protected String otherAttributes;
 
 	/**
+	 * Sync Source Attribute
+	 * */
+	protected String syncSource;
+
+	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public VXGroup ( ) {
@@ -194,6 +199,19 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets sync source attribute.
+	 * @param syncSource
+	 */
+	public void setSyncSource(String syncSource) {
+		this.syncSource = syncSource;
+	}
+
+	/**
+	 * @return {@link String} sync source attribute
+	 */
+	public String getSyncSource() { return syncSource; }
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -207,6 +225,7 @@ public class VXGroup extends VXDataObject implements java.io.Serializable {
 		str += "isVisible={" + isVisible + "} ";
 		str += "groupSrc={" + groupSource + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
+		str += "syncSource={" + syncSource + "} ";
 		str += "}";
 		return str;
 	}

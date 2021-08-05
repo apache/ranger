@@ -192,6 +192,7 @@ status INT DEFAULT '0' NOT NULL,
 user_src INT DEFAULT '0' NOT NULL,
 notes VARCHAR(4000) DEFAULT NULL NULL,
 other_attributes VARCHAR(4000) DEFAULT NULL NULL,
+sync_source VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_portal_user_UK_login_id UNIQUE(login_id),
 CONSTRAINT x_portal_user_UK_email UNIQUE(email),
@@ -325,6 +326,7 @@ CRED_STORE_ID BIGINT DEFAULT NULL,
 GROUP_SRC INT DEFAULT 0 NOT NULL,
 IS_VISIBLE INT DEFAULT '1' NOT NULL,
 other_attributes VARCHAR(4000) DEFAULT NULL NULL,
+sync_source VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(ID),
 CONSTRAINT x_group_UK_group_name UNIQUE(group_name),
 CONSTRAINT X_GROUP_FK_ADDED_BY_ID FOREIGN KEY(ADDED_BY_ID) REFERENCES X_PORTAL_USER(ID),
@@ -362,6 +364,7 @@ status INT DEFAULT '0' NOT NULL,
 cred_store_id BIGINT DEFAULT NULL NULL,
 is_visible INT DEFAULT '1' NOT NULL,
 other_attributes VARCHAR(4000) DEFAULT NULL NULL,
+sync_source VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_user_UK_user_name UNIQUE(user_name),
 CONSTRAINT x_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -1882,6 +1885,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('051',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('052',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('054',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES
