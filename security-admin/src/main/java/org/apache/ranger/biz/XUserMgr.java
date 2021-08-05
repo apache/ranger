@@ -3070,6 +3070,7 @@ public class XUserMgr extends XUserMgrBase {
 			vXPortalUser.setPublicScreenName(vXUser.getName());
 		}
 		vXPortalUser.setUserSource(vXUser.getUserSource());
+		vXPortalUser.setSyncSource(vXUser.getSyncSource());
 
 		String hiddenPasswordString = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
 		String password = vXUser.getPassword();

@@ -630,6 +630,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 								|| StringUtils.equalsIgnoreCase(oldGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE),
 								newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))))) {
 							oldGroup.setOtherAttributes(newGroupAttrsStr);
+							oldGroup.setSyncSource(newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE));
 							oldGroup.setOtherAttrsMap(newGroupAttrs);
 							deltaGroups.put(groupName, oldGroup);
 							noOfModifiedGroups++;
@@ -686,6 +687,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 								|| StringUtils.equalsIgnoreCase(oldUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE),
 								newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE))))) {
 							oldUser.setOtherAttributes(newUserAttrsStr);
+							oldUser.setSyncSource(newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE));
 							oldUser.setOtherAttrsMap(newUserAttrs);
 							oldUser.setUserSource(SOURCE_EXTERNAL);
 							deltaUsers.put(userName, oldUser);
@@ -797,8 +799,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		xuserInfo.setUserRoleList(roleList);
 		xuserInfo.setOtherAttributes(otherAttributes);
+		xuserInfo.setSyncSource(otherAttrsMap.get(UgsyncCommonConstants.SYNC_SOURCE));
 		xuserInfo.setOtherAttrsMap(otherAttrsMap);
-
 		return xuserInfo;
 	}
 
@@ -815,6 +817,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		addGroup.setIsVisible(ISVISIBLE);
 		addGroup.setGroupSource(SOURCE_EXTERNAL);
 		addGroup.setOtherAttributes(otherAttributes);
+		addGroup.setSyncSource(otherAttrsMap.get(UgsyncCommonConstants.SYNC_SOURCE));
 		addGroup.setOtherAttrsMap(otherAttrsMap);
 
 		return addGroup;

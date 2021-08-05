@@ -31,6 +31,7 @@ public class XGroupInfo {
 	private String isVisible;
 	private String groupSource;
 	private String otherAttributes;
+	private String syncSource;
 	private Map<String, String> otherAttrsMap = new HashMap<>();
 	public String getId() {
 		return id;
@@ -90,6 +91,10 @@ public class XGroupInfo {
 	public void setOtherAttributes(String otherAttributes) {
 		this.otherAttributes = otherAttributes;
 	}
+
+	public String getSyncSource() { return syncSource; }
+
+	public void setSyncSource(String syncSource) { this.syncSource = syncSource; }
 
 	@Override
 	public boolean equals(Object o) {

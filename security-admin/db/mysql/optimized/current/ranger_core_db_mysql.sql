@@ -117,6 +117,7 @@ CREATE TABLE `x_portal_user` (
   `user_src` int(11) NOT NULL DEFAULT '0',
   `notes` varchar(4000) DEFAULT NULL,
   `other_attributes` varchar(4000) DEFAULT NULL,
+  `sync_source` varchar(4000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `x_portal_user_UK_login_id` (`login_id`),
   UNIQUE KEY `x_portal_user_UK_email` (`email`),
@@ -276,6 +277,7 @@ CREATE TABLE `x_group` (
   `group_src` INT NOT NULL DEFAULT 0,
   `is_visible` INT(11) NOT NULL DEFAULT '1',
   `other_attributes` varchar(4000) DEFAULT NULL,
+  `sync_source` varchar(4000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `x_group_UK_group_name` (`group_name`),
   KEY `x_group_FK_added_by_id` (`added_by_id`),
@@ -322,6 +324,7 @@ CREATE TABLE `x_user` (
   `cred_store_id` bigint(20) DEFAULT NULL,
   `is_visible` INT(11) NOT NULL DEFAULT '1',
   `other_attributes` varchar(4000) DEFAULT NULL,
+  `sync_source` varchar(4000) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `x_user_FK_added_by_id` (`added_by_id`),
   KEY `x_user_FK_upd_by_id` (`upd_by_id`),
@@ -1734,6 +1737,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('051',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('052',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('054',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed)

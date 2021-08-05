@@ -309,6 +309,7 @@ CREATE TABLE x_portal_user (
         user_src NUMBER(11) DEFAULT '0' NOT NULL ,
         notes VARCHAR(4000) DEFAULT NULL NULL ,
         other_attributes VARCHAR(4000) DEFAULT NULL NULL,
+        sync_source VARCHAR(4000) DEFAULT NULL NULL,
         PRIMARY KEY (id),
         CONSTRAINT x_portal_user_UK_login_id UNIQUE (login_id) ,
         CONSTRAINT x_portal_user_UK_email UNIQUE (email),
@@ -435,6 +436,7 @@ CREATE TABLE X_GROUP(
         group_src NUMBER(10) DEFAULT 0 NOT NULL,
         is_visible NUMBER(11) DEFAULT 1 NOT NULL,
         other_attributes VARCHAR(4000) DEFAULT NULL NULL,
+        sync_source VARCHAR(4000) DEFAULT NULL NULL,
         PRIMARY KEY (ID),
         CONSTRAINT x_group_UK_group_name UNIQUE (group_name),
         CONSTRAINT X_GROUP_FK_ADDED_BY_ID FOREIGN KEY (ADDED_BY_ID) REFERENCES X_PORTAL_USER (ID) ENABLE,
@@ -470,6 +472,7 @@ CREATE TABLE x_user (
         cred_store_id NUMBER(20) DEFAULT NULL NULL ,
         is_visible NUMBER(11) DEFAULT 1 NOT NULL ,
         other_attributes VARCHAR(4000) DEFAULT NULL NULL ,
+        sync_source VARCHAR(4000) DEFAULT NULL NULL,
         PRIMARY KEY (id),
         CONSTRAINT x_user_UK_user_name UNIQUE (user_name),
         CONSTRAINT x_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
@@ -1959,6 +1962,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '051',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '052',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '054',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '055',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
