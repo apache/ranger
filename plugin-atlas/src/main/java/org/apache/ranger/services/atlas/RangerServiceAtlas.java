@@ -62,6 +62,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String RESOURCE_TYPE_NAME                     = "type";
 	public static final String RESOURCE_ENTITY_TYPE                   = "entity-type";
 	public static final String RESOURCE_ENTITY_CLASSIFICATION         = "entity-classification";
+	public static final String RESOURCE_CLASSIFICATION                = "classification";
 	public static final String RESOURCE_ENTITY_ID                     = "entity";
 	public static final String RESOURCE_ENTITY_LABEL                  = "entity-label";
 	public static final String RESOURCE_ENTITY_BUSINESS_METADATA      = "entity-business-metadata";
@@ -172,7 +173,7 @@ public class RangerServiceAtlas extends RangerBaseService {
             }
 
             // 2. add a policy-item for rangertagsync user with 'entity-read' permission in the policy for 'entity-type'
-            if (policyResources.containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)) {
+            if (policyResources.containsKey(RESOURCE_ENTITY_TYPE) && !policyResources.containsKey(RESOURCE_CLASSIFICATION)) {
                 RangerPolicyItem policyItemForTagSyncUser = new RangerPolicyItem();
 
                 policyItemForTagSyncUser.setUsers(Collections.singletonList(tagSyncUser));
@@ -193,7 +194,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 			if (defaultPolicy.getName().contains("all")
 					&& policyResources.containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)
-					&& StringUtils.isNotBlank(lookUpUser)) {
+					&& StringUtils.isNotBlank(lookUpUser) && !policyResources.containsKey(RESOURCE_CLASSIFICATION)) {
 				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
 				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ)));
