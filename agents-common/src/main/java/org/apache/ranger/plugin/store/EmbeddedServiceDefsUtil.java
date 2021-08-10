@@ -74,6 +74,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_PRESTO_NAME  = "presto";
 	public static final String EMBEDDED_SERVICEDEF_OZONE_NAME  = "ozone";
 	public static final String EMBEDDED_SERVICEDEF_KUDU_NAME  = "kudu";
+	public static final String EMBEDDED_SERVICEDEF_TRINO_NAME  = "trino";
 
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
@@ -92,6 +93,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String PRESTO_IMPL_CLASS_NAME  = "org.apache.ranger.services.presto.RangerServicePresto";
 	public static final String OZONE_IMPL_CLASS_NAME  = "org.apache.ranger.services.ozone.RangerServiceOzone";
 	public static final String KUDU_IMPL_CLASS_NAME  = "org.apache.ranger.services.kudu.RangerServiceKudu";
+	public static final String TRINO_IMPL_CLASS_NAME  = "org.apache.ranger.services.trino.RangerServiceTrino";
 
 	private static EmbeddedServiceDefsUtil instance = new EmbeddedServiceDefsUtil();
 
@@ -117,6 +119,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef prestoServiceDef;
 	private RangerServiceDef ozoneServiceDef;
 	private RangerServiceDef kuduServiceDef;
+	private RangerServiceDef trinoServiceDef;
 
 	private RangerServiceDef tagServiceDef;
 
@@ -167,6 +170,7 @@ public class EmbeddedServiceDefsUtil {
 			prestoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_PRESTO_NAME);
 			ozoneServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_OZONE_NAME);
 			kuduServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
+			trinoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TRINO_NAME);
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
@@ -251,6 +255,8 @@ public class EmbeddedServiceDefsUtil {
 	public long getOzoneServiceDefId() { return getId(ozoneServiceDef); }
 
 	public long getKuduServiceDefId() { return getId(kuduServiceDef); }
+
+	public long getTrinoServiceDefId() { return getId(trinoServiceDef); }
 
 	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
 		RangerServiceDef serviceDef=null;
