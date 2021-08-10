@@ -95,6 +95,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setClusterName(request.getClusterName());
 		setResourceMatchingScope(request.getResourceMatchingScope());
 		setClientIPAddress(request.getClientIPAddress());
+		setClusterType(request.getClusterType());
 	}
 
 	@Override
