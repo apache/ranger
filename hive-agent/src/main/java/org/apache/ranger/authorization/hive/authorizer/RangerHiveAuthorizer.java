@@ -1742,6 +1742,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERVIEW_AS:
 				case ALTERVIEW_PROPERTIES:
 				case ALTERVIEW_RENAME:
+				case ALTER_MATERIALIZED_VIEW_REWRITE:
 				case DROPVIEW_PROPERTIES:
 				case MSCK:
 					accessType = HiveAccessType.ALTER;
@@ -1994,6 +1995,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case ALTERVIEW_PROPERTIES:
 			case DROPVIEW_PROPERTIES:
 			case DROP_MATERIALIZED_VIEW:
+			case ALTER_MATERIALIZED_VIEW_REWRITE:
 			case LOCKTABLE:
 			case UNLOCKTABLE:
 			case CREATEROLE:
