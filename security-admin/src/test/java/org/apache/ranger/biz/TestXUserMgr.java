@@ -50,6 +50,8 @@ import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.db.XXPortalUserDao;
 import org.apache.ranger.db.XXPortalUserRoleDao;
 import org.apache.ranger.db.XXResourceDao;
+import org.apache.ranger.db.XXRoleRefGroupDao;
+import org.apache.ranger.db.XXRoleRefUserDao;
 import org.apache.ranger.db.XXSecurityZoneRefGroupDao;
 import org.apache.ranger.db.XXSecurityZoneRefUserDao;
 import org.apache.ranger.db.XXUserDao;
@@ -66,6 +68,8 @@ import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
 import org.apache.ranger.entity.XXResource;
+import org.apache.ranger.entity.XXRoleRefGroup;
+import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXSecurityZoneRefGroup;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
 import org.apache.ranger.entity.XXUser;
@@ -1063,6 +1067,10 @@ public class TestXUserMgr {
 	    XXSecurityZoneRefGroupDao zoneSecRefGroupDao=Mockito.mock(XXSecurityZoneRefGroupDao.class);
 	    Mockito.when(daoManager.getXXSecurityZoneRefGroup()).thenReturn(zoneSecRefGroupDao);
 	    Mockito.when(zoneSecRefGroupDao.findByGroupId(userId)).thenReturn(zoneSecRefGroup);
+		List<XXRoleRefGroup> roleRefGroup = new ArrayList<XXRoleRefGroup>();
+		XXRoleRefGroupDao roleRefGroupDao = Mockito.mock(XXRoleRefGroupDao.class);
+		Mockito.when(daoManager.getXXRoleRefGroup()).thenReturn(roleRefGroupDao);
+		Mockito.when(roleRefGroupDao.findByGroupId(userId)).thenReturn(roleRefGroup);
 	    xUserMgr.deleteXGroup(vXGroup.getId(), force);
 	}
 
@@ -1140,6 +1148,10 @@ public class TestXUserMgr {
 	    XXSecurityZoneRefUserDao zoneSecRefUserDao=Mockito.mock(XXSecurityZoneRefUserDao.class);
 	    Mockito.when(daoManager.getXXSecurityZoneRefUser()).thenReturn(zoneSecRefUserDao);
 	    Mockito.when(zoneSecRefUserDao.findByUserId(userId)).thenReturn(zoneSecRefUser);
+	    List<XXRoleRefUser> roleRefUser=new ArrayList<XXRoleRefUser>();
+	    XXRoleRefUserDao roleRefUserDao=Mockito.mock(XXRoleRefUserDao.class);
+	    Mockito.when(daoManager.getXXRoleRefUser()).thenReturn(roleRefUserDao);
+	    Mockito.when(roleRefUserDao.findByUserId(userId)).thenReturn(roleRefUser);
 		xUserMgr.deleteXUser(vXUser.getId(), force);
 		force=false;
 		xUserMgr.deleteXUser(vXUser.getId(), force);
@@ -2909,6 +2921,10 @@ public class TestXUserMgr {
 	    XXSecurityZoneRefUserDao zoneSecRefUserDao=Mockito.mock(XXSecurityZoneRefUserDao.class);
 	    Mockito.when(daoManager.getXXSecurityZoneRefUser()).thenReturn(zoneSecRefUserDao);
 	    Mockito.when(zoneSecRefUserDao.findByUserId(userId)).thenReturn(zoneSecRefUser);
+	    List<XXRoleRefUser> roleRefUser=new ArrayList<XXRoleRefUser>();
+	    XXRoleRefUserDao roleRefUserDao=Mockito.mock(XXRoleRefUserDao.class);
+	    Mockito.when(daoManager.getXXRoleRefUser()).thenReturn(roleRefUserDao);
+	    Mockito.when(roleRefUserDao.findByUserId(userId)).thenReturn(roleRefUser);
 		xUserMgr.deleteXUser(vXUser.getId(), force);
 		Mockito.when(xGroupUserService.searchXGroupUsers((SearchCriteria) Mockito.any())).thenReturn(new VXGroupUserList());
 		XXPolicy xXPolicy=getXXPolicy();
@@ -2982,7 +2998,11 @@ public class TestXUserMgr {
 		List<XXSecurityZoneRefGroup> zoneSecRefGroup=new ArrayList<XXSecurityZoneRefGroup>();
 	    XXSecurityZoneRefGroupDao zoneSecRefGroupDao=Mockito.mock(XXSecurityZoneRefGroupDao.class);
 	    Mockito.when(daoManager.getXXSecurityZoneRefGroup()).thenReturn(zoneSecRefGroupDao);
+	    List<XXRoleRefGroup> roleRefGroup=new ArrayList<XXRoleRefGroup>();
+	    XXRoleRefGroupDao roleRefGroupDao = Mockito.mock(XXRoleRefGroupDao.class);
+	    Mockito.when(daoManager.getXXRoleRefGroup()).thenReturn(roleRefGroupDao);
 	    Mockito.when(zoneSecRefGroupDao.findByGroupId(userId)).thenReturn(zoneSecRefGroup);
+	    Mockito.when(roleRefGroupDao.findByGroupId(userId)).thenReturn(roleRefGroup);
 		XXResource xXResource = new XXResource();
 		xXResource.setId(userId);
 		xXResource.setName("hadoopdev");
