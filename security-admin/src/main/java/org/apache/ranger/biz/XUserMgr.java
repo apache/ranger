@@ -74,6 +74,9 @@ import org.apache.ranger.entity.XXPermMap;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXResource;
+import org.apache.ranger.entity.XXRole;
+import org.apache.ranger.entity.XXRoleRefGroup;
+import org.apache.ranger.entity.XXRoleRefUser;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXSecurityZoneRefGroup;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
@@ -98,6 +101,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 public class XUserMgr extends XUserMgrBase {
 
 	private static final String RANGER_USER_GROUP_GLOBAL_STATE_NAME = "RangerUserStore";
+	private static final String USER = "User";
+	private static final String GROUP = "Group";
 	private static final int MAX_DB_TRANSACTION_RETRIES = 5;
 
 	@Autowired
@@ -2031,6 +2036,7 @@ public class XUserMgr extends XUserMgrBase {
 	public void deleteXGroup(Long id, boolean force) {
 		checkAdminAccess();
 		blockIfZoneGroup(id);
+		this.blockIfRoleGroup(id);
 		xaBizUtil.blockAuditorRoleUser();
 		XXGroupDao xXGroupDao = daoManager.getXXGroup();
 		XXGroup xXGroup = xXGroupDao.getById(id);
@@ -2207,14 +2213,9 @@ public class XUserMgr extends XUserMgrBase {
 			for(XXSecurityZoneRefGroup zoneRefGrp : zoneRefGrpList) {
 				XXSecurityZone xSecZone=daoManager.getXXSecurityZoneDao().getById(zoneRefGrp.getZoneId());
 				if(zones.indexOf(xSecZone.getName())<0)
-					zones.append(", " + xSecZone.getName());
+					zones.append(xSecZone.getName() + ",");
 			}
-			logger.info("Can Not Delete Group :" + zoneRefGrpList.get(0).getGroupName() + "' as its already present in Zone " +zones);
-			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
-			vXResponse.setMsgDesc(
-					"Can Not Delete Group '" + zoneRefGrpList.get(0).getGroupName() + "' as its already present in Zone " +zones);
-			throw restErrorUtil.generateRESTException(vXResponse);
+			this.prepareAndThrow(zoneRefGrpList.get(0).getGroupName(), RangerConstants.MODULE_SECURITY_ZONE, zones, GROUP);
 		}
 	}
 
@@ -2241,6 +2242,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		restrictSelfAccountDeletion(vXUser.getName().trim());
 		blockIfZoneUser(id);
+		this.blockIfRoleUser(id);
 		SearchCriteria searchCriteria = new SearchCriteria();
 		searchCriteria.addParam("xUserId", id);
 		VXGroupUserList vxGroupUserList = searchXGroupUsers(searchCriteria);
@@ -2414,15 +2416,49 @@ public class XUserMgr extends XUserMgrBase {
 			for(XXSecurityZoneRefUser zoneRefUser :zoneRefUserList ) {
 				XXSecurityZone xSecZone = daoManager.getXXSecurityZoneDao().getById(zoneRefUser.getZoneId());
 				if(zones.indexOf(xSecZone.getName())<0)
-					zones.append(", " + xSecZone.getName());
+					zones.append(xSecZone.getName() + ",");
 			}
-			logger.info("Can Not Delete User :" + zoneRefUserList.get(0).getUserName());
-			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
-			vXResponse.setMsgDesc(
-					"Can Not Delete User '"+ zoneRefUserList.get(0).getUserName() +"' as its already present in Zone" + zones);
-			throw restErrorUtil.generateRESTException(vXResponse);
+			this.prepareAndThrow(zoneRefUserList.get(0).getUserName(), RangerConstants.MODULE_SECURITY_ZONE, zones, USER);
 		}
+	}
+
+	private void blockIfRoleUser(Long id) {
+		List<XXRoleRefUser> roleRefUsers = this.daoManager.getXXRoleRefUser().findByUserId(id);
+		if (CollectionUtils.isNotEmpty(roleRefUsers)) {
+			StringBuilder roles = new StringBuilder();
+			for (XXRoleRefUser roleRefUser : roleRefUsers) {
+				XXRole xxRole = this.daoManager.getXXRole().getById(roleRefUser.getRoleId());
+				final String roleName = xxRole.getName();
+				if (roles.indexOf(roleName) < 0)
+					roles.append(roleName + ",");
+			}
+			final String roleRefUserName = roleRefUsers.get(0).getUserName();
+			this.prepareAndThrow(roleRefUserName, RangerConstants.ROLE_FIELD, roles, USER);
+		}
+	}
+
+	private void blockIfRoleGroup(Long id) {
+		List<XXRoleRefGroup> roleRefGroups = this.daoManager.getXXRoleRefGroup().findByGroupId(id);
+		if (CollectionUtils.isNotEmpty(roleRefGroups)) {
+			StringBuilder roles = new StringBuilder();
+			for (XXRoleRefGroup roleRefGroup : roleRefGroups) {
+				XXRole xxRole = this.daoManager.getXXRole().getById(roleRefGroup.getRoleId());
+				final String roleName = xxRole.getName();
+				if (roles.indexOf(roleName) < 0)
+					roles.append(roleName + ",");
+			}
+			final String roleRefGroupName = roleRefGroups.get(0).getGroupName();
+			this.prepareAndThrow(roleRefGroupName, RangerConstants.ROLE_FIELD, roles, GROUP);
+		}
+	}
+
+	private void prepareAndThrow(String userGrpName, String moduleName, StringBuilder rolesOrZones, String userOrGrp) {
+		logger.error("Can Not Delete " + userOrGrp + ":" + userGrpName);
+		VXResponse vXResponse = new VXResponse();
+		vXResponse.setStatusCode(HttpServletResponse.SC_BAD_REQUEST);
+		vXResponse.setMsgDesc("Can Not Delete " + userOrGrp + ": '" + userGrpName + "' as its present in " + moduleName
+				+ " : " + rolesOrZones.deleteCharAt(rolesOrZones.length() - 1));
+		throw restErrorUtil.generateRESTException(vXResponse);
 	}
 
 	private <T extends RangerPolicyItem> void removeUserGroupReferences(List<T> policyItems, String user, String group) {
