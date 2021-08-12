@@ -961,6 +961,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 					if(accessType == HiveAccessType.NONE) {
 						continue;
+					} else if(accessType == HiveAccessType.UNKNOWN){
+						handleUnKnownAccessTypeCommands(hiveOpType, inputHObjs, outputHObjs, user, auditHandler, context);
 					}
 
 					if(!existsByResourceAndAccessType(requests, resource, accessType)) {
@@ -986,6 +988,10 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.REPLADMIN, context, sessionContext);
 					requests.add(request);
 				}
+			}
+
+			if (CollectionUtils.isEmpty(requests)) {
+				throw new HiveAccessControlException(String.format("Unable to authorize...HivePrivilegeObjects are not available to authorize this command!"));
 			}
 
 			buildRequestContextWithAllAccessedResources(requests);
@@ -1894,6 +1900,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case SHOW_ROLE_PRINCIPALS:
 				case SHOW_TRANSACTIONS:
 				break;
+				default:
+					accessType = HiveAccessType.UNKNOWN;
 			}
 			break;
 		}
@@ -2194,6 +2202,79 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have privilege for [%s] command",
 											 user, hiveOpType.name()));
+	}
+
+	private void handleUnKnownAccessTypeCommands(HiveOperationType         hiveOpType,
+												 List<HivePrivilegeObject> inputHObjs,
+												 List<HivePrivilegeObject> outputHObjs,
+												 String                    user,
+												 RangerHiveAuditHandler    auditHandler,
+												 HiveAuthzContext		   context)
+			throws HiveAccessControlException {
+
+		String commandString = context.getCommandString();
+		String resourceName  = null;
+		String resourceType  = null;
+
+		if (inputHObjs != null) {
+			for(HivePrivilegeObject hiveObj : inputHObjs) {
+				resourceName = getResourceName(hiveObj);
+				if(StringUtils.isNotEmpty(resourceName)) {
+					resourceType = getResourceType(hiveObj);
+					break;
+				}
+			}
+		}
+
+		if (StringUtils.isEmpty(resourceName) && outputHObjs != null) {
+			for(HivePrivilegeObject hiveObj : outputHObjs) {
+				resourceName = getResourceName(hiveObj);
+				if(StringUtils.isNotEmpty(resourceName)) {
+					resourceType = getResourceType(hiveObj);
+					break;
+				}
+			}
+
+		}
+
+		int    serviceType = -1;
+		String serviceName = null;
+		String clusterName = null;
+
+		if(hivePlugin != null) {
+			serviceType = hivePlugin.getServiceDefId();
+			serviceName = hivePlugin.getServiceName();
+			clusterName = hivePlugin.getClusterName();
+		}
+
+		String commandType = (commandString != null) ? commandString.substring(0, commandString.indexOf(' ')): "";
+		String ipAddress   = context.getIpAddress();
+		auditHandler.logAuditEvent(user, resourceName, resourceType, commandString, false, serviceType, serviceName, clusterName, commandType, ipAddress);
+
+		throw new HiveAccessControlException(String.format("Unknown operation! Permission denied: user [%s] does not have privilege for [%s] command",
+				user, hiveOpType.name()));
+	}
+
+	private String getResourceName(HivePrivilegeObject hivePrivilegeObject) {
+		RangerHiveResource resource =  createHiveResource(hivePrivilegeObject);
+		return resource != null ? resource.getAsString() : null;
+	}
+
+	private String getResourceType(HivePrivilegeObject hivePrivilegeObject) {
+		String ret = StringUtils.EMPTY;
+		HivePrivilegeObjectType resourceType = hivePrivilegeObject.getType();
+		switch (resourceType) {
+			case DATABASE:
+				ret = "@database";
+				break;
+			case TABLE_OR_VIEW:
+				ret = "@table";
+				break;
+			case COLUMN:
+				ret = "@column";
+				break;
+		}
+		return ret;
 	}
 
 	private boolean existsByResourceAndAccessType(Collection<RangerHiveAccessRequest> requests, RangerHiveResource resource, HiveAccessType accessType) {
@@ -3064,7 +3145,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 }
 
 enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI, SERVICE_NAME, GLOBAL };
-enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, REPLADMIN, SERVICEADMIN, TEMPUDFADMIN };
+enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, REPLADMIN, SERVICEADMIN, TEMPUDFADMIN, UNKNOWN };
 
 class HiveObj {
 	String databaseName;
