@@ -1401,7 +1401,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("== ServiceDBStore.getServiceDefByName(" + name + "): " + ret);
+			LOG.debug("== ServiceDBStore.getServiceDefByName(" + name + "): " );
 		}
 
 		return  ret;
@@ -3139,7 +3139,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			boolean isValid;
 
-			resourcePolicyDeltas = daoMgr.getXXPolicyChangeLog().findLaterThan(policyService, lastKnownVersion, service.getId());
+			resourcePolicyDeltas = daoMgr.getXXPolicyChangeLog().findLaterThan(lastKnownVersion, service.getId());
 			if (CollectionUtils.isNotEmpty(resourcePolicyDeltas)) {
 				isValid = RangerPolicyDeltaUtil.isValidDeltas(resourcePolicyDeltas, componentServiceType);
 
@@ -3151,7 +3151,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				if (isValid && tagService != null) {
 					Long id = resourcePolicyDeltas.get(0).getId();
-					tagPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(policyService, id, tagService.getId());
+					tagPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(id, tagService.getId());
 
 
 					if (CollectionUtils.isNotEmpty(tagPolicyDeltas)) {
@@ -3542,46 +3542,53 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(id);
 		XXService service = daoMgr.getXXService().getById(id);
 
-		Long nextPolicyVersion = 1L;
+		Long nextVersion = 1L;
 		Date now = new Date();
 
 		if (serviceVersionInfoDbObj != null) {
 			if (versionType == VERSION_TYPE.POLICY_VERSION) {
-				nextPolicyVersion = getNextVersion(serviceVersionInfoDbObj.getPolicyVersion());
-
-				serviceVersionInfoDbObj.setPolicyVersion(nextPolicyVersion);
+				nextVersion = getNextVersion(serviceVersionInfoDbObj.getPolicyVersion());
+				serviceVersionInfoDbObj.setPolicyVersion(nextVersion);
 				serviceVersionInfoDbObj.setPolicyUpdateTime(now);
-			}
-			if (versionType == VERSION_TYPE.TAG_VERSION) {
-				serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
+			} else if (versionType == VERSION_TYPE.TAG_VERSION) {
+				nextVersion = getNextVersion(serviceVersionInfoDbObj.getTagVersion());
+				serviceVersionInfoDbObj.setTagVersion(nextVersion);
 				serviceVersionInfoDbObj.setTagUpdateTime(now);
-			}
-
-			if(versionType == VERSION_TYPE.ROLE_VERSION) {
+			} else if(versionType == VERSION_TYPE.ROLE_VERSION) {
 				// get the LatestRoleVersion from the GlobalTable and update ServiceInfo for a service
 				XXGlobalStateDao xxGlobalStateDao = daoMgr.getXXGlobalState();
 				if (xxGlobalStateDao != null) {
 					Long roleVersion = xxGlobalStateDao.getAppDataVersion("RangerRole");
 					if (roleVersion != null) {
-						serviceVersionInfoDbObj.setRoleVersion(roleVersion);
-						serviceVersionInfoDbObj.setRoleUpdateTime(now);
+						nextVersion = roleVersion;
+					} else {
+						LOG.error("No Global state for 'RoleVersion'. Cannot execute this object:[" + serviceVersionUpdater + "]");
 					}
+					serviceVersionInfoDbObj.setRoleVersion(nextVersion);
+					serviceVersionInfoDbObj.setRoleUpdateTime(now);
+				} else {
+					LOG.error("No Global state DAO. Cannot execute this object:[" + serviceVersionUpdater + "]");
+					return;
 				}
+			} else {
+				LOG.error("Unknown VERSION_TYPE:" + versionType + ". Cannot execute this object:[" + serviceVersionUpdater + "]");
+				return;
 			}
-
+			serviceVersionUpdater.version = nextVersion;
 			serviceVersionInfoDao.update(serviceVersionInfoDbObj);
 
 		} else {
 			if (service != null) {
 				serviceVersionInfoDbObj = new XXServiceVersionInfo();
 				serviceVersionInfoDbObj.setServiceId(service.getId());
-				serviceVersionInfoDbObj.setPolicyVersion(1L);
+				serviceVersionInfoDbObj.setPolicyVersion(nextVersion);
 				serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
-				serviceVersionInfoDbObj.setTagVersion(1L);
+				serviceVersionInfoDbObj.setTagVersion(nextVersion);
 				serviceVersionInfoDbObj.setTagUpdateTime(new Date());
-				serviceVersionInfoDbObj.setRoleVersion(1L);
+				serviceVersionInfoDbObj.setRoleVersion(nextVersion);
 				serviceVersionInfoDbObj.setRoleUpdateTime(new Date());
 
+				serviceVersionUpdater.version = nextVersion;
 				serviceVersionInfoDao.create(serviceVersionInfoDbObj);
 			}
 		}
@@ -5493,6 +5500,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		final String           zoneName;
 		final Integer          policyDeltaChange;
 		final RangerPolicy     policy;
+		      long             version = -1;
 
 		final ServiceTags.TagsChangeType tagChangeType;
 		final Long             resourceId;
@@ -5529,6 +5537,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 		@Override
 		public void run() {
 			ServiceDBStore.persistVersionChange(this);
+		}
+
+		@Override
+		public String toString() {
+			return "ServiceVersionUpdater:[ " +
+					"serviceId="           + serviceId +
+					", versionType="         + versionType +
+					", version="             + version +
+					", zoneName="            + zoneName +
+					", policyDeltaChange="   + policyDeltaChange +
+					", policy="              + policy +
+					", tagChangeType="       + tagChangeType +
+					", resourceId="          + resourceId +
+					", tagId="               + tagId +
+					" ]";
 		}
 	}
 
