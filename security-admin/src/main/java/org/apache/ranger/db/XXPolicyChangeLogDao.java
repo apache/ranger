@@ -31,7 +31,7 @@ import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyChangeLog;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
-import org.apache.ranger.service.RangerPolicyService;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.springframework.stereotype.Service;
 
 /**
@@ -56,7 +56,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
         super(daoManager);
     }
 
-    public List<RangerPolicyDelta> findLaterThan(RangerPolicyService policyService, Long version, Long serviceId) {
+    public List<RangerPolicyDelta> findLaterThan(Long version, Long serviceId) {
         final List<RangerPolicyDelta> ret;
         if (version != null) {
             List<Object[]> logs = getEntityManager()
@@ -81,7 +81,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                     }
                 }
                 if (foundAndRemoved) {
-                    ret = convert(policyService, logs);
+                    ret = convert(logs);
                 } else {
                     ret = null;
                 }
@@ -94,7 +94,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
         return ret;
     }
 
-    public List<RangerPolicyDelta> findGreaterThan(RangerPolicyService policyService, Long id, Long serviceId) {
+    public List<RangerPolicyDelta> findGreaterThan(Long id, Long serviceId) {
         final List<RangerPolicyDelta> ret;
         if (id != null) {
             List<Object[]> logs = getEntityManager()
@@ -102,7 +102,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                     .setParameter("id", id)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
-            ret = convert(policyService, logs);
+            ret = convert(logs);
         } else {
             ret = null;
         }
@@ -120,7 +120,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
         getEntityManager().createNamedQuery("XXPolicyChangeLog.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
     }
 
-    private List<RangerPolicyDelta> convert(RangerPolicyService policyService, List<Object[]> queryResult) {
+    private List<RangerPolicyDelta> convert(List<Object[]> queryResult) {
 
         final List<RangerPolicyDelta> ret;
 
@@ -142,7 +142,8 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                     XXPolicy xxPolicy = daoManager.getXXPolicy().getById(policyId);
                     if (xxPolicy != null) {
                         try {
-                            policy = policyService.read(policyId);
+                            policy = JsonUtilsV2.jsonToObj(xxPolicy.getPolicyText(), RangerPolicy.class);
+                            policy.setId(policyId);
                         } catch (Exception e) {
                             LOG.error("Cannot read policy:[" + policyId + "]. Should not have come here!! Offending log-record-id:[" + logRecordId + "] and returning...", e);
                             ret.clear();

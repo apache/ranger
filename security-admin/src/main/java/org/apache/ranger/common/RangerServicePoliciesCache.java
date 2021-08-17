@@ -228,9 +228,7 @@ public class RangerServicePoliciesCache {
 						}
 					}
 				} else {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached ServicePolicies");
-					}
+					LOG.error("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached ServicePolicies and wait Queue Length:[" +lock.getQueueLength() + "], servicePolicies version:[" + servicePolicies.getPolicyVersion() + "]");
 					ret = this.servicePolicies;
 				}
 			} catch (InterruptedException exception) {
@@ -363,7 +361,7 @@ public class RangerServicePoliciesCache {
 
 			result = Objects.equals(dbPolicyVersion, cachedPolicyVersion);
 
-			if (!result) {
+			if (!result && cachedPolicyVersion != null && dbPolicyVersion != null && cachedPolicyVersion < dbPolicyVersion) {
 				LOG.info("checkCacheSanity(serviceName=" + serviceName + "): policy cache has a different version than one in the database. However, changes from " + cachedPolicyVersion + " to " + dbPolicyVersion + " will be downloaded in the next download. policyVersionInDB=" + dbPolicyVersion + ", policyVersionInCache=" + cachedPolicyVersion);
 			}
 		}
