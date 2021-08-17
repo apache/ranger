@@ -341,6 +341,10 @@
                 <value></value>
         </property>
         <property>
+                <name>ranger.audit.solr.configset.location</name>
+                <value></value>
+        </property>
+        <property>
                 <name>ranger.audit.solr.no.shards</name>
                 <value></value>
         </property>
