@@ -156,6 +156,7 @@ lookup_keytab=$(get_prop 'lookup_keytab' $PROPFILE)
 hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
 audit_solr_collection_name=$(get_prop 'audit_solr_collection_name' $PROPFILE)
 audit_solr_config_name=$(get_prop 'audit_solr_config_name' $PROPFILE)
+audit_solr_configset_location=$(get_prop 'audit_solr_configset_location' $PROPFILE)
 audit_solr_no_shards=$(get_prop 'audit_solr_no_shards' $PROPFILE)
 audit_solr_no_replica=$(get_prop 'audit_solr_no_replica' $PROPFILE)
 audit_solr_max_shards_per_node=$(get_prop 'audit_solr_max_shards_per_node' $PROPFILE)
@@ -473,6 +474,13 @@ update_properties() {
         then
                propertyName=ranger.audit.solr.config.name
                newPropertyValue="${audit_solr_config_name}"
+               updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+        fi
+
+		if [ "${audit_solr_configset_location}" != "" ]
+        then
+               propertyName=ranger.audit.solr.configset.location
+               newPropertyValue="${audit_solr_configset_location}"
                updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
         fi
 

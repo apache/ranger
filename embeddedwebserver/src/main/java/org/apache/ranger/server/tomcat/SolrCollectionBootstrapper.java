@@ -35,6 +35,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.methods.HttpPost;
@@ -65,6 +67,7 @@ public class SolrCollectionBootstrapper extends Thread {
 	final static String SOLR_ZK_HOSTS = "ranger.audit.solr.zookeepers";
 	final static String SOLR_COLLECTION_NAME = "ranger.audit.solr.collection.name";
 	final static String SOLR_CONFIG_NAME = "ranger.audit.solr.config.name";
+	final static String CONFIG_SET_LOCATION = "ranger.audit.solr.configset.location";
 	final static String SOLR_NO_SHARDS = "ranger.audit.solr.no.shards";
 	final static String SOLR_MAX_SHARD_PER_NODE = "ranger.audit.solr.max.shards.per.node";
 	final static String SOLR_NO_REPLICA = "ranger.audit.solr.no.replica";
@@ -94,6 +97,7 @@ public class SolrCollectionBootstrapper extends Thread {
 	String nameRules;
 	String solr_collection_name;
 	String solr_config_name;
+	private String customConfigSetLocation;
 	Path path_for_cloud_mode;
 	int no_of_replicas;
 	int max_node_per_shards;
@@ -149,29 +153,26 @@ public class SolrCollectionBootstrapper extends Thread {
 		String basedir = new File(".").getCanonicalPath();
 		String solrFileDir = new File(basedir).getParent();
 
-		path_for_cloud_mode = Paths.get(solrFileDir, "contrib",
-				"solr_for_audit_setup", "conf");
-		configSetFolder = path_for_cloud_mode.toFile();
+		this.customConfigSetLocation = EmbeddedServerUtil.getConfig(CONFIG_SET_LOCATION);
+		logger.info("Provided custom configSet location : " + this.customConfigSetLocation);
+		if (StringUtils.isNotEmpty(this.customConfigSetLocation)) {
+			this.configSetFolder = new File(this.customConfigSetLocation);
+		} else {
+			path_for_cloud_mode = Paths.get(solrFileDir, "contrib", "solr_for_audit_setup", "conf");
+			configSetFolder = path_for_cloud_mode.toFile();
+		}
                 String sslEnabledProp = EmbeddedServerUtil.getConfig(SSL_ENABLED_PARAM);
                 isSSLEnabled = ("true".equalsIgnoreCase(sslEnabledProp));
 	}
 
 	public void run() {
 		logger.info("Started run method");
-
-		String zkHosts = "";
-		List<String> zookeeperHosts = null;
-		if (EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS) != null
-				&& !StringUtil.isEmpty(EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS))) {
-			zkHosts = EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS).trim();
-			zookeeperHosts = new ArrayList<String>(Arrays.asList(zkHosts
-					.split(",")));
-		}
+		List<String> zookeeperHosts = getZkHosts();
 		if (zookeeperHosts != null
 				&& !zookeeperHosts.isEmpty()
 				&& zookeeperHosts.stream().noneMatch(
 						h -> h.equalsIgnoreCase("none"))) {
-			logger.info("Solr zkHosts=" + zkHosts + ", collectionName="
+			logger.info("Solr zkHosts=" + zookeeperHosts + ", collectionName="
 					+ solr_collection_name);
 			while (!is_completed && (max_retry == TRY_UNTIL_SUCCESS || retry_counter < max_retry)) {
 				try {
@@ -215,6 +216,8 @@ public class SolrCollectionBootstrapper extends Thread {
 			solrCloudClient = new CloudSolrClient.Builder(zookeeperHosts,
 					Optional.empty()).build();
 			solrCloudClient.setDefaultCollection(solr_collection_name);
+			solrCloudClient.connect();
+            zkClient = solrCloudClient.getZkStateReader().getZkClient();
 			solrClient = solrCloudClient;
 			solr_cloud_mode = true;
 
@@ -263,9 +266,6 @@ public class SolrCollectionBootstrapper extends Thread {
 
 	private boolean uploadConfiguration() {
 		try {
-			solrCloudClient.connect();
-			zkClient = solrCloudClient.getZkStateReader().getZkClient();
-
 			if (zkClient != null) {
 				ZkConfigManager zkConfigManager = new ZkConfigManager(zkClient);
 
@@ -274,12 +274,18 @@ public class SolrCollectionBootstrapper extends Thread {
 					try {
 						logger.info("Config does not exist with name " + solr_config_name);
 						String zipOfConfigs = null;
-						String[] files = configSetFolder.list();
-						for (String file : files) {
-							if (file != null) {
-								if (file.equals("solr_audit_conf.zip")) {
-									zipOfConfigs = file;
-									break;
+						if (this.configSetFolder.exists() && this.configSetFolder.isFile()) {
+							zipOfConfigs = this.configSetFolder.getAbsolutePath();
+						} else {
+							String[] files = this.configSetFolder.list();
+							if (files != null) {
+								for (String aFile : files) {
+									if (aFile != null) {
+										if (aFile.equals("solr_audit_conf.zip")) {
+											zipOfConfigs = this.configSetFolder + "/" + aFile;
+											break;
+										}
+									}
 								}
 							}
 						}
@@ -287,14 +293,10 @@ public class SolrCollectionBootstrapper extends Thread {
 							throw new FileNotFoundException(
 									"Could Not Find Configs Zip File : " + getConfigSetFolder());
 						}
-						File file = new File(configSetFolder + "/" + zipOfConfigs);
+						File file = new File(zipOfConfigs);
 						byte[] arrByte = Files.readAllBytes(file.toPath());
 						ByteBuffer byteBuffer = ByteBuffer.wrap(arrByte);
-						Set<String> nodes = solrCloudClient.getClusterStateProvider().getLiveNodes();
-						String baseUrl = null;
-						String[] nodeArr = nodes.toArray(new String[0]);
-						/* getting nodes URL as 'solr_8983', so converting it to 'solr/9893' */
-						baseUrl = nodeArr[0].replaceAll("_", "/");
+						String baseUrl = getBaseUrl();
 						String protocol = isSSLEnabled ? "https" : "http";
 						String uploadConfigsUrl = String.format("%s://%s/admin/configs?action=UPLOAD&name=%s", protocol,
 								baseUrl.toString(), solr_config_name);
@@ -445,6 +447,23 @@ public class SolrCollectionBootstrapper extends Thread {
 
 	private File getConfigSetFolder() {
 		return configSetFolder;
+	}
+
+	private static List<String> getZkHosts() {
+		String zkHosts = "";
+		List<String> zookeeperHosts = null;
+		if (!StringUtil.isEmpty(EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS))) {
+			zkHosts = EmbeddedServerUtil.getConfig(SOLR_ZK_HOSTS).trim();
+			zookeeperHosts = new ArrayList<String>(Arrays.asList(zkHosts.split(",")));
+		}
+		return zookeeperHosts;
+	}
+
+	private String getBaseUrl() {
+		Set<String> nodes = solrCloudClient.getClusterStateProvider().getLiveNodes();
+		String[] nodeArr = nodes.toArray(new String[0]);
+		// getting nodes URL as 'port_solr', so converting it to 'port/solr'
+		return nodeArr[0].replaceAll("_", "/");
 	}
 
 }
