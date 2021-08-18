@@ -127,6 +127,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	private String currentUserName;
 	private Set<String> currentRoles;
 	private String adminRole;
+	private boolean isCurrentRoleSet = false;
 
 	public RangerHiveAuthorizer(HiveMetastoreClientFactory metastoreClientFactory,
 								  HiveConf                   hiveConf,
@@ -310,12 +311,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if (ROLE_NONE.equalsIgnoreCase(roleName)) {
 			// for set role NONE, clear all roles for current session.
 			currentRoles.clear();
+			isCurrentRoleSet = true;
 			return;
 		}
 		if (ROLE_ALL.equalsIgnoreCase(roleName)) {
 			// for set role ALL, reset roles to default roles.
 			currentRoles.clear();
 			currentRoles.addAll(getCurrentRoleNamesFromRanger());
+			isCurrentRoleSet = true;
 			return;
 		}
 		for (String role : getCurrentRoleNamesFromRanger()) {
@@ -323,6 +326,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			if (role.equalsIgnoreCase(roleName)) {
 				currentRoles.clear();
 				currentRoles.add(role);
+				isCurrentRoleSet = true;
 				return;
 			}
 		}
@@ -330,6 +334,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if (ROLE_ADMIN.equalsIgnoreCase(roleName) && null != this.adminRole) {
 			currentRoles.clear();
 			currentRoles.add(adminRole);
+			isCurrentRoleSet = true;
 			return;
 		}
 		LOG.info("Current user : " + currentUserName + ", Current Roles : " + currentRoles);
@@ -3011,7 +3016,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 	private Set<String> getCurrentRoles() {
 		// from SQLStdHiveAccessController.getCurrentRoles()
-		initUserRoles();
+		getCurrentRoleForCurrentUser();
 		return currentRoles;
 	}
 
@@ -3037,6 +3042,21 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		LOG.info("Current user : " + currentUserName + ", Current Roles : " + currentRoles);
 	}
 
+	private void getCurrentRoleForCurrentUser() {
+		if (isCurrentRoleSet) {
+			// current session has a role set, so no need to fetch roles.
+			return;
+		}
+		String newUserName = getHiveAuthenticator().getUserName();
+		this.currentUserName = newUserName;
+		try {
+			currentRoles = getCurrentRoleNamesFromRanger();
+		} catch (HiveAuthzPluginException e) {
+			LOG.error("Error while fetching roles from ranger for user : " + currentUserName, e);
+		}
+		LOG.info("Current user : " + currentUserName + ", Current Roles : " + currentRoles);
+	}
+
 	private Set<String> getCurrentRolesForUser(String user, Set<String> groups) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerHiveAuthorizer.getCurrentRolesForUser()");
@@ -3044,9 +3064,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		Set<String>  ret  = hivePlugin.getRolesFromUserAndGroups(user, groups);
 
-		if (CollectionUtils.isNotEmpty(ret) && CollectionUtils.isNotEmpty(currentRoles) && ret.containsAll(currentRoles)) {
-			ret = currentRoles;
-		}
+		ret = (isCurrentRoleSet) ? currentRoles : ret;
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerHiveAuthorizer.getCurrentRolesForUser() User: " + currentUserName + ", User Roles: " + ret);
