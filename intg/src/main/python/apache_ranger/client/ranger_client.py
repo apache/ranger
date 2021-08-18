@@ -36,171 +36,169 @@ LOG = logging.getLogger(__name__)
 
 class RangerClient:
     def __init__(self, url, auth):
-        self.url          = url
-        self.session      = Session()
-        self.session.auth = auth
+        self.client_http = RangerClientHttp(url, auth)
 
         logging.getLogger("requests").setLevel(logging.WARNING)
 
 
     # Service Definition APIs
     def create_service_def(self, serviceDef):
-        resp = self.__call_api(RangerClient.CREATE_SERVICEDEF, request_data=serviceDef)
+        resp = self.client_http.call_api(RangerClient.CREATE_SERVICEDEF, request_data=serviceDef)
 
         return type_coerce(resp, RangerServiceDef)
 
     def update_service_def_by_id(self, serviceDefId, serviceDef):
-        resp = self.__call_api(RangerClient.UPDATE_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }), request_data=serviceDef)
+        resp = self.client_http.call_api(RangerClient.UPDATE_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }), request_data=serviceDef)
 
         return type_coerce(resp, RangerServiceDef)
 
     def update_service_def(self, serviceDefName, serviceDef):
-        resp = self.__call_api(RangerClient.UPDATE_SERVICEDEF_BY_NAME.format_path({ 'name': serviceDefName }), request_data=serviceDef)
+        resp = self.client_http.call_api(RangerClient.UPDATE_SERVICEDEF_BY_NAME.format_path({ 'name': serviceDefName }), request_data=serviceDef)
 
         return type_coerce(resp, RangerServiceDef)
 
     def delete_service_def_by_id(self, serviceDefId, params=None):
-        self.__call_api(RangerClient.DELETE_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }), params)
+        self.client_http.call_api(RangerClient.DELETE_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }), params)
 
     def delete_service_def(self, serviceDefName, params=None):
-        self.__call_api(RangerClient.DELETE_SERVICEDEF_BY_NAME.format_path({ 'name': serviceDefName }), params)
+        self.client_http.call_api(RangerClient.DELETE_SERVICEDEF_BY_NAME.format_path({ 'name': serviceDefName }), params)
 
     def get_service_def_by_id(self, serviceDefId):
-        resp = self.__call_api(RangerClient.GET_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }))
+        resp = self.client_http.call_api(RangerClient.GET_SERVICEDEF_BY_ID.format_path({ 'id': serviceDefId }))
 
         return type_coerce(resp, RangerServiceDef)
 
     def get_service_def(self, serviceDefName):
-        resp = self.__call_api(RangerClient.GET_SERVICEDEF_BY_NAME.format_path({ 'name': serviceDefName }))
+        resp = self.client_http.call_api(RangerClient.GET_SERVICEDEF_BY_NAME.format_path({ 'name': serviceDefName }))
 
         return type_coerce(resp, RangerServiceDef)
 
     def find_service_defs(self, filter=None):
-        resp = self.__call_api(RangerClient.FIND_SERVICEDEFS, filter)
+        resp = self.client_http.call_api(RangerClient.FIND_SERVICEDEFS, filter)
 
         return type_coerce_list(resp, RangerServiceDef)
 
 
     # Service APIs
     def create_service(self, service):
-        resp = self.__call_api(RangerClient.CREATE_SERVICE, request_data=service)
+        resp = self.client_http.call_api(RangerClient.CREATE_SERVICE, request_data=service)
 
         return type_coerce(resp, RangerService)
 
     def get_service_by_id(self, serviceId):
-        resp = self.__call_api(RangerClient.GET_SERVICE_BY_ID.format_path({ 'id': serviceId }))
+        resp = self.client_http.call_api(RangerClient.GET_SERVICE_BY_ID.format_path({ 'id': serviceId }))
 
         return type_coerce(resp, RangerService)
 
     def get_service(self, serviceName):
-        resp = self.__call_api(RangerClient.GET_SERVICE_BY_NAME.format_path({ 'name': serviceName }))
+        resp = self.client_http.call_api(RangerClient.GET_SERVICE_BY_NAME.format_path({ 'name': serviceName }))
 
         return type_coerce(resp, RangerService)
 
     def update_service_by_id(self, serviceId, service, params=None):
-        resp = self.__call_api(RangerClient.UPDATE_SERVICE_BY_ID.format_path({ 'id': serviceId }), params, service)
+        resp = self.client_http.call_api(RangerClient.UPDATE_SERVICE_BY_ID.format_path({ 'id': serviceId }), params, service)
 
         return type_coerce(resp, RangerService)
 
     def update_service(self, serviceName, service, params=None):
-        resp = self.__call_api(RangerClient.UPDATE_SERVICE_BY_NAME.format_path({ 'name': serviceName }), params, service)
+        resp = self.client_http.call_api(RangerClient.UPDATE_SERVICE_BY_NAME.format_path({ 'name': serviceName }), params, service)
 
         return type_coerce(resp, RangerService)
 
     def delete_service_by_id(self, serviceId):
-        self.__call_api(RangerClient.DELETE_SERVICE_BY_ID.format_path({ 'id': serviceId }))
+        self.client_http.call_api(RangerClient.DELETE_SERVICE_BY_ID.format_path({ 'id': serviceId }))
 
     def delete_service(self, serviceName):
-        self.__call_api(RangerClient.DELETE_SERVICE_BY_NAME.format_path({ 'name': serviceName }))
+        self.client_http.call_api(RangerClient.DELETE_SERVICE_BY_NAME.format_path({ 'name': serviceName }))
 
     def find_services(self, filter=None):
-        resp = self.__call_api(RangerClient.FIND_SERVICES, filter)
+        resp = self.client_http.call_api(RangerClient.FIND_SERVICES, filter)
 
         return type_coerce_list(resp, RangerService)
 
 
     # Policy APIs
     def create_policy(self, policy, params=None):
-        resp = self.__call_api(RangerClient.CREATE_POLICY, params, policy)
+        resp = self.client_http.call_api(RangerClient.CREATE_POLICY, params, policy)
 
         return type_coerce(resp, RangerPolicy)
 
     def get_policy_by_id(self, policyId):
-        resp = self.__call_api(RangerClient.GET_POLICY_BY_ID.format_path({ 'id': policyId }))
+        resp = self.client_http.call_api(RangerClient.GET_POLICY_BY_ID.format_path({ 'id': policyId }))
 
         return type_coerce(resp, RangerPolicy)
 
     def get_policy(self, serviceName, policyName):
-        resp = self.__call_api(RangerClient.GET_POLICY_BY_NAME.format_path({ 'serviceName': serviceName, 'policyName': policyName}))
+        resp = self.client_http.call_api(RangerClient.GET_POLICY_BY_NAME.format_path({ 'serviceName': serviceName, 'policyName': policyName}))
 
         return type_coerce(resp, RangerPolicy)
 
     def get_policies_in_service(self, serviceName, params=None):
-        resp = self.__call_api(RangerClient.GET_POLICIES_IN_SERVICE.format_path({ 'serviceName': serviceName }), params)
+        resp = self.client_http.call_api(RangerClient.GET_POLICIES_IN_SERVICE.format_path({ 'serviceName': serviceName }), params)
 
         return type_coerce_list(resp, RangerPolicy)
 
     def update_policy_by_id(self, policyId, policy):
-        resp = self.__call_api(RangerClient.UPDATE_POLICY_BY_ID.format_path({ 'id': policyId }), request_data=policy)
+        resp = self.client_http.call_api(RangerClient.UPDATE_POLICY_BY_ID.format_path({ 'id': policyId }), request_data=policy)
 
         return type_coerce(resp, RangerPolicy)
 
     def update_policy(self, serviceName, policyName, policy):
-        resp = self.__call_api(RangerClient.UPDATE_POLICY_BY_NAME.format_path({ 'serviceName': serviceName, 'policyName': policyName}), request_data=policy)
+        resp = self.client_http.call_api(RangerClient.UPDATE_POLICY_BY_NAME.format_path({ 'serviceName': serviceName, 'policyName': policyName}), request_data=policy)
 
         return type_coerce(resp, RangerPolicy)
 
     def apply_policy(self, policy, params=None):
-        resp = self.__call_api(RangerClient.APPLY_POLICY, params, policy)
+        resp = self.client_http.call_api(RangerClient.APPLY_POLICY, params, policy)
 
         return type_coerce(resp, RangerPolicy)
 
     def delete_policy_by_id(self, policyId):
-        self.__call_api(RangerClient.DELETE_POLICY_BY_ID.format_path({ 'id': policyId }))
+        self.client_http.call_api(RangerClient.DELETE_POLICY_BY_ID.format_path({ 'id': policyId }))
 
     def delete_policy(self, serviceName, policyName):
-        self.__call_api(RangerClient.DELETE_POLICY_BY_NAME, { 'servicename': serviceName, 'policyname': policyName })
+        self.client_http.call_api(RangerClient.DELETE_POLICY_BY_NAME, { 'servicename': serviceName, 'policyname': policyName })
 
     def find_policies(self, filter=None):
-        resp = self.__call_api(RangerClient.FIND_POLICIES, filter)
+        resp = self.client_http.call_api(RangerClient.FIND_POLICIES, filter)
 
         return type_coerce_list(resp, RangerPolicy)
 
 
     # SecurityZone APIs
     def create_security_zone(self, securityZone):
-        resp = self.__call_api(RangerClient.CREATE_ZONE, request_data=securityZone)
+        resp = self.client_http.call_api(RangerClient.CREATE_ZONE, request_data=securityZone)
 
         return type_coerce(resp, RangerSecurityZone)
 
     def update_security_zone_by_id(self, zoneId, securityZone):
-        resp = self.__call_api(RangerClient.UPDATE_ZONE_BY_ID.format_path({ 'id': zoneId }), request_data=securityZone)
+        resp = self.client_http.call_api(RangerClient.UPDATE_ZONE_BY_ID.format_path({ 'id': zoneId }), request_data=securityZone)
 
         return type_coerce(resp, RangerSecurityZone)
 
     def update_security_zone(self, zoneName, securityZone):
-        resp = self.__call_api(RangerClient.UPDATE_ZONE_BY_NAME.format_path({ 'name': zoneName }), request_data=securityZone)
+        resp = self.client_http.call_api(RangerClient.UPDATE_ZONE_BY_NAME.format_path({ 'name': zoneName }), request_data=securityZone)
 
         return type_coerce(resp, RangerSecurityZone)
 
     def delete_security_zone_by_id(self, zoneId):
-        self.__call_api(RangerClient.DELETE_ZONE_BY_ID.format_path({ 'id': zoneId }))
+        self.client_http.call_api(RangerClient.DELETE_ZONE_BY_ID.format_path({ 'id': zoneId }))
 
     def delete_security_zone(self, zoneName):
-        self.__call_api(RangerClient.DELETE_ZONE_BY_NAME.format_path({ 'name': zoneName }))
+        self.client_http.call_api(RangerClient.DELETE_ZONE_BY_NAME.format_path({ 'name': zoneName }))
 
     def get_security_zone_by_id(self, zoneId):
-        resp = self.__call_api(RangerClient.GET_ZONE_BY_ID.format_path({ 'id': zoneId }))
+        resp = self.client_http.call_api(RangerClient.GET_ZONE_BY_ID.format_path({ 'id': zoneId }))
 
         return type_coerce(resp, RangerSecurityZone)
 
     def get_security_zone(self, zoneName):
-        resp = self.__call_api(RangerClient.GET_ZONE_BY_NAME.format_path({ 'name': zoneName }))
+        resp = self.client_http.call_api(RangerClient.GET_ZONE_BY_NAME.format_path({ 'name': zoneName }))
 
         return type_coerce(resp, RangerSecurityZone)
 
     def find_security_zones(self, filter=None):
-        resp = self.__call_api(RangerClient.FIND_ZONES, filter)
+        resp = self.client_http.call_api(RangerClient.FIND_ZONES, filter)
 
         return type_coerce_list(resp, RangerSecurityZone)
 
@@ -212,126 +210,63 @@ class RangerClient:
 
         params['serviceName'] = serviceName
 
-        resp = self.__call_api(RangerClient.CREATE_ROLE, params, role)
+        resp = self.client_http.call_api(RangerClient.CREATE_ROLE, params, role)
 
         return type_coerce(resp, RangerRole)
 
     def update_role(self, roleId, role, params=None):
-        resp = self.__call_api(RangerClient.UPDATE_ROLE_BY_ID.format_path({ 'id': roleId }), params, role)
+        resp = self.client_http.call_api(RangerClient.UPDATE_ROLE_BY_ID.format_path({ 'id': roleId }), params, role)
 
         return type_coerce(resp, RangerRole)
 
     def delete_role_by_id(self, roleId):
-        self.__call_api(RangerClient.DELETE_ROLE_BY_ID.format_path({ 'id': roleId }))
+        self.client_http.call_api(RangerClient.DELETE_ROLE_BY_ID.format_path({ 'id': roleId }))
 
     def delete_role(self, roleName, execUser, serviceName):
-        self.__call_api(RangerClient.DELETE_ROLE_BY_NAME.format_path({ 'name': roleName }), { 'execUser': execUser, 'serviceName': serviceName })
+        self.client_http.call_api(RangerClient.DELETE_ROLE_BY_NAME.format_path({ 'name': roleName }), { 'execUser': execUser, 'serviceName': serviceName })
 
     def get_role_by_id(self, roleId):
-        resp = self.__call_api(RangerClient.GET_ROLE_BY_ID.format_path({ 'id': roleId }))
+        resp = self.client_http.call_api(RangerClient.GET_ROLE_BY_ID.format_path({ 'id': roleId }))
 
         return type_coerce(resp, RangerRole)
 
     def get_role(self, roleName, execUser, serviceName):
-        resp = self.__call_api(RangerClient.GET_ROLE_BY_NAME.format_path({ 'name': roleName }), { 'execUser': execUser, 'serviceName': serviceName })
+        resp = self.client_http.call_api(RangerClient.GET_ROLE_BY_NAME.format_path({ 'name': roleName }), { 'execUser': execUser, 'serviceName': serviceName })
 
         return type_coerce(resp, RangerRole)
 
     def get_all_role_names(self, execUser, serviceName):
-        resp = self.__call_api(RangerClient.GET_ALL_ROLE_NAMES.format_path({ 'name': serviceName }), { 'execUser': execUser, 'serviceName': serviceName })
+        resp = self.client_http.call_api(RangerClient.GET_ALL_ROLE_NAMES.format_path({ 'name': serviceName }), { 'execUser': execUser, 'serviceName': serviceName })
 
         return resp
 
     def get_user_roles(self, user, filters=None):
-        ret = self.__call_api(RangerClient.GET_USER_ROLES.format_path({ 'name': user }), filters)
+        ret = self.client_http.call_api(RangerClient.GET_USER_ROLES.format_path({ 'name': user }), filters)
 
         return list(ret) if ret is not None else None
 
     def find_roles(self, filter=None):
-        resp = self.__call_api(RangerClient.FIND_ROLES, filter)
+        resp = self.client_http.call_api(RangerClient.FIND_ROLES, filter)
 
         return type_coerce_list(resp, RangerRole)
 
     def grant_role(self, serviceName, request, params=None):
-        resp = self.__call_api(RangerClient.GRANT_ROLE.format_path({ 'name': serviceName }), params, request)
+        resp = self.client_http.call_api(RangerClient.GRANT_ROLE.format_path({ 'name': serviceName }), params, request)
 
         return type_coerce(resp, RESTResponse)
 
     def revoke_role(self, serviceName, request, params=None):
-        resp = self.__call_api(RangerClient.REVOKE_ROLE.format_path({ 'name': serviceName }), params, request)
+        resp = self.client_http.call_api(RangerClient.REVOKE_ROLE.format_path({ 'name': serviceName }), params, request)
 
         return type_coerce(resp, RESTResponse)
 
 
     # Admin APIs
     def delete_policy_deltas(self, days, reloadServicePoliciesCache):
-        self.__call_api(RangerClient.DELETE_POLICY_DELTAS, { 'days': days, 'reloadServicePoliciesCache': reloadServicePoliciesCache})
+        self.client_http.call_api(RangerClient.DELETE_POLICY_DELTAS, { 'days': days, 'reloadServicePoliciesCache': reloadServicePoliciesCache})
 
 
 
-    def __call_api(self, api, query_params=None, request_data=None):
-        ret    = None
-        params = { 'headers': { 'Accept': api.consumes, 'Content-type': api.produces } }
-
-        if query_params:
-            params['params'] = query_params
-
-        if request_data:
-            params['data'] = json.dumps(request_data)
-
-        path = os.path.join(self.url, api.path)
-
-        if LOG.isEnabledFor(logging.DEBUG):
-            LOG.debug("------------------------------------------------------")
-            LOG.debug("Call         : %s %s", api.method, path)
-            LOG.debug("Content-type : %s", api.consumes)
-            LOG.debug("Accept       : %s", api.produces)
-
-        response = None
-
-        if api.method == HttpMethod.GET:
-            response = self.session.get(path, **params)
-        elif api.method == HttpMethod.POST:
-            response = self.session.post(path, **params)
-        elif api.method == HttpMethod.PUT:
-            response = self.session.put(path, **params)
-        elif api.method == HttpMethod.DELETE:
-            response = self.session.delete(path, **params)
-
-        if LOG.isEnabledFor(logging.DEBUG):
-            LOG.debug("HTTP Status: %s", response.status_code if response else "None")
-
-        if response is None:
-            ret = None
-        elif response.status_code == api.expected_status:
-            try:
-                if response.status_code == HTTPStatus.NO_CONTENT or response.content is None:
-                    ret = None
-                else:
-                    if LOG.isEnabledFor(logging.DEBUG):
-                        LOG.debug("<== __call_api(%s, %s, %s), result=%s", vars(api), params, request_data, response)
-
-                        LOG.debug(response.json())
-
-                    ret = response.json()
-            except Exception as e:
-                print(e)
-
-                LOG.exception("Exception occurred while parsing response with msg: %s", e)
-
-                raise RangerServiceException(api, response)
-        elif response.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
-            LOG.error("Ranger admin unavailable. HTTP Status: %s", HTTPStatus.SERVICE_UNAVAILABLE)
-
-            ret = None
-        elif response.status_code == HTTPStatus.NOT_FOUND:
-            LOG.error("Not found. HTTP Status: %s", HTTPStatus.NOT_FOUND)
-
-            ret = None
-        else:
-            raise RangerServiceException(api, response)
-
-        return ret
 
 
     # URIs
@@ -451,3 +386,96 @@ class RESTResponse(RangerBase):
         super(RangerPolicy, self).type_coerce_attrs()
 
         self.messageList = type_coerce_dict(self.messageList, Message)
+
+
+class RangerClientHttp:
+    def __init__(self, url, auth):
+        self.url          = url
+        self.session      = Session()
+        self.session.auth = auth
+
+
+    def call_api(self, api, query_params=None, request_data=None):
+        ret    = None
+        params = { 'headers': { 'Accept': api.consumes, 'Content-type': api.produces } }
+
+        if query_params:
+            params['params'] = query_params
+
+        if request_data:
+            params['data'] = json.dumps(request_data)
+
+        path = os.path.join(self.url, api.path)
+
+        if LOG.isEnabledFor(logging.DEBUG):
+            LOG.debug("------------------------------------------------------")
+            LOG.debug("Call         : %s %s", api.method, path)
+            LOG.debug("Content-type : %s", api.consumes)
+            LOG.debug("Accept       : %s", api.produces)
+
+        response = None
+
+        if api.method == HttpMethod.GET:
+            response = self.session.get(path, **params)
+        elif api.method == HttpMethod.POST:
+            response = self.session.post(path, **params)
+        elif api.method == HttpMethod.PUT:
+            response = self.session.put(path, **params)
+        elif api.method == HttpMethod.DELETE:
+            response = self.session.delete(path, **params)
+
+        if LOG.isEnabledFor(logging.DEBUG):
+            LOG.debug("HTTP Status: %s", response.status_code if response else "None")
+
+        if response is None:
+            ret = None
+        elif response.status_code == api.expected_status:
+            try:
+                if response.status_code == HTTPStatus.NO_CONTENT or response.content is None:
+                    ret = None
+                else:
+                    if LOG.isEnabledFor(logging.DEBUG):
+                        LOG.debug("<== __call_api(%s, %s, %s), result=%s", vars(api), params, request_data, response)
+
+                        LOG.debug(response.json())
+
+                    ret = response.json()
+            except Exception as e:
+                print(e)
+
+                LOG.exception("Exception occurred while parsing response with msg: %s", e)
+
+                raise RangerServiceException(api, response)
+        elif response.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
+            LOG.error("Ranger admin unavailable. HTTP Status: %s", HTTPStatus.SERVICE_UNAVAILABLE)
+
+            ret = None
+        elif response.status_code == HTTPStatus.NOT_FOUND:
+            LOG.error("Not found. HTTP Status: %s", HTTPStatus.NOT_FOUND)
+
+            ret = None
+        else:
+            raise RangerServiceException(api, response)
+
+        return ret
+
+
+class RangerClientPrivate:
+    def __init__(self, url, auth):
+        self.client_http = RangerClientHttp(url, auth)
+
+        logging.getLogger("requests").setLevel(logging.WARNING)
+
+    # URLs
+    URI_DELETE_USER  = "service/xusers/secure/users/{name}"
+    URI_DELETE_GROUP = "service/xusers/secure/groups/{name}"
+
+    # APIs
+    DELETE_USER  = API(URI_DELETE_USER, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    DELETE_GROUP = API(URI_DELETE_GROUP, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+
+    def delete_user(self, userName, execUser):
+        self.client_http.call_api(RangerClientPrivate.DELETE_USER.format_path({ 'name': userName }), { 'execUser': execUser, 'forceDelete': 'true' })
+
+    def delete_group(self, groupName, execUser):
+        self.client_http.call_api(RangerClientPrivate.DELETE_GROUP.format_path({ 'name': groupName }), { 'execUser': execUser, 'forceDelete': 'true' })
