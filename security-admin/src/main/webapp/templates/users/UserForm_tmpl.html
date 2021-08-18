@@ -23,4 +23,33 @@
     <div class="" data-fields="emailAddress"></div>
     <div class="" data-fields="userRoleList"></div>
     <div class="" data-customfields="groupIdList"></div>
+    <fieldset>
+      <p class="wrap-header bold formHeader">Sync Details : </p>
+      <div class="wrap position-relative">
+        <table class="table table-bordered table-condensed backgrid">
+          <thead>
+            <tr>
+              <th class="renderable loginId">Name</th>
+              <th class="renderable loginId">Value</th>
+            </tr>
+          </thead>
+          <tbody>
+            {{#if syncSourceInfo}}
+              {{#each syncSourceInfo}}
+                <tr>
+                  <td class="string-cell renderable" >{{tt label}}</td>
+                  <td class="string-cell renderable white-space-normal" title={{value}} >{{value}}</td>
+                </tr>
+              {{/each}}
+            {{else}}
+              <tr>
+                <td class="emptySet text-muted" colspan="2">
+                  <center>No Sync Details Found!!</center>
+                </td>
+              </tr>
+            {{/if}}
+          </tbody>
+        </table>
+      </div>
+    </fieldset>
 </form>
