@@ -130,6 +130,15 @@ define(function(require) {
         }).open();
         modal.$el.find('.cancel').hide();
     };
+
+    XAViewUtil.syncUsersGroupsDetails = function(self){
+        var syncData = [];
+        var syncDetails = JSON.parse(self.model.get('otherAttributes'));
+        _.mapObject(syncDetails, function(value, key) {
+                syncData.push({'label': key, 'value': value});
+        })
+        return syncData;
+    }
 	
 	return XAViewUtil;
 

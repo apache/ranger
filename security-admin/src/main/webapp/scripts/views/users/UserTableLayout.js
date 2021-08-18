@@ -40,6 +40,7 @@ define(function(require){
         var VXRole			= require('models/VXRole');
 
 	var UsertablelayoutTmpl = require('hbs!tmpl/users/UserTableLayout_tmpl');
+	var XAViewUtils		= require('utils/XAViewUtils');
 
 	var UserTableLayout = Backbone.Marionette.Layout.extend(
 	/** @lends UserTableLayout */
@@ -76,7 +77,8 @@ define(function(require){
             deleteUser: '[data-id="deleteUserGroup"]',
             showUserList:'[data-js="showUserList"]',
             addNewRoles: '[data-id="addNewRoles"]',
-            hideShowVisibility: '[data-id="hideShowVisibility"]'
+            hideShowVisibility: '[data-id="hideShowVisibility"]',
+            syncDetailes : '[data-id="syncDetailes"]',
     	},
 
 		/** ui events hash */
@@ -89,6 +91,7 @@ define(function(require){
 			events['click ' + this.ui.visibilityDropdown+ ' a']  = 'onVisibilityChange';
 			events['click ' + this.ui.deleteUser] = 'onDeleteUser';
             events['click ' + this.ui.showUserList] = 'showUserList';
+            events['click '+this.ui.syncDetailes] = 'onSyncDetailes';
             return events;
 		},
 
@@ -442,6 +445,22 @@ define(function(require){
 					editable:false,
 					sortable:false,
 				},
+				syncSource : {
+					label	: localization.tt("lbl.syncSource"),
+					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							if(!_.isUndefined(rawValue)){
+								return '<span class="badge badge-green">'+rawValue+'</span>';
+							}else
+								return '--';
+						}
+					}),
+					click : false,
+					drag : false,
+					editable:false,
+					sortable:false,
+				},
 				groupNameList : {
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
 					label : localization.tt("lbl.groups"),
@@ -473,7 +492,22 @@ define(function(require){
 					}),
 					editable:false,
 					sortable:false
-				}
+				},
+				otherAttributes : {
+                    cell    : 'html',
+                    label : localization.tt("h.syncDetails"),
+                    editable:false,
+                    sortable:false,
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            if (!_.isUndefined(rawValue)) {
+                                return('<button data-id="syncDetailes" data-for="users" title="Sync Details" id="'+ model.get('id') +'" ><i class="fa-fw fa fa-eye"> </i></button>');
+                            } else {
+                                return '<center> -- </center>'
+                            }
+                        }
+                    }),
+                },
 			};
                         if(!SessionMgr.isSystemAdmin()){
                             delete cols.select;
@@ -553,6 +587,22 @@ define(function(require){
 					editable:false,
 					sortable:false,
 				},
+				syncSource : {
+					label	: localization.tt("lbl.syncSource"),
+					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue, model) {
+							if(!_.isUndefined(rawValue)){
+								return '<span class="badge badge-green">'+rawValue+'</span>';
+							}else
+								return '--';
+						}
+					}),
+					click : false,
+					drag : false,
+					editable:false,
+					sortable:false,
+				},
 				isVisible : {
 					label	: localization.tt("lbl.visibility"),
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
@@ -585,8 +635,23 @@ define(function(require){
                                 + '" data-id="' + model.id + '"<font color="black"><i class="fa-fw fa fa-group"> </i></font></button></div>');
                         }
                     }),
-                }
-			};
+                },
+                otherAttributes : {
+                    cell    : 'html',
+                    label : localization.tt("h.syncDetails"),
+                    editable:false,
+                    sortable:false,
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            if (!_.isUndefined(rawValue)) {
+                                return('<button data-id="syncDetailes" data-for="groups" title="Sync Details" id="'+ model.get('id') +'" ><i class="fa-fw fa fa-eye"> </i></button>');
+                            } else {
+                                return '<center> -- </center>'
+                            }
+                        }
+                    }),
+                },
+            };
             if(!SessionMgr.isSystemAdmin()){
                 delete cols.select;
             }
@@ -984,7 +1049,7 @@ define(function(require){
 			if(this.showUsers){
 				placeholder = localization.tt('h.searchForYourUser');	
 				coll = this.collection;
-				searchOpt = ['User Name','Email Address','Visibility', 'Role','User Source','User Status'];//,'Start Date','End Date','Today'];
+				searchOpt = ['User Name','Email Address','Visibility', 'Role','User Source','User Status', 'Sync Source'];//,'Start Date','End Date','Today'];
 				var userRoleList = _.map(XAEnums.UserRoles,function(obj,key){return {label:obj.label,value:key};});
                 serverAttrName  = [{text : "User Name", label :"name", urlLabel : "userName"},
                                     {text : "Email Address", label :"emailAddress", urlLabel : "emailAddress"},
@@ -992,15 +1057,16 @@ define(function(require){
                                     {text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus), urlLabel : "visibility"},
                                     {text : "User Source", label :"userSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.UserTypes), urlLabel : "userSource"},
                                     {text : "User Status", label :"status", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.ActiveStatus), urlLabel : "userStatus"},
+                                    {text : "Sync Source", label :"syncSource", urlLabel : "syncSource"}
                                 ];
             } else if(this.showGroups){
 				placeholder = localization.tt('h.searchForYourGroup');
 				coll = this.groupList;
-				searchOpt = ['Group Name','Group Source', 'Visibility'];//,'Start Date','End Date','Today'];
+				searchOpt = ['Group Name','Group Source', 'Visibility', 'Sync Source'];//,'Start Date','End Date','Today'];
                 serverAttrName  = [{text : "Group Name", label :"name", urlLabel : "groupName"},
                                     {text : "Visibility", label :"isVisible", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.VisibilityStatus), urlLabel : "visibility"},
-                                    {text : "Group Source", label :"groupSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.GroupTypes), urlLabel : "groupSource"}
-                                ];
+                                    {text : "Group Source", label :"groupSource", 'multiple' : true, 'optionsArr' : XAUtil.enumToSelectLabelValuePairs(XAEnums.GroupTypes), urlLabel : "groupSource"},
+                                    {text : "Sync Source", label :"syncSource", urlLabel : "syncSource"}];
             } else{
                 placeholder = localization.tt('h.searchForYourRole');
                 coll = this.roleList;
@@ -1047,6 +1113,9 @@ define(function(require){
 //										callback(XAUtil.hackForVSLabelValuePairs(XAEnums.ActiveStatus));
 										callback(that.getActiveStatusNVList());
 										break;
+									case 'Sync Source':
+										callback( _.map(XAEnums.UserSyncSource, function(obj){ return obj.label; }) );
+										break;
 									/*case 'Start Date' :
 										setTimeout(function () { XAUtil.displayDatepicker(that.ui.visualSearch, callback); }, 0);
 										break;
@@ -1092,6 +1161,34 @@ define(function(require){
 				this.ui.addNewBtnDiv.children().hide()
 			}
 		},
+        onSyncDetailes : function(e){
+            var that = this;
+            if (e.currentTarget.dataset.for =="users") {
+                var syncData = this.collection.models.find(function(m){return m.id == e.currentTarget.id});
+            } else {
+                var syncData = this.groupList.models.find(function(m){return m.id == e.currentTarget.id});
+            }
+            var SyncSourceView = Backbone.Marionette.ItemView.extend({
+                template : require('hbs!tmpl/reports/UserSyncInfo_tmpl'),
+                templateHelpers:function(){
+                   return {'syncSourceInfo' : XAViewUtils.syncUsersGroupsDetails(this)};
+                },
+                initialize: function(){
+                },
+                onRender: function(){}
+            });
+            var modal = new Backbone.BootstrapModal({
+                animate : true,
+                content     : new SyncSourceView({model : syncData}),
+                title: localization.tt("h.syncDetails"),
+                okText :localization.tt("lbl.ok"),
+                allowCancel : true,
+                escape : true,
+                focusOk : false
+            }).open();
+            modal.$el.find('.cancel').hide();
+        },
+
 		/** all post render plugin initialization */
 		initializePlugins: function(){
 		},
