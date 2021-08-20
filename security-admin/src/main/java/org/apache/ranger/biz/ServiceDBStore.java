@@ -4830,24 +4830,45 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 		}
+
 		String userName = searchFilter.getParam("user");
 		if (!StringUtils.isEmpty(userName)) {
-			searchFilter.removeParam("user");
+			searchFilter.setParam("user", RangerPolicyEngine.USER_CURRENT);
+			List<XXPolicy> xPolListForMacroUser = policyService.searchResources(searchFilter,policyService.searchFields, policyService.sortFields, retList);
+			Set<Long> processedSvcIdsForMacroUser = new HashSet<Long>();
+			if (!CollectionUtils.isEmpty(xPolListForMacroUser)) {
+				for (XXPolicy xXPolicy : xPolListForMacroUser) {
+					if (!processedPolicies.contains(xXPolicy.getId())) {
+						if (!processedSvcIdsForMacroUser.contains(xXPolicy.getService())) {
+							loadRangerPolicies(xXPolicy.getService(), processedSvcIdsForMacroUser, policyMap, searchFilter);
+						}
+						if (policyMap.get(xXPolicy.getId()) != null) {
+							policyList.add(policyMap.get(xXPolicy.getId()));
+							processedPolicies.add(xXPolicy.getId());
+						}
+					}
+				}
+			}
+
+            searchFilter.removeParam("user");
 			Set<String> groupNames = daoMgr.getXXGroupUser().findGroupNamesByUserName(userName);
-			if (!CollectionUtils.isEmpty(groupNames)) {
-				Set<Long> processedServicesForGroup=new HashSet<Long>();
-				List<XXPolicy> xPolList2;
+			groupNames.add(RangerConstants.GROUP_PUBLIC);
+			Set<Long> processedSvcIdsForGroup = new HashSet<Long>();
+			Set<String> processedGroupsName = new HashSet<String>();
+			List<XXPolicy> xPolList2;
 				for (String groupName : groupNames) {
 					searchFilter.setParam("group", groupName);
 					xPolList2 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
 					if (!CollectionUtils.isEmpty(xPolList2)) {
 						for (XXPolicy xPol2 : xPolList2) {
 							if(xPol2!=null){
-								if(!processedPolicies.contains(xPol2.getId())){
-									if(!processedServicesForGroup.contains(xPol2.getService())){
-										loadRangerPolicies(xPol2.getService(),processedServicesForGroup,policyMap,searchFilter);
+								if (!processedPolicies.contains(xPol2.getId())) {
+									if (!processedSvcIdsForGroup.contains(xPol2.getService())
+											|| !processedGroupsName.contains(groupName)) {
+										loadRangerPolicies(xPol2.getService(), processedSvcIdsForGroup, policyMap, searchFilter);
+										processedGroupsName.add(groupName);
 									}
-									if(policyMap.containsKey(xPol2.getId())){
+									if (policyMap.containsKey(xPol2.getId())) {
 										policyList.add(policyMap.get(xPol2.getId()));
 										processedPolicies.add(xPol2.getId());
 									}
@@ -4856,14 +4877,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 						}
 					}
 				}
-			}
 		}
 		if (!CollectionUtils.isEmpty(xPolList)) {
 			if (isSearchQuerybyResource(searchFilter)) {
 				if (MapUtils.isNotEmpty(policyMap)) {
 					for(Entry<Long,RangerPolicy> entry:policyMap.entrySet()) {
-						policyList.add(entry.getValue());
-						processedPolicies.add(entry.getKey());
+						if (!processedPolicies.contains(entry.getKey())) {
+							policyList.add(entry.getValue());
+							processedPolicies.add(entry.getKey());
+						}
 					}
 				}
 			} else {
@@ -4884,8 +4906,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		} else {
 			if (MapUtils.isNotEmpty(policyMap)) {
 				for(Entry<Long,RangerPolicy> entry:policyMap.entrySet()) {
-					policyList.add(entry.getValue());
-					processedPolicies.add(entry.getKey());
+					if (!processedPolicies.contains(entry.getKey())) {
+						policyList.add(entry.getValue());
+						processedPolicies.add(entry.getKey());
+					}
 				}
 			}
 		}
