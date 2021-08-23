@@ -2689,6 +2689,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 			checkAccess(vXUser.getName());
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 			try {
 				txTemplate.execute(new TransactionCallback<Object>() {
 					@Override
@@ -2726,7 +2727,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 
 		TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-
+		txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 		try {
 			txTemplate.execute(new TransactionCallback<Void>() {
 				@Override
@@ -2862,6 +2863,9 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		Set<String> groupUsers = groupUserInfo.getAddUsers();
 		if (CollectionUtils.isNotEmpty(groupUsers)) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("No. of new users in group" + groupName + " = " + groupUsers.size());
+			}
 			xGroupUserService.createOrUpdateXGroupUsers(groupName, groupUsers, usersFromDB);
 		}
 
@@ -2881,12 +2885,17 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	public int createOrDeleteXGroupUserList(List<GroupUserInfo> groupUserInfoList) {
 		int updatedGroups = 0;
 		if (CollectionUtils.isNotEmpty(groupUserInfoList)) {
+			if (logger.isDebugEnabled()) {
+				logger.debug("No. of groups to be updated = " + groupUserInfoList.size());
+			}
 			Map<String, Long> usersFromDB = daoManager.getXXUser().getAllUserIds();
 			if (MapUtils.isNotEmpty(usersFromDB)) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("No. of users in DB = " + usersFromDB.size());
+				}
 				for (GroupUserInfo groupUserInfo : groupUserInfoList) {
 					createOrDeleteXGroupUsers(groupUserInfo, usersFromDB);
 				}
