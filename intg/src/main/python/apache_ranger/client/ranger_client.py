@@ -474,8 +474,8 @@ class RangerClientPrivate:
     DELETE_USER  = API(URI_DELETE_USER, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
     DELETE_GROUP = API(URI_DELETE_GROUP, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
 
-    def delete_user(self, userName, execUser):
-        self.client_http.call_api(RangerClientPrivate.DELETE_USER.format_path({ 'name': userName }), { 'execUser': execUser, 'forceDelete': 'true' })
+    def delete_user(self, userName, execUser, isForceDelete='true'):
+        self.client_http.call_api(RangerClientPrivate.DELETE_USER.format_path({ 'name': userName }), { 'execUser': execUser, 'forceDelete': isForceDelete })
 
-    def delete_group(self, groupName, execUser):
-        self.client_http.call_api(RangerClientPrivate.DELETE_GROUP.format_path({ 'name': groupName }), { 'execUser': execUser, 'forceDelete': 'true' })
+    def delete_group(self, groupName, execUser, isForceDelete='true'):
+        self.client_http.call_api(RangerClientPrivate.DELETE_GROUP.format_path({ 'name': groupName }), { 'execUser': execUser, 'forceDelete': isForceDelete })
