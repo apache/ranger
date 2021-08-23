@@ -1229,7 +1229,8 @@ CREATE TABLE dbo.x_policy_change_log(
         service_type varchar(256) DEFAULT NULL NULL,
         policy_type int DEFAULT NULL NULL,
         zone_name varchar(256) DEFAULT NULL NULL,
-		    policy_id bigint DEFAULT NULL NULL,
+        policy_id bigint DEFAULT NULL NULL,
+        policy_guid varchar(1024) DEFAULT NULL NULL,
         CONSTRAINT x_policy_change_log_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -2251,6 +2252,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('054',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('056',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
