@@ -40,8 +40,14 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXGroupUser;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @Scope("singleton")
@@ -52,6 +58,10 @@ public class XGroupUserService extends
 
 	@Autowired
 	RangerEnumUtil xaEnumUtil;
+
+	@Autowired
+	@Qualifier(value = "transactionManager")
+	PlatformTransactionManager txManager;
 	
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	static {
@@ -118,36 +128,46 @@ public class XGroupUserService extends
 			return;
 		}
 		Map<String, XXGroupUser> groupUsers = daoManager.getXXGroupUser().findUsersByGroupName(groupName);
-		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
 		for (String username : users) {
 			if (usersFromDB.containsKey(username)) {
 				// Add or update group user mapping only if the user exists in x_user table.
-				XXGroupUser xxGroupUser = groupUsers.get(username);
-				boolean groupUserMappingExists = true;
-				if (xxGroupUser == null) {
-					xxGroupUser = new XXGroupUser();
-					groupUserMappingExists = false;
-				}
+				TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+				txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+				try {
+					txTemplate.execute(new TransactionCallback<Object>() {
+						@Override
+						public Object doInTransaction(TransactionStatus status) {
+							XXGroupUser xxGroupUser = groupUsers.get(username);
+							boolean groupUserMappingExists = true;
+							if (xxGroupUser == null) {
+								xxGroupUser = new XXGroupUser();
+								groupUserMappingExists = false;
+							}
+							xxGroupUser.setAddedByUserId(createdByUserId);
+							xxGroupUser.setUpdatedByUserId(createdByUserId);
 
-				if (xXPortalUser != null) {
-					xxGroupUser.setAddedByUserId(createdByUserId);
-					xxGroupUser.setUpdatedByUserId(createdByUserId);
-				}
-
-				if (groupUserMappingExists) {
-					xxGroupUser = getDao().update(xxGroupUser);
-				} else {
-					VXGroupUser vXGroupUser = new VXGroupUser();
-					vXGroupUser.setUserId(usersFromDB.get(username));
-					vXGroupUser.setName(groupName);
-					vXGroupUser.setParentGroupId(xxGroup.getId());
-					xxGroupUser = mapViewToEntityBean(vXGroupUser, xxGroupUser, 0);
-					xxGroupUser = getDao().create(xxGroupUser);
-				}
-				VXGroupUser vXGroupUser = postCreate(xxGroupUser);
-				if (logger.isDebugEnabled()) {
-					logger.debug(String.format("createOrUpdateXGroupUsers(): Create or update group user mapping with groupname =  " + vXGroupUser.getName()
-							+ " username = %s userId = %d", username, vXGroupUser.getUserId()));
+							if (groupUserMappingExists) {
+								xxGroupUser = getDao().update(xxGroupUser);
+							} else {
+								VXGroupUser vXGroupUser = new VXGroupUser();
+								vXGroupUser.setUserId(usersFromDB.get(username));
+								vXGroupUser.setName(groupName);
+								vXGroupUser.setParentGroupId(xxGroup.getId());
+								xxGroupUser = mapViewToEntityBean(vXGroupUser, xxGroupUser, 0);
+								xxGroupUser = getDao().create(xxGroupUser);
+							}
+							VXGroupUser vXGroupUser = postCreate(xxGroupUser);
+							if (logger.isDebugEnabled()) {
+								logger.debug(String.format("createOrUpdateXGroupUsers(): Create or update group user mapping with groupname =  " + vXGroupUser.getName()
+										+ " username = %s userId = %d", username, vXGroupUser.getUserId()));
+							}
+							return null;
+						}
+					});
+				} catch (Throwable ex) {
+					logger.error("XGroupUserService.createOrUpdateXGroupUsers: Failed to update DB for group users: ", ex);
+					throw restErrorUtil.createRESTException("Failed to create or update group users ",
+							MessageEnums.ERROR_CREATING_OBJECT);
 				}
 			}
 		}
@@ -158,7 +178,7 @@ public class XGroupUserService extends
 		if (resource == null) {
 			// Returns code 400 with DATA_NOT_FOUND as the error message
 			throw restErrorUtil.createRESTException(getResourceName()
-					+ " not found", MessageEnums.DATA_NOT_FOUND, id, null,
+							+ " not found", MessageEnums.DATA_NOT_FOUND, id, null,
 					"preRead: " + id + " not found.");
 		}
 
