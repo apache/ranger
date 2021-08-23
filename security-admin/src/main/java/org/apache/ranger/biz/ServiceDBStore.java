@@ -3745,6 +3745,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					policyChangeLog.setServiceType(policy.getServiceType());
 					policyChangeLog.setPolicyType(policy.getPolicyType());
 					policyChangeLog.setPolicyId(policy.getId());
+					policyChangeLog.setPolicyGuid(policy.getGuid());
 				}
 
 				serviceVersionUpdater.daoManager.getXXPolicyChangeLog().create(policyChangeLog);

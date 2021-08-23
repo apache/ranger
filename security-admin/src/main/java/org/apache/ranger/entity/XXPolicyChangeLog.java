@@ -77,6 +77,9 @@ public class XXPolicyChangeLog implements java.io.Serializable {
 	@Column(name = "policy_id")
 	protected Long policyId;
 
+	@Column(name = "policy_guid")
+	protected String policyGuid;
+
     /**
      * Default constructor. This will set all the attributes to default value.
      */
@@ -155,6 +158,14 @@ public class XXPolicyChangeLog implements java.io.Serializable {
 		this.policyId = policyId;
 	}
 
+	public String getPolicyGuid() {
+		return this.policyGuid;
+	}
+
+	public void setPolicyGuid(String policyGuid) {
+		this.policyGuid = policyGuid;
+	}
+
     /**
      * This return the bean content in string format
      * @return formatedStr
@@ -171,6 +182,7 @@ public class XXPolicyChangeLog implements java.io.Serializable {
         str += "policyType={" + policyType + "} ";
         str += "zoneName={" + zoneName + "} ";
         str += "policyId={" + policyId + "} ";
+        str += "policyGuid={" + policyGuid + "} ";
         str += "}";
         return str;
     }
@@ -194,7 +206,8 @@ public class XXPolicyChangeLog implements java.io.Serializable {
 
         return Objects.equals(this.id, other.id) && Objects.equals(this.serviceId, other.serviceId) && Objects.equals(this.policyVersion, other.policyVersion)
                 && Objects.equals(this.createTime, other.createTime) && Objects.equals(this.changeType, other.changeType) && Objects.equals(this.serviceType, other.serviceType)
-                && Objects.equals(this.policyType, other.policyType) && Objects.equals(this.zoneName, other.zoneName) && Objects.equals(this.policyId, other.policyId);
+                && Objects.equals(this.policyType, other.policyType) && Objects.equals(this.zoneName, other.zoneName) && Objects.equals(this.policyId, other.policyId)
+                && Objects.equals(this.policyGuid, other.policyGuid);
     }
 
 }
