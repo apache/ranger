@@ -19,22 +19,26 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
-import java.util.Date;
-import java.util.Map;
-
-import org.apache.kafka.common.config.SaslConfigs;
-import org.apache.kafka.common.network.ListenerName;
-import org.apache.kafka.common.security.JaasContext;
-import org.apache.kafka.common.security.auth.SecurityProtocol;
-import scala.collection.immutable.HashSet;
-import scala.collection.immutable.Set;
-import kafka.security.auth.*;
-import kafka.network.RequestChannel.Session;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.kafka.common.security.auth.KafkaPrincipal;
+import org.apache.kafka.common.Endpoint;
+import org.apache.kafka.common.acl.AclBinding;
+import org.apache.kafka.common.acl.AclBindingFilter;
+import org.apache.kafka.common.acl.AclOperation;
+import org.apache.kafka.common.config.SaslConfigs;
+import org.apache.kafka.common.network.ListenerName;
+import org.apache.kafka.common.resource.ResourcePattern;
+import org.apache.kafka.common.resource.ResourceType;
+import org.apache.kafka.common.security.JaasContext;
+import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.apache.kafka.server.authorizer.AclCreateResult;
+import org.apache.kafka.server.authorizer.AclDeleteResult;
+import org.apache.kafka.server.authorizer.Action;
+import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
+import org.apache.kafka.server.authorizer.AuthorizationResult;
+import org.apache.kafka.server.authorizer.Authorizer;
+import org.apache.kafka.server.authorizer.AuthorizerServerInfo;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
@@ -42,287 +46,240 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletionStage;
+import java.util.stream.Collectors;
+
 public class RangerKafkaAuthorizer implements Authorizer {
-	private static final Log logger = LogFactory
-			.getLog(RangerKafkaAuthorizer.class);
-	private static final Log PERF_KAFKAAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("kafkaauth.request");
+    private static final Log logger = LogFactory.getLog(RangerKafkaAuthorizer.class);
+    private static final Log PERF_KAFKAAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("kafkaauth.request");
+    private static volatile RangerBasePlugin rangerPlugin = null;
 
-	public static final String KEY_TOPIC = "topic";
-	public static final String KEY_CLUSTER = "cluster";
-	public static final String KEY_CONSUMER_GROUP = "consumergroup";
-	public static final String KEY_TRANSACTIONALID = "transactionalid";
-	public static final String KEY_DELEGATIONTOKEN = "delegationtoken";
+    public static final String KEY_TOPIC = "topic";
+    public static final String KEY_CLUSTER = "cluster";
+    public static final String KEY_CONSUMER_GROUP = "consumergroup";
+    public static final String KEY_TRANSACTIONALID = "transactionalid";
+    public static final String KEY_DELEGATIONTOKEN = "delegationtoken";
 
-	public static final String ACCESS_TYPE_READ = "consume";
-	public static final String ACCESS_TYPE_WRITE = "publish";
-	public static final String ACCESS_TYPE_CREATE = "create";
-	public static final String ACCESS_TYPE_DELETE = "delete";
-	public static final String ACCESS_TYPE_CONFIGURE = "configure";
-	public static final String ACCESS_TYPE_DESCRIBE = "describe";
-	public static final String ACCESS_TYPE_DESCRIBE_CONFIGS = "describe_configs";
-	public static final String ACCESS_TYPE_ALTER_CONFIGS    = "alter_configs";
-	public static final String ACCESS_TYPE_IDEMPOTENT_WRITE = "idempotent_write";
-	public static final String ACCESS_TYPE_CLUSTER_ACTION   = "cluster_action";
+    public static final String ACCESS_TYPE_READ = "consume";
+    public static final String ACCESS_TYPE_WRITE = "publish";
+    public static final String ACCESS_TYPE_CREATE = "create";
+    public static final String ACCESS_TYPE_DELETE = "delete";
+    public static final String ACCESS_TYPE_CONFIGURE = "configure";
+    public static final String ACCESS_TYPE_DESCRIBE = "describe";
+    public static final String ACCESS_TYPE_DESCRIBE_CONFIGS = "describe_configs";
+    public static final String ACCESS_TYPE_ALTER_CONFIGS = "alter_configs";
+    public static final String ACCESS_TYPE_IDEMPOTENT_WRITE = "idempotent_write";
+    public static final String ACCESS_TYPE_CLUSTER_ACTION = "cluster_action";
 
-	private static volatile RangerBasePlugin rangerPlugin = null;
-	RangerKafkaAuditHandler auditHandler = null;
+    private RangerKafkaAuditHandler auditHandler = null;
 
-	public RangerKafkaAuthorizer() {
-	}
+    public RangerKafkaAuthorizer() {
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see kafka.security.auth.Authorizer#configure(Map<String, Object>)
-	 */
-	@Override
-	public void configure(Map<String, ?> configs) {
-		RangerBasePlugin me = rangerPlugin;
-		if (me == null) {
-			synchronized(RangerKafkaAuthorizer.class) {
-				me = rangerPlugin;
-				if (me == null) {
-					try {
-						// Possible to override JAAS configuration which is used by Ranger, otherwise
-						// SASL_PLAINTEXT is used, which force Kafka to use 'sasl_plaintext.KafkaServer',
-						// if it's not defined, then it reverts to 'KafkaServer' configuration.
-						final Object jaasContext = configs.get("ranger.jaas.context");
-						final String listenerName = (jaasContext instanceof String
-								&& StringUtils.isNotEmpty((String) jaasContext)) ? (String) jaasContext
-										: SecurityProtocol.SASL_PLAINTEXT.name();
-						final String saslMechanism = SaslConfigs.GSSAPI_MECHANISM;
-						JaasContext context = JaasContext.loadServerContext(new ListenerName(listenerName), saslMechanism, configs);
-						MiscUtil.setUGIFromJAASConfig(context.name());
-						logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
-					} catch (Throwable t) {
-						logger.error("Error getting principal.", t);
-					}
-					me = rangerPlugin = new RangerBasePlugin("kafka", "kafka");
-				}
-			}
-		}
-		logger.info("Calling plugin.init()");
-		rangerPlugin.init();
-		auditHandler = new RangerKafkaAuditHandler();
-		rangerPlugin.setResultProcessor(auditHandler);
-	}
+    /*
+     * (non-Javadoc)
+     *
+     * @see kafka.security.auth.Authorizer#configure(Map<String, Object>)
+     */
+    @Override
+    public void configure(Map<String, ?> configs) {
+        RangerBasePlugin me = rangerPlugin;
+        if (me == null) {
+            synchronized (RangerKafkaAuthorizer.class) {
+                me = rangerPlugin;
+                if (me == null) {
+                    try {
+                        // Possible to override JAAS configuration which is used by Ranger, otherwise
+                        // SASL_PLAINTEXT is used, which force Kafka to use 'sasl_plaintext.KafkaServer',
+                        // if it's not defined, then it reverts to 'KafkaServer' configuration.
+                        final Object jaasContext = configs.get("ranger.jaas.context");
+                        final String listenerName = (jaasContext instanceof String
+                                && StringUtils.isNotEmpty((String) jaasContext)) ? (String) jaasContext
+                                : SecurityProtocol.SASL_PLAINTEXT.name();
+                        final String saslMechanism = SaslConfigs.GSSAPI_MECHANISM;
+                        JaasContext context = JaasContext.loadServerContext(new ListenerName(listenerName), saslMechanism, configs);
+                        MiscUtil.setUGIFromJAASConfig(context.name());
+                        logger.info("LoginUser=" + MiscUtil.getUGILoginUser());
+                    } catch (Throwable t) {
+                        logger.error("Error getting principal.", t);
+                    }
+                    rangerPlugin = new RangerBasePlugin("kafka", "kafka");
+                }
+            }
+        }
+        logger.info("Calling plugin.init()");
+        rangerPlugin.init();
+        auditHandler = new RangerKafkaAuditHandler();
+        rangerPlugin.setResultProcessor(auditHandler);
+    }
 
-	@Override
-	public void close() {
-		logger.info("close() called on authorizer.");
-		try {
-			if (rangerPlugin != null) {
-				rangerPlugin.cleanup();
-			}
-		} catch (Throwable t) {
-			logger.error("Error closing RangerPlugin.", t);
-		}
-	}
+    @Override
+    public void close() {
+        logger.info("close() called on authorizer.");
+        try {
+            if (rangerPlugin != null) {
+                rangerPlugin.cleanup();
+            }
+        } catch (Throwable t) {
+            logger.error("Error closing RangerPlugin.", t);
+        }
+    }
 
-	@Override
-	public boolean authorize(Session session, Operation operation,
-			Resource resource) {
+    @Override
+    public Map<Endpoint, ? extends CompletionStage<Void>> start(AuthorizerServerInfo serverInfo) {
+        return Collections.emptyMap();
+    }
 
-		if (rangerPlugin == null) {
-			MiscUtil.logErrorMessageByInterval(logger,
-					"Authorizer is still not initialized");
-			return false;
-		}
+    @Override
+    public List<AuthorizationResult> authorize(AuthorizableRequestContext requestContext, List<Action> actions) {
+        if (rangerPlugin == null) {
+            MiscUtil.logErrorMessageByInterval(logger,
+                    "Authorizer is still not initialized");
+            return actions.stream().map(a -> AuthorizationResult.DENIED).collect(Collectors.toList());
+        }
 
-		RangerPerfTracer perf = null;
+        String userName = requestContext.principal() == null ? null : requestContext.principal().getName();
+        Set<String> userGroups = MiscUtil.getGroupsForRequestUser(userName);
+        String hostAddress = requestContext.clientAddress().getHostAddress();
+        String ip = StringUtils.isNotEmpty(hostAddress) && hostAddress.charAt(0) == '/' ? hostAddress.substring(1) : hostAddress;
 
-		if(RangerPerfTracer.isPerfTraceEnabled(PERF_KAFKAAUTH_REQUEST_LOG)) {
-			perf = RangerPerfTracer.getPerfTracer(PERF_KAFKAAUTH_REQUEST_LOG, "RangerKafkaAuthorizer.authorize(resource=" + resource + ")");
-		}
-		String userName = null;
-		if (session.principal() != null) {
-			userName = session.principal().getName();
-		}
-		java.util.Set<String> userGroups = MiscUtil
-				.getGroupsForRequestUser(userName);
-		String ip = session.clientAddress().getHostAddress();
+        return actions.stream().map(action -> {
+            RangerPerfTracer perf = perfTracer(action.resourcePattern());
+            Date eventTime = new Date();
+            String accessType = mapToRangerAccessType(action.operation());
+            boolean validationFailed = false;
+            String validationStr = "";
 
-		// skip leading slash
-		if (StringUtils.isNotEmpty(ip) && ip.charAt(0) == '/') {
-			ip = ip.substring(1);
-		}
+            if (StringUtils.isEmpty(accessType)) {
+                if (MiscUtil.logErrorMessageByInterval(logger,
+                        "Unsupported access type. operation=" + action.operation())) {
+                    logger.fatal("Unsupported access type. principal=" + requestContext.principal()
+                            + ", clientAddress=" + requestContext.clientAddress()
+                            + ", operation=" + action.operation() + ", resource=" + action.resourcePattern());
+                }
+                validationFailed = true;
+                validationStr += "Unsupported access type. operation=" + action.operation();
+            }
 
-		Date eventTime = new Date();
-		String accessType = mapToRangerAccessType(operation);
-		boolean validationFailed = false;
-		String validationStr = "";
+            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
+            rangerRequest.setUser(userName);
+            rangerRequest.setUserGroups(userGroups);
+            rangerRequest.setClientIPAddress(ip);
+            rangerRequest.setAccessTime(eventTime);
 
-		if (accessType == null) {
-			if (MiscUtil.logErrorMessageByInterval(logger,
-					"Unsupported access type. operation=" + operation)) {
-				logger.fatal("Unsupported access type. session=" + session
-						+ ", operation=" + operation + ", resource=" + resource);
-			}
-			validationFailed = true;
-			validationStr += "Unsupported access type. operation=" + operation;
-		}
-		String action = accessType;
+            RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+            rangerRequest.setResource(rangerResource);
+            rangerRequest.setAccessType(accessType);
+            rangerRequest.setAction(accessType);
+            rangerRequest.setRequestData(action.resourcePattern().name());
 
-		RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
-		rangerRequest.setUser(userName);
-		rangerRequest.setUserGroups(userGroups);
-		rangerRequest.setClientIPAddress(ip);
-		rangerRequest.setAccessTime(eventTime);
+            String resourceTypeString = mapToResourceType(action.resourcePattern().resourceType());
+            if (StringUtils.isEmpty(resourceTypeString)) {
+                logger.fatal("Unsupported resourceType=" + action.resourcePattern().resourceType());
+                validationFailed = true;
+            } else {
+                rangerResource.setValue(resourceTypeString, action.resourcePattern().name());
+            }
 
-		RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
-		rangerRequest.setResource(rangerResource);
-		rangerRequest.setAccessType(accessType);
-		rangerRequest.setAction(action);
-		rangerRequest.setRequestData(resource.name());
+            boolean returnValue = false;
+            if (validationFailed) {
+                MiscUtil.logErrorMessageByInterval(logger, validationStr + ", request=" + rangerRequest);
+            } else {
+                try {
+                    RangerAccessResult result = rangerPlugin.isAccessAllowed(rangerRequest);
+                    if (result == null) {
+                        logger.error("Ranger Plugin returned null. Returning false");
+                    } else {
+                        returnValue = result.getIsAllowed();
+                    }
+                } catch (Throwable t) {
+                    logger.error("Error while calling isAccessAllowed(). request=" + rangerRequest, t);
+                } finally {
+                    auditHandler.flushAudit();
+                }
+            }
+            RangerPerfTracer.log(perf);
 
-		if (resource.resourceType().equals(Topic$.MODULE$)) {
-			rangerResource.setValue(KEY_TOPIC, resource.name());
-		} else if (resource.resourceType().equals(Cluster$.MODULE$)) {
-			rangerResource.setValue(KEY_CLUSTER, resource.name());
-		} else if (resource.resourceType().equals(Group$.MODULE$)) {
-			rangerResource.setValue(KEY_CONSUMER_GROUP, resource.name());
-		} else if (resource.resourceType().equals(TransactionalId$.MODULE$)) {
-			rangerResource.setValue(KEY_TRANSACTIONALID, resource.name());
-		} else if (resource.resourceType().equals(DelegationToken$.MODULE$)) {
-			rangerResource.setValue(KEY_DELEGATIONTOKEN, resource.name());
-		} else {
-			logger.fatal("Unsupported resourceType=" + resource.resourceType());
-			validationFailed = true;
-		}
+            if (logger.isDebugEnabled()) {
+                logger.debug("rangerRequest=" + rangerRequest + ", return=" + returnValue);
+            }
+            return returnValue ? AuthorizationResult.ALLOWED : AuthorizationResult.DENIED;
+        }).collect(Collectors.toList());
+    }
 
-		boolean returnValue = false;
-		if (validationFailed) {
-			MiscUtil.logErrorMessageByInterval(logger, validationStr
-					+ ", request=" + rangerRequest);
-		} else {
+    @Override
+    public List<? extends CompletionStage<AclCreateResult>> createAcls(AuthorizableRequestContext requestContext, List<AclBinding> aclBindings) {
+        logger.error("createAcls(AuthorizableRequestContext, List<AclBinding>) is not supported by Ranger for Kafka");
+        return Collections.emptyList();
+    }
 
-			try {
-				RangerAccessResult result = rangerPlugin
-						.isAccessAllowed(rangerRequest);
-				if (result == null) {
-					logger.error("Ranger Plugin returned null. Returning false");
-				} else {
-					returnValue = result.getIsAllowed();
-				}
-			} catch (Throwable t) {
-				logger.error("Error while calling isAccessAllowed(). request="
-						+ rangerRequest, t);
-			} finally {
-				auditHandler.flushAudit();
-			}
-		}
-		RangerPerfTracer.log(perf);
+    @Override
+    public List<? extends CompletionStage<AclDeleteResult>> deleteAcls(AuthorizableRequestContext requestContext, List<AclBindingFilter> aclBindingFilters) {
+        logger.error("deleteAcls(AuthorizableRequestContext, List<AclBindingFilter>) is not supported by Ranger for Kafka");
+        return Collections.emptyList();
+    }
 
-		if (logger.isDebugEnabled()) {
-			logger.debug("rangerRequest=" + rangerRequest + ", return="
-					+ returnValue);
-		}
-		return returnValue;
-	}
+    @Override
+    public Iterable<AclBinding> acls(AclBindingFilter filter) {
+        logger.error("acls(AclBindingFilter) is not supported by Ranger for Kafka");
+        return Collections.emptyList();
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * kafka.security.auth.Authorizer#addAcls(scala.collection.immutable.Set,
-	 * kafka.security.auth.Resource)
-	 */
-	@Override
-	public void addAcls(Set<Acl> acls, Resource resource) {
-		logger.error("addAcls(Set<Acl>, Resource) is not supported by Ranger for Kafka");
-	}
+    private static String mapToRangerAccessType(AclOperation operation) {
+        switch (operation) {
+            case READ:
+                return ACCESS_TYPE_READ;
+            case WRITE:
+                return ACCESS_TYPE_WRITE;
+            case ALTER:
+                return ACCESS_TYPE_CONFIGURE;
+            case DESCRIBE:
+                return ACCESS_TYPE_DESCRIBE;
+            case CLUSTER_ACTION:
+                return ACCESS_TYPE_CLUSTER_ACTION;
+            case CREATE:
+                return ACCESS_TYPE_CREATE;
+            case DELETE:
+                return ACCESS_TYPE_DELETE;
+            case DESCRIBE_CONFIGS:
+                return ACCESS_TYPE_DESCRIBE_CONFIGS;
+            case ALTER_CONFIGS:
+                return ACCESS_TYPE_ALTER_CONFIGS;
+            case IDEMPOTENT_WRITE:
+                return ACCESS_TYPE_IDEMPOTENT_WRITE;
+            default:
+                return null;
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * kafka.security.auth.Authorizer#removeAcls(scala.collection.immutable.Set,
-	 * kafka.security.auth.Resource)
-	 */
-	@Override
-	public boolean removeAcls(Set<Acl> acls, Resource resource) {
-		logger.error("removeAcls(Set<Acl>, Resource) is not supported by Ranger for Kafka");
-		return false;
-	}
+    private static String mapToResourceType(ResourceType resourceType) {
+        switch (resourceType) {
+            case TOPIC:
+                return KEY_TOPIC;
+            case CLUSTER:
+                return KEY_CLUSTER;
+            case GROUP:
+                return KEY_CONSUMER_GROUP;
+            case TRANSACTIONAL_ID:
+                return KEY_TRANSACTIONALID;
+            case DELEGATION_TOKEN:
+                return KEY_DELEGATIONTOKEN;
+            default:
+                return null;
+        }
+    }
 
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * kafka.security.auth.Authorizer#removeAcls(kafka.security.auth.Resource)
-	 */
-	@Override
-	public boolean removeAcls(Resource resource) {
-		logger.error("removeAcls(Resource) is not supported by Ranger for Kafka");
-		return false;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see kafka.security.auth.Authorizer#getAcls(kafka.security.auth.Resource)
-	 */
-	@Override
-	public Set<Acl> getAcls(Resource resource) {
-		Set<Acl> aclList = new HashSet<Acl>();
-		logger.error("getAcls(Resource) is not supported by Ranger for Kafka");
-
-		return aclList;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see
-	 * kafka.security.auth.Authorizer#getAcls(kafka.security.auth.KafkaPrincipal
-	 * )
-	 */
-	@Override
-	public scala.collection.immutable.Map<Resource, Set<Acl>> getAcls(
-			KafkaPrincipal principal) {
-		scala.collection.immutable.Map<Resource, Set<Acl>> aclList = new scala.collection.immutable.HashMap<Resource, Set<Acl>>();
-		logger.error("getAcls(KafkaPrincipal) is not supported by Ranger for Kafka");
-		return aclList;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 *
-	 * @see kafka.security.auth.Authorizer#getAcls()
-	 */
-	@Override
-	public scala.collection.immutable.Map<Resource, Set<Acl>> getAcls() {
-		scala.collection.immutable.Map<Resource, Set<Acl>> aclList = new scala.collection.immutable.HashMap<Resource, Set<Acl>>();
-		logger.error("getAcls() is not supported by Ranger for Kafka");
-		return aclList;
-	}
-
-	/**
-	 * @param operation
-	 * @return
-	 */
-	private String mapToRangerAccessType(Operation operation) {
-		if (operation.equals(Read$.MODULE$)) {
-			return ACCESS_TYPE_READ;
-		} else if (operation.equals(Write$.MODULE$)) {
-			return ACCESS_TYPE_WRITE;
-		} else if (operation.equals(Alter$.MODULE$)) {
-			return ACCESS_TYPE_CONFIGURE;
-		} else if (operation.equals(Describe$.MODULE$)) {
-			return ACCESS_TYPE_DESCRIBE;
-		} else if (operation.equals(ClusterAction$.MODULE$)) {
-			return ACCESS_TYPE_CLUSTER_ACTION;
-		} else if (operation.equals(Create$.MODULE$)) {
-			return ACCESS_TYPE_CREATE;
-		} else if (operation.equals(Delete$.MODULE$)) {
-			return ACCESS_TYPE_DELETE;
-		} else if (operation.equals(DescribeConfigs$.MODULE$)) {
-			return ACCESS_TYPE_DESCRIBE_CONFIGS;
-		} else if (operation.equals(AlterConfigs$.MODULE$)) {
-			return ACCESS_TYPE_ALTER_CONFIGS;
-		} else if (operation.equals(IdempotentWrite$.MODULE$)) {
-			return ACCESS_TYPE_IDEMPOTENT_WRITE;
-		}
-		return null;
-	}
+    private static RangerPerfTracer perfTracer(ResourcePattern resourcePattern) {
+        if (RangerPerfTracer.isPerfTraceEnabled(PERF_KAFKAAUTH_REQUEST_LOG)) {
+            return RangerPerfTracer.getPerfTracer(PERF_KAFKAAUTH_REQUEST_LOG,
+                    "RangerKafkaAuthorizer.authorize(resource=" + resourcePattern + ")");
+        } else {
+            return null;
+        }
+    }
 }
