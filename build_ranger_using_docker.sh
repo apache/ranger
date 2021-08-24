@@ -87,7 +87,7 @@ ENV PATH $JAVA_HOME/bin:$PATH
 
 
 ADD https://www.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz.sha512 /tools
-ADD http://www-us.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz /tools
+ADD https://downloads.apache.org/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz /tools
 RUN sha512sum  apache-maven-3.6.3-bin.tar.gz | cut -f 1 -d " " > tmp.sha1
 
 RUN cat apache-maven-3.6.3-bin.tar.gz.sha512 | cut -f 1 -d " " > tmp.sha1.download
