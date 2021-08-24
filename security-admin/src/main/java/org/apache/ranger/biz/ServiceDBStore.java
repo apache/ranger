@@ -61,6 +61,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -133,6 +134,7 @@ import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -1399,7 +1401,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("== ServiceDBStore.getServiceDefByName(" + name + "): " + ret);
+			LOG.debug("== ServiceDBStore.getServiceDefByName(" + name + "): " );
 		}
 
 		return  ret;
@@ -3137,7 +3139,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			boolean isValid;
 
-			resourcePolicyDeltas = daoMgr.getXXPolicyChangeLog().findLaterThan(policyService, lastKnownVersion, service.getId());
+			resourcePolicyDeltas = daoMgr.getXXPolicyChangeLog().findLaterThan(lastKnownVersion, service.getId());
 			if (CollectionUtils.isNotEmpty(resourcePolicyDeltas)) {
 				isValid = RangerPolicyDeltaUtil.isValidDeltas(resourcePolicyDeltas, componentServiceType);
 
@@ -3149,7 +3151,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				if (isValid && tagService != null) {
 					Long id = resourcePolicyDeltas.get(0).getId();
-					tagPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(policyService, id, tagService.getId());
+					tagPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(id, tagService.getId());
 
 
 					if (CollectionUtils.isNotEmpty(tagPolicyDeltas)) {
@@ -3540,46 +3542,53 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXServiceVersionInfo serviceVersionInfoDbObj = serviceVersionInfoDao.findByServiceId(id);
 		XXService service = daoMgr.getXXService().getById(id);
 
-		Long nextPolicyVersion = 1L;
+		Long nextVersion = 1L;
 		Date now = new Date();
 
 		if (serviceVersionInfoDbObj != null) {
 			if (versionType == VERSION_TYPE.POLICY_VERSION) {
-				nextPolicyVersion = getNextVersion(serviceVersionInfoDbObj.getPolicyVersion());
-
-				serviceVersionInfoDbObj.setPolicyVersion(nextPolicyVersion);
+				nextVersion = getNextVersion(serviceVersionInfoDbObj.getPolicyVersion());
+				serviceVersionInfoDbObj.setPolicyVersion(nextVersion);
 				serviceVersionInfoDbObj.setPolicyUpdateTime(now);
-			}
-			if (versionType == VERSION_TYPE.TAG_VERSION) {
-				serviceVersionInfoDbObj.setTagVersion(getNextVersion(serviceVersionInfoDbObj.getTagVersion()));
+			} else if (versionType == VERSION_TYPE.TAG_VERSION) {
+				nextVersion = getNextVersion(serviceVersionInfoDbObj.getTagVersion());
+				serviceVersionInfoDbObj.setTagVersion(nextVersion);
 				serviceVersionInfoDbObj.setTagUpdateTime(now);
-			}
-
-			if(versionType == VERSION_TYPE.ROLE_VERSION) {
+			} else if(versionType == VERSION_TYPE.ROLE_VERSION) {
 				// get the LatestRoleVersion from the GlobalTable and update ServiceInfo for a service
 				XXGlobalStateDao xxGlobalStateDao = daoMgr.getXXGlobalState();
 				if (xxGlobalStateDao != null) {
 					Long roleVersion = xxGlobalStateDao.getAppDataVersion("RangerRole");
 					if (roleVersion != null) {
-						serviceVersionInfoDbObj.setRoleVersion(roleVersion);
-						serviceVersionInfoDbObj.setRoleUpdateTime(now);
+						nextVersion = roleVersion;
+					} else {
+						LOG.error("No Global state for 'RoleVersion'. Cannot execute this object:[" + serviceVersionUpdater + "]");
 					}
+					serviceVersionInfoDbObj.setRoleVersion(nextVersion);
+					serviceVersionInfoDbObj.setRoleUpdateTime(now);
+				} else {
+					LOG.error("No Global state DAO. Cannot execute this object:[" + serviceVersionUpdater + "]");
+					return;
 				}
+			} else {
+				LOG.error("Unknown VERSION_TYPE:" + versionType + ". Cannot execute this object:[" + serviceVersionUpdater + "]");
+				return;
 			}
-
+			serviceVersionUpdater.version = nextVersion;
 			serviceVersionInfoDao.update(serviceVersionInfoDbObj);
 
 		} else {
 			if (service != null) {
 				serviceVersionInfoDbObj = new XXServiceVersionInfo();
 				serviceVersionInfoDbObj.setServiceId(service.getId());
-				serviceVersionInfoDbObj.setPolicyVersion(1L);
+				serviceVersionInfoDbObj.setPolicyVersion(nextVersion);
 				serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
-				serviceVersionInfoDbObj.setTagVersion(1L);
+				serviceVersionInfoDbObj.setTagVersion(nextVersion);
 				serviceVersionInfoDbObj.setTagUpdateTime(new Date());
-				serviceVersionInfoDbObj.setRoleVersion(1L);
+				serviceVersionInfoDbObj.setRoleVersion(nextVersion);
 				serviceVersionInfoDbObj.setRoleUpdateTime(new Date());
 
+				serviceVersionUpdater.version = nextVersion;
 				serviceVersionInfoDao.create(serviceVersionInfoDbObj);
 			}
 		}
@@ -4044,7 +4053,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		response.setContentType("text/csv");
 
 		final String LINE_SEPARATOR = "\n";
-                final String FILE_HEADER = "ID|Name|Resources|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|"
+                final String FILE_HEADER = "ID|Name|Resources|Roles|Groups|Users|Accesses|Service Type|Status|Policy Type|Delegate Admin|isRecursive|"
                                 + "isExcludes|Service Name|Description|isAuditEnabled|Policy Conditions|Policy Condition Type|Masking Options|Row Filter Expr|Policy Label Name";
 		StringBuilder csvBuffer = new StringBuilder();
 		csvBuffer.append(FILE_HEADER);
@@ -4139,8 +4148,10 @@ public class ServiceDBStore extends AbstractServiceStore {
                 }
                 final String COMMA_DELIMITER = "|";
                 final String LINE_SEPARATOR = "\n";
+                List<String> roles = new ArrayList<String>();
                 List<String> groups = new ArrayList<String>();
                 List<String> users = new ArrayList<String>();
+                String roleNames = "";
                 String groupNames = "";
                 String userNames = "";
                 String policyLabelName = "";
@@ -4205,6 +4216,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                         resourceKeyVal = resourceKeyVal.substring(1);
                         if (policyItem != null && dataMaskPolicyItem == null
                                         && rowFilterPolicyItem == null) {
+                                roles = policyItem.getRoles();
                                 groups = policyItem.getGroups();
                                 users = policyItem.getUsers();
                                 accesses = policyItem.getAccesses();
@@ -4212,6 +4224,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 conditionsList = policyItem.getConditions();
                         } else if (dataMaskPolicyItem != null && policyItem == null
                                         && rowFilterPolicyItem == null) {
+                                roles = dataMaskPolicyItem.getRoles();
                                 groups = dataMaskPolicyItem.getGroups();
                                 users = dataMaskPolicyItem.getUsers();
                                 accesses = dataMaskPolicyItem.getAccesses();
@@ -4229,6 +4242,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 }
                         } else if (rowFilterPolicyItem != null && policyItem == null
                                         && dataMaskPolicyItem == null) {
+                                roles = rowFilterPolicyItem.getRoles();
                                 groups = rowFilterPolicyItem.getGroups();
                                 users = rowFilterPolicyItem.getUsers();
                                 accesses = rowFilterPolicyItem.getAccesses();
@@ -4245,6 +4259,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 }
                                 accessType = accessType.substring(0,
                                                 accessType.lastIndexOf("#"));
+                        }
+                        if (CollectionUtils.isNotEmpty(roles)) {
+                            for (String role : roles) {
+                                role = role.replace("|", "");
+                                role = role.replace("#", "");
+                                roleNames = roleNames + role + "#";
+                            }
+                            roleNames = roleNames.substring(0, roleNames.lastIndexOf("#"));
                         }
                         if (CollectionUtils.isNotEmpty(groups)) {
                                 for (String group : groups) {
@@ -4321,6 +4343,8 @@ public class ServiceDBStore extends AbstractServiceStore {
                 csvBuffer.append(policyName);
                 csvBuffer.append(COMMA_DELIMITER);
                 csvBuffer.append(resourceKeyVal);
+                csvBuffer.append(COMMA_DELIMITER);
+                csvBuffer.append(roleNames);
                 csvBuffer.append(COMMA_DELIMITER);
                 csvBuffer.append(groupNames);
                 csvBuffer.append(COMMA_DELIMITER);
@@ -4470,6 +4494,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 		List<String> groups = new ArrayList<String>();
 		List<String> users = new ArrayList<String>();
+		List<String> roles = new ArrayList<String>();
+		String roleNames = "";
 		String groupNames = "";
                 String policyConditionTypeValue = "";
 		String userNames = "";
@@ -4525,12 +4551,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 			resourceKeyVal = resourceKeyVal.substring(1);
 			cell.setCellValue(resourceKeyVal);
 			if (policyItem != null && dataMaskPolicyItem == null && rowFilterPolicyItem == null) {
+				roles = policyItem.getRoles();
 				groups = policyItem.getGroups();
 				users = policyItem.getUsers();
 				accesses = policyItem.getAccesses();
                                 delegateAdmin = policyItem.getDelegateAdmin();
                                 conditionsList = policyItem.getConditions();
 			} else if (dataMaskPolicyItem != null && policyItem == null && rowFilterPolicyItem == null) {
+				roles = dataMaskPolicyItem.getRoles();
 				groups = dataMaskPolicyItem.getGroups();
 				users = dataMaskPolicyItem.getUsers();
 				accesses = dataMaskPolicyItem.getAccesses();
@@ -4544,9 +4572,10 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 if (conditionExpr != null && !conditionExpr.isEmpty() && valueExpr != null && !valueExpr.isEmpty()) {
                                         maskingInfo = maskingInfo + "; conditionExpr=[" + conditionExpr + "]";
                                 }
-                                cell = row.createCell(17);
+                                cell = row.createCell(18);
                                 cell.setCellValue(maskingInfo);
 			} else if (rowFilterPolicyItem != null && policyItem == null && dataMaskPolicyItem == null) {
+				roles = rowFilterPolicyItem.getRoles();
 				groups = rowFilterPolicyItem.getGroups();
 				users = rowFilterPolicyItem.getUsers();
 				accesses = rowFilterPolicyItem.getAccesses();
@@ -4554,7 +4583,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 conditionsList = rowFilterPolicyItem.getConditions();
                                 filterInfo = rowFilterPolicyItem.getRowFilterInfo();
                                 String filterExpr = filterInfo.getFilterExpr();
-                                cell = row.createCell(18);
+                                cell = row.createCell(19);
                                 cell.setCellValue(filterExpr);
 			}
 			if (CollectionUtils.isNotEmpty(accesses)) {
@@ -4563,6 +4592,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 					accessType = accessType + " ,";
 				}
 				accessType = accessType.substring(0, accessType.lastIndexOf(","));
+			}
+			if (CollectionUtils.isNotEmpty(roles)) {
+				roleNames = roleNames + roles.toString();
+				StringTokenizer roleToken = new StringTokenizer(roleNames, "[]");
+				while(roleToken.hasMoreTokens()) {
+					roleNames = roleToken.nextToken().toString();
+				}
 			}
 			if (CollectionUtils.isNotEmpty(groups)) {
 				groupNames = groupNames + groups.toString();
@@ -4586,12 +4622,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 conditionKeyValue = conditionType + "=" + conditionValue;
                         }
 			cell = row.createCell(3);
-			cell.setCellValue(groupNames);
+			cell.setCellValue(roleNames);
 			cell = row.createCell(4);
-			cell.setCellValue(userNames);
+			cell.setCellValue(groupNames);
 			cell = row.createCell(5);
-			cell.setCellValue(accessType.trim());
+			cell.setCellValue(userNames);
 			cell = row.createCell(6);
+			cell.setCellValue(accessType.trim());
+			cell = row.createCell(7);
 			XXService xxservice = daoMgr.getXXService().findByName(policy.getService());
 			String ServiceType = "";
 			if (xxservice != null) {
@@ -4611,7 +4649,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                         }
 
 			cell.setCellValue(ServiceType);
-			cell = row.createCell(7);
+			cell = row.createCell(8);
 
 		}
 		if (policy.getIsEnabled()) {
@@ -4628,7 +4666,7 @@ public class ServiceDBStore extends AbstractServiceStore {
                         }
                 }
 		cell.setCellValue(policyStatus);
-                cell = row.createCell(8);
+                cell = row.createCell(9);
                 int policyTypeInt = policy.getPolicyType();
                 switch (policyTypeInt) {
                         case RangerPolicy.POLICY_TYPE_ACCESS:
@@ -4644,25 +4682,25 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 break;
                 }
                 cell.setCellValue(policyType);
-                cell = row.createCell(9);
-                cell.setCellValue(delegateAdmin.toString().toUpperCase());
                 cell = row.createCell(10);
-                cell.setCellValue(isRecursiveValue);
+                cell.setCellValue(delegateAdmin.toString().toUpperCase());
                 cell = row.createCell(11);
-                cell.setCellValue(isExcludesValue);
+                cell.setCellValue(isRecursiveValue);
                 cell = row.createCell(12);
+                cell.setCellValue(isExcludesValue);
+                cell = row.createCell(13);
                 serviceName = policy.getService();
                 cell.setCellValue(serviceName);
-                cell = row.createCell(13);
+                cell = row.createCell(14);
                 description = policy.getDescription();
                 cell.setCellValue(description);
-                cell = row.createCell(14);
-                cell.setCellValue(isAuditEnabled.toString().toUpperCase());
                 cell = row.createCell(15);
-                cell.setCellValue(conditionKeyValue.trim());
+                cell.setCellValue(isAuditEnabled.toString().toUpperCase());
                 cell = row.createCell(16);
+                cell.setCellValue(conditionKeyValue.trim());
+                cell = row.createCell(17);
                 cell.setCellValue(policyConditionTypeValue);
-                cell = row.createCell(19);
+                cell = row.createCell(20);
                 cell.setCellValue(policyLabelNames);
 
         }
@@ -4687,71 +4725,75 @@ public class ServiceDBStore extends AbstractServiceStore {
 		cellResources.setCellStyle(cellStyle);
 		cellResources.setCellValue("Resources");
 
-		Cell cellGroups = row.createCell(3);
+		Cell cellRoles = row.createCell(3);
+		cellRoles.setCellStyle(cellStyle);
+		cellRoles.setCellValue("Roles");
+
+		Cell cellGroups = row.createCell(4);
 		cellGroups.setCellStyle(cellStyle);
 		cellGroups.setCellValue("Groups");
 
-		Cell cellUsers = row.createCell(4);
+		Cell cellUsers = row.createCell(5);
 		cellUsers.setCellStyle(cellStyle);
 		cellUsers.setCellValue("Users");
 
-		Cell cellAccesses = row.createCell(5);
+		Cell cellAccesses = row.createCell(6);
 		cellAccesses.setCellStyle(cellStyle);
 		cellAccesses.setCellValue("Accesses");
 
-		Cell cellServiceType = row.createCell(6);
+		Cell cellServiceType = row.createCell(7);
 		cellServiceType.setCellStyle(cellStyle);
 		cellServiceType.setCellValue("Service Type");
 
-		Cell cellStatus = row.createCell(7);
+		Cell cellStatus = row.createCell(8);
 		cellStatus.setCellStyle(cellStyle);
 		cellStatus.setCellValue("Status");
 
-                Cell cellPolicyType = row.createCell(8);
+                Cell cellPolicyType = row.createCell(9);
                 cellPolicyType.setCellStyle(cellStyle);
                 cellPolicyType.setCellValue("Policy Type");
 
-                Cell cellDelegateAdmin = row.createCell(9);
+                Cell cellDelegateAdmin = row.createCell(10);
                 cellDelegateAdmin.setCellStyle(cellStyle);
                 cellDelegateAdmin.setCellValue("Delegate Admin");
 
-                Cell cellIsRecursive = row.createCell(10);
+                Cell cellIsRecursive = row.createCell(11);
                 cellIsRecursive.setCellStyle(cellStyle);
                 cellIsRecursive.setCellValue("isRecursive");
 
-                Cell cellIsExcludes = row.createCell(11);
+                Cell cellIsExcludes = row.createCell(12);
                 cellIsExcludes.setCellStyle(cellStyle);
                 cellIsExcludes.setCellValue("isExcludes");
 
-                Cell cellServiceName = row.createCell(12);
+                Cell cellServiceName = row.createCell(13);
                 cellServiceName.setCellStyle(cellStyle);
                 cellServiceName.setCellValue("Service Name");
 
-                Cell cellDescription = row.createCell(13);
+                Cell cellDescription = row.createCell(14);
                 cellDescription.setCellStyle(cellStyle);
                 cellDescription.setCellValue("Description");
 
-                Cell cellisAuditEnabled = row.createCell(14);
+                Cell cellisAuditEnabled = row.createCell(15);
                 cellisAuditEnabled.setCellStyle(cellStyle);
                 cellisAuditEnabled.setCellValue("isAuditEnabled");
 
-                Cell cellPolicyConditions = row.createCell(15);
+                Cell cellPolicyConditions = row.createCell(16);
                 cellPolicyConditions.setCellStyle(cellStyle);
                 cellPolicyConditions.setCellValue("Policy Conditions");
 
-                Cell cellPolicyConditionType = row.createCell(16);
+                Cell cellPolicyConditionType = row.createCell(17);
                 cellPolicyConditionType.setCellStyle(cellStyle);
                 cellPolicyConditionType.setCellValue("Policy Condition Type");
 
-                Cell cellMaskingOptions = row.createCell(17);
+                Cell cellMaskingOptions = row.createCell(18);
                 cellMaskingOptions.setCellStyle(cellStyle);
                 cellMaskingOptions.setCellValue("Masking Options");
 
-                Cell cellRowFilterExpr = row.createCell(18);
+                Cell cellRowFilterExpr = row.createCell(19);
                 cellRowFilterExpr.setCellStyle(cellStyle);
                 cellRowFilterExpr.setCellValue("Row Filter Expr");
 
-                Cell cellPolicyLabelName = row.createCell(19);
+                Cell cellPolicyLabelName = row.createCell(20);
                 cellPolicyLabelName.setCellStyle(cellStyle);
                 cellPolicyLabelName.setCellValue("Policy Labels Name");
         }
@@ -5458,6 +5500,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		final String           zoneName;
 		final Integer          policyDeltaChange;
 		final RangerPolicy     policy;
+		      long             version = -1;
 
 		final ServiceTags.TagsChangeType tagChangeType;
 		final Long             resourceId;
@@ -5494,6 +5537,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 		@Override
 		public void run() {
 			ServiceDBStore.persistVersionChange(this);
+		}
+
+		@Override
+		public String toString() {
+			return "ServiceVersionUpdater:[ " +
+					"serviceId="           + serviceId +
+					", versionType="         + versionType +
+					", version="             + version +
+					", zoneName="            + zoneName +
+					", policyDeltaChange="   + policyDeltaChange +
+					", policy="              + policy +
+					", tagChangeType="       + tagChangeType +
+					", resourceId="          + resourceId +
+					", tagId="               + tagId +
+					" ]";
 		}
 	}
 
@@ -5766,5 +5824,129 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
+	private List<XXServiceConfigMap> getAuditFiltersServiceConfigByName(String searchUsrGrpRoleName) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("===> ServiceDBStore.getAuditFiltersServiceConfigByName( searchUsrGrpRoleName : "
+					+ searchUsrGrpRoleName + ")");
+		}
+		List<XXServiceConfigMap> configMapToBeModified = null;
 
+		if (StringUtils.isNotBlank(searchUsrGrpRoleName)) {
+			configMapToBeModified = new ArrayList<XXServiceConfigMap>();
+			XXServiceConfigMapDao configDao = daoMgr.getXXServiceConfigMap();
+			List<XXServiceConfigMap> configs = configDao.findByConfigKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS);
+			for (XXServiceConfigMap configMap : configs) {
+				if (StringUtils.contains(configMap.getConfigvalue(), searchUsrGrpRoleName)) {
+					configMapToBeModified.add(configMap);
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<=== ServiceDBStore.getAuditFiltersServiceConfigByName( searchUsrGrpRoleName : "
+					+ searchUsrGrpRoleName + ") configMapToBeModified : " + configMapToBeModified);
+		}
+		return configMapToBeModified;
+	}
+
+	public enum REMOVE_REF_TYPE { USER, GROUP, ROLE }
+
+	public void updateServiceAuditConfig(String searchUsrGrpRoleName, REMOVE_REF_TYPE removeRefType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("===> ServiceDBStore.updateServiceAuditConfig( searchUsrGrpRoleName : " + searchUsrGrpRoleName + " removeRefType : "
+					+ removeRefType + ")");
+		}
+		List<XXServiceConfigMap> configMapToBeModified = getAuditFiltersServiceConfigByName(searchUsrGrpRoleName);
+		if (CollectionUtils.isNotEmpty(configMapToBeModified)) {
+			for (XXServiceConfigMap xConfigMap : configMapToBeModified) {
+				String jsonStr = xConfigMap.getConfigvalue() != null ? xConfigMap.getConfigvalue() : null;
+				if (StringUtils.isNotBlank(jsonStr)) {
+					List<AuditFilter> auditFilters = JsonUtils.jsonToAuditFilterList(jsonStr);
+					int filterCount = auditFilters != null ? auditFilters.size() : 0;
+					RangerService rangerService = null;
+					if (filterCount > 0) {
+						String userName = null;
+						String groupName = null;
+						String roleName = null;
+						if (removeRefType == REMOVE_REF_TYPE.USER) {
+							userName = searchUsrGrpRoleName;
+						} else if (removeRefType == REMOVE_REF_TYPE.GROUP) {
+							groupName = searchUsrGrpRoleName;
+						} else if (removeRefType == REMOVE_REF_TYPE.ROLE) {
+							roleName = searchUsrGrpRoleName;
+						}
+						removeUserGroupRoleReferences(auditFilters, userName, groupName, roleName);
+						String updatedJsonStr = JsonUtils.listToJson(auditFilters);
+						XXService xService = daoMgr.getXXService().getById(xConfigMap.getServiceId());
+						rangerService = svcService.getPopulatedViewObject(xService);
+						Map<String, String> configs = rangerService.getConfigs();
+						if (configs.containsKey(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
+							updatedJsonStr = StringUtils.isBlank(updatedJsonStr) ? ""
+									: updatedJsonStr.replaceAll("\"", "'");
+
+							configs.put(ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS, updatedJsonStr);
+
+							try {
+								LOG.info("==>ServiceDBStore.updateServiceAuditConfig updating audit-filter of service : "+rangerService.getName()  +" as part of delete request for : " + searchUsrGrpRoleName);
+								updateService(rangerService, null);
+							} catch (Throwable excp) {
+								LOG.error("updateService(" + rangerService + ") failed", excp);
+
+								throw restErrorUtil.createRESTException(excp.getMessage());
+							}
+						}
+					} else {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("ServiceDBStore.updateServiceAuditConfig audit filter count is zero ");
+						}
+					}
+				}
+			}
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.info("ServiceDBStore.updateServiceAuditConfig no service audit filter Config map found for : "
+					+ searchUsrGrpRoleName);
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<=== ServiceDBStore.updateServiceAuditConfig( searchUsrGrpRoleName : " + searchUsrGrpRoleName + " removeRefType : "
+					+ removeRefType  + ")");
+		}
+	}
+
+	private void removeUserGroupRoleReferences(List<AuditFilter> auditFilters, String user, String group, String role) {
+		List<AuditFilter> itemsToRemove = null;
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("===> ServiceDBStore.removeUserGroupRoleReferences( user : "+ user + " group : "+ group + " role : " + role + " auditFilters : " + auditFilters +")");
+		}
+		for (AuditFilter auditFilter : auditFilters) {
+			boolean isAuditFilterModified = false;
+			if (StringUtils.isNotEmpty(user) && CollectionUtils.isNotEmpty(auditFilter.getUsers())) {
+				auditFilter.getUsers().remove(user);
+				isAuditFilterModified = true;
+			}
+			if (StringUtils.isNotEmpty(group) && CollectionUtils.isNotEmpty(auditFilter.getGroups())) {
+				auditFilter.getGroups().remove(group);
+				isAuditFilterModified = true;
+			}
+			if (StringUtils.isNotEmpty(role) && CollectionUtils.isNotEmpty(auditFilter.getRoles())) {
+				auditFilter.getRoles().remove(role);
+				isAuditFilterModified = true;
+			}
+			if (isAuditFilterModified && CollectionUtils.isEmpty(auditFilter.getUsers())
+					&& CollectionUtils.isEmpty(auditFilter.getGroups())
+					&& CollectionUtils.isEmpty(auditFilter.getRoles())) {
+				if (itemsToRemove == null) {
+					itemsToRemove = new ArrayList<AuditFilter>();
+				}
+				itemsToRemove.add(auditFilter);
+			}
+		}
+		if (CollectionUtils.isNotEmpty(itemsToRemove)) {
+			auditFilters.removeAll(itemsToRemove);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<=== ServiceDBStore.removeUserGroupRoleReferences( user : "+ user + " group : "+ group + " role : " + role + " auditFilters : " + auditFilters +")");
+		}
+	}
 }

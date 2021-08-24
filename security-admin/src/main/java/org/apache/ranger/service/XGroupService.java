@@ -74,10 +74,12 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,
 				"XXGroupUser groupUser", "obj.id = groupUser.parentGroupId"));
 
+		searchFields.add(new SearchField("syncSource", "obj.syncSource",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
-		 sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
+		sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
 	}
 
 	@Override
@@ -125,10 +127,11 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 			xxGroup.setUpdatedByUserId(createdByUserId);
 		}
 		if (groupExists) {
-			xxGroup = getDao().update(xxGroup);
+			getDao().update(xxGroup);
 		} else {
-			xxGroup = getDao().create(xxGroup);
+			getDao().create(xxGroup);
 		}
+		xxGroup = daoManager.getXXGroup().findByGroupName(vxGroup.getName());
 		vxGroup = postCreate(xxGroup);
 		return vxGroup;
 	}

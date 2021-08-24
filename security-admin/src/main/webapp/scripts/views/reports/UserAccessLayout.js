@@ -210,6 +210,9 @@ define(function(require) {'use strict';
                                 this.setupGroupAutoComplete();
                         }
 			this.renderComponentAndPolicyTypeSelect();
+			if(!_.isUndefined(this.ui.policyType.val()) && _.isUndefined(this.urlQueryParams)) {
+				this.urlQueryParams = {'policyType' : this.ui.policyType.val()}
+			}
                         if(this.urlQueryParams) {
                                 this.onSearch()
                         } else {
@@ -1043,6 +1046,7 @@ define(function(require) {'use strict';
 			params = {
 				group : groups,
 				user : users,
+				role : roles,
 				polResource : rxName,
 				policyNamePartial : policyName,
 				policyType: policyType,

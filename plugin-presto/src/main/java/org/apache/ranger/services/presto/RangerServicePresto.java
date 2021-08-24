@@ -83,7 +83,7 @@ public class RangerServicePresto extends RangerBaseService {
         }
         ret = PrestoResourceManager.connectionTest(serviceName, configs);
       } catch (HadoopException he) {
-        LOG.error("<== RangerServicePresto.validateConfig Error:" + he);
+        LOG.error("<== RangerServicePresto.validateConfig() Error:" + he);
         throw he;
       }
     }
@@ -103,7 +103,7 @@ public class RangerServicePresto extends RangerBaseService {
     String	serviceType		   = getServiceType();
     Map<String,String> configs = getConfigs();
     if(LOG.isDebugEnabled()) {
-      LOG.debug("==> RangerServiceHive.lookupResource Context: (" + context + ")");
+      LOG.debug("==> RangerServicePresto.lookupResource() Context: (" + context + ")");
     }
     if (context != null) {
       try {
@@ -112,12 +112,12 @@ public class RangerServicePresto extends RangerBaseService {
         }
         ret  = PrestoResourceManager.getPrestoResources(serviceName, serviceType, configs,context);
       } catch (Exception e) {
-        LOG.error( "<==RangerServicePresto.lookupResource Error : " + e);
+        LOG.error( "<==RangerServicePresto.lookupResource() Error : " + e);
         throw e;
       }
     }
     if(LOG.isDebugEnabled()) {
-      LOG.debug("<== RangerServicePresto.lookupResource Response: (" + ret + ")");
+      LOG.debug("<== RangerServicePresto.lookupResource() Response: (" + ret + ")");
     }
     return ret;
   }

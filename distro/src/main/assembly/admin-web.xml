@@ -297,8 +297,8 @@
           <include>org.slf4j:slf4j-api</include>
           <include>org.apache.commons:commons-lang3</include>
           <include>org.apache.hadoop:hadoop-common</include>
-          <include>org.apache.hadoop:hadoop-auth</include>
           <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
+          <include>org.apache.hadoop:hadoop-auth</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -600,6 +600,13 @@
     <fileSet>
       <outputDirectory>bin</outputDirectory>
       <directory>${project.parent.basedir}/security-admin/src/bin</directory>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>stability-tests</outputDirectory>
+      <directory>${project.parent.basedir}/security-admin/src/test/resources/stability-tests</directory>
       <fileMode>0755</fileMode>
       <directoryMode>0755</directoryMode>
     </fileSet>

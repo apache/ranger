@@ -930,6 +930,7 @@ define(function(require){
                 if(count == numberOfUser){
                         this.collection.getFirstPage({fetch:true});
                         this.collection.selected = {};
+                        this.$el.find('table input[type="checkbox"]').prop('checked',false);
                         XAUtil.blockUI('unblock');
                         if(notDeletedUserName === "" && _.isEmpty(errorMsgForNotDeletedUsers)){
                                 XAUtil.notifySuccess('Success','User deleted successfully!');
@@ -946,13 +947,14 @@ define(function(require){
                 if(count == numberOfGroup){
                         this.groupList.getFirstPage({fetch:true});
                         this.groupList.selected  = {};
+                        this.$el.find('table input[type="checkbox"]').prop('checked',false)
                         XAUtil.blockUI('unblock');
                         if(notDeletedGroupName === "" && _.isEmpty(errorMsgForNotDeletedGroups)){
                                 XAUtil.notifySuccess('Success','Group deleted successfully!');
                         } else {
                             var msg = "";
                             if(!_.isEmpty(notDeletedGroupName)){
-                                msg = 'Error occurred during deleting Users: '+ notDeletedGroupName.slice(0 , -2);
+                                msg = 'Error occurred during deleting Groups: '+ notDeletedGroupName.slice(0 , -2);
                             }
                             XAUtil.notifyError('Error', errorMsgForNotDeletedGroups + msg);
                         }
@@ -962,13 +964,14 @@ define(function(require){
                 if(count == numberOfRole){
                         this.roleList.getFirstPage({fetch:true});
                         this.roleList.selected  = {};
+                        this.$el.find('table input[type="checkbox"]').prop('checked',false)
                         XAUtil.blockUI('unblock');
                         if(notDeletedRoleName === "" && _.isEmpty(errorMsgForNotDeletedRoles)){
                                 XAUtil.notifySuccess('Success','Role deleted successfully!');
                         } else {
                             var msg = "";
                             if(!_.isEmpty(notDeletedRoleName)){
-                                msg = 'Error occurred during deleting Users: '+ notDeletedRoleName.slice(0 , -2);
+                                msg = 'Error occurred during deleting Roles: '+ notDeletedRoleName.slice(0 , -2);
                             }
                             XAUtil.notifyError('Error', errorMsgForNotDeletedRoles + msg);
                         }

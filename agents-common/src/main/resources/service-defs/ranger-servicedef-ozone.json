@@ -211,7 +211,7 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Ranger Default Audit Filters",
-			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['om'] ,'isAudited':false} ]"
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true} ]"
 		}
 	],
 

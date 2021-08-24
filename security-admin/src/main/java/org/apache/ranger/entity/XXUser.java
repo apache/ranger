@@ -116,6 +116,15 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 	protected String otherAttributes;
 
 	/**
+	 * Sync Source attribute.
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name="SYNC_SOURCE")
+	protected String syncSource;
+
+	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
 	public XXUser ( ) {
@@ -237,6 +246,21 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets JSON {@link String} representation of sync source attribute.
+	 * This method accepts null values.
+	 * @param syncSource
+	 */
+	public void setSyncSource(String syncSource) {
+		this.syncSource = syncSource;
+	}
+
+	/**
+	 * @return JSON {@link String} representation of sync source attribute if available,
+	 * <code>null</code> otherwise.
+	 */
+	public String getSyncSource() { return syncSource; }
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -250,6 +274,7 @@ public class XXUser extends XXDBBase implements java.io.Serializable {
 		str += "isvisible={" + isVisible + "} ";
 		str += "credStoreId={" + credStoreId + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
+		str += "syncSource={" + syncSource + "} ";
 		str += "}";
 		return str;
 	}

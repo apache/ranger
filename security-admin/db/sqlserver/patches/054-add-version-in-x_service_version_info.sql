@@ -16,6 +16,7 @@
 GO
 IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_service_version_info' and column_name = 'version')
 BEGIN
-        ALTER TABLE [dbo].[x_service_version_info] ADD [version] [bigint] NOT NULL DEFAULT 1;
+        ALTER TABLE [dbo].[x_service_version_info] ADD [version] [bigint] DEFAULT 1 NOT NULL;
 END
+GO
 exit

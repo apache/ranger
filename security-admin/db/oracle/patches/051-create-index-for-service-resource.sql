@@ -18,8 +18,13 @@ DECLARE
 	v_index_exists number:=0;
 BEGIN
 	SELECT COUNT(*) INTO v_index_exists FROM USER_INDEXES WHERE INDEX_NAME = upper('x_svc_res_IDX_res_sgn') AND TABLE_NAME= upper('x_service_resource');
-	IF (v_index_exists = 0) THEN
-		execute IMMEDIATE 'CREATE UNIQUE INDEX x_svc_res_IDX_res_sgn ON x_service_resource(resource_signature)';
+	IF (v_index_exists = 1) THEN
+		execute IMMEDIATE 'DROP INDEX x_svc_res_IDX_res_sgn';
 		commit;
+	END IF;
+	SELECT COUNT(*) INTO v_index_exists FROM USER_INDEXES WHERE INDEX_NAME = upper('x_svc_res_IDX_svc_id_res_sgn') AND TABLE_NAME= upper('x_service_resource');
+	IF (v_index_exists = 0) THEN
+		execute IMMEDIATE 'CREATE UNIQUE INDEX x_svc_res_IDX_svc_id_res_sgn ON x_service_resource(service_id, resource_signature)';
+	commit;
 	END IF;
 END;/

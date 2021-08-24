@@ -305,9 +305,6 @@ public class RangerKeyStoreProvider extends KeyProvider {
 			throw new IOException("Key " + name + " already exists");
 		}
 
-		if (dbStore.engineContainsAlias(name) || cache.containsKey(name)) {
-			throw new IOException("Key " + name + " already exists");
-		}
 		Metadata meta = new Metadata(options.getCipher(),
 				options.getBitLength(), options.getDescription(),
 				options.getAttributes(), new Date(), 1);

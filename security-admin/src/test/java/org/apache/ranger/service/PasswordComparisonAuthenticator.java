@@ -24,10 +24,10 @@ import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.BaseLdapPathContextSource;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.encoding.LdapShaPasswordEncoder;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.LdapShaPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.security.ldap.authentication.AbstractLdapAuthenticator;
 import org.springframework.util.Assert;
@@ -109,7 +109,7 @@ public final class PasswordComparisonAuthenticator extends
 					+ "'");
 		}
 
-		String encodedPassword = passwordEncoder.encodePassword(password, null);
+		String encodedPassword = passwordEncoder.encode(password);
 		byte[] passwordBytes = encodedPassword.getBytes();
 
 		if (!ldapTemplate.compare(user.getDn().toString(),

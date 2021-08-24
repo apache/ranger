@@ -621,13 +621,57 @@ IF (OBJECT_ID('vx_trx_log') IS NOT NULL)
 BEGIN
     DROP VIEW [dbo].[vx_trx_log]
 END
-IF (OBJECT_ID('x_policy_change_log') IS NOT NULL)
+IF (OBJECT_ID('x_rms_mapping_provider') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_policy_change_log]
+    DROP TABLE [dbo].[x_rms_mapping_provider]
+END
+IF (OBJECT_ID('x_rms_resource_mapping') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_rms_resource_mapping]
+END
+IF (OBJECT_ID('x_rms_notification') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_rms_notification]
+END
+IF (OBJECT_ID('x_rms_service_resource') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_rms_service_resource]
 END
 IF (OBJECT_ID('x_tag_change_log') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_tag_change_log]
+END
+IF (OBJECT_ID('x_role_ref_role') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_role_ref_role]
+END
+
+IF (OBJECT_ID('x_policy_ref_role') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_ref_role]
+END
+
+IF (OBJECT_ID('x_role_ref_group') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_role_ref_group]
+END
+
+IF (OBJECT_ID('x_role_ref_user') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_role_ref_user]
+END
+
+IF (OBJECT_ID('x_role') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_role]
+END
+IF (OBJECT_ID('x_policy_change_log') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_policy_change_log]
+END
+IF (OBJECT_ID('x_security_zone_ref_resource') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_security_zone_ref_resource]
 END
 IF (OBJECT_ID('x_policy_ref_group') IS NOT NULL)
 BEGIN
@@ -685,25 +729,9 @@ IF (OBJECT_ID('x_datamask_type_def') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_datamask_type_def]
 END
-IF (OBJECT_ID('x_service_resource_element_val') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_service_resource_element_val]
-END
 IF (OBJECT_ID('x_tag_resource_map') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_tag_resource_map]
-END
-IF (OBJECT_ID('x_tag_attr') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_tag_attr]
-END
-IF (OBJECT_ID('x_tag_attr_def') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_tag_attr_def]
-END
-IF (OBJECT_ID('x_service_resource_element') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_service_resource_element]
 END
 IF (OBJECT_ID('x_service_resource') IS NOT NULL)
 BEGIN
@@ -797,37 +825,25 @@ IF (OBJECT_ID('x_service_config_def') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_service_config_def]
 END
-IF (OBJECT_ID('x_policy_label_map') IS NOT NULL)
-BEGIN
-        DROP TABLE [dbo].[x_policy_label_map]
-END
-IF (OBJECT_ID('x_policy_label') IS NOT NULL)
-BEGIN
-        DROP TABLE [dbo].[x_policy_label]
-END
 IF (OBJECT_ID('x_policy') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_policy]
 END
-IF (OBJECT_ID('x_security_zone_ref_service') IS NOT NULL)
+IF (OBJECT_ID('x_security_zone_ref_group') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_security_zone_ref_service]
-END
-IF (OBJECT_ID('x_security_zone_ref_tag_srvc') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_security_zone_ref_tag_srvc]
-END
-IF (OBJECT_ID('x_security_zone_ref_resource') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_security_zone_ref_resource]
+    DROP TABLE [dbo].[x_security_zone_ref_group]
 END
 IF (OBJECT_ID('x_security_zone_ref_user') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_security_zone_ref_user]
 END
-IF (OBJECT_ID('x_security_zone_ref_group') IS NOT NULL)
+IF (OBJECT_ID('x_security_zone_ref_tag_srvc') IS NOT NULL)
 BEGIN
-    DROP TABLE [dbo].[x_security_zone_ref_group]
+    DROP TABLE [dbo].[x_security_zone_ref_tag_srvc]
+END
+IF (OBJECT_ID('x_security_zone_ref_service') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_security_zone_ref_service]
 END
 IF (OBJECT_ID('x_ranger_global_state') IS NOT NULL)
 BEGIN
@@ -869,32 +885,6 @@ IF (OBJECT_ID('x_group_users') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_group_users]
 END
-
-IF (OBJECT_ID('x_role_ref_role') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_role_ref_role]
-END
-
-IF (OBJECT_ID('x_policy_ref_role') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_policy_ref_role]
-END
-
-IF (OBJECT_ID('x_role_ref_group') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_role_ref_group]
-END
-
-IF (OBJECT_ID('x_role_ref_user') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_role_ref_user]
-END
-
-IF (OBJECT_ID('x_role') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_role]
-END
-
 IF (OBJECT_ID('x_user') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_user]
@@ -976,6 +966,7 @@ CREATE TABLE [dbo].[x_portal_user](
         [user_src] [int] DEFAULT 0 NOT NULL,
         [notes] [varchar](4000) DEFAULT NULL NULL,
         [other_attributes] [varchar](4000) DEFAULT NULL NULL,
+        [sync_source] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1128,6 +1119,7 @@ CREATE TABLE [dbo].[x_group](
         [group_src] [int] DEFAULT 0 NOT NULL,
         [is_visible] [int] DEFAULT 1 NOT NULL,
         [other_attributes] [varchar](4000) DEFAULT NULL NULL,
+        [sync_source] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1171,6 +1163,7 @@ CREATE TABLE [dbo].[x_user](
         [cred_store_id] [bigint] DEFAULT NULL NULL,
         [is_visible] [int] DEFAULT 1 NOT NULL,
         [other_attributes] [varchar](4000) DEFAULT NULL NULL,
+        [sync_source] [varchar](4000) DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -1965,11 +1958,10 @@ CREATE TABLE [dbo].[x_service_resource](
 CONSTRAINT [x_service_resource$x_service_res_UK_guid] UNIQUE NONCLUSTERED
 (
         [guid] ASC
-)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
-) ON [PRIMARY],
-CONSTRAINT [x_service_resource$x_service_res_IDX_resource_signature] UNIQUE NONCLUSTERED
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+CONSTRAINT [x_service_resource$x_service_res_IDX_svc_id_resource_signature] UNIQUE NONCLUSTERED
 (
-        [resource_signature] ASC
+        [service_id] ASC, [resource_signature] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 SET ANSI_NULLS ON
@@ -2444,9 +2436,9 @@ CREATE NONCLUSTERED INDEX [x_policy_change_log_IDX_policy_version] ON [x_policy_
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 
 GO
-CREATE NONCLUSTERED UNIQUE INDEX [x_policy_change_log_uk_service_id_policy_version] ON [x_policy_change_log]
+CREATE UNIQUE NONCLUSTERED INDEX [x_policy_change_log_uk_service_id_policy_version] ON [x_policy_change_log]
 (
-   [service_id,policy_version] ASC
+   [service_id] ASC,[policy_version] ASC
 )
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 
@@ -2622,9 +2614,9 @@ CREATE NONCLUSTERED INDEX [x_tag_change_log_IDX_tag_version] ON [x_tag_change_lo
 )
 
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
-CREATE NONCLUSTERED UNIQUE INDEX [x_tag_change_log_uk_service_id_service_tags_version] ON [x_tag_change_log]
+CREATE UNIQUE NONCLUSTERED INDEX [x_tag_change_log_uk_service_id_service_tags_version] ON [x_tag_change_log]
 (
-   [service_id, service_tags_version] ASC
+   [service_id] ASC, [service_tags_version] ASC
 )
 
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
@@ -3895,26 +3887,6 @@ BEGIN
     ALTER TABLE [dbo].[x_rms_resource_mapping] DROP CONSTRAINT x_rms_res_map_FK_ll_res_id
 END
 GO
-IF (OBJECT_ID('x_rms_notification') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_rms_notification]
-END
-GO
-IF (OBJECT_ID('x_rms_resource_mapping') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_rms_resource_mapping]
-END
-GO
-IF (OBJECT_ID('x_rms_mapping_provider') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_rms_mapping_provider]
-END
-GO
-IF (OBJECT_ID('x_rms_service_resource') IS NOT NULL)
-BEGIN
-    DROP TABLE [dbo].[x_rms_service_resource]
-END
-GO
 
 
 SET ANSI_NULLS ON
@@ -4126,6 +4098,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('052',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('053',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('054',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);

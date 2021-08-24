@@ -32,10 +32,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import javax.persistence.OptimisticLockException;
 
 @Component
 public class RangerTransactionSynchronizationAdapter extends TransactionSynchronizationAdapter {
@@ -156,7 +159,7 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                 LOG.debug("Executing {" + runnables.size() + "} runnables");
             }
             for (Runnable runnable : runnables) {
-                boolean isThisTransactionCommitted;
+                boolean isThisTransactionCommitted = false;
                 do {
                     try {
                         //Create new  transaction
@@ -165,16 +168,22 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
 
                         Object result = txTemplate.execute(new TransactionCallback<Object>() {
                             public Object doInTransaction(TransactionStatus status) {
-                                Object result;
+                                Object result = null;
                                 if (LOG.isDebugEnabled()) {
                                     LOG.debug("Executing runnable {" + runnable + "}");
                                 }
                                 try {
                                     runnable.run();
                                     result = runnable;
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("executed runnable " + runnable);
+                                    }
+                                } catch (OptimisticLockException optimisticLockException) {
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("Failed to execute runnable " + runnable + "because of OpmimisticLockException");
+                                    }
                                 } catch (Throwable e) {
                                     LOG.error("Failed to execute runnable " + runnable, e);
-                                    result = null;
                                 }
                                 return result;
                             }
@@ -182,12 +191,16 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
 
                         isThisTransactionCommitted = result == runnable;
 
-                    } catch (Exception e) {
+                    } catch (OptimisticLockException optimisticLockException) {
                         if (LOG.isDebugEnabled()) {
-                            LOG.debug("Failed to commit TransactionService transaction for runnable:[" + runnable + "]", e);
+                            LOG.debug("Failed to commit TransactionService transaction for runnable:[" + runnable + "]");
                         }
-                        LOG.warn("Failed to commit TransactionService transaction for runnable:[" + runnable + "]");
-                        isThisTransactionCommitted = false;
+                    } catch (TransactionSystemException tse) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Failed to commit TransactionService transaction, exception:[" + tse + "]");
+                        }
+                    } catch (Throwable e){
+                        LOG.warn("Failed to commit TransactionService transaction, throwable:[" + e + "]");
                     }
                 } while (isParentTransactionCommitted && !isThisTransactionCommitted);
             }

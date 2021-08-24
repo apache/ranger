@@ -13,14 +13,13 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 GO
-IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'x_service_resource_IDX_resource_signature' AND object_id = OBJECT_ID('x_service_resource'))
+IF EXISTS(SELECT * FROM sys.indexes WHERE name = 'x_service_res_IDX_resource_signature' AND object_id = OBJECT_ID('x_service_resource'))
 BEGIN
-	CREATE UNIQUE INDEX NONCLUSTERED [x_service_res_IDX_resource_signature] ON [x_service_resource]
-	(
-	   [resource_signature] ASC
-	)
-	WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
+	DROP INDEX [x_service_res_IDX_resource_signature] ON [x_service_resource];
 END
-Go
-
-EXIT;
+IF NOT EXISTS(SELECT * FROM sys.indexes WHERE name = 'x_service_res_IDX_svc_id_resource_signature' AND object_id = OBJECT_ID('x_service_resource'))
+BEGIN
+	CREATE UNIQUE NONCLUSTERED INDEX [x_service_res_IDX_svc_id_resource_signature] ON [x_service_resource] ([service_id] ASC, [resource_signature] ASC)WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY];
+END
+GO
+exit

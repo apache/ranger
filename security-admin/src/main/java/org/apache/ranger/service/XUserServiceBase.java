@@ -52,6 +52,7 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		mObj.setDescription( vObj.getDescription());
 		mObj.setCredStoreId( vObj.getCredStoreId());
 		mObj.setOtherAttributes(vObj.getOtherAttributes());
+		mObj.setSyncSource(vObj.getSyncSource());
 		return mObj;
 	}
 
@@ -63,6 +64,7 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		vObj.setDescription( mObj.getDescription());
 		vObj.setCredStoreId( mObj.getCredStoreId());
 		vObj.setOtherAttributes(mObj.getOtherAttributes());
+		vObj.setSyncSource(mObj.getSyncSource());
 		return vObj;
 	}
 
@@ -71,12 +73,11 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 	 * @return
 	 */
 	public VXUserList searchXUsers(SearchCriteria searchCriteria) {
-		VXUserList returnList = new VXUserList();
-		List<VXUser> xUserList = new ArrayList<VXUser>();
+		VXUserList returnList   = new VXUserList();
+		List<VXUser> xUserList  = new ArrayList<VXUser>();
 
 		@SuppressWarnings("unchecked")
-		List<XXUser> resultList = (List<XXUser>)searchResources(searchCriteria,
-				searchFields, sortFields, returnList);
+		List<XXUser> resultList = (List<XXUser>)searchResources(searchCriteria, searchFields, sortFields, returnList);
 
 		// Iterate over the result list and create the return list
 		for (XXUser gjXUser : resultList) {

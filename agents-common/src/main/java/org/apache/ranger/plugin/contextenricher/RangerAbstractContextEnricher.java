@@ -178,6 +178,10 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		this.pluginContext = pluginContext;
 	}
 
+	public RangerPluginContext getPluginContext() {
+		return this.pluginContext;
+	}
+
 	final public void setPolicyEngineOptions(RangerPolicyEngineOptions options) {
 		this.options = options;
 	}

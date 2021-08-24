@@ -48,4 +48,30 @@ public class RangerCommonConstants {
 	public static final boolean RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT     = false;
 	public static final boolean PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT    = false;
 
+	public static final boolean POLICY_REST_CLIENT_SESSION_COOKIE_ENABLED            = true;
+
+	public static final String SCRIPT_OPTION_ENABLE_JSON_CTX        = "enableJsonCtx";
+	public static final String SCRIPT_VAR_CONTEXT                   = "_ctx";
+	public static final String SCRIPT_VAR_CONTEXT_JSON              = "_ctx_json";
+	public static final String SCRIPT_FIELD_ACCESS_TIME             = "accessTime";
+	public static final String SCRIPT_FIELD_ACCESS_TYPE             = "accessType";
+	public static final String SCRIPT_FIELD_ACTION                  = "action";
+	public static final String SCRIPT_FIELD_CLIENT_IP_ADDRESS       = "clientIPAddress";
+	public static final String SCRIPT_FIELD_CLIENT_TYPE             = "clientType";
+	public static final String SCRIPT_FIELD_CLUSTER_NAME            = "clusterName";
+	public static final String SCRIPT_FIELD_CLUSTER_TYPE            = "clusterType";
+	public static final String SCRIPT_FIELD_FORWARDED_ADDRESSES     = "forwardedAddresses";
+	public static final String SCRIPT_FIELD_REMOTE_IP_ADDRESS       = "remoteIPAddress";
+	public static final String SCRIPT_FIELD_REQUEST_DATA            = "requestData";
+	public static final String SCRIPT_FIELD_RESOURCE                = "resource";
+	public static final String SCRIPT_FIELD_RESOURCE_OWNER_USER     = "resourceOwnerUser";
+	public static final String SCRIPT_FIELD_RESOURCE_MATCHING_SCOPE = "resourceMatchingScope";
+	public static final String SCRIPT_FIELD_TAG                     = "tag";
+	public static final String SCRIPT_FIELD_TAGS                    = "tags";
+	public static final String SCRIPT_FIELD_USER                    = "user";
+	public static final String SCRIPT_FIELD_USER_ATTRIBUTES         = "userAttributes";
+	public static final String SCRIPT_FIELD_USER_GROUPS             = "userGroups";
+	public static final String SCRIPT_FIELD_USER_GROUP_ATTRIBUTES   = "userGroupAttributes";
+	public static final String SCRIPT_FIELD_USER_ROLES              = "userRoles";
+	public static final String SCRIPT_FIELD_REQUEST                 = "request";
 }

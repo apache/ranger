@@ -422,6 +422,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 	}
 
 	@Override
+	public RangerRoles getRangerRoles() {
+		return policyEngine.getPluginContext().getAuthContext().getRangerRolesUtil().getRoles();
+	}
+
+	@Override
+	public RangerPluginContext getPluginContext() {
+		return policyEngine.getPluginContext();
+	}
+
+	@Override
 	public String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerPolicyEngineImpl.getUniquelyMatchedZoneName(" + grantRevokeRequest + ")");
@@ -548,6 +558,19 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 	}
 
+	public boolean isServiceAdmin(String userName) {
+		boolean ret = serviceConfig.isServiceAdmin(userName);
+
+		if (!ret) {
+
+			RangerPluginConfig pluginConfig = policyEngine.getPluginContext().getConfig();
+
+			ret = pluginConfig.isServiceAdmin(userName);
+		}
+
+		return ret;
+	}
+
 	PolicyEngine getPolicyEngine() {
 		return policyEngine;
 	}
@@ -638,11 +661,59 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + ")");
 		}
 
-		final Date               accessTime  = request.getAccessTime() != null ? request.getAccessTime() : new Date();
-		final RangerAccessResult ret         = createAccessResult(request, policyType);
-		final boolean            isSuperUser = isSuperUser(request.getUser(), request.getUserGroups());
+		RangerAccessResult ret = createAccessResult(request, policyType);
 
-		// for superusers, set access as allowed
+		if (request.isAccessTypeAny()) {
+			RangerAccessResult denyResult  = null;
+			RangerAccessResult allowResult = null;
+
+			List<RangerServiceDef.RangerAccessTypeDef> allAccessDefs = getServiceDef().getAccessTypes();
+
+			for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : allAccessDefs) {
+				RangerAccessRequestImpl requestForOneAccessType = new RangerAccessRequestImpl(request);
+				RangerAccessRequestUtil.setIsAnyAccessInContext(requestForOneAccessType.getContext(), Boolean.TRUE);
+
+				requestForOneAccessType.setAccessType(accessTypeDef.getName());
+
+				RangerAccessResult resultForOneAccessType = evaluatePoliciesForOneAccessTypeNoAudit(requestForOneAccessType, policyType, zoneName, policyRepository, tagPolicyRepository);
+
+				ret.setAuditResultFrom(resultForOneAccessType);
+
+				if (resultForOneAccessType.getIsAccessDetermined()) {
+					if (resultForOneAccessType.getIsAllowed()) {
+						allowResult = resultForOneAccessType;
+						break;
+					} else if (denyResult == null) {
+						denyResult = resultForOneAccessType;
+					}
+				}
+			}
+
+			if (allowResult != null) {
+				ret = allowResult;
+			} else if (denyResult != null) {
+				ret = denyResult;
+			}
+		} else {
+			ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	private RangerAccessResult evaluatePoliciesForOneAccessTypeNoAudit(RangerAccessRequest request, int policyType, String zoneName, RangerPolicyRepository policyRepository, RangerPolicyRepository tagPolicyRepository) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerPolicyEngineImpl.evaluatePoliciesForOneAccessTypeNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + ")");
+		}
+
+		final boolean            isSuperUser = isSuperUser(request.getUser(), request.getUserGroups());
+		final Date               accessTime = request.getAccessTime() != null ? request.getAccessTime() : new Date();
+		final RangerAccessResult ret        = createAccessResult(request, policyType);
+
 		if (isSuperUser || StringUtils.equals(request.getAccessType(), RangerPolicyEngine.SUPER_USER_ACCESS)) {
 			ret.setIsAllowed(isSuperUser);
 			ret.setIsAccessDetermined(true);
@@ -671,9 +742,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			boolean findAuditByResource = !ret.getIsAuditedDetermined();
 			boolean foundInCache        = findAuditByResource && policyRepository.setAuditEnabledFromCache(request, ret);
 
-			if (!isSuperUser) {
-				ret.setIsAccessDetermined(false); // discard result by tag-policies, to evaluate resource policies for possible override
-			}
+			ret.setIsAccessDetermined(false); // discard result by tag-policies, to evaluate resource policies for possible override
 
 			List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchPolicyEvaluators(request, policyType);
 
@@ -729,7 +798,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + "): " + ret);
+			LOG.debug("<== RangerPolicyEngineImpl.evaluatePoliciesForOneAccessTypeNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + "): " + ret);
 		}
 
 		return ret;
@@ -1189,6 +1258,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		private final Set<String> auditExcludedRoles;
 		private final Set<String> superUsers;
 		private final Set<String> superGroups;
+		private final Set<String> serviceAdmins;
 
 		public ServiceConfig(Map<String, String> svcConfig) {
 			if (svcConfig != null) {
@@ -1197,12 +1267,14 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				auditExcludedRoles  = StringUtil.toSet(svcConfig.get(RangerPolicyEngine.PLUGIN_AUDIT_EXCLUDE_ROLES));
 				superUsers          = StringUtil.toSet(svcConfig.get(RangerPolicyEngine.PLUGIN_SUPER_USERS));
 				superGroups         = StringUtil.toSet(svcConfig.get(RangerPolicyEngine.PLUGIN_SUPER_GROUPS));
+				serviceAdmins       = StringUtil.toSet(svcConfig.get(RangerPolicyEngine.PLUGIN_SERVICE_ADMINS));
 			} else {
 				auditExcludedUsers  = Collections.emptySet();
 				auditExcludedGroups = Collections.emptySet();
 				auditExcludedRoles  = Collections.emptySet();
 				superUsers          = Collections.emptySet();
 				superGroups         = Collections.emptySet();
+				serviceAdmins       = Collections.emptySet();
 			}
 		}
 
@@ -1212,6 +1284,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			auditExcludedRoles  = other == null || CollectionUtils.isEmpty(other.auditExcludedRoles) ? Collections.emptySet() : new HashSet<>(other.auditExcludedRoles);
 			superUsers          = other == null || CollectionUtils.isEmpty(other.superUsers) ? Collections.emptySet() : new HashSet<>(other.superUsers);
 			superGroups         = other == null || CollectionUtils.isEmpty(other.superGroups) ? Collections.emptySet() : new HashSet<>(other.superGroups);
+			serviceAdmins       = other == null || CollectionUtils.isEmpty(other.serviceAdmins) ? Collections.emptySet() : new HashSet<>(other.serviceAdmins);
 		}
 
 		public boolean isAuditExcludedUser(String userName) {
@@ -1232,6 +1305,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 		public boolean hasSuperGroup(Set<String> userGroups) {
 			return userGroups != null && userGroups.size() > 0 && superGroups.size() > 0 && CollectionUtils.containsAny(userGroups, superGroups);
+		}
+
+		public boolean isServiceAdmin(String userName) {
+			return serviceAdmins.contains(userName);
 		}
 	}
 }

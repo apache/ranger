@@ -34,12 +34,33 @@ BEGIN
 	SET @drpstmt = 'DROP TABLE IF EXISTS ' + @tblname;
 	execute(@drpstmt)
 END
+
 GO
-call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
+DROP VIEW IF EXISTS dbo.vx_trx_log
+GO
+call dbo.removeForeignKeysAndTable('x_rms_mapping_provider')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_notification')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_service_resource')
+GO
+call dbo.removeForeignKeysAndTable('x_tag_change_log')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_role')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_role')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_group')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_user')
+GO
+call dbo.removeForeignKeysAndTable('x_role')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_change_log')
 GO
-call dbo.removeForeignKeysAndTable('x_tag_change_log')
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_group')
 GO
@@ -69,15 +90,7 @@ call dbo.removeForeignKeysAndTable('x_policy_item_datamask')
 GO
 call dbo.removeForeignKeysAndTable('x_datamask_type_def')
 GO
-call dbo.removeForeignKeysAndTable('x_service_resource_element_val')
-GO
 call dbo.removeForeignKeysAndTable('x_tag_resource_map')
-GO
-call dbo.removeForeignKeysAndTable('x_tag_attr')
-GO
-call dbo.removeForeignKeysAndTable('x_tag_attr_def')
-GO
-call dbo.removeForeignKeysAndTable('x_service_resource_element')
 GO
 call dbo.removeForeignKeysAndTable('x_service_resource')
 GO
@@ -131,9 +144,9 @@ call dbo.removeForeignKeysAndTable('x_security_zone_ref_group')
 GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_user')
 GO
-call dbo.removeForeignKeysAndTable('x_security_zone_ref_service')
-GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_tag_srvc')
+GO
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_service')
 GO
 call dbo.removeForeignKeysAndTable('x_ranger_global_state')
 GO
@@ -147,8 +160,6 @@ call dbo.removeForeignKeysAndTable('x_audit_map')
 GO
 call dbo.removeForeignKeysAndTable('x_perm_map')
 GO
-DROP VIEW IF EXISTS dbo.vx_trx_log
-GO
 call dbo.removeForeignKeysAndTable('x_trx_log')
 GO
 call dbo.removeForeignKeysAndTable('x_resource')
@@ -156,18 +167,6 @@ GO
 call dbo.removeForeignKeysAndTable('x_policy_export_audit')
 GO
 call dbo.removeForeignKeysAndTable('x_group_users')
-GO
-
-call dbo.removeForeignKeysAndTable('x_role_ref_role')
-GO
-call dbo.removeForeignKeysAndTable('x_policy_ref_role')
-GO
-call dbo.removeForeignKeysAndTable('x_role_ref_group')
-GO
-call dbo.removeForeignKeysAndTable('x_role_ref_user')
-GO
-call dbo.removeForeignKeysAndTable('x_role')
-
 GO
 call dbo.removeForeignKeysAndTable('x_user')
 GO
@@ -218,6 +217,7 @@ create table dbo.x_portal_user(
 	user_src int DEFAULT 0 NOT NULL,
 	notes varchar(4000) DEFAULT NULL NULL,
 	other_attributes varchar(4000) DEFAULT NULL NULL,
+	sync_source varchar(4000) DEFAULT NULL NULL,
 	CONSTRAINT x_portal_user_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_portal_user_UK_login_id UNIQUE NONCLUSTERED (login_id)
 )
@@ -332,6 +332,7 @@ create table dbo.x_group(
 	group_src int DEFAULT 0 NOT NULL,
 	is_visible int DEFAULT 1 NOT NULL,
 	other_attributes varchar(4000) DEFAULT NULL NULL,
+	sync_source varchar(4000) DEFAULT NULL NULL,
 	CONSTRAINT x_group_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_group_UK_group_name UNIQUE NONCLUSTERED (group_name)
 )
@@ -360,6 +361,7 @@ create table dbo.x_user(
 	cred_store_id bigint DEFAULT NULL NULL,
 	is_visible int DEFAULT 1 NOT NULL,
 	other_attributes varchar(4000) DEFAULT NULL NULL,
+	sync_source varchar(4000) DEFAULT NULL NULL,
 	CONSTRAINT x_user_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_user_UK_user_name UNIQUE NONCLUSTERED (user_name)
 )
@@ -943,7 +945,7 @@ CREATE TABLE dbo.x_service_resource(
 	CONSTRAINT x_service_res_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_service_res_UK_guid UNIQUE NONCLUSTERED (guid)
 )
-CREATE UNIQUE INDEX x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
+CREATE UNIQUE INDEX x_service_resource_IDX_svc_id_resource_signature ON x_service_resource(service_id, resource_signature);
 GO
 CREATE TABLE dbo.x_tag_resource_map(
 	id bigint IDENTITY NOT NULL,
@@ -2064,37 +2066,6 @@ GO
 CREATE NONCLUSTERED INDEX x_tag_change_log_uk_service_id_service_tags_version ON dbo.x_tag_change_log((service_id, service_tags_version) ASC);
 GO
 
-CREATE OR REPLACE PROCEDURE dbo.removeForeignKeysAndTable (IN table_name varchar(100))
-AS
-BEGIN
-	DECLARE @stmt VARCHAR(300)
-	DECLARE @tblname VARCHAR(300)
-	DECLARE @drpstmt VARCHAR(1000)
-	DECLARE cur CURSOR FOR select 'alter table dbo.' + table_name + ' drop constraint ' + role from SYS.SYSFOREIGNKEYS where foreign_creator ='dbo' and foreign_tname = table_name
-	OPEN cur WITH HOLD
-		fetch cur into @stmt
-		WHILE (@@sqlstatus = 0)
-		BEGIN
-			execute(@stmt)
-			fetch cur into @stmt
-		END
-	close cur
-	DEALLOCATE CURSOR cur
-	SET @tblname ='dbo.' + table_name;
-	SET @drpstmt = 'DROP TABLE IF EXISTS ' + @tblname;
-	execute(@drpstmt)
-END
-
-GO
-call dbo.removeForeignKeysAndTable('x_rms_notification')
-GO
-call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
-GO
-call dbo.removeForeignKeysAndTable('x_rms_mapping_provider')
-GO
-call dbo.removeForeignKeysAndTable('x_rms_service_resource')
-GO
-
 CREATE TABLE dbo.x_rms_service_resource(
 id BIGINT IDENTITY NOT NULL,
 guid VARCHAR(64) NOT NULL,
@@ -2278,6 +2249,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('052',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('054',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

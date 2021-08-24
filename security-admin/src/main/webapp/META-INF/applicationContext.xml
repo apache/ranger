@@ -209,14 +209,6 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		</property>
 	</bean>
 
-	<bean id="velocityEngine"
-	class="org.springframework.ui.velocity.VelocityEngineFactoryBean">
-		<property name="velocityProperties">
-			<value>resource.loader=class
-				class.resource.loader.class=org.apache.velocity.runtime.resource.loader.ClasspathResourceLoader</value>
-		</property>
-		<property name="overrideLogging" value="false" />
-	</bean>
 	<bean id="messageSource" class="org.springframework.context.support.ReloadableResourceBundleMessageSource">
 		<property name="basenames">
 			<list>

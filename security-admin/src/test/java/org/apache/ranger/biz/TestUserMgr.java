@@ -228,7 +228,8 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
 		Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
-		XXPortalUser dbxxPortalUser = userMgr.createUser(userProfile, 1,userRoleList);
+		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(user);
+		XXPortalUser dbxxPortalUser = userMgr.createUser(userProfile, 1, userRoleList);
 		Assert.assertNotNull(dbxxPortalUser);
 		userId = dbxxPortalUser.getId();
 
@@ -240,7 +241,7 @@ public class TestUserMgr {
 		Assert.assertEquals(userProfile.getEmailAddress(),dbxxPortalUser.getEmailAddress());
 		Assert.assertEquals(userProfile.getPassword(),dbxxPortalUser.getPassword());
 
-		Mockito.verify(daoManager).getXXPortalUser();
+		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXPortalUser();
 		Mockito.verify(daoManager).getXXPortalUserRole();
 	}
 
@@ -276,6 +277,7 @@ public class TestUserMgr {
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
 		Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
+		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(user);
 		XXPortalUser dbxxPortalUser = userMgr.createUser(userProfile, 1);
 		userId = dbxxPortalUser.getId();
 
@@ -288,7 +290,7 @@ public class TestUserMgr {
 		Assert.assertEquals(userProfile.getEmailAddress(),dbxxPortalUser.getEmailAddress());
 		Assert.assertEquals(userProfile.getPassword(),dbxxPortalUser.getPassword());
 
-		Mockito.verify(daoManager).getXXPortalUser();
+		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXPortalUser();
 		Mockito.verify(daoManager).getXXPortalUserRole();
 	}
 
@@ -728,6 +730,7 @@ public class TestUserMgr {
 
 		Mockito.when(daoManager.getXXGroupPermission()).thenReturn(xGroupPermissionDao);
 		Mockito.doNothing().when(rangerBizUtil).blockAuditorRoleUser();
+		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(user);
 		VXPortalUser dbVXPortalUser = userMgr.createUser(userProfile);
 		Assert.assertNotNull(dbVXPortalUser);
 		Assert.assertEquals(user.getId(), dbVXPortalUser.getId());
@@ -737,7 +740,7 @@ public class TestUserMgr {
 		Assert.assertEquals(user.getEmailAddress(),dbVXPortalUser.getEmailAddress());
 		Assert.assertEquals(user.getPassword(), dbVXPortalUser.getPassword());
 
-		Mockito.verify(daoManager).getXXPortalUser();
+		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXPortalUser();
 		Mockito.verify(daoManager).getXXUserPermission();
 		Mockito.verify(daoManager).getXXGroupPermission();
 	}
@@ -797,7 +800,7 @@ public class TestUserMgr {
 		list.add(XXPortalUserRole);
 
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(null);
+		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(null, user);
 		Mockito.when(userDao.findByEmailAddress(Mockito.anyString())).thenReturn(null);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(userDao.create((XXPortalUser) Mockito.any())).thenReturn(user);
@@ -1387,6 +1390,7 @@ public class TestUserMgr {
 		Mockito.when(userDao.create((XXPortalUser) Mockito.any())).thenReturn(user);
 		Mockito.when(daoManager.getXXPortalUserRole()).thenReturn(roleDao);
 		Mockito.when(roleDao.findByUserId(userId)).thenReturn(list);
+		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(user);
 		XXPortalUser dbxxPortalUser = userMgr.createUser(userProfile, 1,userRoleList);
 		Assert.assertNotNull(dbxxPortalUser);
 		userId = dbxxPortalUser.getId();
@@ -1398,7 +1402,7 @@ public class TestUserMgr {
 		Assert.assertEquals(userProfile.getEmailAddress(),dbxxPortalUser.getEmailAddress());
 		Assert.assertEquals(encryptedPwd,dbxxPortalUser.getPassword());
 
-		Mockito.verify(daoManager).getXXPortalUser();
+		Mockito.verify(daoManager, Mockito.atLeast(1)).getXXPortalUser();
 		Mockito.verify(daoManager).getXXPortalUserRole();
 	}
 

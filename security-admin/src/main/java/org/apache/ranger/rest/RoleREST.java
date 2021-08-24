@@ -1077,14 +1077,13 @@ public class RoleREST {
             Set<RangerRole.RoleMember> roleGroups = new HashSet<>();
             Set<RangerRole.RoleMember> roleRoles = new HashSet<>();
 
-            for (RangerRole.RoleMember user : role.getUsers()) {
-                if (users.contains(user.getName()) && isAdmin == Boolean.TRUE) {
-                    user.setIsAdmin(isAdmin);
-                    roleUsers.add(user);
-                } else if (!users.contains(user.getName())) {
-                    roleUsers.add(user);
-                }
-            }
+			for (RangerRole.RoleMember user : role.getUsers()) {
+				String userName = user.getName();
+				if (users.contains(userName)) {
+					user.setIsAdmin(isAdmin);
+				}
+				roleUsers.add(user);
+			}
 
             Set<String> existingUsernames = getUserNames(role);
             for (String user : users) {
@@ -1093,14 +1092,13 @@ public class RoleREST {
                 }
             }
 
-            for (RangerRole.RoleMember group : role.getGroups()) {
-                if (groups.contains(group.getName()) && isAdmin == Boolean.TRUE) {
-                    group.setIsAdmin(isAdmin);
-                    roleGroups.add(group);
-                } else if (!groups.contains(group.getName())) {
-                    roleGroups.add(group);
-                }
-            }
+			for (RangerRole.RoleMember group : role.getGroups()) {
+				String groupName = group.getName();
+				if (groups.contains(groupName)) {
+					group.setIsAdmin(isAdmin);
+				}
+				roleGroups.add(group);
+			}
 
             Set<String> existingGroupnames = getGroupNames(role);
             for (String group : groups) {
@@ -1109,14 +1107,14 @@ public class RoleREST {
                 }
             }
 
-            for (RangerRole.RoleMember roleMember : role.getRoles()) {
-                if (roles.contains(roleMember.getName()) && isAdmin == Boolean.TRUE) {
-                    roleMember.setIsAdmin(isAdmin);
-                    roleRoles.add(roleMember);
-                } else if (!roles.contains(roleMember.getName())) {
-                    roleRoles.add(roleMember);
-                }
-            }
+			for (RangerRole.RoleMember roleMember : role.getRoles()) {
+				String roleName = roleMember.getName();
+				if (roles.contains(roleName)) {
+					roleMember.setIsAdmin(isAdmin);
+				}
+				roleRoles.add(roleMember);
+			}
+
             Set<String> existingRolenames = getRoleNames(role);
             for (String newRole : roles) {
                 if (!existingRolenames.contains(newRole)) {

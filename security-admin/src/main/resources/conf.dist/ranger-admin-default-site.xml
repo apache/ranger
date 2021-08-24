@@ -615,4 +615,8 @@
 			<name>ranger.default.browser-useragents</name>
 			<value>Mozilla,Opera,Chrome</value>
 	   </property>
+          <property>
+            <name>ranger.tomcat.work.dir</name>
+            <value></value>
+          </property>
 </configuration>

@@ -37,15 +37,16 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Connector;
+import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.valves.ErrorReportValve;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.log4j.PropertyConfigurator;
+
 import org.apache.ranger.credentialapi.CredentialReader;
 
 import javax.net.ssl.KeyManager;
@@ -259,8 +260,17 @@ public class EmbeddedServer {
 			}
 			LOG.info("Adding webapp [" + webContextName + "] = path ["
 					+ webapp_dir + "] .....");
-			Context webappCtx = server.addWebapp(webContextName, new File(
-					webapp_dir).getAbsolutePath());
+                       StandardContext webappCtx = (StandardContext) server.addWebapp(webContextName, new File(
+                           webapp_dir).getAbsolutePath());
+                       String workDirPath = EmbeddedServerUtil.getConfig("ranger.tomcat.work.dir", "");
+                       if (!workDirPath.isEmpty() && new File(workDirPath).exists()) {
+                           webappCtx.setWorkDir(workDirPath);
+                       } else {
+                            if (LOG.isLoggable(Level.FINE)) {
+                                LOG.fine("Skipping to set tomcat server work directory, '" + workDirPath +
+                                    "', as it is blank or directory does not exist.");
+                            }
+                       }
 			webappCtx.init();
 			LOG.info("Finished init of webapp [" + webContextName
 					+ "] = path [" + webapp_dir + "].");

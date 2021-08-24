@@ -24,11 +24,14 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerUserStore;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -36,14 +39,20 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import static org.apache.ranger.plugin.util.RangerCommonConstants.*;
+
+
 public final class RangerScriptExecutionContext {
 	private static final Log LOG = LogFactory.getLog(RangerScriptExecutionContext.class);
+
+	private static final Log    PERF_POLICY_CONDITION_SCRIPT_TOJSON         = RangerPerfTracer.getPerfLogger("policy.condition.script.tojson");
 	private static final String TAG_ATTR_DATE_FORMAT_PROP                   = "ranger.plugin.tag.attr.additional.date.formats";
 	private static final String TAG_ATTR_DATE_FORMAT_SEPARATOR              = "||";
 	private static final String TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX        = "\\|\\|";
@@ -86,6 +95,100 @@ public final class RangerScriptExecutionContext {
 
 	RangerScriptExecutionContext(final RangerAccessRequest accessRequest) {
 		this.accessRequest = accessRequest;
+	}
+
+	public String toJson() {
+		RangerPerfTracer perf = null;
+
+		long requestHash = accessRequest.hashCode();
+
+		if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_TOJSON)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_TOJSON, "RangerScriptExecutionContext.toJson(requestHash=" + requestHash + ")");
+		}
+
+		Map<String, Object> ret       = new HashMap<>();
+		Map<String, Object> request   = new HashMap<>();
+		RangerUserStore     userStore = RangerAccessRequestUtil.getRequestUserStoreFromContext(accessRequest.getContext());
+
+		if (accessRequest.getAccessTime() != null) {
+			request.put(SCRIPT_FIELD_ACCESS_TIME, accessRequest.getAccessTime().getTime());
+		}
+
+		request.put(SCRIPT_FIELD_ACCESS_TYPE, accessRequest.getAccessType());
+		request.put(SCRIPT_FIELD_ACTION, accessRequest.getAction());
+		request.put(SCRIPT_FIELD_CLIENT_IP_ADDRESS, accessRequest.getClientIPAddress());
+		request.put(SCRIPT_FIELD_CLIENT_TYPE, accessRequest.getClientType());
+		request.put(SCRIPT_FIELD_CLUSTER_NAME, accessRequest.getClusterName());
+		request.put(SCRIPT_FIELD_CLUSTER_TYPE, accessRequest.getClusterType());
+		request.put(SCRIPT_FIELD_FORWARDED_ADDRESSES, accessRequest.getForwardedAddresses());
+		request.put(SCRIPT_FIELD_REMOTE_IP_ADDRESS, accessRequest.getRemoteIPAddress());
+		request.put(SCRIPT_FIELD_REQUEST_DATA, accessRequest.getRequestData());
+
+		if (accessRequest.getResource() != null) {
+			request.put(SCRIPT_FIELD_RESOURCE, accessRequest.getResource().getAsMap());
+			request.put(SCRIPT_FIELD_RESOURCE_OWNER_USER, accessRequest.getResource().getOwnerUser());
+		}
+
+		request.put(SCRIPT_FIELD_RESOURCE_MATCHING_SCOPE, accessRequest.getResourceMatchingScope());
+
+		request.put(SCRIPT_FIELD_USER, accessRequest.getUser());
+		request.put(SCRIPT_FIELD_USER_GROUPS, accessRequest.getUserGroups());
+		request.put(SCRIPT_FIELD_USER_ROLES, accessRequest.getUserRoles());
+
+		if (userStore != null) {
+			Map<String, Map<String, String>> userAttrMapping  = userStore.getUserAttrMapping();
+			Map<String, Map<String, String>> groupAttrMapping = userStore.getGroupAttrMapping();
+
+			if (userAttrMapping != null) {
+				request.put(SCRIPT_FIELD_USER_ATTRIBUTES, userAttrMapping.get(accessRequest.getUser()));
+			}
+
+			if (groupAttrMapping != null && accessRequest.getUserGroups() != null) {
+				Map<String, Map<String, String>> groupAttrs = new HashMap<>();
+
+				for (String groupName : accessRequest.getUserGroups()) {
+					groupAttrs.put(groupName, groupAttrMapping.get(groupName));
+				}
+
+				request.put(SCRIPT_FIELD_USER_GROUP_ATTRIBUTES, groupAttrs);
+			}
+		}
+
+		ret.put(SCRIPT_FIELD_REQUEST, request);
+
+		Set<RangerTagForEval> requestTags = RangerAccessRequestUtil.getRequestTagsFromContext(getRequestContext());
+
+		if (CollectionUtils.isNotEmpty(requestTags)) {
+			Set<Map<String, Object>> tags = new HashSet<>();
+
+			for (RangerTagForEval tag : requestTags) {
+				tags.add(toMap(tag));
+			}
+
+			ret.put(SCRIPT_FIELD_TAGS, tags);
+
+			RangerTagForEval currentTag = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
+
+			if (currentTag != null) {
+				ret.put(SCRIPT_FIELD_TAG, toMap(currentTag));
+			}
+		}
+
+		RangerAccessResource resource = RangerAccessRequestUtil.getCurrentResourceFromContext(getRequestContext());
+
+		if (resource != null) {
+			ret.put(SCRIPT_FIELD_RESOURCE, resource.getAsMap());
+
+			if (resource.getOwnerUser() != null) {
+				ret.put(SCRIPT_FIELD_RESOURCE_OWNER_USER, resource.getOwnerUser());
+			}
+		}
+
+		String strRet = JsonUtils.objectToJson(ret);
+
+		RangerPerfTracer.log(perf);
+
+		return strRet;
 	}
 
 	public static void init(Configuration config) {
@@ -409,6 +512,16 @@ public final class RangerScriptExecutionContext {
 				logDebug("RangerScriptExecutionContext.getAllTags() - No TAGS. No TAGS for the RangerAccessResource=" + resource);
 			}
 		}
+
+		return ret;
+	}
+
+	private static Map<String, Object> toMap(RangerTagForEval tag) {
+		Map<String, Object> ret = new HashMap<>();
+
+		ret.put("type", tag.getType());
+		ret.put("attributes", tag.getAttributes());
+		ret.put("matchType", tag.getMatchType());
 
 		return ret;
 	}

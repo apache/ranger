@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -82,6 +83,9 @@ public class RoleDBStore implements RoleStore {
     @Autowired
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
+	@Autowired
+	ServiceDBStore svcStore;
+
     RangerAdminConfig config;
 
     private Boolean populateExistingBaseFields = true;
@@ -121,7 +125,8 @@ public class RoleDBStore implements RoleStore {
         Runnable roleVersionUpdater = new RoleVersionUpdater(daoMgr);
         transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
 
-        RangerRole createdRole = roleService.create(role);
+        roleService.create(role);
+        RangerRole createdRole = getRole(role.getName());
         if (createdRole == null) {
             throw new Exception("Cannot create role:[" + role + "]");
         }
@@ -196,6 +201,8 @@ public class RoleDBStore implements RoleStore {
 
         RangerRole role = roleService.read(xxRole.getId());
         roleRefUpdater.cleanupRefTables(role);
+		// delete role from audit filter configs
+		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
         roleService.delete(role);
 
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
@@ -212,6 +219,8 @@ public class RoleDBStore implements RoleStore {
         transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
 
         roleRefUpdater.cleanupRefTables(role);
+		// delete role from audit filter configs
+		svcStore.updateServiceAuditConfig(role.getName(), REMOVE_REF_TYPE.ROLE);
         roleService.delete(role);
         List<XXTrxLog> trxLogList = roleService.getTransactionLog(role, null, "delete");
         bizUtil.createTrxLog(trxLogList);

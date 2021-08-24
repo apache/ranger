@@ -27,6 +27,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -37,10 +38,17 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import static org.apache.ranger.plugin.util.RangerCommonConstants.*;
+
 public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvaluator {
 	private static final Log LOG = LogFactory.getLog(RangerScriptConditionEvaluator.class);
 
+	private static final Log PERF_POLICY_CONDITION_SCRIPT_EVAL = RangerPerfTracer.getPerfLogger("policy.condition.script.eval");
+
+	private static final String SCRIPT_PREEXEC = SCRIPT_VAR_CONTEXT + "=JSON.parse(" + SCRIPT_VAR_CONTEXT_JSON + ");";
+
 	private ScriptEngine scriptEngine;
+	private boolean      enableJsonCtx = false;
 
 	@Override
 	public void init() {
@@ -57,6 +65,8 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 
 		if (MapUtils.isNotEmpty(evalOptions)) {
 			engineName = evalOptions.get("engineName");
+
+			enableJsonCtx = Boolean.parseBoolean(evalOptions.getOrDefault(SCRIPT_OPTION_ENABLE_JSON_CTX, Boolean.toString(enableJsonCtx)));
 		}
 
 		if (StringUtils.isBlank(engineName)) {
@@ -147,10 +157,24 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 				bindings.put("tag", currentTag);
 				bindings.put("tagAttr", tagAttribs);
 
+				if (enableJsonCtx) {
+					bindings.put(SCRIPT_VAR_CONTEXT_JSON, context.toJson());
+
+					script = SCRIPT_PREEXEC + script;
+				}
+
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("RangerScriptConditionEvaluator.isMatched(): script={" + script + "}");
 				}
+
+				RangerPerfTracer perf = null;
+
 				try {
+					long requestHash = request.hashCode();
+
+					if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_CONDITION_SCRIPT_EVAL)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_CONDITION_SCRIPT_EVAL, "RangerScriptConditionEvaluator.isMatched(requestHash=" + requestHash + ")");
+					}
 
 					Object ret = scriptEngine.eval(script, bindings);
 
@@ -167,6 +191,8 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 				} catch (ScriptException exception) {
 					LOG.error("RangerScriptConditionEvaluator.isMatched(): failed to evaluate script," +
 							" exception=" + exception);
+				} finally {
+					RangerPerfTracer.log(perf);
 				}
 			} else {
 				String conditionType = condition != null ? condition.getType() : null;

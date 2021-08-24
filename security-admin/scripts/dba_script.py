@@ -472,11 +472,11 @@ class OracleConf(BaseDB):
 						log("[I] User " + db_user + " created", "info")
 						log("[I] Granting permission to " + db_user, "info")
 						if is_unix:
-							query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
+							query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
 							jisql_log(query, db_root_password)
 							ret = subprocessCallWithRetry(shlex.split(query))
 						elif os_name == "WINDOWS":
-							query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
+							query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
 							jisql_log(query, db_root_password)
 							ret = subprocessCallWithRetry(query)
 						if ret == 0:
@@ -624,11 +624,11 @@ class OracleConf(BaseDB):
 		if dryMode == False:
 			get_cmd = self.get_jisql_cmd(root_user ,db_root_password)
 			if is_unix:
-				query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
+				query = get_cmd + " -c \; -query 'GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;'" % (db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocessCallWithRetry(shlex.split(query))
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
+				query = get_cmd + " -query \"GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;\" -c ;" % (db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocessCallWithRetry(query)
 			if ret == 0:
@@ -638,7 +638,7 @@ class OracleConf(BaseDB):
 				log("[E] Granting Oracle user '" + db_user + "' failed..", "error")
 				sys.exit(1)
 		else:
-			logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;" % (db_user))
+			logFile("GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE SYNONYM,CREATE TRIGGER,UNLIMITED Tablespace TO %s;" % (db_user))
 
 	def create_auditdb_user(self, xa_db_host , audit_db_host , db_name ,audit_db_name, xa_db_root_user, audit_db_root_user, db_user, audit_db_user, xa_db_root_password, audit_db_root_password, db_password, audit_db_password, DBA_MODE,dryMode):
 		if DBA_MODE == "TRUE":
@@ -713,7 +713,7 @@ class OracleConf(BaseDB):
 	def writeDrymodeCmd(self, xa_db_host, audit_db_host, xa_db_root_user, xa_db_root_password, db_user, db_password, db_name, audit_db_root_user, audit_db_root_password, audit_db_user, audit_db_password, audit_db_name):
 		logFile("# Login to ORACLE Server from a ORACLE dba user(i.e 'sys') to execute below sql statements.")
 		logFile('create user %s identified by "%s";'%(db_user, db_password))
-		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE PUBLIC SYNONYM,CREATE ANY SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO %s;'%(db_user))
+		logFile('GRANT CREATE SESSION,CREATE PROCEDURE,CREATE TABLE,CREATE VIEW,CREATE SEQUENCE,CREATE SYNONYM,CREATE TRIGGER,UNLIMITED TABLESPACE TO %s;'%(db_user))
 		logFile("create tablespace %s datafile '%s.dat' size 10M autoextend on;" %(db_name, db_name))
 		logFile('alter user %s DEFAULT tablespace %s;'%(db_user, db_name))
 		if not db_user == audit_db_user:

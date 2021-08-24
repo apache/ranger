@@ -13,9 +13,18 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
-DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
-DROP TABLE IF EXISTS x_policy_change_log;
+DROP TABLE IF EXISTS x_rms_mapping_provider CASCADE;
+DROP TABLE IF EXISTS x_rms_resource_mapping CASCADE;
+DROP TABLE IF EXISTS x_rms_notification CASCADE;
+DROP TABLE IF EXISTS x_rms_service_resource CASCADE;
 DROP TABLE IF EXISTS x_tag_change_log;
+DROP TABLE IF EXISTS x_role_ref_role CASCADE;
+DROP TABLE IF EXISTS x_policy_ref_role CASCADE;
+DROP TABLE IF EXISTS x_role_ref_group CASCADE;
+DROP TABLE IF EXISTS x_role_ref_user CASCADE;
+DROP TABLE IF EXISTS x_role CASCADE;
+DROP TABLE IF EXISTS x_policy_change_log;
+DROP TABLE IF EXISTS x_security_zone_ref_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_group CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_user CASCADE;
 DROP TABLE IF EXISTS x_policy_ref_datamask_type CASCADE;
@@ -30,11 +39,7 @@ DROP TABLE IF EXISTS x_service_version_info;
 DROP TABLE IF EXISTS x_policy_item_rowfilter;
 DROP TABLE IF EXISTS x_policy_item_datamask;
 DROP TABLE IF EXISTS x_datamask_type_def;
-DROP TABLE IF EXISTS x_service_resource_element_val CASCADE;
 DROP TABLE IF EXISTS x_tag_resource_map CASCADE;
-DROP TABLE IF EXISTS x_tag_attr CASCADE;
-DROP TABLE IF EXISTS x_tag_attr_def CASCADE;
-DROP TABLE IF EXISTS x_service_resource_element CASCADE;
 DROP TABLE IF EXISTS x_service_resource CASCADE;
 DROP TABLE IF EXISTS x_tag CASCADE;
 DROP TABLE IF EXISTS x_tag_def CASCADE;
@@ -61,8 +66,8 @@ DROP TABLE IF EXISTS x_service_config_def CASCADE;
 DROP TABLE IF EXISTS x_policy CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_group CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_user CASCADE;
-DROP TABLE IF EXISTS x_security_zone_ref_service CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_tag_srvc CASCADE;
+DROP TABLE IF EXISTS x_security_zone_ref_service CASCADE;
 DROP TABLE IF EXISTS x_ranger_global_state CASCADE;
 DROP TABLE IF EXISTS x_security_zone CASCADE;
 DROP TABLE IF EXISTS x_service CASCADE;
@@ -72,13 +77,6 @@ DROP TABLE IF EXISTS x_perm_map CASCADE;
 DROP TABLE IF EXISTS x_trx_log CASCADE;
 DROP TABLE IF EXISTS x_resource CASCADE;
 DROP TABLE IF EXISTS x_policy_export_audit CASCADE;
-
-DROP TABLE IF EXISTS x_role_ref_role CASCADE;
-DROP TABLE IF EXISTS x_policy_ref_role CASCADE;
-DROP TABLE IF EXISTS x_role_ref_group CASCADE;
-DROP TABLE IF EXISTS x_role_ref_user CASCADE;
-DROP TABLE IF EXISTS x_role CASCADE;
-
 DROP TABLE IF EXISTS x_group_users CASCADE;
 DROP TABLE IF EXISTS x_user CASCADE;
 DROP TABLE IF EXISTS x_group_groups;
@@ -91,11 +89,6 @@ DROP TABLE IF EXISTS xa_access_audit CASCADE;
 DROP TABLE IF EXISTS x_portal_user_role CASCADE;
 DROP TABLE IF EXISTS x_portal_user CASCADE;
 DROP TABLE IF EXISTS x_db_version_h CASCADE;
-
-DROP TABLE IF EXISTS x_rms_service_resource CASCADE;
-DROP TABLE IF EXISTS x_rms_notification CASCADE;
-DROP TABLE IF EXISTS x_rms_resource_mapping CASCADE;
-DROP TABLE IF EXISTS x_rms_mapping_provider CASCADE;
 
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_user_seq;
@@ -152,13 +145,11 @@ DROP SEQUENCE IF EXISTS x_trx_log_seq;
 DROP SEQUENCE IF EXISTS x_resource_seq;
 DROP SEQUENCE IF EXISTS x_policy_export_seq;
 DROP SEQUENCE IF EXISTS x_group_users_seq;
-
 DROP SEQUENCE IF EXISTS x_role_ref_role_SEQ;
 DROP SEQUENCE IF EXISTS x_policy_ref_role_SEQ;
 DROP SEQUENCE IF EXISTS x_role_ref_group_SEQ;
 DROP SEQUENCE IF EXISTS x_role_ref_user_SEQ;
 DROP SEQUENCE IF EXISTS x_role_SEQ;
-
 DROP SEQUENCE IF EXISTS x_user_seq;
 DROP SEQUENCE IF EXISTS x_group_groups_seq;
 DROP SEQUENCE IF EXISTS x_group_seq;
@@ -169,7 +160,6 @@ DROP SEQUENCE IF EXISTS x_asset_seq;
 DROP SEQUENCE IF EXISTS xa_access_audit_seq;
 DROP SEQUENCE IF EXISTS x_portal_user_role_seq;
 DROP SEQUENCE IF EXISTS x_portal_user_seq;
-
 DROP SEQUENCE IF EXISTS X_RMS_SERVICE_RESOURCE_SEQ;
 DROP SEQUENCE IF EXISTS X_RMS_NOTIFICATION_SEQ;
 DROP SEQUENCE IF EXISTS X_RMS_RESOURCE_MAPPING_SEQ;
@@ -202,6 +192,7 @@ status INT DEFAULT '0' NOT NULL,
 user_src INT DEFAULT '0' NOT NULL,
 notes VARCHAR(4000) DEFAULT NULL NULL,
 other_attributes VARCHAR(4000) DEFAULT NULL NULL,
+sync_source VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_portal_user_UK_login_id UNIQUE(login_id),
 CONSTRAINT x_portal_user_UK_email UNIQUE(email),
@@ -335,6 +326,7 @@ CRED_STORE_ID BIGINT DEFAULT NULL,
 GROUP_SRC INT DEFAULT 0 NOT NULL,
 IS_VISIBLE INT DEFAULT '1' NOT NULL,
 other_attributes VARCHAR(4000) DEFAULT NULL NULL,
+sync_source VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(ID),
 CONSTRAINT x_group_UK_group_name UNIQUE(group_name),
 CONSTRAINT X_GROUP_FK_ADDED_BY_ID FOREIGN KEY(ADDED_BY_ID) REFERENCES X_PORTAL_USER(ID),
@@ -372,6 +364,7 @@ status INT DEFAULT '0' NOT NULL,
 cred_store_id BIGINT DEFAULT NULL NULL,
 is_visible INT DEFAULT '1' NOT NULL,
 other_attributes VARCHAR(4000) DEFAULT NULL NULL,
+sync_source VARCHAR(4000) DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_user_UK_user_name UNIQUE(user_name),
 CONSTRAINT x_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -1092,10 +1085,9 @@ primary key (id),
 CONSTRAINT x_service_res_UK_guid UNIQUE (guid),
 CONSTRAINT x_service_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id),
 CONSTRAINT x_service_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_service_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+CONSTRAINT x_service_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_service_resource_IDX_svc_id_resource_signature UNIQUE (service_id, resource_signature)
 );
-
-CREATE UNIQUE INDEX x_service_resource_IDX_resource_signature ON x_service_resource(resource_signature);
 
 CREATE SEQUENCE x_tag_resource_map_seq;
 CREATE TABLE x_tag_resource_map(
@@ -1893,6 +1885,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('051',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('052',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('054',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES
