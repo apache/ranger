@@ -16,7 +16,7 @@
 drop procedure if exists add_column_in_x_user_and_x_portal_user_and_x_group;
 
 delimiter ;;
-create procedure add_column_in-x_user-x_portal_user-x_group() begin
+create procedure add_column_in_x_user_and_x_portal_user_and_x_group() begin
 
 if not exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_user' and column_name='sync_source') then
         ALTER TABLE x_user ADD sync_source varchar(4000) DEFAULT NULL;
