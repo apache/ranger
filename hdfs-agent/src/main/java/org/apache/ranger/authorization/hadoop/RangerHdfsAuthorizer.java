@@ -30,6 +30,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 
@@ -813,6 +814,19 @@ class RangerHdfsResource extends RangerAccessResourceImpl {
 	public RangerHdfsResource(String path, String owner) {
 		super.setValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH, path);
 		super.setOwnerUser(owner);
+	}
+
+	@Override
+	public String getAsString() {
+		String ret = super.getStringifiedValue();
+
+		if (ret == null) {
+			ret = Objects.toString(super.getValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH));
+
+			super.setStringifiedValue(ret);
+		}
+
+		return ret;
 	}
 }
 
