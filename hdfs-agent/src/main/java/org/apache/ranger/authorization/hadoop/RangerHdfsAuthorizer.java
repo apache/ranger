@@ -908,6 +908,19 @@ class RangerHdfsResource extends RangerAccessResourceImpl {
 		super.setValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH, path);
 		super.setOwnerUser(owner);
 	}
+
+	@Override
+	public String getAsString() {
+		String ret = super.getStringifiedValue();
+
+		if (ret == null) {
+			ret = Objects.toString(super.getValue(RangerHdfsAuthorizer.KEY_RESOURCE_PATH));
+
+			super.setStringifiedValue(ret);
+		}
+
+		return ret;
+	}
 }
 
 class RangerHdfsAccessRequest extends RangerAccessRequestImpl {
