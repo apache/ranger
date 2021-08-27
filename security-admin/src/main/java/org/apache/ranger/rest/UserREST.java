@@ -20,7 +20,9 @@
  package org.apache.ranger.rest;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -37,6 +39,7 @@ import org.apache.log4j.Logger;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.RangerConstants;
@@ -277,7 +280,11 @@ public class UserREST {
 		try {
 			logger.debug("getUserProfile(). httpSessionId="
 					+ request.getSession().getId());
+			Map<String, String> configProperties  = new HashMap<>();
+			Long inactivityTimeout = PropertiesUtil.getLongProperty("ranger.service.inactivity.timeout", 15*60);
+			configProperties.put("inactivityTimeout", Long.toString(inactivityTimeout));
 			VXPortalUser userProfile = userManager.getUserProfileByLoginId();
+			userProfile.setConfigProperties(configProperties);
 			return userProfile;
 		} catch (Throwable t) {
 			logger.error(

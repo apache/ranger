@@ -26,6 +26,7 @@ import com.nimbusds.jose.JWSVerifier;
 import com.nimbusds.jose.crypto.RSASSAVerifier;
 import com.nimbusds.jwt.SignedJWT;
 
+import org.apache.ranger.util.RestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,7 +54,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
-import java.util.Enumeration;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -88,9 +88,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
     public static final String JWT_EXPECTED_SIGALG = "ranger.sso.expected.sigalg";
     public static final String JWT_DEFAULT_SIGALG = "RS256";
 
-	public static final String LOCAL_LOGIN_URL = "locallogin";
 	public static final String DEFAULT_BROWSER_USERAGENT = "ranger.default.browser-useragents";
-    public static final String PROXY_RANGER_URL_PATH = "/ranger";
 
 
 	private SSOAuthenticationProperties jwtProperties;
@@ -130,7 +128,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 
 		HttpServletRequest httpRequest = (HttpServletRequest)servletRequest;
 
-                String xForwardedURL = constructForwardableURL(httpRequest);
+                String xForwardedURL = RestUtil.constructForwardableURL(httpRequest);
 
 		if (httpRequest.getRequestedSessionId() != null && !httpRequest.isRequestedSessionIdValid()){
 			synchronized(httpRequest.getServletContext()){
@@ -154,7 +152,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			}
 		}
 		//If sso is enable and request is not for local login and is from browser then it will go inside and try for knox sso authentication
-		if (ssoEnabled && !httpRequest.getRequestURI().contains(LOCAL_LOGIN_URL)) {
+		if (ssoEnabled && !httpRequest.getRequestURI().contains(RestUtil.LOCAL_LOGIN_URL)) {
 			//if jwt properties are loaded and is current not authenticated then it will go for sso authentication
 			//Note : Need to remove !isAuthenticated() after knoxsso solve the bug from cross-origin script
 			if (jwtProperties != null && !isAuthenticated()) {
@@ -203,7 +201,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 									httpServletResponse.setStatus(RangerConstants.SC_AUTHENTICATION_TIMEOUT);
 									httpServletResponse.setHeader("X-Rngr-Redirect-Url", ssourl);
 								} else {
-									ssourl = constructLoginURL(httpRequest, xForwardedURL);
+									ssourl = RestUtil.constructRedirectURL(httpRequest, authenticationProviderUrl, xForwardedURL, originalUrlQueryParam);
 									if (LOG.isDebugEnabled()) {
 										LOG.debug("SSO URL = " + ssourl);
 									}
@@ -231,7 +229,7 @@ public class RangerSSOAuthenticationFilter implements Filter {
 							httpServletResponse.setStatus(RangerConstants.SC_AUTHENTICATION_TIMEOUT);
 							httpServletResponse.setHeader("X-Rngr-Redirect-Url", ssourl);
 						} else {
-							ssourl = constructLoginURL(httpRequest, xForwardedURL);
+							ssourl = RestUtil.constructRedirectURL(httpRequest, authenticationProviderUrl, xForwardedURL, originalUrlQueryParam);
 							if (LOG.isDebugEnabled()) {
 								LOG.debug("SSO URL = " + ssourl);
 							}
@@ -246,11 +244,11 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			else {
 				filterChain.doFilter(servletRequest, servletResponse);
 			}
-		} else if(ssoEnabled && ((HttpServletRequest) servletRequest).getRequestURI().contains(LOCAL_LOGIN_URL) && isWebUserAgent(userAgent) && isAuthenticated()){
+		} else if(ssoEnabled && ((HttpServletRequest) servletRequest).getRequestURI().contains(RestUtil.LOCAL_LOGIN_URL) && isWebUserAgent(userAgent) && isAuthenticated()){
 				//If already there's an active session with sso and user want's to switch to local login(i.e without sso) then it won't be navigated to local login
 				// In this scenario the user as to use separate browser
-				String url = ((HttpServletRequest) servletRequest).getRequestURI().replace(LOCAL_LOGIN_URL+"/", "");
-				url = url.replace(LOCAL_LOGIN_URL, "");
+				String url = ((HttpServletRequest) servletRequest).getRequestURI().replace(RestUtil.LOCAL_LOGIN_URL+"/", "");
+				url = url.replace(RestUtil.LOCAL_LOGIN_URL, "");
 				LOG.warn("There is an active session and if you want local login to ranger, try this on a separate browser");
 				((HttpServletResponse)servletResponse).sendRedirect(url);
 		}
@@ -258,57 +256,6 @@ public class RangerSSOAuthenticationFilter implements Filter {
 		else {
 			filterChain.doFilter(servletRequest, servletResponse);
 		}
-	}
-
-	private String constructForwardableURL(HttpServletRequest httpRequest) {
-		String xForwardedProto = "";
-		String xForwardedHost = "";
-		String xForwardedContext = "";
-		Enumeration<?> names = httpRequest.getHeaderNames();
-		while (names.hasMoreElements()) {
-			String name = (String) names.nextElement();
-			Enumeration<?> values = httpRequest.getHeaders(name);
-			String value = "";
-			if (values != null) {
-				while (values.hasMoreElements()) {
-					value = (String) values.nextElement();
-				}
-			}
-			if (StringUtils.trimToNull(name) != null && StringUtils.trimToNull(value) != null) {
-				if (name.equalsIgnoreCase("x-forwarded-proto")) {
-					xForwardedProto = value;
-				} else if (name.equalsIgnoreCase("x-forwarded-host")) {
-					xForwardedHost = value;
-				} else if (name.equalsIgnoreCase("x-forwarded-context")) {
-					xForwardedContext = value;
-				}
-			}
-		}
-		if (xForwardedHost.contains(",")) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("xForwardedHost value is " + xForwardedHost + " it contains multiple hosts, selecting the first host.");
-			}
-			xForwardedHost = xForwardedHost.split(",")[0].trim();
-		}
-		String xForwardedURL = "";
-		if (StringUtils.trimToNull(xForwardedProto) != null) {
-			//if header contains x-forwarded-host and x-forwarded-context
-			if (StringUtils.trimToNull(xForwardedHost) != null && StringUtils.trimToNull(xForwardedContext) != null) {
-				xForwardedURL = xForwardedProto + "://" + xForwardedHost + xForwardedContext + PROXY_RANGER_URL_PATH + httpRequest.getRequestURI();
-			} else if (StringUtils.trimToNull(xForwardedHost) != null) {
-				//if header contains x-forwarded-host and does not contains x-forwarded-context
-				xForwardedURL = xForwardedProto + "://" + xForwardedHost + httpRequest.getRequestURI();
-			} else {
-				//if header does not contains x-forwarded-host and x-forwarded-context
-				//preserve the x-forwarded-proto value coming from the request.
-				String requestURL = httpRequest.getRequestURL().toString();
-				if (StringUtils.trimToNull(requestURL) != null && requestURL.startsWith("http:")) {
-					requestURL = requestURL.replaceFirst("http", xForwardedProto);
-				}
-				xForwardedURL = requestURL;
-			}
-		}
-		return xForwardedURL;
 	}
 
 	private Authentication getGrantedAuthority(Authentication authentication) {
@@ -391,33 +338,6 @@ public class RangerSSOAuthenticationFilter implements Filter {
 			}
 		}
 		return serializedJWT;
-	}
-
-	/**
-	 * Create the URL to be used for authentication of the user in the absence
-	 * of a JWT token within the incoming request.
-	 *
-	 * @param request
-	 *            for getting the original request URL
-	 * @return url to use as login url for redirect
-	 */
-        protected String constructLoginURL(HttpServletRequest request, String xForwardedURL) {
-		String delimiter = "?";
-		if (authenticationProviderUrl.contains("?")) {
-			delimiter = "&";
-		}
-                String loginURL = authenticationProviderUrl + delimiter + originalUrlQueryParam + "=";
-                if (StringUtils.trimToNull(xForwardedURL) != null) {
-                        loginURL += xForwardedURL + getOriginalQueryString(request);
-                } else {
-                        loginURL += request.getRequestURL().append(getOriginalQueryString(request));
-                }
-		return loginURL;
-	}
-
-	private String getOriginalQueryString(HttpServletRequest request) {
-		String originalQueryString = request.getQueryString();
-		return (originalQueryString == null) ? "" : "?" + originalQueryString;
 	}
 
 	/**

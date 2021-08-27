@@ -21,6 +21,7 @@
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
@@ -96,6 +97,12 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	 *
 	 */
 	protected String syncSource;
+
+	/**
+	 * Configuration properties.
+	 *
+	 */
+	protected Map<String, String> configProperties;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -319,6 +326,14 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	 */
 	public void setOtherAttributes(final String otherAttributes) {
 		this.otherAttributes = otherAttributes;
+	}
+
+	public Map<String, String> getConfigProperties() {
+		return configProperties;
+	}
+
+	public void setConfigProperties(Map<String, String> configProperties) {
+		this.configProperties = configProperties;
 	}
 
 	/**

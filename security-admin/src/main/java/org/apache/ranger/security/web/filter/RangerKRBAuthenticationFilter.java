@@ -52,6 +52,7 @@ import javax.servlet.descriptor.JspConfigDescriptor;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.apache.commons.collections.iterators.IteratorEnumeration;
 import org.apache.hadoop.conf.Configuration;
@@ -65,6 +66,7 @@ import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.security.handler.RangerAuthenticationProvider;
+import org.apache.ranger.util.RestUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -113,6 +115,8 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 
 	private static final String KERBEROS_TYPE = "kerberos";
 	private static final String S_USER = "suser";
+	private String originalUrlQueryParam = "originalUrl";
+	public static final String LOGOUT_URL = "/logout";
 
 	public RangerKRBAuthenticationFilter() {
 		try {
@@ -395,11 +399,45 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 					throw restErrorUtil.createRESTException("RangerKRBAuthenticationFilter Failed : "+e.getMessage());
 				}				
 			}	
-		}else{
-			filterChain.doFilter(request, response);
+		} else {
+			String action = httpRequest.getParameter("action");
+			String doAsUser = request.getParameter("doAs");
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("RangerKRBAuthenticationFilter: request URL = " + httpRequest.getRequestURI());
+			}
+
+			boolean allowTrustedProxy = PropertiesUtil.getBooleanProperty(ALLOW_TRUSTED_PROXY, false);
+
+			if (allowTrustedProxy && StringUtils.isNotEmpty(doAsUser) && existingAuth.isAuthenticated()
+					&& StringUtils.equals(action, RestUtil.TIMEOUT_ACTION)) {
+				HttpServletResponse httpResponse = (HttpServletResponse) response;
+				String xForwardedURL = RestUtil.constructForwardableURL(httpRequest);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("xForwardedURL = " + xForwardedURL);
+				}
+				String logoutUrl = xForwardedURL;
+				logoutUrl =  StringUtils.replace(logoutUrl, httpRequest.getRequestURI(), LOGOUT_URL);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("logoutUrl value is " + logoutUrl);
+				}
+				String redirectUrl = RestUtil.constructRedirectURL(httpRequest, logoutUrl, xForwardedURL, originalUrlQueryParam);
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Redirect URL = " + redirectUrl);
+					LOG.debug("session id = " + httpRequest.getRequestedSessionId());
+				}
+
+				HttpSession httpSession = httpRequest.getSession(false);
+				if (httpSession != null) {
+					httpSession.invalidate();
+				}
+				httpResponse.sendRedirect(redirectUrl);
+			} else {
+				filterChain.doFilter(request, response);
+			}
 		}
 	}
-	
+
 	private boolean isSpnegoEnable(String authType){
 		String principal = PropertiesUtil.getProperty(PRINCIPAL);
 		String keytabPath = PropertiesUtil.getProperty(KEYTAB);
