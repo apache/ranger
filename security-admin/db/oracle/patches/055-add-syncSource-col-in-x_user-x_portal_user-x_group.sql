@@ -21,13 +21,13 @@ BEGIN
                 execute immediate 'ALTER TABLE x_portal_user ADD sync_source VARCHAR(4000) DEFAULT NULL NULL';
         end if;
 
-        v_count number:=0;
+        v_count:=0;
         select count(*) into v_count from user_tab_cols where table_name='x_user' and column_name='sync_source';
         if (v_count = 0) then
                 execute immediate 'ALTER TABLE x_user ADD sync_source VARCHAR(4000) DEFAULT NULL NULL';
         end if;
 
-        v_count number:=0;
+        v_count:=0;
         select count(*) into v_count from user_tab_cols where table_name='X_GROUP' and column_name='sync_source';
         if (v_count = 0) then
                 execute immediate 'ALTER TABLE X_GROUP ADD sync_source VARCHAR(4000) DEFAULT NULL NULL';
