@@ -837,6 +837,62 @@
                     </execution>
                 </executions>
             </plugin>
+
+            <!-- duplicate SQL prefix validator plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.4.1</version>
+                <executions>
+                    <execution>
+                        <id>duplicate-sql-file-prefix-validator</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <evaluateBeanshell>
+                                    <message>Looks like there are multiple SQL files with same version number prefix. Update prefix and build again.</message>
+                                    <condition>
+                                        List sqlFilePaths = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/db"), "**/*.sql", null, false);
+                                        Map sqlFileMap    = new HashMap();
+                                        Boolean noDupPrfx = true;
+
+                                        for (Iterator it = sqlFilePaths.iterator(); it.hasNext();) {
+                                            String currentSqlFilePath = it.next();
+
+                                            if (currentSqlFilePath.contains("patches")) {
+                                                String [] array      = currentSqlFilePath.split("/");
+                                                String db            = array[0];
+                                                String patch         = array[(array.length - 1)];
+                                                Boolean prfxWithNums = java.util.regex.Pattern.matches("^[0-9]{3}-([a-zA-Z]+[-_]*)+.sql$", patch);
+
+                                                if (prfxWithNums) {
+                                                    String sqlFile = sqlFileMap.get(db + "-" + patch.split("-")[0]);
+
+                                                    if (sqlFile == null) {
+                                                        sqlFileMap.put(db + "-" + patch.split("-")[0], currentSqlFilePath);
+                                                    } else {
+                                                        print("Multiple SQL files with combination: [DB=" + db + "] [VersionPrefix=" + patch.split("-")[0] + "] found, hence triggering build failure.");
+                                                        print("Review prefixs for following files.");
+                                                        print("1. " + sqlFile);
+                                                        print("2. " + currentSqlFilePath);
+                                                        noDupPrfx = false;
+                                                    };
+                                                };
+                                            };
+                                        };
+
+                                        noDupPrfx
+                                    </condition>
+                                </evaluateBeanshell>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
         <resources>
             <resource>
