@@ -24,12 +24,21 @@ define(function(require) {
     var App = require('App');
     var MAppState = require('models/VAppState');
     var XAGlobals = require('utils/XAGlobals');
+    var XAUtil    = require('utils/XAUtils');
+    var moment    = require('moment');
 
     return Backbone.Marionette.Controller.extend({
 
         initialize: function(options) {
-
             console.log("initialize a Controller Controller");
+            if (App.userProfile && App.userProfile.get('configProperties') && App.userProfile.get('configProperties').inactivityTimeout
+                && App.userProfile.get('configProperties').inactivityTimeout != -1) {
+                XAUtil.setIdealActivityTime()
+                $('#contentBody').on("click mousemove keyup mousedown scroll keypress", function(e){
+                    // do preload here
+                    XAUtil.setIdealActivityTime()
+                })
+            }
             var vTopNav = require('views/common/TopNav');
             var vProfileBar = require('views/common/ProfileBar');
             var vFooter = require('views/common/Footer');

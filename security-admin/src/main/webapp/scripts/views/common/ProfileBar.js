@@ -95,7 +95,11 @@ define(function(require){
 					"cache-control" : "no-cache"
 				},
 				success : function(resp) {
-					that.onLogout(resp);
+					if (localStorage.getItem('idleTimerLoggedOut') == "true" && resp == "true") {
+						window.location.replace('index.html?action=timeout');
+					} else {
+						that.onLogout(resp);
+					}
 				},
 				error : function(jqXHR, textStatus, err ) {
 					if( jqXHR.status == 419 ){
