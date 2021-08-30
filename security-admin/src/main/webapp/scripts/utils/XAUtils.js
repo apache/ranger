@@ -25,6 +25,7 @@ define(function(require) {
 	var XAUtils = {};
 	var notify = require('bootstrap-notify');
 	var bootbox = require('bootbox');
+    var moment = require('moment');
 
 	// ///////////////////////////////////////////////////////
 	// Enum utility methods
@@ -1908,6 +1909,101 @@ define(function(require) {
             self.rTableList.$el.find('.'+columnName).css('min-width', +localStorage.getItem(columnName+'ColWidth'));
         }
     }
+
+    XAUtils.setIdealActivityTime = function() {
+        var App = require('App');
+        var INACTIVITY_TIME_OUT = 900;
+        if (App.userProfile && App.userProfile.get('configProperties') && App.userProfile.get('configProperties').inactivityTimeout) {
+            INACTIVITY_TIME_OUT = parseInt(App.userProfile.get('configProperties').inactivityTimeout);
+        }
+        INACTIVITY_TIME_OUT *= 1000;
+        localStorage.setItem('idealTimeOut', moment().add(INACTIVITY_TIME_OUT, 'milliseconds').valueOf());
+        localStorage.setItem('idleTimerLoggedOut', false);
+        XAUtils.setIdealActivityTime = function () {
+            localStorage.setItem('idealTimeOut', moment().add(INACTIVITY_TIME_OUT, 'milliseconds').valueOf());
+            var isLoggedOut = localStorage.getItem('idleTimerLoggedOut') == "true";
+            if (isLoggedOut) {
+                localStorage.setItem('idleTimerLoggedOut', false);
+            }
+            XAUtils.startIdealActivityInterval()
+        }
+    };
+
+    XAUtils.startIdealActivityInterval = function () {
+        clearInterval(XAUtils.activityIntervalID)
+        XAUtils.activityIntervalID = setInterval(function() {
+            var idealTimeVal = parseInt(localStorage.getItem('idealTimeOut'));
+            if(moment().isAfter(moment(idealTimeVal))) {
+                clearInterval(XAUtils.activityIntervalID)
+                var isLoggedOut = localStorage.getItem('idleTimerLoggedOut') == "true";
+                if(isLoggedOut) {
+                    localStorage.setItem('idleTimerLoggedOut', 'false');
+                    XAUtils.idealActivityLogout();
+                } else {
+                    XAUtils.idelTimePopup();
+                }
+            }
+        }, 2000);
+    };
+
+    XAUtils.idelTimePopup = function() {
+        var timeLeft = 15;
+        var $elem = '<div id="Timer"></div>';
+
+        function countdown() {
+            if (timeLeft == 0) {
+                clearTimeout(timerId);
+                localStorage.setItem('idleTimerLoggedOut', 'false');
+                XAUtils.idealActivityLogout();
+            } else {
+                var isLoggedOut = localStorage.getItem('idleTimerLoggedOut') == "true";
+                if(isLoggedOut) {
+                    clearTimeout(timerId);
+                    localStorage.setItem('idleTimerLoggedOut', 'false');
+                    XAUtils.idealActivityLogout();
+                } else {
+                    $.find('#Timer')[0].innerHTML ='Time left : '+ timeLeft + ' seconds remaining';
+                    timeLeft--;
+                }
+            }
+        }
+        bootbox.dialog({
+            title: 'Session Expiration Warning',
+            message: '<span class="inline-block">' + localization.tt('dialogMsg.idelTimeOutMsg') +'<br>'+ $elem + '</span>',
+            closeButton: false,
+            buttons: {
+                noclose: {
+                    "label" : localization.tt('btn.stayLoggdedIn'),
+                    "className" : "btn-success btn-sm",
+                    "callback" : function() {
+                        clearTimeout(timerId);
+                        XAUtils.setIdealActivityTime()
+                    }
+                },
+                cancel: {
+                    "label" : localization.tt('btn.logOutNow'),
+                    "className" : "btn-danger btn-sm",
+                    "callback" : function() {
+                        localStorage.setItem('idleTimerLoggedOut', 'false');
+                        XAUtils.idealActivityLogout();
+                    }
+                }
+            }
+        });
+
+        var timerId = setInterval(countdown, 1000);
+
+        return false;
+    };
+
+    XAUtils.idealActivityLogout = function () {
+        var App = require('App');
+        // localStorage.setItem('idleTimerLoggedOut', true);
+        if(localStorage.getItem('idleTimerLoggedOut') == "false") {
+        	localStorage.setItem('idleTimerLoggedOut', true);
+        	App.rTopProfileBar.currentView.checkKnoxSSO();
+        }
+    };
 
 	return XAUtils;
 });
