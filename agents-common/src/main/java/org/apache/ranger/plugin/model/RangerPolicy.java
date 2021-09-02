@@ -1694,7 +1694,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		}
 
 		public StringBuilder toString(StringBuilder sb) {
-			sb.append("RangerPolicyItemDataMaskInfo={");
+			sb.append("RangerPolicyItemRowFilterInfo={");
 
 			sb.append("filterExpr={").append(filterExpr).append("} ");
 
