@@ -1042,6 +1042,18 @@
     <processor class="solr.LogUpdateProcessorFactory"/>
     <processor class="solr.DistributedUpdateProcessorFactory"/>
     <processor class="solr.RunUpdateProcessorFactory"/>
+    <processor class="solr.DefaultValueUpdateProcessorFactory">
+    	<str name="fieldName">_ttl_</str>
+    	<str name="value">+90DAYS</str>
+    </processor>
+    <processor class="solr.processor.DocExpirationUpdateProcessorFactory">
+    	<int name="autoDeletePeriodSeconds">86400</int>
+    	<str name="ttlFieldName">_ttl_</str>
+    	<str name="expirationFieldName">_expire_at_</str>
+    </processor>
+    <processor class="solr.FirstFieldValueUpdateProcessorFactory">
+    	<str name="fieldName">_expire_at_</str>
+    </processor>
   </updateRequestProcessorChain>
 
   <!-- Deduplication

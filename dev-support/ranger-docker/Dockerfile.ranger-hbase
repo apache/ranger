@@ -16,6 +16,9 @@
 
 FROM ranger-base:latest
 
+ARG HBASE_VERSION
+ARG RANGER_VERSION
+
 
 COPY ./dist/version                                      /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-hbase-plugin.tar.gz /home/ranger/dist/

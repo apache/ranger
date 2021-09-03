@@ -4,6 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-hbase
+      args:
+        - HBASE_VERSION=${HBASE_VERSION}
+        - RANGER_VERSION=${RANGER_VERSION}
     image: ranger-hbase
     container_name: ranger-hbase
     hostname: ranger-hbase.example.com
@@ -17,6 +20,9 @@ services:
       - "16020:16020"
     depends_on:
       - ranger-hadoop
+    environment:
+      - HBASE_VERSION
+      - RANGER_VERSION
 
 networks:
   ranger:

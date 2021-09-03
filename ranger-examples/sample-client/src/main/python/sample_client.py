@@ -16,131 +16,304 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
-import logging.config
+import time
 
-from os import path
-
-from apache_ranger.model.ranger_service     import RangerService
-from apache_ranger.model.ranger_role        import RangerRole, RoleMember
-from apache_ranger.client.ranger_client     import RangerClient
-from apache_ranger.model.ranger_policy      import RangerPolicy, RangerPolicyResource
-from apache_ranger.model.ranger_service_def import RangerServiceConfigDef, RangerAccessTypeDef, RangerResourceDef, RangerServiceDef
-
-LOG_CONFIG = path.dirname(__file__) + '/../resources/logging.conf'
-
-logging.config.fileConfig(LOG_CONFIG, disable_existing_loggers=False)
-
-log = logging.getLogger(__name__)
-
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description='Parameters required for connection to Ranger Admin!')
-
-    parser.add_argument('--url', default='http://localhost:6080')
-    parser.add_argument('--username')
-    parser.add_argument('--password')
-
-    args = parser.parse_args()
-
-    service_def_name = "sampleServiceDef"
-    service_name     = "sampleService"
-    policy_name      = "samplePolicy"
-    role_name        = "sampleRole"
-
-    ranger_client = RangerClient(args.url, args.username, args.password)
+from apache_ranger.model.ranger_service import *
+from apache_ranger.client.ranger_client import *
+from apache_ranger.model.ranger_policy  import *
 
 
-    # create a new service definition
-    config       = RangerServiceConfigDef(itemId=1, name='sampleConfig', type='string')
-    access_type  = RangerAccessTypeDef(itemId=1, name='sampleAccess')
-    resource_def = RangerResourceDef(itemId=1, name='root', type='string')
-    service_def  = RangerServiceDef(name=service_def_name, configs=[config], accessTypes=[access_type],
-                                    resources=[resource_def])
+## create a client to connect to Apache Ranger admin server
+ranger_url  = 'http://localhost:6080'
+ranger_auth = ('admin', 'rangerR0cks!')
 
-    created_service_def = ranger_client.create_service_def(service_def)
-
-    log.info('New Service Definition created successfully {}'.format(created_service_def))
-
-
-    # create a new service
-    service = RangerService(name=service_name, type=service_def_name)
-
-    created_service = ranger_client.create_service(service)
-
-    log.info('New Service created successfully {}'.format(created_service))
+# For Kerberos authentication
+#
+# from requests_kerberos import HTTPKerberosAuth
+#
+# ranger_auth = HTTPKerberosAuth()
 
 
-    # create a new policy
-    resource = RangerPolicyResource(['/path/to/sample/resource'], False, False)
-    policy   = RangerPolicy(service=service_name, name=policy_name, resources={'root': resource})
+print('Using Ranger at ' + ranger_url);
 
-    created_policy = ranger_client.create_policy(policy)
+ranger = RangerClient(ranger_url, ranger_auth)
 
-    log.info('New Ranger Policy created successfully {}'.format(created_policy))
-
-
-    # update an existing policy
-    policy = RangerPolicy(service=service_name, name=policy_name, description='Policy Updated!')
-
-    updated_policy = ranger_client.update_policy(service_name, policy_name, policy)
-
-    log.info('Ranger Policy updated successfully {}'.format(updated_policy))
+# to disable SSL certificate validation (not recommended for production use!)
+#
+# ranger.session.verify = False
 
 
-    # get a policy by name
-    fetched_policy = ranger_client.get_policy(service_name, policy_name)
+print('Listing service-defs..')
+service_defs = ranger.find_service_defs()
 
-    log.info('Policy {} fetched {}'.format(policy_name, fetched_policy))
-
-
-    # get all policies
-    all_policies = ranger_client.find_policies({})
-
-    for id, policy in enumerate(all_policies):
-        log.info('Policy #{}: {}'.format(id, RangerPolicy(**policy)))
+print('    ' + str(len(service_defs)) + ' service-defs found')
+for service_def in service_defs:
+    print('        ' + 'id: ' + str(service_def.id) + ', name: ' + service_def.name)
 
 
-    # delete a policy by name
-    ranger_client.delete_policy(service_name, policy_name)
+service_name = 'dev_hive-' + str(int(time.time() * 1000))
 
-    log.info('Policy {} successfully deleted'.format(policy_name))
+print('Creating service: name=' + service_name)
 
+service         = RangerService({'name': service_name, 'type': 'hive'})
+service.configs = {'username':'hive', 'password':'hive', 'jdbc.driverClassName': 'org.apache.hive.jdbc.HiveDriver', 'jdbc.url': 'jdbc:hive2://ranger-hadoop:10000', 'hadoop.security.authorization': 'true'}
 
-    # create a role in ranger
-    sample_role = RangerRole(name=role_name, description='Sample Role', users=[RoleMember(isAdmin=True)])
+created_service = ranger.create_service(service)
 
-    created_role = ranger_client.create_role(service_name, sample_role)
+print('    created service: id: ' + str(created_service.id) + ', name: ' + created_service.name)
 
-    log.info('New Role successfully created {}'.format(created_role))
-
-
-    # update a role in ranger
-    sample_role = RangerRole(name=role_name, description='Updated Sample Role!')
-
-    updated_role = ranger_client.update_role(created_role.id, sample_role)
-
-    log.info('Role {} successfully updated {}'.format(role_name, updated_role))
+service_id = created_service.id
 
 
-    # get all roles in ranger
-    all_roles = ranger_client.find_roles({})
+print('Retrieving service: id=' + str(service_id))
 
-    log.info('List of Roles {}'.format(all_roles)) if all_roles is not None else log.info('No roles found!')
+retrieved_service = ranger.get_service_by_id(service_id)
 
-
-    # delete a role in ranger
-    ranger_client.delete_role(role_name, ranger_client.username, service_name)
-
-    log.info('Role {} successfully deleted'.format(role_name))
+print('    retrieved service: id: ' + str(retrieved_service.id) + ', name: ' + retrieved_service.name)
 
 
-    # delete a service
-    ranger_client.delete_service(service_name)
+print('Retrieving service: name=' + service_name)
 
-    log.info('Service {} successfully deleted'.format(service_name))
+retrieved_service = ranger.get_service(service_name)
+
+print('    retrieved service: id: ' + str(retrieved_service.id) + ', name: ' + retrieved_service.name)
 
 
-    # delete a service definition
-    ranger_client.delete_service_def(service_def_name)
+print('Updating service: id=' + str(service_id))
 
-    log.info('Service Definition {} successfully deleted'.format(service_def_name))
+saved_value                 = created_service.displayName
+created_service.displayName = service_name + '-UPDATE1'
+
+updated_service1 = ranger.update_service_by_id(service_id, created_service)
+
+print('    updated service: id: ' + str(updated_service1.id) + ', displayName: ' + saved_value + ', updatedDisplayName: ' + updated_service1.displayName)
+
+
+print('Updating service: name=' + service_name)
+
+saved_value                  = updated_service1.displayName
+updated_service1.displayName = service_name + '-UPDATE2'
+
+updated_service2 = ranger.update_service(service_name, updated_service1)
+
+print('    updated service: id: ' + str(updated_service2.id) + ', displayName: ' + saved_value + ', updatedDisplayName: ' + updated_service2.displayName)
+
+
+print('Listing services..')
+services = ranger.find_services()
+
+print('    ' + str(len(services)) + ' services found')
+for svc in services:
+    print('        ' + 'id: ' + str(svc.id) + ', type: ' + svc.type + ', name: ' + svc.name)
+
+
+print('Deleting service id=' + str(service_id))
+
+ranger.delete_service_by_id(service_id)
+
+print('    deleted service: id: ' + str(service_id) + ', name: ' + updated_service2.name)
+
+
+print('Deleting service: name=' + service.name)
+
+service_to_delete = ranger.create_service(service)
+
+print('    created service: id: ' + str(service_to_delete.id) + ', name: ' + service_to_delete.name)
+
+ranger.delete_service(service_to_delete.name)
+
+print('    deleted service: id: ' + str(service_to_delete.id) + ', name: ' + service_to_delete.name)
+
+
+print('Listing services..')
+services = ranger.find_services()
+
+print('    ' + str(len(services)) + ' services found')
+for svc in services:
+    print('        ' + 'id: ' + str(svc.id) + ', type: ' + svc.type + ', name: ' + svc.name)
+
+
+policy_name = 'test policy'
+
+print('Creating policy: name=' + policy_name)
+
+created_service = ranger.create_service(service)
+
+print('    created service: id: ' + str(created_service.id) + ', name: ' + created_service.name)
+
+service_id   = created_service.id
+service_name = created_service.name
+
+policy             = RangerPolicy()
+policy.service     = service_name
+policy.name        = policy_name
+policy.description = 'test description'
+policy.resources   = { 'database': RangerPolicyResource({ 'values': ['test_db'] }),
+                       'table':    RangerPolicyResource({ 'values': ['test_tbl'] }),
+					   'column':   RangerPolicyResource({ 'values': ['*'] }) }
+
+allowItem1          = RangerPolicyItem()
+allowItem1.users    = [ 'admin' ]
+allowItem1.accesses = [ RangerPolicyItemAccess({ 'type': 'create' }),
+                        RangerPolicyItemAccess({ 'type': 'alter' }),
+                        RangerPolicyItemAccess({ 'type': 'select' }) ]
+
+denyItem1          = RangerPolicyItem()
+denyItem1.users    = [ 'admin' ]
+denyItem1.accesses = [ RangerPolicyItemAccess({ 'type': 'drop' }) ]
+
+policy.policyItems     = [ allowItem1 ]
+policy.denyPolicyItems = [ denyItem1 ]
+
+created_policy = ranger.create_policy(policy)
+
+print('    created policy: id: ' + str(created_policy.id) + ', name: ' + created_policy.name)
+
+policy_id = created_policy.id
+
+
+data_mask_policy_name = 'test masking policy'
+
+print('Creating data-masking policy: name=' + data_mask_policy_name)
+
+data_mask_policy             = RangerPolicy()
+data_mask_policy.service     = service_name
+data_mask_policy.policyType  = RangerPolicy.POLICY_TYPE_DATAMASK
+data_mask_policy.name        = data_mask_policy_name
+data_mask_policy.description = 'test description'
+data_mask_policy.resources   = { 'database': RangerPolicyResource({ 'values': ['test_db'] }),
+                                 'table':    RangerPolicyResource({ 'values': ['test_tbl'] }),
+					             'column':   RangerPolicyResource({ 'values': ['test_col'] }) }
+
+policyItem1              = RangerDataMaskPolicyItem()
+policyItem1.users        = [ 'admin' ]
+policyItem1.accesses     = [ RangerPolicyItemAccess({ 'type': 'select' }) ]
+policyItem1.dataMaskInfo = RangerPolicyItemDataMaskInfo({ 'dataMaskType': 'MASK_SHOW_LAST_4' })
+
+data_mask_policy.dataMaskPolicyItems = [ policyItem1 ]
+
+created_data_mask_policy = ranger.create_policy(data_mask_policy)
+
+print('    created data-masking policy: id: ' + str(created_data_mask_policy.id) + ', name: ' + created_data_mask_policy.name)
+
+
+row_filter_policy_name = 'test row filter policy'
+
+print('Creating row-filtering policy: name=' + row_filter_policy_name)
+
+row_filter_policy             = RangerPolicy()
+row_filter_policy.service     = service_name
+row_filter_policy.policyType  = RangerPolicy.POLICY_TYPE_ROWFILTER
+row_filter_policy.name        = row_filter_policy_name
+row_filter_policy.description = 'test description'
+row_filter_policy.resources   = { 'database': RangerPolicyResource({ 'values': ['test_db'] }),
+                                  'table':    RangerPolicyResource({ 'values': ['test_tbl'] }) }
+
+policyItem1               = RangerRowFilterPolicyItem()
+policyItem1.users         = [ 'admin' ]
+policyItem1.accesses      = [ RangerPolicyItemAccess({ 'type': 'select' }) ]
+policyItem1.rowFilterInfo = RangerPolicyItemRowFilterInfo({ 'filterExpr': 'country_code = "US"' })
+
+row_filter_policy.rowFilterPolicyItems = [ policyItem1 ]
+
+create_row_filter_policy = ranger.create_policy(row_filter_policy)
+
+print('    created row-filtering policy: id: ' + str(create_row_filter_policy.id) + ', name: ' + create_row_filter_policy.name)
+
+
+print('Retrieving policy: id=' + str(policy_id))
+
+retrieved_policy = ranger.get_policy_by_id(policy_id)
+
+print('    retrieved policy: id: ' + str(retrieved_policy.id) + ', name: ' + retrieved_policy.name)
+
+
+print('Retrieving policy: service_name=' + service_name + ', policy_name=' + data_mask_policy.name)
+
+retrieved_policy = ranger.get_policy(service_name, data_mask_policy.name)
+
+print('    retrieved policy: id: ' + str(retrieved_policy.id) + ', name: ' + retrieved_policy.name)
+
+
+print('Retrieving policy: service_name=' + service_name + ', policy_name=' + row_filter_policy.name)
+
+retrieved_policy = ranger.get_policy(service_name, row_filter_policy.name)
+
+print('    retrieved policy: id: ' + str(retrieved_policy.id) + ', name: ' + retrieved_policy.name)
+
+
+print('Retrieving policies in service ' + created_policy.service + '..')
+
+policies = ranger.get_policies_in_service(created_policy.service)
+
+print('    ' + str(len(policies)) + ' policies found')
+for plcy in policies:
+    print('        id: ' + str(plcy.id) + ', service: ' + plcy.service + ', name: ' + plcy.name)
+
+
+print('Updating policy: id=' + str(policy_id))
+
+saved_value                = created_policy.description
+created_policy.description = 'updated description - #1'
+
+updated_policy1 = ranger.update_policy_by_id(policy_id, created_policy)
+
+print('    updated policy: id: ' + str(updated_policy1.id) + ', description: ' + saved_value + ', updatedDescription: ' + updated_policy1.description)
+
+
+print('Updating policy: service_name=' + service_name + ', policy_name=' + policy_name)
+
+saved_value                 = updated_policy1.description
+updated_policy1.description = 'updated description - #2'
+
+updated_policy2 = ranger.update_policy(service_name, policy_name, updated_policy1)
+
+print('    updated policy: id: ' + str(updated_policy2.id) + ', description: ' + saved_value + ', updatedDescription: ' + updated_policy2.description)
+
+
+print('Deleting policy: id=' + str(policy_id))
+
+ranger.delete_policy_by_id(policy_id)
+
+print('    deleted policy: id: ' + str(policy_id) + ', name: ' + updated_policy2.name)
+
+
+print('Deleting policy: service_name=' + data_mask_policy.service + ', policy_name=' + data_mask_policy.name)
+
+ranger.delete_policy(data_mask_policy.service, data_mask_policy.name)
+
+print('    deleted policy: id: ' + str(data_mask_policy.id) + ', name: ' + data_mask_policy.name)
+
+
+print('Deleting policy: service_name=' + row_filter_policy.service + ', policy_name=' + row_filter_policy.name)
+
+ranger.delete_policy(row_filter_policy.service, row_filter_policy.name)
+
+print('    deleted policy: id: ' + str(row_filter_policy.id) + ', name: ' + row_filter_policy.name)
+
+ranger.delete_service_by_id(service_id)
+
+
+print('Listing policies..')
+policies = ranger.find_policies()
+
+print('    ' + str(len(policies)) + ' policies found')
+for policy in policies:
+    print('        id: ' + str(policy.id) + ', service: ' + policy.service + ', name: ' + policy.name)
+
+
+print('Listing security zones..')
+security_zones = ranger.find_security_zones()
+
+print('    ' + str(len(security_zones)) + ' security zones found')
+for security_zone in security_zones:
+    print('        id: ' + str(security_zone.id) + ', name: ' + security_zone.name)
+
+
+print('Listing roles..')
+roles = ranger.find_roles()
+
+print('    ' + str(len(roles)) + ' roles zones found')
+for role in roles:
+    print('        id: ' + str(role.id) + ', name: ' + role.name)
+

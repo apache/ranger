@@ -31,13 +31,12 @@ RUN mkdir -p /home/ranger/git && \
 
 COPY ./scripts/ranger-build.sh /home/ranger/scripts/
 
-VOLUME /home/ranger/dist
 VOLUME /home/ranger/.m2
+VOLUME /home/ranger/scripts
+VOLUME /home/ranger/patches
+VOLUME /home/ranger/dist
+VOLUME /home/ranger/src
 
 USER ranger
-
-WORKDIR /home/ranger/git
-
-RUN git clone https://github.com/apache/ranger.git
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-build.sh" ]

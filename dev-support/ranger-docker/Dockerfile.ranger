@@ -16,6 +16,7 @@
 
 FROM ranger-base:latest
 
+ARG RANGER_VERSION
 
 COPY ./dist/version                              ${RANGER_DIST}/
 COPY ./scripts/ranger.sh                         ${RANGER_SCRIPTS}/
