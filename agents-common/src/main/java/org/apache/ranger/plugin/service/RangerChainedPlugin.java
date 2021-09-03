@@ -23,6 +23,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 
 import java.util.Collection;
 
@@ -58,5 +59,11 @@ public abstract class RangerChainedPlugin {
     public abstract RangerAccessResult isAccessAllowed(RangerAccessRequest request);
 
     public abstract Collection<RangerAccessResult> isAccessAllowed(Collection<RangerAccessRequest> requests);
+
+    public abstract RangerResourceACLs getResourceACLs(RangerAccessRequest request);
+
+    public abstract RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer policyType);
+
+    public boolean  isAuthorizeOnlyWithChainedPlugin() { return false; }
 
 }

@@ -243,8 +243,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 	@Override
 	public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
+		return getResourceACLs(request, null);
+	}
+
+	@Override
+	public RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer requestedPolicyType) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerPolicyEngineImpl.getResourceACLs(request=" + request + ")");
+			LOG.debug("==> RangerPolicyEngineImpl.getResourceACLs(request=" + request + ", policyType=" + requestedPolicyType + ")");
 		}
 
 		RangerResourceACLs ret  = new RangerResourceACLs();
@@ -269,7 +274,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				LOG.debug("zoneName:[" + zoneName + "]");
 			}
 
-			for (int policyType : RangerPolicy.POLICY_TYPES) {
+			int[] policyTypes = requestedPolicyType == null ? RangerPolicy.POLICY_TYPES : new int[] { requestedPolicyType };
+
+
+			for (int policyType : policyTypes) {
 				List<RangerPolicyEvaluator> allEvaluators           = new ArrayList<>();
 				Map<Long, MatchType>        tagMatchTypeMap         = new HashMap<>();
 				Set<Long>                   policyIdForTemporalTags = new HashSet<>();
@@ -331,7 +339,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		RangerPerfTracer.logAlways(perf);
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerPolicyEngineImpl.getResourceACLs(request=" + request + ") : ret=" + ret);
+			LOG.debug("<== RangerPolicyEngineImpl.getResourceACLs(request=" + request + ", policyType=" + requestedPolicyType + ") : ret=" + ret);
 		}
 
 		return ret;
@@ -773,7 +781,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				if (ret.getIsAuditedDetermined() && ret.getIsAccessDetermined()) {
 					break;            // Break out of policy-evaluation loop
 				}
-
 			}
 
 			if (!ret.getIsAccessDetermined()) {
@@ -1136,6 +1143,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
+	private boolean getIsFallbackSupported() {
+		return policyEngine.getPluginContext().getConfig().getIsFallbackSupported();
+	}
+
 	private void updateFromPolicyACLs(RangerPolicyEvaluator evaluator, Set<Long> policyIdForTemporalTags, RangerResourceACLs resourceACLs) {
 		PolicyACLSummary aclSummary = evaluator.getPolicyACLSummary();
 
@@ -1246,10 +1257,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				resourceACLs.getDataMasks().add(dataMaskResult);
 			}
 		}
-	}
-
-	private boolean getIsFallbackSupported() {
-		return policyEngine.getPluginContext().getConfig().getIsFallbackSupported();
 	}
 
 	private static class ServiceConfig {

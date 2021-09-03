@@ -86,6 +86,13 @@ public class TestPolicyACLs {
 		runTestsFromResourceFiles(tests);
 	}
 
+	@Test
+	public void testResourceACLs_hdfs() throws Exception {
+		String[] tests = {"/policyengine/test_aclprovider_hdfs.json"};
+
+		runTestsFromResourceFiles(tests);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
@@ -101,8 +108,9 @@ public class TestPolicyACLs {
 		assertTrue("invalid input: " + testName, testCases != null && testCases.testCases != null);
 
 		for(PolicyACLsTests.TestCase testCase : testCases.testCases) {
+			String                    serviceType         = testCase.servicePolicies.getServiceDef().getName();
 			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-			RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig("hive", null, "test-policy-acls", "cl1", "on-prem", policyEngineOptions));
+			RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig(serviceType, null, "test-policy-acls", "cl1", "on-prem", policyEngineOptions));
 			RangerPolicyEngine        policyEngine        = new RangerPolicyEngineImpl(testCase.servicePolicies, pluginContext, null);
 
 			for(PolicyACLsTests.TestCase.OneTest oneTest : testCase.tests) {
@@ -259,9 +267,7 @@ public class TestPolicyACLs {
 				} else if (!(MapUtils.isEmpty(acls.getRoleACLs()) && MapUtils.isEmpty(oneTest.rolePermissions))) {
 					roleACLsMatched = false;
 				}
-
-				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - userACLsMatched=" + userACLsMatched + "; groupACLsMatched=" + groupACLsMatched + "; roleACLsMatched=" + roleACLsMatched + "; rowFiltersMatched=" + rowFiltersMatched + "; dataMaskingMatched=" + dataMaskingMatched,
-						   userACLsMatched && groupACLsMatched && roleACLsMatched && rowFiltersMatched && dataMaskingMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name, userACLsMatched && groupACLsMatched && roleACLsMatched && rowFiltersMatched && dataMaskingMatched);
 			}
 		}
 	}

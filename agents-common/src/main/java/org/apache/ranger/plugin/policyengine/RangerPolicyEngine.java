@@ -70,6 +70,8 @@ public interface RangerPolicyEngine {
 
 	RangerResourceACLs getResourceACLs(RangerAccessRequest request);
 
+	RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer requestedPolicyType);
+
 	Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
 
 	RangerRoles getRangerRoles();

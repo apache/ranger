@@ -49,6 +49,7 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.*;
 
@@ -539,13 +540,43 @@ public class RangerBasePlugin {
 	}
 
 	public RangerResourceACLs getResourceACLs(RangerAccessRequest request) {
+		return getResourceACLs(request, null);
+	}
+
+	public RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer policyType) {
+		RangerResourceACLs ret          = null;
 		RangerPolicyEngine policyEngine = this.policyEngine;
 
 		if(policyEngine != null) {
-			return policyEngine.getResourceACLs(request);
+			ret = policyEngine.getResourceACLs(request, policyType);
 		}
 
-		return null;
+		for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
+			RangerResourceACLs chainedResourceACLs = chainedPlugin.getResourceACLs(request, policyType);
+
+			if (chainedResourceACLs != null) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Chained-plugin returned non-null ACLs!!");
+				}
+				if (chainedPlugin.isAuthorizeOnlyWithChainedPlugin()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Chained-plugin is configured to ignore Base-plugin's ACLs");
+					}
+					ret = chainedResourceACLs;
+					break;
+				} else {
+					if (ret != null) {
+						ret = getMergedResourceACLs(ret, chainedResourceACLs);
+					}
+				}
+			} else {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Chained-plugin returned null ACLs!!");
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	public Set<String> getRolesFromUserAndGroups(String user, Set<String> groups) {
@@ -1032,6 +1063,98 @@ public class RangerBasePlugin {
 		if (!result.getIsAuditedDetermined() && chainedResult.getIsAuditedDetermined()) {
 			result.setIsAudited(chainedResult.getIsAudited());
 			result.setAuditPolicyId(chainedResult.getAuditPolicyId());
+		}
+	}
+
+	private RangerResourceACLs getMergedResourceACLs(RangerResourceACLs baseACLs, RangerResourceACLs chainedACLs) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.getMergedResourceACLs()");
+			LOG.debug("baseACLs:[" + baseACLs + "]");
+			LOG.debug("chainedACLS:[" + chainedACLs + "]");
+		}
+
+		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.USER);
+		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.GROUP);
+		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.ROLE);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.getMergedResourceACLs() : ret:[" + baseACLs + "]");
+		}
+		return baseACLs;
+	}
+
+	private void overrideACLs(final RangerResourceACLs chainedResourceACLs, RangerResourceACLs baseResourceACLs, final RangerRolesUtil.ROLES_FOR userType) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.overrideACLs(isUser=" + userType.name() + ")");
+		}
+		Map<String, Map<String, RangerResourceACLs.AccessResult>> chainedACLs = null;
+		Map<String, Map<String, RangerResourceACLs.AccessResult>> baseACLs    = null;
+
+		switch (userType) {
+			case USER:
+				chainedACLs = chainedResourceACLs.getUserACLs();
+				baseACLs    = baseResourceACLs.getUserACLs();
+				break;
+			case GROUP:
+				chainedACLs = chainedResourceACLs.getGroupACLs();
+				baseACLs    = baseResourceACLs.getGroupACLs();
+				break;
+			case ROLE:
+				chainedACLs = chainedResourceACLs.getRoleACLs();
+				baseACLs    = baseResourceACLs.getRoleACLs();
+				break;
+			default:
+				break;
+		}
+
+		for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> chainedPermissionsMap : chainedACLs.entrySet()) {
+			String                                       name               = chainedPermissionsMap.getKey();
+			Map<String, RangerResourceACLs.AccessResult> chainedPermissions = chainedPermissionsMap.getValue();
+			Map<String, RangerResourceACLs.AccessResult> basePermissions    = baseACLs.get(name);
+
+			for (Map.Entry<String, RangerResourceACLs.AccessResult> chainedPermission : chainedPermissions.entrySet()) {
+				String chainedAccessType                            = chainedPermission.getKey();
+				RangerResourceACLs.AccessResult chainedAccessResult = chainedPermission.getValue();
+				RangerResourceACLs.AccessResult baseAccessResult    = basePermissions == null ? null : basePermissions.get(chainedAccessType);
+
+				final boolean useChainedAccessResult;
+
+				if (baseAccessResult == null) {
+					useChainedAccessResult = true;
+				} else {
+					if (chainedAccessResult.getPolicy().getPolicyPriority() > baseAccessResult.getPolicy().getPolicyPriority()) {
+						useChainedAccessResult = true;
+					} else if (chainedAccessResult.getPolicy().getPolicyPriority().equals(baseAccessResult.getPolicy().getPolicyPriority())) {
+						if (chainedAccessResult.getResult() == baseAccessResult.getResult()) {
+							useChainedAccessResult = true;
+						} else {
+							useChainedAccessResult = chainedAccessResult.getResult() == RangerPolicyEvaluator.ACCESS_DENIED;
+						}
+					} else { // chainedAccessResult.getPolicy().getPolicyPriority() < baseAccessResult.getPolicy().getPolicyPriority()
+						useChainedAccessResult = false;
+					}
+				}
+
+				final RangerResourceACLs.AccessResult finalAccessResult = useChainedAccessResult ? chainedAccessResult : baseAccessResult;
+
+				switch (userType) {
+					case USER:
+						baseResourceACLs.setUserAccessInfo(name, chainedAccessType, finalAccessResult.getResult(), finalAccessResult.getPolicy());
+						break;
+					case GROUP:
+						baseResourceACLs.setGroupAccessInfo(name, chainedAccessType, finalAccessResult.getResult(), finalAccessResult.getPolicy());
+						break;
+					case ROLE:
+						baseResourceACLs.setRoleAccessInfo(name, chainedAccessType, finalAccessResult.getResult(), finalAccessResult.getPolicy());
+						break;
+					default:
+						break;
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.mergeACLsOneWay(isUser=" + userType.name() + ")");
 		}
 	}
 

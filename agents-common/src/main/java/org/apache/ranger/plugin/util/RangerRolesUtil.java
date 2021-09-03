@@ -34,8 +34,12 @@ public class RangerRolesUtil {
     private final Map<String, Set<String>> userRoleMapping = new HashMap<>();
     private final Map<String, Set<String>> groupRoleMapping = new HashMap<>();
     private final Map<String, Set<String>> roleRoleMapping  = new HashMap<>();
+
+    private final Map<String, Set<String>> roleToUserMapping = new HashMap<>();
+    private final Map<String, Set<String>> roleToGroupMapping = new HashMap<>();
+
     private RangerRoles                    roles            = null;
-    private enum  ROLES_FOR {USER, GROUP, ROLE};
+    public  enum  ROLES_FOR {USER, GROUP, ROLE}
 
     public RangerRolesUtil(RangerRoles roles) {
         if (roles != null) {
@@ -49,7 +53,22 @@ public class RangerRolesUtil {
                     buildMap(userRoleMapping, role, containedRoles, ROLES_FOR.USER);
                     buildMap(groupRoleMapping, role, containedRoles, ROLES_FOR.GROUP);
                     buildMap(roleRoleMapping, role, containedRoles, ROLES_FOR.ROLE);
+
+                    Set<String> roleUsers  = new HashSet<>();
+                    Set<String> roleGroups = new HashSet<>();
+
+                    addMemberNames(role.getUsers(), roleUsers);
+                    addMemberNames(role.getGroups(), roleGroups);
+
+                    for (RangerRole containedRole : containedRoles) {
+                        addMemberNames(containedRole.getUsers(), roleUsers);
+                        addMemberNames(containedRole.getGroups(), roleGroups);
+                    }
+
+                    roleToUserMapping.put(role.getName(), roleUsers);
+                    roleToGroupMapping.put(role.getName(), roleGroups);
                 }
+
             }
         } else {
             roleVersion = -1L;
@@ -72,6 +91,14 @@ public class RangerRolesUtil {
 
     public Map<String, Set<String>> getRoleRoleMapping() {
         return this.roleRoleMapping;
+    }
+
+    public Map<String, Set<String>> getRoleToUserMapping() {
+        return this.roleToUserMapping;
+    }
+
+    public Map<String, Set<String>> getRoleToGroupMapping() {
+        return this.roleToGroupMapping;
     }
 
     private Set<RangerRole> getAllContainedRoles(Set<RangerRole> roles, RangerRole role) {
@@ -104,22 +131,6 @@ public class RangerRolesUtil {
         }
     }
 
-    private void buildMap(Map<String, Set<String>> map, RangerRole role, String roleName, boolean isUser) {
-        for (RangerRole.RoleMember userOrGroup : isUser ? role.getUsers() : role.getGroups()) {
-            if (StringUtils.isNotEmpty(userOrGroup.getName())) {
-                Set<String> roleNames = map.get(userOrGroup.getName());
-
-                if (roleNames == null) {
-                    roleNames = new HashSet<>();
-
-                    map.put(userOrGroup.getName(), roleNames);
-                }
-
-                roleNames.add(roleName);
-            }
-        }
-    }
-
     private void buildMap(Map<String, Set<String>> map, RangerRole role, String roleName, ROLES_FOR roles_for) {
         List<RangerRole.RoleMember> userOrGroupOrRole = null;
         switch(roles_for) {
@@ -141,23 +152,20 @@ public class RangerRolesUtil {
     private void getRoleMap(Map<String, Set<String>> map, String roleName, List<RangerRole.RoleMember> userOrGroupOrRole) {
         for (RangerRole.RoleMember roleMember : userOrGroupOrRole) {
             if (StringUtils.isNotEmpty(roleMember.getName())) {
-                Set<String> roleNames = map.get(roleMember.getName());
-                if (roleNames == null) {
-                    roleNames = new HashSet<>();
-
-                    map.put(roleMember.getName(), roleNames);
-                }
+                Set<String> roleNames = map.computeIfAbsent(roleMember.getName(), k -> new HashSet<>());
                 roleNames.add(roleName);
             }
         }
     }
 
     private RangerRole getContainedRole(Set<RangerRole> roles, String role) {
-        return (roles
-                .stream()
-                .filter(containedRole -> role.equals(containedRole.getName()))
-                .findAny()
-                .orElse(null));
+        return (roles.stream().filter(containedRole -> role.equals(containedRole.getName())).findAny().orElse(null));
+    }
+
+    private void addMemberNames(List<RangerRole.RoleMember> members, Set<String> names) {
+        for (RangerRole.RoleMember member : members) {
+            names.add(member.getName());
+        }
     }
 }
 
