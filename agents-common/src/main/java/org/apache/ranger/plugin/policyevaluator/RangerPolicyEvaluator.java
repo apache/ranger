@@ -55,8 +55,10 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS;
+import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS;
+import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER;
 
 public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	Comparator<RangerPolicyEvaluator> EVAL_ORDER_COMPARATOR = new RangerPolicyEvaluator.PolicyEvalOrderComparator();
@@ -140,9 +142,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 		return false;
 	}
 
-	default boolean hasRoles() {
-		RangerPolicy policy = getPolicy();
-
+        default boolean hasRoles(final RangerPolicy policy) {
 		for (RangerPolicyItem policyItem : policy.getPolicyItems()) {
 			if (hasRoles(policyItem)) {
 				return true;
@@ -297,7 +297,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 
 		void processPolicyItem(RangerPolicyItem policyItem, int policyItemType, boolean isConditional) {
 			final Integer result;
-			final boolean hasContextSensitiveSpecification = RangerPolicyEvaluator.hasContextSensitiveSpecification(policyItem);
+			final boolean hasContextSensitiveSpecification = CollectionUtils.isNotEmpty(policyItem.getConditions());
 
 			switch (policyItemType) {
 				case POLICY_ITEM_TYPE_ALLOW:

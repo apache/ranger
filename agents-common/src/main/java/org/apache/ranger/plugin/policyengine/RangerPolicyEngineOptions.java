@@ -36,6 +36,7 @@ public class RangerPolicyEngineOptions {
 	public boolean enableTagEnricherWithLocalRefresher = false;
 	public boolean disableAccessEvaluationWithPolicyACLSummary = true;
 	public boolean optimizeTrieForRetrieval = false;
+	public boolean disableRoleResolution = true;
 
 	private RangerServiceDefHelper serviceDefHelper;
 
@@ -53,6 +54,7 @@ public class RangerPolicyEngineOptions {
 		this.enableTagEnricherWithLocalRefresher = other.enableTagEnricherWithLocalRefresher;
 		this.disableAccessEvaluationWithPolicyACLSummary = other.disableAccessEvaluationWithPolicyACLSummary;
 		this.optimizeTrieForRetrieval = other.optimizeTrieForRetrieval;
+		this.disableRoleResolution = other.disableRoleResolution;
 		this.serviceDefHelper = null;
 	}
 
@@ -73,6 +75,7 @@ public class RangerPolicyEngineOptions {
 		enableTagEnricherWithLocalRefresher = false;
 		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
+		disableRoleResolution = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.role.resolution", true);
 
 	}
 
@@ -89,6 +92,7 @@ public class RangerPolicyEngineOptions {
 		enableTagEnricherWithLocalRefresher = false;
 		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
+		disableRoleResolution = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.role.resolution", true);
 
 	}
 
@@ -150,7 +154,8 @@ public class RangerPolicyEngineOptions {
 					&& this.cacheAuditResults == that.cacheAuditResults
 					&& this.evaluateDelegateAdminOnly == that.evaluateDelegateAdminOnly
 					&& this.enableTagEnricherWithLocalRefresher == that.enableTagEnricherWithLocalRefresher
-					&& this.optimizeTrieForRetrieval == that.optimizeTrieForRetrieval;
+					&& this.optimizeTrieForRetrieval == that.optimizeTrieForRetrieval
+					&& this.disableRoleResolution == that.disableRoleResolution;
 		}
 		return ret;
 	}
@@ -178,7 +183,8 @@ public class RangerPolicyEngineOptions {
 		ret *= 2;
 		ret += optimizeTrieForRetrieval ? 1 : 0;
 		ret *= 2;
-		return ret;
+		ret += disableRoleResolution ? 1 : 0;
+		ret *= 2;		return ret;
 	}
 
 	@Override
@@ -195,6 +201,7 @@ public class RangerPolicyEngineOptions {
 				", disableTrieLookupPrefilter: " + disableTrieLookupPrefilter +
 				", optimizeTrieForRetrieval: " + optimizeTrieForRetrieval +
 				", cacheAuditResult: " + cacheAuditResults +
+				", disableRoleResolution: " + disableRoleResolution +
 				" }";
 
 	}
