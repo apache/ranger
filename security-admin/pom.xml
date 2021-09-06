@@ -863,14 +863,14 @@
                 </executions>
             </plugin>
 
-            <!-- duplicate SQL prefix validator plugin -->
+            <!-- duplicate SQL patch file version validator plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-enforcer-plugin</artifactId>
                 <version>1.4.1</version>
                 <executions>
                     <execution>
-                        <id>duplicate-sql-file-prefix-validator</id>
+                        <id>duplicate-sql-patch-file-version-validator</id>
                         <goals>
                             <goal>enforce</goal>
                         </goals>
@@ -910,6 +910,56 @@
                                         };
 
                                         noDupPrfx
+                                    </condition>
+                                </evaluateBeanshell>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!-- duplicate JAVA patch file version validator plugin -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>1.4.1</version>
+                <executions>
+                    <execution>
+                        <id>duplicate-java-patch-file-version-validator</id>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <phase>validate</phase>
+                        <configuration>
+                            <rules>
+                                <evaluateBeanshell>
+                                    <message>Looks like there are multiple JAVA files with same version number suffix. Update suffix and build again.</message>
+                                    <condition>
+                                        List javaFilePaths  = org.codehaus.plexus.util.FileUtils.getFileNames(new File("security-admin/src/main/java/org/apache/ranger/patch"), "**/*.java", null, false);
+                                        Map javaFileMap     = new HashMap();
+                                        Boolean noDupSuffix = true;
+
+                                        for (Iterator it = javaFilePaths.iterator(); it.hasNext();) {
+                                            String currentJavaFilePath = it.next();
+
+                                            if (currentJavaFilePath.startsWith("Patch")) {
+                                                String versionSuffix = currentJavaFilePath.split("_J")[1];
+                                                String javaFile      = javaFileMap.get(versionSuffix);
+
+                                                if (javaFile == null) {
+                                                    javaFileMap.put(versionSuffix, currentJavaFilePath);
+                                                } else {
+                                                    print("Multiple JAVA files with suffix: " + versionSuffix + " found, hence triggering build failure.");
+                                                    print("Review suffixes for following files.");
+                                                    print("1. " + javaFile);
+                                                    print("2. " + currentJavaFilePath);
+                                                    noDupSuffix = false;
+                                                };
+                                            };
+                                        };
+
+                                        noDupSuffix
                                     </condition>
                                 </evaluateBeanshell>
                             </rules>
