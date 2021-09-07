@@ -30,6 +30,8 @@ import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
@@ -1230,9 +1232,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			boolean isConditional = policyIdForTemporalTags.contains(evaluator.getId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
 
 			for (RowFilterResult rowFilterResult : aclSummary.getRowFilters()) {
-				if (isConditional && !rowFilterResult.getIsConditional()) {
-					rowFilterResult = new RowFilterResult(rowFilterResult);
+				rowFilterResult = copyRowFilter(rowFilterResult);
 
+				if (isConditional) {
 					rowFilterResult.setIsConditional(true);
 				}
 
@@ -1248,15 +1250,43 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			boolean isConditional = policyIdForTemporalTags.contains(evaluator.getId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
 
 			for (DataMaskResult dataMaskResult : aclSummary.getDataMasks()) {
-				if (isConditional && !dataMaskResult.getIsConditional()) {
-					dataMaskResult = new DataMaskResult(dataMaskResult);
+				dataMaskResult = copyDataMask(dataMaskResult);
 
+				if (isConditional) {
 					dataMaskResult.setIsConditional(true);
 				}
 
 				resourceACLs.getDataMasks().add(dataMaskResult);
 			}
 		}
+	}
+
+	private DataMaskResult copyDataMask(DataMaskResult dataMask) {
+		DataMaskResult ret = new DataMaskResult(copyStrings(dataMask.getUsers()),
+												copyStrings(dataMask.getGroups()),
+												copyStrings(dataMask.getRoles()),
+												copyStrings(dataMask.getAccessTypes()),
+												new RangerPolicyItemDataMaskInfo(dataMask.getMaskInfo()));
+
+		ret.setIsConditional(dataMask.getIsConditional());
+
+		return ret;
+	}
+
+	private RowFilterResult copyRowFilter(RowFilterResult rowFilter) {
+		RowFilterResult ret = new RowFilterResult(copyStrings(rowFilter.getUsers()),
+												  copyStrings(rowFilter.getGroups()),
+												  copyStrings(rowFilter.getRoles()),
+												  copyStrings(rowFilter.getAccessTypes()),
+												  new RangerPolicyItemRowFilterInfo(rowFilter.getFilterInfo()));
+
+		ret.setIsConditional(rowFilter.getIsConditional());
+
+		return ret;
+	}
+
+	private Set<String> copyStrings(Set<String> values) {
+		return values != null ? new HashSet<>(values) : null;
 	}
 
 	private static class ServiceConfig {
