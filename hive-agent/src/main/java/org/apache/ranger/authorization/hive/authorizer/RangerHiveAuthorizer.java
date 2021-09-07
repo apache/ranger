@@ -995,8 +995,9 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 			}
 
-			if (CollectionUtils.isEmpty(requests)) {
-				throw new HiveAccessControlException(String.format("Unable to authorize...HivePrivilegeObjects are not available to authorize this command!"));
+			if (CollectionUtils.isEmpty(requests) && !IsCommandInExceptionList(hiveOpType)) {
+				String commandString = context == null ? "" : context.getCommandString();
+				throw new HiveAccessControlException(String.format("Unable to authorize command: [%s] , HivePrivilegeObjects are not available to authorize this command!", commandString));
 			}
 
 			buildRequestContextWithAllAccessedResources(requests);
@@ -2465,6 +2466,41 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		default:
 			throw new AssertionError("Unexpected object type " + objectType);
 		}
+	}
+
+	private boolean IsCommandInExceptionList(HiveOperationType hiveOpType) {
+		boolean ret = false;
+		switch (hiveOpType) {
+			case CREATEMACRO:
+			case CREATEROLE:
+			case DESCFUNCTION:
+			case DELETE:
+			case DFS:
+			case DROPMACRO:
+			case DROPROLE:
+			case EXPLAIN:
+			case GRANT_ROLE:
+			case REVOKE_ROLE:
+			case RESET:
+			case SET:
+			case SHOWDATABASES:
+			case SHOWCONF:
+			case SHOWFUNCTIONS:
+			case SHOWLOCKS:
+			case SHOW_COMPACTIONS:
+			case SHOW_GRANT:
+			case SHOW_ROLES:
+			case SHOW_ROLE_GRANT:
+			case SHOW_ROLE_PRINCIPALS:
+			case SHOW_TRANSACTIONS:
+			case REPLDUMP:
+			case REPLLOAD:
+			case REPLSTATUS:
+			case ADD:
+				ret = true;
+				break;
+		}
+		return ret;
 	}
 
 	private RangerRequestedResources buildRequestContextWithAllAccessedResources(List<RangerHiveAccessRequest> requests) {
