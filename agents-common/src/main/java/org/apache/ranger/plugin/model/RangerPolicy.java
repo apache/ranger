@@ -1552,6 +1552,12 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			setValueExpr(valueExpr);
 		}
 
+		public RangerPolicyItemDataMaskInfo(RangerPolicyItemDataMaskInfo that) {
+			this.dataMaskType  = that.dataMaskType;
+			this.conditionExpr = that.conditionExpr;
+			this.valueExpr     = that.valueExpr;
+		}
+
 		public String getDataMaskType() {
 			return dataMaskType;
 		}
@@ -1649,6 +1655,10 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
 		public RangerPolicyItemRowFilterInfo(String filterExpr) {
 			setFilterExpr(filterExpr);
+		}
+
+		public RangerPolicyItemRowFilterInfo(RangerPolicyItemRowFilterInfo that) {
+			this.filterExpr = that.filterExpr;
 		}
 
 		public String getFilterExpr() {
