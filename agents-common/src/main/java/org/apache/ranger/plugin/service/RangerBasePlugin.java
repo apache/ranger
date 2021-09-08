@@ -147,6 +147,8 @@ public class RangerBasePlugin {
 
 	public RangerAuthContext getCurrentRangerAuthContext() { return currentAuthContext; }
 
+	public List<RangerChainedPlugin> getChainedPlugins() { return chainedPlugins; }
+
 	// For backward compatibility
 	public RangerAuthContext createRangerAuthContext() { return currentAuthContext; }
 
