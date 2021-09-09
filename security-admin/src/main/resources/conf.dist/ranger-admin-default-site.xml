@@ -531,6 +531,10 @@
 		<value>GET,OPTIONS,HEAD,TRACE</value>
 	</property>
 	<property>
+		<name>ranger.rest-csrf.token.length</name>
+		<value>20</value>
+	</property>
+	<property>
 		<name>ranger.rest-csrf.browser-useragents-regex</name>
 		<value>Mozilla,Opera,Chrome</value>
 	</property>

@@ -28,6 +28,7 @@ define(function(require) {
 	require('jquery');
 	var restCsrfCustomHeader = null;
 	var restCsrfMethodsToIgnore = null;
+  var restCsrfToken = null;
 
 	if(!window.location.origin){
 		window.location.origin = window.location.protocol + "//" + window.location.hostname + (window.location.port ? ':' + window.location.port: '');
@@ -61,6 +62,7 @@ define(function(require) {
       var $xml = $(data);
       var csrfEnabled = false;
       var header = null;
+      var headerToken = null;
       var methods = [];
       $xml.each(function(indx,element){
     	  if(element['ranger.rest-csrf.enabled']) {
@@ -73,6 +75,9 @@ define(function(require) {
     	  if (element['ranger.rest-csrf.methods-to-ignore']) {
     		  methods = getTrimmedStringArrayValue(element['ranger.rest-csrf.methods-to-ignore']);
     	  }
+        if (element['_csrfToken']) {
+          headerToken = element['_csrfToken'];
+        }
       });
 
       // If enabled, set up all subsequent AJAX calls with a pre-send callback
@@ -80,6 +85,7 @@ define(function(require) {
       if (csrfEnabled) {
         restCsrfCustomHeader = header;
         restCsrfMethodsToIgnore = {};
+        restCsrfToken = headerToken;
         methods.map(function(method) { restCsrfMethodsToIgnore[method] = true; });
         $.ajaxSetup({
           beforeSend: addRestCsrfCustomHeader
@@ -97,7 +103,11 @@ define(function(require) {
     var method = settings.type;
     if (restCsrfCustomHeader != null && !restCsrfMethodsToIgnore[method]) {
       // The value of the header is unimportant.  Only its presence matters.
-      xhr.setRequestHeader(restCsrfCustomHeader, '""');
+      if (restCsrfToken != null) {
+        xhr.setRequestHeader(restCsrfCustomHeader, restCsrfToken);
+      } else {
+        xhr.setRequestHeader(restCsrfCustomHeader, '""');
+      }
     }
   }
 });

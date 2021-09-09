@@ -19,11 +19,13 @@
 package org.apache.ranger.security.web.filter;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.junit.Test;
 import org.mockito.Mockito;
@@ -32,7 +34,7 @@ import static org.mockito.Mockito.atLeastOnce;
 
 public class TestRangerCSRFPreventionFilter {
 	
-	private static final String EXPECTED_MESSAGE = "Missing Required Header for CSRF Vulnerability Protection";
+	private static final String EXPECTED_MESSAGE = "Missing header or invalid Header value for CSRF Vulnerability Protection";
 	private static final String X_CUSTOM_HEADER = "X-CUSTOM_HEADER";
 	private String userAgent = "Mozilla";
 	
@@ -42,6 +44,12 @@ public class TestRangerCSRFPreventionFilter {
 		HttpServletRequest mockReq = Mockito.mock(HttpServletRequest.class);
 		Mockito.when(mockReq.getHeader(RangerCSRFPreventionFilter.HEADER_DEFAULT)).thenReturn(null);
 		Mockito.when(mockReq.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)).thenReturn(userAgent);		
+
+		Mockito.when(mockReq.getMethod()).thenReturn("POST");
+
+		HttpSession session = Mockito.mock(HttpSession.class);
+		Mockito.when(session.getAttribute(RangerCSRFPreventionFilter.CSRF_TOKEN)).thenReturn("valueUnimportant");
+		Mockito.when(mockReq.getSession()).thenReturn(session);
 
 		// Objects to verify interactions based on request
 		HttpServletResponse mockRes = Mockito.mock(HttpServletResponse.class);
@@ -62,6 +70,12 @@ public class TestRangerCSRFPreventionFilter {
 		Mockito.when(mockReq.getHeader(RangerCSRFPreventionFilter.HEADER_DEFAULT)).thenReturn("valueUnimportant");
 		Mockito.when(mockReq.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)).thenReturn(userAgent);
 
+		Mockito.when(mockReq.getMethod()).thenReturn("POST");
+
+		HttpSession session = Mockito.mock(HttpSession.class);
+		Mockito.when(session.getAttribute(RangerCSRFPreventionFilter.CSRF_TOKEN)).thenReturn("valueUnimportant");
+		Mockito.when(mockReq.getSession()).thenReturn(session);
+
 		// Objects to verify interactions based on request
 		HttpServletResponse mockRes = Mockito.mock(HttpServletResponse.class);
 		FilterChain mockChain = Mockito.mock(FilterChain.class);
@@ -71,6 +85,28 @@ public class TestRangerCSRFPreventionFilter {
 		filter.doFilter(mockReq, mockRes, mockChain);
 
 		Mockito.verify(mockChain).doFilter(mockReq, mockRes);
+	}
+
+	@Test
+	public void testHeaderPresentDefaultConfig_badRequest() throws ServletException, IOException {
+		// CSRF HAS been sent
+		HttpServletRequest mockReq = Mockito.mock(HttpServletRequest.class);
+		Mockito.when(mockReq.getHeader(RangerCSRFPreventionFilter.HEADER_DEFAULT)).thenReturn("valueUnimportant");
+		Mockito.when(mockReq.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)).thenReturn(userAgent);
+		Mockito.when(mockReq.getMethod()).thenReturn("POST");
+
+		// Objects to verify interactions based on request
+		HttpServletResponse mockRes = Mockito.mock(HttpServletResponse.class);
+		PrintWriter mockWriter = Mockito.mock(PrintWriter.class);
+		Mockito.when(mockRes.getWriter()).thenReturn(mockWriter);
+
+		FilterChain mockChain = Mockito.mock(FilterChain.class);
+
+		// Object under test
+		RangerCSRFPreventionFilter filter = new RangerCSRFPreventionFilter();
+		filter.doFilter(mockReq, mockRes, mockChain);
+
+		Mockito.verify(mockChain, Mockito.never()).doFilter(mockReq, mockRes);
 	}
 
 	@Test

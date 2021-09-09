@@ -31,7 +31,9 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
 
@@ -46,6 +48,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
 	public static final String HEADER_DEFAULT = "X-XSRF-HEADER";
 	public static final String HEADER_USER_AGENT = "User-Agent";
+	public static final String CSRF_TOKEN = "_csrfToken";
 	private static final boolean IS_CSRF_ENABLED = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled", true);
 
 	private String  headerName = HEADER_DEFAULT;
@@ -149,12 +152,25 @@ public class RangerCSRFPreventionFilter implements Filter {
 	
 	public void handleHttpInteraction(HttpInteraction httpInteraction)
 			throws IOException, ServletException {
-		if (httpInteraction.getHeader(headerName) != null
+
+		HttpSession session   = ((ServletFilterHttpInteraction) httpInteraction).getSession();
+		String clientCsrfToken = httpInteraction.getHeader(headerName);
+		String actualCsrfToken = StringUtils.EMPTY;
+
+		if (session != null) {
+			actualCsrfToken = (String) session.getAttribute(CSRF_TOKEN);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Session is null");
+			}
+		}
+
+		if (clientCsrfToken != null && clientCsrfToken.equals(actualCsrfToken)
 				|| !isBrowser(httpInteraction.getHeader(HEADER_USER_AGENT))
 				|| methodsToIgnore.contains(httpInteraction.getMethod())) {
 			httpInteraction.proceed();
 		}else {
-			httpInteraction.sendError(HttpServletResponse.SC_BAD_REQUEST,"Missing Required Header for CSRF Vulnerability Protection");
+			httpInteraction.sendError(HttpServletResponse.SC_BAD_REQUEST,"Missing header or invalid Header value for CSRF Vulnerability Protection");
 		}
 	}
 	
@@ -208,6 +224,10 @@ public class RangerCSRFPreventionFilter implements Filter {
 		@Override
 		public void proceed() throws IOException, ServletException {
 			chain.doFilter(httpRequest, httpResponse);
+		}
+
+		public HttpSession getSession() {
+			return httpRequest.getSession();
 		}
 
 		@Override
