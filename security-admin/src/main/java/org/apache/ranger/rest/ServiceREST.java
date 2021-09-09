@@ -21,6 +21,7 @@ package org.apache.ranger.rest;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -55,6 +56,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
+import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -179,6 +181,7 @@ public class ServiceREST {
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
 	public static final String CUSTOM_METHODS_TO_IGNORE_PARAM = "ranger.rest-csrf.methods-to-ignore";
 	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
+	public static final String CSRF_TOKEN_LENGTH = "ranger.rest-csrf.token.length";
 	final static public String POLICY_MATCHING_ALGO_BY_POLICYNAME = "matchByName";
 	final static public String POLICY_MATCHING_ALGO_BY_RESOURCE  = "matchByPolicySignature";
 	final static public String PARAM_POLICY_MATCHING_ALGORITHM = "policyMatchingAlgorithm";
@@ -3654,8 +3657,8 @@ public class ServiceREST {
 	@GET
 	@Path("/csrfconf")
 	@Produces({ "application/json"})
-	public HashMap<String, Object> getCSRFProperties() {
-		return getCSRFPropertiesMap();
+	public HashMap<String, Object> getCSRFProperties(@Context HttpServletRequest request) {
+		return getCSRFPropertiesMap(request);
 	}
 
 	@GET
@@ -3750,13 +3753,24 @@ public class ServiceREST {
 		return new ResponseEntity<>(deletedServices, responseStatus);
 	}
 
-	private HashMap<String, Object> getCSRFPropertiesMap() {
+	private HashMap<String, Object> getCSRFPropertiesMap(HttpServletRequest request) {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put(isCSRF_ENABLED, PropertiesUtil.getBooleanProperty(isCSRF_ENABLED, true));
 		map.put(CUSTOM_HEADER_PARAM, PropertiesUtil.getProperty(CUSTOM_HEADER_PARAM, RangerCSRFPreventionFilter.HEADER_DEFAULT));
 		map.put(BROWSER_USER_AGENT_PARAM, PropertiesUtil.getProperty(BROWSER_USER_AGENT_PARAM, RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT));
 		map.put(CUSTOM_METHODS_TO_IGNORE_PARAM, PropertiesUtil.getProperty(CUSTOM_METHODS_TO_IGNORE_PARAM, RangerCSRFPreventionFilter.METHODS_TO_IGNORE_DEFAULT));
+		map.put(RangerCSRFPreventionFilter.CSRF_TOKEN, getCSRFToken(request));
 		return map;
+	}
+
+	private static String getCSRFToken(HttpServletRequest request) {
+		String salt = (String) request.getSession().getAttribute(RangerCSRFPreventionFilter.CSRF_TOKEN);
+        if (StringUtils.isEmpty(salt)) {
+            final int tokenLength = PropertiesUtil.getIntProperty(CSRF_TOKEN_LENGTH, 20);
+            salt = RandomStringUtils.random(tokenLength, 0, 0, true, true, null, new SecureRandom());
+            request.getSession().setAttribute(RangerCSRFPreventionFilter.CSRF_TOKEN, salt);
+        }
+        return salt;
 	}
 
 	private RangerPolicyList toRangerPolicyList(List<RangerPolicy> policyList, SearchFilter filter) {
