@@ -176,7 +176,7 @@ public class RangerResourceACLs {
 			sb.append("permissions={");
 			for (Map.Entry<String, AccessResult> permission : entry.getValue().entrySet()) {
 				sb.append("{Permission=").append(permission.getKey()).append(", value=").append(permission.getValue()).append("},");
-				sb.append("{RangerPolicyID=").append(permission.getValue().getPolicy().getId()).append("},");
+				sb.append("{RangerPolicyID=").append(permission.getValue().getPolicy() == null ? null : permission.getValue().getPolicy().getId()).append("},");
 			}
 			sb.append("},");
 		}
@@ -188,7 +188,7 @@ public class RangerResourceACLs {
 			sb.append("permissions={");
 			for (Map.Entry<String, AccessResult> permission : entry.getValue().entrySet()) {
 				sb.append("{Permission=").append(permission.getKey()).append(", value=").append(permission.getValue()).append("}, ");
-				sb.append("{RangerPolicy ID=").append(permission.getValue().getPolicy().getId()).append("},");
+				sb.append("{RangerPolicy ID=").append(permission.getValue().getPolicy() == null ? null : permission.getValue().getPolicy().getId()).append("},");
 			}
 			sb.append("},");
 		}
@@ -200,7 +200,7 @@ public class RangerResourceACLs {
 			sb.append("permissions={");
 			for (Map.Entry<String, AccessResult> permission : entry.getValue().entrySet()) {
 				sb.append("{Permission=").append(permission.getKey()).append(", value=").append(permission.getValue()).append("}, ");
-				sb.append("{RangerPolicy ID=").append(permission.getValue().getPolicy().getId()).append("},");
+				sb.append("{RangerPolicy ID=").append(permission.getValue().getPolicy() == null ? null : permission.getValue().getPolicy().getId()).append("},");
 			}
 			sb.append("},");
 		}
