@@ -994,6 +994,23 @@ public class RangerBasePlugin {
 		return ret;
 	}
 
+	public static RangerResourceACLs getMergedResourceACLs(RangerResourceACLs baseACLs, RangerResourceACLs chainedACLs) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerBasePlugin.getMergedResourceACLs()");
+			LOG.debug("baseACLs:[" + baseACLs + "]");
+			LOG.debug("chainedACLS:[" + chainedACLs + "]");
+		}
+
+		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.USER);
+		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.GROUP);
+		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.ROLE);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerBasePlugin.getMergedResourceACLs() : ret:[" + baseACLs + "]");
+		}
+		return baseACLs;
+	}
+
 	private RangerAdminClient getAdminClient() throws Exception {
 		PolicyRefresher   refresher = this.refresher;
 		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();
@@ -1068,24 +1085,7 @@ public class RangerBasePlugin {
 		}
 	}
 
-	private RangerResourceACLs getMergedResourceACLs(RangerResourceACLs baseACLs, RangerResourceACLs chainedACLs) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerBasePlugin.getMergedResourceACLs()");
-			LOG.debug("baseACLs:[" + baseACLs + "]");
-			LOG.debug("chainedACLS:[" + chainedACLs + "]");
-		}
-
-		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.USER);
-		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.GROUP);
-		overrideACLs(chainedACLs, baseACLs, RangerRolesUtil.ROLES_FOR.ROLE);
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerBasePlugin.getMergedResourceACLs() : ret:[" + baseACLs + "]");
-		}
-		return baseACLs;
-	}
-
-	private void overrideACLs(final RangerResourceACLs chainedResourceACLs, RangerResourceACLs baseResourceACLs, final RangerRolesUtil.ROLES_FOR userType) {
+	private static void overrideACLs(final RangerResourceACLs chainedResourceACLs, RangerResourceACLs baseResourceACLs, final RangerRolesUtil.ROLES_FOR userType) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerBasePlugin.overrideACLs(isUser=" + userType.name() + ")");
 		}
