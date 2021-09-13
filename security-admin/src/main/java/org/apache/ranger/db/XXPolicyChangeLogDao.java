@@ -26,12 +26,12 @@ import java.util.concurrent.TimeUnit;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyChangeLog;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
-import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.springframework.stereotype.Service;
 
 /**
@@ -142,7 +142,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                     XXPolicy xxPolicy = daoManager.getXXPolicy().getById(policyId);
                     if (xxPolicy != null) {
                         try {
-                            policy = JsonUtilsV2.jsonToObj(xxPolicy.getPolicyText(), RangerPolicy.class);
+                            policy = JsonUtils.jsonToObject(xxPolicy.getPolicyText(), RangerPolicy.class);
                             policy.setId(policyId);
                         } catch (Exception e) {
                             LOG.error("Cannot read policy:[" + policyId + "]. Should not have come here!! Offending log-record-id:[" + logRecordId + "] and returning...", e);
