@@ -90,7 +90,7 @@ public class RangerPolicyDeltaUtil {
 
                         while (iter.hasNext()) {
                             RangerPolicy policy = iter.next();
-                            if (policyId.equals(policy.getId()) && changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
+                            if (policyId.equals(policy.getId()) && (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE)) {
                                 deletedPolicies.add(policy);
                                 iter.remove();
                             }
