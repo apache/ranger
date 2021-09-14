@@ -144,6 +144,9 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                         try {
                             policy = JsonUtils.jsonToObject(xxPolicy.getPolicyText(), RangerPolicy.class);
                             policy.setId(policyId);
+                            if (policy.getServiceType() == null) {
+                                policy.setServiceType(serviceType);
+                            }
                         } catch (Exception e) {
                             LOG.error("Cannot read policy:[" + policyId + "]. Should not have come here!! Offending log-record-id:[" + logRecordId + "] and returning...", e);
                             ret.clear();

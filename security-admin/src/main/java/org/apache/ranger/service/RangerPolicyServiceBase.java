@@ -102,6 +102,11 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 					+ "Service Not Found : " + vObj.getService(), MessageEnums.INVALID_INPUT_DATA);
 		}
 
+		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
+		if (xServiceDef != null) {
+			vObj.setServiceType(xServiceDef.getName());
+		}
+
 		String guid = vObj.getGuid();
 		if (StringUtils.isEmpty(guid)) {
 			guid = guidUtil.genGUID();

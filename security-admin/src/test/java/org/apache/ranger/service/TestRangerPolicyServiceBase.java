@@ -148,6 +148,8 @@ public class TestRangerPolicyServiceBase {
 	public void test1mapViewToEntityBean() {
 		XXServiceDao xServiceDao = Mockito.mock(XXServiceDao.class);
 		XXService xService = Mockito.mock(XXService.class);
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		XXServiceDef xServiceDef = Mockito.mock(XXServiceDef.class);
 		RangerPolicy rangerPolicy = rangerPolicy();
 		XXPolicy policy = policy();
 		int OPERATION_CONTEXT = 0;
@@ -155,6 +157,8 @@ public class TestRangerPolicyServiceBase {
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
 		Mockito.when(xServiceDao.findByName(rangerPolicy.getService()))
 				.thenReturn(xService);
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(xServiceDef);
 
 		XXPolicy dbPolicy = policyService.mapViewToEntityBean(rangerPolicy,
 				policy, OPERATION_CONTEXT);
