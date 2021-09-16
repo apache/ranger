@@ -1802,9 +1802,10 @@ public class TestServiceREST {
 		String type = "usergroup";
 		String ret = "{\"groupCount\":1,\"userCountOfUserRole\":0,\"userCountOfKeyAdminRole\":1,"
 				+ "\"userCountOfSysAdminRole\":3,\"userCountOfKeyadminAuditorRole\":0,\"userCountOfSysAdminAuditorRole\":0,\"userTotalCount\":4}";
-		Mockito.when(svcStore.getMetricByType(type)).thenReturn(ret);
+		ServiceDBStore.METRIC_TYPE metricType = ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type);
+		Mockito.when(svcStore.getMetricByType(metricType)).thenReturn(ret);
 		serviceREST.getMetricByType(type);
-		Mockito.verify(svcStore).getMetricByType(type);
+		Mockito.verify(svcStore).getMetricByType(metricType);
 	}
 
 	@Test

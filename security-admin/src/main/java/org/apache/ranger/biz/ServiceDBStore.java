@@ -62,6 +62,7 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
+import org.apache.ranger.biz.ServiceDBStore.METRIC_TYPE;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -5093,314 +5094,403 @@ public class ServiceDBStore extends AbstractServiceStore {
         return result;
     }
 
+    public enum METRIC_TYPE {
+        USER_GROUP {
+            @Override
+            public String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria) {
+                return ref.getMetricOfTypeUserGroup(searchCriteria);
+            }},
+        AUDITS {
+            @Override
+            public String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria) {
+                return ref.getMetricOfTypeAudits(searchCriteria);
+            }},
+        SERVICES {
+            @Override
+            public String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria) {
+                return ref.getMetricOfTypeServices(searchCriteria);
+            }},
+        POLICIES {
+            @Override
+            public String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria) {
+                return ref.getMetricOfTypePolicies(searchCriteria);
+            }},
+        DATABASE {
+            @Override
+            public String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria) {
+                return ref.getMetricOfTypeDatabase(searchCriteria);
+            }},
+        CONTEXT_ENRICHERS {
+            @Override
+            public String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria) {
+                return ref.getMetricOfTypeContextEnrichers(searchCriteria);
+            }},
+        DENY_CONDITIONS {
+            @Override
+            public String getMetric(ServiceDBStore ref, SearchCriteria searchCriteria) {
+                return ref.getMetricOfTypeDenyConditions(searchCriteria);
+            }};
 
-    public String getMetricByType(String type) throws Exception {
-                if (LOG.isDebugEnabled()) {
-                        LOG.debug("==> ServiceDBStore.getMetricByType(" + type + ")");
-                }
-                String ret = null;
-        try {
-                SearchCriteria searchCriteria = new SearchCriteria();
-                searchCriteria.setStartIndex(0);
-                searchCriteria.setMaxRows(100);
-                searchCriteria.setGetCount(true);
-                searchCriteria.setSortType("asc");
-                switch (type.toLowerCase()) {
-			case "usergroup":
-				try {
-                            VXGroupList vxGroupList = xUserMgr.searchXGroups(searchCriteria);
-                            long groupCount = vxGroupList.getTotalCount();
-                            ArrayList<String> userAdminRoleCount = new ArrayList<String>();
-                            userAdminRoleCount.add(RangerConstants.ROLE_SYS_ADMIN);
-                            long userSysAdminCount = getUserCountBasedOnUserRole(userAdminRoleCount);
-                            ArrayList<String> userAdminAuditorRoleCount = new ArrayList<String>();
-                            userAdminAuditorRoleCount.add(RangerConstants.ROLE_ADMIN_AUDITOR);
-                            long userSysAdminAuditorCount = getUserCountBasedOnUserRole(userAdminAuditorRoleCount);
-                            ArrayList<String> userRoleListKeyRoleAdmin = new ArrayList<String>();
-                            userRoleListKeyRoleAdmin.add(RangerConstants.ROLE_KEY_ADMIN);
-                            long userKeyAdminCount = getUserCountBasedOnUserRole(userRoleListKeyRoleAdmin);
-                            ArrayList<String> userRoleListKeyadminAduitorRole = new ArrayList<String>();
-                            userRoleListKeyadminAduitorRole.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
-                            long userKeyadminAuditorCount = getUserCountBasedOnUserRole(userRoleListKeyadminAduitorRole);
-                            ArrayList<String> userRoleListUser = new ArrayList<String>();
-                            userRoleListUser.add(RangerConstants.ROLE_USER);
-                            long userRoleCount = getUserCountBasedOnUserRole(userRoleListUser);
-                            long userTotalCount = userSysAdminCount + userKeyAdminCount + userRoleCount + userKeyadminAuditorCount + userSysAdminAuditorCount;
-                            VXMetricUserGroupCount metricUserGroupCount = new VXMetricUserGroupCount();
-                            metricUserGroupCount.setUserCountOfUserRole(userRoleCount);
-                            metricUserGroupCount.setUserCountOfKeyAdminRole(userKeyAdminCount);
-                            metricUserGroupCount.setUserCountOfSysAdminRole(userSysAdminCount);
-                            metricUserGroupCount.setUserCountOfKeyadminAuditorRole(userKeyadminAuditorCount);
-                            metricUserGroupCount.setUserCountOfSysAdminAuditorRole(userSysAdminAuditorCount);
-                            metricUserGroupCount.setUserTotalCount(userTotalCount);
-                            metricUserGroupCount.setGroupCount(groupCount);
-                            Gson gson = new GsonBuilder().create();
-                            final String jsonUserGroupCount = gson.toJson(metricUserGroupCount);
-                            ret = jsonUserGroupCount;
-                                        } catch (Exception e) {
-                                                LOG.error("ServiceDBStore.getMetricByType(" + type + "): Error calculating Metric for usergroup : " + e.getMessage());
-                                        }
-				break;
-			case "audits":
-				try{
-                        int clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
-                        String defaultDateFormat="MM/dd/yyyy";
-                        DateFormat formatter = new SimpleDateFormat(defaultDateFormat);
+        abstract String getMetric(final ServiceDBStore ref, final SearchCriteria searchCriteria);
 
-                        VXMetricAuditDetailsCount auditObj = new VXMetricAuditDetailsCount();
-                        DateUtil dateUtilTwoDays = new DateUtil();
-                        Date startDateUtilTwoDays = dateUtilTwoDays.getDateFromNow(-2);
-                        Date dStart2 = restErrorUtil.parseDate(formatter.format(startDateUtilTwoDays),"Invalid value for startDate",
-                                        MessageEnums.INVALID_INPUT_DATA, null, "startDate", defaultDateFormat);
+        public static METRIC_TYPE getMetricTypeByName(final String metricTypeName) {
+            METRIC_TYPE ret = null;
 
-                        Date endDateTwoDays = MiscUtil.getUTCDate();
-                        Date dEnd2 = restErrorUtil.parseDate(formatter.format(endDateTwoDays),"Invalid value for endDate",
-                                        MessageEnums.INVALID_INPUT_DATA, null, "endDate", defaultDateFormat);
-                        dEnd2 = dateUtilTwoDays.getDateFromGivenDate(dEnd2, 0, 23, 59, 59);
-                        dEnd2 = dateUtilTwoDays.addTimeOffset(dEnd2, clientTimeOffsetInMinute);
-                        VXMetricServiceCount deniedCountObj = getAuditsCount(0,dStart2,dEnd2);
-                        auditObj.setDenialEventsCountTwoDays(deniedCountObj);
-
-                        VXMetricServiceCount allowedCountObj = getAuditsCount(1,dStart2,dEnd2);
-                        auditObj.setAccessEventsCountTwoDays(allowedCountObj);
-
-                        long totalAuditsCountTwoDays = deniedCountObj.getTotalCount() + allowedCountObj.getTotalCount();
-                        auditObj.setSolrIndexCountTwoDays(totalAuditsCountTwoDays);
-
-                        DateUtil dateUtilWeek = new DateUtil();
-                        Date startDateUtilWeek = dateUtilWeek.getDateFromNow(-7);
-                        Date dStart7 = restErrorUtil.parseDate(formatter.format(startDateUtilWeek),"Invalid value for startDate",
-                                        MessageEnums.INVALID_INPUT_DATA, null, "startDate", defaultDateFormat);
-
-                        Date endDateWeek = MiscUtil.getUTCDate();
-                        DateUtil dateUtilweek = new DateUtil();
-                        Date dEnd7 = restErrorUtil.parseDate(formatter.format(endDateWeek),"Invalid value for endDate",
-                                        MessageEnums.INVALID_INPUT_DATA, null, "endDate", defaultDateFormat);
-                        dEnd7 = dateUtilweek.getDateFromGivenDate(dEnd7,0, 23, 59, 59 );
-                        dEnd7 = dateUtilweek.addTimeOffset(dEnd7, clientTimeOffsetInMinute);
-                        VXMetricServiceCount deniedCountObjWeek =  getAuditsCount(0,dStart7,dEnd7);
-                        auditObj.setDenialEventsCountWeek(deniedCountObjWeek);
-
-                        VXMetricServiceCount allowedCountObjWeek = getAuditsCount(1,dStart7,dEnd7);
-                        auditObj.setAccessEventsCountWeek(allowedCountObjWeek);
-
-                        long totalAuditsCountWeek = deniedCountObjWeek.getTotalCount() + allowedCountObjWeek.getTotalCount();
-                        auditObj.setSolrIndexCountWeek(totalAuditsCountWeek);
-
-                        Gson gson = new GsonBuilder().create();
-                        final String jsonAudit = gson.toJson(auditObj);
-                        ret = jsonAudit;
-                                        }catch (Exception e) {
-                                                LOG.error("ServiceDBStore.getMetricByType(" + type + "): Error calculating Metric for audits : "+e.getMessage());
-                                        }
-                                        break;
-			case "services" :
-				try {
-                            SearchFilter serviceFilter = new SearchFilter();
-                            serviceFilter.setMaxRows(200);
-                            serviceFilter.setStartIndex(0);
-                            serviceFilter.setGetCount(true);
-                            serviceFilter.setSortBy("serviceId");
-                            serviceFilter.setSortType("asc");
-                            VXMetricServiceCount vXMetricServiceCount = new VXMetricServiceCount();
-                            PList<RangerService> paginatedSvcs = getPaginatedServices(serviceFilter);
-                            long totalServiceCount = paginatedSvcs.getTotalCount();
-                            List<RangerService> rangerServiceList = paginatedSvcs.getList();
-                            Map<String, Long> services = new HashMap<String, Long>();
-                            for (Object rangerService : rangerServiceList) {
-                                RangerService RangerServiceObj = (RangerService) rangerService;
-                                String serviceName = RangerServiceObj.getType();
-                                if (!(services.containsKey(serviceName))) {
-                                    serviceFilter.setParam("serviceType", serviceName);
-                                    PList<RangerService> paginatedSvcscount = getPaginatedServices(serviceFilter);
-                                    services.put(serviceName, paginatedSvcscount.getTotalCount());
-                                }
-                            }
-                            vXMetricServiceCount.setServiceBasedCountList(services);
-                            vXMetricServiceCount.setTotalCount(totalServiceCount);
-                            Gson gson = new GsonBuilder().create();
-                            final String jsonServices = gson.toJson(vXMetricServiceCount);
-                            ret= jsonServices;
-				} catch (Exception e) {
-					LOG.error("ServiceDBStore.getMetricByType(" + type + "): Error calculating Metric for services : " + e.getMessage());
-				}
-				break;
-			case "policies" :
-                                        try {
-                                                SearchFilter policyFilter = new SearchFilter();
-                                                policyFilter.setMaxRows(200);
-                        policyFilter.setStartIndex(0);
-                        policyFilter.setGetCount(true);
-                        policyFilter.setSortBy("serviceId");
-                        policyFilter.setSortType("asc");
-                        VXMetricPolicyWithServiceNameCount vXMetricPolicyWithServiceNameCount = new VXMetricPolicyWithServiceNameCount();
-                        PList<RangerPolicy> paginatedSvcsList = getPaginatedPolicies(policyFilter);
-                        vXMetricPolicyWithServiceNameCount.setTotalCount(paginatedSvcsList.getTotalCount());
-                        Map<String, VXMetricServiceNameCount> servicesWithPolicy = new HashMap<String, VXMetricServiceNameCount>();
-                        for (int k = 2; k >= 0; k--) {
-                                String policyType = String.valueOf(k);
-                                VXMetricServiceNameCount vXMetricServiceNameCount = getVXMetricServiceCount(policyType);
-                                if (k == 2) {
-					servicesWithPolicy.put("rowFilteringPolicies", vXMetricServiceNameCount);
-                                } else if (k == 1) {
-					servicesWithPolicy.put("maskingPolicies", vXMetricServiceNameCount);
-                                } else if (k == 0) {
-					servicesWithPolicy.put("resourceAccessPolicies", vXMetricServiceNameCount);
-                                }
-                        }
-                        Map<String, Map<String,Long>> tagMap = new HashMap<String, Map<String,Long>>();
-                        Map<String,Long> ServiceNameWithPolicyCount = new HashMap<String, Long>();
-                        boolean tagFlag = false;
-                        if (tagFlag == false) {
-                                policyFilter.setParam("serviceType", "tag");
-                                PList<RangerPolicy> policiestype = getPaginatedPolicies(policyFilter);
-                                List<RangerPolicy> policies = policiestype.getList();
-                                for (RangerPolicy rangerPolicy : policies) {
-                                    if(ServiceNameWithPolicyCount.containsKey(rangerPolicy.getService())){
-                                        Long tagServicePolicyCount = ServiceNameWithPolicyCount.get(rangerPolicy.getService()) +1l;
-                                        ServiceNameWithPolicyCount.put(rangerPolicy.getService(),tagServicePolicyCount);
-                                    }
-                                    else if (!rangerPolicy.getName().isEmpty()){
-					ServiceNameWithPolicyCount.put(rangerPolicy.getService(),1l);
-                                    }
-                                }
-                                tagMap.put("tag", ServiceNameWithPolicyCount);
-                                long tagCount = policiestype.getTotalCount();
-                            VXMetricServiceNameCount vXMetricServiceNameCount = new VXMetricServiceNameCount();
-                            vXMetricServiceNameCount.setServiceBasedCountList(tagMap);
-                            vXMetricServiceNameCount.setTotalCount(tagCount);
-                            servicesWithPolicy.put("tagAccessPolicies", vXMetricServiceNameCount);
-                            tagFlag = true;
-                        }
-                        vXMetricPolicyWithServiceNameCount.setPolicyCountList(servicesWithPolicy);
-                        Gson gson = new GsonBuilder().create();
-                        final String jsonPolicies = gson.toJson(vXMetricPolicyWithServiceNameCount);
-                        ret= jsonPolicies;
-                                        } catch (Exception e) {
-                                                LOG.error("Error calculating Metric for policies : " + e.getMessage());
-                                        }
-                    break;
-			case "database" :
-				try {
-                            int dbFlavor = RangerBizUtil.getDBFlavor();
-                            String dbFlavourType = "Unknow ";
-                            if (dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
-				dbFlavourType = "MYSQL ";
-                            } else if (dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
-				dbFlavourType = "ORACLE ";
-                            } else if (dbFlavor == AppConstants.DB_FLAVOR_POSTGRES) {
-				dbFlavourType = "POSTGRES ";
-                            } else if (dbFlavor == AppConstants.DB_FLAVOR_SQLANYWHERE) {
-				dbFlavourType = "SQLANYWHERE ";
-                            } else if (dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER) {
-				dbFlavourType = "SQLSERVER ";
-                            }
-                            String dbDetail = dbFlavourType + bizUtil.getDBVersion();
-                            Gson gson = new GsonBuilder().create();
-                            final String jsonDBDetail = gson.toJson(dbDetail);
-                            ret = jsonDBDetail;
-                                        } catch (Exception e) {
-                                                LOG.error("ServiceDBStore.getMetricByType(" + type + "): Error calculating Metric for database : " + e.getMessage());
-                                        }
-                                        break;
-			case "contextenrichers":
-                        try {
-                            SearchFilter filter = new SearchFilter();
-                            filter.setStartIndex(0);
-                            VXMetricContextEnricher serviceWithContextEnrichers = new VXMetricContextEnricher();
-                            PList<RangerServiceDef> paginatedSvcDefs = getPaginatedServiceDefs(filter);
-                            List<RangerServiceDef> repoTypeList = paginatedSvcDefs.getList();
-                            if (repoTypeList != null) {
-				for (RangerServiceDef repoType : repoTypeList) {
-                                    RangerServiceDef rangerServiceDefObj = (RangerServiceDef) repoType;
-                                    String name = rangerServiceDefObj.getName();
-                                    List<RangerContextEnricherDef> contextEnrichers = rangerServiceDefObj.getContextEnrichers();
-                                    if (contextEnrichers != null && !contextEnrichers.isEmpty()) {
-					serviceWithContextEnrichers.setServiceName(name);
-                                        serviceWithContextEnrichers.setTotalCount(contextEnrichers.size());
-                                    }
-                                }
-                            }
-                            Gson gson = new GsonBuilder().create();
-                            final String jsonContextEnrichers = gson.toJson(serviceWithContextEnrichers);
-                            ret = jsonContextEnrichers;
-                            } catch (Exception e) {
-				LOG.error("ServiceDBStore.getMetricByType(" + type + "): Error calculating Metric for contextenrichers : " + e.getMessage());
-                            }
+            if (metricTypeName != null) {
+                switch(metricTypeName) {
+                    case "usergroup":
+                        ret = METRIC_TYPE.USER_GROUP;
                         break;
-			case "denyconditions":
-				try {
-                            SearchFilter policyFilter1 = new SearchFilter();
-                            policyFilter1.setMaxRows(200);
-                            policyFilter1.setStartIndex(0);
-                            policyFilter1.setGetCount(true);
-                            policyFilter1.setSortBy("serviceId");
-                            policyFilter1.setSortType("asc");
-                            policyFilter1.setParam("denyCondition", "true");
-                            int denyCount = 0;
-                            Map<String, Integer> denyconditionsonMap = new HashMap<String, Integer>();
-                            PList<RangerServiceDef> paginatedSvcDefs = getPaginatedServiceDefs(policyFilter1);
-                            if (paginatedSvcDefs != null) {
-				List<RangerServiceDef> rangerServiceDefs = paginatedSvcDefs.getList();
-				if (rangerServiceDefs != null && !rangerServiceDefs.isEmpty()) {
-					for (RangerServiceDef rangerServiceDef : rangerServiceDefs) {
-						if (rangerServiceDef != null) {
-							String serviceDef = rangerServiceDef.getName();
-							if (!StringUtils.isEmpty(serviceDef)) {
-								policyFilter1.setParam("serviceType", serviceDef);
-								PList<RangerPolicy> policiesList = getPaginatedPolicies(policyFilter1);
-								if (policiesList != null && policiesList.getListSize() > 0) {
-									int policyListCount = policiesList.getListSize();
-									if (policyListCount > 0 && policiesList.getList() != null) {
-										List<RangerPolicy> policies = policiesList.getList();
-										for (RangerPolicy policy : policies) {
-											if (policy != null) {
-												List<RangerPolicyItem> policyItem = policy.getDenyPolicyItems();
-												if (policyItem != null && !policyItem.isEmpty()) {
-													if (denyconditionsonMap.get(serviceDef) != null) {
-														denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItem.size();
-													} else {
-														denyCount = denyCount + policyItem.size();
-													}
-												}
-												List<RangerPolicyItem> policyItemExclude = policy.getDenyExceptions();
-												if (policyItemExclude != null && !policyItemExclude.isEmpty()) {
-													if (denyconditionsonMap.get(serviceDef) != null) {
-														denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItemExclude.size();
-													} else {
-														denyCount = denyCount + policyItemExclude.size();
-													}
-												}
-											}
-										}
-									}
-								}
-								policyFilter1.removeParam("serviceType");
-							}
-							denyconditionsonMap.put(serviceDef, denyCount);
-							denyCount = 0;
-						}
-					}
-				}
-                            }
-                            Gson gson = new GsonBuilder().create();
-                            String jsonContextDenyCondtionOn = gson.toJson(denyconditionsonMap);
-                            ret = jsonContextDenyCondtionOn;
-                                        } catch (Exception e) {
-                                                LOG.error("ServiceDBStore.getMetricByType(" + type + "): Error calculating Metric for denyconditions : " + e.getMessage());
-                                        }
-                                        break;
-			default:
-				LOG.info("ServiceDBStore.getMetricByType(" + type + "):Please enter the valid arguments for Metric Calculation -type policies | audits | usergroup | services | database | contextenrichers | denyconditions");
-				break;
+                    case "audits":
+                        ret = METRIC_TYPE.AUDITS;
+                        break;
+                    case "services":
+                        ret = METRIC_TYPE.SERVICES;
+                        break;
+                    case "policies":
+                        ret = METRIC_TYPE.POLICIES;
+                        break;
+                    case "database":
+                        ret = METRIC_TYPE.DATABASE;
+                        break;
+                    case "contextenrichers":
+                        ret = METRIC_TYPE.CONTEXT_ENRICHERS;
+                        break;
+                    case "denyconditions":
+                        ret = METRIC_TYPE.DENY_CONDITIONS;
+                        break;
                 }
-        } catch(Exception e) {
-		LOG.error("ServiceDBStore.getMetricByType(" + type + "): Error calculating Metric : "+e.getMessage());
+            }
+
+            return ret;
+        }
+    }
+
+    private String getMetricOfTypeUserGroup(final SearchCriteria searchCriteria) {
+        String ret = null;
+
+        try {
+            VXGroupList       vxGroupList        = xUserMgr.searchXGroups(searchCriteria);
+            long              groupCount         = vxGroupList.getTotalCount();
+            ArrayList<String> userAdminRoleCount = new ArrayList<String>();
+            userAdminRoleCount.add(RangerConstants.ROLE_SYS_ADMIN);
+            long              userSysAdminCount         = getUserCountBasedOnUserRole(userAdminRoleCount);
+            ArrayList<String> userAdminAuditorRoleCount = new ArrayList<String>();
+            userAdminAuditorRoleCount.add(RangerConstants.ROLE_ADMIN_AUDITOR);
+            long              userSysAdminAuditorCount = getUserCountBasedOnUserRole(userAdminAuditorRoleCount);
+            ArrayList<String> userRoleListKeyRoleAdmin = new ArrayList<String>();
+            userRoleListKeyRoleAdmin.add(RangerConstants.ROLE_KEY_ADMIN);
+            long              userKeyAdminCount               = getUserCountBasedOnUserRole(userRoleListKeyRoleAdmin);
+            ArrayList<String> userRoleListKeyadminAduitorRole = new ArrayList<String>();
+            userRoleListKeyadminAduitorRole.add(RangerConstants.ROLE_KEY_ADMIN_AUDITOR);
+            long              userKeyadminAuditorCount = getUserCountBasedOnUserRole(userRoleListKeyadminAduitorRole);
+            ArrayList<String> userRoleListUser         = new ArrayList<String>();
+            userRoleListUser.add(RangerConstants.ROLE_USER);
+            long                   userRoleCount        = getUserCountBasedOnUserRole(userRoleListUser);
+            long                   userTotalCount       = userSysAdminCount + userKeyAdminCount + userRoleCount + userKeyadminAuditorCount + userSysAdminAuditorCount;
+            VXMetricUserGroupCount metricUserGroupCount = new VXMetricUserGroupCount();
+            metricUserGroupCount.setUserCountOfUserRole(userRoleCount);
+            metricUserGroupCount.setUserCountOfKeyAdminRole(userKeyAdminCount);
+            metricUserGroupCount.setUserCountOfSysAdminRole(userSysAdminCount);
+            metricUserGroupCount.setUserCountOfKeyadminAuditorRole(userKeyadminAuditorCount);
+            metricUserGroupCount.setUserCountOfSysAdminAuditorRole(userSysAdminAuditorCount);
+            metricUserGroupCount.setUserTotalCount(userTotalCount);
+            metricUserGroupCount.setGroupCount(groupCount);
+            Gson         gson               = new GsonBuilder().create();
+            final String jsonUserGroupCount = gson.toJson(metricUserGroupCount);
+            ret = jsonUserGroupCount;
+        } catch (Exception e) {
+            LOG.error("ServiceDBStore.getMetricByType(usergroup): Error calculating Metric for usergroup : " + e.getMessage());
+        }
+
+        return ret;
+    }
+
+    private String getMetricOfTypeAudits(final SearchCriteria searchCriteria) {
+        String ret = null;
+        try {
+            int        clientTimeOffsetInMinute = RestUtil.getClientTimeOffset();
+            String     defaultDateFormat        = "MM/dd/yyyy";
+            DateFormat formatter                = new SimpleDateFormat(defaultDateFormat);
+
+            VXMetricAuditDetailsCount auditObj             = new VXMetricAuditDetailsCount();
+            DateUtil                  dateUtilTwoDays      = new DateUtil();
+            Date                      startDateUtilTwoDays = dateUtilTwoDays.getDateFromNow(-2);
+            Date                      dStart2              = restErrorUtil.parseDate(formatter.format(startDateUtilTwoDays), "Invalid value for startDate", MessageEnums.INVALID_INPUT_DATA, null,
+            "startDate", defaultDateFormat);
+
+            Date endDateTwoDays = MiscUtil.getUTCDate();
+            Date dEnd2          = restErrorUtil.parseDate(formatter.format(endDateTwoDays), "Invalid value for endDate", MessageEnums.INVALID_INPUT_DATA, null, "endDate", defaultDateFormat);
+            dEnd2 = dateUtilTwoDays.getDateFromGivenDate(dEnd2, 0, 23, 59, 59);
+            dEnd2 = dateUtilTwoDays.addTimeOffset(dEnd2, clientTimeOffsetInMinute);
+            VXMetricServiceCount deniedCountObj = getAuditsCount(0, dStart2, dEnd2);
+            auditObj.setDenialEventsCountTwoDays(deniedCountObj);
+
+            VXMetricServiceCount allowedCountObj = getAuditsCount(1, dStart2, dEnd2);
+            auditObj.setAccessEventsCountTwoDays(allowedCountObj);
+
+            long totalAuditsCountTwoDays = deniedCountObj.getTotalCount() + allowedCountObj.getTotalCount();
+            auditObj.setSolrIndexCountTwoDays(totalAuditsCountTwoDays);
+
+            DateUtil dateUtilWeek      = new DateUtil();
+            Date     startDateUtilWeek = dateUtilWeek.getDateFromNow(-7);
+            Date     dStart7           = restErrorUtil.parseDate(formatter.format(startDateUtilWeek), "Invalid value for startDate", MessageEnums.INVALID_INPUT_DATA, null, "startDate",
+            defaultDateFormat);
+
+            Date     endDateWeek  = MiscUtil.getUTCDate();
+            DateUtil dateUtilweek = new DateUtil();
+            Date     dEnd7        = restErrorUtil.parseDate(formatter.format(endDateWeek), "Invalid value for endDate", MessageEnums.INVALID_INPUT_DATA, null, "endDate", defaultDateFormat);
+            dEnd7 = dateUtilweek.getDateFromGivenDate(dEnd7, 0, 23, 59, 59);
+            dEnd7 = dateUtilweek.addTimeOffset(dEnd7, clientTimeOffsetInMinute);
+            VXMetricServiceCount deniedCountObjWeek = getAuditsCount(0, dStart7, dEnd7);
+            auditObj.setDenialEventsCountWeek(deniedCountObjWeek);
+
+            VXMetricServiceCount allowedCountObjWeek = getAuditsCount(1, dStart7, dEnd7);
+            auditObj.setAccessEventsCountWeek(allowedCountObjWeek);
+
+            long totalAuditsCountWeek = deniedCountObjWeek.getTotalCount() + allowedCountObjWeek.getTotalCount();
+            auditObj.setSolrIndexCountWeek(totalAuditsCountWeek);
+
+            Gson         gson      = new GsonBuilder().create();
+            final String jsonAudit = gson.toJson(auditObj);
+            ret = jsonAudit;
+        } catch (Exception e) {
+            LOG.error("ServiceDBStore.getMetricByType(audits): Error calculating Metric for audits : " + e.getMessage());
+        }
+
+        return ret;
+    }
+
+    private String getMetricOfTypeServices(final SearchCriteria searchCriteria) {
+        String ret = null;
+        try {
+            SearchFilter serviceFilter = new SearchFilter();
+            serviceFilter.setMaxRows(200);
+            serviceFilter.setStartIndex(0);
+            serviceFilter.setGetCount(true);
+            serviceFilter.setSortBy("serviceId");
+            serviceFilter.setSortType("asc");
+            VXMetricServiceCount vXMetricServiceCount = new VXMetricServiceCount();
+            PList<RangerService> paginatedSvcs        = getPaginatedServices(serviceFilter);
+            long                 totalServiceCount    = paginatedSvcs.getTotalCount();
+            List<RangerService>  rangerServiceList    = paginatedSvcs.getList();
+            Map<String, Long>    services             = new HashMap<String, Long>();
+            for (Object rangerService : rangerServiceList) {
+                RangerService RangerServiceObj = (RangerService) rangerService;
+                String        serviceName      = RangerServiceObj.getType();
+                if (!(services.containsKey(serviceName))) {
+                    serviceFilter.setParam("serviceType", serviceName);
+                    PList<RangerService> paginatedSvcscount = getPaginatedServices(serviceFilter);
+                    services.put(serviceName, paginatedSvcscount.getTotalCount());
+                }
+            }
+            vXMetricServiceCount.setServiceBasedCountList(services);
+            vXMetricServiceCount.setTotalCount(totalServiceCount);
+            Gson         gson         = new GsonBuilder().create();
+            final String jsonServices = gson.toJson(vXMetricServiceCount);
+            ret = jsonServices;
+        } catch (Exception e) {
+            LOG.error("ServiceDBStore.getMetricByType(services): Error calculating Metric for services : " + e.getMessage());
+        }
+        return ret;
+    }
+
+    private String getMetricOfTypePolicies(final SearchCriteria searchCriteria) {
+        String ret = null;
+        try {
+            SearchFilter policyFilter = new SearchFilter();
+            policyFilter.setMaxRows(200);
+            policyFilter.setStartIndex(0);
+            policyFilter.setGetCount(true);
+            policyFilter.setSortBy("serviceId");
+            policyFilter.setSortType("asc");
+            VXMetricPolicyWithServiceNameCount vXMetricPolicyWithServiceNameCount = new VXMetricPolicyWithServiceNameCount();
+            PList<RangerPolicy>                paginatedSvcsList                  = getPaginatedPolicies(policyFilter);
+            vXMetricPolicyWithServiceNameCount.setTotalCount(paginatedSvcsList.getTotalCount());
+            Map<String, VXMetricServiceNameCount> servicesWithPolicy = new HashMap<String, VXMetricServiceNameCount>();
+            for (int k = 2; k >= 0; k--) {
+                String                   policyType               = String.valueOf(k);
+                VXMetricServiceNameCount vXMetricServiceNameCount = getVXMetricServiceCount(policyType);
+                if (k == 2) {
+                    servicesWithPolicy.put("rowFilteringPolicies", vXMetricServiceNameCount);
+                } else if (k == 1) {
+                    servicesWithPolicy.put("maskingPolicies", vXMetricServiceNameCount);
+                } else if (k == 0) {
+                    servicesWithPolicy.put("resourceAccessPolicies", vXMetricServiceNameCount);
+                }
+            }
+            Map<String, Map<String, Long>> tagMap                     = new HashMap<String, Map<String, Long>>();
+            Map<String, Long>              ServiceNameWithPolicyCount = new HashMap<String, Long>();
+            boolean                        tagFlag                    = false;
+            if (tagFlag == false) {
+                policyFilter.setParam("serviceType", "tag");
+                PList<RangerPolicy> policiestype = getPaginatedPolicies(policyFilter);
+                List<RangerPolicy>  policies     = policiestype.getList();
+                for (RangerPolicy rangerPolicy : policies) {
+                    if (ServiceNameWithPolicyCount.containsKey(rangerPolicy.getService())) {
+                        Long tagServicePolicyCount = ServiceNameWithPolicyCount.get(rangerPolicy.getService()) + 1l;
+                        ServiceNameWithPolicyCount.put(rangerPolicy.getService(), tagServicePolicyCount);
+                    } else if (!rangerPolicy.getName().isEmpty()) {
+                        ServiceNameWithPolicyCount.put(rangerPolicy.getService(), 1l);
+                    }
+                }
+                tagMap.put("tag", ServiceNameWithPolicyCount);
+                long                     tagCount                 = policiestype.getTotalCount();
+                VXMetricServiceNameCount vXMetricServiceNameCount = new VXMetricServiceNameCount();
+                vXMetricServiceNameCount.setServiceBasedCountList(tagMap);
+                vXMetricServiceNameCount.setTotalCount(tagCount);
+                servicesWithPolicy.put("tagAccessPolicies", vXMetricServiceNameCount);
+                tagFlag = true;
+            }
+            vXMetricPolicyWithServiceNameCount.setPolicyCountList(servicesWithPolicy);
+            Gson         gson         = new GsonBuilder().create();
+            final String jsonPolicies = gson.toJson(vXMetricPolicyWithServiceNameCount);
+            ret = jsonPolicies;
+        } catch (Exception e) {
+            LOG.error("ServiceDBStore.getMetricByType(policies): Error calculating Metric for policies : " + e.getMessage());
+        }
+        return ret;
+    }
+
+    private String getMetricOfTypeDatabase(final SearchCriteria searchCriteria) {
+        String ret = null;
+        try {
+            int    dbFlavor      = RangerBizUtil.getDBFlavor();
+            String dbFlavourType = "Unknow ";
+            if (dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
+                dbFlavourType = "MYSQL ";
+            } else if (dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
+                dbFlavourType = "ORACLE ";
+            } else if (dbFlavor == AppConstants.DB_FLAVOR_POSTGRES) {
+                dbFlavourType = "POSTGRES ";
+            } else if (dbFlavor == AppConstants.DB_FLAVOR_SQLANYWHERE) {
+                dbFlavourType = "SQLANYWHERE ";
+            } else if (dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER) {
+                dbFlavourType = "SQLSERVER ";
+            }
+            String       dbDetail     = dbFlavourType + bizUtil.getDBVersion();
+            Gson         gson         = new GsonBuilder().create();
+            final String jsonDBDetail = gson.toJson(dbDetail);
+            ret = jsonDBDetail;
+        } catch (Exception e) {
+            LOG.error("ServiceDBStore.getMetricByType(database): Error calculating Metric for database : " + e.getMessage());
+        }
+        return ret;
+    }
+
+    private String getMetricOfTypeContextEnrichers(final SearchCriteria searchCriteria) {
+        String ret = null;
+        try {
+            SearchFilter filter = new SearchFilter();
+            filter.setStartIndex(0);
+            VXMetricContextEnricher serviceWithContextEnrichers = new VXMetricContextEnricher();
+            PList<RangerServiceDef> paginatedSvcDefs            = getPaginatedServiceDefs(filter);
+            List<RangerServiceDef>  repoTypeList                = paginatedSvcDefs.getList();
+            if (repoTypeList != null) {
+                for (RangerServiceDef repoType : repoTypeList) {
+                    RangerServiceDef               rangerServiceDefObj = (RangerServiceDef) repoType;
+                    String                         name                = rangerServiceDefObj.getName();
+                    List<RangerContextEnricherDef> contextEnrichers    = rangerServiceDefObj.getContextEnrichers();
+                    if (contextEnrichers != null && !contextEnrichers.isEmpty()) {
+                        serviceWithContextEnrichers.setServiceName(name);
+                        serviceWithContextEnrichers.setTotalCount(contextEnrichers.size());
+                    }
+                }
+            }
+            Gson         gson                 = new GsonBuilder().create();
+            final String jsonContextEnrichers = gson.toJson(serviceWithContextEnrichers);
+            ret = jsonContextEnrichers;
+        } catch (Exception e) {
+            LOG.error("ServiceDBStore.getMetricByType(contextenrichers): Error calculating Metric for contextenrichers : " + e.getMessage());
+        }
+        return ret;
+    }
+
+    private String getMetricOfTypeDenyConditions(final SearchCriteria searchCriteria) {
+        String ret = null;
+        try {
+            SearchFilter policyFilter1 = new SearchFilter();
+            policyFilter1.setMaxRows(200);
+            policyFilter1.setStartIndex(0);
+            policyFilter1.setGetCount(true);
+            policyFilter1.setSortBy("serviceId");
+            policyFilter1.setSortType("asc");
+            policyFilter1.setParam("denyCondition", "true");
+            int                     denyCount           = 0;
+            Map<String, Integer>    denyconditionsonMap = new HashMap<String, Integer>();
+            PList<RangerServiceDef> paginatedSvcDefs    = getPaginatedServiceDefs(policyFilter1);
+            if (paginatedSvcDefs != null) {
+                List<RangerServiceDef> rangerServiceDefs = paginatedSvcDefs.getList();
+                if (rangerServiceDefs != null && !rangerServiceDefs.isEmpty()) {
+                    for (RangerServiceDef rangerServiceDef : rangerServiceDefs) {
+                        if (rangerServiceDef != null) {
+                            String serviceDef = rangerServiceDef.getName();
+                            if (!StringUtils.isEmpty(serviceDef)) {
+                                policyFilter1.setParam("serviceType", serviceDef);
+                                PList<RangerPolicy> policiesList = getPaginatedPolicies(policyFilter1);
+                                if (policiesList != null && policiesList.getListSize() > 0) {
+                                    int policyListCount = policiesList.getListSize();
+                                    if (policyListCount > 0 && policiesList.getList() != null) {
+                                        List<RangerPolicy> policies = policiesList.getList();
+                                        for (RangerPolicy policy : policies) {
+                                            if (policy != null) {
+                                                List<RangerPolicyItem> policyItem = policy.getDenyPolicyItems();
+                                                if (policyItem != null && !policyItem.isEmpty()) {
+                                                    if (denyconditionsonMap.get(serviceDef) != null) {
+                                                        denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItem.size();
+                                                    } else {
+                                                        denyCount = denyCount + policyItem.size();
+                                                    }
+                                                }
+                                                List<RangerPolicyItem> policyItemExclude = policy.getDenyExceptions();
+                                                if (policyItemExclude != null && !policyItemExclude.isEmpty()) {
+                                                    if (denyconditionsonMap.get(serviceDef) != null) {
+                                                        denyCount = denyconditionsonMap.get(serviceDef) + denyCount + policyItemExclude.size();
+                                                    } else {
+                                                        denyCount = denyCount + policyItemExclude.size();
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                policyFilter1.removeParam("serviceType");
+                            }
+                            denyconditionsonMap.put(serviceDef, denyCount);
+                            denyCount = 0;
+                        }
+                    }
+                }
+            }
+            Gson   gson                      = new GsonBuilder().create();
+            String jsonContextDenyCondtionOn = gson.toJson(denyconditionsonMap);
+            ret = jsonContextDenyCondtionOn;
+        } catch (Exception e) {
+            LOG.error("ServiceDBStore.getMetricByType(denyconditions): Error calculating Metric for denyconditions : " + e.getMessage());
+        }
+        return ret;
+    }
+
+    public String getMetricByType(final METRIC_TYPE metricType) throws Exception {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ServiceDBStore.getMetricByType(" + metricType + ")");
+        }
+        String ret = null;
+        try {
+            SearchCriteria searchCriteria = new SearchCriteria();
+            searchCriteria.setStartIndex(0);
+            searchCriteria.setMaxRows(100);
+            searchCriteria.setGetCount(true);
+            searchCriteria.setSortType("asc");
+
+            ret = metricType.getMetric(this, searchCriteria);
+        } catch (Exception e) {
+            LOG.error("ServiceDBStore.getMetricByType(" + metricType + "): Error calculating Metric : " + e.getMessage());
         }
         if (LOG.isDebugEnabled()) {
-		LOG.debug("== ServiceDBStore.getMetricByType(" + type + "): " + ret);
+            LOG.debug("== ServiceDBStore.getMetricByType(" + metricType + "): " + ret);
         }
-        return  ret;
+        return ret;
     }
 
     private VXMetricServiceNameCount getVXMetricServiceCount(String policyType) throws Exception {
