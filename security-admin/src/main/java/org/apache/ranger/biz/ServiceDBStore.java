@@ -3032,7 +3032,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 											break;
 										}
 									}
-									policyDeltasForPolicy.add(policyDeltas.get(index));
 									index++;
 									break;
 								case RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE:
