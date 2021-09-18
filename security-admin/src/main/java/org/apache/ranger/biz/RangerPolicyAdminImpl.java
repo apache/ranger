@@ -193,24 +193,24 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                     LOG.debug("Checking admin-access for the access-types:[" + accessTypes + "]");
                 }
 
-                if (CollectionUtils.isEmpty(accessTypes)) {
-                    LOG.info("access-types to check for admin-access are empty!! Allowing admin access!!");
-                    ret = true;
-                } else {
-                    for (RangerPolicyEvaluator evaluator : matchedRepository.getPolicyEvaluators()) {
-                        Set<String> allowedAccesses = evaluator.getAllowedAccesses(modifiedPolicyResources, user, userGroups, roles, accessTypes, evalContext);
-                        if (CollectionUtils.isNotEmpty(allowedAccesses)) {
-                            accessTypes.removeAll(allowedAccesses);
-                            if (CollectionUtils.isEmpty(accessTypes)) {
-                                ret = true;
-                                break;
-                            }
-                        }
+                for (RangerPolicyEvaluator evaluator : matchedRepository.getPolicyEvaluators()) {
+                    Set<String> allowedAccesses = evaluator.getAllowedAccesses(modifiedPolicyResources, user, userGroups, roles, accessTypes, evalContext);
+
+                    if (allowedAccesses == null) {
+                        continue;
                     }
-                    if (CollectionUtils.isNotEmpty(accessTypes)) {
-                        LOG.info("Accesses : " + accessTypes + " are not authorized for the policy:[" + policy.getId() + "] by any of delegated-admin policies");
+
+                    accessTypes.removeAll(allowedAccesses);
+
+                    if (CollectionUtils.isEmpty(accessTypes)) {
+                        ret = true;
+                        break;
                     }
                 }
+                if (CollectionUtils.isNotEmpty(accessTypes)) {
+                    LOG.info("Accesses : " + accessTypes + " are not authorized for the policy:[" + policy.getId() + "] by any of delegated-admin policies");
+                }
+
             }
 
         }

@@ -212,6 +212,8 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 							break;
 						}
 					}
+				} else if (StringUtils.isEmpty(accessType)) {
+					ret = true;
 				}
 			}
 		}
