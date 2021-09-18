@@ -382,10 +382,16 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		Set<String> ret = null;
 
 		if (isMatch(resources, evalContext)) {
-			ret = new HashSet<>();
-			for (String accessType : accessTypes) {
-				if (isAccessAllowed(user, userGroups, roles, null, accessType)) {
-					ret.add(accessType);
+			if (CollectionUtils.isNotEmpty(accessTypes)) {
+				ret = new HashSet<>();
+				for (String accessType : accessTypes) {
+					if (isAccessAllowed(user, userGroups, roles, null, accessType)) {
+						ret.add(accessType);
+					}
+				}
+			} else {
+				if (isAccessAllowed(user, userGroups, roles, null, null)) {
+					ret = new HashSet<>();
 				}
 			}
 		}
@@ -959,7 +965,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				LOG.debug("Using ACL Summary for checking if access is allowed. PolicyId=[" + getId() +"]");
 			}
 
-			Integer accessResult = lookupPolicyACLSummary(user, userGroups, roles, accessType);
+			Integer accessResult = StringUtils.isEmpty(accessType) ? null : lookupPolicyACLSummary(user, userGroups, roles, accessType);
 			if (accessResult != null && accessResult.equals(RangerPolicyEvaluator.ACCESS_ALLOWED)) {
 				ret = true;
 			}
