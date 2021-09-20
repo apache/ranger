@@ -27,6 +27,7 @@ import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.Future;
 
+import kafka.server.KafkaServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -40,11 +41,12 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.apache.kafka.common.config.SaslConfigs;
 import org.apache.kafka.common.config.SslConfigs;
+import org.apache.kafka.common.utils.Time;
 import org.junit.Assert;
 import org.junit.Test;
 
 import kafka.server.KafkaConfig;
-import kafka.server.KafkaServerStartable;
+import scala.Some;
 
 /**
  * A simple test that starts a Kafka broker, creates "test" and "dev" topics, sends a message to them and consumes it. We also plug in a 
@@ -63,7 +65,7 @@ import kafka.server.KafkaServerStartable;
 @org.junit.Ignore("Causing JVM to abort on some platforms")
 public class KafkaRangerAuthorizerSASLSSLTest {
     
-    private static KafkaServerStartable kafkaServer;
+    private static KafkaServer kafkaServer;
     private static TestingServer zkServer;
     private static int port;
     private static String serviceKeystorePath;
@@ -139,7 +141,7 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         UserGroupInformation.createUserForTesting("alice", new String[] {"IT"});
         
         KafkaConfig config = new KafkaConfig(props);
-        kafkaServer = new KafkaServerStartable(config);
+        kafkaServer = new KafkaServer(config, Time.SYSTEM, new Some<String>("KafkaRangerAuthorizerSASLSSLTest"), false);
         kafkaServer.startup();
 
         // Create some topics
