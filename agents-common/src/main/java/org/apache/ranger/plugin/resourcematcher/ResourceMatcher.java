@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
@@ -87,6 +88,16 @@ abstract class ResourceMatcher {
             ret = tokenReplacer.replaceTokens(value, evalContext);
         } else {
             ret = value;
+        }
+
+        return ret;
+    }
+
+    public static boolean startsWithAnyChar(String value, String startChars) {
+        boolean ret = false;
+
+        if (value != null && value.length() > 0 && startChars != null) {
+            ret = StringUtils.contains(startChars, value.charAt(0));
         }
 
         return ret;
