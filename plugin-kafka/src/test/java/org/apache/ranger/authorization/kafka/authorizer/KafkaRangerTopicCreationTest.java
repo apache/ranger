@@ -18,7 +18,7 @@
 package org.apache.ranger.authorization.kafka.authorizer;
 
 import kafka.server.KafkaConfig;
-import kafka.server.KafkaServerStartable;
+import kafka.server.KafkaServer;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -29,10 +29,12 @@ import org.apache.kafka.clients.admin.AdminClientConfig;
 import org.apache.kafka.clients.admin.CreateTopicsResult;
 import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.utils.Time;
 import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import scala.Some;
 
 import java.io.File;
 import java.net.ServerSocket;
@@ -49,7 +51,7 @@ import java.util.Properties;
 public class KafkaRangerTopicCreationTest {
     private final static Logger LOG = LoggerFactory.getLogger(KafkaRangerTopicCreationTest.class);
 
-    private static KafkaServerStartable kafkaServer;
+    private static KafkaServer kafkaServer;
     private static TestingServer zkServer;
     private static int port;
     private static Path tempDir;
@@ -121,7 +123,7 @@ public class KafkaRangerTopicCreationTest {
         UserGroupInformation.createUserForTesting("kafka/localhost@kafka.apache.org", new String[] {"IT"});
 
         KafkaConfig config = new KafkaConfig(props);
-        kafkaServer = new KafkaServerStartable(config);
+        kafkaServer = new KafkaServer(config, Time.SYSTEM, new Some<String>("KafkaRangerTopicCreationTest"), false);
         kafkaServer.startup();
    }
 
