@@ -97,6 +97,13 @@ public class TestDefaultPolicyResourceMatcher {
 	}
 
 	@Test
+	public void testDefaultPolicyResourceMatcherQuoted() throws Exception {
+		String[] tests = {"/resourcematcher/test_defaultpolicyresourcematcher_quoted.json"};
+
+		runTestsFromResourceFiles(tests, null);
+	}
+
+	@Test
 	public void testDefaultPolicyResourceMatcher_ResourceSpecific() throws Exception {
 		String[] tests = { "/resourcematcher/test_defaultpolicyresourcematcher.json" };
 

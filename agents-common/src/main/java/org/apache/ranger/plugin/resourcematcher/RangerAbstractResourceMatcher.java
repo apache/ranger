@@ -40,8 +40,10 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 	public final static String WILDCARD_ASTERISK = "*";
 
-	public final static String OPTION_IGNORE_CASE = "ignoreCase";
-	public final static String OPTION_WILD_CARD   = "wildCard";
+	public final static String OPTION_IGNORE_CASE            = "ignoreCase";
+	public final static String OPTION_QUOTED_CASE_SENSITIVE  = "quotedCaseSensitive";
+	public final static String OPTION_QUOTE_CHARS            = "quoteChars";
+	public final static String OPTION_WILD_CARD              = "wildCard";
 	public final static String OPTION_REPLACE_TOKENS         = "replaceTokens";
 	public final static String OPTION_TOKEN_DELIMITER_START  = "tokenDelimiterStart";
 	public final static String OPTION_TOKEN_DELIMITER_END    = "tokenDelimiterEnd";
@@ -52,6 +54,8 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 	protected RangerPolicyResource policyResource;
 
 	protected boolean      optIgnoreCase;
+	protected boolean      optQuotedCaseSensitive;
+	protected String       optQuoteChars = "\"";
 	protected boolean      optWildCard;
 
 	protected List<String> policyValues;
@@ -83,8 +87,10 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 		Map<String, String> options = resourceDef != null ? resourceDef.getMatcherOptions() : null;
 
-		optIgnoreCase = getOptionIgnoreCase(options);
-		optWildCard   = getOptionWildCard(options);
+		optIgnoreCase          = getOptionIgnoreCase(options);
+		optQuotedCaseSensitive = getOptionQuotedCaseSensitive(options);
+		optQuoteChars          = getOptionQuoteChars(options);
+		optWildCard            = getOptionWildCard(options);
 
 		policyValues = new ArrayList<>();
 		policyIsExcludes = policyResource != null && policyResource.getIsExcludes();
@@ -141,6 +147,14 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 
 	public static boolean getOptionIgnoreCase(Map<String, String> options) {
 		return ServiceDefUtil.getBooleanOption(options, OPTION_IGNORE_CASE, true);
+	}
+
+	public static boolean getOptionQuotedCaseSensitive(Map<String, String> options) {
+		return ServiceDefUtil.getBooleanOption(options, OPTION_QUOTED_CASE_SENSITIVE, false);
+	}
+
+	public static String getOptionQuoteChars(Map<String, String> options) {
+		return ServiceDefUtil.getOption(options, OPTION_QUOTE_CHARS, "\"");
 	}
 
 	public static boolean getOptionWildCard(Map<String, String> options) {
@@ -208,7 +222,7 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 			if(isMatchAny) {
 				ret = StringUtils.isEmpty(resource) || StringUtils.containsOnly(resource, WILDCARD_ASTERISK);
 			} else {
-				ret = optIgnoreCase ? StringUtils.equalsIgnoreCase(resource, policyValue) : StringUtils.equals(resource, policyValue);
+				ret = optIgnoreCase && !(optQuotedCaseSensitive && ResourceMatcher.startsWithAnyChar(resource, optQuoteChars)) ? StringUtils.equalsIgnoreCase(resource, policyValue) : StringUtils.equals(resource, policyValue);
 			}
 
 			if(policyIsExcludes) {
@@ -246,6 +260,8 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		}
 		sb.append("} ");
 		sb.append("optIgnoreCase={").append(optIgnoreCase).append("} ");
+		sb.append("optQuotedCaseSensitive={").append(optQuotedCaseSensitive).append("} ");
+		sb.append("optQuoteChars={").append(optQuoteChars).append("} ");
 		sb.append("optWildCard={").append(optWildCard).append("} ");
 
 		sb.append("policyValues={");
@@ -346,17 +362,17 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		}
 
 		if (needWildcardMatch) { // test?, test*a*, test*a*b, *test*a
-			ret = optIgnoreCase ? new CaseInsensitiveWildcardMatcher(policyValue) : new CaseSensitiveWildcardMatcher(policyValue);
+			ret = optIgnoreCase ? (optQuotedCaseSensitive ? new QuotedCaseSensitiveWildcardMatcher(policyValue, optQuoteChars) : new CaseInsensitiveWildcardMatcher(policyValue)) : new CaseSensitiveWildcardMatcher(policyValue);
 		} else if (wildcardStartIdx == -1) { // test, testa, testab
-			ret = optIgnoreCase ? new CaseInsensitiveStringMatcher(policyValue) : new CaseSensitiveStringMatcher(policyValue);
+			ret = optIgnoreCase ? (optQuotedCaseSensitive ? new QuotedCaseSensitiveStringMatcher(policyValue, optQuoteChars) : new CaseInsensitiveStringMatcher(policyValue)) : new CaseSensitiveStringMatcher(policyValue);
 		} else if (wildcardStartIdx == 0) { // *test, **test, *testa, *testab
 			String matchStr = policyValue.substring(wildcardEndIdx + 1);
-			ret = optIgnoreCase ? new CaseInsensitiveEndsWithMatcher(matchStr) : new CaseSensitiveEndsWithMatcher(matchStr);
+			ret = optIgnoreCase ? (optQuotedCaseSensitive ? new QuotedCaseSensitiveEndsWithMatcher(matchStr, optQuoteChars) : new CaseInsensitiveEndsWithMatcher(matchStr)) : new CaseSensitiveEndsWithMatcher(matchStr);
 		} else if (wildcardEndIdx != (len - 1)) { // test*a, test*ab
-			ret = optIgnoreCase ? new CaseInsensitiveWildcardMatcher(policyValue) : new CaseSensitiveWildcardMatcher(policyValue);
+			ret = optIgnoreCase ? (optQuotedCaseSensitive ? new QuotedCaseSensitiveWildcardMatcher(policyValue, optQuoteChars) : new CaseInsensitiveWildcardMatcher(policyValue)) : new CaseSensitiveWildcardMatcher(policyValue);
 		} else { // test*, test**, testa*, testab*
 			String matchStr = policyValue.substring(0, wildcardStartIdx);
-			ret = optIgnoreCase ? new CaseInsensitiveStartsWithMatcher(matchStr) : new CaseSensitiveStartsWithMatcher(matchStr);
+			ret = optIgnoreCase ? (optQuotedCaseSensitive ? new QuotedCaseSensitiveStartsWithMatcher(matchStr, optQuoteChars) : new CaseInsensitiveStartsWithMatcher(matchStr)) : new CaseSensitiveStartsWithMatcher(matchStr);
 		}
 
 		if(optReplaceTokens) {
@@ -389,6 +405,27 @@ final class CaseInsensitiveStringMatcher extends ResourceMatcher {
 	int getPriority() {return 2 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
+final class QuotedCaseSensitiveStringMatcher extends ResourceMatcher {
+	private final String quoteChars;
+
+	QuotedCaseSensitiveStringMatcher(String value, String quoteChars) {
+		super(value);
+
+		this.quoteChars = quoteChars;
+	}
+
+	@Override
+	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+		if (startsWithAnyChar(resourceValue, quoteChars)) {
+			return StringUtils.equals(resourceValue, getExpandedValue(evalContext));
+		} else {
+			return StringUtils.equalsIgnoreCase(resourceValue, getExpandedValue(evalContext));
+		}
+	}
+
+	int getPriority() {return 2 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
+}
+
 final class CaseSensitiveStartsWithMatcher extends ResourceMatcher {
 	CaseSensitiveStartsWithMatcher(String value) {
 		super(value);
@@ -408,6 +445,27 @@ final class CaseInsensitiveStartsWithMatcher extends ResourceMatcher {
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return StringUtils.startsWithIgnoreCase(resourceValue, getExpandedValue(evalContext));
 	}
+	int getPriority() { return 4 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
+}
+
+final class QuotedCaseSensitiveStartsWithMatcher extends ResourceMatcher {
+	private final String quoteChars;
+
+	QuotedCaseSensitiveStartsWithMatcher(String value, String quoteChars) {
+		super(value);
+
+		this.quoteChars = quoteChars;
+	}
+
+	@Override
+	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+		if (startsWithAnyChar(resourceValue, quoteChars)) {
+			return StringUtils.startsWith(resourceValue, getExpandedValue(evalContext));
+		} else {
+			return StringUtils.startsWithIgnoreCase(resourceValue, getExpandedValue(evalContext));
+		}
+	}
+
 	int getPriority() { return 4 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
@@ -435,6 +493,27 @@ final class CaseInsensitiveEndsWithMatcher extends ResourceMatcher {
 	int getPriority() { return 4 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
+final class QuotedCaseSensitiveEndsWithMatcher extends ResourceMatcher {
+	private final String quoteChars;
+
+	QuotedCaseSensitiveEndsWithMatcher(String value, String quoteChars) {
+		super(value);
+
+		this.quoteChars = quoteChars;
+	}
+
+	@Override
+	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+		if (startsWithAnyChar(resourceValue, quoteChars)) {
+			return StringUtils.endsWith(resourceValue, getExpandedValue(evalContext));
+		} else {
+			return StringUtils.endsWithIgnoreCase(resourceValue, getExpandedValue(evalContext));
+		}
+	}
+
+	int getPriority() { return 4 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
+}
+
 final class CaseSensitiveWildcardMatcher extends ResourceMatcher {
 	CaseSensitiveWildcardMatcher(String value) {
 		super(value);
@@ -457,6 +536,25 @@ final class CaseInsensitiveWildcardMatcher extends ResourceMatcher {
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return FilenameUtils.wildcardMatch(resourceValue, getExpandedValue(evalContext), IOCase.INSENSITIVE);
 	}
+	int getPriority() {return 6 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
+}
+
+final class QuotedCaseSensitiveWildcardMatcher extends ResourceMatcher {
+	private final String quoteChars;
+
+	QuotedCaseSensitiveWildcardMatcher(String value, String quoteChars) {
+		super(value);
+
+		this.quoteChars = quoteChars;
+	}
+
+	@Override
+	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
+		IOCase caseSensitivity = startsWithAnyChar(resourceValue, quoteChars) ? IOCase.SENSITIVE : IOCase.INSENSITIVE;
+
+		return FilenameUtils.wildcardMatch(resourceValue, getExpandedValue(evalContext), caseSensitivity);
+	}
+
 	int getPriority() {return 6 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
