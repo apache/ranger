@@ -3662,36 +3662,41 @@ public class ServiceREST {
 		return getCSRFPropertiesMap(request);
 	}
 
-	@GET
-	@Path("/metrics/type/{type}")
-	@Produces({ "application/json", "application/xml" })
-	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\""+ RangerAPIList.GET_METRICS_BY_TYPE + "\")")
-	public String getMetricByType(@PathParam("type") String type) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getMetricByType(serviceDefName=" + type + ")");
-		}
-		// as of now we are allowing only users with Admin role to access this
-		// API
-		bizUtil.checkSystemAdminAccess();
-		bizUtil.blockAuditorRoleUser();
-		String ret = null;
-		try {
-			ret = svcStore.getMetricByType(type);
-		} catch (WebApplicationException excp) {
-			throw excp;
-		} catch (Throwable excp) {
-			LOG.error("getMetricByType(" + type + ") failed", excp);
-			throw restErrorUtil.createRESTException(excp.getMessage());
-		}
-		if (ret == null) {
-			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
-		}
+    @GET
+    @Path("/metrics/type/{type}")
+    @Produces({ "application/json", "application/xml" })
+    @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_METRICS_BY_TYPE + "\")")
+    public String getMetricByType(@PathParam("type") String type) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ServiceREST.getMetricByType(serviceDefName=" + type + ")");
+        }
+        // as of now we are allowing only users with Admin role to access this
+        // API
+        bizUtil.checkSystemAdminAccess();
+        bizUtil.blockAuditorRoleUser();
+        String ret = null;
+        try {
+            ServiceDBStore.METRIC_TYPE metricType = ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type);
+            if (metricType == null) {
+                throw restErrorUtil.createRESTException("Metric type="+type+", not supported.");
+            }
 
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getMetricByType(" + type + "): " + ret);
-		}
-		return ret;
-	}
+            ret = svcStore.getMetricByType(metricType);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            LOG.error("getMetricByType(" + type + ") failed", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+        if (ret == null) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== ServiceREST.getMetricByType(" + type + "): " + ret);
+        }
+        return ret;
+    }
 
 	/**
 	 * Delete services/ repos associated with cluster.

@@ -2297,80 +2297,79 @@ public class TestServiceDBStore {
 			rangerService.getVersion());
 	Mockito.verify(daoManager).getXXUser();
 }
-    @Test
-    public void test41getMetricByTypeusergroup() throws Exception{
-    	VXGroupList vxGroupList = new VXGroupList();
-    	vxGroupList.setTotalCount(4l);
-    	vxGroupList.setPageSize(1);
-    	String type = "usergroup";
-    	VXUserList vXUserList = new VXUserList();
-    	vXUserList.setTotalCount(4l);
-    	Mockito.when(xUserMgr.searchXGroups(Mockito.any(SearchCriteria.class) )).thenReturn(vxGroupList);
-    	Mockito.when(xUserMgr.searchXUsers(Mockito.any(SearchCriteria.class))).thenReturn(vXUserList);
-    	serviceDBStore.getMetricByType(type);
-    	
 
-    }
-    @Test
-    public void test42getMetricByTypeaudits() throws Exception{
-    	String type = "audits";
-    	
-    	Date date = new Date();
-    	date.setYear(2018);
-    
-    	Mockito.when(restErrorUtil.parseDate(Mockito.anyString(),Mockito.anyString(),
-                                         Mockito.any(), Mockito.any(), Mockito.anyString(),  Mockito.anyString())).thenReturn(date);
-    	RangerServiceDefList svcDefList = new RangerServiceDefList();
-    	svcDefList.setTotalCount(10l);
-    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
-    	
-    	
-		serviceDBStore.getMetricByType(type);
-		
-		
-    }
-    @Test
-    public void test43getMetricByTypeServices() throws Exception{
-    	String type = "services";
-    	RangerServiceList svcList = new RangerServiceList();
-    	svcList.setTotalCount(10l);
-    	Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
-    	serviceDBStore.getMetricByType(type);
-    }
-    
-    @Test
-    public void test44getMetricByTypePolicies() throws Exception{
-    	String type = "policies";
-    	RangerServiceList svcList = new RangerServiceList();
-    	svcList.setTotalCount(10l);
-    	Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
-    	serviceDBStore.getMetricByType(type);
-    }
-    
-    @Test
-    public void test45getMetricByTypeDatabase() throws Exception{
-    	String type = "database";
-    	Mockito.when(bizUtil.getDBVersion()).thenReturn("MYSQL");
-    	serviceDBStore.getMetricByType(type);
-    }
-    
-    @Test
-    public void test46getMetricByTypeContextenrichers() throws Exception{
-    	String type = "contextenrichers";
-    	RangerServiceDefList svcDefList = new RangerServiceDefList();
-    	svcDefList.setTotalCount(10l);
-    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
-    	serviceDBStore.getMetricByType(type);
-    }
-    
-    @Test
-    public void test47getMetricByTypeDenyconditions() throws Exception{
-    	String type = "denyconditions";
-    	RangerServiceDefList svcDefList = new RangerServiceDefList();
-    	svcDefList.setTotalCount(10l);
-    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
-    	serviceDBStore.getMetricByType(type);
-    }
+@Test
+public void test41getMetricByTypeusergroup() throws Exception {
+    VXGroupList vxGroupList = new VXGroupList();
+    vxGroupList.setTotalCount(4l);
+    vxGroupList.setPageSize(1);
+    String         type       = "usergroup";
+    VXUserList     vXUserList = new VXUserList();
+    vXUserList.setTotalCount(4l);
+    Mockito.when(xUserMgr.searchXGroups(Mockito.any(SearchCriteria.class))).thenReturn(vxGroupList);
+    Mockito.when(xUserMgr.searchXUsers(Mockito.any(SearchCriteria.class))).thenReturn(vXUserList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+
+}
+
+@Test
+public void test42getMetricByTypeaudits() throws Exception {
+    String type = "audits";
+
+    Date date = new Date();
+    date.setYear(2018);
+
+    Mockito.when(restErrorUtil.parseDate(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(date);
+    RangerServiceDefList svcDefList = new RangerServiceDefList();
+    svcDefList.setTotalCount(10l);
+    Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+
+}
+
+@Test
+public void test43getMetricByTypeServices() throws Exception {
+    String                type    = "services";
+    RangerServiceList     svcList = new RangerServiceList();
+    svcList.setTotalCount(10l);
+    Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+@Test
+public void test44getMetricByTypePolicies() throws Exception {
+    String                type    = "policies";
+    RangerServiceList     svcList = new RangerServiceList();
+    svcList.setTotalCount(10l);
+    Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+@Test
+public void test45getMetricByTypeDatabase() throws Exception {
+    String type = "database";
+    Mockito.when(bizUtil.getDBVersion()).thenReturn("MYSQL");
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+@Test
+public void test46getMetricByTypeContextenrichers() throws Exception {
+    String                   type       = "contextenrichers";
+    RangerServiceDefList     svcDefList = new RangerServiceDefList();
+    svcDefList.setTotalCount(10l);
+    Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+@Test
+public void test47getMetricByTypeDenyconditions() throws Exception {
+    String                   type       = "denyconditions";
+    RangerServiceDefList     svcDefList = new RangerServiceDefList();
+    svcDefList.setTotalCount(10l);
+    Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
 
     @Test
     public void test48IsServiceAdminUserTrue() throws Exception{

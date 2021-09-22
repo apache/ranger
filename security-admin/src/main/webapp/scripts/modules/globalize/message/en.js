@@ -300,7 +300,9 @@ define(function(require) {
 				stayOnPage					: 'Stay on this page',
 				leavePage					: 'Leave this page',
 				setVisibility               : 'Set Visibility',
-				setStatus               	: 'Set Status'
+				setStatus               	: 'Set Status',
+				stayLoggdedIn				: 'Stay Logged In',
+				logOutNow					: 'Log Out Now'
 				
 			},
 			// h1, h2, h3, fieldset, title
@@ -512,7 +514,8 @@ define(function(require) {
 				preventNavUserForm : 'User form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavGroupForm : 'Group form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavUserList : 'Some Users/Groups have been edited. Kindly save your changes before navigating away!',
-				preventNavZoneForm : 'Zone form edit is in progress. Please save/cancel changes before navigating away!'
+				preventNavZoneForm : 'Zone form edit is in progress. Please save/cancel changes before navigating away!',
+				idelTimeOutMsg : 'Because you have been inactive, your session is about to expire.'
 				
 			},	
 			validationMessages : {
