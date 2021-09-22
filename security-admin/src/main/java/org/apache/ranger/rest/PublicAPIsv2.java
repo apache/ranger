@@ -410,6 +410,13 @@ public class PublicAPIsv2 {
 		return serviceREST.getPoliciesForResource(serviceDefName, serviceName, request);
 	}
 
+	@GET
+	@Path("/api/policy/guid/{guid}")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicy getPolicyByGUIDAndServiceName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName) {
+		return serviceREST.getPolicyByGUIDAndServiceName(guid, serviceName);
+	}
+
 	@POST
 	@Path("/api/policy/")
 	@Produces({ "application/json", "application/xml" })
@@ -504,6 +511,13 @@ public class PublicAPIsv2 {
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.deletePolicyByName(" + serviceName + "," + policyName + ")");
 		}
+	}
+
+	@DELETE
+	@Path("/api/policy/guid/{guid}")
+	@Produces({ "application/json", "application/xml" })
+	public void deletePolicyByGUIDAndServiceName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName) {
+		serviceREST.deletePolicyByGUIDAndServiceName(guid, serviceName);
 	}
 
 	@GET
