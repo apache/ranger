@@ -3758,6 +3758,70 @@ public class ServiceREST {
 		return new ResponseEntity<>(deletedServices, responseStatus);
 	}
 
+	@GET
+	@Path("/policies/guid/{guid}")
+	@Produces({ "application/json", "application/xml" })
+	public RangerPolicy getPolicyByGUIDAndServiceName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.getPolicyByGUIDAndServiceName(" + guid + ", " + serviceName + ")");
+		}
+		RangerPolicy ret = null;
+		RangerPerfTracer perf = null;
+		try {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicyByGUIDAndServiceName(policyGUID=" + guid + ", serviceName="+ serviceName + ")");
+			}
+			ret = svcStore.getPolicy(guid, serviceName);
+			if (ret != null) {
+				ensureAdminAndAuditAccess(ret);
+			}
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("getPolicyByGUIDAndServiceName(" + guid + "," + serviceName + ") failed", excp);
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
+		if (ret == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.getPolicyByGUIDAndServiceName(" + guid + ", " + serviceName + "): " + ret);
+		}
+		return ret;
+	}
+
+	@DELETE
+	@Path("/policies/guid/{guid}")
+	@Produces({ "application/json", "application/xml" })
+	public void deletePolicyByGUIDAndServiceName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.deletePolicyByGUIDAndServiceName(" + guid + ", " + serviceName + ")");
+		}
+		RangerPolicy ret = null;
+		RangerPerfTracer perf = null;
+		try {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deletePolicyByGUIDAndServiceName(policyGUID=" + guid + ", serviceName="+ serviceName + ")");
+			}
+			ret = getPolicyByGUIDAndServiceName(guid, serviceName);
+			if (ret != null) {
+				deletePolicy(ret.getId());
+			}
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("deletePolicyByGUIDAndServiceName(" + guid + "," + serviceName + ") failed", excp);
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.deletePolicyByGUIDAndServiceName(" + guid + ", " + serviceName + ")");
+		}
+	}
+
 	private HashMap<String, Object> getCSRFPropertiesMap(HttpServletRequest request) {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put(isCSRF_ENABLED, PropertiesUtil.getBooleanProperty(isCSRF_ENABLED, true));

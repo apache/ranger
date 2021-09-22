@@ -2298,6 +2298,17 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return policyService.read(id);
 	}
 
+	public RangerPolicy getPolicy(String guid, String serviceName) throws Exception {
+		RangerPolicy ret = null;
+		if (StringUtils.isNotBlank(guid) && StringUtils.isNotBlank(serviceName)) {
+			XXPolicy xPolicy = daoMgr.getXXPolicy().findByPolicyGUIDAndServiceName(guid, serviceName);
+			if (xPolicy != null) {
+				ret = policyService.getPopulatedViewObject(xPolicy);
+			}
+		}
+		return ret;
+	}
+
 	@Override
 	public List<RangerPolicy> getPolicies(SearchFilter filter) throws Exception {
 		if(LOG.isDebugEnabled()) {

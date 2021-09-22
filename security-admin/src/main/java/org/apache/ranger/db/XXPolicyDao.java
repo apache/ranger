@@ -284,4 +284,16 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		}
 		return ret;
 	}
+
+	public XXPolicy findByPolicyGUIDAndServiceName(String guid, String serviceName) {
+		if (guid == null  || serviceName == null) {
+			return null;
+		}
+		try {
+			XXPolicy xPol = getEntityManager().createNamedQuery("XXPolicy.findByGUIDAndServiceName", tClass).setParameter("guid", guid).setParameter("serviceName", serviceName).getSingleResult();
+			return xPol;
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
 }

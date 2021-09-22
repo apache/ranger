@@ -383,6 +383,10 @@
 		<query>select obj from XXPolicy obj where obj.id in (select item.policyId from XXPolicyItem item) </query>
 	</named-query>
 
+	<named-query name="XXPolicy.findByGUIDAndServiceName">
+		<query>select obj from XXPolicy obj, XXService svc where obj.guid = :guid and obj.service  = svc.id and svc.name = :serviceName</query>
+	</named-query>
+
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>
