@@ -26,7 +26,7 @@ import org.junit.Test;
 import java.util.Map;
 import java.util.Set;
 
-import static org.junit.Assert.assertThat;
+import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNull;
@@ -40,7 +40,7 @@ public class TestUnixUserGroupBuilder {
     private UserGroupSyncConfig config;
 
     @Before
-    public void setUp() throws Exception {
+    public void setUp() {
         config = UserGroupSyncConfig.getInstance();
         config.setProperty("ranger.usersync.unix.minUserId", "0");
         config.setProperty("ranger.usersync.unix.minGroupId", "0");
