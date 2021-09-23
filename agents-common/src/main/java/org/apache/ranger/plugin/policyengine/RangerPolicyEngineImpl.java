@@ -671,11 +671,13 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			LOG.debug("==> RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + ")");
 		}
 
-		RangerAccessResult ret = createAccessResult(request, policyType);
+		final RangerAccessResult ret;
 
 		if (request.isAccessTypeAny()) {
 			RangerAccessResult denyResult  = null;
 			RangerAccessResult allowResult = null;
+
+			ret = createAccessResult(request, policyType);
 
 			List<RangerServiceDef.RangerAccessTypeDef> allAccessDefs = getServiceDef().getAccessTypes();
 
@@ -700,9 +702,9 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			}
 
 			if (allowResult != null) {
-				ret = allowResult;
+				ret.setAccessResultFrom(allowResult);
 			} else if (denyResult != null) {
-				ret = denyResult;
+				ret.setAccessResultFrom(denyResult);
 			}
 		} else {
 			ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
