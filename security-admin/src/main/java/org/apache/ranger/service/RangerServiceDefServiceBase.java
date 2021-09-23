@@ -110,11 +110,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			serviceDef.setResources(resources);
 		}
 
-		List<XXAccessTypeDef> xAccessTypes = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
+		List<XXAccessTypeDef>     xAccessTypes  = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
+		Map<String, List<String>> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByServiceDefId(serviceDefId);
 		if (!stringUtil.isEmpty(xAccessTypes)) {
 			List<RangerAccessTypeDef> accessTypes = new ArrayList<RangerAccessTypeDef>();
 			for (XXAccessTypeDef xAtd : xAccessTypes) {
-				RangerAccessTypeDef accessType = populateXXToRangerAccessTypeDef(xAtd);
+				RangerAccessTypeDef accessType = populateXXToRangerAccessTypeDef(xAtd, impliedGrants.get(xAtd.getName()));
 				accessTypes.add(accessType);
 			}
 			serviceDef.setAccessTypes(accessTypes);
@@ -405,17 +406,27 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 	}
 	
 	public RangerAccessTypeDef populateXXToRangerAccessTypeDef(XXAccessTypeDef xObj) {
+		List<String> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByATDId(xObj.getId());
+
+		return populateXXToRangerAccessTypeDef(xObj, impliedGrants);
+	}
+
+	public RangerAccessTypeDef populateXXToRangerAccessTypeDef(XXAccessTypeDef xObj, List<String> impliedGrants) {
 		RangerAccessTypeDef vObj = new RangerAccessTypeDef();
+
+		if (impliedGrants == null) {
+			impliedGrants = new ArrayList<>();
+		}
+
 		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		
-		List<String> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByATDId(xObj.getId());
 		vObj.setImpliedGrants(impliedGrants);
+
 		return vObj;
 	}
-	
+
 	public XXPolicyConditionDef populateRangerPolicyConditionDefToXX(RangerPolicyConditionDef vObj,
 			XXPolicyConditionDef xObj, XXServiceDef serviceDef, int operationContext) {
 		if(serviceDef == null) {

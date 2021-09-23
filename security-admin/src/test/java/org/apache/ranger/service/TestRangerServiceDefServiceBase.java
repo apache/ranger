@@ -17,6 +17,7 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -32,7 +33,6 @@ import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
-import org.apache.ranger.db.XXAccessTypeDefGrantsDao;
 import org.apache.ranger.db.XXEnumElementDefDao;
 import org.apache.ranger.db.XXResourceDefDao;
 import org.apache.ranger.entity.XXAccessTypeDef;
@@ -370,9 +370,6 @@ public class TestRangerServiceDefServiceBase {
 	@Test
 	public void test9populateXXToRangerAccessTypeDef() {
 
-		XXAccessTypeDefGrantsDao xAccessTypeDefGrantsDao = Mockito
-				.mock(XXAccessTypeDefGrantsDao.class);
-		List<String> lists = new ArrayList<String>();
 		XXAccessTypeDef accessTypeDefObj = new XXAccessTypeDef();
 		accessTypeDefObj.setAddedByUserId(Id);
 		accessTypeDefObj.setCreateTime(new Date());
@@ -385,15 +382,8 @@ public class TestRangerServiceDefServiceBase {
 		accessTypeDefObj.setUpdatedByUserId(Id);
 		accessTypeDefObj.setUpdateTime(new Date());
 
-		Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(
-				xAccessTypeDefGrantsDao);
-		Mockito.when(
-				xAccessTypeDefGrantsDao
-						.findImpliedGrantsByATDId(accessTypeDefObj.getId()))
-				.thenReturn(lists);
-
 		RangerAccessTypeDef dbRangerAccessTypeDef = rangerServiceDefService
-				.populateXXToRangerAccessTypeDef(accessTypeDefObj);
+				.populateXXToRangerAccessTypeDef(accessTypeDefObj, Collections.emptyList());
 		Assert.assertNotNull(dbRangerAccessTypeDef);
 		Assert.assertEquals(dbRangerAccessTypeDef.getName(),
 				accessTypeDefObj.getName());
@@ -401,7 +391,6 @@ public class TestRangerServiceDefServiceBase {
 				accessTypeDefObj.getLabel());
 		Assert.assertEquals(dbRangerAccessTypeDef.getRbKeyLabel(),
 				accessTypeDefObj.getRbkeylabel());
-
 	}
 
 	@Test
