@@ -916,15 +916,8 @@
                             <fail>true</fail>
                         </configuration>
                     </execution>
-                </executions>
-            </plugin>
 
-            <!-- duplicate JAVA patch file version validator plugin -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-enforcer-plugin</artifactId>
-                <version>1.4.1</version>
-                <executions>
+                    <!-- duplicate JAVA patch file version validator plugin -->
                     <execution>
                         <id>duplicate-java-patch-file-version-validator</id>
                         <goals>
