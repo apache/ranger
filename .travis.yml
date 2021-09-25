@@ -14,7 +14,6 @@
 # limitations under the License.
 
 
-sudo: false
 language: java
 cache:
   directories:
