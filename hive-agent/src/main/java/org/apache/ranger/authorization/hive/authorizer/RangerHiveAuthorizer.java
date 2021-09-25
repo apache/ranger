@@ -995,8 +995,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				}
 			}
 
-			if (CollectionUtils.isEmpty(inputHObjs) && CollectionUtils.isEmpty(outputHObjs) && !IsCommandInExceptionList(hiveOpType)
-					&& (hiveOpType.equals(HiveOperationType.DROPDATABASE) || hiveOpType.equals(HiveOperationType.DROPTABLE)))  {
+			if (CollectionUtils.isEmpty(inputHObjs) && CollectionUtils.isEmpty(outputHObjs) && !IsCommandInExceptionList(hiveOpType)) {
+				if (hiveOpType.equals(HiveOperationType.DROPDATABASE) || hiveOpType.equals(HiveOperationType.DROPTABLE)) {
 					//Handle Drop If exists statements where both inputHObjs and outputHObjs will be empty and request has to created out of commandString.
 					RangerHiveAccessRequest request = buildRequestForDropIfExistsCommands(hiveOpType, user, groups, roles, hiveOpType.name(), context, sessionContext);
 					if (request != null) {
@@ -1005,6 +1005,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				} else {
 					String commandString = context == null ? "" : context.getCommandString();
 					throw new HiveAccessControlException(String.format("Unable to authorize command: [%s] , HivePrivilegeObjects are not available to authorize this command!", commandString));
+				}
 			}
 
 			buildRequestContextWithAllAccessedResources(requests);
