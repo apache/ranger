@@ -18,7 +18,9 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.NoResultException;
 
@@ -47,6 +49,36 @@ public class XXAccessTypeDefGrantsDao extends BaseDao<XXAccessTypeDefGrants> {
 		} catch (NoResultException e) {
 			return new ArrayList<String>();
 		}
+	}
+
+	public Map<String, List<String>> findImpliedGrantsByServiceDefId(Long serviceDefId) {
+		final Map<String, List<String>> ret = new HashMap<>();
+
+		if (serviceDefId != null) {
+			@SuppressWarnings("unchecked")
+			List<Object[]> rows = (List<Object[]>) getEntityManager()
+					.createNamedQuery("XXAccessTypeDefGrants.findByServiceDefId")
+					.setParameter("serviceDefId", serviceDefId)
+					.getResultList();
+
+			if (rows != null) {
+				for (Object[] row : rows) {
+					String       accessType    = (String) row[0];
+					String       impliedGrant  = (String) row[1];
+					List<String> impliedGrants = ret.get(accessType);
+
+					if (impliedGrants == null) {
+						impliedGrants = new ArrayList<>();
+
+						ret.put(accessType, impliedGrants);
+					}
+
+					impliedGrants.add(impliedGrant);
+				}
+			}
+		}
+
+		return ret;
 	}
 
 	public XXAccessTypeDefGrants findByNameAndATDId(Long atdId, String name) {

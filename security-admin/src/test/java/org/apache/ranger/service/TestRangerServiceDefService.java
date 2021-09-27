@@ -17,6 +17,7 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
@@ -155,6 +156,7 @@ public class TestRangerServiceDefService {
 		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
 		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
 				.mock(XXAccessTypeDefDao.class);
+		XXAccessTypeDefGrantsDao xxAccessTypeDefGrantsDao = Mockito.mock(XXAccessTypeDefGrantsDao.class);
 		XXPolicyConditionDefDao xPolicyConditionDefDao = Mockito
 				.mock(XXPolicyConditionDefDao.class);
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
@@ -301,6 +303,8 @@ public class TestRangerServiceDefService {
 
 		Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(
 				xAccessTypeDefDao);
+		Mockito.when(xxAccessTypeDefGrantsDao.findImpliedGrantsByServiceDefId(Mockito.anyLong())).thenReturn(Collections.emptyMap());
+		Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
@@ -352,6 +356,7 @@ public class TestRangerServiceDefService {
 		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
 		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
 				.mock(XXAccessTypeDefDao.class);
+		XXAccessTypeDefGrantsDao xxAccessTypeDefGrantsDao = Mockito.mock(XXAccessTypeDefGrantsDao.class);
 		XXPolicyConditionDefDao xPolicyConditionDefDao = Mockito
 				.mock(XXPolicyConditionDefDao.class);
 		XXServiceConfigDefDao xServiceConfigDefDao = Mockito
@@ -514,6 +519,8 @@ public class TestRangerServiceDefService {
 
 		Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(
 				xAccessTypeDefDao);
+		Mockito.when(xxAccessTypeDefGrantsDao.findImpliedGrantsByServiceDefId(Mockito.anyLong())).thenReturn(Collections.emptyMap());
+		Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
@@ -559,6 +566,7 @@ public class TestRangerServiceDefService {
 		XXResourceDefDao xResourceDefDao = Mockito.mock(XXResourceDefDao.class);
 		XXAccessTypeDefDao xAccessTypeDefDao = Mockito
 				.mock(XXAccessTypeDefDao.class);
+		XXAccessTypeDefGrantsDao xxAccessTypeDefGrantsDao = Mockito.mock(XXAccessTypeDefGrantsDao.class);
 		XXPolicyConditionDefDao xPolicyConditionDefDao = Mockito
 				.mock(XXPolicyConditionDefDao.class);
 		XXContextEnricherDefDao xContextEnricherDefDao = Mockito
@@ -702,6 +710,8 @@ public class TestRangerServiceDefService {
 
 		Mockito.when(daoManager.getXXAccessTypeDef()).thenReturn(
 				xAccessTypeDefDao);
+		Mockito.when(xxAccessTypeDefGrantsDao.findImpliedGrantsByServiceDefId(Mockito.anyLong())).thenReturn(Collections.emptyMap());
+		Mockito.when(daoManager.getXXAccessTypeDefGrants()).thenReturn(xxAccessTypeDefGrantsDao);
 
 		Mockito.when(daoManager.getXXPolicyConditionDef()).thenReturn(
 				xPolicyConditionDefDao);
