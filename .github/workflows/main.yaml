@@ -3,7 +3,7 @@ name: Java CI with Maven
 on:
   push:
     branches:
-      - actions
+      - beta
 
 jobs:
   build:
