@@ -432,6 +432,14 @@
 		<query>select obj from XXAccessTypeDefGrants obj where obj.atdId = :atdId</query>
 	</named-query>
 
+	<named-query name="XXAccessTypeDefGrants.findByServiceDefId">
+		<query>select atd.name, obj.impliedGrant from XXAccessTypeDef atd, XXAccessTypeDefGrants obj
+			    where atd.defId = :serviceDefId
+			      and obj.atdId = atd.id
+			    order by atd.name
+		</query>
+	</named-query>
+
 	<!-- XXEnumElementDef -->
 	<named-query name="XXEnumElementDef.findByEnumDefId">
 		<query>select obj from XXEnumElementDef obj where obj.enumDefId = :enumDefId order by obj.order</query>
