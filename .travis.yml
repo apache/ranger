@@ -50,7 +50,7 @@ before_install:
   - sudo apt install openjdk-${JDK_VERSION}-jdk maven
 
 install:
-  - mvn package $MAVEN_ARGS -D$KEY=$VALUE -DskipTests -Dmaven.javadoc.skip=true --no-transfer-progress -B -V
+  - mvn install $MAVEN_ARGS -D$KEY=$VALUE -DskipTests -Dmaven.javadoc.skip=true --no-transfer-progress -B -V
 
 # KafkaRangerAuthorizerGSSTest is a failing test, TestLdapUserGroup needs too much memory for travis
 script:
