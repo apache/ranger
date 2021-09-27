@@ -308,7 +308,7 @@
 
 	<property>
 		<name>ranger.contextName</name>
-		<value>/</value>
+		<value>/ranger</value>
 		<description></description>
 	</property>
 
