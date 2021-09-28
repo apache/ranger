@@ -32,7 +32,7 @@ define(function(require) {
         initialize: function(options) {
             console.log("initialize a Controller Controller");
             if (App.userProfile && App.userProfile.get('configProperties') && App.userProfile.get('configProperties').inactivityTimeout
-                && App.userProfile.get('configProperties').inactivityTimeout != -1) {
+                && App.userProfile.get('configProperties').inactivityTimeout > 0) {
                 XAUtil.setIdealActivityTime()
                 $('#contentBody').on("click mousemove keyup mousedown scroll keypress", function(e){
                     // do preload here
