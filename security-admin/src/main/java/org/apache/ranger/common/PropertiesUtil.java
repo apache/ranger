@@ -62,8 +62,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	Set<Object> keySet = System.getProperties().keySet();
 	for (Object key : keySet) {
 	    String keyStr = key.toString();
-	    propertiesMap.put(keyStr, System.getProperties()
-		    .getProperty(keyStr).trim());
+	    propertiesMap.put(keyStr, System.getProperties().getProperty(keyStr).trim());
 	}
 
 	// Let's add our properties now
@@ -321,8 +320,9 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 	keySet = props.keySet();
 	for (Object key : keySet) {
 		String keyStr = key.toString();
-                logger.debug("PropertiesUtil:[" + keyStr + "][" +
-                    (keyStr.contains("password") || keyStr.contains("keystore.pass")   ? "********]" : props.get(keyStr)) + "]");
+		if (logger.isDebugEnabled()) {
+			logger.debug("PropertiesUtil:[" + keyStr + "][" + (keyStr.toLowerCase().contains("pass") ? "********]" : props.get(keyStr)) + "]");
+		}
 	}
 
 	super.processProperties(beanFactory, props);
