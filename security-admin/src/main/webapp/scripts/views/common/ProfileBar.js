@@ -98,7 +98,12 @@ define(function(require){
 					if (localStorage.getItem('idleTimerLoggedOut') == "true" && resp == "true") {
 						window.location.replace('index.html?action=timeout');
 					} else {
-						that.onLogout(resp);
+						if (App.userProfile && App.userProfile.get('configProperties') && App.userProfile.get('configProperties').inactivityTimeout
+							&& App.userProfile.get('configProperties').inactivityTimeout > 0 && resp == "true") {
+								window.location.replace('index.html?action=timeout');
+						} else {
+							that.onLogout(resp);
+						}
 					}
 				},
 				error : function(jqXHR, textStatus, err ) {
