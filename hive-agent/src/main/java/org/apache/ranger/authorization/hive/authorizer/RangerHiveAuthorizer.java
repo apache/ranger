@@ -2501,6 +2501,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			case SHOW_ROLE_GRANT:
 			case SHOW_ROLE_PRINCIPALS:
 			case SHOW_TRANSACTIONS:
+			case RELOADFUNCTION:
 			case REPLDUMP:
 			case REPLLOAD:
 			case REPLSTATUS:
