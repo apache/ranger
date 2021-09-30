@@ -1910,57 +1910,66 @@ define(function(require) {
         }
     }
 
-    XAUtils.setIdealActivityTime = function() {
+    XAUtils.setIdleActivityTime = function() {
         var App = require('App');
         var INACTIVITY_TIME_OUT = 900;
         if (App.userProfile && App.userProfile.get('configProperties') && App.userProfile.get('configProperties').inactivityTimeout) {
             INACTIVITY_TIME_OUT = parseInt(App.userProfile.get('configProperties').inactivityTimeout);
         }
         INACTIVITY_TIME_OUT *= 1000;
-        localStorage.setItem('idealTimeOut', moment().add(INACTIVITY_TIME_OUT, 'milliseconds').valueOf());
+        localStorage.setItem('idleTimeOut', moment().add(INACTIVITY_TIME_OUT, 'milliseconds').valueOf());
         localStorage.setItem('idleTimerLoggedOut', false);
-        XAUtils.setIdealActivityTime = function () {
-            localStorage.setItem('idealTimeOut', moment().add(INACTIVITY_TIME_OUT, 'milliseconds').valueOf());
+        XAUtils.setIdleActivityTime = function () {
+            localStorage.setItem('idleTimeOut', moment().add(INACTIVITY_TIME_OUT, 'milliseconds').valueOf());
             var isLoggedOut = localStorage.getItem('idleTimerLoggedOut') == "true";
             if (isLoggedOut) {
                 localStorage.setItem('idleTimerLoggedOut', false);
             }
             XAUtils.startIdealActivityInterval()
         }
+        XAUtils.setIdleActivityTime();
     };
 
     XAUtils.startIdealActivityInterval = function () {
         clearInterval(XAUtils.activityIntervalID)
         XAUtils.activityIntervalID = setInterval(function() {
-            var idealTimeVal = parseInt(localStorage.getItem('idealTimeOut'));
-            if(moment().isAfter(moment(idealTimeVal))) {
+            var idleTimeVal = parseInt(localStorage.getItem('idleTimeOut'));
+            if(moment().isAfter(moment(idleTimeVal))) {
                 clearInterval(XAUtils.activityIntervalID)
                 var isLoggedOut = localStorage.getItem('idleTimerLoggedOut') == "true";
                 if(isLoggedOut) {
                     localStorage.setItem('idleTimerLoggedOut', 'false');
-                    XAUtils.idealActivityLogout();
+                    XAUtils.idleActivityLogout();
                 } else {
-                    XAUtils.idelTimePopup();
+                    XAUtils.idleTimePopup();
                 }
             }
         }, 2000);
     };
 
-    XAUtils.idelTimePopup = function() {
+    XAUtils.idleTimePopup = function() {
         var timeLeft = 15;
         var $elem = '<div id="Timer"></div>';
 
         function countdown() {
-            if (timeLeft == 0) {
+            var idleTimeVal = parseInt(localStorage.getItem('idleTimeOut'));
+            if (timeLeft == 0 ) {
                 clearTimeout(timerId);
-                localStorage.setItem('idleTimerLoggedOut', 'false');
-                XAUtils.idealActivityLogout();
+                if (!moment().isAfter(moment(idleTimeVal))) {
+                    bootbox.hideAll()
+                } else {
+                    localStorage.setItem('idleTimerLoggedOut', 'false');
+                    XAUtils.idleActivityLogout();
+                }
             } else {
                 var isLoggedOut = localStorage.getItem('idleTimerLoggedOut') == "true";
                 if(isLoggedOut) {
                     clearTimeout(timerId);
                     localStorage.setItem('idleTimerLoggedOut', 'false');
-                    XAUtils.idealActivityLogout();
+                    XAUtils.idleActivityLogout();
+                } else if (!moment().isAfter(moment(idleTimeVal))) {
+                    bootbox.hideAll()
+                    clearTimeout(timerId);
                 } else {
                     $.find('#Timer')[0].innerHTML ='Time left : '+ timeLeft + ' seconds remaining';
                     timeLeft--;
@@ -1969,15 +1978,15 @@ define(function(require) {
         }
         bootbox.dialog({
             title: 'Session Expiration Warning',
-            message: '<span class="inline-block">' + localization.tt('dialogMsg.idelTimeOutMsg') +'<br>'+ $elem + '</span>',
+            message: '<span class="inline-block">' + localization.tt('dialogMsg.idleTimeOutMsg') +'<br>'+ $elem + '</span>',
             closeButton: false,
             buttons: {
                 noclose: {
                     "label" : localization.tt('btn.stayLoggdedIn'),
-                    "className" : "btn-success btn-sm",
+                    "className" : "btn-success btn-sm stayLoggdedIn-popup",
                     "callback" : function() {
                         clearTimeout(timerId);
-                        XAUtils.setIdealActivityTime()
+                        XAUtils.setIdleActivityTime()
                     }
                 },
                 cancel: {
@@ -1985,7 +1994,7 @@ define(function(require) {
                     "className" : "btn-danger btn-sm",
                     "callback" : function() {
                         localStorage.setItem('idleTimerLoggedOut', 'false');
-                        XAUtils.idealActivityLogout();
+                        XAUtils.idleActivityLogout();
                     }
                 }
             }
@@ -1996,7 +2005,7 @@ define(function(require) {
         return false;
     };
 
-    XAUtils.idealActivityLogout = function () {
+    XAUtils.idleActivityLogout = function () {
         var App = require('App');
         // localStorage.setItem('idleTimerLoggedOut', true);
         if(localStorage.getItem('idleTimerLoggedOut') == "false") {
