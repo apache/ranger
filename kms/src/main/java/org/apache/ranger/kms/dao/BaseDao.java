@@ -260,8 +260,10 @@ public abstract class BaseDao<T> {
 
 	public List<T> getAllKeys(String namedQuery) {
 		try {
-			return getEntityManager()
+			List<T> ret = getEntityManager()
 					.createNamedQuery(namedQuery, tClass).setHint("eclipselink.refresh", "true").getResultList();
+			getEntityManager().clear();
+			return ret;
 		} catch (NoResultException e) {
 			e.printStackTrace();
 		}
