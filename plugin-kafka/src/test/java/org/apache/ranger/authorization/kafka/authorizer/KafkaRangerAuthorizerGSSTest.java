@@ -52,7 +52,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import kafka.server.KafkaConfig;
-import scala.Option$;
+import scala.Some;
 
 /**
  * A simple test that starts a Kafka broker, creates "test" and "dev" topics,
@@ -142,7 +142,7 @@ public class KafkaRangerAuthorizerGSSTest {
         UserGroupInformation.createUserForTesting("kafka/localhost@kafka.apache.org", new String[] {"IT"});
 
         KafkaConfig config = new KafkaConfig(props);
-        kafkaServer = new KafkaServer(config, new SystemTime(), Option$.MODULE$.<String>apply("KafkaRangerAuthorizerGSSTest"), false);
+        kafkaServer = new KafkaServer(config, new SystemTime(), new Some<String>("KafkaRangerAuthorizerGSSTest"), false);
         kafkaServer.startup();
 
         // Create some topics

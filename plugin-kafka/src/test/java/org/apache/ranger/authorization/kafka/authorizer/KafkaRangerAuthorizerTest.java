@@ -47,7 +47,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import kafka.server.KafkaConfig;
-import scala.Option$;
+import scala.Some;
 
 /**
  * A simple test that starts a Kafka broker, creates "test" and "dev" topics, sends a message to them and consumes it. We also plug in a 
@@ -135,7 +135,7 @@ public class KafkaRangerAuthorizerTest {
         UserGroupInformation.createUserForTesting(serviceDN, new String[] {"IT"});
         
         KafkaConfig config = new KafkaConfig(props);
-        kafkaServer = new KafkaServer(config, new SystemTime(), Option$.MODULE$.<String>apply("KafkaRangerAuthorizerTest"), false);
+        kafkaServer = new KafkaServer(config, new SystemTime(), new Some<String>("KafkaRangerAuthorizerTest"), false);
         kafkaServer.startup();
 
         // Create some topics

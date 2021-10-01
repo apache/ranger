@@ -34,7 +34,7 @@ import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import scala.Option$;
+import scala.Some;
 
 import java.io.File;
 import java.net.ServerSocket;
@@ -123,7 +123,7 @@ public class KafkaRangerTopicCreationTest {
         UserGroupInformation.createUserForTesting("kafka/localhost@kafka.apache.org", new String[] {"IT"});
 
         KafkaConfig config = new KafkaConfig(props);
-        kafkaServer = new KafkaServer(config, new SystemTime(), Option$.MODULE$.<String>apply("KafkaRangerTopicCreationTest"), false);
+        kafkaServer = new KafkaServer(config, new SystemTime(), new Some<String>("KafkaRangerTopicCreationTest"), false);
         kafkaServer.startup();
    }
 
