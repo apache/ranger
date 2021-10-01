@@ -138,6 +138,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(policy != null) {
 			validityScheduleEvaluators = createValidityScheduleEvaluators(policy);
 
+			this.disableRoleResolution = options.disableRoleResolution;
+
 			if (!options.disableAccessEvaluationWithPolicyACLSummary) {
 				aclSummary = createPolicyACLSummary();
 			}
