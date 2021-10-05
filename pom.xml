@@ -226,6 +226,8 @@
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
         <log4j.core.version>2.13.3</log4j.core.version>
+        <jsonsmart.version>2.3.1</jsonsmart.version>
+        <nimbus-jose-jwt.version>8.22.1</nimbus-jose-jwt.version>
     </properties>
     <profiles>
         <profile>
