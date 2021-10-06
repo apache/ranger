@@ -3519,7 +3519,7 @@ public class ServiceREST {
 						Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
 						for (RangerPolicy policy : listToFilter) {
-							if ((policyAdmin.isDelegatedAdminAccessAllowed(policy, userName, userGroups, roles, evalContext))
+							if ((policyAdmin.isDelegatedAdminAccessAllowedForRead(policy, userName, userGroups, roles, evalContext))
 									|| (!StringUtils.isEmpty(policy.getZoneName()) && (serviceMgr.isZoneAdmin(policy.getZoneName()) || serviceMgr.isZoneAuditor(policy.getZoneName())))) {
 								ret.add(policy);
 							}
@@ -3618,7 +3618,7 @@ public class ServiceREST {
 
 			Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
 
-			isAllowed = policyAdmin.isDelegatedAdminAccessAllowed(policy, userName, userGroups, roles, evalContext);
+			isAllowed = policyAdmin.isDelegatedAdminAccessAllowedForModify(policy, userName, userGroups, roles, evalContext);
 		}
 
 		return isAllowed;
@@ -3926,7 +3926,16 @@ public class ServiceREST {
 			boolean isAllowed = false;
 
 			Set<String> userGroups = userMgr.getGroupsForUser(userName);
-			isAllowed = hasAdminAccess(policy, userName, userGroups);
+			RangerPolicyAdmin policyAdmin = getPolicyAdminForDelegatedAdmin(policy.getService());
+
+			if(policyAdmin != null) {
+				Map evalContext = new HashMap<>();
+				RangerAccessRequestUtil.setCurrentUserInContext(evalContext, userName);
+
+				Set<String> roles = policyAdmin.getRolesFromUserAndGroups(userName, userGroups);
+
+				isAllowed = policyAdmin.isDelegatedAdminAccessAllowedForRead(policy, userName, userGroups, roles, evalContext);
+			}
 
 			if (!isAllowed) {
 				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "User '"
