@@ -185,13 +185,13 @@ public class VXPasswordChange extends ViewBaseBean implements java.io.Serializab
 	*/
 	public String toString( ) {
 		String str = "VXPasswordChange={";
-		str += super.toString();
+		str += super.toString() + " ";
 		str += "id={" + id + "} ";
 		str += "loginId={" + loginId + "} ";
 		str += "emailAddress={" + emailAddress + "} ";
 		str += "resetCode={" + resetCode + "} ";
-		str += "oldPassword={***length=" + (oldPassword == null? 0 : oldPassword.length()) + "***} ";
-		str += "updPassword={***length=" + (updPassword == null? 0 : updPassword.length()) + "***} ";
+		str += "isOldPasswordNull={" + (oldPassword == null) + "} ";
+		str += "isUpdPasswordNull={" + (updPassword == null) + "}";
 		str += "}";
 		return str;
 	}

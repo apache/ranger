@@ -206,127 +206,73 @@ public class UserMgr {
 	 * @return
 	 */
 	public XXPortalUser updateUser(VXPortalUser userProfile) {
-		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(
-				userProfile.getId());
+		XXPortalUser gjUser = daoManager.getXXPortalUser().getById(userProfile.getId());
 
 		if (gjUser == null) {
-			logger.error("updateUser(). User not found. userProfile="
-					+ userProfile);
+			logger.error("updateUser(). User not found. userProfile=" + userProfile);
 			return null;
 		}
 
 		checkAccess(gjUser);
-                rangerBizUtil.blockAuditorRoleUser();
-		boolean updateUser = false;
+		rangerBizUtil.blockAuditorRoleUser();
 		// Selectively update fields
 
-		// status
-		if (userProfile.getStatus() != gjUser.getStatus()) {
-			updateUser = true;
-		}
-
 		// Allowing email address update even when its set to empty.
-		// emailAddress
 		String emailAddress = userProfile.getEmailAddress();
 		if (stringUtil.isEmpty(emailAddress)) {
 			userProfile.setEmailAddress(null);
-			updateUser = true;
 		} else {
 			if (stringUtil.validateEmail(emailAddress)) {
-				XXPortalUser checkUser = daoManager.getXXPortalUser()
-						.findByEmailAddress(emailAddress);
+				XXPortalUser checkUser = daoManager.getXXPortalUser().findByEmailAddress(emailAddress);
 				if (checkUser != null) {
 					String loginId = userProfile.getLoginId();
 					if (loginId == null) {
 						throw restErrorUtil.createRESTException(
-								"Invalid user, please provide valid "
-										+ "username.",
-								MessageEnums.INVALID_INPUT_DATA);
+								"Invalid user, please provide valid username.", MessageEnums.INVALID_INPUT_DATA);
 					} else if (!loginId.equals(checkUser.getLoginId())) {
-						throw restErrorUtil
-								.createRESTException(
-										"The email address "
-												+ "you've provided already exists in system.",
-										MessageEnums.INVALID_INPUT_DATA);
+						throw restErrorUtil.createRESTException(
+								"The email address you've provided already exists in system.", MessageEnums.INVALID_INPUT_DATA);
 					} else {
 						userProfile.setEmailAddress(emailAddress);
-						updateUser = true;
 					}
 				} else {
 					userProfile.setEmailAddress(emailAddress);
-					updateUser = true;
 				}
 			} else {
-				throw restErrorUtil.createRESTException(
-						"Please provide valid email address.",
-						MessageEnums.INVALID_INPUT_DATA);
+				throw restErrorUtil.createRESTException("Please provide valid email address.", MessageEnums.INVALID_INPUT_DATA);
 			}
 		}
-
-		// loginId
-		// if (!stringUtil.isEmpty(userProfile.getLoginId())
-		// && !userProfile.getLoginId().equals(gjUser.getLoginId())) {
-		// gjUser.setLoginId(userProfile.getLoginId());
-		// updateUser = true;
-		// }
 
 		// firstName
 		if("null".equalsIgnoreCase(userProfile.getFirstName())){
 			userProfile.setFirstName("");
 		}
-		if (!stringUtil.isEmpty(userProfile.getFirstName())
-				&& !userProfile.getFirstName().equals(gjUser.getFirstName())) {
-			userProfile.setFirstName(stringUtil.toCamelCaseAllWords(userProfile
-					.getFirstName()));
-			updateUser = true;
+		if (!stringUtil.isEmpty(userProfile.getFirstName()) && !userProfile.getFirstName().equals(gjUser.getFirstName())) {
+			userProfile.setFirstName(stringUtil.toCamelCaseAllWords(userProfile.getFirstName()));
 		}
-
 		if("null".equalsIgnoreCase(userProfile.getLastName())){
 			userProfile.setLastName("");
 		}
-		if (!stringUtil.isEmpty(userProfile.getLastName())
-				&& !userProfile.getLastName().equals(gjUser.getLastName())) {
-			userProfile.setLastName(stringUtil.toCamelCaseAllWords(userProfile
-					.getLastName()));
-			updateUser = true;
+		if (!stringUtil.isEmpty(userProfile.getLastName()) && !userProfile.getLastName().equals(gjUser.getLastName())) {
+			userProfile.setLastName(stringUtil.toCamelCaseAllWords(userProfile.getLastName()));
 		}
 
 		// publicScreenName
-		if (userProfile.getFirstName() != null
-				&& userProfile.getLastName() != null
-				&& !userProfile.getFirstName().trim().isEmpty()
+		if (userProfile.getFirstName() != null && userProfile.getLastName() != null && !userProfile.getFirstName().trim().isEmpty()
 				&& !userProfile.getLastName().trim().isEmpty()) {
-			userProfile.setPublicScreenName(userProfile.getFirstName() + " "
-					+ userProfile.getLastName());
-			updateUser = true;
+			userProfile.setPublicScreenName(userProfile.getFirstName() + " " + userProfile.getLastName());
 		} else {
 			userProfile.setPublicScreenName(gjUser.getLoginId());
-			updateUser = true;
 		}
-
-		// notes
-		/*
-		 * if (!stringUtil.isEmpty(userProfile.getNotes()) &&
-		 * !userProfile.getNotes().equalsIgnoreCase(gjUser.getNotes())) {
-		 * updateUser = true; }
-		 */
 
 		// userRoleList
 		updateRoles(userProfile.getId(), userProfile.getUserRoleList());
 
-		if (updateUser) {
-
-			List<XXTrxLog> trxLogList = xPortalUserService.getTransactionLog(
-					userProfile, gjUser, "update");
-
-			userProfile.setPassword(gjUser.getPassword());
-			xPortalUserService.updateResource(userProfile);
-			sessionMgr.resetUserSessionForProfiles(ContextUtil
-					.getCurrentUserSession());
-
-                        rangerBizUtil.createTrxLog(trxLogList);
-		}
-
+		List<XXTrxLog> trxLogList = xPortalUserService.getTransactionLog(userProfile, gjUser, "update");
+		userProfile.setPassword(gjUser.getPassword());
+		xPortalUserService.updateResource(userProfile);
+		sessionMgr.resetUserSessionForProfiles(ContextUtil.getCurrentUserSession());
+		rangerBizUtil.createTrxLog(trxLogList);
 		return gjUser;
 	}
 
@@ -504,56 +450,43 @@ public class UserMgr {
 	 * @param changeEmail
 	 * @return
 	 */
-	public VXPortalUser changeEmailAddress(XXPortalUser gjUser,
-			VXPasswordChange changeEmail) {
+	public VXPortalUser changeEmailAddress(XXPortalUser gjUser, VXPasswordChange changeEmail) {
 		checkAccessForUpdate(gjUser);
-                rangerBizUtil.blockAuditorRoleUser();
+		rangerBizUtil.blockAuditorRoleUser();
 		if (StringUtils.isEmpty(changeEmail.getEmailAddress())) {
 			changeEmail.setEmailAddress(null);
 		}
 
 		if (!StringUtils.isEmpty(changeEmail.getEmailAddress()) && !stringUtil.validateEmail(changeEmail.getEmailAddress())) {
 			logger.info("Invalid email address." + changeEmail);
-			throw restErrorUtil.createRESTException(
-					"serverMsg.userMgrInvalidEmail",
-					MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(),
-					"emailAddress", changeEmail.toString());
-
+			throw restErrorUtil.createRESTException("serverMsg.userMgrInvalidEmail",
+					MessageEnums.INVALID_INPUT_DATA, changeEmail.getId(), "emailAddress", changeEmail.toString());
 		}
-		
+
 		if (this.isFipsEnabled) {
 			if (!isPasswordValid(changeEmail.getLoginId(), gjUser.getPassword(), changeEmail.getOldPassword())) {
-				logger.info("changeEmailAddress(). Invalid  password. changeEmail="
-								+ changeEmail);
-								throw restErrorUtil.createRESTException(
-											"serverMsg.userMgrWrongPassword",
-												MessageEnums.OPER_NO_PERMISSION, null, null, ""
-														+ changeEmail);
-					}
+				logger.info("changeEmailAddress(). Invalid  password. changeEmail=" + changeEmail);
+				throw restErrorUtil.createRESTException("serverMsg.userMgrWrongPassword",
+												MessageEnums.OPER_NO_PERMISSION, null, null, "" + changeEmail);
+			}
 		} else {
 			String encryptedOldPwd = encrypt(gjUser.getLoginId(), changeEmail.getOldPassword());
 			if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
-				encryptedOldPwd = encryptWithOlderAlgo(gjUser.getLoginId(), changeEmail.getOldPassword());
-				if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
-					logger.info("changeEmailAddress(). Invalid  password. changeEmail=" + changeEmail);
-					throw restErrorUtil.createRESTException("serverMsg.userMgrWrongPassword",
-							MessageEnums.OPER_NO_PERMISSION, null, null, "" + changeEmail);
-				}
+				logger.info("changeEmailAddress(). Invalid  password. changeEmail=" + changeEmail);
+				throw restErrorUtil.createRESTException("serverMsg.userMgrWrongPassword",
+						MessageEnums.OPER_NO_PERMISSION, null, null, "" + changeEmail);
 			}
 		}
 
 		// Normalize email. Make it lower case
-		gjUser.setEmailAddress(stringUtil.normalizeEmail(changeEmail
-				.getEmailAddress()));
+		gjUser.setEmailAddress(stringUtil.normalizeEmail(changeEmail.getEmailAddress()));
 
-		String saltEncodedpasswd = encrypt(gjUser.getLoginId(),
-				changeEmail.getOldPassword());
-        if (gjUser.getUserSource() == RangerCommonEnums.USER_APP) {
-		gjUser.setPassword(saltEncodedpasswd);
-       }
-        else if (gjUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
-                gjUser.setPassword(gjUser.getPassword());
-        }
+		String saltEncodedpasswd = encrypt(gjUser.getLoginId(), changeEmail.getOldPassword());
+		if (gjUser.getUserSource() == RangerCommonEnums.USER_APP) {
+			gjUser.setPassword(saltEncodedpasswd);
+		} else if (gjUser.getUserSource() == RangerCommonEnums.USER_EXTERNAL) {
+			gjUser.setPassword(gjUser.getPassword());
+		}
 		daoManager.getXXPortalUser().update(gjUser);
 		return mapXXPortalUserVXPortalUser(gjUser);
 	}
