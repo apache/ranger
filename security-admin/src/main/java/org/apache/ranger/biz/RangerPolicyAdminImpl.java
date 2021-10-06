@@ -42,6 +42,7 @@ import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.service.RangerDefaultRequestProcessor;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -70,6 +71,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         @Override
         public Object get(Object key) { return RangerAbstractResourceMatcher.WILDCARD_ASTERISK; }
     };
+    private       ServiceDBStore               serviceDBStore;
 
     static {
         wildcardEvalContext.put(RangerAbstractResourceMatcher.WILDCARD_ASTERISK, RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
@@ -101,6 +103,13 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     private RangerPolicyAdminImpl(final PolicyEngine policyEngine) {
         this.policyEngine     = policyEngine;
         this.requestProcessor = new RangerDefaultRequestProcessor(policyEngine);
+    }
+
+    @Override
+    public void setServiceStore(ServiceStore svcStore) {
+        if (svcStore instanceof ServiceDBStore) {
+            this.serviceDBStore = (ServiceDBStore) svcStore;
+        }
     }
 
     @Override
@@ -161,9 +170,33 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     }
 
     @Override
-    public boolean isDelegatedAdminAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext) {
+    public boolean isDelegatedAdminAccessAllowedForRead(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext) {
+        return isDelegatedAdminAccessAllowed(policy, user, userGroups, roles, true, evalContext);
+    }
+
+    @Override
+    public boolean isDelegatedAdminAccessAllowedForModify(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext) {
+        boolean ret = isDelegatedAdminAccessAllowed(policy, user, userGroups, roles, false, evalContext);
+        if (ret) {
+            // Get old policy from policy-engine
+            RangerPolicy oldPolicy = null;
+            if (policy.getId() != null) {
+                try {
+                    oldPolicy = serviceDBStore.getPolicy(policy.getId());
+                } catch (Exception e) {
+                    // Ignore
+                }
+            }
+            if (oldPolicy != null) {
+                ret = isDelegatedAdminAccessAllowed(oldPolicy, user, userGroups, roles, false, evalContext);
+            }
+        }
+        return ret;
+    }
+
+    boolean isDelegatedAdminAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, boolean isRead, Map<String, Object> evalContext) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + evalContext + ")");
+            LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + isRead + ", " + evalContext + ")");
         }
 
         boolean          ret  = false;
@@ -200,14 +233,19 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
                         continue;
                     }
 
-                    accessTypes.removeAll(allowedAccesses);
+                    boolean isAllowedAccessesModified = accessTypes.removeAll(allowedAccesses);
+
+                    if (isRead && isAllowedAccessesModified) {
+                        ret = true;
+                        break;
+                    }
 
                     if (CollectionUtils.isEmpty(accessTypes)) {
                         ret = true;
                         break;
                     }
                 }
-                if (CollectionUtils.isNotEmpty(accessTypes)) {
+                if (!ret && CollectionUtils.isNotEmpty(accessTypes)) {
                     LOG.info("Accesses : " + accessTypes + " are not authorized for the policy:[" + policy.getId() + "] by any of delegated-admin policies");
                 }
 
@@ -218,7 +256,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
         RangerPerfTracer.log(perf);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + evalContext + "): " + ret);
+            LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + isRead + ", " + evalContext + "): " + ret);
         }
 
         return ret;
