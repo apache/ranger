@@ -916,29 +916,29 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getUsers()");
 		}
+		final int totalCount = Math.max(0, xUserList.getTotalCount());
+		final int pageSize = Integer.valueOf(recordsToPullPerCall);
 		int ret = 0;
-		int totalCount = xUserList.getTotalCount();
-		int uploadedCount = -1;
-		int pageSize = Integer.valueOf(recordsToPullPerCall);
+		int uploadedCount = 0;
 		while (uploadedCount < totalCount) {
 			String response = null;
 			ClientResponse clientRes = null;
-			String relativeUrl = PM_ADD_USERS_URI;
 			GetXUserListResponse pagedXUserList = new GetXUserListResponse();
-			int pagedXUserListLen = uploadedCount+pageSize;
-			pagedXUserList.setXuserInfoList(xUserList.getXuserInfoList().subList(uploadedCount+1,
-					pagedXUserListLen>totalCount?totalCount:pagedXUserListLen));
 			pagedXUserList.setTotalCount(pageSize);
+
+			final int pagedXUserListLen = Math.min(totalCount, (uploadedCount + pageSize));
+			pagedXUserList.setXuserInfoList(xUserList.getXuserInfoList().subList(uploadedCount, pagedXUserListLen));
+
 			if (pagedXUserList.getXuserInfoList().size() == 0) {
 				LOG.info("PolicyMgrUserGroupBuilder.getUsers() done updating users");
 				return 1;
 			}
 
 			if (isRangerCookieEnabled) {
-				response = cookieBasedUploadEntity(pagedXUserList, relativeUrl);
+				response = cookieBasedUploadEntity(pagedXUserList, PM_ADD_USERS_URI);
 			} else {
 				try {
-					clientRes = ldapUgSyncClient.post(relativeUrl, null, pagedXUserList);
+					clientRes = ldapUgSyncClient.post(PM_ADD_USERS_URI, null, pagedXUserList);
 					if (clientRes != null) {
 						response = clientRes.getEntity(String.class);
 					}
@@ -963,7 +963,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				LOG.error("Failed to addOrUpdateUsers " + uploadedCount );
 				throw new Exception("Failed to addOrUpdateUsers" + uploadedCount);
 			}
-			LOG.info("ret = " + ret + " No. of users uploaded to ranger admin= " + (uploadedCount>totalCount?totalCount:uploadedCount));
+			LOG.info("ret = " + ret + " No. of users uploaded to ranger admin= " + uploadedCount);
 		}
 
 		if(LOG.isDebugEnabled()){
