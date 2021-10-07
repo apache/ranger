@@ -237,31 +237,6 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		addAuthzAuditEvent(auditEvent);
     }
 
-	public void logAuditEvent(String userName, String resourceName, String resourceType, String command, boolean accessGranted,
-										   int repositoryType, String repositoryName, String clusterName, String accessType, String ipAddress) {
-		AuthzAuditEvent auditEvent = new AuthzAuditEvent();
-
-		auditEvent.setAclEnforcer(moduleName);
-		auditEvent.setResourcePath(resourceName);
-		auditEvent.setResourceType(resourceType);
-		auditEvent.setAccessType(accessType);
-		auditEvent.setAction(accessType);
-		auditEvent.setUser(userName);
-		auditEvent.setAccessResult((short)(accessGranted ? 1 : 0));
-		auditEvent.setEventTime(new Date());
-		auditEvent.setRepositoryType(repositoryType);
-		auditEvent.setRepositoryName(repositoryName);
-		auditEvent.setRequestData(command);
-		auditEvent.setPolicyId(-1L);
-		auditEvent.setClusterName(clusterName);
-		auditEvent.setClientIP(ipAddress);
-
-		if(LOG.isDebugEnabled()){
-			LOG.debug("Logging " + accessType + " event " + auditEvent);
-		}
-		addAuthzAuditEvent(auditEvent);
-	}
-
     public void flushAudit() {
     	if(auditEvents == null) {
     		return;
