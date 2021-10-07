@@ -79,6 +79,7 @@ public class EmbeddedServer {
 	private static final String ACCESS_LOG_PREFIX = "ranger.accesslog.prefix";
 	private static final String ACCESS_LOG_DATE_FORMAT = "ranger.accesslog.dateformat";
 	private static final String ACCESS_LOG_PATTERN = "ranger.accesslog.pattern";
+	private static final String ACCESS_LOG_ROTATE_MAX_DAYS = "ranger.accesslog.rotate.max.days";
 	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
 	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
 	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLSv1.2";
@@ -207,6 +208,7 @@ public class EmbeddedServer {
 		valve.setFileDateFormat(EmbeddedServerUtil.getConfig(ACCESS_LOG_DATE_FORMAT, "yyyy-MM-dd.HH"));
 		valve.setDirectory(logDirectory.getAbsolutePath());
 		valve.setSuffix(".log");
+		valve.setMaxDays(EmbeddedServerUtil.getIntConfig(ACCESS_LOG_ROTATE_MAX_DAYS,15));
 
 		String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b" : "%h %l %u %t \"%r\" %s %b";
 		String logPattern = EmbeddedServerUtil.getConfig(ACCESS_LOG_PATTERN, defaultAccessLogPattern);
