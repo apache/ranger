@@ -52,9 +52,13 @@
             <artifactId>hadoop-common</artifactId>
             <version>${hadoop.version}</version>
             <exclusions>
-                 <exclusion>
+                <exclusion>
                     <groupId>com.google.guava</groupId>
                     <artifactId>guava</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>net.minidev</groupId>
+                    <artifactId>json-smart</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
