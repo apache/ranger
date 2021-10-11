@@ -138,6 +138,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 			res.setHeader("X-XSS-Protection", "1; mode=block");
 			res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
 			res.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline';font-src 'self'");
+			res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
 			chain.doFilter(request, res);
 
 		} finally {
