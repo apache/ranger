@@ -905,6 +905,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					//
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.REPLADMIN, context, sessionContext);
 					requests.add(request);
+				} else if (hiveOpType.equals(HiveOperationType.ALTERTABLE_OWNER)) {
+					RangerHiveAccessRequest request = buildRequestForAlterTableSetOwnerFromCommandString(user, groups, roles, hiveOpType.name(), context, sessionContext);
+					if (request != null) {
+						requests.add(request);
+					} else {
+						throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have privilege for [%s] command",
+								user, hiveOpType.name()));
+					}
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerHiveAuthorizer.checkPrivileges: Unexpected operation type[" + hiveOpType + "] received with empty input objects list!");
@@ -3079,6 +3087,28 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 		return ret;
 	}
+
+	private RangerHiveAccessRequest buildRequestForAlterTableSetOwnerFromCommandString(String                  user,
+																					   Set<String>             userGroups,
+																					   Set<String>             userRoles,
+																					   String                  hiveOpTypeName,
+																					   HiveAuthzContext        context,
+																					   HiveAuthzSessionContext sessionContext) {
+		RangerHiveResource      resource  = null;
+		RangerHiveAccessRequest request   = null;
+		HiveObj hiveObj  = new HiveObj();
+		hiveObj.fetchHiveObjForAlterTable(context);
+		String dbName    = hiveObj.getDatabaseName();
+		String tableName = hiveObj.getTableName();
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Database: " + dbName + " Table: " + tableName);
+		}
+		if (dbName != null && tableName != null) {
+			resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
+			request  = new RangerHiveAccessRequest(resource, user, userGroups, userRoles, hiveOpTypeName, HiveAccessType.ALTER, context, sessionContext);
+		}
+		return request;
+	}
 }
 
 enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI, SERVICE_NAME, GLOBAL };
@@ -3087,6 +3117,8 @@ enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, US
 class HiveObj {
 	String databaseName;
 	String tableName;
+
+	HiveObj() {}
 
 	HiveObj(HiveAuthzContext context) {
 	 fetchHiveObj(context);
@@ -3114,6 +3146,29 @@ class HiveObj {
 					} else {
 						databaseName = dbName;
 						tableName = null;
+					}
+				}
+			}
+		}
+	}
+
+	public void fetchHiveObjForAlterTable(HiveAuthzContext context) {
+		// cmd passed: Alter Table <database.tableName or tableName> set owner user|role  <user_or_role>
+		if (context != null) {
+			String cmdString = context.getCommandString();
+			if (cmdString != null) {
+				String[] cmd = cmdString.trim().split("\\s+");
+				if (!ArrayUtils.isEmpty(cmd) && cmd.length > 2) {
+					tableName = cmd[2];
+					if (tableName.contains(".")) {
+						String[] result = splitDBName(tableName);
+						databaseName = result[0];
+						tableName = result[1];
+					} else {
+						SessionState sessionState = SessionState.get();
+						if (sessionState != null) {
+							databaseName = sessionState.getCurrentDatabase();
+						}
 					}
 				}
 			}
