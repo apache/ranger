@@ -22,9 +22,7 @@ import java.security.KeyStore;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Properties;
 
 import javax.crypto.Cipher;
@@ -46,24 +44,23 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Lists;
-import com.sun.org.apache.xml.internal.security.exceptions.Base64DecodingException;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class RangerMasterKey implements RangerKMSMKI {
 
-    private static final Logger logger = LoggerFactory.getLogger(RangerMasterKey.class);
+    private static final Logger     logger                    = LoggerFactory.getLogger(RangerMasterKey.class);
+    private static final String     DEFAULT_MK_CIPHER         = "AES";
+    private static final int        DEFAULT_MK_KeySize        = 256;
+    private static final int        DEFAULT_SALT_SIZE         = 8;
+    private static final String     DEFAULT_SALT              = "abcdefghijklmnopqrstuvwxyz01234567890";
+    private static final String     DEFAULT_CRYPT_ALGO        = "PBEWithMD5AndTripleDES";
+    private static final int        DEFAULT_ITERATION_COUNT   = 1000;
+    private static final Properties serverConfigProperties    = new Properties();
 
-    private static final String DEFAULT_MK_CIPHER = "AES";
-    private static final int DEFAULT_MK_KeySize = 256;
-    private static final int DEFAULT_SALT_SIZE = 8;
-    private static final String DEFAULT_SALT = "abcdefghijklmnopqrstuvwxyz01234567890";
-    private static final String DEFAULT_CRYPT_ALGO = "PBEWithMD5AndTripleDES";
-    private static final int DEFAULT_ITERATION_COUNT = 1000;
+    public static final String DBKS_SITE_XML                  = "dbks-site.xml";
+
     private static String password = null;
     private static String DEFAULT_MD_ALGO;
-
-    public static final String DBKS_SITE_XML = "dbks-site.xml";
-    private static Properties serverConfigProperties = new Properties();
 
     public static String MK_CIPHER;
     public static Integer MK_KeySize = 0;
@@ -87,8 +84,7 @@ public class RangerMasterKey implements RangerKMSMKI {
     protected static String getConfig(String key, String defaultValue) {
         String value = serverConfigProperties.getProperty(key);
         if (value == null || value.trim().isEmpty()) {
-            // Value not found in properties file, let's try to get from
-            // System's property
+            //value not found in properties file, let's try to get from system property
             value = System.getProperty(key);
         }
         if (value == null || value.trim().isEmpty()) {
@@ -105,7 +101,7 @@ public class RangerMasterKey implements RangerKMSMKI {
                 ret = Integer.parseInt(retStr);
             }
         } catch (Exception err) {
-            logger.warn(retStr + " can't be parsed to int. Reason: " + err.toString());
+            logger.warn("Key can not be parsed to int due to NumberFormatException");
         }
         return ret;
     }
@@ -125,7 +121,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         logger.info("Getting Master Key");
         List result = getEncryptedMK();
         String encryptedPassString = null;
-        byte masterKeyByte[] = null;
+        byte[] masterKeyByte = null;
         if (CollectionUtils.isNotEmpty(result) && result.size() == 2) {
             masterKeyByte = (byte[]) result.get(0);
             encryptedPassString = (String) result.get(1);
@@ -149,7 +145,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         logger.info("Getting Master Key");
         List result = getEncryptedMK();
         String encryptedPassString = null;
-        byte masterKeyByte[] = null;
+        byte[] masterKeyByte = null;
         if (CollectionUtils.isNotEmpty(result) && result.size() == 2) {
             masterKeyByte = (byte[]) result.get(0);
             encryptedPassString = (String) result.get(1);
@@ -169,16 +165,15 @@ public class RangerMasterKey implements RangerKMSMKI {
     /**
      * Generate the master key, encrypt it and save it in the database
      *
-     * @param password password to be used for encryption
      * @return true if the master key was successfully created false if master
      * key generation was unsuccessful or the master key already exists
-     * @throws Throwable
      */
 
     public void init() {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerMasterKey.init()");
         }
+
         XMLUtils.loadConfig(DBKS_SITE_XML, serverConfigProperties);
         DEFAULT_MD_ALGO = getConfig("ranger.keystore.file.type", KeyStore.getDefaultType()).equalsIgnoreCase("bcfks") ? "SHA-512" : "MD5";
         MK_CIPHER = getConfig("ranger.kms.service.masterkey.password.cipher", DEFAULT_MK_CIPHER);
@@ -187,10 +182,12 @@ public class RangerMasterKey implements RangerKMSMKI {
         SALT = getConfig("ranger.kms.service.masterkey.password.salt", DEFAULT_SALT);
         PBE_ALGO = getConfig("ranger.kms.service.masterkey.password.encryption.algorithm", DEFAULT_CRYPT_ALGO);
         MD_ALGO = getConfig("ranger.kms.service.masterkey.password.md.algorithm", DEFAULT_MD_ALGO);
-        ITERATION_COUNT = getIntConfig("ranger.kms.service.masterkey.password.iteration.count",
-                DEFAULT_ITERATION_COUNT);
-        paddingString = Joiner.on(",").skipNulls().join(MK_CIPHER, MK_KeySize, SALT_SIZE, PBE_ALGO, MD_ALGO,
-                ITERATION_COUNT, SALT);
+        ITERATION_COUNT = getIntConfig("ranger.kms.service.masterkey.password.iteration.count", DEFAULT_ITERATION_COUNT);
+        paddingString = Joiner.on(",").skipNulls().join(MK_CIPHER, MK_KeySize, SALT_SIZE, PBE_ALGO, MD_ALGO, ITERATION_COUNT, SALT);
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== RangerMasterKey.init()");
+        }
     }
 
     /**
@@ -221,7 +218,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         return false;
     }
 
-    public boolean generateMKFromHSMMK(String password, byte[] key) throws Throwable {
+    public void generateMKFromHSMMK(String password, byte[] key) throws Throwable {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerMasterKey.generateMKFromHSMMK()");
         }
@@ -233,15 +230,13 @@ public class RangerMasterKey implements RangerKMSMKI {
                 logger.debug("Master Key Created with id = " + savedKey);
                 logger.debug("<== RangerMasterKey.generateMKFromHSMMK()");
             }
-            return true;
         }
         if (logger.isDebugEnabled()) {
             logger.debug("<== RangerMasterKey.generateMKFromHSMMK()");
         }
-        return false;
     }
 
-    private String decryptMasterKey(byte masterKey[], String password, String encryptedPassString) throws Throwable {
+    private String decryptMasterKey(byte[] masterKey, String password, String encryptedPassString) throws Throwable {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerMasterKey.decryptMasterKey()");
             logger.debug("Decrypting Master Key...");
@@ -287,9 +282,8 @@ public class RangerMasterKey implements RangerKMSMKI {
         }
     }
 
-        public boolean generateMKFromKeySecureMK(String password, byte[] key)
-                        throws Throwable {
-                if (logger.isDebugEnabled()) {
+    public void generateMKFromKeySecureMK(String password, byte[] key) throws Throwable {
+        if (logger.isDebugEnabled()) {
             logger.debug("==> RangerMasterKey.generateMKFromKeySecureMK()");
         }
         init();
@@ -301,11 +295,9 @@ public class RangerMasterKey implements RangerKMSMKI {
         if (logger.isDebugEnabled()) {
             logger.debug("<== RangerMasterKey.generateMKFromKeySecureMK()");
         }
-                return false;
-        }
+    }
 
-    private SecretKey decryptMasterKeySK(byte masterKey[], String password, String encryptedPassString)
-            throws Throwable {
+    private SecretKey decryptMasterKeySK(byte[] masterKey, String password, String encryptedPassString) throws Throwable {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerMasterKey.decryptMasterKeySK()");
         }
@@ -320,7 +312,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         return getMasterKeyFromBytes(masterKeyFromDBDecrypted);
     }
 
-    private List getEncryptedMK() throws Base64DecodingException {
+    private List getEncryptedMK() {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerMasterKey.getEncryptedMK()");
         }
@@ -339,21 +331,17 @@ public class RangerMasterKey implements RangerKMSMKI {
                         getPasswordParam(masterKeyStr);
                         ret.add(Base64.decode(password));
                         ret.add(masterKeyStr);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("<== RangerMasterKey.getEncryptedMK()");
-                        }
-                        return ret;
                     } else {
                         ret.add(Base64.decode(masterKeyStr));
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("<== RangerMasterKey.getEncryptedMK()");
-                        }
-                        return ret;
                     }
+                    if (logger.isDebugEnabled()) {
+                        logger.debug("<== RangerMasterKey.getEncryptedMK()");
+                    }
+                    return ret;
                 }
             }
         } catch (Exception e) {
-            logger.error("Unable to Retrieving Master Key from database!!! or ", e);
+            logger.error("Unable to retrieve Master Key from the database!!!", e);
         }
         if (logger.isDebugEnabled()) {
             logger.debug("<== RangerMasterKey.getEncryptedMK()");
@@ -442,7 +430,13 @@ public class RangerMasterKey implements RangerKMSMKI {
             PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
             Cipher c = Cipher.getInstance(key.getAlgorithm());
             c.init(Cipher.ENCRYPT_MODE, key, paramSpec);
+            if (logger.isDebugEnabled()) {
+                logger.debug("<== RangerMasterKey.encryptKey()");
+            }
             return c.doFinal(data);
+        }
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== RangerMasterKey.encryptKey()");
         }
         return null;
     }
@@ -452,13 +446,16 @@ public class RangerMasterKey implements RangerKMSMKI {
             logger.debug("==> RangerMasterKey.getPasswordKey()");
         }
         SecretKeyFactory factory = SecretKeyFactory.getInstance(PBE_ALGO);
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== RangerMasterKey.getPasswordKey()");
+        }
         return factory.generateSecret(keyspec);
     }
 
-    private byte[] decryptKey(byte[] encrypted, PBEKeySpec keyspec) throws Throwable {
-        SecretKey key = getPasswordKey(keyspec);
-        if (keyspec.getSalt() != null) {
-            PBEParameterSpec paramSpec = new PBEParameterSpec(keyspec.getSalt(), keyspec.getIterationCount());
+    private byte[] decryptKey(byte[] encrypted, PBEKeySpec keySpec) throws Throwable {
+        SecretKey key = getPasswordKey(keySpec);
+        if (keySpec.getSalt() != null) {
+            PBEParameterSpec paramSpec = new PBEParameterSpec(keySpec.getSalt(), keySpec.getIterationCount());
             Cipher c = Cipher.getInstance(key.getAlgorithm());
             c.init(Cipher.DECRYPT_MODE, key, paramSpec);
             return c.doFinal(encrypted);
@@ -466,31 +463,8 @@ public class RangerMasterKey implements RangerKMSMKI {
         return null;
     }
 
-    private SecretKey getMasterKeyFromBytes(byte[] keyData) throws Throwable {
+    private SecretKey getMasterKeyFromBytes(byte[] keyData) {
         return new SecretKeySpec(keyData, MK_CIPHER);
     }
 
-    public Map<String, String> getPropertiesWithPrefix(Properties props, String prefix) {
-        Map<String, String> prefixedProperties = new HashMap<String, String>();
-
-        if (props != null && prefix != null) {
-            for (String key : props.stringPropertyNames()) {
-                if (key == null) {
-                    continue;
-                }
-
-                String val = props.getProperty(key);
-
-                if (key.startsWith(prefix)) {
-                    key = key.substring(prefix.length());
-
-                    if (key != null) {
-                        prefixedProperties.put(key, val);
-                    }
-                }
-            }
-        }
-
-        return prefixedProperties;
-    }
 }
