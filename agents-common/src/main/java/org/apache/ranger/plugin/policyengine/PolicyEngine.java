@@ -849,22 +849,16 @@ public class PolicyEngine {
             Map<String, List<RangerPolicyDelta>> zoneDeltasMap = new HashMap<>();
 
             for (Map.Entry<String, ServicePolicies.SecurityZoneInfo> zone : servicePolicies.getSecurityZones().entrySet()) {
-                List<RangerPolicyDelta> deltas = zone.getValue().getPolicyDeltas();
+                String                  zoneName   = zone.getKey();
+                List<RangerPolicyDelta> deltas     = zone.getValue().getPolicyDeltas();
+                List<RangerPolicyDelta> zoneDeltas = new ArrayList<>();
 
-                for (RangerPolicyDelta delta : deltas) {
-                    String zoneName = delta.getZoneName();
+                if (StringUtils.isNotEmpty(zoneName)) {
+                    zoneDeltasMap.put(zoneName, zoneDeltas);
 
-                    if (StringUtils.isNotEmpty(zoneName)) {
-                        List<RangerPolicyDelta> zoneDeltas = zoneDeltasMap.get(zoneName);
-
-                        if (zoneDeltas == null) {
-                            zoneDeltas = new ArrayList<>();
-                            zoneDeltasMap.put(zoneName, zoneDeltas);
-                        }
-
+                    for (RangerPolicyDelta delta : deltas) {
+                        zoneDeltas = zoneDeltasMap.get(zoneName);
                         zoneDeltas.add(delta);
-                    } else {
-                        LOG.warn("policyDelta : [" + delta + "] does not belong to any zone. Should not have come here.");
                     }
                 }
             }
