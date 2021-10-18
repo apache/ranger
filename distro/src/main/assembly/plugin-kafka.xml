@@ -87,6 +87,7 @@
 					<include>org.elasticsearch.plugin:lang-mustache-client</include>
 					<include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
 					<include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
+					<include>org.apache.htrace:htrace-core4</include>
 					<include>org.apache.lucene:lucene-core</include>
 					<include>joda-time:joda-time</include>
 					<include>com.carrotsearch:hppc</include>
