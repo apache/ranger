@@ -138,9 +138,8 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
 
     public void flush() {
         if (logger.isDebugEnabled()) {
-            logger.debug("==> JSONWriter.flush()");
+            logger.debug("==> JSONWriter.flush() called. name=" + auditProviderName);
         }
-        logger.info("Flush called. name=" + auditProviderName);
         super.flush();
         if (logger.isDebugEnabled()) {
             logger.debug("<== JSONWriter.flush()");
