@@ -504,7 +504,8 @@ def main():
     os.chown(ugsyncLogFolderName, ownerId, groupId)
     os.chown(rangerBaseDirName, ownerId, groupId)
     os.chown(usersyncBaseDirFullName, ownerId, groupId)
-
+    os.chown(pid_dir_path, ownerId, groupId)
+    os.chmod(pid_dir_path, 0o755)
     initializeInitD(ownerName)
 
     #
