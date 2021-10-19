@@ -86,7 +86,9 @@ public class HDFSAuditDestination extends AuditDestination {
 			logError("Error writing to log file.", t);
 			return false;
 		} finally {
-			logger.info("Flushing HDFS audit. Event Size:" + events.size());
+			if (logger.isDebugEnabled()) {
+				logger.debug("Flushing HDFS audit. Event Size:" + events.size());
+			}
 			if (auditWriter != null) {
 				flush();
 			}
@@ -125,7 +127,9 @@ public class HDFSAuditDestination extends AuditDestination {
 
 	@Override
 	public void flush() {
-		logger.info("Flush called. name=" + getName());
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> HDFSAuditDestination.flush() called. name=" + getName());
+		}
 		MiscUtil.executePrivilegedAction(new PrivilegedAction<Void>() {
 			@Override
 			public Void run() {
@@ -133,6 +137,9 @@ public class HDFSAuditDestination extends AuditDestination {
 				return null;
 			}
 		});
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== HDFSAuditDestination.flush() called. name=" + getName());
+		}
 	}
 
 	/*

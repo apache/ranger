@@ -293,7 +293,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     @Override
     public void flush() {
         if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.flush()");
+            logger.debug("==> AbstractRangerAuditWriter.flush() " + fileSystemScheme);
         }
         if (ostream != null) {
             try {
@@ -308,7 +308,10 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
                             ostream.hflush();
                         } else {
                             ostream.flush();
-                        }                    logger.info("Flush " + fileSystemScheme + " audit logs completed.....");
+                        }
+                        if (logger.isDebugEnabled()) {
+                            logger.debug("Flush " + fileSystemScheme + " audit logs completed.....");
+                        }
                 }
             } catch (IOException e) {
                 logger.error("Error on flushing log writer: " + e.getMessage() +
