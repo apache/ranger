@@ -51,20 +51,14 @@ public class OzoneConnectionMgr {
             if (ozoneClient == null) {
                 if (configs != null) {
 
-                    final Callable<OzoneClient> connectHive = new Callable<OzoneClient>() {
-                        @Override
-                        public OzoneClient call() throws Exception {
-                            return new OzoneClient(serviceName, configs);
-                        }
-                    };
+                    final Callable<OzoneClient> connectOzone = () -> new OzoneClient(serviceName, configs);
                     try {
-                        ozoneClient = TimedEventUtil.timedTask(connectHive, 5, TimeUnit.SECONDS);
+                        ozoneClient = TimedEventUtil.timedTask(connectOzone, 5, TimeUnit.SECONDS);
                     } catch(Exception e){
-                        LOG.error("Error connecting ozone repository : "+
-                                serviceName +" using config : "+ configs, e);
+                        LOG.error("Error connecting ozone repository : " + serviceName +" using config : "+ configs, e);
                     }
 
-                    OzoneClient oldClient = null;
+                    OzoneClient oldClient;
                     if (ozoneClient != null) {
                         oldClient = ozoneConnectionCache.putIfAbsent(serviceName, ozoneClient);
                     } else {
@@ -80,8 +74,7 @@ public class OzoneConnectionMgr {
                     }
                     repoConnectStatusMap.put(serviceName, true);
                 } else {
-                    LOG.error("Connection Config not defined for asset :"
-                            + serviceName, new Throwable());
+                    LOG.error("Connection Config not defined for asset :" + serviceName, new Throwable());
                 }
             } else {
                 try {
