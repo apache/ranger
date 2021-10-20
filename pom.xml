@@ -96,7 +96,7 @@
         <commons.cli.version>1.2</commons.cli.version>
         <commons.codec.version>1.12</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
-        <commons.compress.version>1.8.1</commons.compress.version>
+        <commons.compress.version>1.21</commons.compress.version>
         <commons.configuration1.version>1.10</commons.configuration1.version>
         <commons.configuration.version>2.1.1</commons.configuration.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
@@ -148,7 +148,7 @@
         <jersey-spring.version>1.19.3</jersey-spring.version>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jettison.version>1.1</jettison.version>
-        <jetty-client.version>9.4.31.v20200723</jetty-client.version>
+        <jetty-client.version>9.4.44.v20210927</jetty-client.version>
         <jline.version>0.9.94</jline.version>
         <jopt-simple.version>3.2</jopt-simple.version>
         <json4s.version>3.2.11</json4s.version>
@@ -175,7 +175,7 @@
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
         <presto.version>333</presto.version>
-        <poi.version>4.1.2</poi.version>
+        <poi.version>5.0.0</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
         <scala.version>2.12.10</scala.version>
