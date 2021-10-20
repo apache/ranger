@@ -654,7 +654,7 @@ public class RangerPolicyRepository {
     }
 
 
-    Map<Long, RangerPolicyEvaluator> getPolicyEvaluatorsMap() { return policyEvaluatorsMap; }
+    public Map<Long, RangerPolicyEvaluator> getPolicyEvaluatorsMap() { return policyEvaluatorsMap; }
 
     RangerPolicyEvaluator getPolicyEvaluator(Long id) {
         return policyEvaluatorsMap.get(id);

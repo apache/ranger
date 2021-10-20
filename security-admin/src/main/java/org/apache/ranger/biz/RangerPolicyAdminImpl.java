@@ -279,16 +279,24 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
             RangerPolicyRepository policyRepository = policyEngine.getRepositoryForZone(zoneName);
 
-            if (policyRepository != null) {
-                for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
-                    if (evaluator.isCompleteMatch(resource, evalContext)) {
-                        if (ret == null) {
-                            ret = new ArrayList<>();
-                        }
+            if (policyRepository != null ) {
 
-                        ret.add(evaluator.getPolicy());
+                Map<Long, RangerPolicyEvaluator>  policyEvaluatorsMap = policyRepository.getPolicyEvaluatorsMap();
+
+                if (!policyEvaluatorsMap.isEmpty()) {
+
+                    for (RangerPolicyEvaluator evaluator : policyEvaluatorsMap.values()) {
+                        if (evaluator.isCompleteMatch(resource, evalContext)) {
+                            if (ret == null) {
+                                ret = new ArrayList<>();
+                            }
+
+                            ret.add(evaluator.getPolicy());
+                        }
                     }
+
                 }
+
             }
 
         }
@@ -318,19 +326,28 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
             RangerPolicyRepository policyRepository = policyEngine.getRepositoryForMatchedZone(policy);
 
-            if (policyRepository != null) {
+            if (policyRepository != null ) {
+
+                Map<Long, RangerPolicyEvaluator>  policyEvaluatorsMap = policyRepository.getPolicyEvaluatorsMap();
+
                 Map<String, RangerPolicyResource> resources = policy.getResources();
 
-                for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
-                    if (evaluator.isCompleteMatch(resources, evalContext)) {
-                        if (ret == null) {
-                            ret = new ArrayList<>();
-                        }
+                if (!policyEvaluatorsMap.isEmpty()) {
 
-                        ret.add(evaluator.getPolicy());
+                    for (RangerPolicyEvaluator evaluator : policyEvaluatorsMap.values()) {
+                        if (evaluator.isCompleteMatch(resources, evalContext)) {
+                            if (ret == null) {
+                                ret = new ArrayList<>();
+                            }
+
+                            ret.add(evaluator.getPolicy());
+                        }
                     }
+
                 }
+
             }
+
 
         }
 
