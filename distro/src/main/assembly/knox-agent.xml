@@ -63,6 +63,7 @@
           <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
           <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
+          <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
           <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
           <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
           <include>org.apache.solr:solr-solrj</include>
@@ -108,6 +109,7 @@
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>com.fasterxml.woodstox:woodstox-core</include>
+          <include>org.apache.htrace:htrace-core4</include>
         </includes>
       </binaries>
     </moduleSet>
