@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.store;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.lang.reflect.Field;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -300,6 +301,26 @@ public class EmbeddedServiceDefsUtil {
 					ret = store.createServiceDef(ret);
 				}
 				LOG.info("created embedded service-def " + serviceDefName);
+			}else if (ret != null && supportedServiceDefs.contains(serviceDefName)) {
+
+				RangerServiceDef retFromServiceDef = ServiceDefUtil.normalize(loadEmbeddedServiceDef(serviceDefName));
+
+				if (ret.getId().equals(retFromServiceDef.getId())) {
+
+					EmbeddedServiceDefsUtil embeddedServiceDefsUtil=EmbeddedServiceDefsUtil.instance();
+					Field field=embeddedServiceDefsUtil.getClass().getDeclaredField(serviceDefName+"ServiceDef");
+					field.set(embeddedServiceDefsUtil,retFromServiceDef);
+					ret = store.updateServiceDef(retFromServiceDef);
+
+					LOG.info("updating embedded service-def " + serviceDefName);
+
+				} else {
+
+					LOG.error("updating embedded service-def error : " + "service id from ranger db " +
+							"is not matched id in ranger-servicedef-"+serviceDefName+".json.  service id from ranger db is "
+							+ret.getId()+", and id in ranger-servicedef-"+serviceDefName+".json is "+retFromServiceDef.getId());
+
+				}
 			}
 		} catch(Exception excp) {
 			LOG.fatal("EmbeddedServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);
