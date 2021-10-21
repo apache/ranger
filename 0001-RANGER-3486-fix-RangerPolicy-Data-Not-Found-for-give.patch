@@ -1,0 +1,100 @@
+From 30f88626d34209e1acbdd6a67e68ef1f0c61ed60 Mon Sep 17 00:00:00 2001
+From: hervor <htao@tencent.com>
+Date: Wed, 20 Oct 2021 16:10:15 +0800
+Subject: [PATCH 1/1] RANGER-3486:fix RangerPolicy Data Not Found for given id
+ when grantAccess and revokeAccess
+
+---
+ .../policyengine/RangerPolicyRepository.java  |  2 +-
+ .../ranger/biz/RangerPolicyAdminImpl.java     | 45 +++++++++++++------
+ 2 files changed, 32 insertions(+), 15 deletions(-)
+
+diff --git a/agents-common/src/main/java/org/apache/ranger/plugin/policyengine/RangerPolicyRepository.java b/agents-common/src/main/java/org/apache/ranger/plugin/policyengine/RangerPolicyRepository.java
+index 008ee7719..07c0688ae 100644
+--- a/agents-common/src/main/java/org/apache/ranger/plugin/policyengine/RangerPolicyRepository.java
++++ b/agents-common/src/main/java/org/apache/ranger/plugin/policyengine/RangerPolicyRepository.java
+@@ -654,7 +654,7 @@ void storeAuditEnabledInCache(RangerAccessRequest request, RangerAccessResult re
+     }
+ 
+ 
+-    Map<Long, RangerPolicyEvaluator> getPolicyEvaluatorsMap() { return policyEvaluatorsMap; }
++    public Map<Long, RangerPolicyEvaluator> getPolicyEvaluatorsMap() { return policyEvaluatorsMap; }
+ 
+     RangerPolicyEvaluator getPolicyEvaluator(Long id) {
+         return policyEvaluatorsMap.get(id);
+diff --git a/security-admin/src/main/java/org/apache/ranger/biz/RangerPolicyAdminImpl.java b/security-admin/src/main/java/org/apache/ranger/biz/RangerPolicyAdminImpl.java
+index 5311a54a2..56ea45688 100644
+--- a/security-admin/src/main/java/org/apache/ranger/biz/RangerPolicyAdminImpl.java
++++ b/security-admin/src/main/java/org/apache/ranger/biz/RangerPolicyAdminImpl.java
+@@ -279,16 +279,24 @@ boolean isDelegatedAdminAccessAllowed(RangerPolicy policy, String user, Set<Stri
+ 
+             RangerPolicyRepository policyRepository = policyEngine.getRepositoryForZone(zoneName);
+ 
+-            if (policyRepository != null) {
+-                for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
+-                    if (evaluator.isCompleteMatch(resource, evalContext)) {
+-                        if (ret == null) {
+-                            ret = new ArrayList<>();
+-                        }
++            if (policyRepository != null ) {
+ 
+-                        ret.add(evaluator.getPolicy());
++                Map<Long, RangerPolicyEvaluator>  policyEvaluatorsMap = policyRepository.getPolicyEvaluatorsMap();
++
++                if (!policyEvaluatorsMap.isEmpty()) {
++
++                    for (RangerPolicyEvaluator evaluator : policyEvaluatorsMap.values()) {
++                        if (evaluator.isCompleteMatch(resource, evalContext)) {
++                            if (ret == null) {
++                                ret = new ArrayList<>();
++                            }
++
++                            ret.add(evaluator.getPolicy());
++                        }
+                     }
++
+                 }
++
+             }
+ 
+         }
+@@ -318,20 +326,29 @@ boolean isDelegatedAdminAccessAllowed(RangerPolicy policy, String user, Set<Stri
+ 
+             RangerPolicyRepository policyRepository = policyEngine.getRepositoryForMatchedZone(policy);
+ 
+-            if (policyRepository != null) {
++            if (policyRepository != null ) {
++
++                Map<Long, RangerPolicyEvaluator>  policyEvaluatorsMap = policyRepository.getPolicyEvaluatorsMap();
++
+                 Map<String, RangerPolicyResource> resources = policy.getResources();
+ 
+-                for (RangerPolicyEvaluator evaluator : policyRepository.getPolicyEvaluators()) {
+-                    if (evaluator.isCompleteMatch(resources, evalContext)) {
+-                        if (ret == null) {
+-                            ret = new ArrayList<>();
+-                        }
++                if (!policyEvaluatorsMap.isEmpty()) {
+ 
+-                        ret.add(evaluator.getPolicy());
++                    for (RangerPolicyEvaluator evaluator : policyEvaluatorsMap.values()) {
++                        if (evaluator.isCompleteMatch(resources, evalContext)) {
++                            if (ret == null) {
++                                ret = new ArrayList<>();
++                            }
++
++                            ret.add(evaluator.getPolicy());
++                        }
+                     }
++
+                 }
++
+             }
+ 
++
+         }
+ 
+         if (LOG.isDebugEnabled()) {
+-- 
+2.33.0
+
