@@ -30,7 +30,7 @@ Docker files in this folder create docker images and run them to build Apache Ra
 
 3. Update environment variables in .env file, if necessary
 
-4. Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka services:
+4. Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox services:
      ./download-archives.sh
 
 5. Build and deploy Apache Ranger in containers using docker-compose
@@ -41,8 +41,8 @@ Docker files in this folder create docker images and run them to build Apache Ra
 
    Time taken to complete the build might vary (upto an hour), depending on status of ${HOME}/.m2 directory cache.
 
-   5.2. Execute following command to start Ranger, Ranger enabled HDFS/YARN/HBase/Kafka and dependent services (Solr, DB) in containers:
+   5.2. Execute following command to start Ranger, Ranger enabled HDFS/YARN/HBase/Hive/Kafka/Knox and dependent services (Solr, DB) in containers:
 
-        docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml up -d
+        docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml up -d
 
 6. Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)

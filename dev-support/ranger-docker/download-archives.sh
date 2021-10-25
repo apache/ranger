@@ -49,4 +49,5 @@ downloadIfNotPresent kafka_2.12-${KAFKA_VERSION}.tgz        https://archive.apac
 downloadIfNotPresent apache-hive-${HIVE_VERSION}-bin.tar.gz https://archive.apache.org/dist/hive/hive-${HIVE_VERSION}
 downloadIfNotPresent hadoop-${HIVE_HADOOP_VERSION}.tar.gz   https://archive.apache.org/dist/hadoop/common/hadoop-${HIVE_HADOOP_VERSION}
 downloadIfNotPresent postgresql-42.2.16.jre7.jar            https://search.maven.org/remotecontent?filepath=org/postgresql/postgresql/42.2.16.jre7
+downloadIfNotPresent knox-${KNOX_VERSION}.tar.gz            https://archive.apache.org/dist/knox/${KNOX_VERSION}
 

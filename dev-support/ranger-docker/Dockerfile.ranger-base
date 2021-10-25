@@ -45,6 +45,8 @@ RUN groupadd ranger && \
     useradd -g hadoop -ms /bin/bash hive && \
     useradd -g hadoop -ms /bin/bash hbase && \
     useradd -g hadoop -ms /bin/bash kafka && \
+    groupadd knox && \
+    useradd -g knox -ms /bin/bash knox && \
     mkdir -p /home/ranger/dist && \
     mkdir -p /home/ranger/scripts && \
     chown -R ranger:ranger /home/ranger && \
