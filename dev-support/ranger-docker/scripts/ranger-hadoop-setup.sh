@@ -39,6 +39,10 @@ cat <<EOF > ${HADOOP_HOME}/etc/hadoop/hdfs-site.xml
     <name>dfs.replication</name>
     <value>1</value>
   </property>
+  <property>
+    <name>dfs.webhdfs.enabled</name>
+    <value>true</value>
+  </property>
 </configuration>
 EOF
 

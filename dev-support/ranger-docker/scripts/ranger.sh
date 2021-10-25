@@ -43,6 +43,7 @@ then
   python3 ${RANGER_SCRIPTS}/ranger-hive-service-dev_hive.py
   python3 ${RANGER_SCRIPTS}/ranger-hbase-service-dev_hbase.py
   python3 ${RANGER_SCRIPTS}/ranger-kafka-service-dev_kafka.py
+  python3 ${RANGER_SCRIPTS}/ranger-knox-service-dev_knox.py
 fi
 
 RANGER_ADMIN_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.server.tomcat.EmbeddedServer" | awk '{print $2}'`

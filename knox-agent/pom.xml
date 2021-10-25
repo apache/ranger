@@ -57,6 +57,12 @@
             <artifactId>jersey-client</artifactId>
         </dependency>
         <dependency>
+            <groupId>com.sun.jersey</groupId>
+            <artifactId>jersey-client</artifactId>
+            <type>jar</type>
+            <version>${jersey-bundle.version}</version>
+        </dependency>
+        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
         </dependency>
