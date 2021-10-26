@@ -127,6 +127,11 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroup.getAllGroupIdNames">
+		<query>SELECT obj.id, obj.name FROM XXGroup obj
+		</query>
+	</named-query>
+
 	<!-- XXGroup -->
 	<named-query name="XXUser.findGroupsByUserIds">
 		<query>SELECT user.name, group.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
@@ -136,6 +141,11 @@
 
 	<named-query name="XXUser.getAllUserIds">
 		<query>SELECT user.name, user.id FROM XXUser user
+		</query>
+	</named-query>
+
+	<named-query name="XXUser.getAllUserIdNames">
+		<query>SELECT portalUser.id, user.id, user.name FROM XXUser user, XXPortalUser portalUser WHERE user.name=portalUser.loginId
 		</query>
 	</named-query>
 

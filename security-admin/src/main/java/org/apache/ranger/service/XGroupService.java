@@ -277,4 +277,8 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
                 }catch(Exception ex){}
                 return xXGroupMap;
         }
+
+	public Map<Long, String> getXXGroupIdNameMap() {
+		return daoManager.getXXGroup().getAllGroupIdNames();
+	}
 }
