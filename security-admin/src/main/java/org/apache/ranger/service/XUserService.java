@@ -426,4 +426,18 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 		return vXUserList;
 	}
 
+	public Map<Long, Object[]> getXXPortalUserIdXXUserNameMap() {
+		Map<Long, Object[]> xXPortalUserIdXXUserMap = new HashMap<Long, Object[]>();
+		try {
+			List<Object[]> xxUserList = daoManager.getXXUser().getAllUserIdNames();
+			if(!CollectionUtils.isEmpty(xxUserList)) {
+				for (Object[] obj : xxUserList) {
+					xXPortalUserIdXXUserMap.put((Long)obj[0], obj);
+				}
+			}
+		} catch (Exception ex) {
+		}
+		return xXPortalUserIdXXUserMap;
+	}
+
 }

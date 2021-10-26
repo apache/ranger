@@ -91,4 +91,27 @@ public class XUserPermissionService extends XUserPermissionServiceBase<XXUserPer
                 }
                 return vXUserPermissionList;
         }
+
+	public List<VXUserPermission> getPopulatedVXUserPermissionListNew(List<XXUserPermission> xuserPermissionList,
+			Map<Long, Object[]> xXPortalUserIdXXUserMap, VXModuleDef vModuleDef) {
+		List<VXUserPermission> vXUserPermissionList = new ArrayList<VXUserPermission>();
+		Object[] xXUser = null;
+		for (XXUserPermission xuserPermission : xuserPermissionList) {
+			if (xXPortalUserIdXXUserMap.containsKey(xuserPermission.getUserId())) {
+				xXUser = xXPortalUserIdXXUserMap.get(xuserPermission.getUserId());
+				VXUserPermission vXUserPerm = new VXUserPermission();
+				vXUserPerm.setId(xuserPermission.getId());
+				vXUserPerm.setUserId((Long) xXUser[1]);
+				vXUserPerm.setModuleId(xuserPermission.getModuleId());
+				vXUserPerm.setIsAllowed(xuserPermission.getIsAllowed());
+				vXUserPerm.setCreateDate(xuserPermission.getCreateTime());
+				vXUserPerm.setUpdateDate(xuserPermission.getUpdateTime());
+				vXUserPerm.setModuleName(vModuleDef.getModule());
+				vXUserPerm.setLoginId((String) xXUser[2]);
+				vXUserPerm.setUserName((String) xXUser[2]);
+				vXUserPermissionList.add(vXUserPerm);
+			}
+		}
+		return vXUserPermissionList;
+	}
 }
