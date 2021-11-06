@@ -53,7 +53,7 @@ images=`docker images | cut -f 1 -d " "`
 
 if [ $build_image -eq 1 ]; then
     echo "Creating image $image_name ..."
-    docker rmi -f $image_name
+    docker rmi -f $image_name >& /dev/null
 
 docker build -t $image_name - <<Dockerfile
 FROM centos
@@ -85,7 +85,7 @@ ENV PATH $JAVA_HOME/bin:$PATH
 
 
 ADD https://www.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz.sha512 /tools
-ADD http://www-us.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz /tools
+ADD http://www.apache.org/dist/maven/maven-3/3.6.3/binaries/apache-maven-3.6.3-bin.tar.gz /tools
 RUN sha512sum  apache-maven-3.6.3-bin.tar.gz | cut -f 1 -d " " > tmp.sha1
 
 RUN cat apache-maven-3.6.3-bin.tar.gz.sha512 | cut -f 1 -d " " > tmp.sha1.download
@@ -122,6 +122,7 @@ Dockerfile
 
 fi
 
+[[ $? -ne 0 ]] && echo "ERROR: failed creating docker image" && exit 1
 src_folder=`pwd`
 
 LOCAL_M2="$HOME/.m2"
