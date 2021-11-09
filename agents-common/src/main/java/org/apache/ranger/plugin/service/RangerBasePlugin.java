@@ -33,7 +33,7 @@ import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
-import org.apache.ranger.plugin.conditionevaluator.RangerScriptExecutionContext;
+import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -94,7 +94,7 @@ public class RangerBasePlugin {
 		setIsFallbackSupported(pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".is.fallback.supported", false));
 		setServiceAdmins(serviceAdmins);
 
-		RangerScriptExecutionContext.init(pluginConfig);
+		RangerRequestScriptEvaluator.init(pluginConfig);
 
 		this.chainedPlugins = initChainedPlugins();
 	}

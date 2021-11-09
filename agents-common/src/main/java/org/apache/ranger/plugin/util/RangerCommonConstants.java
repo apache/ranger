@@ -51,8 +51,23 @@ public class RangerCommonConstants {
 	public static final boolean POLICY_REST_CLIENT_SESSION_COOKIE_ENABLED            = true;
 
 	public static final String SCRIPT_OPTION_ENABLE_JSON_CTX        = "enableJsonCtx";
-	public static final String SCRIPT_VAR_CONTEXT                   = "_ctx";
-	public static final String SCRIPT_VAR_CONTEXT_JSON              = "_ctx_json";
+
+	public static final String SCRIPT_VAR_ctx                       = "ctx";
+	public static final String SCRIPT_VAR_tag                       = "tag";
+	public static final String SCRIPT_VAR_tagAttr                   = "tagAttr";
+	public static final String SCRIPT_VAR__CTX                      = "_ctx";
+	public static final String SCRIPT_VAR__CTX_JSON                 = "_ctx_json";
+	public static final String SCRIPT_VAR_REQ                       = "REQ";
+	public static final String SCRIPT_VAR_RES                       = "RES";
+	public static final String SCRIPT_VAR_TAG                       = "TAG";
+	public static final String SCRIPT_VAR_TAGNAMES                  = "TAGNAMES";
+	public static final String SCRIPT_VAR_TAGS                      = "TAGS";
+	public static final String SCRIPT_VAR_UGA                       = "UGA";
+	public static final String SCRIPT_VAR_UGROUP                    = "UGROUP";
+	public static final String SCRIPT_VAR_UGROUPS                   = "UGROUPS";
+	public static final String SCRIPT_VAR_UROLES                    = "UROLES";
+	public static final String SCRIPT_VAR_USER                      = "USER";
+
 	public static final String SCRIPT_FIELD_ACCESS_TIME             = "accessTime";
 	public static final String SCRIPT_FIELD_ACCESS_TYPE             = "accessType";
 	public static final String SCRIPT_FIELD_ACTION                  = "action";
@@ -61,17 +76,22 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_FIELD_CLUSTER_NAME            = "clusterName";
 	public static final String SCRIPT_FIELD_CLUSTER_TYPE            = "clusterType";
 	public static final String SCRIPT_FIELD_FORWARDED_ADDRESSES     = "forwardedAddresses";
+	public static final String SCRIPT_FIELD__MATCH_TYPE             = "_matchType";
+	public static final String SCRIPT_FIELD__NAME                   = "_name";
+	public static final String SCRIPT_FIELD__OWNER_USER             = "_ownerUser";
 	public static final String SCRIPT_FIELD_REMOTE_IP_ADDRESS       = "remoteIPAddress";
+	public static final String SCRIPT_FIELD_REQUEST                 = "request";
 	public static final String SCRIPT_FIELD_REQUEST_DATA            = "requestData";
 	public static final String SCRIPT_FIELD_RESOURCE                = "resource";
-	public static final String SCRIPT_FIELD_RESOURCE_OWNER_USER     = "resourceOwnerUser";
 	public static final String SCRIPT_FIELD_RESOURCE_MATCHING_SCOPE = "resourceMatchingScope";
 	public static final String SCRIPT_FIELD_TAG                     = "tag";
 	public static final String SCRIPT_FIELD_TAGS                    = "tags";
+	public static final String SCRIPT_FIELD_TAG_NAMES               = "tagNames";
+	public static final String SCRIPT_FIELD__TYPE                   = "_type";
 	public static final String SCRIPT_FIELD_USER                    = "user";
 	public static final String SCRIPT_FIELD_USER_ATTRIBUTES         = "userAttributes";
 	public static final String SCRIPT_FIELD_USER_GROUPS             = "userGroups";
 	public static final String SCRIPT_FIELD_USER_GROUP_ATTRIBUTES   = "userGroupAttributes";
+	public static final String SCRIPT_FIELD_UGA                     = "uga";
 	public static final String SCRIPT_FIELD_USER_ROLES              = "userRoles";
-	public static final String SCRIPT_FIELD_REQUEST                 = "request";
 }
