@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.conditionevaluator;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -63,9 +64,8 @@ public class RangerAnyOfExpectedTagsPresentConditionEvaluator extends RangerAbst
 
 		boolean matched = false;
 
-		RangerAccessRequest			 readOnlyRequest = request.getReadOnlyCopy();
-		RangerScriptExecutionContext context         = new RangerScriptExecutionContext(readOnlyRequest);
-		Set<String>                  resourceTags    = context.getAllTagTypes();
+		RangerRequestScriptEvaluator evaluator    = new RangerRequestScriptEvaluator(request);
+		Set<String>                  resourceTags = evaluator.getAllTagTypes();
 
 		if (resourceTags != null) {
 			// check if resource Tags does contain any of the policy Condition Tags
