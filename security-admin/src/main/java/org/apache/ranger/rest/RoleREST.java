@@ -184,10 +184,19 @@ public class RoleREST {
         }
         RangerRole ret;
         try {
+            UserSessionBase usb          = ContextUtil.getCurrentUserSession();
+            String          loggedInUser = usb != null ? usb.getLoginId() : null;
+            RangerRole      existingRole = getRole(roleId);
+
+            if (!bizUtil.isUserRangerAdmin(loggedInUser) && !ensureRoleAccess(loggedInUser, userMgr.getGroupsForUser(loggedInUser), existingRole)) {
+                LOG.error("User " + loggedInUser + " does not have permission for this operation");
+
+                throw new Exception("User does not have permission for this operation");
+            }
+
             RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
             validator.validate(role, RangerValidator.Action.UPDATE);
 
-            ensureAdminAccess(null, null);
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
