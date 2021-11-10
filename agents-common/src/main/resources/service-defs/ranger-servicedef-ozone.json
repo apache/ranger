@@ -169,7 +169,7 @@
 			"name": "hadoop.security.authorization",
 			"type": "bool",
 			"subType": "YesTrue:NoFalse",
-			"mandatory": true,
+			"mandatory": false,
 			"validationRegEx":"",
 			"validationMessage": "",
 			"uiHint":"",
