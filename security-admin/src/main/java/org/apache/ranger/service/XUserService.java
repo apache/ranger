@@ -144,7 +144,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 		String vObjName = vObj.getName();
 		String mObjName = mObj.getName();
 		if (vObjName != null && mObjName != null) {
-			if (!vObjName.trim().equals(mObjName.trim())) {
+			if (!vObjName.trim().equalsIgnoreCase(mObjName.trim())) {
 				validateForCreate(vObj);
 			}
 		}
