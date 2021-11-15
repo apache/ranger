@@ -21,6 +21,7 @@ package org.apache.ranger.authorization.hive.authorizer;
 
 import java.util.*;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
@@ -41,6 +42,8 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 	public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
 	public static final String  ACTION_TYPE_METADATA_OPERATION = "METADATA OPERATION";
+	public static final String  URL_RESOURCE_TYPE = "url";
+
 	Collection<AuthzAuditEvent> auditEvents  = null;
 	boolean                     deniedExists = false;
 
@@ -60,8 +63,12 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 		AuthzAuditEvent auditEvent = super.getAuthzEvents(result);
 
+		String resourcePathComputed = resourcePath;
+		if (URL_RESOURCE_TYPE.equals(resourceType)) {
+			resourcePathComputed = getURLPathString(resource, resourcePathComputed);
+		}
 		auditEvent.setAccessType(accessType);
-		auditEvent.setResourcePath(resourcePath);
+		auditEvent.setResourcePath(resourcePathComputed);
 		auditEvent.setResourceType("@" + resourceType); // to be consistent with earlier release
 
 		if (request instanceof RangerHiveAccessRequest && resource instanceof RangerHiveResource) {
@@ -314,6 +321,19 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		boolean ret = false;
 		if (roleOperationCmds.contains(action)) {
 			ret = true;
+		}
+		return ret;
+	}
+
+	private String getURLPathString(RangerAccessResource resource, String resourcePath) {
+		String ret = resourcePath;
+		ArrayList<String> resourcePathVal;
+		Object val = resource.getValue(URL_RESOURCE_TYPE);
+		if (val instanceof List<?>) {
+			resourcePathVal = (ArrayList<String>) val;
+			if (CollectionUtils.isNotEmpty(resourcePathVal)) {
+				ret = resourcePathVal.get(0);
+			}
 		}
 		return ret;
 	}

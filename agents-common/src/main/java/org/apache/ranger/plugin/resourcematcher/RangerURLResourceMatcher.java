@@ -179,6 +179,14 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
                         sb.append(pathSeparatorChar);
                     }
 
+                    if (!ret) {
+                        boolean isEndsWithPathSeparator = url.endsWith(Character.toString(pathSeparatorChar));
+                        if (!isEndsWithPathSeparator) {
+                            sb.deleteCharAt(sb.length()-1);
+                        }
+                        ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity);
+                    }
+
                     sb = null;
                 } else { // pathToCheck consists of only pathSeparatorChar
                     ret = FilenameUtils.wildcardMatch(pathToCheck, wildcardPath, caseSensitivity);
