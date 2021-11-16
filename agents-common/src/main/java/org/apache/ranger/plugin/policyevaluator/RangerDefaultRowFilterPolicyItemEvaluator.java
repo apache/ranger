@@ -24,21 +24,16 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
-import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
 
 public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPolicyItemEvaluator implements RangerRowFilterPolicyItemEvaluator {
 	final private RangerRowFilterPolicyItem rowFilterPolicyItem;
-	final private boolean                   isDynamicEvalNeeded;
 
 	public RangerDefaultRowFilterPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerRowFilterPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
-		super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER, policyItemIndex, options);
+		super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK, policyItemIndex, options);
 
 		rowFilterPolicyItem = policyItem;
-		isDynamicEvalNeeded = rowFilterPolicyItem != null &&
-				              rowFilterPolicyItem.getRowFilterInfo() != null &&
-				              RangerRequestScriptEvaluator.needsJsonCtxEnabled(rowFilterPolicyItem.getRowFilterInfo().getFilterExpr());
 	}
 
 	@Override
