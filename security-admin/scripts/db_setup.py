@@ -35,6 +35,9 @@ retryPatchAfterSeconds=120
 stalePatchEntryHoldTimeInMinutes=10
 java_patch_regex="^Patch.*?J\d{5}.class$"
 is_unix = os_name == "LINUX" or os_name == "DARWIN"
+pre_sql_prefix="PatchPreSql_"
+post_sql_prefix="PatchPostSql_"
+java_patch_version_regex="Patch.*?_J(.*).class"
 
 RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
 if RANGER_ADMIN_HOME is None:
@@ -177,6 +180,8 @@ class BaseDB(object):
 
 	def apply_patches(self, db_name, db_user, db_password, PATCHES_PATH):
 		#first get all patches and then apply each patch
+		global globalDict
+		xa_db_host = globalDict['db_host']
 		if not os.path.exists(PATCHES_PATH):
 			log("[I] No patches to apply!","info")
 		else:
@@ -186,7 +191,22 @@ class BaseDB(object):
 				sorted_files = sorted(files, key=lambda x: str(x.split('.')[0]))
 				for filename in sorted_files:
 					currentPatch = os.path.join(PATCHES_PATH, filename)
+					pre_dict = {}
+					post_dict = {}
+					version = filename.split('-')[0]
+					prefix_for_preSql_patch=pre_sql_prefix + version
+					prefix_for_postSql_patch=post_sql_prefix +version
+					#getting Java patch which needs to be run before this DB patch.
+					pre_dict = self.get_pre_post_java_patches(prefix_for_preSql_patch)
+					if pre_dict:
+						log ("[I] ruunig pre java patch:[{}]".format(pre_dict),"info")
+						self.execute_java_patches(xa_db_host, db_user, db_password, db_name, pre_dict)
 					self.import_db_patches(db_name, db_user, db_password, currentPatch)
+					#getting Java patch which needs to be run immediately after this DB patch.
+					post_dict = self.get_pre_post_java_patches(prefix_for_postSql_patch)
+					if post_dict:
+						log ("[I] ruunig post java patch:[{}]".format(post_dict),"info")
+						self.execute_java_patches(xa_db_host, db_user, db_password, db_name, post_dict)
 				self.update_applied_patches_status(db_name, db_user, db_password, "DB_PATCHES")
 			else:
 				log("[I] No patches to apply!","info")
@@ -357,6 +377,29 @@ class BaseDB(object):
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
 
+	def get_pre_post_java_patches(self, patch_name_prefix):
+		my_dict = {}
+		version = ""
+		className = ""
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
+		if not os.path.exists(javaFiles):
+			log("[I] No java patches to apply!","info")
+		else:
+			files = os.listdir(javaFiles)
+			if files:
+				for filename in files:
+					f = re.match(java_patch_regex,filename)
+					if f:
+						if patch_name_prefix != "":
+							p = re.match(patch_name_prefix, filename)
+							if p:
+								version = re.match(java_patch_version_regex,filename)
+								version = version.group(1)
+								key3 = int(version)
+								my_dict[key3] = filename
+		return my_dict
+
 	def import_db_patches(self, db_name, db_user, db_password, file_name):
 		if self.XA_DB_FLAVOR == "POSTGRES":
 			self.create_language_plpgsql(db_user, db_password, db_name)
@@ -431,9 +474,9 @@ class BaseDB(object):
 						log("[E] "+name + " import failed!","error")
 						sys.exit(1)
 
-	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name):
+
+	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name, my_dict):
 		global globalDict
-		my_dict = {}
 		version = ""
 		className = ""
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
@@ -453,13 +496,14 @@ class BaseDB(object):
 		else:
 			files = os.listdir(javaFiles)
 			if files:
-				for filename in files:
-					f = re.match(java_patch_regex,filename)
-					if f:
-						version = re.match("Patch.*?_(.*).class",filename)
-						version = version.group(1)
-						key3 = int(version.strip("J"))
-						my_dict[key3] = filename
+				if not my_dict:
+					for filename in files:
+						f = re.match(java_patch_regex,filename)
+						if f:
+							version = re.match(java_patch_version_regex,filename)
+							version = version.group(1)
+							key3 = int(version)
+							my_dict[key3] = filename
 
 			keylist = list(my_dict)
 			keylist.sort()
@@ -1303,7 +1347,8 @@ def main(argv):
 				applyJavaPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "JAVA_PATCHES")
 				if applyJavaPatches == True:
 					log("[I] ----------------- Applying java patches ------------", "info")
-					xa_sqlObj.execute_java_patches(xa_db_host, db_user, db_password, db_name)
+					my_dict = {}
+					xa_sqlObj.execute_java_patches(xa_db_host, db_user, db_password, db_name, my_dict)
 					xa_sqlObj.update_applied_patches_status(db_name,db_user, db_password,"JAVA_PATCHES")
 				else:
 					log("[I] JAVA_PATCHES have already been applied","info")
