@@ -26,6 +26,7 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
@@ -43,7 +44,9 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
 	public static final String  ACTION_TYPE_METADATA_OPERATION = "METADATA OPERATION";
 	public static final String  URL_RESOURCE_TYPE = "url";
-
+	public static final String CONF_AUDIT_QUERY_REQUEST_SIZE = "xasecure.audit.solr.limit.query.req.size";
+	public static final int DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE = Integer.MAX_VALUE;
+	private int requestQuerySize;
 	Collection<AuthzAuditEvent> auditEvents  = null;
 	boolean                     deniedExists = false;
 
@@ -54,6 +57,13 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 	public RangerHiveAuditHandler() {
 		super();
+		requestQuerySize = DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE;
+	}
+
+	public RangerHiveAuditHandler(Configuration config) {
+		super(config);
+		requestQuerySize = config.getInt(CONF_AUDIT_QUERY_REQUEST_SIZE, DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE);
+		requestQuerySize = (requestQuerySize < 1) ? DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE : requestQuerySize;
 	}
 
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result, String accessType, String resourcePath) {
@@ -66,6 +76,14 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		String resourcePathComputed = resourcePath;
 		if (URL_RESOURCE_TYPE.equals(resourceType)) {
 			resourcePathComputed = getURLPathString(resource, resourcePathComputed);
+		}
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("requestQuerySize = " + requestQuerySize);
+		}
+		if (StringUtils.isNotBlank(request.getRequestData()) && request.getRequestData().length()>requestQuerySize) {
+			auditEvent.setRequestData(request.getRequestData().substring(0, requestQuerySize));
+		} else {
+			auditEvent.setRequestData(request.getRequestData());
 		}
 		auditEvent.setAccessType(accessType);
 		auditEvent.setResourcePath(resourcePathComputed);
