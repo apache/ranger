@@ -447,7 +447,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					serviceResourceTrie = new HashMap<>();
 
 					for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-						serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, resourceMatchers, getPolicyEngineOptions().optimizeTrieForRetrieval, null));
+						serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, resourceMatchers, getPolicyEngineOptions().optimizeTagTrieForRetrieval, getPolicyEngineOptions().optimizeTagTrieForSpace, null));
 					}
 				}
 				enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie);
@@ -491,7 +491,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 									LOG.debug("Added resource-matcher for service-resource:[" + serviceResource + "]");
 								}
 							} else {
-								trie = new RangerResourceTrie<>(resourceDef, Collections.singletonList(resourceMatcher));
+								trie = new RangerResourceTrie<>(resourceDef, Collections.singletonList(resourceMatcher), getPolicyEngineOptions().optimizeTagTrieForRetrieval, getPolicyEngineOptions().optimizeTagTrieForSpace, null);
 								serviceResourceTrie.put(resourceDef.getName(), trie);
 							}
 						}
