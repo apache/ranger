@@ -19,6 +19,7 @@
 package org.apache.ranger;
 
 import com.sun.jersey.api.client.GenericType;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import com.sun.jersey.api.client.ClientResponse;
@@ -142,9 +143,7 @@ public class RangerClient {
     private boolean isSecureMode = false;
     private Subject sub = null;
 
-    public RangerClient(String hostName, String authType, String username, String password, String configFile) {
-        restClient = new RangerRESTClient(hostName, configFile, new Configuration());
-
+    private void authInit(String authType, String username, String password) {
         if (AUTH_KERBEROS.equalsIgnoreCase(authType)) {
             if (SecureClientLogin.isKerberosCredentialExists(username, password)) {
                 isSecureMode = true;
@@ -157,6 +156,17 @@ public class RangerClient {
         } else {
             restClient.setBasicAuthInfo(username, password);
         }
+    }
+
+    public RangerClient(String hostName, String authType, String username, String password, String configFile) {
+        restClient = new RangerRESTClient(hostName, configFile, new Configuration());
+        authInit(authType, username, password);
+    }
+
+    public RangerClient(String hostname, String authType, String username, String password, String appId, String serviceType){
+        this(hostname, authType, username, password,
+                new RangerPluginConfig(serviceType, null,appId,null,null,null)
+                        .get("ranger.plugin." + serviceType + ".policy.rest.ssl.config.file"));
     }
 
 
