@@ -413,8 +413,10 @@ public class PublicAPIsv2 {
 	@GET
 	@Path("/api/policy/guid/{guid}")
 	@Produces({ "application/json", "application/xml" })
-	public RangerPolicy getPolicyByGUIDAndServiceName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName) {
-		return serviceREST.getPolicyByGUIDAndServiceName(guid, serviceName);
+	public RangerPolicy getPolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
+																 @DefaultValue("") @QueryParam("serviceName") String serviceName,
+																 @DefaultValue("") @QueryParam("ZoneName") String zoneName) {
+		return serviceREST.getPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
 	}
 
 	@POST
@@ -516,8 +518,10 @@ public class PublicAPIsv2 {
 	@DELETE
 	@Path("/api/policy/guid/{guid}")
 	@Produces({ "application/json", "application/xml" })
-	public void deletePolicyByGUIDAndServiceName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName) {
-		serviceREST.deletePolicyByGUIDAndServiceName(guid, serviceName);
+	public void deletePolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
+												 @DefaultValue("") @QueryParam("serviceName") String serviceName,
+												 @DefaultValue("") @QueryParam("zoneName") String zoneName) {
+		serviceREST.deletePolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
 	}
 
 	@GET

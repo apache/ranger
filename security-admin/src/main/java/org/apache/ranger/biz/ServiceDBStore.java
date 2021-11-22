@@ -2303,10 +2303,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return policyService.read(id);
 	}
 
-	public RangerPolicy getPolicy(String guid, String serviceName) throws Exception {
+	public RangerPolicy getPolicy(String guid, String serviceName, String zoneName) throws Exception {
 		RangerPolicy ret = null;
 		if (StringUtils.isNotBlank(guid) && StringUtils.isNotBlank(serviceName)) {
-			XXPolicy xPolicy = daoMgr.getXXPolicy().findByPolicyGUIDAndServiceName(guid, serviceName);
+			XXPolicy xPolicy = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
 			if (xPolicy != null) {
 				ret = policyService.getPopulatedViewObject(xPolicy);
 			}

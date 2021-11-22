@@ -285,16 +285,30 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		return ret;
 	}
 
-	public XXPolicy findByPolicyGUIDAndServiceName(String guid, String serviceName) {
-		if (guid == null  || serviceName == null) {
+	public XXPolicy findPolicyByGUIDAndServiceNameAndZoneName(String guid, String serviceName, String zoneName) {
+		if (guid == null || serviceName == null) {
 			return null;
 		}
+
 		try {
-			XXPolicy xPol = getEntityManager().createNamedQuery("XXPolicy.findByGUIDAndServiceName", tClass).setParameter("guid", guid).setParameter("serviceName", serviceName).getSingleResult();
-			return xPol;
+			if (zoneName == null || zoneName.trim().isEmpty()) {
+				return getEntityManager().createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndServiceName", tClass)
+						.setParameter("guid", guid)
+						.setParameter("serviceName", serviceName)
+						.setParameter("zoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+						.getSingleResult();
+			} else {
+				return getEntityManager()
+						.createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndServiceNameAndZoneName", tClass)
+						.setParameter("guid", guid)
+						.setParameter("serviceName", serviceName)
+						.setParameter("zoneName", zoneName)
+						.getSingleResult();
+			}
 		} catch (NoResultException e) {
 			return null;
 		}
+
 	}
 
 	public List<XXPolicy> findByPolicyStatus(Boolean isPolicyEnabled) {

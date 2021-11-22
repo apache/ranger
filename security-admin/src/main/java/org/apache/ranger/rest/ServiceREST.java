@@ -3762,24 +3762,26 @@ public class ServiceREST {
 	@GET
 	@Path("/policies/guid/{guid}")
 	@Produces({ "application/json", "application/xml" })
-	public RangerPolicy getPolicyByGUIDAndServiceName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName) {
+	public RangerPolicy getPolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid, 
+                                                                 @DefaultValue("") @QueryParam("serviceName") String serviceName,
+                                                                 @DefaultValue("") @QueryParam("zoneName") String zoneName) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicyByGUIDAndServiceName(" + guid + ", " + serviceName + ")");
+			LOG.debug("==> ServiceREST.getPolicyByGUIDAndServiceNameAndZoneName(" + guid + ", " + serviceName + ", " + zoneName + ")");
 		}
 		RangerPolicy ret = null;
 		RangerPerfTracer perf = null;
 		try {
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicyByGUIDAndServiceName(policyGUID=" + guid + ", serviceName="+ serviceName + ")");
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getPolicyByGUIDAndServiceNameAndZoneName(policyGUID=" + guid + ", serviceName="+ serviceName + ", zoneName="+ zoneName + ")");
 			}
-			ret = svcStore.getPolicy(guid, serviceName);
+			ret = svcStore.getPolicy(guid, serviceName, zoneName);
 			if (ret != null) {
 				ensureAdminAndAuditAccess(ret);
 			}
 		} catch (WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
-			LOG.error("getPolicyByGUIDAndServiceName(" + guid + "," + serviceName + ") failed", excp);
+			LOG.error("getPolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName + ", " + zoneName + ") failed", excp);
 			throw restErrorUtil.createRESTException(excp.getMessage());
 		} finally {
 			RangerPerfTracer.log(perf);
@@ -3788,7 +3790,7 @@ public class ServiceREST {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicyByGUIDAndServiceName(" + guid + ", " + serviceName + "): " + ret);
+			LOG.debug("<== ServiceREST.getPolicyByGUIDAndServiceNameAndZoneName(" + guid + ", " + serviceName + ", " + zoneName +"): " + ret);
 		}
 		return ret;
 	}
@@ -3796,30 +3798,32 @@ public class ServiceREST {
 	@DELETE
 	@Path("/policies/guid/{guid}")
 	@Produces({ "application/json", "application/xml" })
-	public void deletePolicyByGUIDAndServiceName(@PathParam("guid") String guid, @DefaultValue("") @QueryParam("serviceName") String serviceName) {
+	public void deletePolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
+                                                            @DefaultValue("") @QueryParam("serviceName") String serviceName,
+                                                            @DefaultValue("") @QueryParam("zoneName") String zoneName) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.deletePolicyByGUIDAndServiceName(" + guid + ", " + serviceName + ")");
+			LOG.debug("==> ServiceREST.deletePolicyByGUIDAndServiceNameAndZoneName(" + guid + ", " + serviceName + ", " + zoneName +")");
 		}
 		RangerPolicy ret = null;
 		RangerPerfTracer perf = null;
 		try {
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deletePolicyByGUIDAndServiceName(policyGUID=" + guid + ", serviceName="+ serviceName + ")");
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.deletePolicyByGUIDAndServiceNameAndZoneName(policyGUID=" + guid + ", serviceName="+ serviceName + ", zoneName="+ zoneName +")");
 			}
-			ret = getPolicyByGUIDAndServiceName(guid, serviceName);
+			ret = getPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
 			if (ret != null) {
 				deletePolicy(ret.getId());
 			}
 		} catch (WebApplicationException excp) {
 			throw excp;
 		} catch (Throwable excp) {
-			LOG.error("deletePolicyByGUIDAndServiceName(" + guid + "," + serviceName + ") failed", excp);
+			LOG.error("deletePolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName + ", " + zoneName + ") failed", excp);
 			throw restErrorUtil.createRESTException(excp.getMessage());
 		} finally {
 			RangerPerfTracer.log(perf);
 		}
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.deletePolicyByGUIDAndServiceName(" + guid + ", " + serviceName + ")");
+			LOG.debug("<== ServiceREST.deletePolicyByGUIDAndServiceNameAndZoneName(" + guid + ", " + serviceName + ", " + zoneName +")");
 		}
 	}
 
