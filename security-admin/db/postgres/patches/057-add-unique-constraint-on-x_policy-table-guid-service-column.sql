@@ -19,13 +19,15 @@ RETURNS void AS $$
 DECLARE
 	v_attnum1 integer := 0;
 	v_attnum2 integer := 0;
+	v_attnum3 integer := 0;
 BEGIN
 	select attnum into v_attnum1 from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy') and attname in('guid');
 	select attnum into v_attnum2 from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy') and attname in('service');
-	IF v_attnum1 > 0 and v_attnum2 > 0 THEN
-		IF not exists (select * from pg_constraint where conrelid in(select oid from pg_class where relname='x_policy') and conname='x_policy_uk_guid_service' and contype='u') THEN
-			IF not exists (select * from pg_index where indrelid in(select oid from pg_class where relname='x_policy') and indkey[0]=v_attnum1 and indkey[1]=v_attnum2) THEN
-				ALTER TABLE x_policy ADD CONSTRAINT x_policy_uk_guid_service UNIQUE(guid,service);
+	select attnum into v_attnum3 from pg_attribute where attrelid in(select oid from pg_class where relname='x_policy') and attname in('zone_id');
+	IF v_attnum1 > 0 and v_attnum2 > 0 and v_attnum3 > 0 THEN
+		IF not exists (select * from pg_constraint where conrelid in(select oid from pg_class where relname='x_policy') and conname='x_policy_uk_guid_service_zone' and contype='u') THEN
+			IF not exists (select * from pg_index where indrelid in(select oid from pg_class where relname='x_policy') and indkey[0]=v_attnum1 and indkey[1]=v_attnum2 and indkey[2]=v_attnum3) THEN
+				ALTER TABLE x_policy ADD CONSTRAINT x_policy_uk_guid_service_zone UNIQUE(guid,service,zone_id);
 			END IF;
 		END IF;
 	END IF;

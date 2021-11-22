@@ -13,9 +13,9 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 BEGIN
-	IF EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname in('guid','service') THEN
-		IF NOT EXISTS(select * from SYS.SYSCONSTRAINT where constraint_name = 'x_policy_UK_guid_service') THEN
-			ALTER TABLE dbo.x_policy ADD CONSTRAINT x_policy_UK_guid_service UNIQUE NONCLUSTERED (guid,service);
+	IF EXISTS(select * from SYS.SYSCOLUMNS where tname = 'x_policy' and cname in('guid','service','zone_id') THEN
+		IF NOT EXISTS(select * from SYS.SYSCONSTRAINT where constraint_name = 'x_policy_UK_guid_service_zone') THEN
+			ALTER TABLE dbo.x_policy ADD CONSTRAINT x_policy_UK_guid_service_zone UNIQUE NONCLUSTERED (guid,service,zone_id);
 		END IF;
 	END IF;
 END

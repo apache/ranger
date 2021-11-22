@@ -16,14 +16,14 @@
 DECLARE
 	v_count number:=0;
 BEGIN
-	select count(*) into v_count from user_tab_cols where table_name='X_POLICY' and column_name IN('GUID','SERVICE');
-	if (v_count = 2) THEN
+	select count(*) into v_count from user_tab_cols where table_name='X_POLICY' and column_name IN('GUID','SERVICE','ZONE_ID');
+	if (v_count = 3) THEN
 		v_count:=0;
-		select count(*) into v_count from user_constraints where table_name='X_POLICY' and constraint_name='X_POLICY_UK_GUID_SERVICE' and constraint_type='U';
+		select count(*) into v_count from user_constraints where table_name='X_POLICY' and constraint_name='X_POLICY_UK_GUID_SERVICE_ZONE' and constraint_type='U';
 		if (v_count = 0) THEN
-			select count(*) into v_count from user_ind_columns WHERE table_name='X_POLICY' and column_name IN('GUID','SERVICE') and index_name='X_POLICY_UK_GUID_SERVICE';
+			select count(*) into v_count from user_ind_columns WHERE table_name='X_POLICY' and column_name IN('GUID','SERVICE','ZONE_ID') and index_name='X_POLICY_UK_GUID_SERVICE_ZONE';
 			if (v_count = 0) THEN
-				execute immediate 'ALTER TABLE X_POLICY ADD CONSTRAINT X_POLICY_UK_GUID_SERVICE UNIQUE (GUID,SERVICE)';
+				execute immediate 'ALTER TABLE X_POLICY ADD CONSTRAINT X_POLICY_UK_GUID_SERVICE_ZONE UNIQUE (GUID,SERVICE,ZONE_ID)';
 			end if;
 			commit;
 		end if;

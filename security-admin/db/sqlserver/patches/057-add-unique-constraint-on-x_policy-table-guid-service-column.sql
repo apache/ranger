@@ -16,13 +16,13 @@
 -- limitations under the License.
 
 
-IF EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_policy' and column_name in ('guid','service'))
+IF EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_policy' and column_name in ('guid','service','zone_id'))
 BEGIN
-	IF NOT EXISTS(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where table_name='x_policy' and column_name='guid' and constraint_name = 'x_policy$x_policy_UK_guid_service')
+	IF NOT EXISTS(select * from INFORMATION_SCHEMA.CONSTRAINT_COLUMN_USAGE where table_name='x_policy' and column_name='guid' and constraint_name = 'x_policy$x_policy_UK_guid_service_zone')
 	BEGIN
-		IF NOT EXISTS(select * from INFORMATION_SCHEMA.TABLE_CONSTRAINTS where table_name='x_policy' and constraint_name = 'x_policy$x_policy_UK_guid_service' and CONSTRAINT_TYPE='UNIQUE')
+		IF NOT EXISTS(select * from INFORMATION_SCHEMA.TABLE_CONSTRAINTS where table_name='x_policy' and constraint_name = 'x_policy$x_policy_UK_guid_service_zone' and CONSTRAINT_TYPE='UNIQUE')
 		BEGIN
-			ALTER TABLE [dbo].[x_policy] ADD CONSTRAINT [x_policy$x_policy_UK_guid_service] UNIQUE ([guid],[service]);
+			ALTER TABLE [dbo].[x_policy] ADD CONSTRAINT [x_policy$x_policy_UK_guid_service_zone] UNIQUE ([guid],[service],[zone_id]);
 		END
 	END
 END

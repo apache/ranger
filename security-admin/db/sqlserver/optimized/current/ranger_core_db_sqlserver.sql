@@ -1465,9 +1465,9 @@ CONSTRAINT [x_policy$x_policy_UK_name_service_zone] UNIQUE NONCLUSTERED
 (
         [name] ASC, [service] ASC, [zone_id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
-CONSTRAINT [x_policy$x_policy_UK_guid_service] UNIQUE NONCLUSTERED
+CONSTRAINT [x_policy$x_policy_UK_guid_service_zone] UNIQUE NONCLUSTERED
 (
-        [guid] ASC, [service] ASC
+        [guid] ASC, [service] ASC, [zone_id] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
 CONSTRAINT [x_policy$x_policy_UK_service_signature] UNIQUE NONCLUSTERED
 (

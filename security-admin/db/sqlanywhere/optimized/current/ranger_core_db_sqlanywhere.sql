@@ -574,7 +574,7 @@ create table dbo.x_policy (
 	zone_id bigint DEFAULT '1' NOT NULL,
 	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_policy_UK_name_service_zone UNIQUE NONCLUSTERED (name,service,zone_id),
-	CONSTRAINT x_policy_UK_guid_service UNIQUE NONCLUSTERED (guid,service),
+	CONSTRAINT x_policy_UK_guid_service_zone UNIQUE NONCLUSTERED (guid,service,zone_id),
 	CONSTRAINT x_policy_UK_service_signature UNIQUE NONCLUSTERED (service,resource_signature),
 )
 GO
