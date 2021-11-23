@@ -296,4 +296,17 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 			return null;
 		}
 	}
+
+	public List<XXPolicy> findByPolicyStatus(Boolean isPolicyEnabled) {
+		if (isPolicyEnabled == null) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicy.findByPolicyStatus", tClass)
+					.setParameter("isPolicyEnabled", isPolicyEnabled)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
+	}
 }
