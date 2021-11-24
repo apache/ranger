@@ -121,6 +121,8 @@ public class RangerPolicyResourceSignature {
 				LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection on policy was null!");
 			} else if (_policy.getResources().containsKey(null)) {
 				LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection has resource with null name!");
+			} else if (StringUtils.isEmpty(_policy.getGuid())) {
+				LOG.debug("isPolicyValidForResourceSignatureComputation: policy GUID is empty!");
 			} else {
 				valid = true;
 			}
@@ -162,6 +164,9 @@ public class RangerPolicyResourceSignature {
 			if (_policy.getConditions() != null) {
 				CustomConditionSerialiser customConditionSerialiser = new CustomConditionSerialiser(_policy.getConditions());
 				resource += customConditionSerialiser.toString();
+			}
+			if (!_policy.getIsEnabled()) {
+				resource += _policy.getGuid();
 			}
 
 			String result = String.format("{version=%d,type=%d,resource=%s}", _SignatureVersion, type, resource);

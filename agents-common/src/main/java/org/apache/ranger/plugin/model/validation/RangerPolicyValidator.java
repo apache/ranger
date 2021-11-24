@@ -539,25 +539,22 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 
 		boolean valid = true;
-		if (!Boolean.TRUE.equals(policy.getIsEnabled())) {
-			LOG.debug("Policy is disabled. Skipping resource uniqueness validation.");
-		} else {
-			RangerPolicyResourceSignature policySignature = _factory.createPolicyResourceSignature(policy);
-			String signature = policySignature.getSignature();
-			List<RangerPolicy> policies = getPoliciesForResourceSignature(policy.getService(), signature);
-			if (CollectionUtils.isNotEmpty(policies)) {
-				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_POLICY_RESOURCE;
-				RangerPolicy matchedPolicy = policies.iterator().next();
-				// there shouldn't be a matching policy for create.  During update only match should be to itself
-				if (action == Action.CREATE || (action == Action.UPDATE && (policies.size() > 1 || !matchedPolicy.getId().equals(policy.getId())))) {
-					failures.add(new ValidationFailureDetailsBuilder()
-							.field("resources")
-							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(matchedPolicy.getName(), policy.getService()))
-							.errorCode(error.getErrorCode())
-							.build());
-					valid = false;
-				}
+
+		RangerPolicyResourceSignature policySignature = _factory.createPolicyResourceSignature(policy);
+		String signature = policySignature.getSignature();
+		List<RangerPolicy> policies = getPoliciesForResourceSignature(policy.getService(), signature);
+		if (CollectionUtils.isNotEmpty(policies)) {
+			ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_POLICY_RESOURCE;
+			RangerPolicy matchedPolicy = policies.iterator().next();
+			// there shouldn't be a matching policy for create.  During update only match should be to itself
+			if (action == Action.CREATE || (action == Action.UPDATE && !matchedPolicy.getId().equals(policy.getId()))) {
+				failures.add(new ValidationFailureDetailsBuilder()
+						.field("resources")
+						.isSemanticallyIncorrect()
+						.becauseOf(error.getMessage(matchedPolicy.getName(), policy.getService()))
+						.errorCode(error.getErrorCode())
+						.build());
+				valid = false;
 			}
 		}
 

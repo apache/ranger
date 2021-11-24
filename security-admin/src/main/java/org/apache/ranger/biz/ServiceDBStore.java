@@ -63,6 +63,7 @@ import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore.METRIC_TYPE;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
@@ -346,6 +347,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
 	SecurityZoneDBStore securityZoneStore;
+
+	@Autowired
+	GUIDUtil guidUtil;
 
 	private static volatile boolean legacyServiceDefsInitDone = false;
 	private Boolean populateExistingBaseFields = false;
@@ -2029,11 +2033,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policy.setVersion(Long.valueOf(1));
 		updatePolicySignature(policy);
 
-		boolean updateServiceInfoRoleVersion = false;
-		if (isSupportsRolesDownloadByService()) {
-			updateServiceInfoRoleVersion = isRoleDownloadRequired(policy, service);
-		}
-
 		if(populateExistingBaseFields) {
 			assignedIdPolicyService.setPopulateExistingBaseFields(true);
 			daoMgr.getXXPolicy().setIdentityInsert(true);
@@ -2050,8 +2049,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 		policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef);
 		createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
-                RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
+		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 
+		boolean updateServiceInfoRoleVersion = false;
+		if (isSupportsRolesDownloadByService()) {
+			updateServiceInfoRoleVersion = isRoleDownloadRequired(createdPolicy, service);
+		}
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE, createdPolicy, updateServiceInfoRoleVersion);
 		dataHistService.createObjectDataHistory(createdPolicy, RangerDataHistService.ACTION_CREATE);
 
@@ -2175,11 +2178,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		updatePolicySignature(policy);
 
-		boolean updateServiceInfoRoleVersion = false;
-		if (isSupportsRolesDownloadByService()) {
-			updateServiceInfoRoleVersion = isRoleDownloadRequired(policy, service);
-		}
-
 		policy = policyService.update(policy);
 		XXPolicy newUpdPolicy = daoMgr.getXXPolicy().getById(policy.getId());
 
@@ -2189,6 +2187,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef);
 		createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
+
+		boolean updateServiceInfoRoleVersion = false;
+		if (isSupportsRolesDownloadByService()) {
+			updateServiceInfoRoleVersion = isRoleDownloadRequired(updPolicy, service);
+		}
 		handlePolicyUpdate(service, RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE, updPolicy, updateServiceInfoRoleVersion);
 		dataHistService.createObjectDataHistory(updPolicy, RangerDataHistService.ACTION_UPDATE);
 
@@ -3831,6 +3834,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	void updatePolicySignature(RangerPolicy policy) {
+		String guid = policy.getGuid();
+		if (StringUtils.isEmpty(guid)) {
+			guid = guidUtil.genGUID();
+			policy.setGuid(guid);
+		}
 		RangerPolicyResourceSignature policySignature = factory.createPolicyResourceSignature(policy);
 		String signature = policySignature.getSignature();
 		policy.setResourceSignature(signature);
