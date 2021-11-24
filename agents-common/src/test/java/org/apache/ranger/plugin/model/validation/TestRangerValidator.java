@@ -186,9 +186,9 @@ public class TestRangerValidator {
 		String serviceName = "service-name";
 		boolean isPolicyEnabled = true;
 		when(_store.getPoliciesByResourceSignature(serviceName, hexSignature, isPolicyEnabled)).thenReturn(null);
-		Assert.assertNull(_validator.getPoliciesForResourceSignature(serviceName, hexSignature));
+		Assert.assertNotNull(_validator.getPoliciesForResourceSignature(serviceName, hexSignature));
 		when(_store.getPoliciesByResourceSignature(serviceName, hexSignature, isPolicyEnabled)).thenThrow(new Exception());
-		Assert.assertNull(_validator.getPoliciesForResourceSignature(serviceName, hexSignature));
+		Assert.assertNotNull(_validator.getPoliciesForResourceSignature(serviceName, hexSignature));
 
 		// what ever store returns should come back
 		hexSignature = "anotherSignature";
