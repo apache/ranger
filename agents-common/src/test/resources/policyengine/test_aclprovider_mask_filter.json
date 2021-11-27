@@ -91,7 +91,7 @@
           }
         },
         "policies": [
-          {"id":101,"name":"db=employee, table=personal, column=ssn: mask","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+          {"id":101,"name":"01: db=employee, table=personal, column=ssn: mask","isEnabled":true,"isAuditEnabled":true,"policyType":1,
             "resources":{"database":{"values":["employee"]},"table":{"values":["personal"]},"column":{"values":["ssn"]}},
             "dataMaskPolicyItems":[
               {"accesses":[{"type":"select","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false,
@@ -99,6 +99,17 @@
               },
               {"accesses":[{"type":"select","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false,
                 "dataMaskInfo": {"dataMaskType":"SHUFFLE"}
+              }
+            ]
+          },
+          {"id":1011,"name":"02: db=employee, table=personal, column=ssn,dummy: mask","isEnabled":true,"isAuditEnabled":true,"policyType":1,
+            "resources":{"database":{"values":["employee"]},"table":{"values":["personal"]},"column":{"values":["ssn", "dummy"]}},
+            "dataMaskPolicyItems":[
+              {"accesses":[{"type":"select","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false,
+                "dataMaskInfo": {"dataMaskType":"HASH"}
+              },
+              {"accesses":[{"type":"select","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false,
+                "dataMaskInfo": {"dataMaskType":"MASK"}
               }
             ]
           },
@@ -189,6 +200,11 @@
               { "itemId": 8, "name": "hive:all", "label": "hive:all",
                 "impliedGrants": [ "hive:select", "hive:update", "hive:create", "hive:drop", "hive:alter", "hive:index", "hive:lock" ] }
             ],
+            "dataMaskDef": {
+              "resources":[
+                {"name":"tag"}
+              ]
+            },
             "contextEnrichers": [
               { "itemId": 1, "name": "TagEnricher",
                 "enricher": "org.apache.ranger.plugin.contextenricher.RangerTagEnricher",
@@ -267,7 +283,9 @@
           "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
           "dataMasks": [
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}},
-            {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"SHUFFLE"}}
+            {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"SHUFFLE"}},
+            {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"HASH"}},
+            {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"MASK"}}
           ]
         },
         {"name":"mask: hr.employee.date_of_birth",

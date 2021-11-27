@@ -193,7 +193,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 		}
 
 		private int compareNormal(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
-			final int result;
+			int result;
 
 			if (me.hasDeny() && !other.hasDeny()) {
 				result = -1;
@@ -201,6 +201,10 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 				result = 1;
 			} else {
 				result =  Integer.compare(me.getEvalOrder(), other.getEvalOrder());
+
+				if (result == 0) {
+					result = me.getPolicy().getName().compareTo(other.getPolicy().getName());
+				}
 			}
 
 			return result;
