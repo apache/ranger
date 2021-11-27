@@ -346,19 +346,30 @@ public abstract class RangerValidator {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerValidator.getPoliciesForResourceSignature(%s, %s)", serviceName, policySignature));
 		}
+		final List<RangerPolicy> ret;
 
-		List<RangerPolicy> policies = null;
+		List<RangerPolicy> enabledPolicies = new ArrayList<>();
+		List<RangerPolicy> disabledPolicies = new ArrayList<>();
 		try {
-			policies = _store.getPoliciesByResourceSignature(serviceName, policySignature, true); // only look for enabled policies
+			enabledPolicies = _store.getPoliciesByResourceSignature(serviceName, policySignature, true);
+			disabledPolicies = _store.getPoliciesByResourceSignature(serviceName, policySignature, false);
 		} catch (Exception e) {
 			LOG.debug("Encountred exception while retrieving policies from service store!", e);
 		}
+		if (CollectionUtils.isEmpty(enabledPolicies)) {
+			ret = disabledPolicies;
+		} else if (CollectionUtils.isEmpty(disabledPolicies)) {
+			ret = enabledPolicies;
+		} else {
+			ret = enabledPolicies;
+			ret.addAll(disabledPolicies);
+		}
 		
 		if(LOG.isDebugEnabled()) {
-			int count = policies == null ? 0 : policies.size();
-			LOG.debug(String.format("<== RangerValidator.getPoliciesForResourceSignature(%s, %s): count[%d], %s", serviceName, policySignature, count, policies));
+			int count = ret == null ? 0 : ret.size();
+			LOG.debug(String.format("<== RangerValidator.getPoliciesForResourceSignature(%s, %s): count[%d], %s", serviceName, policySignature, count, ret));
 		}
-		return policies;
+		return ret;
 	}
 
     RangerSecurityZone getSecurityZone(Long id) {

@@ -60,6 +60,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     private final boolean           optWildcard;
     private final String            wildcardChars;
     private final boolean           isOptimizedForRetrieval;
+    private final boolean           isOptimizedForSpace;
     private final Character         separatorChar;
     private       Set<T>            inheritedEvaluators;
     private final TrieNode<T>       root;
@@ -79,6 +80,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         this.optIgnoreCase           = other.optIgnoreCase;
         this.optWildcard             = other.optWildcard;
         this.wildcardChars           = other.wildcardChars;
+        this.isOptimizedForSpace     = other.isOptimizedForSpace;
         this.isOptimizedForRetrieval = false;
         this.separatorChar           = other.separatorChar;
         this.inheritedEvaluators     = other.inheritedEvaluators != null ? new HashSet<>(other.inheritedEvaluators) : null;
@@ -98,8 +100,12 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
     }
 
     public RangerResourceTrie(RangerResourceDef resourceDef, List<T> evaluators, boolean isOptimizedForRetrieval, RangerPluginContext pluginContext) {
+        this(resourceDef, evaluators, isOptimizedForRetrieval, false, pluginContext);
+    }
+
+    public RangerResourceTrie(RangerResourceDef resourceDef, List<T> evaluators, boolean isOptimizedForRetrieval, boolean isOptimizedForSpace, RangerPluginContext pluginContext) {
         if(LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + ")");
+            LOG.debug("==> RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + ", isOptimizedForSpace=" + isOptimizedForSpace + ")");
         }
 
         RangerPerfTracer perf = null;
@@ -137,7 +143,8 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         this.optIgnoreCase           = RangerAbstractResourceMatcher.getOptionIgnoreCase(matcherOptions);
         this.optWildcard             = RangerAbstractResourceMatcher.getOptionWildCard(matcherOptions);
         this.wildcardChars           = optWildcard ? DEFAULT_WILDCARD_CHARS + tokenReplaceSpecialChars : "" + tokenReplaceSpecialChars;
-        this.isOptimizedForRetrieval = isOptimizedForRetrieval;
+        this.isOptimizedForSpace     = isOptimizedForSpace;
+        this.isOptimizedForRetrieval = !isOptimizedForSpace && isOptimizedForRetrieval;  // isOptimizedForSpace takes precedence
         this.separatorChar           = ServiceDefUtil.getCharOption(matcherOptions, OPTION_PATH_SEPARATOR, DEFAULT_PATH_SEPARATOR_CHAR);
 
         TrieNode<T> tmpRoot = buildTrie(resourceDef, evaluators, builderThreadCount);
@@ -163,7 +170,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + "): " + toString());
+            LOG.debug("<== RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + this.isOptimizedForRetrieval + ", isOptimizedForSpace=" + this.isOptimizedForSpace + "): " + toString());
         }
     }
 
@@ -565,9 +572,15 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         final int   len    = resource.length();
         int         i      = 0;
 
+        Set<T>      accumulatedEvaluators = new HashSet<>();
+
         while (i < len) {
-            if (!isOptimizedForRetrieval) {
+            if (!isOptimizedForSpace) {
                 curr.setupIfNeeded(parent);
+            } else {
+                if (curr.getWildcardEvaluators() != null) {
+                    accumulatedEvaluators.addAll(curr.getWildcardEvaluators());
+                }
             }
 
             child = curr.getChild(getLookupChar(resource, i));
@@ -587,12 +600,28 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             i      += childStr.length();
         }
 
-        if (!isOptimizedForRetrieval) {
+        if (!isOptimizedForSpace) {
             curr.setupIfNeeded(parent);
+        } else {
+            if (curr.getWildcardEvaluators() != null) {
+                accumulatedEvaluators.addAll(curr.getWildcardEvaluators());
+            }
         }
 
-        boolean isSelfMatch                       = (i == len);
-        Set<T>  ret                               = isSelfMatch ? curr.getEvaluators() : curr.getWildcardEvaluators();
+        boolean isSelfMatch = (i == len);
+        Set<T>  ret;
+
+        if (!isOptimizedForSpace) {
+            ret = isSelfMatch ? curr.getEvaluators() : curr.getWildcardEvaluators();
+        } else {
+            if (isSelfMatch) {
+                if (curr.getEvaluators() != null) {
+                    accumulatedEvaluators.addAll(curr.getEvaluators());
+                }
+            }
+            ret = accumulatedEvaluators;
+        }
+
         boolean includeEvaluatorsOfChildResources = scope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD;
 
         if (includeEvaluatorsOfChildResources) {
@@ -1149,17 +1178,29 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
 
         void collectChildEvaluators(Character sep, int startIdx, Set<U> childEvaluators) {
-            setupIfNeeded(getParent());
+            if (!isOptimizedForSpace) {
+                setupIfNeeded(getParent());
+            }
 
             final int sepPos = startIdx < str.length() ? str.indexOf(sep, startIdx) : -1;
 
             if (sepPos == -1) { // ex: startIdx=5, path(str)=/tmp/test, path(a child) could be: /tmp/test.txt, /tmp/test/, /tmp/test/a, /tmp/test/a/b
+                if (isOptimizedForSpace) {
+                    if (this.wildcardEvaluators != null) {
+                        childEvaluators.addAll(this.wildcardEvaluators);
+                    }
+                }
                 if (this.evaluators != null) {
                     childEvaluators.addAll(this.evaluators);
                 }
 
                 children.values().stream().forEach(c -> c.collectChildEvaluators(sep, 0, childEvaluators));
             } else if (sepPos == (str.length() - 1)) { // ex: str=/tmp/test/, startIdx=5
+                if (isOptimizedForSpace) {
+                    if (this.wildcardEvaluators != null) {
+                        childEvaluators.addAll(this.wildcardEvaluators);
+                    }
+                }
                 if (this.evaluators != null) {
                     childEvaluators.addAll(this.evaluators);
                 }

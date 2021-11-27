@@ -242,10 +242,10 @@ public class RangerPolicyRepository {
             rowFilterResourceTrie   = null;
             auditFilterResourceTrie = null;
         } else {
-            policyResourceTrie      = createResourceTrieMap(policyEvaluators, options.optimizeTrieForRetrieval);
-            dataMaskResourceTrie    = createResourceTrieMap(dataMaskPolicyEvaluators, options.optimizeTrieForRetrieval);
-            rowFilterResourceTrie   = createResourceTrieMap(rowFilterPolicyEvaluators, options.optimizeTrieForRetrieval);
-            auditFilterResourceTrie = createResourceTrieMap(auditPolicyEvaluators, options.optimizeTrieForRetrieval);
+            policyResourceTrie      = createResourceTrieMap(policyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
+            dataMaskResourceTrie    = createResourceTrieMap(dataMaskPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
+            rowFilterResourceTrie   = createResourceTrieMap(rowFilterPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
+            auditFilterResourceTrie = createResourceTrieMap(auditPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
         }
     }
 
@@ -296,10 +296,10 @@ public class RangerPolicyRepository {
             rowFilterResourceTrie   = null;
             auditFilterResourceTrie = null;
         } else {
-            policyResourceTrie      = createResourceTrieMap(policyEvaluators, options.optimizeTrieForRetrieval);
-            dataMaskResourceTrie    = createResourceTrieMap(dataMaskPolicyEvaluators, options.optimizeTrieForRetrieval);
-            rowFilterResourceTrie   = createResourceTrieMap(rowFilterPolicyEvaluators, options.optimizeTrieForRetrieval);
-            auditFilterResourceTrie = createResourceTrieMap(auditPolicyEvaluators, options.optimizeTrieForRetrieval);
+            policyResourceTrie      = createResourceTrieMap(policyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
+            dataMaskResourceTrie    = createResourceTrieMap(dataMaskPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTagTrieForSpace);
+            rowFilterResourceTrie   = createResourceTrieMap(rowFilterPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
+            auditFilterResourceTrie = createResourceTrieMap(auditPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
         }
     }
 
@@ -1188,14 +1188,14 @@ public class RangerPolicyRepository {
         return ret;
     }
 
-    private Map<String, RangerResourceTrie> createResourceTrieMap(List<? extends RangerPolicyEvaluator> evaluators, boolean optimizeTrieForRetrieval) {
+    private Map<String, RangerResourceTrie> createResourceTrieMap(List<? extends RangerPolicyEvaluator> evaluators, boolean optimizeTrieForRetrieval, boolean optimizeTrieForSpace) {
         final Map<String, RangerResourceTrie> ret;
 
         if (serviceDef != null && CollectionUtils.isNotEmpty(serviceDef.getResources())) {
             ret = new HashMap<>();
 
             for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, optimizeTrieForRetrieval, pluginContext));
+                ret.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, evaluators, optimizeTrieForRetrieval, optimizeTrieForSpace, pluginContext));
             }
         } else {
             ret = null;
@@ -1218,7 +1218,7 @@ public class RangerPolicyRepository {
                 if (RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE == policyDeltaType || RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE == policyDeltaType) {
                     LOG.warn("policyDeltaType is not for POLICY_CREATE and trie for resourceDef:[" + resourceDefName + "] was null! Should not have happened!!");
                 }
-                trie = new RangerResourceTrie<>(resourceDef, new ArrayList<>(), true, pluginContext);
+                trie = new RangerResourceTrie<>(resourceDef, new ArrayList<>(), options.optimizeTrieForRetrieval, options.optimizeTrieForSpace, pluginContext);
                 trieMap.put(resourceDefName, trie);
             }
 

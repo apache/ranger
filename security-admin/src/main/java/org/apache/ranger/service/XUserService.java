@@ -72,18 +72,22 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	static {
-		trxLogAttrs.put("name", new VTrxLogAttr("name", "Login ID", false));
-		trxLogAttrs.put("firstName", new VTrxLogAttr("firstName", "First Name",
-				false));
-		trxLogAttrs.put("lastName", new VTrxLogAttr("lastName", "Last Name",
-				false));
-		trxLogAttrs.put("emailAddress", new VTrxLogAttr("emailAddress",
-				"Email Address", false));
-		trxLogAttrs.put("password", new VTrxLogAttr("password", "Password",
-				false));
-		trxLogAttrs.put("userRoleList", new VTrxLogAttr("userRoleList", "User Role",
-				false));
-		
+		trxLogAttrs.put("name",
+				new VTrxLogAttr("name", "Login ID", false));
+		trxLogAttrs.put("firstName",
+				new VTrxLogAttr("firstName", "First Name", false));
+		trxLogAttrs.put("lastName",
+				new VTrxLogAttr("lastName", "Last Name", false));
+		trxLogAttrs.put("emailAddress",
+				new VTrxLogAttr("emailAddress", "Email Address", false));
+		trxLogAttrs.put("password",
+				new VTrxLogAttr("password", "Password", false));
+		trxLogAttrs.put("userRoleList",
+				new VTrxLogAttr("userRoleList", "User Role", false));
+		trxLogAttrs.put("otherAttributes",
+				new VTrxLogAttr("otherAttributes", "Other Attributes", false));
+		trxLogAttrs.put("syncSource",
+				new VTrxLogAttr("syncSource", "Sync Source", false));
 	}
 
 	public XUserService() {
@@ -144,7 +148,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 		String vObjName = vObj.getName();
 		String mObjName = mObj.getName();
 		if (vObjName != null && mObjName != null) {
-			if (!vObjName.trim().equals(mObjName.trim())) {
+			if (!vObjName.trim().equalsIgnoreCase(mObjName.trim())) {
 				validateForCreate(vObj);
 			}
 		}
@@ -424,6 +428,20 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 
 		vXUserList.setVXUsers(xUserList);
 		return vXUserList;
+	}
+
+	public Map<Long, Object[]> getXXPortalUserIdXXUserNameMap() {
+		Map<Long, Object[]> xXPortalUserIdXXUserMap = new HashMap<Long, Object[]>();
+		try {
+			List<Object[]> xxUserList = daoManager.getXXUser().getAllUserIdNames();
+			if(!CollectionUtils.isEmpty(xxUserList)) {
+				for (Object[] obj : xxUserList) {
+					xXPortalUserIdXXUserMap.put((Long)obj[0], obj);
+				}
+			}
+		} catch (Exception ex) {
+		}
+		return xXPortalUserIdXXUserMap;
 	}
 
 }

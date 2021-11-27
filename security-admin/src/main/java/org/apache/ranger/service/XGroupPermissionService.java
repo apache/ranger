@@ -96,4 +96,24 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
                 }
                 return vXGroupPermissionList;
         }
+
+	public List<VXGroupPermission> getPopulatedVXGroupPermissionListNew(List<XXGroupPermission> xgroupPermissionList,
+			Map<Long, String> xXGroupMap, VXModuleDef vModuleDef) {
+		List<VXGroupPermission> vXGroupPermissionList = new ArrayList<VXGroupPermission>();
+		for (XXGroupPermission xgroupPermission : xgroupPermissionList) {
+			if (xXGroupMap.containsKey(xgroupPermission.getGroupId())) {
+				VXGroupPermission vXGrpPerm = new VXGroupPermission();
+				vXGrpPerm.setId(xgroupPermission.getId());
+				vXGrpPerm.setGroupId(xgroupPermission.getGroupId());
+				vXGrpPerm.setModuleId(xgroupPermission.getModuleId());
+				vXGrpPerm.setIsAllowed(xgroupPermission.getIsAllowed());
+				vXGrpPerm.setCreateDate(xgroupPermission.getCreateTime());
+				vXGrpPerm.setUpdateDate(xgroupPermission.getUpdateTime());
+				vXGrpPerm.setGroupName(xXGroupMap.get(xgroupPermission.getGroupId()));
+				vXGrpPerm.setModuleName(vModuleDef.getModule());
+				vXGroupPermissionList.add(vXGrpPerm);
+			}
+		}
+		return vXGroupPermissionList;
+	}
 }

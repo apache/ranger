@@ -184,10 +184,19 @@ public class RoleREST {
         }
         RangerRole ret;
         try {
+            UserSessionBase usb          = ContextUtil.getCurrentUserSession();
+            String          loggedInUser = usb != null ? usb.getLoginId() : null;
+            RangerRole      existingRole = getRole(roleId);
+
+            if (!bizUtil.isUserRangerAdmin(loggedInUser) && !ensureRoleAccess(loggedInUser, userMgr.getGroupsForUser(loggedInUser), existingRole)) {
+                LOG.error("User " + loggedInUser + " does not have permission for this operation");
+
+                throw new Exception("User does not have permission for this operation");
+            }
+
             RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
             validator.validate(role, RangerValidator.Action.UPDATE);
 
-            ensureAdminAccess(null, null);
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
@@ -279,9 +288,6 @@ public class RoleREST {
             ret = getRoleIfAccessible(roleName, serviceName, execUser, userMgr.getGroupsForUser(execUser));
             if (ret == null) {
                 throw restErrorUtil.createRESTException("User doesn't have permissions to get details for " + roleName);
-            }
-            if (ret.getName() == null) {
-                throw restErrorUtil.createRESTException("Role with name: " + roleName + " does not exist");
             }
 
         } catch(WebApplicationException excp) {
@@ -934,17 +940,16 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
         try {
-            existingRole = roleStore.getRole(roleName);
-            if (!ensureRoleAccess(effectiveUser, userGroups, existingRole)) {
-                LOG.error("User does not have permission for this operation");
-                return null;
+            if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
+                existingRole = roleStore.getRole(roleName);
+                ensureRoleAccess(effectiveUser, userGroups, existingRole);
+
+            } else {
+                existingRole = roleStore.getRole(roleName);
             }
         } catch (Exception ex) {
-            if (bizUtil.isUserRangerAdmin(effectiveUser)) {
-                return new RangerRole();
-            } else {
-                return null;
-            }
+            LOG.error(ex.getMessage());
+            return null;
         }
 
         return existingRole;

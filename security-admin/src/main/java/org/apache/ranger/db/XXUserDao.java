@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 @Service
@@ -101,6 +102,18 @@ public class XXUserDao extends BaseDao<XXUser> {
 					users.put((String)row[0], (Long)row[1]);
 				}
 			}
+		} catch (NoResultException e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug(e.getMessage());
+			}
+		}
+		return users;
+	}
+
+	public List<Object[]> getAllUserIdNames() {
+		List<Object[]> users = new ArrayList<Object[]>();
+		try {
+			users = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.getAllUserIdNames").getResultList();
 		} catch (NoResultException e) {
 			if (logger.isDebugEnabled()) {
 				logger.debug(e.getMessage());

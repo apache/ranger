@@ -21,7 +21,9 @@
 
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroup;
@@ -67,4 +69,17 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 		return null;
 	}
 
+	public Map<Long, String> getAllGroupIdNames() {
+		Map<Long, String> groups = new HashMap<Long, String>();
+		try {
+			List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXGroup.getAllGroupIdNames").getResultList();
+			if (rows != null) {
+				for (Object[] row : rows) {
+					groups.put((Long)row[0], (String)row[1]);
+				}
+			}
+		} catch (Exception ex) {
+		}
+		return groups;
+	}
 }

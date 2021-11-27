@@ -57,8 +57,14 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	static {
-		trxLogAttrs.put("name", new VTrxLogAttr("name", "Group Name", false));
-		trxLogAttrs.put("description", new VTrxLogAttr("description", "Group Description", false));
+		trxLogAttrs.put("name",
+				new VTrxLogAttr("name", "Group Name", false));
+		trxLogAttrs.put("description",
+				new VTrxLogAttr("description", "Group Description", false));
+		trxLogAttrs.put("otherAttributes",
+				new VTrxLogAttr("otherAttributes", "Other Attributes", false));
+		trxLogAttrs.put("syncSource",
+				new VTrxLogAttr("syncSource", "Sync Source", false));
 	}
 	
 	public XGroupService() {
@@ -271,4 +277,8 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
                 }catch(Exception ex){}
                 return xXGroupMap;
         }
+
+	public Map<Long, String> getXXGroupIdNameMap() {
+		return daoManager.getXXGroup().getAllGroupIdNames();
+	}
 }

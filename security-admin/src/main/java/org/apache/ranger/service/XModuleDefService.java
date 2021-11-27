@@ -18,17 +18,19 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import org.apache.ranger.common.RangerConstants;
+import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.SearchField;
-import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
-import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.entity.XXUserPermission;
 import org.apache.ranger.view.VXGroupPermission;
 import org.apache.ranger.view.VXModuleDef;
+import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXUserPermission;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -88,8 +90,8 @@ public class XModuleDefService extends
 	@Override
 	public VXModuleDef populateViewBean(XXModuleDef xObj) {
 		VXModuleDef vModuleDef = super.populateViewBean(xObj);
-                Map<Long, XXUser> xXPortalUserIdXXUserMap=xUserService.getXXPortalUserIdXXUserMap();
-                Map<Long, XXGroup> xXGroupMap=xGroupService.getXXGroupIdXXGroupMap();
+		Map<Long, Object[]> xXPortalUserIdXXUserMap=xUserService.getXXPortalUserIdXXUserNameMap();
+		Map<Long, String> xXGroupMap=xGroupService.getXXGroupIdNameMap();
 		List<VXUserPermission> vXUserPermissionList = new ArrayList<VXUserPermission>();
 		List<VXGroupPermission> vXGroupPermissionList = new ArrayList<VXGroupPermission>();
 		List<XXUserPermission> xuserPermissionList = daoManager
@@ -102,7 +104,7 @@ public class XModuleDefService extends
                                 vXUserPermissionList.add(vXUserPerm);
                         }
                 }else{
-                        vXUserPermissionList=xUserPermService.getPopulatedVXUserPermissionList(xuserPermissionList,xXPortalUserIdXXUserMap,vModuleDef);
+                        vXUserPermissionList=xUserPermService.getPopulatedVXUserPermissionListNew(xuserPermissionList,xXPortalUserIdXXUserMap,vModuleDef);
 		}
                 if(CollectionUtils.isEmpty(xXGroupMap)){
                         for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
@@ -110,7 +112,60 @@ public class XModuleDefService extends
                                 vXGroupPermissionList.add(vXGrpPerm);
                         }
                 }else{
-                        vXGroupPermissionList=xGrpPermService.getPopulatedVXGroupPermissionList(xgroupPermissionList,xXGroupMap,vModuleDef);
+                        vXGroupPermissionList=xGrpPermService.getPopulatedVXGroupPermissionListNew(xgroupPermissionList,xXGroupMap,vModuleDef);
+		}
+		vModuleDef.setUserPermList(vXUserPermissionList);
+		vModuleDef.setGroupPermList(vXGroupPermissionList);
+		return vModuleDef;
+	}
+
+	@Override
+	public VXModuleDefList searchModuleDef(SearchCriteria searchCriteria) {
+		VXModuleDefList returnList = new VXModuleDefList();
+		List<VXModuleDef> vXModuleDefList = new ArrayList<VXModuleDef>();
+		searchCriteria.setMaxRows(Integer.MAX_VALUE);
+		List<XXModuleDef> resultList = searchResources(searchCriteria, searchFields, sortFields, returnList);
+		Map<Long, XXModuleDef> matchModule = new HashMap<Long, XXModuleDef>();
+		for (XXModuleDef moduleDef : resultList) {
+			matchModule.put(moduleDef.getId(), moduleDef);
+		}
+
+		List<XXModuleDef> moduleDefList = new ArrayList<XXModuleDef>(matchModule.values());
+		Map<Long, Object[]> xXPortalUserIdXXUserMap = xUserService.getXXPortalUserIdXXUserNameMap();
+
+		Map<Long, String> xXGroupMap = xGroupService.getXXGroupIdNameMap();
+		// Iterate over the result list and create the return list
+		for (XXModuleDef gjXModuleDef : moduleDefList) {
+			VXModuleDef vXModuleDef = populateViewBean(gjXModuleDef, xXPortalUserIdXXUserMap, xXGroupMap);
+			vXModuleDefList.add(vXModuleDef);
+		}
+		returnList.setTotalCount(vXModuleDefList.size());
+		returnList.setvXModuleDef(vXModuleDefList);
+		return returnList;
+	}
+
+	public VXModuleDef populateViewBean(XXModuleDef xObj, Map<Long, Object[]> xXPortalUserIdXXUserMap,
+			Map<Long, String> xXGroupMap) {
+		VXModuleDef vModuleDef = super.populateViewBean(xObj);
+		List<VXUserPermission> vXUserPermissionList = new ArrayList<VXUserPermission>();
+		List<VXGroupPermission> vXGroupPermissionList = new ArrayList<VXGroupPermission>();
+		List<XXUserPermission> xuserPermissionList = daoManager.getXXUserPermission().findByModuleId(xObj.getId(),false);
+		List<XXGroupPermission> xgroupPermissionList = daoManager.getXXGroupPermission().findByModuleId(xObj.getId(),false);
+		if (CollectionUtils.isEmpty(xXPortalUserIdXXUserMap)) {
+			for (XXUserPermission xUserPerm : xuserPermissionList) {
+				VXUserPermission vXUserPerm = xUserPermService.populateViewBean(xUserPerm);
+				vXUserPermissionList.add(vXUserPerm);
+			}
+		} else {
+			vXUserPermissionList = xUserPermService.getPopulatedVXUserPermissionListNew(xuserPermissionList,xXPortalUserIdXXUserMap, vModuleDef);
+		}
+		if (CollectionUtils.isEmpty(xXGroupMap)) {
+			for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
+				VXGroupPermission vXGrpPerm = xGrpPermService.populateViewBean(xGrpPerm);
+				vXGroupPermissionList.add(vXGrpPerm);
+			}
+		} else {
+			vXGroupPermissionList = xGrpPermService.getPopulatedVXGroupPermissionListNew(xgroupPermissionList, xXGroupMap,vModuleDef);
 		}
 		vModuleDef.setUserPermList(vXUserPermissionList);
 		vModuleDef.setGroupPermList(vXGroupPermissionList);

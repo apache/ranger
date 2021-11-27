@@ -23,7 +23,6 @@
     <baseDirectory>${project.parent.name}-${project.version}-ozone-plugin</baseDirectory>
     <includeBaseDirectory>true</includeBaseDirectory>
     <moduleSets>
-
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
@@ -50,7 +49,7 @@
                 <includeDependencies>true</includeDependencies>
                 <unpack>false</unpack>
                 <includes>
-		    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+		            <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                     <include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-collections:commons-collections</include>
@@ -61,13 +60,12 @@
                     <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                    <include>org.apache.hadoop:hadoop-ozone:jar:${ozone.version}</include>
-                    <include>org.apache.hadoop:hadoop-hdds:jar:${ozone.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
                     <include>com.sun.jersey:jersey-core</include>
                     <include>com.sun.jersey:jersey-client</include>
                     <include>com.sun.jersey:jersey-bundle</include>
+                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>com.kstruct:gethostname4j</include>
                     <include>net.java.dev.jna:jna</include>
                     <include>net.java.dev.jna:jna-platform</include>
@@ -90,14 +88,14 @@
                 <directoryMode>755</directoryMode>
                 <fileMode>644</fileMode>
                 <includes>
-		    <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+		            <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                     <include>commons-configuration:commons-configuration:jar:${commons.configuration1.version}</include>
                     <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
                     <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
-		    <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-		    <include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
+		            <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
+		            <include>org.apache.zookeeper:zookeeper-jute:jar:${zookeeper.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
@@ -105,11 +103,12 @@
                     <include>com.sun.jersey:jersey-core</include>
                     <include>com.sun.jersey:jersey-client</include>
                     <include>com.sun.jersey:jersey-bundle</include>
-		    <include>org.codehaus.jackson:jackson-core-asl</include>
+		            <include>org.codehaus.jackson:jackson-core-asl</include>
                     <include>org.codehaus.jackson:jackson-jaxrs</include>
                     <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
                     <include>org.codehaus.jackson:jackson-xc</include>
-		    <include>com.sun.xml.bind:jaxb-impl</include>
+		            <include>com.sun.xml.bind:jaxb-impl</include>
+                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>commons-lang:commons-lang</include>
                     <include>com.kstruct:gethostname4j</include>
                     <include>net.java.dev.jna:jna</include>

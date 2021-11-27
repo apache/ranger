@@ -23,6 +23,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -63,9 +64,8 @@ public class RangerTagsAllPresentConditionEvaluator extends RangerAbstractCondit
 		boolean matched = true;
 
 		if (CollectionUtils.isNotEmpty(policyConditionTags))  {
-			RangerAccessRequest			 readOnlyRequest = request.getReadOnlyCopy();
-			RangerScriptExecutionContext context         = new RangerScriptExecutionContext(readOnlyRequest);
-			Set<String>                  resourceTags    = context.getAllTagTypes();
+			RangerRequestScriptEvaluator evaluator    = new RangerRequestScriptEvaluator(request);
+			Set<String>                  resourceTags = evaluator.getAllTagTypes();
 
 			// check if resource Tags  atleast have to have all the tags in policy Condition
 			matched = resourceTags != null && resourceTags.containsAll(policyConditionTags);

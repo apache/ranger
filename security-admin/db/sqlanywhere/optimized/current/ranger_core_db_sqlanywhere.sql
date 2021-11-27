@@ -555,7 +555,7 @@ CREATE TABLE dbo.x_ranger_global_state(
 GO
 create table dbo.x_policy (
 	id bigint IDENTITY NOT NULL,
-	guid varchar(1024) DEFAULT NULL NULL,
+	guid varchar(1024) NOT NULL,
 	create_time datetime DEFAULT NULL NULL,
 	update_time datetime DEFAULT NULL NULL,
 	added_by_id bigint DEFAULT NULL NULL,
@@ -565,7 +565,7 @@ create table dbo.x_policy (
 	name varchar(512) NOT NULL,
 	policy_type int DEFAULT 0 NULL,
 	description varchar(1024) DEFAULT NULL NULL,
-	resource_signature varchar(128) DEFAULT NULL NULL,
+	resource_signature varchar(128) NOT NULL,
 	is_enabled tinyint DEFAULT 0 NOT NULL,
 	is_audit_enabled tinyint DEFAULT 0 NOT NULL,
 	policy_options varchar(4000) DEFAULT NULL NULL,
@@ -574,7 +574,8 @@ create table dbo.x_policy (
 	zone_id bigint DEFAULT '1' NOT NULL,
 	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_policy_UK_name_service_zone UNIQUE NONCLUSTERED (name,service,zone_id),
-	CONSTRAINT x_policy_UK_guid_service UNIQUE NONCLUSTERED (guid,service)
+	CONSTRAINT x_policy_UK_guid_service UNIQUE NONCLUSTERED (guid,service),
+	CONSTRAINT x_policy_UK_service_signature UNIQUE NONCLUSTERED (service,resource_signature),
 )
 GO
 create table dbo.x_service_config_def (
@@ -2258,6 +2259,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('057',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
@@ -2389,6 +2392,12 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10049',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10050',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10051',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10053',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10054',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

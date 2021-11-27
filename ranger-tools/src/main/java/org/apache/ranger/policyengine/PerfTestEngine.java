@@ -125,4 +125,11 @@ public class PerfTestEngine {
 		return ret;
 	}
 
+	public void cleanUp() {
+		if (policyEvaluationEngine != null) {
+			((RangerPolicyEngineImpl)policyEvaluationEngine).releaseResources(true);
+			policyEvaluationEngine = null;
+		}
+	}
+
 }

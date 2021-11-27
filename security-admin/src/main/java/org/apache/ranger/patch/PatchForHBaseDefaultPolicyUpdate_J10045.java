@@ -135,8 +135,9 @@ public class PatchForHBaseDefaultPolicyUpdate_J10045 extends BaseLoader {
 					policyItemForHBase.setAccesses(accesses);
 					policyItemForHBase.setDelegateAdmin(true);
 					policy.getPolicyItems().add(policyItemForHBase);
+					svcDBStore.updatePolicy(policy);
+					break;
 				}
-				svcDBStore.updatePolicy(policy);
 			}
 		}
 	}

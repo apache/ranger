@@ -4219,26 +4219,37 @@ public class ServiceREST {
 		return ret;
 	}
 
-	private RangerPolicy getPolicyByName(String serviceName,String policyName) {
-		RangerPolicy ret = null;
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")");
-		}
+	/**
+	 * Returns {@link RangerPolicy} for non-empty serviceName and policyName, null otherwise.
+	 * @param serviceName
+	 * @param policyName
+	 * @return
+	 */
+    private RangerPolicy getPolicyByName(String serviceName, String policyName) {
 
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		filter.setParam(SearchFilter.POLICY_NAME, policyName);
-		List<RangerPolicy> policies = getPolicies(filter);
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")");
+        }
 
-		if (CollectionUtils.isNotEmpty(policies)) {
-			ret = policies.get(0);
-		}
+        RangerPolicy ret = null;
+        if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(policyName)) {
+            SearchFilter filter = new SearchFilter();
 
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")" + ret);
-		}
-		return ret;
-	}
+            filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
+            filter.setParam(SearchFilter.POLICY_NAME, policyName);
+
+            List<RangerPolicy> policies = getPolicies(filter);
+
+            if (CollectionUtils.isNotEmpty(policies)) {
+                ret = policies.get(0);
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ") " + (ret != null ? ret : "ret is null"));
+        }
+        return ret;
+    }
 
 	private RangerPolicy getPolicyByNameAndZone(String serviceName, String policyName, String zoneName) {
 		RangerPolicy ret = null;

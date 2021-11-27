@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.conditionevaluator;
 
 
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
@@ -29,6 +30,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerUserStore;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -61,13 +63,24 @@ public class RangerCustomConditionMatcherTest {
 		RangerScriptConditionEvaluator accessTypeCondition     = createScriptConditionEvaluator("_ctx.request.accessType.equals('select')");
 		RangerScriptConditionEvaluator actionCondition         = createScriptConditionEvaluator("_ctx.request.action.equals('query')");
 		RangerScriptConditionEvaluator userCondition           = createScriptConditionEvaluator("_ctx.request.user.equals('test-user')");
-		RangerScriptConditionEvaluator userGroupsLenCondition  = createScriptConditionEvaluator("_ctx.request.userGroups.length == 1");
-		RangerScriptConditionEvaluator userRolesLenCondition   = createScriptConditionEvaluator("_ctx.request.userRoles.length == 1");
+		RangerScriptConditionEvaluator userGroupsLenCondition  = createScriptConditionEvaluator("_ctx.request.userGroups.length == 2");
+		RangerScriptConditionEvaluator userGroupsHas1Condition = createScriptConditionEvaluator("_ctx.request.userGroups.indexOf('test-group1') != -1");
+		RangerScriptConditionEvaluator userGroupsHas2Condition = createScriptConditionEvaluator("_ctx.request.userGroups.indexOf('test-group2') != -1");
+		RangerScriptConditionEvaluator userRolesLenCondition   = createScriptConditionEvaluator("_ctx.request.userRoles.length == 2");
+		RangerScriptConditionEvaluator userRolesHas1Condition  = createScriptConditionEvaluator("_ctx.request.userRoles.indexOf('test-role1') != -1");
+		RangerScriptConditionEvaluator userRolesHas2Condition  = createScriptConditionEvaluator("_ctx.request.userRoles.indexOf('test-role2') != -1");
+		RangerScriptConditionEvaluator userAttrLenCondition    = createScriptConditionEvaluator("Object.keys(_ctx.request.userAttributes).length == 3");
+		RangerScriptConditionEvaluator userAttr1Condition      = createScriptConditionEvaluator("_ctx.request.userAttributes['attr1'].equals('test-user-value1')");
+		RangerScriptConditionEvaluator userAttr2Condition      = createScriptConditionEvaluator("_ctx.request.userAttributes['attr2'].equals('test-user-value2')");
+		RangerScriptConditionEvaluator userGroup1Attr1Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group1']['attr1'].equals('test-group1-value1')");
+		RangerScriptConditionEvaluator userGroup1Attr2Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group1']['attr2'].equals('test-group1-value2')");
+		RangerScriptConditionEvaluator userGroup2Attr1Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group2']['attr1'].equals('test-group2-value1')");
+		RangerScriptConditionEvaluator userGroup2Attr2Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group2']['attr2'].equals('test-group2-value2')");
 		RangerScriptConditionEvaluator tagsLengthCondition     = createScriptConditionEvaluator("_ctx.tags.length == 2");
-		RangerScriptConditionEvaluator tagTypeCondition        = createScriptConditionEvaluator("_ctx.tag.type.equals('PCI')");
-		RangerScriptConditionEvaluator tagAttributesCondition  = createScriptConditionEvaluator("_ctx.tag.attributes.attr1.equals('PCI_value')");
-		RangerScriptConditionEvaluator tagsTypeCondition       = createScriptConditionEvaluator("switch(_ctx.tags[0].type) { case 'PCI': _ctx.tags[1].type.equals('PII'); break; case 'PII': _ctx.tags[1].type.equals('PCI'); break; default: false; }");
-		RangerScriptConditionEvaluator tagsAttributesCondition = createScriptConditionEvaluator("switch(_ctx.tags[0].type) { case 'PCI': _ctx.tags[0].attributes.attr1.equals('PCI_value') && _ctx.tags[1].attributes.attr1.equals('PII_value'); break; case 'PII': _ctx.tags[0].attributes.attr1.equals('PII_value') && _ctx.tags[1].attributes.attr1.equals('PCI_value'); break; default: false; }");
+		RangerScriptConditionEvaluator tagTypeCondition        = createScriptConditionEvaluator("_ctx.tag._type.equals('PCI')");
+		RangerScriptConditionEvaluator tagAttributesCondition  = createScriptConditionEvaluator("_ctx.tag.attr1.equals('PCI_value')");
+		RangerScriptConditionEvaluator tagsTypeCondition       = createScriptConditionEvaluator("switch(_ctx.tags[0]._type) { case 'PCI': _ctx.tags[1]._type.equals('PII'); break; case 'PII': _ctx.tags[1]._type.equals('PCI'); break; default: false; }");
+		RangerScriptConditionEvaluator tagsAttributesCondition = createScriptConditionEvaluator("switch(_ctx.tags[0]._type) { case 'PCI': _ctx.tags[0].attr1.equals('PCI_value') && _ctx.tags[1].attr1.equals('PII_value'); break; case 'PII': _ctx.tags[0].attr1.equals('PII_value') && _ctx.tags[1].attr1.equals('PCI_value'); break; default: false; }");
 
 		Assert.assertTrue("request.resource.database should be db1", resourceDbCondition.isMatched(request));
 		Assert.assertTrue("request.resource.database should not be db2", resourceDbCondition2.isMatched(request));
@@ -76,10 +89,21 @@ public class RangerCustomConditionMatcherTest {
 		Assert.assertTrue("request.accessType should be select", accessTypeCondition.isMatched(request));
 		Assert.assertTrue("request.action should be query", actionCondition.isMatched(request));
 		Assert.assertTrue("request.user should be testUser", userCondition.isMatched(request));
-		Assert.assertTrue("request.userGroups should have 1 entry", userGroupsLenCondition.isMatched(request));
-		Assert.assertTrue("request.userRoles should have 1 entry", userRolesLenCondition.isMatched(request));
-		Assert.assertTrue("tag.type should be PCI", tagTypeCondition.isMatched(request));
-		Assert.assertTrue("tag.attributes.attr1 should be PCI_value", tagAttributesCondition.isMatched(request));
+		Assert.assertTrue("request.userGroups should have 2 entries", userGroupsLenCondition.isMatched(request));
+		Assert.assertTrue("request.userGroups should have test-group1", userGroupsHas1Condition.isMatched(request));
+		Assert.assertTrue("request.userGroups should have test-group2", userGroupsHas2Condition.isMatched(request));
+		Assert.assertTrue("request.userRoles should have 2 entries", userRolesLenCondition.isMatched(request));
+		Assert.assertTrue("request.userRoles should have test-role1", userRolesHas1Condition.isMatched(request));
+		Assert.assertTrue("request.userRoles should have test-role2", userRolesHas2Condition.isMatched(request));
+		Assert.assertTrue("request.userAttributes should have 3 entries", userAttrLenCondition.isMatched(request));
+		Assert.assertTrue("request.userAttributes[attr1] should be test-user-value1", userAttr1Condition.isMatched(request));
+		Assert.assertTrue("request.userAttributes[attr2] should be test-user-value2", userAttr2Condition.isMatched(request));
+		Assert.assertTrue("request.userGroup1Attributes[attr1] should be test-group1-value1", userGroup1Attr1Condition.isMatched(request));
+		Assert.assertTrue("request.userGroup1Attributes[attr2] should be test-group1-value2", userGroup1Attr2Condition.isMatched(request));
+		Assert.assertTrue("request.userGroup2Attributes[attr1] should be test-group2-value1", userGroup2Attr1Condition.isMatched(request));
+		Assert.assertTrue("request.userGroup2Attributes[attr2] should be test-group2-value2", userGroup2Attr2Condition.isMatched(request));
+		Assert.assertTrue("tag._type should be PCI", tagTypeCondition.isMatched(request));
+		Assert.assertTrue("tag.attr1 should be PCI_value", tagAttributesCondition.isMatched(request));
 		Assert.assertTrue("should have 2 tags", tagsLengthCondition.isMatched(request));
 		Assert.assertTrue("tags PCI and PII should be found", tagsTypeCondition.isMatched(request));
 		Assert.assertTrue("tag attributes for PCI and PII should be found", tagsAttributesCondition.isMatched(request));
@@ -204,12 +228,15 @@ public class RangerCustomConditionMatcherTest {
 	RangerScriptConditionEvaluator createScriptConditionEvaluator(String script) {
 		RangerScriptConditionEvaluator ret = new RangerScriptConditionEvaluator();
 
+		RangerServiceDef          serviceDef   = mock(RangerServiceDef.class);
 		RangerPolicyConditionDef  conditionDef = mock(RangerPolicyConditionDef.class);
 		RangerPolicyItemCondition condition    = mock(RangerPolicyItemCondition.class);
 
+		when(serviceDef.getName()).thenReturn("test");
 		when(conditionDef.getEvaluatorOptions()).thenReturn(Collections.singletonMap(SCRIPT_OPTION_ENABLE_JSON_CTX, "true"));
 		when(condition.getValues()).thenReturn(Arrays.asList(script));
 
+		ret.setServiceDef(serviceDef);
 		ret.setConditionDef(conditionDef);
 		ret.setPolicyItemCondition(condition);
 
@@ -239,8 +266,8 @@ public class RangerCustomConditionMatcherTest {
 		request.setAccessType("select");
 		request.setAction("query");
 		request.setUser("test-user");
-		request.setUserGroups(Collections.singleton("test-group"));
-		request.setUserRoles(Collections.singleton("test-role"));
+		request.setUserGroups(new HashSet<>(Arrays.asList("test-group1", "test-group2")));
+		request.setUserRoles(new HashSet<>(Arrays.asList("test-role1", "test-role2")));
 
 		if (resourceTags != null) {
 			Set<RangerTagForEval> rangerTagForEvals = new HashSet<>();
@@ -262,6 +289,30 @@ public class RangerCustomConditionMatcherTest {
 		}  else {
 			RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), null);
 		}
+
+		Map<String, Map<String, String>> userAttrMapping  = new HashMap<>();
+		Map<String, Map<String, String>> groupAttrMapping = new HashMap<>();
+		Map<String, String>              testUserAttrs    = new HashMap<>();
+		Map<String, String>              testGroup1Attrs  = new HashMap<>();
+		Map<String, String>              testGroup2Attrs  = new HashMap<>();
+
+		testUserAttrs.put("attr1", "test-user-value1");
+		testUserAttrs.put("attr2", "test-user-value2");
+		testGroup1Attrs.put("attr1", "test-group1-value1");
+		testGroup1Attrs.put("attr2", "test-group1-value2");
+		testGroup2Attrs.put("attr1", "test-group2-value1");
+		testGroup2Attrs.put("attr2", "test-group2-value2");
+
+		userAttrMapping.put("test-user", testUserAttrs);
+		groupAttrMapping.put("test-group1", testGroup1Attrs);
+		groupAttrMapping.put("test-group2", testGroup2Attrs);
+
+		RangerUserStore userStore = mock(RangerUserStore.class);
+
+		when(userStore.getUserAttrMapping()).thenReturn(userAttrMapping);
+		when(userStore.getGroupAttrMapping()).thenReturn(groupAttrMapping);
+
+		RangerAccessRequestUtil.setRequestUserStoreInContext(request.getContext(), userStore);
 
 		return request;
 	}

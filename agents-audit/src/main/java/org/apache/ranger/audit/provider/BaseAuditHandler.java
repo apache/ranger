@@ -306,36 +306,38 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			lastStashedCount = totalStashedCount;
 			lastDeferredCount = totalDeferredCount;
 
-			String finalPath = "";
-			String tFinalPath = getFinalPath();
-			if (!getName().equals(tFinalPath)) {
-				finalPath = ", finalDestination=" + tFinalPath;
-			}
+			if (LOG.isDebugEnabled()) {
+				String finalPath = "";
+				String tFinalPath = getFinalPath();
+				if (!getName().equals(tFinalPath)) {
+					finalPath = ", finalDestination=" + tFinalPath;
+				}
 
-			String msg = "Audit Status Log: name="
-					+ getName()
-					+ finalPath
-					+ ", interval="
-					+ formatIntervalForLog(diffTime)
-					+ ", events="
-					+ diffCount
-					+ (diffSuccess > 0 ? (", succcessCount=" + diffSuccess)
-							: "")
-					+ (diffFailed > 0 ? (", failedCount=" + diffFailed) : "")
-					+ (diffStashed > 0 ? (", stashedCount=" + diffStashed) : "")
-					+ (diffDeferred > 0 ? (", deferredCount=" + diffDeferred)
-							: "")
-					+ ", totalEvents="
-					+ totalCount
-					+ (totalSuccessCount > 0 ? (", totalSuccessCount=" + totalSuccessCount)
-							: "")
-					+ (totalFailedCount > 0 ? (", totalFailedCount=" + totalFailedCount)
-							: "")
-					+ (totalStashedCount > 0 ? (", totalStashedCount=" + totalStashedCount)
-							: "")
-					+ (totalDeferredCount > 0 ? (", totalDeferredCount=" + totalDeferredCount)
-							: "");
-			LOG.info(msg);
+				String msg = "Audit Status Log: name="
+						+ getName()
+						+ finalPath
+						+ ", interval="
+						+ formatIntervalForLog(diffTime)
+						+ ", events="
+						+ diffCount
+						+ (diffSuccess > 0 ? (", succcessCount=" + diffSuccess)
+						: "")
+						+ (diffFailed > 0 ? (", failedCount=" + diffFailed) : "")
+						+ (diffStashed > 0 ? (", stashedCount=" + diffStashed) : "")
+						+ (diffDeferred > 0 ? (", deferredCount=" + diffDeferred)
+						: "")
+						+ ", totalEvents="
+						+ totalCount
+						+ (totalSuccessCount > 0 ? (", totalSuccessCount=" + totalSuccessCount)
+						: "")
+						+ (totalFailedCount > 0 ? (", totalFailedCount=" + totalFailedCount)
+						: "")
+						+ (totalStashedCount > 0 ? (", totalStashedCount=" + totalStashedCount)
+						: "")
+						+ (totalDeferredCount > 0 ? (", totalDeferredCount=" + totalDeferredCount)
+						: "");
+				LOG.debug(msg);
+			}
 		} catch (Throwable t) {
 			LOG.error("Error while printing stats. auditProvider=" + getName());
 		}

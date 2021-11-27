@@ -127,6 +127,11 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXGroup.getAllGroupIdNames">
+		<query>SELECT obj.id, obj.name FROM XXGroup obj
+		</query>
+	</named-query>
+
 	<!-- XXGroup -->
 	<named-query name="XXUser.findGroupsByUserIds">
 		<query>SELECT user.name, group.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
@@ -136,6 +141,11 @@
 
 	<named-query name="XXUser.getAllUserIds">
 		<query>SELECT user.name, user.id FROM XXUser user
+		</query>
+	</named-query>
+
+	<named-query name="XXUser.getAllUserIdNames">
+		<query>SELECT portalUser.id, user.id, user.name FROM XXUser user, XXPortalUser portalUser WHERE user.name=portalUser.loginId
 		</query>
 	</named-query>
 
@@ -320,6 +330,10 @@
 	<named-query name="XXPolicy.findByResourceSignatureByPolicyStatus">
 		<query>select obj from XXPolicy obj, XXService xSvc where obj.service = xSvc.id 
 				and obj.resourceSignature = :resSignature and xSvc.name = :serviceName and obj.isEnabled = :isPolicyEnabled</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findByPolicyStatus">
+		<query>select obj from XXPolicy obj where obj.isEnabled = :isPolicyEnabled</query>
 	</named-query>
 	
 	<!--  currently not exposed but should be when we have a use case for it -->
