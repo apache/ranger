@@ -27,6 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 /**
@@ -73,9 +75,11 @@ public class KMSMDCFilter implements Filter {
       throws IOException, ServletException {
     try {
     	 String path = ((HttpServletRequest) request).getRequestURI();
+         HttpServletResponse resp = (HttpServletResponse) response;
+         resp.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
     	    
     	     if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
-    	    	chain.doFilter(request, response);
+                 chain.doFilter(request, resp);
     	      } else {
 			      DATA_TL.remove();
 			      UserGroupInformation ugi = HttpUserGroupInformation.get();
@@ -86,7 +90,7 @@ public class KMSMDCFilter implements Filter {
 			        requestURL.append("?").append(queryString);
 			      }
 			      DATA_TL.set(new Data(ugi, method, requestURL.toString()));
-			      chain.doFilter(request, response);
+			      chain.doFilter(request, resp);
     	    }
     } finally {
       DATA_TL.remove();
