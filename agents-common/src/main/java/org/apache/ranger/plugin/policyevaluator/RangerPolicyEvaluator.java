@@ -33,8 +33,6 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
@@ -55,10 +53,8 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS;
-import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY;
 import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS;
-import static org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER;
 
 public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 	Comparator<RangerPolicyEvaluator> EVAL_ORDER_COMPARATOR = new RangerPolicyEvaluator.PolicyEvalOrderComparator();
@@ -184,6 +180,14 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 		return  CollectionUtils.isNotEmpty(policyItem.getRoles());
 	}
 
+	static int compareStrings(String str1, String str2) {
+		if (str1 == null) {
+			return str2 == null ? 0 : -1;
+		} else {
+			return str2 == null ? 1 : str1.compareTo(str2);
+		}
+	}
+
 	class PolicyEvalOrderComparator implements Comparator<RangerPolicyEvaluator>, Serializable {
 		@Override
 		public int compare(RangerPolicyEvaluator me, RangerPolicyEvaluator other) {
@@ -203,7 +207,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 				result =  Integer.compare(me.getEvalOrder(), other.getEvalOrder());
 
 				if (result == 0) {
-					result = me.getPolicy().getName().compareTo(other.getPolicy().getName());
+					result = compareStrings(me.getPolicy().getName(), other.getPolicy().getName());
 				}
 			}
 
@@ -227,7 +231,7 @@ public interface RangerPolicyEvaluator extends RangerPolicyResourceEvaluator {
 			} else if (!me.hasDeny() && other.hasDeny()) {
 				result = 1;
 			} else {
-				result = me.getPolicy().getName().compareTo(other.getPolicy().getName());
+				result = compareStrings(me.getPolicy().getName(), other.getPolicy().getName());
 			}
 
 			return result;
