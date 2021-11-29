@@ -336,6 +336,38 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     }
 
     @Override
+    public void scrubSearchResults(AtlasSearchResultScrubRequest request, boolean isScrubAuditEnabled) throws AtlasAuthorizationException {
+        if (LOG.isDebugEnabled())
+            LOG.debug("==> scrubSearchResults(" + request + " " + isScrubAuditEnabled);
+        RangerPerfTracer perf = null;
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG))
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerAtlasAuthorizer.scrubSearchResults(" + request + ")");
+            AtlasSearchResult result = request.getSearchResult();
+            if (CollectionUtils.isNotEmpty(result.getEntities())) {
+                for (AtlasEntityHeader entity : result.getEntities()) {
+                    checkAccessAndScrub(entity, request, isScrubAuditEnabled);
+                }
+            }
+            if (CollectionUtils.isNotEmpty(result.getFullTextResult())) {
+                for (AtlasSearchResult.AtlasFullTextResult fullTextResult : result.getFullTextResult()) {
+                    if (fullTextResult != null)
+                        checkAccessAndScrub(fullTextResult.getEntity(), request, isScrubAuditEnabled);
+                }
+            }
+            if (MapUtils.isNotEmpty(result.getReferredEntities())) {
+                for (AtlasEntityHeader entity : result.getReferredEntities().values()) {
+                    checkAccessAndScrub(entity, request, isScrubAuditEnabled);
+                }
+            }
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+        if (LOG.isDebugEnabled())
+            LOG.debug("<== scrubSearchResults(): " + request + " " + isScrubAuditEnabled);
+    }
+
+    @Override
     public void filterTypesDef(AtlasTypesDefFilterRequest request) throws AtlasAuthorizationException {
 
         AtlasTypesDef typesDef = request.getTypesDef();
@@ -479,7 +511,22 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             entityAccessRequest.setRemoteIPAddress(request.getRemoteIPAddress());
 
             if (!isAccessAllowed(entityAccessRequest, null)) {
-                scrubEntityHeader(entity);
+                scrubEntityHeader(entity, request.getTypeRegistry());
+            }
+        }
+    }
+
+    private void checkAccessAndScrub(AtlasEntityHeader entity, AtlasSearchResultScrubRequest request, boolean isScrubAuditEnabled) throws AtlasAuthorizationException {
+        if (entity != null && request != null) {
+            final AtlasEntityAccessRequest entityAccessRequest = new AtlasEntityAccessRequest(request.getTypeRegistry(), AtlasPrivilege.ENTITY_READ, entity, request.getUser(), request.getUserGroups());
+
+            entityAccessRequest.setClientIPAddress(request.getClientIPAddress());
+            entityAccessRequest.setForwardedAddresses(request.getForwardedAddresses());
+            entityAccessRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
+            boolean isEntityAccessAllowed  = isScrubAuditEnabled ?  isAccessAllowed(entityAccessRequest) : isAccessAllowed(entityAccessRequest, null);
+            if (!isEntityAccessAllowed) {
+                scrubEntityHeader(entity, request.getTypeRegistry());
             }
         }
     }

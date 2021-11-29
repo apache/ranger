@@ -221,6 +221,19 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 		}
 	}
 
+	public void scrubSearchResults(AtlasSearchResultScrubRequest request, boolean isScrubAuditEnabled) throws AtlasAuthorizationException {
+		if (isDebugEnabled)
+			LOG.debug("==> scrubSearchResults(" + request + ")");
+		try {
+			activatePluginClassLoader();
+			this.rangerAtlasAuthorizerImpl.scrubSearchResults(request, isScrubAuditEnabled);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+		if (isDebugEnabled)
+			LOG.debug("<== scrubSearchResults(): " + request);
+	}
+
 	@Override
 	public void filterTypesDef(AtlasTypesDefFilterRequest request) throws AtlasAuthorizationException {
 
