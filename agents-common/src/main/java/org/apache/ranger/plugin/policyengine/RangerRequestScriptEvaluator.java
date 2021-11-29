@@ -69,10 +69,10 @@ public final class RangerRequestScriptEvaluator {
                                                                                  SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
                                                                                  SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
                                                                                  SCRIPT_VAR_USER + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ATTRIBUTES + ";" +
-                                                                                 SCRIPT_VAR_UGROUPS + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUPS + ";" +
-                                                                                 SCRIPT_VAR_UGROUP + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUP_ATTRIBUTES + ";" +
+                                                                                 SCRIPT_VAR_UGNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUPS + ";" +
+                                                                                 SCRIPT_VAR_UG + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_GROUP_ATTRIBUTES + ";" +
                                                                                  SCRIPT_VAR_UGA + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_UGA + ";" +
-                                                                                 SCRIPT_VAR_UROLES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ROLES + ";" +
+                                                                                 SCRIPT_VAR_URNAMES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_USER_ROLES + ";" +
                                                                                  SCRIPT_VAR_TAG + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG + ";" +
                                                                                  SCRIPT_VAR_TAGS + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAGS + ";" +
                                                                                  SCRIPT_VAR_TAGNAMES + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG_NAMES + ";";
@@ -262,11 +262,11 @@ public final class RangerRequestScriptEvaluator {
 		Set<RangerTagForEval> requestTags = RangerAccessRequestUtil.getRequestTagsFromContext(getRequestContext());
 
 		if (CollectionUtils.isNotEmpty(requestTags)) {
-			Set<Map<String, Object>> tags     = new HashSet<>();
-			Set<String>              tagNames = new HashSet<>();
+			Map<String, Map<String, Object>> tags     = new HashMap();
+			Set<String>                      tagNames = new HashSet<>();
 
 			for (RangerTagForEval tag : requestTags) {
-				tags.add(toMap(tag));
+				tags.put(tag.getType(), toMap(tag));
 				tagNames.add(tag.getType());
 			}
 
@@ -279,7 +279,7 @@ public final class RangerRequestScriptEvaluator {
 				ret.put(SCRIPT_FIELD_TAG, toMap(currentTag));
 			}
 		} else {
-			ret.put(SCRIPT_FIELD_TAGS, Collections.emptySet());
+			ret.put(SCRIPT_FIELD_TAGS, Collections.emptyMap());
 			ret.put(SCRIPT_FIELD_TAG_NAMES, Collections.emptySet());
 		}
 
@@ -659,9 +659,9 @@ public final class RangerRequestScriptEvaluator {
 		varNames.add(SCRIPT_VAR_TAGNAMES);
 		varNames.add(SCRIPT_VAR_TAGS);
 		varNames.add(SCRIPT_VAR_UGA);
-		varNames.add(SCRIPT_VAR_UGROUP);
-		varNames.add(SCRIPT_VAR_UGROUPS);
-		varNames.add(SCRIPT_VAR_UROLES);
+		varNames.add(SCRIPT_VAR_UG);
+		varNames.add(SCRIPT_VAR_UGNAMES);
+		varNames.add(SCRIPT_VAR_URNAMES);
 		varNames.add(SCRIPT_VAR_USER);
 
 		return ".*(" + StringUtils.join(varNames, '|') + ").*";

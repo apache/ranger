@@ -38,7 +38,7 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 	private static final Log LOG = LogFactory.getLog(RangerScriptConditionEvaluator.class);
 
 	private ScriptEngine scriptEngine;
-	private boolean      enableJsonCtx = false;
+	private Boolean      enableJsonCtx = null;
 
 	@Override
 	public void init() {
@@ -54,7 +54,11 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 		if (MapUtils.isNotEmpty(evalOptions)) {
 			engineName = evalOptions.get("engineName");
 
-			enableJsonCtx = Boolean.parseBoolean(evalOptions.getOrDefault(SCRIPT_OPTION_ENABLE_JSON_CTX, Boolean.toString(enableJsonCtx)));
+			String strEnableJsonCtx = evalOptions.get(SCRIPT_OPTION_ENABLE_JSON_CTX);
+
+			if (StringUtils.isNotEmpty(strEnableJsonCtx)) {
+				enableJsonCtx = Boolean.parseBoolean(strEnableJsonCtx);
+			}
 		}
 
 		if (StringUtils.isBlank(engineName)) {
@@ -97,6 +101,10 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 				}
 
 				RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request);
+
+				if (enableJsonCtx == null) { // if not specified in evaluatorOptions, set it on first call to isMatched()
+					enableJsonCtx = RangerRequestScriptEvaluator.needsJsonCtxEnabled(script);
+				}
 
 				evaluator.evaluateConditionScript(scriptEngine, script, enableJsonCtx);
 

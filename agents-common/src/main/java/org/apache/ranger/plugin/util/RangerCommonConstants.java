@@ -63,9 +63,9 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_VAR_TAGNAMES                  = "TAGNAMES";
 	public static final String SCRIPT_VAR_TAGS                      = "TAGS";
 	public static final String SCRIPT_VAR_UGA                       = "UGA";
-	public static final String SCRIPT_VAR_UGROUP                    = "UGROUP";
-	public static final String SCRIPT_VAR_UGROUPS                   = "UGROUPS";
-	public static final String SCRIPT_VAR_UROLES                    = "UROLES";
+	public static final String SCRIPT_VAR_UG                        = "UG";
+	public static final String SCRIPT_VAR_UGNAMES                   = "UGNAMES";
+	public static final String SCRIPT_VAR_URNAMES                   = "URNAMES";
 	public static final String SCRIPT_VAR_USER                      = "USER";
 
 	public static final String SCRIPT_FIELD_ACCESS_TIME             = "accessTime";
