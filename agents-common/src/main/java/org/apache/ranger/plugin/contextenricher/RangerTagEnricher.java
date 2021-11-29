@@ -198,6 +198,15 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.debug("==> RangerTagEnricher.enrich(" + request + ") with dataStore:[" + dataStore + "]");
 		}
 
+		Map<String, Object> requestContext = request.getContext();
+
+		Set<RangerTagForEval> atlasClassificationSet = new HashSet<>();
+
+		if (requestContext != null && requestContext.get("CLASSIFICATIONS") != null) {
+			LOG.info("Classification found " + requestContext.get("CLASSIFICATIONS"));
+			atlasClassificationSet = (Set<RangerTagForEval>) requestContext.get("CLASSIFICATIONS");
+		}
+
 		final Set<RangerTagForEval> matchedTags;
 
 		try (RangerReadWriteLock.RangerLock readLock = this.lock.getReadLock()) {
@@ -220,7 +229,11 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				}
 			}
 
-			matchedTags = enrichedServiceTags == null ? null : findMatchingTags(request, enrichedServiceTags);
+			if(atlasClassificationSet!=null && atlasClassificationSet.size() > 0) {
+				matchedTags = atlasClassificationSet;
+			} else {
+				matchedTags = enrichedServiceTags == null ? null : findMatchingTags(request, enrichedServiceTags);
+			}
 
 			RangerAccessRequestUtil.setRequestTagsInContext(request.getContext(), matchedTags);
 		}

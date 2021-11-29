@@ -41,10 +41,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
@@ -443,6 +446,20 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             }
 
             if (CollectionUtils.isNotEmpty(request.getEntityClassifications())) {
+                Set<String> entityClassifications = request.getEntityClassifications();
+                Map<String, Object> contextOjb = rangerRequest.getContext();
+
+                Set<RangerTagForEval> rangerTagForEval = getRangerServiceTag(entityClassifications);
+
+                if (contextOjb == null) {
+                    Map<String, Object> contextOjb1 = new HashMap<String, Object>();
+                    contextOjb1.put("CLASSIFICATIONS", rangerTagForEval);
+                    rangerRequest.setContext(contextOjb1);
+                } else {
+                    contextOjb.put("CLASSIFICATIONS", rangerTagForEval);
+                    rangerRequest.setContext(contextOjb);
+                }
+
                 // check authorization for each classification
                 for (String classificationToAuthorize : request.getEntityClassifications()) {
                     rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
@@ -470,6 +487,17 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         }
 
         return ret;
+    }
+
+    Set<RangerTagForEval> getRangerServiceTag(Set<String> classifications) {
+        Set<RangerTagForEval> atlasClassificationSet = new HashSet<>();
+
+        for (String classification : classifications) {
+            RangerTag rangerTag = new RangerTag(null, classification, null, RangerTag.OWNER_SERVICERESOURCE);
+            RangerTagForEval tagForEval = new RangerTagForEval(rangerTag, RangerPolicyResourceMatcher.MatchType.SELF);
+            atlasClassificationSet.add(tagForEval);
+        }
+        return atlasClassificationSet;
     }
 
     private boolean checkAccess(RangerAccessRequestImpl request) {
