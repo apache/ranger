@@ -138,6 +138,8 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		if(policy != null) {
 			validityScheduleEvaluators = createValidityScheduleEvaluators(policy);
 
+			this.disableRoleResolution = options.disableRoleResolution;
+
 			if (!options.disableAccessEvaluationWithPolicyACLSummary) {
 				aclSummary = createPolicyACLSummary();
 			}
@@ -152,7 +154,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			} else {
 				allowEvaluators          = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW);
 
-				if (ServiceDefUtil.getOption_enableDenyAndExceptionsInPolicies(serviceDef, getPluginContext())) {
+				if (ServiceDefUtil.getOption_enableDenyAndExceptionsInPolicies(serviceDef, pluginContext)) {
 					denyEvaluators           = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY);
 					allowExceptionEvaluators = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW_EXCEPTIONS);
 					denyExceptionEvaluators  = createPolicyItemEvaluators(policy, serviceDef, options, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY_EXCEPTIONS);

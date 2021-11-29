@@ -269,7 +269,6 @@
           <include>joda-time:joda-time</include>
           <include>org.apache.ranger:ranger-plugins-cred</include>
           <include>org.apache.ranger:ugsyn-util</include>
-          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
         </includes>
       </binaries>
