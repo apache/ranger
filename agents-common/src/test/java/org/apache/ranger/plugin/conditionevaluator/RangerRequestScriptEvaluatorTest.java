@@ -59,19 +59,20 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertTrue("test: USER['state'] is 'CA'", (Boolean) evaluator.evaluateScript(scriptEngine, "USER['state'] == 'CA'"));
         Assert.assertTrue("test: USER.state is 'CA'", (Boolean) evaluator.evaluateScript(scriptEngine, "USER.state == 'CA'"));
 
-        Assert.assertTrue("test: UGROUPS has test-group1", (Boolean)evaluator.evaluateScript(scriptEngine, "UGROUPS.indexOf('test-group1') != -1"));
-        Assert.assertTrue("test: UGROUPS has test-group2", (Boolean)evaluator.evaluateScript(scriptEngine, "UGROUPS.indexOf('test-group2') != -1"));
-        Assert.assertTrue("test: UGROUPS doesn't have test-group3", (Boolean)evaluator.evaluateScript(scriptEngine, "UGROUPS.indexOf('test-group3') == -1"));
-        Assert.assertTrue("test: UGROUP['test-group1'].dept is 'ENGG'", (Boolean) evaluator.evaluateScript(scriptEngine, "UGROUP['test-group1'].dept == 'ENGG'"));
-        Assert.assertTrue("test: UGROUP['test-group1'].site is 10", (Boolean) evaluator.evaluateScript(scriptEngine, "UGROUP['test-group1'].site == 10"));
-        Assert.assertTrue("test: UGROUP['test-group2'].dept is 'PROD'", (Boolean) evaluator.evaluateScript(scriptEngine, "UGROUP['test-group2'].dept == 'PROD'"));
-        Assert.assertTrue("test: UGROUP['test-group2'].site is 20", (Boolean) evaluator.evaluateScript(scriptEngine, "UGROUP['test-group2'].site == 20"));
-        Assert.assertTrue("test: UGROUP['test-group3'] is null", (Boolean) evaluator.evaluateScript(scriptEngine, "UGROUP['test-group3'] == null"));
-        Assert.assertTrue("test: UGROUP['test-group1'].notExists is null", (Boolean) evaluator.evaluateScript(scriptEngine, "UGROUP['test-group1'].notExists == null"));
+        Assert.assertTrue("test: UGNAMES has test-group1", (Boolean)evaluator.evaluateScript(scriptEngine, "UGNAMES.indexOf('test-group1') != -1"));
+        Assert.assertTrue("test: UGNAMES has test-group2", (Boolean)evaluator.evaluateScript(scriptEngine, "UGNAMES.indexOf('test-group2') != -1"));
+        Assert.assertTrue("test: UGNAMES doesn't have test-group3", (Boolean)evaluator.evaluateScript(scriptEngine, "UGNAMES.indexOf('test-group3') == -1"));
 
-        Assert.assertTrue("test: UROLES has test-role1", (Boolean)evaluator.evaluateScript(scriptEngine, "UROLES.indexOf('test-role1') != -1"));
-        Assert.assertTrue("test: UROLES has test-role2", (Boolean)evaluator.evaluateScript(scriptEngine, "UROLES.indexOf('test-role2') != -1"));
-        Assert.assertTrue("test: UROLES doesn't have test-role3", (Boolean)evaluator.evaluateScript(scriptEngine, "UROLES.indexOf('test-role3') == -1"));
+        Assert.assertTrue("test: UG['test-group1'].dept is 'ENGG'", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group1'].dept == 'ENGG'"));
+        Assert.assertTrue("test: UG['test-group1'].site is 10", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group1'].site == 10"));
+        Assert.assertTrue("test: UG['test-group2'].dept is 'PROD'", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group2'].dept == 'PROD'"));
+        Assert.assertTrue("test: UG['test-group2'].site is 20", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group2'].site == 20"));
+        Assert.assertTrue("test: UG['test-group3'] is null", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group3'] == null"));
+        Assert.assertTrue("test: UG['test-group1'].notExists is null", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group1'].notExists == null"));
+
+        Assert.assertTrue("test: URNAMES has test-role1", (Boolean)evaluator.evaluateScript(scriptEngine, "URNAMES.indexOf('test-role1') != -1"));
+        Assert.assertTrue("test: URNAMES has test-role2", (Boolean)evaluator.evaluateScript(scriptEngine, "URNAMES.indexOf('test-role2') != -1"));
+        Assert.assertTrue("test: URNAMES doesn't have test-role3", (Boolean)evaluator.evaluateScript(scriptEngine, "URNAMES.indexOf('test-role3') == -1"));
 
         Assert.assertTrue("test: UGA.sVal['dept'] is 'ENGG'", (Boolean)evaluator.evaluateScript(scriptEngine, "UGA.sVal['dept'] == 'ENGG'"));
         Assert.assertTrue("test: UGA.sVal['site'] is 10", (Boolean) evaluator.evaluateScript(scriptEngine, "UGA.sVal['site'] == 10"));
@@ -93,9 +94,11 @@ public class RangerRequestScriptEvaluatorTest {
 
         Assert.assertTrue("test: TAG._type is 'PII'", (Boolean) evaluator.evaluateScript(scriptEngine, "TAG._type == 'PII'"));
         Assert.assertTrue("test: TAG.attr1 is 'PII_value'", (Boolean) evaluator.evaluateScript(scriptEngine, "TAG.attr1 == 'PII_value'"));
-        Assert.assertTrue("test: TAGS.length is 2", (Boolean) evaluator.evaluateScript(scriptEngine, "TAGS.length == 2"));
-        Assert.assertTrue("test: TAGS has PII and PCI", (Boolean) evaluator.evaluateScript(scriptEngine, "TAGS[0]._type == 'PCI' ? TAGS[1]._type == 'PII' : TAGS[0]._type == 'PII' && TAGS[1]._type == 'PCI'"));
-        Assert.assertTrue("test: TAGS has PII.attr1=PII_value and PCI.attr1=PCI_value", (Boolean) evaluator.evaluateScript(scriptEngine, "TAGS[0]._type == 'PCI' ? (TAGS[0].attr1 == 'PCI_value' && TAGS[1].attr1 == 'PII_value') : (TAGS[0].attr1 == 'PII_value' && TAGS[1].attr1 == 'PCI_value')"));
+        Assert.assertTrue("test: TAGS.length is 2", (Boolean) evaluator.evaluateScript(scriptEngine, "Object.keys(TAGS).length == 2"));
+        Assert.assertEquals("test: TAGS has PII", evaluator.evaluateScript(scriptEngine, "TAGS.PII._type"), "PII");
+        Assert.assertEquals("test: TAGS has PCI", evaluator.evaluateScript(scriptEngine, "TAGS.PCI._type"), "PCI");
+        Assert.assertEquals("test: TAGS has PII.attr1=PII_value", evaluator.evaluateScript(scriptEngine, "TAGS['PII'].attr1"), "PII_value");
+        Assert.assertEquals("test: TAGS has PCI.attr1=PCI_value", evaluator.evaluateScript(scriptEngine, "TAGS['PCI'].attr1"), "PCI_value");
 
         Assert.assertTrue("test: TAGNAMES.length is 2", (Boolean) evaluator.evaluateScript(scriptEngine, "TAGNAMES.length == 2"));
         Assert.assertTrue("test: TAGNAMES has 'PII'", (Boolean)evaluator.evaluateScript(scriptEngine, "TAGNAMES.indexOf('PII') != -1"));

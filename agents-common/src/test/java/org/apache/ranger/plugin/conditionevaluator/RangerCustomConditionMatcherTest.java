@@ -76,11 +76,11 @@ public class RangerCustomConditionMatcherTest {
 		RangerScriptConditionEvaluator userGroup1Attr2Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group1']['attr2'].equals('test-group1-value2')");
 		RangerScriptConditionEvaluator userGroup2Attr1Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group2']['attr1'].equals('test-group2-value1')");
 		RangerScriptConditionEvaluator userGroup2Attr2Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group2']['attr2'].equals('test-group2-value2')");
-		RangerScriptConditionEvaluator tagsLengthCondition     = createScriptConditionEvaluator("_ctx.tags.length == 2");
+		RangerScriptConditionEvaluator tagsLengthCondition     = createScriptConditionEvaluator("Object.keys(_ctx.tags).length == 2");
 		RangerScriptConditionEvaluator tagTypeCondition        = createScriptConditionEvaluator("_ctx.tag._type.equals('PCI')");
 		RangerScriptConditionEvaluator tagAttributesCondition  = createScriptConditionEvaluator("_ctx.tag.attr1.equals('PCI_value')");
-		RangerScriptConditionEvaluator tagsTypeCondition       = createScriptConditionEvaluator("switch(_ctx.tags[0]._type) { case 'PCI': _ctx.tags[1]._type.equals('PII'); break; case 'PII': _ctx.tags[1]._type.equals('PCI'); break; default: false; }");
-		RangerScriptConditionEvaluator tagsAttributesCondition = createScriptConditionEvaluator("switch(_ctx.tags[0]._type) { case 'PCI': _ctx.tags[0].attr1.equals('PCI_value') && _ctx.tags[1].attr1.equals('PII_value'); break; case 'PII': _ctx.tags[0].attr1.equals('PII_value') && _ctx.tags[1].attr1.equals('PCI_value'); break; default: false; }");
+		RangerScriptConditionEvaluator tagsTypeCondition       = createScriptConditionEvaluator("_ctx.tags['PII']._type == 'PII' && _ctx.tags['PCI']._type == 'PCI'");
+		RangerScriptConditionEvaluator tagsAttributesCondition = createScriptConditionEvaluator("_ctx.tags['PII'].attr1.equals('PII_value') && _ctx.tags['PCI'].attr1.equals('PCI_value')");
 
 		Assert.assertTrue("request.resource.database should be db1", resourceDbCondition.isMatched(request));
 		Assert.assertTrue("request.resource.database should not be db2", resourceDbCondition2.isMatched(request));

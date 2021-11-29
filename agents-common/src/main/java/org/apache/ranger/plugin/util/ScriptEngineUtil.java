@@ -58,7 +58,7 @@ public class ScriptEngineUtil {
             LOG.error("RangerScriptConditionEvaluator.init() failed with exception=" + exp);
         }
 
-        if (ret == null) {
+        if (ret == null && serviceType != null) {
             LOG.warn("failed to initialize script engine '" + engineName + "' in a default manner." +
                      " Will try to get script-engine from plugin-class-loader");
 
