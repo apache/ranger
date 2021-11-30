@@ -96,6 +96,8 @@ public class RangerPolicyAdminCache {
 		}
 		if (ret == null) {
 			LOG.error("Policy-engine is not built! Returning null policy-engine!");
+		} else {
+			ret.setServiceStore(svcStore);
 		}
 
 		return ret;

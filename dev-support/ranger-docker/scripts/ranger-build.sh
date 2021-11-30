@@ -19,7 +19,7 @@
 
 if [ "${BRANCH}" == "" ]
 then
-  BRANCH=master
+  BRANCH=ranger-2.1
 fi
 
 if [ "${GIT_URL}" == "" ]

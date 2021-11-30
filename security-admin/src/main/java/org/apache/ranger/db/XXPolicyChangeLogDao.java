@@ -147,6 +147,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                             if (policy.getServiceType() == null) {
                                 policy.setServiceType(serviceType);
                             }
+                            policy.setVersion(xxPolicy.getVersion());
                         } catch (Exception e) {
                             LOG.error("Cannot read policy:[" + policyId + "]. Should not have come here!! Offending log-record-id:[" + logRecordId + "] and returning...", e);
                             ret.clear();

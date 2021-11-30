@@ -5,6 +5,7 @@ on:
     branches:
       - beta
       - master
+      - build2.2
 
 jobs:
   build:

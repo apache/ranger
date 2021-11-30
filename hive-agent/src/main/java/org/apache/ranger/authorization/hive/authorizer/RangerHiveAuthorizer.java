@@ -905,6 +905,14 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					//
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.REPLADMIN, context, sessionContext);
 					requests.add(request);
+				} else if (hiveOpType.equals(HiveOperationType.ALTERTABLE_OWNER)) {
+					RangerHiveAccessRequest request = buildRequestForAlterTableSetOwnerFromCommandString(user, groups, roles, hiveOpType.name(), context, sessionContext);
+					if (request != null) {
+						requests.add(request);
+					} else {
+						throw new HiveAccessControlException(String.format("Permission denied: user [%s] does not have privilege for [%s] command",
+								user, hiveOpType.name()));
+					}
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("RangerHiveAuthorizer.checkPrivileges: Unexpected operation type[" + hiveOpType + "] received with empty input objects list!");
@@ -966,8 +974,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 					if(accessType == HiveAccessType.NONE) {
 						continue;
-					} else if(accessType == HiveAccessType.UNKNOWN){
-						handleUnKnownAccessTypeCommands(hiveOpType, inputHObjs, outputHObjs, user, auditHandler, context);
 					}
 
 					if(!existsByResourceAndAccessType(requests, resource, accessType)) {
@@ -992,19 +998,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					}
 					RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, hiveOpType.name(), HiveAccessType.REPLADMIN, context, sessionContext);
 					requests.add(request);
-				}
-			}
-
-			if (CollectionUtils.isEmpty(inputHObjs) && CollectionUtils.isEmpty(outputHObjs) && !IsCommandInExceptionList(hiveOpType)) {
-				if (hiveOpType.equals(HiveOperationType.DROPDATABASE) || hiveOpType.equals(HiveOperationType.DROPTABLE)) {
-					//Handle Drop If exists statements where both inputHObjs and outputHObjs will be empty and request has to created out of commandString.
-					RangerHiveAccessRequest request = buildRequestForDropIfExistsCommands(hiveOpType, user, groups, roles, hiveOpType.name(), context, sessionContext);
-					if (request != null) {
-						requests.add(request);
-					}
-				} else {
-					String commandString = context == null ? "" : context.getCommandString();
-					throw new HiveAccessControlException(String.format("Unable to authorize command: [%s] , HivePrivilegeObjects are not available to authorize this command!", commandString));
 				}
 			}
 
@@ -1914,8 +1907,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case SHOW_ROLE_PRINCIPALS:
 				case SHOW_TRANSACTIONS:
 				break;
-				default:
-					accessType = HiveAccessType.UNKNOWN;
 			}
 			break;
 		}
@@ -2218,79 +2209,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 											 user, hiveOpType.name()));
 	}
 
-	private void handleUnKnownAccessTypeCommands(HiveOperationType         hiveOpType,
-												 List<HivePrivilegeObject> inputHObjs,
-												 List<HivePrivilegeObject> outputHObjs,
-												 String                    user,
-												 RangerHiveAuditHandler    auditHandler,
-												 HiveAuthzContext		   context)
-			throws HiveAccessControlException {
-
-		String commandString = context.getCommandString();
-		String resourceName  = null;
-		String resourceType  = null;
-
-		if (inputHObjs != null) {
-			for(HivePrivilegeObject hiveObj : inputHObjs) {
-				resourceName = getResourceName(hiveObj);
-				if(StringUtils.isNotEmpty(resourceName)) {
-					resourceType = getResourceType(hiveObj);
-					break;
-				}
-			}
-		}
-
-		if (StringUtils.isEmpty(resourceName) && outputHObjs != null) {
-			for(HivePrivilegeObject hiveObj : outputHObjs) {
-				resourceName = getResourceName(hiveObj);
-				if(StringUtils.isNotEmpty(resourceName)) {
-					resourceType = getResourceType(hiveObj);
-					break;
-				}
-			}
-
-		}
-
-		int    serviceType = -1;
-		String serviceName = null;
-		String clusterName = null;
-
-		if(hivePlugin != null) {
-			serviceType = hivePlugin.getServiceDefId();
-			serviceName = hivePlugin.getServiceName();
-			clusterName = hivePlugin.getClusterName();
-		}
-
-		String commandType = (commandString != null) ? commandString.substring(0, commandString.indexOf(' ')): "";
-		String ipAddress   = context.getIpAddress();
-		auditHandler.logAuditEvent(user, resourceName, resourceType, commandString, false, serviceType, serviceName, clusterName, commandType, ipAddress);
-
-		throw new HiveAccessControlException(String.format("Unknown operation! Permission denied: user [%s] does not have privilege for [%s] command",
-				user, hiveOpType.name()));
-	}
-
-	private String getResourceName(HivePrivilegeObject hivePrivilegeObject) {
-		RangerHiveResource resource =  createHiveResource(hivePrivilegeObject);
-		return resource != null ? resource.getAsString() : null;
-	}
-
-	private String getResourceType(HivePrivilegeObject hivePrivilegeObject) {
-		String ret = StringUtils.EMPTY;
-		HivePrivilegeObjectType resourceType = hivePrivilegeObject.getType();
-		switch (resourceType) {
-			case DATABASE:
-				ret = "@database";
-				break;
-			case TABLE_OR_VIEW:
-				ret = "@table";
-				break;
-			case COLUMN:
-				ret = "@column";
-				break;
-		}
-		return ret;
-	}
-
 	private boolean existsByResourceAndAccessType(Collection<RangerHiveAccessRequest> requests, RangerHiveResource resource, HiveAccessType accessType) {
 		boolean ret = false;
 
@@ -2476,41 +2394,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 	}
 
-	private boolean IsCommandInExceptionList(HiveOperationType hiveOpType) {
-		boolean ret = false;
-		switch (hiveOpType) {
-			case CREATEMACRO:
-			case CREATEROLE:
-			case DESCFUNCTION:
-			case DELETE:
-			case DFS:
-			case DROPMACRO:
-			case DROPROLE:
-			case EXPLAIN:
-			case GRANT_ROLE:
-			case REVOKE_ROLE:
-			case RESET:
-			case SET:
-			case SHOWDATABASES:
-			case SHOWCONF:
-			case SHOWFUNCTIONS:
-			case SHOWLOCKS:
-			case SHOW_COMPACTIONS:
-			case SHOW_GRANT:
-			case SHOW_ROLES:
-			case SHOW_ROLE_GRANT:
-			case SHOW_ROLE_PRINCIPALS:
-			case SHOW_TRANSACTIONS:
-			case REPLDUMP:
-			case REPLLOAD:
-			case REPLSTATUS:
-			case ADD:
-				ret = true;
-				break;
-		}
-		return ret;
-	}
-
 	private RangerRequestedResources buildRequestContextWithAllAccessedResources(List<RangerHiveAccessRequest> requests) {
 
 		RangerRequestedResources requestedResources = new RangerRequestedResources();
@@ -2554,72 +2437,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 
 		return requestedResources;
-	}
-
-	private RangerHiveAccessRequest  buildRequestForDropIfExistsCommands(HiveOperationType       hiveOpType,
-																		 String                  user,
-																		 Set<String>             userGroups,
-																		 Set<String>             userRoles,
-																		 String                  hiveOpTypeName,
-																		 HiveAuthzContext        context,
-																		 HiveAuthzSessionContext sessionContext) {
-		RangerHiveAccessRequest request = null;
-
-		switch (hiveOpType) {
-			case DROPDATABASE:
-				request = buildRequestForDropDatabaseIfExistsCommands(user,userGroups,userRoles,hiveOpTypeName,context,sessionContext);
-				break;
-
-			case DROPTABLE:
-				request = buildRequestForDropTableIfExistsCommands(user,userGroups,userRoles,hiveOpTypeName,context,sessionContext);
-				break;
-		}
-
-		return request;
-	}
-
-	private RangerHiveAccessRequest buildRequestForDropDatabaseIfExistsCommands(String                  user,
-																				Set<String>             userGroups,
-																				Set<String>             userRoles,
-																				String                  hiveOpTypeName,
-																				HiveAuthzContext        context,
-																				HiveAuthzSessionContext sessionContext) {
-		RangerHiveResource		resource  = null;
-		RangerHiveAccessRequest request   = null;
-		HiveObj hiveObj  = new HiveObj();
-		hiveObj.fetchHiveObjForDropDatabase(context);
-		String dbName    = hiveObj.getDatabaseName();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Database: " + dbName);
-		}
-		if (dbName != null) {
-			resource = new RangerHiveResource(HiveObjectType.DATABASE, dbName, null);
-			request = new RangerHiveAccessRequest(resource, user, userGroups, userRoles, hiveOpTypeName, HiveAccessType.DROP, context, sessionContext);
-		}
-		return request;
-	}
-
-
-	private RangerHiveAccessRequest buildRequestForDropTableIfExistsCommands(String                  user,
-																			 Set<String>             userGroups,
-																			 Set<String>             userRoles,
-																			 String                  hiveOpTypeName,
-																			 HiveAuthzContext        context,
-																			 HiveAuthzSessionContext sessionContext) {
-		RangerHiveResource 		resource  = null;
-		RangerHiveAccessRequest request   = null;
-		HiveObj hiveObj  = new HiveObj();
-		hiveObj.fetchHiveObjForDropTable(context);
-		String dbName    = hiveObj.getDatabaseName();
-		String tableName = hiveObj.getTableName();
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Database: " + dbName + " Table: " + tableName);
-		}
-		if (dbName != null && tableName != null) {
-			resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
-			request  = new RangerHiveAccessRequest(resource, user, userGroups, userRoles, hiveOpTypeName, HiveAccessType.DROP, context, sessionContext);
-		}
-		return request;
 	}
 
 	private boolean isBlockAccessIfRowfilterColumnMaskSpecified(HiveOperationType hiveOpType, RangerHiveAccessRequest request) {
@@ -3270,10 +3087,32 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 		return ret;
 	}
+
+	private RangerHiveAccessRequest buildRequestForAlterTableSetOwnerFromCommandString(String                  user,
+																					   Set<String>             userGroups,
+																					   Set<String>             userRoles,
+																					   String                  hiveOpTypeName,
+																					   HiveAuthzContext        context,
+																					   HiveAuthzSessionContext sessionContext) {
+		RangerHiveResource      resource  = null;
+		RangerHiveAccessRequest request   = null;
+		HiveObj hiveObj  = new HiveObj();
+		hiveObj.fetchHiveObjForAlterTable(context);
+		String dbName    = hiveObj.getDatabaseName();
+		String tableName = hiveObj.getTableName();
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Database: " + dbName + " Table: " + tableName);
+		}
+		if (dbName != null && tableName != null) {
+			resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, tableName);
+			request  = new RangerHiveAccessRequest(resource, user, userGroups, userRoles, hiveOpTypeName, HiveAccessType.ALTER, context, sessionContext);
+		}
+		return request;
+	}
 }
 
 enum HiveObjectType { NONE, DATABASE, TABLE, VIEW, PARTITION, INDEX, COLUMN, FUNCTION, URI, SERVICE_NAME, GLOBAL };
-enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, REPLADMIN, SERVICEADMIN, TEMPUDFADMIN, UNKNOWN };
+enum HiveAccessType { NONE, CREATE, ALTER, DROP, INDEX, LOCK, SELECT, UPDATE, USE, READ, WRITE, ALL, REPLADMIN, SERVICEADMIN, TEMPUDFADMIN };
 
 class HiveObj {
 	String databaseName;
@@ -3313,37 +3152,28 @@ class HiveObj {
 		}
 	}
 
-	public void fetchHiveObjForDropDatabase(HiveAuthzContext context) {
-		// cmd passed: drop database if exists <db>
+	public void fetchHiveObjForAlterTable(HiveAuthzContext context) {
+		// cmd passed: Alter Table <database.tableName or tableName> set owner user|role  <user_or_role>
 		if (context != null) {
 			String cmdString = context.getCommandString();
 			if (cmdString != null) {
 				String[] cmd = cmdString.trim().split("\\s+");
-				if (!ArrayUtils.isEmpty(cmd) && cmd.length > 3) {
-					databaseName = cmd[4];
-				}
-			}
-		}
-	}
-
-	public void fetchHiveObjForDropTable(HiveAuthzContext context) {
-		// cmd passed: drop table if exists <db.table> or drop database if exists <table>
-		if (context != null) {
-			String cmdString = context.getCommandString();
-			if (cmdString != null) {
-				String[] cmd = cmdString.trim().split("\\s+");
-				if (!ArrayUtils.isEmpty(cmd) && cmd.length > 3) {
-					tableName = cmd[4];
+				if (!ArrayUtils.isEmpty(cmd) && cmd.length > 2) {
+					tableName = cmd[2];
 					if (tableName.contains(".")) {
 						String[] result = splitDBName(tableName);
 						databaseName = result[0];
 						tableName = result[1];
+					} else {
+						SessionState sessionState = SessionState.get();
+						if (sessionState != null) {
+							databaseName = sessionState.getCurrentDatabase();
+						}
 					}
 				}
 			}
 		}
 	}
-
 
 	private String[] splitDBName(String dbName) {
 		String[] ret = null;

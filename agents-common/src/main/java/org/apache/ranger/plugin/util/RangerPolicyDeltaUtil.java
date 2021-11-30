@@ -134,7 +134,7 @@ public class RangerPolicyDeltaUtil {
             }
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.warn("Unexpected : applyDeltas called with deltas=null");
+                LOG.debug("applyDeltas called with empty deltas. Will return policies without change");
             }
             ret = policies;
         }
