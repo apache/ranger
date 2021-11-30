@@ -33,10 +33,12 @@ define(function(require) {
             console.log("initialize a Controller Controller");
             if (App.userProfile && App.userProfile.get('configProperties') && App.userProfile.get('configProperties').inactivityTimeout
                 && App.userProfile.get('configProperties').inactivityTimeout > 0) {
-                XAUtil.setIdealActivityTime()
+                XAUtil.setIdleActivityTime()
                 $('#contentBody').on("click mousemove keyup mousedown scroll keypress", function(e){
                     // do preload here
-                    XAUtil.setIdealActivityTime()
+                    if ($('.stayLoggdedIn-popup').length == 0) {
+                        XAUtil.setIdleActivityTime()
+                    }
                 })
             }
             var vTopNav = require('views/common/TopNav');

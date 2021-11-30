@@ -2394,6 +2394,43 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 	}
 
+
+	private boolean IsCommandInExceptionList(HiveOperationType hiveOpType) {
+		boolean ret = false;
+		switch (hiveOpType) {
+			case CREATEMACRO:
+			case CREATEROLE:
+			case DESCFUNCTION:
+			case DELETE:
+			case DFS:
+			case DROPMACRO:
+			case DROPROLE:
+			case EXPLAIN:
+			case GRANT_ROLE:
+			case REVOKE_ROLE:
+			case RESET:
+			case SET:
+			case SHOWDATABASES:
+			case SHOWCONF:
+			case SHOWFUNCTIONS:
+			case SHOWLOCKS:
+			case SHOW_COMPACTIONS:
+			case SHOW_GRANT:
+			case SHOW_ROLES:
+			case SHOW_ROLE_GRANT:
+			case SHOW_ROLE_PRINCIPALS:
+			case SHOW_TRANSACTIONS:
+			case RELOADFUNCTION:
+			case REPLDUMP:
+			case REPLLOAD:
+			case REPLSTATUS:
+			case ADD:
+				ret = true;
+				break;
+		}
+		return ret;
+	}
+
 	private RangerRequestedResources buildRequestContextWithAllAccessedResources(List<RangerHiveAccessRequest> requests) {
 
 		RangerRequestedResources requestedResources = new RangerRequestedResources();

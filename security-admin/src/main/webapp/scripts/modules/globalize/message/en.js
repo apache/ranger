@@ -515,7 +515,7 @@ define(function(require) {
 				preventNavGroupForm : 'Group form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavUserList : 'Some Users/Groups have been edited. Kindly save your changes before navigating away!',
 				preventNavZoneForm : 'Zone form edit is in progress. Please save/cancel changes before navigating away!',
-				idelTimeOutMsg : 'Because you have been inactive, your session is about to expire.'
+				idleTimeOutMsg : 'Because you have been inactive, your session is about to expire.'
 				
 			},	
 			validationMessages : {
