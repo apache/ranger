@@ -23,6 +23,7 @@ RUN apk --no-cache add python bash java-postgresql-jdbc bc shadow procps curl &&
     groupadd -r ranger -g 6080 && \
     useradd --no-log-init -r -g ranger -u 6080 -d /opt/apache/ranger-admin ranger
 
+RUN ls target
 COPY target/ranger-2.2.0-admin.tar.gz /ranger-2.2.0-admin.tar.gz
 COPY target/ranger-2.2.0-atlas-plugin.tar.gz /ranger-2.2.0-atlas-plugin.tar.gz
 RUN  tar -xzf /ranger-2.2.0-admin.tar.gz -C /opt/apache/ranger-admin --strip-components=1
