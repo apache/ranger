@@ -3430,7 +3430,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 					vXGroup.setDescription(policyGroup);
 					vXGroup.setGroupSource(RangerCommonEnums.GROUP_INTERNAL);
 					vXGroup.setIsVisible(RangerCommonEnums.IS_VISIBLE);
-					xGroupService.createResource(vXGroup);
+					VXGroup createdVXGrp = xGroupService.createResource(vXGroup);
+					List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(createdVXGrp, "create");
+					bizUtil.createTrxLog(trxLogList);
 				}
 			}
 		}
