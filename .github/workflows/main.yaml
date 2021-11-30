@@ -69,3 +69,21 @@ jobs:
           ref: master
           repository: atlanhq/atlan-v2
           token: ${{ secrets.my_pat }}
+      - name: Check out into atlan repo
+        uses: actions/checkout@v2
+        with:
+          ref: ${{ steps.get_branch.outputs.branch }}
+          repository: atlanhq/atlan
+          token: ${{ secrets.my_pat }}
+
+      - name: Add Changelog
+        run: |
+          mkdir -p gitlog
+          echo "- ${{ github.event.head_commit.message }}">>gitlog/${{ github.event.repository.name }}.txt
+          chmod +x ./scripts/create_changelog.sh
+          ./scripts/create_changelog.sh
+          git add .
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git commit -m "${{ github.event.repository.name }}"
+          git push origin
