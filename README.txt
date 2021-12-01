@@ -58,6 +58,9 @@ Build Process
    ranger-<version>-yarn-plugin.tar.gz
    ranger-<version>-kylin-plugin.tar.gz
    ranger-<version>-elasticsearch-plugin.tar.gz
+   ranger-<version>-ozone-plugin.tar.gz
+   ranger-<version>-presto-plugin.tar.gz
+   ranger-<version>-schema-registry-plugin.tar.gz
 
 Importing Apache Ranger Project into Eclipse
 ============================================
@@ -85,6 +88,9 @@ Installation Host Information
     (h)  Sqoop plugin needs to be installed on Sqoop2 hosts
     (i)  Kylin plugin needs to be installed on Kylin hosts
     (j)  Elasticsearch plugin needs to be installed on Elasticsearch hosts
+    (k)  Ozone plugin needs to be installed on Ozone hosts
+    (l)  Presto plugin needs to be installed on Presto hosts
+    (m)  Schema Registry plugin needs to be installed on Schema Registry hosts
 
 Installation Process
 ~~~~~~~~~~~~~~~~~~~~
