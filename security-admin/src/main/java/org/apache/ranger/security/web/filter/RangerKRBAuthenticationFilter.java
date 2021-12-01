@@ -394,11 +394,21 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 				}
 			}else{
 				try{
-					super.doFilter(request, response, filterChain);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("isSpnegoEnable = " + isSpnegoEnable(authtype) + " userName = " + userName + " request URL = " + getRequestURL(httpRequest));
+						if (existingAuth!=null) {
+							LOG.debug("isAuthenticated: " + existingAuth.isAuthenticated());
+						}
+					}
+					if (StringUtils.equals(httpRequest.getParameter("action"), RestUtil.TIMEOUT_ACTION)) {
+						handleTimeoutRequest(httpRequest, (HttpServletResponse) response);
+					} else {
+						super.doFilter(request, response, filterChain);
+					}
 				}catch(Exception e){
 					throw restErrorUtil.createRESTException("RangerKRBAuthenticationFilter Failed : "+e.getMessage());
-				}				
-			}	
+				}
+			}
 		} else {
 			String action = httpRequest.getParameter("action");
 			String doAsUser = request.getParameter("doAs");
@@ -411,31 +421,36 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 			if (allowTrustedProxy && StringUtils.isNotEmpty(doAsUser) && existingAuth.isAuthenticated()
 					&& StringUtils.equals(action, RestUtil.TIMEOUT_ACTION)) {
 				HttpServletResponse httpResponse = (HttpServletResponse) response;
-				String xForwardedURL = RestUtil.constructForwardableURL(httpRequest);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("xForwardedURL = " + xForwardedURL);
-				}
-				String logoutUrl = xForwardedURL;
-				logoutUrl =  StringUtils.replace(logoutUrl, httpRequest.getRequestURI(), LOGOUT_URL);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("logoutUrl value is " + logoutUrl);
-				}
-				String redirectUrl = RestUtil.constructRedirectURL(httpRequest, logoutUrl, xForwardedURL, originalUrlQueryParam);
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Redirect URL = " + redirectUrl);
-					LOG.debug("session id = " + httpRequest.getRequestedSessionId());
-				}
-
-				HttpSession httpSession = httpRequest.getSession(false);
-				if (httpSession != null) {
-					httpSession.invalidate();
-				}
-				httpResponse.sendRedirect(redirectUrl);
+				handleTimeoutRequest(httpRequest, httpResponse);
 			} else {
 				filterChain.doFilter(request, response);
 			}
 		}
+	}
+
+	private void handleTimeoutRequest(HttpServletRequest httpRequest, HttpServletResponse httpResponse) throws IOException{
+		String xForwardedURL = RestUtil.constructForwardableURL(httpRequest);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("xForwardedURL = " + xForwardedURL);
+		}
+		String logoutUrl = xForwardedURL;
+		logoutUrl =  StringUtils.replace(logoutUrl, httpRequest.getRequestURI(), LOGOUT_URL);
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("logoutUrl value is " + logoutUrl);
+		}
+		String redirectUrl = RestUtil.constructRedirectURL(httpRequest, logoutUrl, xForwardedURL, originalUrlQueryParam);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Redirect URL = " + redirectUrl);
+			LOG.debug("session id = " + httpRequest.getRequestedSessionId());
+		}
+
+		HttpSession httpSession = httpRequest.getSession(false);
+		if (httpSession != null) {
+			httpSession.invalidate();
+		}
+		httpResponse.setHeader("Content-Type", "application/x-http-headers");
+		httpResponse.sendRedirect(redirectUrl);
 	}
 
 	private boolean isSpnegoEnable(String authType){
