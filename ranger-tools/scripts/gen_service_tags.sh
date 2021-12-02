@@ -64,17 +64,23 @@ echo "{
       \"isEnabled\": true
     }
   },
-  \"tags\": {
-    \"1\": {
-      \"type\": \"EXPIRES_ON\",
-      \"attributes\": {
-        \"expiry_date\": \"2027/12/31\",
-        \"activates_on\": \"2020/01/01\"
-      },
-      \"id\": 1,
-      \"isEnabled\": true
-    }
-  },"
+  \"tags\": {"
+for ((i = 1; i <= $num_of_service_resources; i++)); do
+    if [ $i -ne 1 ]
+    then
+         echo "  ,"
+    fi
+    echo "  \"${i}\": {
+       \"type\": \"EXPIRES_ON\",
+        \"attributes\": {
+          \"expiry_date\": \"2027/12/31\",
+          \"activates_on\": \"2020/01/01\"
+        },
+        \"id\": ${i},
+        \"isEnabled\": true
+      }"
+done
+  echo "  },"
 echo "  \"serviceResources\": ["
 for ((i = 1; i <= $num_of_service_resources; i++)); do
     if [ $i -ne 1 ]
@@ -96,7 +102,7 @@ for ((i = 1; i <= $num_of_service_resources; i++)); do
     then
        echo "  ,"
     fi
-    echo "    \"${i}\": [ 1 ]"
+    echo "    \"${i}\": [ ${i} ]"
 done
 echo "  }
 }"

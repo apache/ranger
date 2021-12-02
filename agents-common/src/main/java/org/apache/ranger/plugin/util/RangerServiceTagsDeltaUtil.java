@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
@@ -30,6 +31,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 
 public class RangerServiceTagsDeltaUtil {
@@ -37,6 +39,9 @@ public class RangerServiceTagsDeltaUtil {
     private static final Log LOG = LogFactory.getLog(RangerServiceTagsDeltaUtil.class);
 
     private static final Log PERF_TAGS_DELTA_LOG = RangerPerfTracer.getPerfLogger("tags.delta");
+
+    private static boolean SUPPORTS_TAGS_DEDUP_INITIALIZED = false;
+    private static boolean SUPPORTS_TAGS_DEDUP             = false;
 
     /*
     It should be possible to call applyDelta() multiple times with serviceTags and delta resulting from previous call to applyDelta()
@@ -61,13 +66,33 @@ public class RangerServiceTagsDeltaUtil {
             Map<Long, List<Long>>       resourceToTagIds = serviceTags.getResourceToTagIds();
             boolean                     isAnyMaterialChange = false;
 
-            for (Map.Entry<Long, RangerTag> tagEntry : delta.getTags().entrySet()) {
-                if (StringUtils.isEmpty(tagEntry.getValue().getType())) {
-                    if (null != tags.remove(tagEntry.getKey())) {
+            Map<Long, Long>             replacedIds         = new HashMap<>();
+
+            Iterator<Map.Entry<Long, RangerTag>> deltaTagIter = delta.getTags().entrySet().iterator();
+
+            while (deltaTagIter.hasNext()) {
+                Map.Entry<Long, RangerTag> entry       = deltaTagIter.next();
+                Long                       tagId       = entry.getKey();
+                RangerTag                  tag         = entry.getValue();
+
+                if (StringUtils.isEmpty(tag.getType())) {
+                    if (null != tags.remove(tagId)) {
                         isAnyMaterialChange = true;
+                        if (isSupportsTagsDedup()) {
+                            serviceTags.cachedTags.remove(tag);
+                        }
                     }
                 } else {
-                    tags.put(tagEntry.getKey(), tagEntry.getValue());
+                    if (isSupportsTagsDedup()) {
+                        Long cachedTagId = serviceTags.cachedTags.get(tag);
+
+                        if (cachedTagId == null) {
+                            serviceTags.cachedTags.put(tag, tagId);
+                        } else {
+                            replacedIds.put(tagId, cachedTagId);
+                            deltaTagIter.remove();
+                        }
+                    }
                 }
             }
 
@@ -110,6 +135,21 @@ public class RangerServiceTagsDeltaUtil {
 
             for (Long deletedServiceResourceId : deletedServiceResources.keySet()) {
                 resourceToTagIds.remove(deletedServiceResourceId);
+            }
+
+            if (isSupportsTagsDedup()) {
+                for (Map.Entry<Long, List<Long>> resourceEntry : delta.getResourceToTagIds().entrySet()) {
+                    ListIterator<Long> listIter = resourceEntry.getValue().listIterator();
+
+                    while (listIter.hasNext()) {
+                        Long tagId = listIter.next();
+                        Long replacerTagId = replacedIds.get(tagId);
+
+                        if (replacerTagId != null) {
+                            listIter.set(replacerTagId);
+                        }
+                    }
+                }
             }
 
             resourceToTagIds.putAll(delta.getResourceToTagIds());
@@ -173,5 +213,15 @@ public class RangerServiceTagsDeltaUtil {
                 serviceResource.setServiceName(null);
             }
         }
+    }
+
+    public static boolean isSupportsTagsDedup() {
+        if (!SUPPORTS_TAGS_DEDUP_INITIALIZED) {
+            RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+            SUPPORTS_TAGS_DEDUP = config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUPPORTS_TAGS_DEDUP, RangerCommonConstants.RANGER_ADMIN_SUPPORTS_TAGS_DEDUP_DEFAULT);
+            SUPPORTS_TAGS_DEDUP_INITIALIZED = true;
+        }
+        return SUPPORTS_TAGS_DEDUP;
     }
 }

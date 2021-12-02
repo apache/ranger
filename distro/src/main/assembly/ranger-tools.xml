@@ -146,5 +146,17 @@
       <destName>create_requests.py</destName>
       <fileMode>644</fileMode>
     </file>
+    <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/gen_service_tags.sh</source>
+      <outputDirectory></outputDirectory>
+      <destName>gen_service_tags.sh</destName>
+      <fileMode>755</fileMode>
+    </file>
+    <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/gen_service_policies.sh</source>
+      <outputDirectory></outputDirectory>
+      <destName>gen_service_policies.sh</destName>
+      <fileMode>755</fileMode>
+    </file>
   </files>
 </assembly>

@@ -21,7 +21,9 @@ package org.apache.ranger.plugin.util;
 
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
@@ -34,6 +36,7 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -63,6 +66,9 @@ public class ServiceTags implements java.io.Serializable {
 	private Map<Long, List<Long>>       resourceToTagIds;
 	private Boolean					 	isDelta;
 	private TagsChangeExtent			tagsChangeExtent;
+
+	@JsonIgnore
+	Map<RangerTag, Long>                cachedTags  = new HashMap<>();
 
 	public ServiceTags() {
 		this(OP_ADD_OR_UPDATE, null, 0L, null, null, null, null, null);
@@ -208,5 +214,47 @@ public class ServiceTags implements java.io.Serializable {
 				.append("}");
 
 		return sb;
+	}
+
+	public int dedupTags() {
+		final int ret;
+
+		Map<Long, Long>                      replacedIds = new HashMap<>();
+		Iterator<Map.Entry<Long, RangerTag>> iter        = tags.entrySet().iterator();
+
+		final int initialTagsCount = tags.size();
+
+		while (iter.hasNext()) {
+			Map.Entry<Long, RangerTag> entry       = iter.next();
+			Long                       tagId       = entry.getKey();
+			RangerTag                  tag         = entry.getValue();
+			Long                       cachedTagId = cachedTags.get(tag);
+
+			if (cachedTagId == null) {
+				cachedTags.put(tag, tagId);
+			} else {
+				replacedIds.put(tagId, cachedTagId);
+				iter.remove();
+			}
+		}
+
+		final int finalTagsCount = tags.size();
+
+		for (Map.Entry<Long, List<Long>> resourceEntry : resourceToTagIds.entrySet()) {
+			ListIterator<Long> listIter = resourceEntry.getValue().listIterator();
+
+			while (iter.hasNext()) {
+				Long tagId         = listIter.next();
+				Long replacerTagId = replacedIds.get(tagId);
+
+				if (replacerTagId != null) {
+					listIter.set(replacerTagId);
+				}
+			}
+		}
+
+		ret = initialTagsCount - finalTagsCount;
+
+		return ret;
 	}
 }

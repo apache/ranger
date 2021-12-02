@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.service;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.logging.Log;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -29,11 +30,14 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestProcessor;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 import java.util.List;
 import java.util.Set;
 
 public class RangerDefaultRequestProcessor implements RangerAccessRequestProcessor {
+
+    private static final Log PERF_CONTEXTENRICHER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("contextenricher.request");
 
     protected final PolicyEngine policyEngine;
 
@@ -89,7 +93,15 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         if (!CollectionUtils.isEmpty(enrichers)) {
             for(RangerContextEnricher enricher : enrichers) {
+                RangerPerfTracer perf = null;
+
+                if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_REQUEST_LOG)) {
+                    perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_REQUEST_LOG, "RangerContextEnricher.enrich(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + ", enricherName=" + enricher.getName() + ")");
+                }
+
                 enricher.enrich(request);
+
+                RangerPerfTracer.log(perf);
             }
         }
     }
