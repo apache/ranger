@@ -2171,7 +2171,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		List<String> policyLabels = policy.getPolicyLabels();
 		Set<String> uniquePolicyLabels = new TreeSet<>(policyLabels);
 		policy.setCreateTime(xxExisting.getCreateTime());
-		policy.setGuid(xxExisting.getGuid());
+		if (StringUtils.isEmpty(policy.getGuid())) {
+			policy.setGuid(xxExisting.getGuid());
+		}
 		policy.setVersion(xxExisting.getVersion());
 
 		List<XXTrxLog> trxLogList = policyService.getTransactionLog(policy, xxExisting, existing, RangerPolicyService.OPERATION_UPDATE_CONTEXT);

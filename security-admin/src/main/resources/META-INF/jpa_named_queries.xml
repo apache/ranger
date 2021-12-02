@@ -323,6 +323,14 @@
 		<query>select obj.id from XXPolicy obj where obj.service = :serviceId</query>
 	</named-query>
 
+	<named-query name="XXPolicy.findDuplicateGUIDByServiceIdAndZoneId">
+		<query>select obj.guid from XXPolicy obj where obj.service = :serviceId and obj.zoneId = :zoneId GROUP BY obj.guid HAVING COUNT(obj.guid)>1</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findPolicyByGUIDAndServiceIdAndZoneId">
+		<query>select obj from XXPolicy obj where obj.guid = :guid and obj.service =:serviceId and obj.zoneId = :zoneId order by obj.id </query>
+	</named-query>
+
 	<named-query name="XXPolicy.getMaxIdOfXXPolicy">
 		<query>select MAX(obj.id) from XXPolicy obj</query>
 	</named-query>

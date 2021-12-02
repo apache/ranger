@@ -309,4 +309,37 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 			return new ArrayList<XXPolicy>();
 		}
 	}
+
+	public List<String> findDuplicateGUIDByServiceIdAndZoneId(Long serviceId, Long zoneId) {
+		List<String> ret = ListUtils.EMPTY_LIST;
+		if(serviceId == null || zoneId == null) {
+			return ret;
+		}
+		try {
+			ret = getEntityManager().createNamedQuery("XXPolicy.findDuplicateGUIDByServiceIdAndZoneId", String.class)
+					.setParameter("serviceId", serviceId)
+					.setParameter("zoneId", zoneId)
+					.getResultList();
+
+		} catch (Exception e) {
+		}
+		return ret;
+	}
+
+	public List<XXPolicy> findPolicyByGUIDAndServiceIdAndZoneId(String guid, Long serviceId, Long zoneId) {
+		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+		if (guid == null || serviceId == null ||  zoneId == null) {
+			return ret;
+		}
+		try {
+			ret = getEntityManager().createNamedQuery("XXPolicy.findPolicyByGUIDAndServiceIdAndZoneId", tClass)
+					.setParameter("guid", guid)
+					.setParameter("serviceId", serviceId)
+					.setParameter("zoneId", zoneId)
+					.getResultList();
+
+		} catch (NoResultException excp) {
+		}
+		return ret;
+	}
 }

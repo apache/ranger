@@ -21,10 +21,13 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.util.CLIUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -44,6 +47,9 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
 
 	@Autowired
 	ServiceDBStore svcStore;
+
+	@Autowired
+	RangerFactory factory;
 
 	@Autowired
 	@Qualifier(value = "transactionManager")
@@ -97,14 +103,23 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
 
 	private void updateDisabledPolicyResourceSignature() throws Exception {
 		logger.info("==> updateDisabledPolicyResourceSignature() ");
+
 		List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().findByPolicyStatus(isPolicyEnabled);
 		if (CollectionUtils.isNotEmpty(xxPolicyList)) {
-			logger.info("==> Total number of disabled policies :"+xxPolicyList.size());
+			logger.info("==> Total number of disabled policies :" + xxPolicyList.size());
+
 			for (XXPolicy xxPolicy : xxPolicyList) {
 				RangerPolicy policy = svcStore.getPolicy(xxPolicy.getId());
 				if (policy != null) {
 					policy.setResourceSignature(null);
-					svcStore.updatePolicy(policy);
+					xxPolicy.setResourceSignature(null);
+					RangerPolicyResourceSignature policySignature = factory.createPolicyResourceSignature(policy);
+					String signature = policySignature.getSignature();
+					policy.setResourceSignature(signature);
+					xxPolicy.setPolicyText(JsonUtils.objectToJson(policy));
+					xxPolicy.setResourceSignature(signature);
+
+					daoMgr.getXXPolicy().update(xxPolicy);
 				}
 			}
 		} else {
