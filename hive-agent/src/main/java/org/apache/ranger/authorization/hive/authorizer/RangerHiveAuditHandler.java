@@ -35,8 +35,6 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 
-import com.google.common.collect.Lists;
-
 public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
@@ -46,14 +44,20 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	public static final String  URL_RESOURCE_TYPE = "url";
 	public static final String CONF_AUDIT_QUERY_REQUEST_SIZE = "xasecure.audit.solr.limit.query.req.size";
 	public static final int DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE = Integer.MAX_VALUE;
-	private int requestQuerySize;
-	Collection<AuthzAuditEvent> auditEvents  = null;
-	boolean                     deniedExists = false;
 
-	Set<String> roleOperationCmds = new HashSet<>(Arrays.asList(HiveOperationType.CREATEROLE.name(), HiveOperationType.DROPROLE.name(),
-			HiveOperationType.SHOW_ROLES.name(), HiveOperationType.SHOW_ROLE_GRANT.name(),
-			HiveOperationType.SHOW_ROLE_PRINCIPALS.name(), HiveOperationType.GRANT_ROLE.name(),
-			HiveOperationType.REVOKE_ROLE.name()));
+	private static final Set<String> ROLE_OPS = new HashSet<>();
+
+	static {
+		for (HiveOperationType e : EnumSet.of(HiveOperationType.CREATEROLE, HiveOperationType.DROPROLE,
+				HiveOperationType.SHOW_ROLES, HiveOperationType.SHOW_ROLE_GRANT, HiveOperationType.SHOW_ROLE_PRINCIPALS,
+				HiveOperationType.GRANT_ROLE, HiveOperationType.REVOKE_ROLE)) {
+			ROLE_OPS.add(e.name());
+		}
+	}
+
+	private final int requestQuerySize;
+	private final Collection<AuthzAuditEvent> auditEvents = new ArrayList<>();
+	boolean deniedExists = false;
 
 	public RangerHiveAuditHandler() {
 		super();
@@ -62,8 +66,8 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 	public RangerHiveAuditHandler(Configuration config) {
 		super(config);
-		requestQuerySize = config.getInt(CONF_AUDIT_QUERY_REQUEST_SIZE, DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE);
-		requestQuerySize = (requestQuerySize < 1) ? DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE : requestQuerySize;
+		int configRequestQuerySize = config.getInt(CONF_AUDIT_QUERY_REQUEST_SIZE, DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE);
+		requestQuerySize = (configRequestQuerySize < 1) ? DEFAULT_CONF_AUDIT_QUERY_REQUEST_SIZE : configRequestQuerySize;
 	}
 
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result, String accessType, String resourcePath) {
@@ -123,7 +127,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			}
 
 			String action = request.getAction();
-			if (hiveResource.getObjectType() == HiveObjectType.GLOBAL && isRoleOperation(action)) {
+			if (hiveResource.getObjectType() == HiveObjectType.GLOBAL && ROLE_OPS.contains(action)) {
 				auditEvent.setAccessType(action);
 			}
 		}
@@ -133,7 +137,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	
 	AuthzAuditEvent createAuditEvent(RangerAccessResult result) {
 
-		AuthzAuditEvent ret = null;
+		final AuthzAuditEvent ret;
 
 		RangerAccessRequest  request  = result.getAccessRequest();
 		RangerAccessResource resource = request.getResource();
@@ -163,6 +167,8 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 			}
 
 			ret = createAuditEvent(result, accessType, resourcePath);
+		} else {
+			ret = null;
 		}
 
 		return ret;
@@ -170,7 +176,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
 	List<AuthzAuditEvent> createAuditEvents(Collection<RangerAccessResult> results) {
 
-		Map<Long, AuthzAuditEvent> auditEvents = new HashMap<Long, AuthzAuditEvent>();
+		Map<Long, AuthzAuditEvent> auditEventsMap = new HashMap<>();
 		Iterator<RangerAccessResult> iterator = results.iterator();
 		AuthzAuditEvent deniedAuditEvent = null;
 		while (iterator.hasNext() && deniedAuditEvent == null) {
@@ -180,8 +186,8 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 					deniedAuditEvent = createAuditEvent(result);
 				} else {
 					long policyId = result.getPolicyId();
-					if (auditEvents.containsKey(policyId)) { // add this result to existing event by updating column values
-						AuthzAuditEvent auditEvent = auditEvents.get(policyId);
+					if (auditEventsMap.containsKey(policyId)) { // add this result to existing event by updating column values
+						AuthzAuditEvent auditEvent = auditEventsMap.get(policyId);
 						RangerHiveAccessRequest request    = (RangerHiveAccessRequest)result.getAccessRequest();
 						RangerHiveResource resource   = (RangerHiveResource)request.getResource();
 						String resourcePath = auditEvent.getResourcePath() + "," + resource.getColumn();
@@ -194,19 +200,15 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 						AuthzAuditEvent auditEvent = createAuditEvent(result);
 
 						if(auditEvent != null) {
-							auditEvents.put(policyId, auditEvent);
+							auditEventsMap.put(policyId, auditEvent);
 						}
 					}
 				}
 			}
 		}
-		List<AuthzAuditEvent> result;
-		if (deniedAuditEvent == null) {
-			result = new ArrayList<>(auditEvents.values());
-		} else {
-			result = Lists.newArrayList(deniedAuditEvent);
-		}
-		
+		final List<AuthzAuditEvent> result = (deniedAuditEvent == null) ? new ArrayList<>(auditEventsMap.values())
+				: Collections.singletonList(deniedAuditEvent);
+
 		return result;
 	}
 
@@ -233,8 +235,8 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	 */
 	@Override
 	public void processResults(Collection<RangerAccessResult> results) {
-		List<AuthzAuditEvent> auditEvents = createAuditEvents(results);
-		for(AuthzAuditEvent auditEvent : auditEvents) {
+		List<AuthzAuditEvent> result = createAuditEvents(results);
+		for (AuthzAuditEvent auditEvent : result) {
 			addAuthzAuditEvent(auditEvent);
 		}
 	}
@@ -262,33 +264,25 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		addAuthzAuditEvent(auditEvent);
     }
 
-    public void flushAudit() {
-    	if(auditEvents == null) {
-    		return;
-    	}
+	public void flushAudit() {
+		for (AuthzAuditEvent auditEvent : auditEvents) {
+			if (deniedExists && auditEvent.getAccessResult() != 0) { // if deny exists, skip logging for allowed results
+				continue;
+			}
 
-    	for(AuthzAuditEvent auditEvent : auditEvents) {
-    		if(deniedExists && auditEvent.getAccessResult() != 0) { // if deny exists, skip logging for allowed results
-    			continue;
-    		}
+			super.logAuthzAudit(auditEvent);
+		}
+	}
 
-    		super.logAuthzAudit(auditEvent);
-    	}
-    }
+	private void addAuthzAuditEvent(AuthzAuditEvent auditEvent) {
+		if (auditEvent != null) {
+			auditEvents.add(auditEvent);
 
-    private void addAuthzAuditEvent(AuthzAuditEvent auditEvent) {
-    	if(auditEvent != null) {
-    		if(auditEvents == null) {
-    			auditEvents = new ArrayList<AuthzAuditEvent>();
-    		}
-    		
-    		auditEvents.add(auditEvent);
-    		
-    		if(auditEvent.getAccessResult() == 0) {
-    			deniedExists = true;
-    		}
-    	}
-    }
+			if (auditEvent.getAccessResult() == 0) {
+				deniedExists = true;
+			}
+		}
+	}
 
     private String getReplCmd(String cmdString) {
 		String ret = "REPL";
@@ -335,14 +329,6 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		return ret;
 	}
 
-	private boolean isRoleOperation(String action) {
-		boolean ret = false;
-		if (roleOperationCmds.contains(action)) {
-			ret = true;
-		}
-		return ret;
-	}
-
 	private String getURLPathString(RangerAccessResource resource, String resourcePath) {
 		String ret = resourcePath;
 		ArrayList<String> resourcePathVal;
@@ -350,7 +336,7 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		if (val instanceof List<?>) {
 			resourcePathVal = (ArrayList<String>) val;
 			if (CollectionUtils.isNotEmpty(resourcePathVal)) {
-				ret = resourcePathVal.get(0);
+				ret = resourcePathVal.iterator().next();
 			}
 		}
 		return ret;
