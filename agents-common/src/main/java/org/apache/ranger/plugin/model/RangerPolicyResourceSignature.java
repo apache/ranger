@@ -175,10 +175,10 @@ public class RangerPolicyResourceSignature {
 
 	}
 
-	static class ResourceSerializer {
+	static public class ResourceSerializer {
 		final RangerPolicyResource _policyResource;
 
-		ResourceSerializer(RangerPolicyResource policyResource) {
+		public ResourceSerializer(RangerPolicyResource policyResource) {
 			_policyResource = policyResource;
 		}
 
