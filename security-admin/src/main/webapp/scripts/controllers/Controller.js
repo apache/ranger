@@ -304,12 +304,11 @@ define(function(require) {
             var view = require('views/policymanager/ServiceLayout');
             var RangerServiceDefList = require('collections/RangerServiceDefList');
             var RangerServiceDef = require('models/RangerServiceDef');
-            var RangerZoneList = require('collections/RangerZoneList');
+            var RangerZoneList = require('model_bases/RangerZoneBase');
             var rangerZoneList = new RangerZoneList();
 
             var collection = new RangerServiceDefList();
             collection.queryParams.sortBy = 'serviceTypeId';
-
             if (type == 'tag') {
                 var tagServiceDef = new RangerServiceDef();
                 tagServiceDef.url = XAUtil.getRangerServiceDef(XAEnums.ServiceType.SERVICE_TAG.label)
@@ -331,8 +330,8 @@ define(function(require) {
             rangerZoneList.fetch({
                 cache: false,
                 async: false,
+                url: "service/public/v2/api/zone-headers",
             })
-            //         if(App.rContent.currentView) App.rContent.currentView.close();
             App.rContent.show(new view({
                 collection: collection,
                 type: type,

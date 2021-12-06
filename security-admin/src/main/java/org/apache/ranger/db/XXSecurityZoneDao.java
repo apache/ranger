@@ -20,8 +20,12 @@ package org.apache.ranger.db;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.springframework.stereotype.Service;
 import javax.persistence.NoResultException;
+
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -107,4 +111,15 @@ public class XXSecurityZoneDao extends BaseDao<XXSecurityZone> {
 		}
 	}
 
+    public List<RangerSecurityZoneHeaderInfo> findAllZoneHeaderInfos() {
+        @SuppressWarnings("unchecked")
+        List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZone.findAllZoneHeaderInfos").setParameter("unzoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID).getResultList();
+
+        List<RangerSecurityZoneHeaderInfo> securityZoneList = new ArrayList<RangerSecurityZoneHeaderInfo>(results.size());
+        for (Object[] result : results) {
+            securityZoneList.add(new RangerSecurityZoneHeaderInfo((Long) result[0], (String) result[1]));
+        }
+
+        return securityZoneList;
+    }
 }

@@ -33,6 +33,8 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.store.AbstractPredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
@@ -215,5 +217,17 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         }
 
         return ret;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList() {
+        return daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfos();
+    }
+
+    public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(Long zoneId) {
+        List<RangerServiceHeaderInfo> services    = daoMgr.getXXSecurityZoneRefService().findServiceHeaderInfosByZoneId(zoneId);
+        List<RangerServiceHeaderInfo> tagServices = daoMgr.getXXSecurityZoneRefTagService().findServiceHeaderInfosByZoneId(zoneId);
+        services.addAll(tagServices);
+
+        return services;
     }
 }

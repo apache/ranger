@@ -46,6 +46,7 @@ import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
@@ -72,7 +73,8 @@ import com.google.common.collect.Sets;
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class SecurityZoneREST {
-    private static final Log LOG = LogFactory.getLog(SecurityZoneREST.class);
+    private static final Log    LOG                                    = LogFactory.getLog(SecurityZoneREST.class);
+    private static final String STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE = "User is not authorized to access zone(s).";
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -224,6 +226,11 @@ public class SecurityZoneREST {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getSecurityZone(name=" + zoneName + ")");
         }
+
+        if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_SECURITY_ZONE)) {
+            throw restErrorUtil.createRESTException(STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE, MessageEnums.OPER_NO_PERMISSION);
+        }
+
         RangerSecurityZone ret;
         try {
             ret = securityZoneStore.getSecurityZoneByName(zoneName);
@@ -234,6 +241,7 @@ public class SecurityZoneREST {
 
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== getSecurityZone(name=" + zoneName + "):" + ret);
         }
@@ -246,9 +254,15 @@ public class SecurityZoneREST {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getSecurityZone(id=" + id + ")");
         }
-        if (id != null && id.equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
-            throw restErrorUtil.createRESTException("Cannot delete unzoned zone");
+
+        if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_SECURITY_ZONE)) {
+            throw restErrorUtil.createRESTException(STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE, MessageEnums.OPER_NO_PERMISSION);
         }
+
+        if (id != null && id.equals(RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)) {
+            throw restErrorUtil.createRESTException("Cannot access unzoned zone");
+        }
+
         RangerSecurityZone ret;
         try {
             ret = securityZoneStore.getSecurityZone(id);
@@ -259,6 +273,7 @@ public class SecurityZoneREST {
 
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== getSecurityZone(id=" + id + "):" + ret);
         }
@@ -268,34 +283,39 @@ public class SecurityZoneREST {
     @GET
     @Path("/zones")
     public RangerSecurityZoneList getAllZones(@Context HttpServletRequest request) {
-		RangerSecurityZoneList ret = new RangerSecurityZoneList();
-	      if (LOG.isDebugEnabled()) {
+        if (LOG.isDebugEnabled()) {
             LOG.debug("==> getAllZones()");
         }
-        SearchFilter filter = searchUtil.getSearchFilter(request, securityZoneService.sortFields);
-        List<RangerSecurityZone> securityZones;
-		try {
-			securityZones = securityZoneStore.getSecurityZones(filter);
-			ret.setSecurityZoneList(securityZones);
-			if (securityZones != null) {
-				ret.setTotalCount(securityZones.size());
-				ret.setSortBy(filter.getSortBy());
-				ret.setSortType(filter.getSortType());
-				ret.setResultSize(securityZones.size());
-			}
-        } catch(WebApplicationException excp) {
+
+        if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_SECURITY_ZONE)) {
+            throw restErrorUtil.createRESTException(STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE, MessageEnums.OPER_NO_PERMISSION);
+        }
+
+        RangerSecurityZoneList   ret    = new RangerSecurityZoneList();
+        SearchFilter             filter = searchUtil.getSearchFilter(request, securityZoneService.sortFields);
+        try {
+            List<RangerSecurityZone> securityZones = securityZoneStore.getSecurityZones(filter);
+            ret.setSecurityZoneList(securityZones);
+            if (securityZones != null) {
+                ret.setTotalCount(securityZones.size());
+                ret.setSortBy(filter.getSortBy());
+                ret.setSortType(filter.getSortType());
+                ret.setResultSize(securityZones.size());
+            }
+        } catch (WebApplicationException excp) {
             throw excp;
-        } catch(Throwable excp) {
+        } catch (Throwable excp) {
             LOG.error("getSecurityZones() failed", excp);
 
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
+
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== getAllZones():" + ret);
         }
         return ret;
     }
-    
+
 	private void ensureAdminAccess(){
 		if(!bizUtil.isAdmin()){
 			String userName = bizUtil.getCurrentUserLoginId();

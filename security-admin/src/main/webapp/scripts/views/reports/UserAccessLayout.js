@@ -35,7 +35,7 @@ define(function(require) {'use strict';
 	var RangerPolicyList	= require('collections/RangerPolicyList');
 	var UseraccesslayoutTmpl= require('hbs!tmpl/reports/UserAccessLayout_tmpl');
 	var SessionMgr  	= require('mgrs/SessionMgr');
-	var RangerZoneList = require('collections/RangerZoneList');
+	var RangerZoneBase = require('model_bases/RangerZoneBase');
 	var UserAccessLayout 	= Backbone.Marionette.Layout.extend(
 	/** @lends UserAccessLayout */
 	{
@@ -143,10 +143,11 @@ define(function(require) {'use strict';
 				cache : false,
 				async:false
 			});
-			this.rangerZoneList = new RangerZoneList();
+			this.rangerZoneList = new RangerZoneBase();
 			this.rangerZoneList.fetch({
 				cache : false,
 				async:false,
+				url: "service/public/v2/api/zone-headers",
 			})
 		},
 
@@ -668,8 +669,8 @@ define(function(require) {'use strict';
 			var policyTypes = _.map(XAEnums.RangerPolicyType,function(m){
 				return {'id': m.value,'text': m.label};
 			});
-			var zoneListOptions = _.map(this.rangerZoneList.models, function(m){
-				return { 'id':m.get('name'), 'text':m.get('name')}
+			var zoneListOptions = _.map(this.rangerZoneList.attributes, function(m){
+				return { 'id':m.name, 'text':m.name}
 			});
                         var tags = [];
                         if (this.urlParam && this.urlParam['policyLabelsPartial'] && !_.isEmpty(this.urlParam['policyLabelsPartial'])) {

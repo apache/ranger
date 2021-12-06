@@ -19,6 +19,7 @@
 
 package org.apache.ranger.db;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,6 +27,8 @@ import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXSecurityZoneRefService;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 
 public class XXSecurityZoneRefServiceDao extends BaseDao<XXSecurityZoneRefService>{
 
@@ -83,4 +86,22 @@ public class XXSecurityZoneRefServiceDao extends BaseDao<XXSecurityZoneRefServic
 			return Collections.emptyList();
 		}
 	}
+
+    public List<RangerServiceHeaderInfo> findServiceHeaderInfosByZoneId(Long zoneId) {
+        List<RangerServiceHeaderInfo> serviceHeaderInfos = null;
+
+        if (zoneId != null && zoneId > RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID) {
+            @SuppressWarnings("unchecked")
+            List<Object[]> results = getEntityManager().createNamedQuery("XXSecurityZoneRefService.findServiceHeaderInfosByZoneId").setParameter("zoneId", zoneId).getResultList();
+
+            serviceHeaderInfos = new ArrayList<RangerServiceHeaderInfo>(results.size());
+            for (Object[] result : results) {
+                serviceHeaderInfos.add(new RangerServiceHeaderInfo((Long) result[0], (String) result[1], false));
+            }
+        } else {
+            serviceHeaderInfos = Collections.emptyList();
+        }
+
+        return serviceHeaderInfos;
+    }
 }
