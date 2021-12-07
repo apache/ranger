@@ -121,8 +121,8 @@ public class RangerPolicyResourceSignature {
 				LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection on policy was null!");
 			} else if (_policy.getResources().containsKey(null)) {
 				LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection has resource with null name!");
-			} else if (StringUtils.isEmpty(_policy.getGuid())) {
-				LOG.debug("isPolicyValidForResourceSignatureComputation: policy GUID is empty!");
+			} else if (!_policy.getIsEnabled() && StringUtils.isEmpty(_policy.getGuid())) {
+				   LOG.debug("isPolicyValidForResourceSignatureComputation: policy GUID is empty for a disabled policy!");
 			} else {
 				valid = true;
 			}
