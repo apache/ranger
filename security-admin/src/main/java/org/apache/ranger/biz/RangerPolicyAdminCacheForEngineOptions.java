@@ -55,15 +55,18 @@ public class RangerPolicyAdminCacheForEngineOptions {
     }
 
     private RangerPolicyAdmin getServicePoliciesAdmin(String serviceName, ServiceStore svcStore, RoleStore roleStore, SecurityZoneStore zoneStore, RangerPolicyEngineOptions options) {
-        RangerPolicyAdminCache policyAdminCache;
 
-        synchronized (this) {
-            policyAdminCache = policyAdminCacheForEngineOptions.get(options);
+        RangerPolicyAdminCache policyAdminCache = policyAdminCacheForEngineOptions.get(options);
 
-            if (policyAdminCache == null) {
-                policyAdminCache = new RangerPolicyAdminCache();
+        if (policyAdminCache == null) {
+            synchronized (this) {
+                policyAdminCache = policyAdminCacheForEngineOptions.get(options);
 
-                policyAdminCacheForEngineOptions.put(options, policyAdminCache);
+                if (policyAdminCache == null) {
+                    policyAdminCache = new RangerPolicyAdminCache();
+
+                    policyAdminCacheForEngineOptions.put(options, policyAdminCache);
+                }
             }
         }
 
