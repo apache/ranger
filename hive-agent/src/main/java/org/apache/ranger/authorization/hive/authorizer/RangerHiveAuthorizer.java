@@ -66,7 +66,6 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveResourceACLs;
 import org.apache.hadoop.hive.ql.session.SessionState;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -862,7 +861,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             }
 
             if (shouldCheckAccess) {
-              if (!isURIAccessAllowed(user, permission, path, fs, RangerHivePlugin.URIPermissionCoarseCheck)) {
+              if (!isURIAccessAllowed(user, permission, path, fs)) {
                 throw new HiveAccessControlException(
                     String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
                         permission.name(), path));
@@ -960,7 +959,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
             }
 
             if (shouldCheckAccess) {
-              if (!isURIAccessAllowed(user, permission, path, fs, RangerHivePlugin.URIPermissionCoarseCheck)) {
+              if (!isURIAccessAllowed(user, permission, path, fs)) {
                 throw new HiveAccessControlException(
                     String.format("Permission denied: user [%s] does not have [%s] privilege on [%s]", user,
                         permission.name(), path));
@@ -2099,7 +2098,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 	}
 
   private boolean isURIAccessAllowed(String userName, FsAction action, Path filePath, FileSystem fs) {
-		return isURIAccessAllowed(userName, action, filePath, fs, false);
+		return isURIAccessAllowed(userName, action, filePath, fs, RangerHivePlugin.URIPermissionCoarseCheck);
 	}
 
 	private boolean isURIAccessAllowed(String userName, FsAction action, Path filePath, FileSystem fs, boolean coarseCheck) {
