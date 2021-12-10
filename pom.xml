@@ -1074,6 +1074,13 @@
                 <configuration>
                     <includeFilterFile>./dev-support/spotbugsIncludeFile.xml</includeFilterFile>
                 </configuration>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
 
             <plugin>

@@ -43,6 +43,8 @@
         <Bug pattern="DM_BOXED_PRIMITIVE_TOSTRING" />
         <Bug pattern="NP_NULL_PARAM_DEREF" />
         <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS" />
+        <Bug pattern="IL_INFINITE_RECURSIVE_LOOP" />
+        <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE" />
       </Or>
     </Not>
   </Match>
