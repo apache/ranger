@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
@@ -263,7 +264,10 @@ public class PublicAPIs {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.createPolicy()");
 		}
-		
+
+		if(vXPolicy == null) {
+		    throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Policy object is null in create policy api", false);
+		}
 		RangerService service = serviceREST.getServiceByName(vXPolicy.getRepositoryName());
 		RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXPolicy,service);
 
@@ -293,7 +297,11 @@ public class PublicAPIs {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.updatePolicy(): "  + vXPolicy );
 		}
-		
+
+		if(vXPolicy == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Policy object is null in update policy api", false);
+		}
+
 		XXPolicy existing = daoMgr.getXXPolicy().getById(id);
 		if(existing == null) {
 			throw restErrorUtil.createRESTException("Policy not found for Id: " + id, MessageEnums.DATA_NOT_FOUND);
