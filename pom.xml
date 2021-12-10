@@ -236,6 +236,12 @@
         <com.amazonaws.aws-java-sdk-bom.version>1.12.125</com.amazonaws.aws-java-sdk-bom.version>
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
+
+        <!-- JaCoCo Properties -->
+        <jacoco.version>0.8.7</jacoco.version>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.language>java</sonar.language>
     </properties>
     <profiles>
         <profile>
@@ -828,6 +834,11 @@
                 <artifactId>jaxb-runtime</artifactId>
                 <version>${jaxb.api.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
     <build>
@@ -860,7 +871,7 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.21.0</version>
                     <configuration>
-                        <argLine>-Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
+                        <argLine>${argLine} -Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
                         <skipTests>${skipTests}</skipTests>
                         <encoding>UTF-8</encoding>
                         <systemProperties>
@@ -1122,6 +1133,26 @@
                             <suppressionsLocation>./dev-support/checkstyle-suppressions.xml</suppressionsLocation>
                             <failOnViolation>true</failOnViolation>
                         </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>${jacoco.version}</version>
+                <executions>
+                    <execution>
+                        <id>jacoco-initialize</id>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>jacoco-site</id>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
