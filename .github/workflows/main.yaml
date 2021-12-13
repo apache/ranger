@@ -62,13 +62,7 @@ jobs:
           tags: |
             ghcr.io/atlanhq/${{ github.event.repository.name }}-${{ steps.get_branch.outputs.branch }}:latest
             ghcr.io/atlanhq/${{ github.event.repository.name }}-${{ steps.get_branch.outputs.branch }}:${{ steps.get_version.outputs.version }}
-      - name: Check out into atlan-v2 repo
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          ref: master
-          repository: atlanhq/atlan-v2
-          token: ${{ secrets.my_pat }}
+
       - name: Check out into atlan repo
         uses: actions/checkout@v2
         with:
