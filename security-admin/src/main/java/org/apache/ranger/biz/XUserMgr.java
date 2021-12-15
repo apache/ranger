@@ -509,11 +509,11 @@ public class XUserMgr extends XUserMgrBase {
 			searchCriteria.addParam("xUserId", userId);
 			VXGroupUserList vXGroupUserList = xGroupUserService.searchXGroupUsers(searchCriteria);
 			List<VXGroupUser> vXGroupUsers = vXGroupUserList.getList();
-			for(VXGroupUser eachVXGrpUser : vXGroupUsers) {
-				groupNamesSet.add(eachVXGrpUser.getName());
-			}
-
 			if (vXGroupUsers != null) {
+
+				for(VXGroupUser eachVXGrpUser : vXGroupUsers) {
+					groupNamesSet.add(eachVXGrpUser.getName());
+				}
 
 				// Create
 				for (Long groupId : groupIdList) {
