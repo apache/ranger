@@ -46,10 +46,7 @@ public class RangerConfiguration extends Configuration {
 
 		URL fUrl = getFileLocation(aResourceName);
 		if (fUrl != null) {
-			if(LOG.isInfoEnabled()) {
-				LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fUrl);
-			}
-
+			LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fUrl);
 			try {
 				addResource(fUrl);
 				ret = true;
