@@ -251,9 +251,9 @@ define(function(require){
 		getColumns : function(){
 			var that = this;
 			var cols = {
-				id : {
+				policyId : {
                     cell : 'html',
-					label	: localization.tt("lbl.policyId"),
+                    label : localization.tt("lbl.policyId"),
                     formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw: function (rawValue, model) {
                             if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
@@ -281,14 +281,24 @@ define(function(require){
                             }
                         }
                     }),
-					editable: false,
-					sortable : false
-				},
-				name : {
-					cell : 'string',
-					label	: localization.tt("lbl.policyName"),
-					editable: false,
-					sortable : false
+                    editable: false,
+                    sortable : true,
+                    direction: "ascending",
+                },
+                policyName : {
+                    cell : 'string',
+                    label : localization.tt("lbl.policyName"),
+                    editable: false,
+                    sortable:true,
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            if(model) {
+                                return model.get('name');
+                            } else {
+                                return '--';
+                            }
+                        }
+                    })
                 },
                 policyLabels: {
                     cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),

@@ -25,6 +25,7 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
+import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -102,6 +103,14 @@ public class AccessAuditsService {
 
         sortFields.add(new SortField("eventTime", "evtTime", true,
                 SortField.SORT_ORDER.DESC));
+        sortFields.add(new SortField("policyId", "policy", false, SORT_ORDER.ASC));
+        sortFields.add(new SortField("requestUser", "reqUser", false, SORT_ORDER.ASC));
+        sortFields.add(new SortField("resourceType", "resType", false, SORT_ORDER.ASC));
+        sortFields.add(new SortField("accessType", "access", false, SORT_ORDER.ASC));
+        sortFields.add(new SortField("action", "action", false, SORT_ORDER.ASC));
+        sortFields.add(new SortField("aclEnforcer", "enforcer", false, SORT_ORDER.ASC));
+        sortFields.add(new SortField("zoneName", "zoneName", false, SORT_ORDER.ASC));
+        sortFields.add(new SortField("clientIP", "cliIP", false, SORT_ORDER.ASC));
     }
 
     protected void updateUserExclusion(Map<String, Object> paramList) {

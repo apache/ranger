@@ -286,7 +286,7 @@ define(function(require) {
             getColumns: function() {
                 var that = this;
                 var cols = {
-                    id: {
+                    policyId : {
                         cell: 'html',
                         label: localization.tt("lbl.policyId"),
                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
@@ -317,13 +317,23 @@ define(function(require) {
                             }
                         }),
                         editable: false,
-                        sortable: false
+                        sortable: true,
+                        direction: "ascending",
                     },
-                    name: {
-                        cell: 'string',
-                        label: localization.tt("lbl.policyName"),
+                    policyName : {
+                        cell : 'string',
+                        label : localization.tt("lbl.policyName"),
                         editable: false,
-                        sortable: false
+                        sortable:true,
+                        formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                            fromRaw: function (rawValue, model) {
+                                if(model) {
+                                    return model.get('name');
+                                } else {
+                                    return '--';
+                                }
+                            }
+                        })
                     },
                     policyLabels: {
                         cell: Backgrid.HtmlCell.extend({

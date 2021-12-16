@@ -96,9 +96,6 @@ define(function(require) {
             var accessAuditList = new VXAccessAuditList();
             var XAUtil = require('utils/XAUtils');
             var localization = require('utils/XALangSupport');
-            _.extend(accessAuditList.queryParams, {
-                'sortBy': 'eventTime'
-            });
             App.rContent.show(new view({
                 accessAuditList: accessAuditList,
                 tab: tab
