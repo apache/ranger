@@ -1266,7 +1266,8 @@ define(function(require) {
 						}),
 						label	: localization.tt("lbl.policyId"),
 						editable: false,
-						sortable : false
+						sortable : true,
+						sortType: 'toggle',
 					},
                     policyVersion: {
                         label : localization.tt("lbl.policyVersion"),
@@ -1289,9 +1290,9 @@ define(function(require) {
 					eventTime : {
 						label : 'Event Time',
 						cell: "String",
-						click : false,
-						drag : false,
 						editable:false,
+						sortable : true,
+						direction: "descending",
                         sortType: 'toggle',
                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
@@ -1313,7 +1314,8 @@ define(function(require) {
 						click : false,
 						drag : false,
                                                 editable:false,
-                        sortable : false,
+                        sortable : true,
+                        sortType: 'toggle',
 					},
 					repoName : {
 						label : 'Service (Name / Type)',
@@ -1332,31 +1334,31 @@ define(function(require) {
 					resourceType: {
 						label : 'Resource (Name / Type)',
 						cell: "html",
-						click: false,
 						formatter: _.extend({},Backgrid.CellFormatter.prototype,{
 							 fromRaw: function(rawValue,model) {
 							     return XAViewUtils.resourceTypeFormatter(rawValue, model);
 							 }
 						}),
 						drag: false,
-						sortable: false,
+						sortable: true,
+						sortType: 'toggle',
 						editable: false,
 					},
 					accessType : {
 						label : localization.tt("lbl.accessType"),
 						cell: "String",
-						click : false,
 						drag : false,
-						sortable:false,
+						sortable:true,
+						sortType: 'toggle',
 						editable:false
 					},
 					action : {
 						label : localization.tt("lbl.permission"),
 						cell: "html",
-						click : false,
 						drag : false,
 						editable:false,
-						sortable : false,
+						sortable : true,
+						sortType: 'toggle',
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw : function (rawValue, model) {
 								rawValue = _.escape(rawValue);
@@ -1395,9 +1397,9 @@ define(function(require) {
 					aclEnforcer : {
 						label :localization.tt("lbl.aclEnforcer"),
 						cell: "String",
-						click : false,
 						drag : false,
-						sortable:false,
+						sortable:true,
+						sortType: 'toggle',
 						editable:false
 					},
 					agentHost : {
@@ -1419,9 +1421,9 @@ define(function(require) {
 					clientIP : {
 						label : 'Client IP',
 						cell: "string",
-						click : false,
 						drag : false,
-						sortable:false,
+						sortable:true,
+						sortType: 'toggle',
 						editable:false
 					},
                     clusterName : {
@@ -1445,7 +1447,6 @@ define(function(require) {
                     zoneName: {
 						label : localization.tt("lbl.zoneName"),
 						cell: "html",
-						click: false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                             fromRaw: function (rawValue, model) {
                                 rawValue = _.escape(rawValue);
@@ -1457,7 +1458,8 @@ define(function(require) {
                             }
                         }),
 						drag: false,
-						sortable: false,
+						sortable: true,
+						sortType: 'toggle',
 						editable: false,
 					},
 

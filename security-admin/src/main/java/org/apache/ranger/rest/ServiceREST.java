@@ -24,6 +24,7 @@ import java.io.InputStream;
 import java.security.SecureRandom;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -84,6 +85,7 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
+import org.apache.ranger.common.SortField.SORT_ORDER;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
@@ -2881,7 +2883,6 @@ public class ServiceREST {
 		RangerPerfTracer perf = null;
 
 		SearchFilter filter = searchUtil.getSearchFilter(request, policyService.sortFields);
-
 		try {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceId=" + serviceId + ")");
@@ -3858,6 +3859,25 @@ public class ServiceREST {
 			String sortType   = filter.getSortType();
 			String sortBy     = filter.getSortBy();
 
+			if (StringUtils.isNotEmpty(sortBy) && StringUtils.isNotEmpty(sortType)) {
+				// By default policyList is sorted by policyId in asc order, So handling only desc case.
+				if (SearchFilter.POLICY_ID.equalsIgnoreCase(sortBy)) {
+					if (SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
+						policyList.sort(this.getPolicyComparator(sortBy, sortType));
+					}
+				} else if (SearchFilter.POLICY_NAME.equalsIgnoreCase(sortBy)) {
+					if (SORT_ORDER.ASC.name().equalsIgnoreCase(sortType)) {
+						policyList.sort(this.getPolicyComparator(sortBy, sortType));
+					} else if (SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
+						policyList.sort(this.getPolicyComparator(sortBy, sortType));
+					} else {
+						LOG.info("Invalid or Unsupported sortType : " + sortType);
+					}
+				} else {
+					LOG.info("Invalid or Unsupported sortBy property : " + sortBy);
+				}
+			}
+
 			List<RangerPolicy> retList = new ArrayList<RangerPolicy>();
 			for(int i = startIndex; i < toIndex; i++) {
 				retList.add(policyList.get(i));
@@ -3873,6 +3893,23 @@ public class ServiceREST {
 		}
 
 		return ret;
+	}
+
+	private Comparator<RangerPolicy> getPolicyComparator(String sortBy, String sortType) {
+		Comparator<RangerPolicy> rangerPolComparator = (RangerPolicy me, RangerPolicy other) -> {
+			int ret = 0;
+			if (SearchFilter.POLICY_ID.equalsIgnoreCase(sortBy)) {
+				ret = Long.compare(other.getId(), me.getId());
+			} else if (SearchFilter.POLICY_NAME.equalsIgnoreCase(sortBy)) {
+				if (SORT_ORDER.ASC.name().equalsIgnoreCase(sortType)) {
+					ret = me.getName().compareTo(other.getName());
+				} else if (SORT_ORDER.DESC.name().equalsIgnoreCase(sortType)) {
+					ret = other.getName().compareTo(me.getName());
+				}
+			}
+			return ret;
+		};
+		return rangerPolComparator;
 	}
 
 	private void validateGrantRevokeRequest(GrantRevokeRequest request, final boolean hasAdminPrivilege, final String loggedInUser) {

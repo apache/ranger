@@ -95,7 +95,16 @@ public class XAccessAuditService extends XAccessAuditServiceBase<XXAccessAudit, 
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 		searchFields.add(new SearchField("agentHost", "obj.agentHost",
 				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.PARTIAL));
-		sortFields.add(new SortField("eventTime", "obj.eventTime", true, SORT_ORDER.DESC));
+
+		sortFields.add(new SortField("eventTime", "obj.evtTime", true, SORT_ORDER.DESC));
+		sortFields.add(new SortField("policyId", "obj.policy", false, SORT_ORDER.ASC));
+		sortFields.add(new SortField("requestUser", "obj.reqUser", false, SORT_ORDER.ASC));
+		sortFields.add(new SortField("resourceType", "obj.resType", false, SORT_ORDER.ASC));
+		sortFields.add(new SortField("accessType", "obj.access", false, SORT_ORDER.ASC));
+		sortFields.add(new SortField("action", "obj.action", false, SORT_ORDER.ASC));
+		sortFields.add(new SortField("aclEnforcer", "obj.enforcer", false, SORT_ORDER.ASC));
+		sortFields.add(new SortField("zoneName", "obj.zoneName", false, SORT_ORDER.ASC));
+		sortFields.add(new SortField("clientIP", "obj.cliIP", false, SORT_ORDER.ASC));
 }
 
 	protected XXAccessAudit mapViewToEntityBean(VXAccessAudit vObj, XXAccessAudit mObj, int OPERATION_CONTEXT) {
