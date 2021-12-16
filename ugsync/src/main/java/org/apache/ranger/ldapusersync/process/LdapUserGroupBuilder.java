@@ -281,7 +281,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
     groupSearchControls.setReturningAttributes(groupSearchAttributes.toArray(
 			new String[groupSearchAttributes.size()]));
 
-		if (LOG.isInfoEnabled()) {
 			LOG.info("LdapUserGroupBuilder initialization completed with --  "
 					+ "ldapUrl: " + ldapUrl
 					+ ",  ldapBindDn: " + ldapBindDn
@@ -313,8 +312,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
           + ", userSearchEnabled: " + userSearchEnabled
           + ",  ldapReferral: " + ldapReferral
       );
-		}
-
 	}
 
 	private void closeLdapContext() throws Throwable {
@@ -474,27 +471,21 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						final SearchResult userEntry = userSearchResultEnum.next();
 
 						if (userEntry == null)  {
-							if (LOG.isInfoEnabled())  {
-								LOG.info("userEntry null, skipping sync for the entry");
-							}
+							LOG.info("userEntry null, skipping sync for the entry");
 							continue;
 						}
 
 						Attributes attributes =   userEntry.getAttributes();
 						if (attributes == null)  {
-							if (LOG.isInfoEnabled())  {
-								LOG.info("attributes  missing for entry " + userEntry.getNameInNamespace() +
-										", skipping sync");
-							}
+							LOG.info("attributes  missing for entry " + userEntry.getNameInNamespace() +
+									", skipping sync");
 							continue;
 						}
 
 						Attribute userNameAttr  = attributes.get(userNameAttribute);
 						if (userNameAttr == null)  {
-							if (LOG.isInfoEnabled())  {
-								LOG.info(userNameAttribute + " missing for entry " + userEntry.getNameInNamespace() +
-										", skipping sync");
-							}
+							LOG.info(userNameAttribute + " missing for entry " + userEntry.getNameInNamespace() +
+									", skipping sync");
 							continue;
 						}
 
@@ -502,10 +493,8 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						String userName = (String) userNameAttr.get();
 
 						if (userName == null || userName.trim().isEmpty())  {
-							if (LOG.isInfoEnabled())  {
-								LOG.info(userNameAttribute + " empty for entry " + userEntry.getNameInNamespace() +
-										", skipping sync");
-							}
+							LOG.info(userNameAttribute + " empty for entry " + userEntry.getNameInNamespace() +
+									", skipping sync");
 							continue;
 						}
 
@@ -591,10 +580,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						counter++;
 
                         if (counter <= 2000) {
-                            if (LOG.isInfoEnabled()) {
-                                LOG.info("Updating user count: " + counter
-                                        + ", userName: " + userName);
-                            }
+                            LOG.info("Updating user count: " + counter + ", userName: " + userName);
                             if ( counter == 2000 ) {
                                 LOG.info("===> 2000 user records have been synchronized so far. From now on, only a summary progress log will be written for every 100 users. To continue to see detailed log for every user, please enable Trace level logging. <===");
                             }
@@ -710,19 +696,15 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						while (groupSearchResultEnum.hasMore()) {
 							final SearchResult groupEntry = groupSearchResultEnum.next();
 							if (groupEntry == null) {
-								if (LOG.isInfoEnabled())  {
-									LOG.info("groupEntry null, skipping sync for the entry");
-								}
+								LOG.info("groupEntry null, skipping sync for the entry");
 								continue;
 							}
 							counter++;
 							Attributes attributes =   groupEntry.getAttributes();
 							Attribute groupNameAttr = attributes.get(groupNameAttribute);
 							if (groupNameAttr == null) {
-								if (LOG.isInfoEnabled())  {
-									LOG.info(groupNameAttribute + " empty for entry " + groupEntry.getNameInNamespace() +
-											", skipping sync");
-								}
+								LOG.info(groupNameAttribute + " empty for entry " + groupEntry.getNameInNamespace() +
+										", skipping sync");
 								continue;
 							}
 							String groupFullName = (groupEntry.getNameInNamespace());
@@ -936,18 +918,14 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 						while (groupSearchResultEnum.hasMore()) {
 							final SearchResult groupEntry = groupSearchResultEnum.next();
 							if (groupEntry == null) {
-								if (LOG.isInfoEnabled())  {
-									LOG.info("groupEntry null, skipping sync for the entry");
-								}
+								LOG.info("groupEntry null, skipping sync for the entry");
 								continue;
 							}
 							counter++;
 							Attribute groupNameAttr = groupEntry.getAttributes().get(groupNameAttribute);
 							if (groupNameAttr == null) {
-								if (LOG.isInfoEnabled())  {
-									LOG.info(groupNameAttribute + " empty for entry " + groupEntry.getNameInNamespace() +
-											", skipping sync");
-								}
+								LOG.info(groupNameAttribute + " empty for entry " + groupEntry.getNameInNamespace() +
+										", skipping sync");
 								continue;
 							}
 							String groupFullName = (groupEntry.getNameInNamespace());
