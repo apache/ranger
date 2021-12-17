@@ -45,13 +45,13 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 				if (isUpdate) {
 					return getEntityManager()
 							.createNamedQuery(
-									"XXGroupPermissionUpdate.findByModuleId",
+									"XXGroupPermissionUpdates.findByModuleId",
 									XXGroupPermission.class)
 							.setParameter("moduleId", moduleId).getResultList();
 				}
 				return getEntityManager()
 						.createNamedQuery(
-								"XXGroupPermissionUpdates.findByModuleId",
+								"XXGroupPermission.findByModuleId",
 								XXGroupPermission.class)
 						.setParameter("moduleId", moduleId)
 						.setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
@@ -131,4 +131,19 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 		}
 	}
 
+	public List<String> findModuleGroupsByModuleId(Long moduleId) {
+		if (moduleId != null) {
+			try {
+				return getEntityManager().createNamedQuery("XXGroupPermission.findModuleGroupsByModuleId", String.class)
+				.setParameter("moduleId", moduleId)
+				.setParameter("isAllowed",RangerCommonEnums.IS_ALLOWED)
+				.getResultList();
+			} catch (Exception e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			logger.debug("ModuleId not provided.");
+		}
+		return null;
+	}
 }

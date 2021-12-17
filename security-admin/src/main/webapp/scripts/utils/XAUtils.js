@@ -553,10 +553,11 @@ define(function(require) {
 	};
 
 	XAUtils.showGroupsOrUsers = function(rawValue, model, userOrGroups) {
-                var showMoreLess = false, objArr, lastShowMoreCnt = 1, j = 1, listShownCnt = 5000;
+                var showMoreLess = false, objArr, lastShowMoreCnt = 1, j = 1, listShownCnt = 1000;
 		if (!_.isArray(rawValue) && rawValue.length == 0)
 			return '--';
-                objArr = (userOrGroups == 'groups') ? _.pluck(rawValue, 'groupName') : _.pluck(rawValue, 'userName');
+               // objArr = (userOrGroups == 'groups') ? _.pluck(rawValue, 'groupName') : _.pluck(rawValue, 'userName');
+               objArr = rawValue;
 		var newObjArr = _.map(objArr, function(name, i) {
 			if (i >= 4) {
                                 var eleStr = '', span = '<span class="badge badge-info float-left-margin-2" policy-' + userOrGroups

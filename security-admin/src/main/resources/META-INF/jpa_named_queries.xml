@@ -1098,6 +1098,10 @@
 		<query>DELETE FROM XXUserPermission obj WHERE obj.moduleId=:moduleId</query>
 	</named-query>
 
+	<named-query name="XXUserPermission.findModuleUsersByModuleId">
+	<query>select xpu.loginId from XXUserPermission xump, XXPortalUser xpu where xump.moduleId=:moduleId and xump.isAllowed=:isAllowed and xump.userId = xpu.id </query>
+	</named-query>
+
 	<!-- XXGroupPermission -->
 	<named-query name="XXGroupPermission.findByGroupId">
 		<query>SELECT obj FROM XXGroupPermission obj
@@ -1107,17 +1111,11 @@
 
 	<named-query name="XXGroupPermission.findByModuleId">
 		<query>SELECT obj FROM XXGroupPermission obj
-			   WHERE obj.moduleId=:moduleId	AND Obj.isAllowed=:isAllowed
+			   WHERE obj.moduleId=:moduleId	AND obj.isAllowed=:isAllowed
 		 </query>
 	</named-query>
-	
+
 	<named-query name="XXGroupPermissionUpdates.findByModuleId">
-		<query>SELECT obj FROM XXGroupPermission obj
-			   WHERE obj.moduleId=:moduleId	AND Obj.isAllowed=:isAllowed
-		 </query>
-	</named-query>
-	
-	<named-query name="XXGroupPermissionUpdate.findByModuleId">
 		<query>SELECT obj FROM XXGroupPermission obj
 			   WHERE obj.moduleId=:moduleId
 		 </query>
@@ -1138,7 +1136,12 @@
 	<named-query name="XXGroupPermission.deleteByModuleId">
 		<query>DELETE FROM XXGroupPermission obj WHERE obj.moduleId=:moduleId</query>
 	</named-query>
-	
+
+	<named-query name="XXGroupPermission.findModuleGroupsByModuleId">
+	<query>select xg.name from XXGroupPermission xgmp, XXGroup xg where xgmp.moduleId=:moduleId and xgmp.isAllowed=:isAllowed and xgmp.groupId =xg.id </query>
+	</named-query>
+
+
 	<named-query name="XXPortalUser.findByUserName">
 		<query>SELECT Obj FROM XXPortalUser obj
 			   WHERE obj.loginId=:loginId

@@ -18,6 +18,7 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -76,28 +77,7 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
 		return vObj;
 	}
 
-        public List<VXGroupPermission> getPopulatedVXGroupPermissionList(List<XXGroupPermission> xgroupPermissionList,Map<Long, XXGroup> xXGroupMap,VXModuleDef vModuleDef){
-                List<VXGroupPermission> vXGroupPermissionList = new ArrayList<VXGroupPermission>();
-                XXGroup xXGroup=null;
-                for(XXGroupPermission xgroupPermission:xgroupPermissionList){
-                        if(xXGroupMap.containsKey(xgroupPermission.getGroupId())){
-                                xXGroup =xXGroupMap.get(xgroupPermission.getGroupId());
-                                VXGroupPermission vXGrpPerm=new VXGroupPermission();
-                                vXGrpPerm.setId(xgroupPermission.getId());
-                                vXGrpPerm.setGroupId(xgroupPermission.getGroupId());
-                                vXGrpPerm.setModuleId(xgroupPermission.getModuleId());
-                                vXGrpPerm.setIsAllowed(xgroupPermission.getIsAllowed());
-                                vXGrpPerm.setCreateDate(xgroupPermission.getCreateTime());
-                                vXGrpPerm.setUpdateDate(xgroupPermission.getUpdateTime());
-                                vXGrpPerm.setGroupName(xXGroup.getName());
-                                vXGrpPerm.setModuleName(vModuleDef.getModule());
-                                vXGroupPermissionList.add(vXGrpPerm);
-                        }
-                }
-                return vXGroupPermissionList;
-        }
-
-	public List<VXGroupPermission> getPopulatedVXGroupPermissionListNew(List<XXGroupPermission> xgroupPermissionList,
+	public List<VXGroupPermission> getPopulatedVXGroupPermissionList(List<XXGroupPermission> xgroupPermissionList,
 			Map<Long, String> xXGroupMap, VXModuleDef vModuleDef) {
 		List<VXGroupPermission> vXGroupPermissionList = new ArrayList<VXGroupPermission>();
 		for (XXGroupPermission xgroupPermission : xgroupPermissionList) {
@@ -115,5 +95,17 @@ public class XGroupPermissionService extends XGroupPermissionServiceBase<XXGroup
 			}
 		}
 		return vXGroupPermissionList;
+	}
+
+	@Override
+	public Map<Long, VXGroupPermission> convertVListToVMap(List<VXGroupPermission> vObjList) {
+		Map<Long, VXGroupPermission> ret = new HashMap<Long, VXGroupPermission>();
+		if (vObjList == null) {
+			return ret;
+		}
+		for (VXGroupPermission vObj : vObjList) {
+			ret.put(vObj.getGroupId(), vObj);
+		}
+		return ret;
 	}
 }

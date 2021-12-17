@@ -136,8 +136,7 @@ define(function(require){
 					editable: false,
 					sortable : false
 				},
-				groupPermList : {
-					reName : 'groupPermList',
+				groupNameList : {
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
 					label : localization.tt("lbl.group"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
@@ -153,8 +152,7 @@ define(function(require){
 					sortable : false
 				},
 				//Hack for backgrid plugin doesn't allow to have same column name
-				userPermList : {
-					reName : 'userPermList',
+				userNameList : {
 					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
 					label : localization.tt("lbl.users"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
