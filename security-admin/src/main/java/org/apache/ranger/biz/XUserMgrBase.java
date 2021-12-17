@@ -45,6 +45,7 @@ import org.apache.ranger.view.VXModuleDefList;
 import org.apache.ranger.view.VXPermMap;
 import org.apache.ranger.view.VXPermMapList;
 import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.VXModulePermissionList;
 import org.apache.ranger.view.VXUserList;
 import org.apache.ranger.view.VXUserPermissionList;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -279,6 +280,9 @@ public class XUserMgrBase {
 
 	public VXModuleDefList searchXModuleDef(SearchCriteria searchCriteria) {
 		return xModuleDefService.searchModuleDef(searchCriteria);
+	}
+	public VXModulePermissionList searchXModuleDefList(SearchCriteria searchCriteria) {
+		return xModuleDefService.searchModuleDefList(searchCriteria);
 	}
 
 	public VXUserPermissionList searchXUserPermission(SearchCriteria searchCriteria) {

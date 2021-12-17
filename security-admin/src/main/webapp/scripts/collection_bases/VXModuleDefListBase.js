@@ -28,7 +28,7 @@ define(function(require){
 	var VXModuleDefListBase = XABaseCollection.extend(
 	/** @lends VXModuleDefListBase.prototype */
 	{
-		url: XAGlobals.baseURL + 'xusers/permission',
+		url: XAGlobals.baseURL + 'xusers/permissionlist',
 
 		model : VXModuleDef,
 
@@ -38,8 +38,8 @@ define(function(require){
 		 * @constructs
 		 */
 		initialize : function() {
-			this.modelName = 'VXModuleDef';
-			this.modelAttrName = 'vXModuleDef';
+			this.modelName = 'vXModulePermissionList';
+			this.modelAttrName = 'vXModulePermissionList';
 			this.bindErrorEvents();
 		},
 			/**

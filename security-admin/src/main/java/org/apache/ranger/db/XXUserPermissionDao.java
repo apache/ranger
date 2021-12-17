@@ -132,4 +132,21 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
 			logger.debug("ModuleId not provided.");
 		}
 	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> findModuleUsersByModuleId(Long moduleId) {
+		if (moduleId != null) {
+			try {
+				return getEntityManager().createNamedQuery("XXUserPermission.findModuleUsersByModuleId", String.class)
+				.setParameter("moduleId", moduleId)
+				.setParameter("isAllowed",RangerCommonEnums.IS_ALLOWED)
+				.getResultList();
+			} catch (Exception e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			logger.debug("ModuleId not provided.");
+		}
+		return null;
+	}
 }

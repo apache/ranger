@@ -978,6 +978,27 @@ public class XUserREST {
 	}
 
 	@GET
+	@Path("/permissionlist")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_MODULE_DEF + "\")")
+	public VXModulePermissionList searchXModuleDefList(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xModuleDefService.sortFields);
+
+		searchUtil.extractString(request, searchCriteria, "module",
+				"modulename", null);
+
+		searchUtil.extractString(request, searchCriteria, "moduleDefList",
+				"id", null);
+		searchUtil.extractString(request, searchCriteria, "userName",
+				"userName", null);
+		searchUtil.extractString(request, searchCriteria, "groupName",
+				"groupName", null);
+
+		return xUserMgr.searchXModuleDefList(searchCriteria);
+	}
+
+	@GET
 	@Path("/permission/count")
 	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_MODULE_DEF + "\")")

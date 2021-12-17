@@ -1126,44 +1126,25 @@ public class XUserMgr extends XUserMgrBase {
 		if(!StringUtils.equals(xModuleDef.getModule(), vXModuleDef.getModule())) {
 			throw restErrorUtil.createRESTException("Module name change is not allowed!", MessageEnums.DATA_NOT_UPDATABLE);
 		}
-		VXModuleDef vModuleDefPopulateOld = xModuleDefService.populateViewBean(xModuleDef);
 
-		List<XXGroupPermission> xgroupPermissionList = daoManager.getXXGroupPermission().findByModuleId(vXModuleDef.getId(), true);
-		Map<Long, XXGroup> xXGroupMap=xGroupService.getXXGroupIdXXGroupMap();
-		if(xXGroupMap==null || xXGroupMap.isEmpty()){
-			for (XXGroupPermission xGrpPerm : xgroupPermissionList) {
-				VXGroupPermission vXGrpPerm = xGroupPermissionService.populateViewBean(xGrpPerm);
-				groupPermListOld.add(vXGrpPerm);
-			}
-		}else{
-			groupPermListOld=xGroupPermissionService.getPopulatedVXGroupPermissionList(xgroupPermissionList,xXGroupMap,vModuleDefPopulateOld);
-		}
-		vModuleDefPopulateOld.setGroupPermList(groupPermListOld);
+		Map<Long, Object[]> xXPortalUserIdXXUserMap = xUserService.getXXPortalUserIdXXUserNameMap();
+		Map<Long, String> xXGroupMap = xGroupService.getXXGroupIdNameMap();
+		VXModuleDef vModuleDefPopulateOld = xModuleDefService.populateViewBean(xModuleDef, xXPortalUserIdXXUserMap, xXGroupMap, true);
+		groupPermListOld = vModuleDefPopulateOld.getGroupPermList();
+		userPermListOld = vModuleDefPopulateOld.getUserPermList();
+		Map<Long, VXUserPermission> userPermMapOld = xUserPermissionService.convertVListToVMap(userPermListOld);
+		Map<Long, VXGroupPermission> groupPermMapOld = xGroupPermissionService.convertVListToVMap(groupPermListOld);
 
-		List<XXUserPermission> xuserPermissionList = daoManager.getXXUserPermission().findByModuleId(vXModuleDef.getId(), true);
-		Map<Long, XXUser> xXPortalUserIdXXUserMap=xUserService.getXXPortalUserIdXXUserMap();
-		if(xXPortalUserIdXXUserMap==null || xXPortalUserIdXXUserMap.isEmpty()){
-			for (XXUserPermission xUserPerm : xuserPermissionList) {
-				VXUserPermission vUserPerm = xUserPermissionService.populateViewBean(xUserPerm);
-				userPermListOld.add(vUserPerm);
-			}
-		}else{
-			userPermListOld=xUserPermissionService.getPopulatedVXUserPermissionList(xuserPermissionList,xXPortalUserIdXXUserMap,vModuleDefPopulateOld);
-		}
-		vModuleDefPopulateOld.setUserPermList(userPermListOld);
-
-		if (groupPermListOld != null && groupPermListNew != null) {
+		if (groupPermMapOld != null && groupPermListNew != null) {
 			for (VXGroupPermission newVXGroupPerm : groupPermListNew) {
-
 				boolean isExist = false;
-
-				for (VXGroupPermission oldVXGroupPerm : groupPermListOld) {
-					if (newVXGroupPerm.getModuleId().equals(oldVXGroupPerm.getModuleId()) && newVXGroupPerm.getGroupId().equals(oldVXGroupPerm.getGroupId())) {
-						if (!newVXGroupPerm.getIsAllowed().equals(oldVXGroupPerm.getIsAllowed())) {
-							oldVXGroupPerm.setIsAllowed(newVXGroupPerm.getIsAllowed());
-							oldVXGroupPerm = this.updateXGroupPermission(oldVXGroupPerm);
-						}
-						isExist = true;
+				VXGroupPermission oldVXGroupPerm = groupPermMapOld.get(newVXGroupPerm.getGroupId());
+				if (oldVXGroupPerm != null && newVXGroupPerm.getGroupId().equals(oldVXGroupPerm.getGroupId())
+						&& newVXGroupPerm.getModuleId().equals(oldVXGroupPerm.getModuleId())) {
+					isExist = true;
+					if (!newVXGroupPerm.getIsAllowed().equals(oldVXGroupPerm.getIsAllowed())) {
+						oldVXGroupPerm.setIsAllowed(newVXGroupPerm.getIsAllowed());
+						oldVXGroupPerm = this.updateXGroupPermission(oldVXGroupPerm);
 					}
 				}
 				if (!isExist) {
@@ -1172,17 +1153,17 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 
-		if (userPermListOld != null && userPermListNew != null) {
+		if (userPermMapOld != null && userPermListNew != null) {
 			for (VXUserPermission newVXUserPerm : userPermListNew) {
 
 				boolean isExist = false;
-				for (VXUserPermission oldVXUserPerm : userPermListOld) {
-					if (newVXUserPerm.getModuleId().equals(oldVXUserPerm.getModuleId()) && newVXUserPerm.getUserId().equals(oldVXUserPerm.getUserId())) {
-						if (!newVXUserPerm.getIsAllowed().equals(oldVXUserPerm.getIsAllowed())) {
-							oldVXUserPerm.setIsAllowed(newVXUserPerm.getIsAllowed());
-							oldVXUserPerm = this.updateXUserPermission(oldVXUserPerm);
-						}
-						isExist = true;
+				VXUserPermission oldVXUserPerm = userPermMapOld.get(newVXUserPerm.getUserId());
+				if (oldVXUserPerm != null && newVXUserPerm.getUserId().equals(oldVXUserPerm.getUserId())
+						&& newVXUserPerm.getModuleId().equals(oldVXUserPerm.getModuleId())) {
+					isExist = true;
+					if (!newVXUserPerm.getIsAllowed().equals(oldVXUserPerm.getIsAllowed())) {
+						oldVXUserPerm.setIsAllowed(newVXUserPerm.getIsAllowed());
+						oldVXUserPerm = this.updateXUserPermission(oldVXUserPerm);
 					}
 				}
 				if (!isExist) {

@@ -59,9 +59,10 @@ public class TestXGroupPermissionService {
 
 	@Test
 	public void test2GetPopulatedVXGroupPermissionList() {
-		Map<Long, XXGroup> xXGroupMap = new HashMap<Long, XXGroup>();
 		List<XXGroupPermission> xgroupPermissionList = new ArrayList<XXGroupPermission>();
-		xGroupPermissionService.getPopulatedVXGroupPermissionList(xgroupPermissionList, xXGroupMap, vXModuleDef);
+		Map<Long, String> xXGroupNameMap = new HashMap<Long, String>();
+		xXGroupNameMap.put(XXGroup.getId(), XXGroup.getName());
+		xGroupPermissionService.getPopulatedVXGroupPermissionList(xgroupPermissionList, xXGroupNameMap, vXModuleDef);
 
 	}
 }

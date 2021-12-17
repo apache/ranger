@@ -821,4 +821,15 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 
 		}
 	}
+
+	public Map<Long,V> convertVListToVMap(List<V> vObjList) {
+		Map<Long,V> ret = new HashMap<Long,V>();
+		if (vObjList == null) {
+			return ret;
+		}
+		for (V vObj : vObjList) {
+			ret.put(vObj.getId(), vObj);
+		}
+		return ret;
+	}
 }
