@@ -190,7 +190,9 @@ public class AtlasTagSource extends AbstractTagSource {
 					List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
 
 					if (newMessages.size() == 0) {
-						LOG.info("AtlasTagSource.ConsumerRunnable.run: no message from NotificationConsumer within " + MAX_WAIT_TIME_IN_MILLIS + " milliseconds");
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("AtlasTagSource.ConsumerRunnable.run: no message from NotificationConsumer within " + MAX_WAIT_TIME_IN_MILLIS + " milliseconds");
+						}
 						if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags)) {
 							buildAndUploadServiceTags();
 						}
@@ -274,7 +276,9 @@ public class AtlasTagSource extends AbstractTagSource {
 					updateSink(entry.getValue());
 				}
 				offsetOfLastMessageDeliveredToRanger = messages.get(messages.size()-1).getOffset();
-				LOG.info("Completed processing batch of messages of size:[" + messages.size() + "] received from NotificationConsumer");
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Completed processing batch of messages of size:[" + messages.size() + "] received from NotificationConsumer");
+				}
 
 				commitToKafka();
 			}
