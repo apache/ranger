@@ -699,7 +699,7 @@ public class UserMgr {
 		// Add sort by
 		String sortBy = searchCriteria.getSortBy();
 		String querySortBy = "u.loginId";
-		if (!stringUtil.isEmpty(sortBy)) {
+		if (sortBy != null && !sortBy.trim().isEmpty()) {
 			sortBy = sortBy.trim();
 			if (sortBy.equalsIgnoreCase("userId")) {
 				querySortBy = "u.id";
@@ -1118,7 +1118,7 @@ public class UserMgr {
                 if (loginId != null && !loginId.isEmpty()) {
 			xXPortalUser = this.findByLoginId(loginId);
 			if (xXPortalUser == null) {
-				if (!stringUtil.isEmpty(emailAddress)) {
+				if (emailAddress != null && !emailAddress.trim().isEmpty()) {
 					xXPortalUser = this.findByEmailAddress(emailAddress);
 					if (xXPortalUser == null) {
                                             xXPortalUser = this.createUser(userProfile,
@@ -1272,9 +1272,6 @@ public class UserMgr {
             if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
 		xXPortalUser.setPassword(encryptedNewPwd);
              }
-             else if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
-		 xXPortalUser.setPassword(xXPortalUser.getPassword());
-             }
              xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
 		}
 		return xXPortalUser;
@@ -1295,9 +1292,6 @@ public class UserMgr {
 		String encryptedNewPwd = encrypt(xXPortalUser.getLoginId(),userPassword);
        if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
                 xXPortalUser.setPassword(encryptedNewPwd);
-       }
-       else if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
-	   xXPortalUser.setPassword(xXPortalUser.getPassword());
        }
 
 		xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
