@@ -123,13 +123,14 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
         List<Runnable> runnablesAfterCommit = RUNNABLES_AFTER_COMMIT.get();
         RUNNABLES_AFTER_COMMIT.remove();
 
+        List<Runnable> runnables = RUNNABLES.get();
+        RUNNABLES.remove();
+
         if (isParentTransactionCommitted) {
             // Run tasks scheduled to run after transaction is successfully committed
             runRunnables(runnablesAfterCommit, true);
         }
 
-        List<Runnable> runnables = RUNNABLES.get();
-        RUNNABLES.remove();
         // Run other tasks scheduled to run after transaction completes
         runRunnables(runnables, false);
 
