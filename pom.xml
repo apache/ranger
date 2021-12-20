@@ -163,6 +163,7 @@
         <libpam4j.version>1.10</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <log4j.version>1.2.17</log4j.version>
+        <log4j2.version>2.17.0</log4j2.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.pmd.plugin.version>3.14.0</maven.pmd.plugin.version>
         <metrics.core.version>3.0.2</metrics.core.version>
@@ -227,7 +228,6 @@
         <lucene.version>8.4.0</lucene.version>
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
-        <log4j.core.version>2.16.0</log4j.core.version>
         <jsonsmart.version>2.3.1</jsonsmart.version>
         <nimbus-jose-jwt.version>8.22.1</nimbus-jose-jwt.version>
     </properties>
