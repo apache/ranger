@@ -68,60 +68,6 @@ public class ElasticSearchUtil {
         }
     }
 
-
-    // Utility methods
-    public int toInt(Object value) {
-        if (value == null) {
-            return 0;
-        }
-        if (value instanceof Integer) {
-            return (Integer) value;
-        }
-        if (value.toString().isEmpty()) {
-            return 0;
-        }
-        try {
-            return Integer.valueOf(value.toString());
-        } catch (Throwable t) {
-            logger.error("Error converting value to integer. Value = " + value, t);
-        }
-        return 0;
-    }
-
-    public long toLong(Object value) {
-        if (value == null) {
-            return 0;
-        }
-        if (value instanceof Long) {
-            return (Long) value;
-        }
-        if (value.toString().isEmpty()) {
-            return 0;
-        }
-        try {
-            return Long.valueOf(value.toString());
-        } catch (Throwable t) {
-            logger.error("Error converting value to long. Value = " + value, t);
-        }
-        return 0;
-    }
-
-    public Date toDate(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Date) {
-            return (Date) value;
-        }
-        try {
-            LocalDateTime localDateTime = LocalDateTime.parse(value.toString(), DateTimeFormatter.ISO_DATE_TIME);
-            return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-        } catch (Throwable t) {
-            logger.error("Error converting value to date. Value = " + value, t);
-        }
-        return null;
-    }
-
     public SearchResponse searchResources(SearchCriteria searchCriteria, List<SearchField> searchFields, List<SortField> sortFields, RestHighLevelClient client, String index) throws IOException {
         // See Also: https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-high-query-builders.html
         QueryAccumulator queryAccumulator = new QueryAccumulator(searchCriteria);

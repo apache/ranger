@@ -77,6 +77,10 @@ public class AccessAuditsService {
                 SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("repoType", "repoType",
                 SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
+        /* Note; search fields starting with '-' denotes exclude conditions,
+         * it should be handled manually if audit destination does not support the same.
+         * solr support this way while cloudwatch does not.
+         */
         searchFields.add(new SearchField("-repoType", "-repoType",
                 SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL));
         searchFields.add(new SearchField("-requestUser", "-reqUser",

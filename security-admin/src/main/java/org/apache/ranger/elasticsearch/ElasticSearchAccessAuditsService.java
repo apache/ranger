@@ -20,6 +20,7 @@
 package org.apache.ranger.elasticsearch;
 
 import org.apache.log4j.Logger;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -169,7 +170,7 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 
 		value = source.get("policyVersion");
 		if (value != null) {
-			accessAudit.setPolicyVersion(elasticSearchUtil.toLong(value));
+			accessAudit.setPolicyVersion(MiscUtil.toLong(value));
 		}
 
 		value = source.get("access");
@@ -221,15 +222,15 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 		//}
 		value = source.get("result");
 		if (value != null) {
-			accessAudit.setAccessResult(elasticSearchUtil.toInt(value));
+			accessAudit.setAccessResult(MiscUtil.toInt(value));
 		}
 		value = source.get("policy");
 		if (value != null) {
-			accessAudit.setPolicyId(elasticSearchUtil.toLong(value));
+			accessAudit.setPolicyId(MiscUtil.toLong(value));
 		}
 		value = source.get("repoType");
 		if (value != null) {
-			accessAudit.setRepoType(elasticSearchUtil.toInt(value));
+			accessAudit.setRepoType(MiscUtil.toInt(value));
 			if(null != daoManager) {
 				XXServiceDefDao xxServiceDef = daoManager.getXXServiceDef();
 				if(xxServiceDef != null) {
@@ -255,19 +256,19 @@ public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAu
 		}
 		value = source.get("evtTime");
 		if (value != null) {
-			accessAudit.setEventTime(elasticSearchUtil.toDate(value));
+			accessAudit.setEventTime(MiscUtil.toDate(value));
 		}
 		value = source.get("seq_num");
 		if (value != null) {
-			accessAudit.setSequenceNumber(elasticSearchUtil.toLong(value));
+			accessAudit.setSequenceNumber(MiscUtil.toLong(value));
 		}
 		value = source.get("event_count");
 		if (value != null) {
-			accessAudit.setEventCount(elasticSearchUtil.toLong(value));
+			accessAudit.setEventCount(MiscUtil.toLong(value));
 		}
 		value = source.get("event_dur_ms");
 		if (value != null) {
-			accessAudit.setEventDuration(elasticSearchUtil.toLong(value));
+			accessAudit.setEventDuration(MiscUtil.toLong(value));
 		}
 		value = source.get("tags");
 		if (value != null) {

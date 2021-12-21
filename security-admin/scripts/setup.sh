@@ -85,6 +85,9 @@ audit_solr_urls=$(get_prop 'audit_solr_urls' $PROPFILE)
 audit_solr_user=$(get_prop 'audit_solr_user' $PROPFILE)
 audit_solr_password=$(get_prop 'audit_solr_password' $PROPFILE)
 audit_solr_zookeepers=$(get_prop 'audit_solr_zookeepers' $PROPFILE)
+audit_cloudwatch_region=$(get_prop 'audit_cloudwatch_region' $PROPFILE)
+audit_cloudwatch_log_group=$(get_prop 'audit_cloudwatch_log_group' $PROPFILE)
+audit_cloudwatch_log_stream_prefix=$(get_prop 'audit_cloudwatch_log_stream_prefix' $PROPFILE)
 policymgr_external_url=$(get_prop 'policymgr_external_url' $PROPFILE)
 policymgr_http_enabled=$(get_prop 'policymgr_http_enabled' $PROPFILE)
 policymgr_https_keystore_file=$(get_prop 'policymgr_https_keystore_file' $PROPFILE)
@@ -265,6 +268,17 @@ init_variables(){
 		fi
 		if [ "${audit_elasticsearch_port}" == "" ] ;then
 			log "[I] Please provide valid port for 'elasticsearch' audit store!"
+			exit 1
+		fi
+	fi
+
+	if [ "${audit_store}" == "cloudwatch" ] ;then
+		if [ "${audit_cloudwatch_region}" == "" ] ;then
+			log "[I] Please provide valid region for 'amazon cloudwatch' audit store!"
+			exit 1
+		fi
+		if [ "${audit_cloudwatch_log_group}" == "" ] ;then
+			log "[I] Please provide valid log-group for 'amazon cloudwatch' audit store!"
 			exit 1
 		fi
 	fi
@@ -798,6 +812,21 @@ update_properties() {
 		newPropertyValue=${audit_elasticsearch_bootstrap_enabled}
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 
+	fi
+
+	if [ "${audit_store}" == "cloudwatch" ]
+	then
+		propertyName=ranger.audit.amazon_cloudwatch.region
+		newPropertyValue=${audit_cloudwatch_region}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+		propertyName=ranger.audit.amazon_cloudwatch.log_group
+		newPropertyValue=${audit_cloudwatch_log_group}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
+
+		propertyName=ranger.audit.amazon_cloudwatch.log_stream_prefix
+		newPropertyValue=${audit_cloudwatch_log_stream_prefix}
+		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_ranger
 	fi
 
 	if [ "${audit_store}" != "" ]

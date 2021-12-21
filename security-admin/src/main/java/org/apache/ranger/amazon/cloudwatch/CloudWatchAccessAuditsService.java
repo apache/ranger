@@ -17,160 +17,178 @@
  * under the License.
  */
 
-package org.apache.ranger.solr;
+package org.apache.ranger.amazon.cloudwatch;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.log4j.Logger;
-import org.apache.ranger.AccessAuditsService;
+import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.SearchCriteria;
-import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.view.VXAccessAudit;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.apache.ranger.view.VXLong;
-import org.apache.solr.client.solrj.SolrClient;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.solr.common.SolrDocumentList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
+import com.amazonaws.services.logs.AWSLogs;
+import com.amazonaws.services.logs.model.FilteredLogEvent;
+
 @Service
 @Scope("singleton")
-public class SolrAccessAuditsService extends AccessAuditsService {
-	private static final Logger LOGGER = Logger.getLogger(SolrAccessAuditsService.class);
+public class CloudWatchAccessAuditsService extends org.apache.ranger.AccessAuditsService {
+	private static final Logger LOGGER = Logger.getLogger(CloudWatchAccessAuditsService.class);
 
 	@Autowired
-	SolrMgr solrMgr;
+	CloudWatchMgr cloudWatchMgr;
 
 	@Autowired
-	SolrUtil solrUtil;
+	CloudWatchUtil cloudWatchUtil;
 
 	@Autowired
-	RESTErrorUtil restErrorUtil;
-
-	@Autowired
-	RangerDaoManager daoManager;
-
+	JSONUtil jsonUtil;
 
 	public VXAccessAuditList searchXAccessAudits(SearchCriteria searchCriteria) {
 
-		// Make call to Solr
-		SolrClient solrClient = solrMgr.getSolrClient();
 		final boolean hiveQueryVisibility = PropertiesUtil.getBooleanProperty("ranger.audit.hive.query.visibility", true);
-		if (solrClient == null) {
-			LOGGER.warn("Solr client is null, so not running the query.");
-			throw restErrorUtil.createRESTException(
-					"Error connecting to search engine",
-					MessageEnums.ERROR_SYSTEM);
+		AWSLogs client = cloudWatchMgr.getClient();
+		if (client == null) {
+			LOGGER.warn("CloudWatch client is null, so not running the query.");
+			throw restErrorUtil.createRESTException("Error connecting to cloudwatch", MessageEnums.ERROR_SYSTEM);
 		}
+
 		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
-
 		Map<String, Object> paramList = searchCriteria.getParamList();
-
-		Object eventIdObj = paramList.get("eventId");
-		if (eventIdObj != null) {
-			paramList.put("id", eventIdObj.toString());
-		}
-
 		updateUserExclusion(paramList);
 
-		QueryResponse response = solrUtil.searchResources(searchCriteria,
-				searchFields, sortFields, solrClient);
-		SolrDocumentList docs = response.getResults();
-		for (int i = 0; i < docs.size(); i++) {
-			SolrDocument doc = docs.get(i);
-			VXAccessAudit vXAccessAudit = populateViewBean(doc);
-                        if (vXAccessAudit != null) {
-                                if (!hiveQueryVisibility && "hive".equalsIgnoreCase(vXAccessAudit.getServiceType())) {
-                                        vXAccessAudit.setRequestData(null);
-                                }
-                                else if("hive".equalsIgnoreCase(vXAccessAudit.getServiceType()) && ("grant".equalsIgnoreCase(vXAccessAudit.getAccessType()) || "revoke".equalsIgnoreCase(vXAccessAudit.getAccessType()))){
-                                        try {
-                                            if (vXAccessAudit.getRequestData() != null) {
-                                                vXAccessAudit.setRequestData(java.net.URLDecoder.decode(vXAccessAudit.getRequestData(), "UTF-8"));
-                                            } else {
-                                                LOGGER.warn("Error in request data of audit from solr. AuditData: "  + vXAccessAudit.toString());
-                                            }
-                                        } catch (UnsupportedEncodingException e) {
-                                                LOGGER.warn("Error while encoding request data");
-                                        }
-                                }
-                        }
-                        xAccessAuditList.add(vXAccessAudit);
+		List<FilteredLogEvent> result;
+		try {
+			result = cloudWatchUtil.searchResources(client, searchCriteria, searchFields, sortFields);
+		} catch (Exception e) {
+			LOGGER.warn(String.format("CloudWatch query failed: %s", e.getMessage()));
+			throw restErrorUtil.createRESTException("Error querying search engine", MessageEnums.ERROR_SYSTEM);
 		}
 
 		VXAccessAuditList returnList = new VXAccessAuditList();
+		if (result != null && CollectionUtils.isNotEmpty(result)) {
+			int recordCount = 0;
+			int endIndex = result.size() - 1;
+			endIndex = endIndex - searchCriteria.getStartIndex() < 0 ? endIndex : endIndex - searchCriteria.getStartIndex();
+			for (int index = endIndex; recordCount < searchCriteria.getMaxRows() && index >=0 ; index--) {
+				FilteredLogEvent event = result.get(index);
+				AuthzAuditEvent auditEvent = null;
+				try {
+					auditEvent = MiscUtil.fromJson(event.getMessage(), AuthzAuditEvent.class);
+				} catch (Exception ex) {
+					LOGGER.error("Error while parsing json data" , ex);
+				}
+				VXAccessAudit vXAccessAudit = populateViewBean(auditEvent);
+				if (vXAccessAudit != null) {
+					String serviceType = vXAccessAudit.getServiceType();
+					boolean isHive = "hive".equalsIgnoreCase(serviceType);
+					if (!hiveQueryVisibility && isHive) {
+						vXAccessAudit.setRequestData(null);
+					} else if (isHive) {
+						String accessType = vXAccessAudit.getAccessType();
+						if ("grant".equalsIgnoreCase(accessType) || "revoke".equalsIgnoreCase(accessType)) {
+							String requestData = vXAccessAudit.getRequestData();
+							if (requestData != null) {
+								try {
+									vXAccessAudit.setRequestData(java.net.URLDecoder.decode(requestData, "UTF-8"));
+								} catch (UnsupportedEncodingException e) {
+									LOGGER.warn("Error while encoding request data: " + requestData, e);
+								}
+							} else {
+								LOGGER.warn("Error in request data of audit from cloudwatch. AuditData: "+ vXAccessAudit.toString());
+							}
+						}
+					}
+				}
+				xAccessAuditList.add(vXAccessAudit);
+				recordCount++;
+			}
+			returnList.setResultSize(result.size());
+			returnList.setTotalCount(result.size());
+		}
+
 		returnList.setPageSize(searchCriteria.getMaxRows());
-		returnList.setResultSize(docs.size());
-		returnList.setTotalCount((int) docs.getNumFound());
-		returnList.setStartIndex((int) docs.getStart());
+		returnList.setStartIndex(searchCriteria.getStartIndex());
 		returnList.setVXAccessAudits(xAccessAuditList);
 		return returnList;
 	}
 
-	/**
-	 * @param doc
-	 * @return
-	 */
-	private VXAccessAudit populateViewBean(SolrDocument doc) {
+	public void setRestErrorUtil(RESTErrorUtil restErrorUtil) {
+		this.restErrorUtil = restErrorUtil;
+	}
+
+	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
+		long count = 100;
+		VXLong vXLong = new VXLong();
+		vXLong.setValue(count);
+		return vXLong;
+	}
+
+	private VXAccessAudit populateViewBean(AuthzAuditEvent auditEvent) {
 		VXAccessAudit accessAudit = new VXAccessAudit();
 
 		Object value = null;
 		if(LOGGER.isDebugEnabled()) {
-			LOGGER.debug("doc=" + doc.toString());
+			LOGGER.debug("doc=" + auditEvent.toString());
 		}
 
-		value = doc.getFieldValue("id");
+		value = auditEvent.getEventId();
 		if (value != null) {
-			// TODO: Converting ID to hashcode for now
 			accessAudit.setId((long) value.hashCode());
 			accessAudit.setEventId(value.toString());
 		}
-		
-		value = doc.getFieldValue("cluster");
+
+		value = auditEvent.getClusterName();
 		if (value != null) {
 			accessAudit.setClusterName(value.toString());
 		}
 
-		value = doc.getFieldValue("zoneName");
+		value = auditEvent.getZoneName();
 		if (value != null) {
 			accessAudit.setZoneName(value.toString());
 		}
 
-		value = doc.getFieldValue("agentHost");
+		value = auditEvent.getAgentHostname();
 		if (value != null) {
 			accessAudit.setAgentHost(value.toString());
 		}
 
-		value = doc.getFieldValue("policyVersion");
+		value = auditEvent.getPolicyVersion();
 		if (value != null) {
 			accessAudit.setPolicyVersion(MiscUtil.toLong(value));
 		}
 
-		value = doc.getFieldValue("access");
+		value = auditEvent.getAccessType();
 		if (value != null) {
 			accessAudit.setAccessType(value.toString());
 		}
 
-		value = doc.getFieldValue("enforcer");
+		value = auditEvent.getAclEnforcer();
 		if (value != null) {
 			accessAudit.setAclEnforcer(value.toString());
 		}
-		value = doc.getFieldValue("agent");
+
+		value = auditEvent.getAgentId();
 		if (value != null) {
 			accessAudit.setAgentId(value.toString());
 		}
-		value = doc.getFieldValue("repo");
+
+		value = auditEvent.getRepositoryName();
 		if (value != null) {
 			accessAudit.setRepoName(value.toString());
 			XXService xxService = daoManager.getXXService().findByName(accessAudit.getRepoName());
@@ -179,40 +197,42 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 				accessAudit.setRepoDisplayName(xxService.getDisplayName());
 			}
 		}
-		value = doc.getFieldValue("sess");
+
+		value = auditEvent.getSessionId();
 		if (value != null) {
 			accessAudit.setSessionId(value.toString());
 		}
-		value = doc.getFieldValue("reqUser");
+
+		value = auditEvent.getUser();
 		if (value != null) {
 			accessAudit.setRequestUser(value.toString());
 		}
-		value = doc.getFieldValue("reqData");
+
+		value = auditEvent.getRequestData();
 		if (value != null) {
 			accessAudit.setRequestData(value.toString());
 		}
-		value = doc.getFieldValue("resource");
+		value = auditEvent.getResourcePath();
 		if (value != null) {
 			accessAudit.setResourcePath(value.toString());
 		}
-		value = doc.getFieldValue("cliIP");
+
+		value = auditEvent.getClientIP();
 		if (value != null) {
 			accessAudit.setClientIP(value.toString());
 		}
-		value = doc.getFieldValue("logType");
-		//if (value != null) {
-			// TODO: Need to see what logType maps to in UI
-//			accessAudit.setAuditType(solrUtil.toInt(value));
-		//}
-		value = doc.getFieldValue("result");
+
+		value = auditEvent.getAccessResult();
 		if (value != null) {
 			accessAudit.setAccessResult(MiscUtil.toInt(value));
 		}
-		value = doc.getFieldValue("policy");
+
+		value = auditEvent.getPolicyId();
 		if (value != null) {
 			accessAudit.setPolicyId(MiscUtil.toLong(value));
 		}
-		value = doc.getFieldValue("repoType");
+
+		value = auditEvent.getRepositoryType();
 		if (value != null) {
 			accessAudit.setRepoType(MiscUtil.toInt(value));
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
@@ -221,51 +241,48 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 				accessAudit.setServiceTypeDisplayName(xServiceDef.getDisplayName());
 			}
 		}
-		value = doc.getFieldValue("resType");
+
+		value = auditEvent.getResourceType();
 		if (value != null) {
 			accessAudit.setResourceType(value.toString());
 		}
-		value = doc.getFieldValue("reason");
+
+		value = auditEvent.getResultReason();
 		if (value != null) {
 			accessAudit.setResultReason(value.toString());
 		}
-		value = doc.getFieldValue("action");
+
+		value = auditEvent.getAction();
 		if (value != null) {
 			accessAudit.setAction(value.toString());
 		}
-		value = doc.getFieldValue("evtTime");
+
+		value = auditEvent.getEventTime();
 		if (value != null) {
-			accessAudit.setEventTime(MiscUtil.toDate(value));
+			accessAudit.setEventTime(MiscUtil.toLocalDate(value));
 		}
-		value = doc.getFieldValue("seq_num");
+
+		value = auditEvent.getSeqNum();
 		if (value != null) {
 			accessAudit.setSequenceNumber(MiscUtil.toLong(value));
 		}
-		value = doc.getFieldValue("event_count");
+
+		value = auditEvent.getEventCount();
 		if (value != null) {
 			accessAudit.setEventCount(MiscUtil.toLong(value));
 		}
-		value = doc.getFieldValue("event_dur_ms");
+
+		value = auditEvent.getEventDurationMS();
 		if (value != null) {
 			accessAudit.setEventDuration(MiscUtil.toLong(value));
 		}
-		value = doc.getFieldValue("tags");
+
+		value = auditEvent.getTags();
 		if (value != null) {
 			accessAudit.setTags(value.toString());
 		}
+
 		return accessAudit;
-	}
-
-	/**
-	 * @param searchCriteria
-	 * @return
-	 */
-	public VXLong getXAccessAuditSearchCount(SearchCriteria searchCriteria) {
-		long count = 100;
-
-		VXLong vXLong = new VXLong();
-		vXLong.setValue(count);
-		return vXLong;
 	}
 
 }

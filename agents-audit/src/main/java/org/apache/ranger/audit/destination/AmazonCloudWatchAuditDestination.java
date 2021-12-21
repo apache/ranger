@@ -31,6 +31,9 @@ import com.amazonaws.services.logs.model.InputLogEvent;
 import com.amazonaws.services.logs.model.InvalidSequenceTokenException;
 import com.amazonaws.services.logs.model.PutLogEventsRequest;
 import com.amazonaws.services.logs.model.PutLogEventsResult;
+import com.amazonaws.services.logs.model.ResourceNotFoundException;
+
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
@@ -61,21 +64,22 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
     public static final String PROP_LOG_GROUP_NAME = "log_group";
     public static final String PROP_LOG_STREAM_PREFIX = "log_stream_prefix";
     public static final String CONFIG_PREFIX = "ranger.audit.amazon_cloudwatch";
+    public static final String PROP_REGION = "region";
 
     private String logGroupName;
     private String logStreamName;
     private AWSLogs logsClient;
     private String sequenceToken;
+    private String regionName;
 
     @Override
     public void init(Properties props, String propPrefix) {
         LOG.info("init() called for CloudWatchAuditDestination");
         super.init(props, propPrefix);
 
-        this.logGroupName = MiscUtil.getStringProperty(props, propPrefix + "."
-                + PROP_LOG_GROUP_NAME);
-        this.logStreamName = MiscUtil.getStringProperty(props, propPrefix + "."
-                + PROP_LOG_STREAM_PREFIX) + MiscUtil.generateUniqueId();
+        this.logGroupName = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_LOG_GROUP_NAME, "ranger_audits");
+        this.logStreamName = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_LOG_STREAM_PREFIX) + MiscUtil.generateUniqueId();
+        this.regionName = MiscUtil.getStringProperty(props, propPrefix + "." + PROP_REGION);
 
         logsClient = getClient(); // Initialize client
         createLogStream();
@@ -95,8 +99,11 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
         PutLogEventsRequest req = new PutLogEventsRequest()
                 .withLogEvents(toInputLogEvent(collection))
                 .withLogGroupName(logGroupName)
-                .withLogStreamName(logStreamName)
-                .withSequenceToken(sequenceToken);
+                .withLogStreamName(logStreamName);
+
+        if (StringUtils.isNotBlank(sequenceToken)) {
+            req.setSequenceToken(sequenceToken);
+        }
 
         try {
             sequenceToken = pushLogEvents(req, false, client);
@@ -117,6 +124,12 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
         try {
             PutLogEventsResult re = client.putLogEvents(req);
             sequenceToken = re.getNextSequenceToken();
+        } catch (ResourceNotFoundException ex) {
+            if (!retryingOnInvalidSeqToken) {
+                createLogStream();
+                return pushLogEvents(req, true, client);
+            }
+            throw ex;
         } catch (InvalidSequenceTokenException ex) {
             if (retryingOnInvalidSeqToken) {
                 LOG.error("Unexpected invalid sequence token. Possible race condition occurred");
@@ -124,8 +137,9 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
             }
 
             // LogStream may exist before first push attempt, re-obtain the sequence token
-            LOG.info("Invalid sequence token. Plugin possibly restarted. " +
-                    "Updating the sequence token and retrying");
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Invalid sequence token. Plugin possibly restarted. Updating the sequence token and retrying");
+            }
             sequenceToken = ex.getExpectedSequenceToken();
             req.setSequenceToken(sequenceToken);
             return pushLogEvents(req, true, client);
@@ -159,8 +173,7 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
                 .withLogGroupName(logGroupName)
                 .withLogStreamName(logStreamName);
 
-        LOG.info(String.format("Creating Log Stream `%s` in Log Group `%s`",
-                logStreamName, logGroupName));
+        LOG.info(String.format("Creating Log Stream `%s` in Log Group `%s`", logStreamName, logGroupName));
         client.createLogStream(req);
     }
 
@@ -177,6 +190,9 @@ public class AmazonCloudWatchAuditDestination extends AuditDestination {
     }
 
     private AWSLogs newClient() {
-        return AWSLogsClientBuilder.standard().build();
+        if (StringUtils.isBlank(regionName)) {
+            return AWSLogsClientBuilder.standard().build();
+        }
+        return AWSLogsClientBuilder.standard().withRegion(regionName).build();
     }
 }

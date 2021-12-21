@@ -24,6 +24,9 @@ import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -883,6 +886,75 @@ public class MiscUtil {
 	// use Holder class to defer initialization until needed
 	private static class RandomHolder {
 		static final Random random = new Random();
+	}
+
+	// Utility methods
+	public static int toInt(Object value) {
+		if (value == null) {
+			return 0;
+		}
+		if (value instanceof Integer) {
+			return (Integer) value;
+		}
+		if (value.toString().isEmpty()) {
+			return 0;
+		}
+		try {
+			return Integer.valueOf(value.toString());
+		} catch (Throwable t) {
+			logger.error("Error converting value to integer. Value = " + value, t);
+		}
+		return 0;
+	}
+
+	public static long toLong(Object value) {
+		if (value == null) {
+			return 0;
+		}
+		if (value instanceof Long) {
+			return (Long) value;
+		}
+		if (value.toString().isEmpty()) {
+			return 0;
+		}
+		try {
+			return Long.valueOf(value.toString());
+		} catch (Throwable t) {
+			logger.error("Error converting value to long. Value = " + value, t);
+		}
+		return 0;
+	}
+
+	public static Date toDate(Object value) {
+		if (value == null) {
+			return null;
+		}
+		if (value instanceof Date) {
+			return (Date) value;
+		}
+		try {
+			// TODO: Do proper parsing based on Solr response value
+			return new Date(value.toString());
+		} catch (Throwable t) {
+			logger.error("Error converting value to date. Value = " + value, t);
+		}
+		return null;
+	}
+
+	public static Date toLocalDate(Object value) {
+		if (value == null) {
+			return null;
+		}
+		if (value instanceof Date) {
+			return (Date) value;
+		}
+		try {
+			LocalDateTime localDateTime = LocalDateTime.parse(value.toString(), DateTimeFormatter.ISO_DATE_TIME);
+			return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+		} catch (Throwable t) {
+			logger.error("Error converting value to date. Value = " + value, t);
+		}
+		return null;
 	}
 
 }
