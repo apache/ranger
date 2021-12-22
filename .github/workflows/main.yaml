@@ -62,13 +62,7 @@ jobs:
           tags: |
             ghcr.io/atlanhq/${{ github.event.repository.name }}-${{ steps.get_branch.outputs.branch }}:latest
             ghcr.io/atlanhq/${{ github.event.repository.name }}-${{ steps.get_branch.outputs.branch }}:${{ steps.get_version.outputs.version }}
-      - name: Check out into atlan-v2 repo
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          ref: master
-          repository: atlanhq/atlan-v2
-          token: ${{ secrets.my_pat }}
+
       - name: Check out into atlan repo
         uses: actions/checkout@v2
         with:
@@ -82,8 +76,14 @@ jobs:
           echo "- ${{ github.event.head_commit.message }}">>gitlog/${{ github.event.repository.name }}.txt
           chmod +x ./scripts/create_changelog.sh
           ./scripts/create_changelog.sh
-          git add .
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-          git commit -m "${{ github.event.repository.name }}"
-          git push origin
+
+      - name: Commit changes
+        uses: EndBug/add-and-commit@v7
+        with:
+          branch: ${{ steps.get_branch.outputs.branch }}
+          author_name: atlan-ci
+          author_email: it@atlan.com
+          message: '${{ github.event.repository.name }}'
+          default_author: user_info
+          push: origin ${{ steps.get_branch.outputs.branch }}
+
