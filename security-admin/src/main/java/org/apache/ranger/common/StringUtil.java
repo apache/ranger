@@ -158,7 +158,7 @@ public class StringUtil implements Serializable {
 			return false;
 		}
 		emailAddress = emailAddress.trim();
-		String expression = "^[\\w]([\\-\\.\\w])+[\\w]+@[\\w]+[\\w\\-]+[\\w]*\\.([\\w]+[\\w\\-]+[\\w]*(\\.[a-z][a-z|0-9]*)?)$";
+		String expression = "^[\\w]([\\-\\.\\w])*[\\w]*@[\\w]+[\\w\\-]+[\\w]*\\.([\\w]+[\\w\\-]+[\\w]*(\\.[a-z][a-z|0-9]*)?)$";
 		return regExPatternMatch(expression, emailAddress);
 
 	}
