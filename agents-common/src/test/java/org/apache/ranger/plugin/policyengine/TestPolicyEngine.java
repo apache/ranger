@@ -28,6 +28,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
@@ -51,6 +52,7 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.junit.AfterClass;
@@ -449,6 +451,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(awsTestResourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_resourceWithReqExpressions() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_resource_with_req_expressions.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
@@ -660,6 +669,15 @@ public class TestPolicyEngine {
                 RangerAccessResult expected = test.result;
                 RangerAccessResult result;
 
+                if (MapUtils.isNotEmpty(test.userAttributes) || MapUtils.isNotEmpty(test.groupAttributes)) {
+                    RangerUserStore userStore = new RangerUserStore();
+
+                    userStore.setUserAttrMapping(test.userAttributes);
+                    userStore.setGroupAttrMapping(test.groupAttributes);
+
+                    RangerAccessRequestUtil.setRequestUserStoreInContext(request.getContext(), userStore);
+                }
+
 				result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
 				policyEngine.evaluateAuditPolicies(result);
@@ -771,6 +789,8 @@ public class TestPolicyEngine {
 			public RangerAccessResult  dataMaskResult;
 			public RangerAccessResult rowFilterResult;
 			public RangerResourceAccessInfo resourceAccessInfo;
+			public Map<String, Map<String, String>> userAttributes;
+			public Map<String, Map<String, String>> groupAttributes;
 		}
 
 		class TagPolicyInfo {

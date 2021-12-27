@@ -111,7 +111,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 		// To ensure that when policyValue is single '*', ResourceMatcher created here returns true for isMatchAny()
 		if (optWildCard && WILDCARD_ASTERISK.equals(policyValue)) {
-			return new CaseInsensitiveStringMatcher("");
+			return new CaseInsensitiveStringMatcher("", getOptions());
 		}
 
 		boolean isWildcardPresent = false;
@@ -130,9 +130,9 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		final ResourceMatcher ret;
 
 		if (isWildcardPresent) {
-			ret = new RecursiveWildcardResourceMatcher(policyValue, pathSeparatorChar, optIgnoreCase, RangerPathResourceMatcher::isRecursiveWildCardMatch, optIgnoreCase ? 8 : 7);
+			ret = new RecursiveWildcardResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, RangerPathResourceMatcher::isRecursiveWildCardMatch, optIgnoreCase ? 8 : 7);
 		} else {
-			ret = new RecursivePathResourceMatcher(policyValue, pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith, optIgnoreCase ? 8 : 7);
+			ret = new RecursivePathResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith, optIgnoreCase ? 8 : 7);
 		}
 
 		if (optReplaceTokens) {
@@ -233,17 +233,17 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		}
 
 		if (needWildcardMatch) { // test?, test*a*, test*a*b, *test*a
-			ret = new WildcardResourceMatcher(policyValue, pathSeparatorChar, optIgnoreCase, FilenameUtils::wildcardMatch, 6);
+			ret = new WildcardResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, FilenameUtils::wildcardMatch, 6);
 		} else if (wildcardStartIdx == -1) { // test, testa, testab
-			ret = new StringResourceMatcher(policyValue, pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, optIgnoreCase ? 2 : 1);
+			ret = new StringResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, optIgnoreCase ? 2 : 1);
 		} else if (wildcardStartIdx == 0) { // *test, **test, *testa, *testab
 			String matchStr = policyValue.substring(wildcardEndIdx + 1);
-			ret = new StringResourceMatcher(matchStr, pathSeparatorChar, optIgnoreCase ? StringUtils::endsWithIgnoreCase : StringUtils::endsWith, optIgnoreCase ? 4 : 3);
+			ret = new StringResourceMatcher(matchStr, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::endsWithIgnoreCase : StringUtils::endsWith, optIgnoreCase ? 4 : 3);
 		} else if (wildcardEndIdx != (len - 1)) { // test*a, test*ab
-			ret = new WildcardResourceMatcher(policyValue, pathSeparatorChar, optIgnoreCase, FilenameUtils::wildcardMatch, 6);
+			ret = new WildcardResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, FilenameUtils::wildcardMatch, 6);
 		} else { // test*, test**, testa*, testab*
 			String matchStr = policyValue.substring(0, wildcardStartIdx);
-			ret = new StringResourceMatcher(matchStr, pathSeparatorChar, optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith, optIgnoreCase ? 4 : 3);
+			ret = new StringResourceMatcher(matchStr, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith, optIgnoreCase ? 4 : 3);
 		}
 
 		if (optReplaceTokens) {
@@ -265,8 +265,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		final char    pathSeparatorChar;
 		final int     priority;
 
-		PathResourceMatcher(String value, char pathSeparatorChar, int priority) {
-			super(value);
+		PathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, int priority) {
+			super(value, options);
 			this.pathSeparatorChar    = pathSeparatorChar;
 			this.priority             = priority;
 		}
@@ -277,8 +277,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 	static class StringResourceMatcher extends PathResourceMatcher {
 		final BiFunction<String, String, Boolean> function;
-		StringResourceMatcher(String value, char pathSeparatorChar, BiFunction<String, String, Boolean> function, int priority) {
-			super(value, pathSeparatorChar, priority);
+		StringResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, BiFunction<String, String, Boolean> function, int priority) {
+			super(value, options, pathSeparatorChar, priority);
 			this.function = function;
 		}
 		@Override
@@ -313,8 +313,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		final TriFunction<String, String, IOCase, Boolean> function;
 		final IOCase ioCase;
 
-		WildcardResourceMatcher(String value, char pathSeparatorChar, boolean optIgnoreCase, TriFunction<String, String, IOCase, Boolean> function, int priority) {
-			super(value, pathSeparatorChar, priority);
+		WildcardResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, TriFunction<String, String, IOCase, Boolean> function, int priority) {
+			super(value, options, pathSeparatorChar, priority);
 			this.function = function;
 			this.ioCase   = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
 		}
@@ -349,8 +349,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		final QuadFunction<String, String, Character, IOCase, Boolean> function;
 		final IOCase ioCase;
 
-		RecursiveWildcardResourceMatcher(String value, char pathSeparatorChar, boolean optIgnoreCase, QuadFunction<String, String, Character, IOCase, Boolean> function, int priority) {
-			super(value, pathSeparatorChar, priority);
+		RecursiveWildcardResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, QuadFunction<String, String, Character, IOCase, Boolean> function, int priority) {
+			super(value, options, pathSeparatorChar, priority);
 			this.function = function;
 			this.ioCase   = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
 		}
@@ -388,8 +388,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		final BiFunction<String, String, Boolean> primaryFunction;
 		final BiFunction<String, String, Boolean> fallbackFunction;
 
-		RecursivePathResourceMatcher(String value, char pathSeparatorChar, BiFunction<String, String, Boolean> primaryFunction, BiFunction<String, String, Boolean> fallbackFunction, int priority) {
-			super(value, pathSeparatorChar, priority);
+		RecursivePathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, BiFunction<String, String, Boolean> primaryFunction, BiFunction<String, String, Boolean> fallbackFunction, int priority) {
+			super(value, options, pathSeparatorChar, priority);
 			this.primaryFunction    = primaryFunction;
 			this.fallbackFunction   = fallbackFunction;
 		}

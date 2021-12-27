@@ -36,6 +36,7 @@ public class RangerRequestExprResolver {
     private static final String  REGEX_GROUP_EXPR   = "expr";
     private static final String  SCRIPT_ENGINE_NAME = "JavaScript";
     private static final Pattern PATTERN            = Pattern.compile("\\$\\{\\{(?<" + REGEX_GROUP_EXPR + ">.*?)\\}\\}");
+    public  static final String  EXPRESSION_START   = "${{";
 
     private final String  str;
     private final String  serviceType;

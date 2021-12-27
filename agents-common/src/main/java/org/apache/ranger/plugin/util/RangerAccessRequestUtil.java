@@ -29,6 +29,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 
 public class RangerAccessRequestUtil {
@@ -45,6 +46,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_ROLES = "ROLES";
 	public static final String KEY_CONTEXT_ACCESSTYPES = "ACCESSTYPES";
 	public static final String KEY_CONTEXT_IS_ANY_ACCESS = "ISANYACCESS";
+	public static final String KEY_CONTEXT_REQUEST       = "_REQUEST";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
@@ -184,4 +186,31 @@ public class RangerAccessRequestUtil {
 	public static Boolean getIsAnyAccessInContext(Map<String, Object> context) {
 		return (Boolean)context.get(KEY_CONTEXT_IS_ANY_ACCESS);
 	}
+
+	public static void setRequestInContext(RangerAccessRequest request) {
+		Map<String, Object> context = request.getContext();
+
+		if (context != null) {
+			context.put(KEY_CONTEXT_REQUEST, request);
+		}
+	}
+
+	public static RangerAccessRequest getRequestFromContext(Map<String, Object> context) {
+		RangerAccessRequest ret = null;
+
+		if (context != null) {
+			Object val = context.get(KEY_CONTEXT_REQUEST);
+
+			if (val != null) {
+				if (val instanceof RangerAccessRequest) {
+					ret = (RangerAccessRequest) val;
+				} else {
+					LOG.error("getRequestFromContext(): expected RangerAccessRequest, but found " + val.getClass().getCanonicalName());
+				}
+			}
+		}
+
+		return ret;
+	}
+
 }

@@ -324,10 +324,6 @@ public final class RangerRequestScriptEvaluator {
 		return ret;
 	}
 
-	public Map<String, Object> getRequestContext() {
-		return accessRequest.getContext();
-	}
-
 	public String getRequestContextAttribute(String attributeName) {
 		String ret = null;
 
@@ -602,6 +598,10 @@ public final class RangerRequestScriptEvaluator {
 		}
 
 		return ret;
+	}
+
+	private Map<String, Object> getRequestContext() {
+		return accessRequest.getContext();
 	}
 
 	private Set<RangerTagForEval> getAllTags() {

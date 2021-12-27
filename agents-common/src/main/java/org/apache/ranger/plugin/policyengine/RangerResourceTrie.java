@@ -31,6 +31,7 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvalua
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 import java.util.ArrayList;
@@ -127,6 +128,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
 
         Map<String, String> matcherOptions           = resourceDef.getMatcherOptions();
         boolean             optReplaceTokens         = RangerAbstractResourceMatcher.getOptionReplaceTokens(matcherOptions);
+        boolean             optReplaceReqExpressions = RangerAbstractResourceMatcher.getOptionReplaceReqExpressions(matcherOptions);
         String              tokenReplaceSpecialChars = "";
 
         if(optReplaceTokens) {
@@ -137,6 +139,10 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             tokenReplaceSpecialChars += delimiterStart;
             tokenReplaceSpecialChars += delimiterEnd;
             tokenReplaceSpecialChars += delimiterEscape;
+        }
+
+        if (optReplaceReqExpressions) {
+            tokenReplaceSpecialChars += RangerRequestExprResolver.EXPRESSION_START.charAt(0);
         }
 
         this.resourceDef             = resourceDef;
