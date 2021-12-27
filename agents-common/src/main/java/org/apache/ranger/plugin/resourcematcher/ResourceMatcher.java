@@ -22,6 +22,9 @@ package org.apache.ranger.plugin.resourcematcher;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
 
 import java.io.Serializable;
@@ -32,12 +35,21 @@ import java.util.Map;
 abstract class ResourceMatcher {
     private static final Log LOG = LogFactory.getLog(ResourceMatcher.class);
 
-    protected final String value;
-    protected StringTokenReplacer tokenReplacer;
+    protected final String                    value;
+    protected final RangerRequestExprResolver exprResolver;
+    protected       StringTokenReplacer       tokenReplacer;
 
     static final int DYNAMIC_EVALUATION_PENALTY = 8;
 
-    ResourceMatcher(String value) { this.value = value; }
+    ResourceMatcher(String value, Map<String, String> options) {
+        this.value = value;
+
+        if (RangerAbstractResourceMatcher.getOptionReplaceReqExpressions(options) && RangerRequestExprResolver.hasExpressions(value)) {
+            exprResolver = new RangerRequestExprResolver(value, null); // TODO: serviceType
+        } else {
+            exprResolver = null;
+        }
+    }
 
     abstract boolean isMatch(String resourceValue, Map<String, Object> evalContext);
     abstract int getPriority();
@@ -45,7 +57,7 @@ abstract class ResourceMatcher {
     boolean isMatchAny() { return value != null && value.length() == 0; }
 
     boolean getNeedsDynamicEval() {
-        return tokenReplacer != null;
+        return exprResolver != null || tokenReplacer != null;
     }
 
     public boolean isMatchAny(Collection<String> resourceValues, Map<String, Object> evalContext) {
@@ -71,7 +83,7 @@ abstract class ResourceMatcher {
                     ", endDelimiter=" + endDelimiterChar + ", escapeChar=" + escapeChar + ", prefix=" + tokenPrefix);
         }
 
-        if(value != null && (value.indexOf(escapeChar) != -1 || (value.indexOf(startDelimiterChar) != -1 && value.indexOf(endDelimiterChar) != -1))) {
+        if(exprResolver != null || StringTokenReplacer.hasToken(value, startDelimiterChar, endDelimiterChar, escapeChar)) {
             tokenReplacer = new StringTokenReplacer(startDelimiterChar, endDelimiterChar, escapeChar, tokenPrefix);
         }
 
@@ -82,12 +94,18 @@ abstract class ResourceMatcher {
     }
 
     String getExpandedValue(Map<String, Object> evalContext) {
-        final String ret;
+        String ret = value;
 
-        if(tokenReplacer != null) {
-            ret = tokenReplacer.replaceTokens(value, evalContext);
-        } else {
-            ret = value;
+        if (exprResolver != null) {
+            RangerAccessRequest accessRequest = RangerAccessRequestUtil.getRequestFromContext(evalContext);
+
+            if (accessRequest != null) {
+                ret = exprResolver.resolveExpressions(accessRequest);
+            }
+        }
+
+        if (tokenReplacer != null) {
+            ret = tokenReplacer.replaceTokens(ret, evalContext);
         }
 
         return ret;

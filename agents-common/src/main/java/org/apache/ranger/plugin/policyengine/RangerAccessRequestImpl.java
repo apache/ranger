@@ -30,6 +30,7 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private static final Logger LOG = Logger.getLogger(RangerAccessRequestImpl.class);
@@ -256,7 +257,17 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	public void setResourceMatchingScope(ResourceMatchingScope scope) { this.resourceMatchingScope = scope; }
 
 	public void setContext(Map<String, Object> context) {
-		this.context = (context == null) ? new HashMap<String, Object>() : context;
+		if (context == null) {
+			this.context = new HashMap<>();
+		} else {
+			this.context = context;
+		}
+
+		RangerAccessRequest current = RangerAccessRequestUtil.getRequestFromContext(this.context);
+
+		if (current == null) {
+			RangerAccessRequestUtil.setRequestInContext(this);
+		}
 	}
 
 	public void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[]trustedProxyAddresses) {
@@ -344,7 +355,11 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("context={");
 		if(context != null) {
 			for(Map.Entry<String, Object> e : context.entrySet()) {
-				sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
+				Object val = e.getValue();
+
+				if (!(val instanceof RangerAccessRequest)) { // to avoid recursive calls
+					sb.append(e.getKey()).append("={").append(val).append("} ");
+				}
 			}
 		}
 		sb.append("} ");
