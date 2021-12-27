@@ -36,6 +36,7 @@ import java.util.Set;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.http.HttpEntity;
@@ -459,8 +460,11 @@ public class SolrCollectionBootstrapper extends Thread {
 		return zookeeperHosts;
 	}
 
-	private String getBaseUrl() {
+	private String getBaseUrl() throws Exception {
 		Set<String> nodes = solrCloudClient.getClusterStateProvider().getLiveNodes();
+		if (CollectionUtils.isEmpty(nodes)) {
+			throw new Exception("No live SolrServers available");
+		}
 		String[] nodeArr = nodes.toArray(new String[0]);
 		// getting nodes URL as 'port_solr', so converting it to 'port/solr'
 		return nodeArr[0].replaceAll("_", "/");
