@@ -105,6 +105,8 @@ public class RangerRESTClient {
 	private Gson   gsonBuilder;
 	private int    mRestClientConnTimeOutMs;
 	private int    mRestClientReadTimeOutMs;
+	private int    maxRetryAttempts;
+	private int    retryIntervalMs;
 	private int    lastKnownActiveUrlIndex;
 
 	private final List<String> configuredURLs;
@@ -153,6 +155,14 @@ public class RangerRESTClient {
 	public void setRestClientReadTimeOutMs(int mRestClientReadTimeOutMs) {
 		this.mRestClientReadTimeOutMs = mRestClientReadTimeOutMs;
 	}
+
+	public int getMaxRetryAttempts() { return maxRetryAttempts; }
+
+	public void setMaxRetryAttempts(int maxRetryAttempts) { this.maxRetryAttempts = maxRetryAttempts; }
+
+	public int getRetryIntervalMs() { return retryIntervalMs; }
+
+	public void setRetryIntervalMs(int retryIntervalMs) { this.retryIntervalMs = retryIntervalMs; }
 
 	public void setBasicAuthInfo(String username, String password) {
 		mUsername = username;
@@ -450,6 +460,7 @@ public class RangerRESTClient {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int currentIndex = 0;
+		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
 			try {
@@ -465,8 +476,11 @@ public class RangerRESTClient {
 					break;
 				}
 			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, ex);
+				if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
+				}
 			}
 		}
 		return finalResponse;
@@ -476,6 +490,7 @@ public class RangerRESTClient {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int currentIndex = 0;
+		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
 			try {
@@ -491,8 +506,11 @@ public class RangerRESTClient {
 					break;
 				}
 			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : "+configuredURLs.get(currentIndex));
-				processException(index, ex);
+				if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
+				}
 			}
 		}
 		return finalResponse;
@@ -502,6 +520,7 @@ public class RangerRESTClient {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int currentIndex = 0;
+		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
 			try {
@@ -515,17 +534,51 @@ public class RangerRESTClient {
 					break;
 				}
 			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, ex);
+				if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
+				}
 			}
 		}
 		return finalResponse;
+	}
+
+	public ClientResponse post(String relativeURL, Map<String, String> params, Object obj, Cookie sessionId) throws Exception {
+		ClientResponse response = null;
+		int startIndex = this.lastKnownActiveUrlIndex;
+		int currentIndex = 0;
+		int retryAttempt = 0;
+
+		for (int index = 0; index < configuredURLs.size(); index++) {
+			try {
+				currentIndex = (startIndex + index) % configuredURLs.size();
+
+				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
+				webResource = setQueryParams(webResource, params);
+				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON)
+						.post(ClientResponse.class, toJson(obj));
+				if (response != null) {
+					setLastKnownActiveUrlIndex(currentIndex);
+					break;
+				}
+			} catch (ClientHandlerException ex) {
+				if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
+				}
+			}
+		}
+		return response;
 	}
 
 	public ClientResponse delete(String relativeUrl, Map<String, String> params) throws Exception {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int currentIndex = 0;
+		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
 			try {
@@ -540,17 +593,51 @@ public class RangerRESTClient {
 					break;
 				}
 			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, ex);
+				if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
+				}
 			}
 		}
 		return finalResponse;
+	}
+
+	public ClientResponse delete(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
+		ClientResponse response = null;
+		int startIndex = this.lastKnownActiveUrlIndex;
+		int currentIndex = 0;
+		int retryAttempt = 0;
+
+		for (int index = 0; index < configuredURLs.size(); index++) {
+			try {
+				currentIndex = (startIndex + index) % configuredURLs.size();
+
+				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
+				webResource = setQueryParams(webResource, params);
+				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
+				response = br.delete(ClientResponse.class);
+				if (response != null) {
+					setLastKnownActiveUrlIndex(currentIndex);
+					break;
+				}
+			} catch (ClientHandlerException ex) {
+				if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
+				}
+			}
+		}
+		return response;
 	}
 
 	public ClientResponse put(String relativeUrl, Map<String, String> params, Object obj) throws Exception {
 		ClientResponse finalResponse = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int currentIndex = 0;
+		int retryAttempt = 0;
+
 		for (int index = 0; index < configuredURLs.size(); index++) {
 			try {
 				currentIndex = (startIndex + index) % configuredURLs.size();
@@ -563,8 +650,11 @@ public class RangerRESTClient {
 					break;
 				}
 			} catch (ClientHandlerException ex) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, ex);
+				if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
+				}
 			}
 		}
 		return finalResponse;
@@ -574,6 +664,7 @@ public class RangerRESTClient {
 		ClientResponse response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int currentIndex = 0;
+		int retryAttempt = 0;
 
 		for (int index = 0; index < configuredURLs.size(); index++) {
 			try {
@@ -587,9 +678,12 @@ public class RangerRESTClient {
 					setLastKnownActiveUrlIndex(currentIndex);
 					break;
 				}
-			} catch (ClientHandlerException e) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configuredURLs.get(currentIndex));
-				processException(index, e);
+			} catch (ClientHandlerException ex) {
+				if (shouldRetry(configuredURLs.get(currentIndex), index, retryAttempt, ex)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
+				}
 			}
 		}
 		return response;
@@ -617,11 +711,29 @@ public class RangerRESTClient {
 		return ret;
 	}
 
-	protected void processException(int index, ClientHandlerException e) throws Exception {
-		if (index == configuredURLs.size() - 1) {
+	protected boolean shouldRetry(String currentUrl, int index, int retryAttemptCount, Exception ex) throws Exception {
+		LOG.warn("Failed to communicate with Ranger Admin. URL: " + currentUrl + ". Error: " + ex.getMessage());
+
+		boolean isLastUrl = index == (configuredURLs.size() - 1);
+
+		// attempt retry after failure on the last url
+		boolean ret = isLastUrl && (retryAttemptCount < maxRetryAttempts);
+
+		if (ret) {
+			LOG.warn("Waiting for " + retryIntervalMs + "ms before retry attempt #" + (retryAttemptCount + 1));
+
+			try {
+				Thread.sleep(retryIntervalMs);
+			} catch (InterruptedException excp) {
+				LOG.error("Failed while waiting to retry", excp);
+			}
+		} else if (isLastUrl) {
 			LOG.error("Failed to communicate with all Ranger Admin's URL's : [ " + configuredURLs + " ]");
-			throw e;
+
+			throw ex;
 		}
+
+		return ret;
 	}
 
 	public int getLastKnownActiveUrlIndex() {

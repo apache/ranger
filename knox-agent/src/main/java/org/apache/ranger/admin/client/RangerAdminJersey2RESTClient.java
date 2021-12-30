@@ -79,6 +79,8 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	String _pluginId = null;
 	int	   _restClientConnTimeOutMs;
 	int	   _restClientReadTimeOutMs;
+	int	   _restClientMaxRetryAttempts;
+	int	   _restClientRetryIntervalMs;
 	private int lastKnownActiveUrlIndex;
 	private List<String> configURLs;
 	private boolean			 isRangerCookieEnabled;
@@ -107,6 +109,9 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		_sslConfigFileName 		 = config.get(configPropertyPrefix + ".policy.rest.ssl.config.file");
 		_restClientConnTimeOutMs = config.getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		_restClientReadTimeOutMs = config.getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
+		_restClientMaxRetryAttempts	= config.getInt(configPropertyPrefix + ".policy.rest.client.max.retry.attempts", 3);
+		_restClientRetryIntervalMs	= config.getInt(configPropertyPrefix + ".policy.rest.client.retry.interval.ms", 1 * 1000);
+
 		_clusterName             = config.get(configPropertyPrefix + ".access.cluster.name", "");
 		if(StringUtil.isEmpty(_clusterName)){
 			_clusterName =config.get(configPropertyPrefix + ".ambari.cluster.name", "");
@@ -332,6 +337,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		Response response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
         int currentIndex = 0;
+        int retryAttempt = 0;
 
 		for (int index = 0; index < configURLs.size(); index++) {
 			try {
@@ -344,10 +350,10 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 					break;
 				}
 			} catch (ProcessingException e) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + configURLs.get(currentIndex));
-				if (index == configURLs.size() - 1) {
-					throw new ClientHandlerException(
-							"Failed to communicate with all Ranger Admin's URL's : [ " + configURLs + " ]", e);
+				if (shouldRetry(configURLs.get(currentIndex), index, retryAttempt, e)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
 				}
 			}
 		}
@@ -358,6 +364,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		Response response = null;
 		int startIndex = this.lastKnownActiveUrlIndex;
 		int currentIndex = 0;
+		int retryAttempt = 0;
 
 		for (int index = 0; index < configURLs.size(); index++) {
 			try {
@@ -372,9 +379,10 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 					break;
 				}
 			} catch (ProcessingException e) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : "+configURLs.get(currentIndex));
-				if(index == configURLs.size()-1) {
-					throw new ProcessingException("Failed to communicate with all Ranger Admin's URL : [ "+ configURLs+" ]", e);
+				if (shouldRetry(configURLs.get(currentIndex), index, retryAttempt, e)) {
+					retryAttempt++;
+
+					index = -1; // start from first url
 				}
 			}
 		}
@@ -1064,5 +1072,30 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 			roleDownloadSessionId = sessionCookie;
 			isValidRoleDownloadSessionCookie = (roleDownloadSessionId != null);
 		}
+	}
+
+	protected boolean shouldRetry(String currentUrl, int index, int retryAttemptCount, ProcessingException ex) {
+		LOG.warn("Failed to communicate with Ranger Admin. URL: " + currentUrl + ". Error: " + ex.getMessage());
+
+		boolean isLastUrl = index == (configURLs.size() - 1);
+
+		// attempt retry after failure on the last url
+		boolean ret = isLastUrl && (retryAttemptCount < _restClientMaxRetryAttempts);
+
+		if (ret) {
+			LOG.warn("Waiting for " + _restClientRetryIntervalMs + "ms before retry attempt #" + (retryAttemptCount + 1));
+
+			try {
+				Thread.sleep(_restClientRetryIntervalMs);
+			} catch (InterruptedException excp) {
+				LOG.error("Failed while waiting to retry", excp);
+			}
+		} else if (isLastUrl) {
+			LOG.error("Failed to communicate with all Ranger Admin's URL's : [ " + configURLs + " ]");
+
+			throw new ClientHandlerException("Failed to communicate with all Ranger Admin's URL : [ "+ configURLs+" ]", ex);
+		}
+
+		return ret;
 	}
 }
