@@ -233,6 +233,9 @@ public class UserGroupSyncConfig  {
 
 	private static final String SYNC_POLICY_MGR_USERNAME = "ranger.usersync.policymgr.username";
 
+	private static final String SYNC_POLICY_MGR_MAX_RETRY_ATTEMPTS = "ranger.usersync.policymgr.max.retry.attempts";
+	private static final String SYNC_POLICY_MGR_RETRY_INTERVAL_MS  = "ranger.usersync.policymgr.retry.interval.ms";
+
 	private static final String DEFAULT_POLICYMGR_USERNAME = "rangerusersync";
 
 	private static final String SYNC_SOURCE = "ranger.usersync.sync.source";
@@ -955,6 +958,14 @@ public class UserGroupSyncConfig  {
 		return userName;
 	}
 
+	public int getPolicyMgrMaxRetryAttempts() {
+		return getIntProperty(prop, SYNC_POLICY_MGR_MAX_RETRY_ATTEMPTS, 0);
+	}
+
+	public int getPolicyMgrRetryIntervalMs() {
+		return getIntProperty(prop, SYNC_POLICY_MGR_RETRY_INTERVAL_MS, 1 * 1000);
+	}
+
 	public String getSyncSource() {
 		String syncSource=null;
 		if(prop!=null && prop.containsKey(SYNC_SOURCE)){
@@ -1282,5 +1293,21 @@ public class UserGroupSyncConfig  {
 			isUserSyncNameValidationEnabled  = Boolean.valueOf(val);
 		}
 		return isUserSyncNameValidationEnabled;
+	}
+
+
+	private int getIntProperty(Properties prop, String key, int defaultValue) {
+		int   ret  = defaultValue;
+		String val = prop.getProperty(key);
+
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Integer.parseInt(val);
+			} catch (NumberFormatException excp) {
+				LOG.warn("Invalid value for property: " + key + "=" + val + ". Will use default value: " + defaultValue, excp);
+			}
+		}
+
+		return ret;
 	}
 }
