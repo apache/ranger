@@ -326,12 +326,12 @@ define(function(require){
                 if(e.added){
                     App.vZone.vZoneId = e.added.zoneId;
                     XAUtil.changeParamToUrlFragment({"securityZone" : e.val}, that.collection.modelName);
+                    that.zoneServiceList.clear();
                     that.zoneServiceList.fetch({
 						cache : false,
 						async : false,
 						url : "service/public/v2/api/zones/"+e.added.zoneId+"/service-headers",
 					})
-
                 } else {
                     App.vZone.vZoneId = null;
                     //for url change on UI
@@ -369,6 +369,7 @@ define(function(require){
                     App.vZone.vZoneId = zoneID;
                 }
                 if (_.isEmpty(this.zoneServiceList.attributes)) {
+                    this.zoneServiceList.clear()
                     this.zoneServiceList.fetch({
                         cache : false,
                         async : false,

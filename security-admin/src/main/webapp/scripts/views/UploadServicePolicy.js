@@ -223,6 +223,7 @@ define(function(require){
                         return m.name == that.ui.zoneDestination.val();
                     })
                     var zoneServiceListModel = new RangerServiceList();
+                    zoneServiceListModel.clear();
                     zoneServiceListModel.fetch({
                         cache : false,
                         async : false,
@@ -385,6 +386,7 @@ define(function(require){
                         return m.name == e.val
                     })
                     var zoneServiceListModel = new RangerServiceList();
+                    zoneServiceListModel.clear();
                     zoneServiceListModel.fetch({
                         cache : false,
                         async : false,
