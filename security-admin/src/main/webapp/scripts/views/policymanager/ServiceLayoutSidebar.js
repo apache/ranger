@@ -403,6 +403,7 @@ define(function(require){
                 App.vZone.vZoneName = e.val;
                 if(e.added){
                     App.vZone.vZoneId = e.added.zoneId;
+                    that.zoneServiceList.clear();
                     that.zoneServiceList.fetch({
                         cache : false,
                         async : false,
