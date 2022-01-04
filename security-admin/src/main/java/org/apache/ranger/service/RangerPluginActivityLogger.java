@@ -30,8 +30,6 @@ import javax.annotation.PostConstruct;
 
 @Component
 public class RangerPluginActivityLogger {
-    @Autowired
-    RangerTransactionService transactionService;
 
     @Autowired
     RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
@@ -52,18 +50,7 @@ public class RangerPluginActivityLogger {
     }
 
     public void commitAfterTransactionComplete(Runnable commitWork) {
-        if (pluginActivityAuditCommitInline) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Using TransactionManager for committing work [pluginActivityAuditCommitInline:" + pluginActivityAuditCommitInline + "]");
-            }
-            transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
-        } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Using separate thread for committing work [pluginActivityAuditCommitInline:" + pluginActivityAuditCommitInline + "]");
-            }
-            final long delayInMillis = 1000L;
-            transactionService.scheduleToExecuteInOwnTransaction(commitWork, delayInMillis);
-        }
+        transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
     }
 
 }

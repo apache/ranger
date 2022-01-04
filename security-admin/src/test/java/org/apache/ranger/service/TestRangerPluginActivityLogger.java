@@ -21,7 +21,6 @@ import org.junit.FixMethodOrder;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.MockitoJUnitRunner;
 
@@ -29,7 +28,7 @@ import org.mockito.junit.MockitoJUnitRunner;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestRangerPluginActivityLogger {
 
-	@InjectMocks
+	@Mock
 	RangerPluginActivityLogger rangerPluginActivityLogger;
 
 	@Mock
