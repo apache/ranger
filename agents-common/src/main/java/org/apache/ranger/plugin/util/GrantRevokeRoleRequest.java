@@ -275,7 +275,7 @@ public class GrantRevokeRoleRequest implements Serializable {
 		sb.append("} ");
 
 		sb.append("groups={");
-		if(roles != null) {
+		if(groups != null) {
 			for(String group : groups) {
 				sb.append(group).append(" ");
 			}
