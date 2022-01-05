@@ -19,7 +19,7 @@ FROM ubuntu:20.04
 
 # Install tzdata, Python, Java, python-requests
 RUN apt-get update && \
-    DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata \
+    DEBIAN_FRONTEND="noninteractive" apt-get -y install tzdata vim\
     python3 python3-pip openjdk-8-jdk bc iputils-ping ssh pdsh && \
     pip3 install apache-ranger && \
     pip3 install requests
