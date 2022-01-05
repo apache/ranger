@@ -114,6 +114,13 @@ AZURE_MASTER_KEY_TYPE=$(get_prop 'AZURE_MASTER_KEY_TYPE' $PROPFILE)
 ZONE_KEY_ENCRYPTION_ALGO=$(get_prop 'ZONE_KEY_ENCRYPTION_ALGO' $PROPFILE)
 AZURE_KEYVAULT_URL=$(get_prop 'AZURE_KEYVAULT_URL' $PROPFILE)
 
+IS_GCP_ENABLED=$(get_prop 'IS_GCP_ENABLED' $PROPFILE)
+GCP_KEYRING_ID=$(get_prop 'GCP_KEYRING_ID' $PROPFILE)
+GCP_CRED_JSON_FILE=$(get_prop 'GCP_CRED_JSON_FILE' $PROPFILE)
+GCP_PROJECT_ID=$(get_prop 'GCP_PROJECT_ID' $PROPFILE)
+GCP_LOCATION_ID=$(get_prop 'GCP_LOCATION_ID' $PROPFILE)
+GCP_MASTER_KEY_NAME=$(get_prop 'GCP_MASTER_KEY_NAME' $PROPFILE)
+
 kms_principal=$(get_prop 'kms_principal' $PROPFILE)
 kms_keytab=$(get_prop 'kms_keytab' $PROPFILE)
 hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
@@ -471,6 +478,14 @@ setup_kms(){
         cd ${oldP}
 }
 
+checkIfEmpty() {
+	if [ -z "$1" ]
+	then
+		echo "Error - Since GCP is enabled, Please provide valid value for '$2', Found : '$1'";
+		exit 1
+	fi
+}
+
 update_properties() {
 	newPropertyValue=''
 	echo "export JAVA_HOME=${JAVA_HOME}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/java_home.sh
@@ -643,6 +658,7 @@ update_properties() {
         HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
         KEYSECURE_ENABLED=`echo $KEYSECURE_ENABLED | tr '[:lower:]' '[:upper:]'`
 	AZURE_KEYVAULT_ENABLED=`echo $AZURE_KEYVAULT_ENABLED | tr '[:lower:]' '[:upper:]'`
+	IS_GCP_ENABLED=`echo $IS_GCP_ENABLED | tr '[:lower:]' '[:upper:]'`
 
 	if [ "${keystore}" != "" ]
 	then
@@ -888,6 +904,46 @@ update_properties() {
 
         fi
 
+	########### RANGER GCP #################
+		if [ "${IS_GCP_ENABLED}" != "TRUE" ]
+		then
+			propertyName=ranger.kms.gcp.enabled
+			newPropertyValue="false"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		else
+			propertyName=ranger.kms.gcp.enabled
+			newPropertyValue="true"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.keyring.id
+			newPropertyValue="${GCP_KEYRING_ID}"
+			checkIfEmpty "$newPropertyValue" "GCP_KEYRING_ID"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.cred.file
+			newPropertyValue="${GCP_CRED_JSON_FILE}"
+			if [ "${newPropertyValue: -5}" != ".json" ]
+			then
+				echo "Error - GCP Credential file must be in a json format, Provided file : ${newPropertyValue}";
+				exit 1
+			fi
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.project.id
+			newPropertyValue="${GCP_PROJECT_ID}"
+			checkIfEmpty "$newPropertyValue" "GCP_PROJECT_ID"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.location.id
+			newPropertyValue="${GCP_LOCATION_ID}"
+			checkIfEmpty "$newPropertyValue" "GCP_LOCATION_ID"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+			propertyName=ranger.kms.gcp.masterkey.name
+			newPropertyValue="${GCP_MASTER_KEY_NAME}"
+			checkIfEmpty "$newPropertyValue" "GCP_MASTER_KEY_NAME"
+			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		fi
 
 	to_file_kms_site=$PWD/ews/webapp/WEB-INF/classes/conf/ranger-kms-site.xml
     if test -f $to_file_kms_site; then

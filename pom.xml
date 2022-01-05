@@ -179,6 +179,7 @@
         <poi.version>5.0.0</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
+        <gcp.protobuf-java.version>3.19.1</gcp.protobuf-java.version>
 	<ratis.version>2.1.0</ratis.version>
         <ratis-thirdparty.version>0.7.0</ratis-thirdparty.version>
         <scala.version>2.12.10</scala.version>
@@ -231,6 +232,8 @@
         <jsonsmart.version>2.3.1</jsonsmart.version>
         <nimbus-jose-jwt.version>8.22.1</nimbus-jose-jwt.version>
         <com.amazonaws.aws-java-sdk-bom.version>1.12.125</com.amazonaws.aws-java-sdk-bom.version>
+        <!-- GCP HSM -->
+        <google.cloud.kms>2.3.0</google.cloud.kms>
     </properties>
     <profiles>
         <profile>
