@@ -91,7 +91,7 @@ idx=1
 while [ $idx -le $MAX_CLIENT ]
 do
    LOG $INFO "Initiating: 'python ./test-hdfs-policy.py --startIndex $idx --maxIteration $MAX_ITERATION --incrementBy $MAX_CLIENT --host $ADM_HOST --username $USERNAME --password $PASSWORD --serviceName $SERVICE_NAME > $SCRIPT_LOG_DIR/script-$idx.log 2>&1 &'"
-   python ./test-hdfs-policy.py --startIndex $idx --maxIteration $MAX_ITERATION --incrementBy $MAX_CLIENT --host $ADM_HOST --username $USERNAME --password $PASSWORD --serviceName $SERVICE_NAME > $SCRIPT_LOG_DIR/script-$idx.log 2>&1 &
+   python3 ./test-hdfs-policy.py --startIndex $idx --maxIteration $MAX_ITERATION --incrementBy $MAX_CLIENT --host $ADM_HOST --username $USERNAME --password $PASSWORD --serviceName $SERVICE_NAME > $SCRIPT_LOG_DIR/script-$idx.log 2>&1 &
    idx=`expr $idx + 1`
 done
 
