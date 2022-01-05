@@ -176,11 +176,7 @@ public class PolicyRefUpdater {
 				continue;
 			}
 			PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.ROLE, role, xPolicy);
-			if (associator.doAssociate(false)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Role name: " + role + " specified in policy does not exist in ranger admin.");
-				}
-			} else {
+			if (!associator.doAssociate(false)) {
 				if (isAdmin) {
 					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 				} else {
@@ -200,11 +196,7 @@ public class PolicyRefUpdater {
 			}
 
 			PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.GROUP, group, xPolicy);
-			if (associator.doAssociate(false)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Group name: " + group + " specified in policy does not exist in ranger admin.");
-				}
-			} else {
+			if (!associator.doAssociate(false)) {
 				if (isAdmin) {
 					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 				} else {
@@ -221,11 +213,7 @@ public class PolicyRefUpdater {
 				continue;
 			}
 			PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.USER, user, xPolicy);
-			if (associator.doAssociate(false)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("User name: " + user + " specified in policy does not exist in ranger admin.");
-				}
-			} else {
+			if (!associator.doAssociate(false)) {
 				if (isAdmin) {
 					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 				} else {

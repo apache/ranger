@@ -107,11 +107,7 @@ public class RoleRefUpdater {
 				}
 				RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.USER, roleUser, roleId);
 
-				if (associator.doAssociate(false)) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("User name: " + roleUser + " specified in role does not exist in ranger admin.");
-					}
-				} else {
+				if (!associator.doAssociate(false)) {
 					if (isCreateNonExistentUGs) {
 						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 					} else {
@@ -129,11 +125,7 @@ public class RoleRefUpdater {
 				}
 				RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.GROUP, roleGroup, roleId);
 
-				if (associator.doAssociate(false)) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Group name: " + roleGroup + " specified in role does not exist in ranger admin.");
-					}
-				} else {
+				if (!associator.doAssociate(false)) {
 					if (isCreateNonExistentUGs) {
 						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 					} else {
@@ -152,11 +144,7 @@ public class RoleRefUpdater {
 
 				RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.ROLE, roleRole, roleId);
 
-				if (associator.doAssociate(false)) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Group name: " + roleRole + " specified in role does not exist in ranger admin.");
-					}
-				} else {
+				if (!associator.doAssociate(false)) {
 					throw restErrorUtil.createRESTException("Role with name: " + roleRole + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
 				}
 			}
