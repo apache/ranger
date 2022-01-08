@@ -62,7 +62,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
-import org.apache.ranger.biz.ServiceDBStore.METRIC_TYPE;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.GUIDUtil;
@@ -170,7 +169,6 @@ import org.apache.ranger.rest.ServiceREST;
 import org.apache.ranger.rest.TagREST;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerDataHistService;
-import org.apache.ranger.service.RangerPolicyLabelHelper;
 import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerPolicyWithAssignedIdService;
@@ -283,9 +281,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 	
 	@Autowired
         RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
-
-	@Autowired
-	RangerPolicyLabelHelper policyLabelsHelper;
 
 	@Autowired
 	XUserService xUserService;
@@ -2072,24 +2067,58 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		for (String policyLabel : uniquePolicyLabels) {
 			//check and create new label If does not exist
-			XXPolicyLabel xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
-			if(xxPolicyLabel == null) {
-				synchronized(this) {
-					xxPolicyLabel  = policyLabelsHelper.createNewOrGetLabel(policyLabel, xPolicy);
-				}
-			}
-			//label mapping with policy
-			if (xxPolicyLabel.getId() != null) {
-				XXPolicyLabelMap xxPolicyLabelMap = new XXPolicyLabelMap();
-				xxPolicyLabelMap.setPolicyId(xPolicy.getId());
-				xxPolicyLabelMap.setPolicyLabelId(xxPolicyLabel.getId()); xxPolicyLabelMap =
-				rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabelMap);
-				xxPolicyLabelMap = daoMgr.getXXPolicyLabelMap().create(xxPolicyLabelMap);
+			if (StringUtils.isNotEmpty(policyLabel)) {
+				transactionSynchronizationAdapter.executeOnTransactionCommit(new AssociatePolicyLabel(policyLabel, xPolicy));
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceDBStore.createOrMapLabels()");
+		}
+	}
+
+	private class AssociatePolicyLabel implements Runnable {
+		private String   policyLabel;
+		private XXPolicy xPolicy;
+
+		AssociatePolicyLabel(String policyLabel, XXPolicy xPolicy) {
+			this.policyLabel = policyLabel;
+			this.xPolicy     = xPolicy;
+		}
+
+		@Override
+		public void run() {
+			getOrCreateLabel();
+		}
+
+		private void getOrCreateLabel() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> AssociatePolicyLabel.getOrCreateLabel(policyId=" + xPolicy.getId() + ", label=" + policyLabel + ")");
+			}
+
+			XXPolicyLabel xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
+
+			if (xxPolicyLabel == null) {
+				xxPolicyLabel = daoMgr.getXXPolicyLabels().findByName(policyLabel);
+
+				if (xxPolicyLabel == null) {
+					xxPolicyLabel = new XXPolicyLabel();
+					xxPolicyLabel.setPolicyLabel(policyLabel);
+					xxPolicyLabel = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabel);
+					xxPolicyLabel = daoMgr.getXXPolicyLabels().create(xxPolicyLabel);
+				}
+			}
+
+			if (xxPolicyLabel != null) {
+				XXPolicyLabelMap xxPolicyLabelMap = new XXPolicyLabelMap();
+				xxPolicyLabelMap.setPolicyId(xPolicy.getId());
+				xxPolicyLabelMap.setPolicyLabelId(xxPolicyLabel.getId());
+				xxPolicyLabelMap = rangerAuditFields.populateAuditFieldsForCreate(xxPolicyLabelMap);
+				daoMgr.getXXPolicyLabelMap().create(xxPolicyLabelMap);
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== AssociatePolicyLabel.getOrCreateLabel(policyId=" + xPolicy.getId() + ", label=" + policyLabel + ")");
+			}
 		}
 	}
 
