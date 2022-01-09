@@ -17,7 +17,7 @@
  * under the License.
  */
 
-package org.apache.ranger.ugsyncutil.model;;
+package org.apache.ranger.ugsyncutil.model;
 
 import java.util.Set;
 
