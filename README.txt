@@ -29,6 +29,8 @@ Build Process
 
 2. On the root folder, please execute the following Maven command:
 
+   $ mvn install:install-file -DgroupId=org.apache.atlas -DartifactId=atlas-authorization -Dversion=3.0.0-SNAPSHOT -Dpackaging=jar -Dfile=plugin-atlas/external-libs/atlas-authorization-3.0.0-SNAPSHOT.jar
+     (Required above Steps since central maven repo is present for custom artifacts
    $ mvn clean compile package install
    $ mvn eclipse:eclipse
 

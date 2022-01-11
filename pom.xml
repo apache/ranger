@@ -80,7 +80,7 @@
         <asm.all.version>3.2</asm.all.version>
         <aspectj.version>1.8.2</aspectj.version>
         <assembly.plugin.version>2.6</assembly.plugin.version>
-        <atlas.version>2.2.0</atlas.version>
+        <atlas.version>3.0.0-SNAPSHOT</atlas.version>
         <atlas.gson.version>2.5</atlas.gson.version>
         <atlas.jackson.version>2.11.3</atlas.jackson.version>
         <atlas.jackson.databind.version>2.11.3</atlas.jackson.databind.version>
