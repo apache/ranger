@@ -265,7 +265,11 @@ public class XUserMgr extends XUserMgrBase {
 		if(vXPortalUser!=null){
 			assignPermissionToUser(vXPortalUser, true);
 		}
-
+		try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error("unable to do onGlobalAppDataChange() failed", excp);
+		}
 		return createdXUser;
 	}
 
@@ -467,6 +471,11 @@ public class XUserMgr extends XUserMgrBase {
 			}
 			assignPermissionToUser(vXPortalUser,true);
 		}
+		try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error("unable to do onGlobalAppDataChange() failed", excp);
+		}
 		//update permissions end
 		Collection<String> roleList = new ArrayList<String>();
 		if (xXPortalUser != null) {
@@ -498,7 +507,7 @@ public class XUserMgr extends XUserMgrBase {
 		List<Long> groupUsersToRemove = new ArrayList<Long>();
 		trxLogList.addAll(createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove));
 		xaBizUtil.createTrxLog(trxLogList);
-
+		
 		return vXUser;
 	}
 	private List<XXTrxLog> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
@@ -740,6 +749,11 @@ public class XUserMgr extends XUserMgrBase {
 		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
 				"create");
 		xaBizUtil.createTrxLog(trxLogList);
+		try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error("unable to do onGlobalAppDataChange() failed", excp);
+		}
 		return vXGroup;
 	}
 
@@ -2204,6 +2218,11 @@ public class XUserMgr extends XUserMgrBase {
 				xaBizUtil.createTrxLog(xXTrxLogsXXGroup);
 			}
 		}
+		try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error("unable to do onGlobalAppDataChange() failed", excp);
+		}
 	}
 
 	private void blockIfZoneGroup(Long grpId) {
@@ -2406,6 +2425,11 @@ public class XUserMgr extends XUserMgrBase {
 				trxLogList=xPortalUserService.getTransactionLog(xPortalUserService.populateViewBean(xXPortalUser), "delete");
 				xaBizUtil.createTrxLog(trxLogList);
 			}
+		}
+		try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error("unable to do onGlobalAppDataChange() failed", excp);
 		}
 	}
 

@@ -53,6 +53,7 @@ public class RangerUserStore implements Serializable {
     private Map<String, Set<String>>         userGroupMapping;
     private Map<String, String>              userCloudIdMapping;
     private Map<String, String>              groupCloudIdMapping;
+    private String                           serviceName;
 
     public RangerUserStore() {this(-1L, null, null, null);}
 
@@ -62,6 +63,15 @@ public class RangerUserStore implements Serializable {
         setUserGroupMapping(userGroups);
         buildMap(users, groups);
     }
+    
+    public String getServiceName() {
+        return serviceName;
+    }
+
+    public void setServiceName(String serviceName) {
+        this.serviceName = serviceName;
+    }
+    
     public Long getUserStoreVersion() {
         return userStoreVersion;
     }

@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.admin.client;
+package org.apache.ranger.admin.client;
 
 
 import com.sun.jersey.api.client.ClientResponse;
@@ -64,7 +64,9 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 	private Cookie			 tagDownloadSessionId               = null;
 	private boolean			 isValidTagDownloadSessionCookie    = false;
 	private Cookie			 roleDownloadSessionId              = null;
+	private Cookie           userStoreDownloadSessionId         = null;
 	private boolean			 isValidRoleDownloadSessionCookie   = false;
+	private boolean          isValidUserStoreDownloadSessionCookie = false;
 	private final String	 pluginCapabilities      = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 
 	public static <T> GenericType<List<T>> getGenericType(final T clazz) {
@@ -748,73 +750,13 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			LOG.debug("==> RangerAdminRESTClient.getUserStoreIfUpdated(" + lastKnownUserStoreVersion + ", " + lastActivationTimeInMillis + ")");
 		}
 
+
 		final RangerUserStore ret;
-		final UserGroupInformation user = MiscUtil.getUGILoginUser();
-		final boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
-		final ClientResponse response;
 
-		Map<String, String> queryParams = new HashMap<String, String>();
-		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_USERSTORE_VERSION, Long.toString(lastKnownUserStoreVersion));
-		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
-		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
-		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
-		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
-
-		if (isSecureMode) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking UserStore updated as user : " + user);
-			}
-			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
-				public ClientResponse run() {
-					ClientResponse clientRes = null;
-					String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE + serviceNameUrlParam;
-					try {
-						clientRes =  restClient.get(relativeURL, queryParams);
-					} catch (Exception e) {
-						LOG.error("Failed to get response, Error is : "+e.getMessage());
-					}
-					return clientRes;
-				}
-			};
-			response = user.doAs(action);
+		if (isRangerCookieEnabled && userStoreDownloadSessionId != null && isValidUserStoreDownloadSessionCookie) {
+			ret = getUserStoreIfUpdatedWithCookie(lastKnownUserStoreVersion, lastActivationTimeInMillis);
 		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking UserStore updated as user : " + user);
-			}
-			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE + serviceNameUrlParam;
-			response = restClient.get(relativeURL, queryParams);
-		}
-
-		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED) {
-			if (response == null) {
-				LOG.error("Error getting UserStore; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
-			} else {
-				RESTResponse resp = RESTResponse.fromClientResponse(response);
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No change in UserStore. secureMode=" + isSecureMode + ", user=" + user
-							+ ", response=" + resp + ", serviceName=" + serviceName
-							+ ", " + "lastKnownUserStoreVersion=" + lastKnownUserStoreVersion
-							+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-				}
-			}
-			ret = null;
-		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
-			ret = response.getEntity(RangerUserStore.class);
-		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
-			ret = null;
-			LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode + ", user=" + user
-					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName
-					+ ", " + "lastKnownUserStoreVersion=" + lastKnownUserStoreVersion
-					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
-			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
-
-			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
-
-			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
-		} else {
-			RESTResponse resp = RESTResponse.fromClientResponse(response);
-			LOG.warn("Error getting UserStore. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
-			ret = null;
+			ret = getUserStoreIfUpdatedWithCred(lastKnownUserStoreVersion, lastActivationTimeInMillis);
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -1296,6 +1238,118 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		return ret;
 	}
 
+	/* Roles Download ranger admin rest call methods */
+	private RangerUserStore getUserStoreIfUpdatedWithCred(final long lastKnownUserStoreVersion, final long lastActivationTimeInMillis) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getUserStoreIfUpdatedWithCred(" + lastKnownUserStoreVersion + ", " + lastActivationTimeInMillis + ")");
+		}
+
+		final RangerUserStore ret;
+
+		final UserGroupInformation user = MiscUtil.getUGILoginUser();
+		final boolean isSecureMode      = user != null && UserGroupInformation.isSecurityEnabled();
+		final ClientResponse response   = getUserStoreDownloadResponse(lastKnownUserStoreVersion, lastActivationTimeInMillis, user, isSecureMode);
+
+		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+			if (response == null) {
+				userStoreDownloadSessionId = null;
+				LOG.error("Error getting UserStore; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+			} else {
+				setCookieReceivedFromUserStoreDownloadSession(response);
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No change in UserStore. secureMode=" + isSecureMode + ", user=" + user
+							+ ", response=" + resp + ", serviceName=" + serviceName
+							+ ", " + "lastKnownUserStoreVersion=" + lastKnownUserStoreVersion
+							+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+				}
+			}
+			ret = null;
+		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+			setCookieReceivedFromUserStoreDownloadSession(response);
+			ret = response.getEntity(RangerUserStore.class);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+			userStoreDownloadSessionId = null;
+			ret = null;
+			LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode + ", user=" + user
+					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName
+					+ ", " + "lastKnownUserStoreVersion=" + lastKnownUserStoreVersion
+					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+
+			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
+
+			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.warn("Error getting UserStore. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
+			userStoreDownloadSessionId = null;
+			ret = null;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getUserStoreIfUpdatedWithCred(" + lastKnownUserStoreVersion + ", " + lastActivationTimeInMillis + "): " + ret);
+		}
+
+		return ret;
+	}
+
+	private RangerUserStore getUserStoreIfUpdatedWithCookie(final long lastKnownUserStoreVersion, final long lastActivationTimeInMillis) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getUserStoreIfUpdatedWithCookie(" + lastKnownUserStoreVersion + ", " + lastActivationTimeInMillis + ")");
+		}
+
+		final RangerUserStore ret;
+
+		final UserGroupInformation user = MiscUtil.getUGILoginUser();
+		final boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final ClientResponse response = getUserStoreDownloadResponse(lastKnownUserStoreVersion, lastActivationTimeInMillis, user, isSecureMode);
+
+		if (response == null || response.getStatus() == HttpServletResponse.SC_NOT_MODIFIED || response.getStatus() == HttpServletResponse.SC_NO_CONTENT) {
+			if (response == null) {
+				userStoreDownloadSessionId = null;
+				isValidUserStoreDownloadSessionCookie = false;
+				LOG.error("Error getting Roles; Received NULL response!!. secureMode=" + isSecureMode + ", user=" + user + ", serviceName=" + serviceName);
+			} else {
+				checkAndResetUserStoreDownloadSessionCookie(response);
+				RESTResponse resp = RESTResponse.fromClientResponse(response);
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No change in Roles. secureMode=" + isSecureMode + ", user=" + user
+							+ ", response=" + resp + ", serviceName=" + serviceName
+							+ ", " + "lastKnownRoleVersion=" + lastKnownUserStoreVersion
+							+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+				}
+			}
+			ret = null;
+		} else if (response.getStatus() == HttpServletResponse.SC_OK) {
+			checkAndResetUserStoreDownloadSessionCookie(response);
+			ret = response.getEntity(RangerUserStore.class);
+		} else if (response.getStatus() == HttpServletResponse.SC_NOT_FOUND) {
+			userStoreDownloadSessionId = null;
+			isValidUserStoreDownloadSessionCookie = false;
+			ret = null;
+			LOG.error("Error getting UserStore; service not found. secureMode=" + isSecureMode + ", user=" + user
+					+ ", response=" + response.getStatus() + ", serviceName=" + serviceName
+					+ ", " + "lastKnownUserStoreVersion=" + lastKnownUserStoreVersion
+					+ ", " + "lastActivationTimeInMillis=" + lastActivationTimeInMillis);
+			String exceptionMsg = response.hasEntity() ? response.getEntity(String.class) : null;
+			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(serviceName, exceptionMsg);
+			LOG.warn("Received 404 error code with body:[" + exceptionMsg + "], Ignoring");
+		} else {
+			RESTResponse resp = RESTResponse.fromClientResponse(response);
+			LOG.warn("Error getting UserStore. secureMode=" + isSecureMode + ", user=" + user + ", response=" + resp + ", serviceName=" + serviceName);
+			userStoreDownloadSessionId = null;
+			isValidUserStoreDownloadSessionCookie = false;
+			ret = null;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getUserStoreIfUpdatedWithCookie(" + lastKnownUserStoreVersion + ", " + lastActivationTimeInMillis + "): " + ret);
+		}
+
+		return ret;
+	}
+
 	private ClientResponse getRangerRolesDownloadResponse(final long lastKnownRoleVersion, final long lastActivationTimeInMillis, final UserGroupInformation user, final boolean isSecureMode) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAdminRESTClient.getRangerRolesDownloadResponse(" + lastKnownRoleVersion + ", " + lastActivationTimeInMillis + ")");
@@ -1312,7 +1366,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Roles updated as user : " + user);
+				LOG.debug("Checking Roles updated as user : " + user + " isSecureMode :" + isSecureMode);
 			}
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
 				public ClientResponse run() {
@@ -1329,7 +1383,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			ret = user.doAs(action);
 		} else {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Checking Roles updated as user : " + user);
+				LOG.debug("Checking Roles updated as user : " + user + " isSecureMode :" + isSecureMode);
 			}
 			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USER_GROUP_ROLES + serviceNameUrlParam;
 			ret = restClient.get(relativeURL, queryParams);
@@ -1342,12 +1396,73 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 		return ret;
 	}
 
+	private ClientResponse getUserStoreDownloadResponse(final long lastKnownUserStoreVersion, final long lastActivationTimeInMillis, final UserGroupInformation user, final boolean isSecureMode) throws Exception {
+		
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminRESTClient.getUserStoreDownloadResponse(" + lastKnownUserStoreVersion + ", " + lastActivationTimeInMillis + ")");
+		}
+
+		final ClientResponse ret;
+
+		Map<String, String> queryParams = new HashMap<String, String>();
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_USERSTORE_VERSION, Long.toString(lastKnownUserStoreVersion));
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
+		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, pluginId);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, clusterName);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
+
+		if (isSecureMode) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking UserStore updated as user : " + user + " isSecureMode :" + isSecureMode);
+			}
+			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
+				public ClientResponse run() {
+					ClientResponse clientRes = null;
+					String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE + serviceNameUrlParam;
+					try {
+						clientRes =  restClient.get(relativeURL, queryParams, userStoreDownloadSessionId);
+					} catch (Exception e) {
+						LOG.error("Failed to get response, Error is : "+e.getMessage());
+					}
+					return clientRes;
+				}
+			};
+			ret = user.doAs(action);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking UserStore updated as user : " + user + " isSecureMode :" + isSecureMode);
+			}
+			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USERSTORE + serviceNameUrlParam;
+			ret = restClient.get(relativeURL, queryParams);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RangerAdminRESTClient.getUserStoreDownloadResponse(" + restClient.getUsername() + ", " + restClient.getPassword() + "): " + ret);
+			}
+	
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminRESTClient.getUserStoreDownloadResponse(" + lastKnownUserStoreVersion + ", " + lastActivationTimeInMillis + "): " + ret);
+		}
+
+		return ret;
+	}
+
 	private void checkAndResetRoleDownloadSessionCookie(ClientResponse response) {
 		List<NewCookie> respCookieList = response.getCookies();
 		for (NewCookie respCookie : respCookieList) {
 			if (respCookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
 				roleDownloadSessionId = respCookie;
 				isValidRoleDownloadSessionCookie = (roleDownloadSessionId != null);
+				break;
+			}
+		}
+	}
+	private void checkAndResetUserStoreDownloadSessionCookie(ClientResponse response) {
+		List<NewCookie> respCookieList = response.getCookies();
+		for (NewCookie respCookie : respCookieList) {
+			if (respCookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
+				userStoreDownloadSessionId = respCookie;
+				isValidUserStoreDownloadSessionCookie = (userStoreDownloadSessionId != null);
 				break;
 			}
 		}
@@ -1366,6 +1481,21 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			}
 			roleDownloadSessionId = sessionCookie;
 			isValidRoleDownloadSessionCookie = (roleDownloadSessionId != null);
+		}
+	}
+	private void setCookieReceivedFromUserStoreDownloadSession(ClientResponse clientResponse) {
+		if (isRangerCookieEnabled) {
+			Cookie sessionCookie = null;
+			List<NewCookie> cookieList = clientResponse.getCookies();
+			// save cookie received from credentials session login
+			for (NewCookie cookie : cookieList) {
+				if (cookie.getName().equalsIgnoreCase(rangerAdminCookieName)) {
+					sessionCookie = cookie.toCookie();
+					break;
+				}
+			}
+			userStoreDownloadSessionId = sessionCookie;
+			isValidUserStoreDownloadSessionCookie = (userStoreDownloadSessionId != null);
 		}
 	}
 }
