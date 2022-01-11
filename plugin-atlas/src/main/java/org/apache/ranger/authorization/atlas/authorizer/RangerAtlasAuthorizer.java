@@ -67,7 +67,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     }};
 
     private static volatile RangerBasePlugin atlasPlugin = null;
-
+    private static volatile RangerGroupUtil groupUtil = null;
     @Override
     public void init() {
         if (LOG.isDebugEnabled()) {
@@ -88,6 +88,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                     plugin.setResultProcessor(new RangerDefaultAuditHandler(plugin.getConfig()));
 
                     atlasPlugin = plugin;
+                    groupUtil = new RangerGroupUtil(atlasPlugin.getUserStore());
                 }
             }
         }
@@ -426,7 +427,6 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> isAccessAllowed(" + request + ")");
         }
-
         boolean ret = false;
 
         try {
@@ -520,12 +520,21 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
     private boolean checkAccess(RangerAccessRequestImpl request) {
         boolean          ret    = false;
+        String userName = request.getUser();
         RangerBasePlugin plugin = atlasPlugin;
 
         if (plugin != null) {
+            
+            groupUtil.setUserStore(atlasPlugin.getUserStore());
+            
+            request.setUserGroups(groupUtil.getContainedGroups(userName));
+            
+            LOG.warn("Setting UserGroup for user: "+ userName + " Groups: " + groupUtil.getContainedGroups(userName) );
+            
             RangerAccessResult result = plugin.isAccessAllowed(request);
 
             ret = result != null && result.getIsAllowed();
+
         } else {
             LOG.warn("RangerAtlasPlugin not initialized. Access blocked!!!");
         }
@@ -535,12 +544,24 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
     private boolean checkAccess(RangerAccessRequestImpl request, RangerAtlasAuditHandler auditHandler) {
         boolean          ret    = false;
+        
         RangerBasePlugin plugin = atlasPlugin;
+        String userName = request.getUser();
+
+        LOG.warn("Setting UserGroup for user"+ userName + " Groups: " + groupUtil.getContainedGroups(userName));
 
         if (plugin != null) {
+            
+            groupUtil.setUserStore(atlasPlugin.getUserStore());
+            
+            request.setUserGroups(groupUtil.getContainedGroups(userName));
+            
+            LOG.warn("Setting UserGroup for user :"+ userName + " Groups: " + groupUtil.getContainedGroups(userName) );
+            
             RangerAccessResult result = plugin.isAccessAllowed(request, auditHandler);
 
             ret = result != null && result.getIsAllowed();
+        
         } else {
             LOG.warn("RangerAtlasPlugin not initialized. Access blocked!!!");
         }

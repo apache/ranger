@@ -67,6 +67,7 @@ public class RangerBasePlugin {
 	private       RangerAuthContext           currentAuthContext;
 	private       RangerAccessResultProcessor resultProcessor;
 	private       RangerRoles                 roles;
+	private       RangerUserStore             userStore;
 	private final List<RangerChainedPlugin>   chainedPlugins;
 
 
@@ -166,6 +167,22 @@ public class RangerBasePlugin {
 		}
 
 		pluginContext.notifyAuthContextChanged();
+	}
+
+	public RangerUserStore getUserStore() {
+		return this.userStore;
+	}
+
+	public void setUserStore(RangerUserStore userStore) {
+		this.userStore = userStore;
+
+		// RangerPolicyEngine policyEngine = this.policyEngine;
+
+		// if (policyEngine != null) {
+		// 	policyEngine.setUserStore(userStore);
+		// }
+
+		// pluginContext.notifyAuthContextChanged();
 	}
 
 	public void setAuditExcludedUsersGroupsRoles(Set<String> users, Set<String> groups, Set<String> roles) {

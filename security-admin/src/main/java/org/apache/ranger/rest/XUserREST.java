@@ -1209,59 +1209,59 @@ public class XUserREST {
 		}
 	}
 
-        @DELETE
-        @Path("/secure/users/{userName}")
-        @Produces({ "application/xml", "application/json" })
-        @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-        public void deleteSingleUserByUserName(@Context HttpServletRequest request, @PathParam("userName") String userName) {
-                String forceDeleteStr = request.getParameter("forceDelete");
-                boolean forceDelete = false;
-                if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
-                        forceDelete = true;
-                }
+	@DELETE
+	@Path("/secure/users/{userName}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteSingleUserByUserName(@Context HttpServletRequest request, @PathParam("userName") String userName) {
+			String forceDeleteStr = request.getParameter("forceDelete");
+			boolean forceDelete = false;
+			if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
+					forceDelete = true;
+			}
 
-                if (StringUtils.isNotEmpty(userName)) {
-                        VXUser vxUser = xUserService.getXUserByUserName(userName);
-                        xUserMgr.deleteXUser(vxUser.getId(), forceDelete);
-                }
-        }
+			if (StringUtils.isNotEmpty(userName)) {
+					VXUser vxUser = xUserService.getXUserByUserName(userName);
+					xUserMgr.deleteXUser(vxUser.getId(), forceDelete);
+			}
+	}
 
-        @DELETE
-        @Path("/secure/groups/{groupName}")
-        @Produces({ "application/xml", "application/json" })
-        @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-        public void deleteSingleGroupByGroupName(@Context HttpServletRequest request, @PathParam("groupName") String groupName) {
-                String forceDeleteStr = request.getParameter("forceDelete");
-                boolean forceDelete = false;
-                if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
-                        forceDelete = true;
-                }
-                if (StringUtils.isNotEmpty(groupName)) {
-                        VXGroup vxGroup = xGroupService.getGroupByGroupName(groupName.trim());
-                        xUserMgr.deleteXGroup(vxGroup.getId(), forceDelete);
-                }
-        }
+	@DELETE
+	@Path("/secure/groups/{groupName}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteSingleGroupByGroupName(@Context HttpServletRequest request, @PathParam("groupName") String groupName) {
+			String forceDeleteStr = request.getParameter("forceDelete");
+			boolean forceDelete = false;
+			if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
+					forceDelete = true;
+			}
+			if (StringUtils.isNotEmpty(groupName)) {
+					VXGroup vxGroup = xGroupService.getGroupByGroupName(groupName.trim());
+					xUserMgr.deleteXGroup(vxGroup.getId(), forceDelete);
+			}
+	}
 
-        @DELETE
-        @Path("/secure/users/id/{userId}")
-        @Produces({ "application/xml", "application/json" })
-        @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-        public void deleteSingleUserByUserId(@Context HttpServletRequest request, @PathParam("userId") Long userId) {
-                String forceDeleteStr = request.getParameter("forceDelete");
-                boolean forceDelete = false;
-                if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
-                        forceDelete = true;
-                }
-                if (userId != null) {
-                        xUserMgr.deleteXUser(userId, forceDelete);
-                }
-        }
+	@DELETE
+	@Path("/secure/users/id/{userId}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteSingleUserByUserId(@Context HttpServletRequest request, @PathParam("userId") Long userId) {
+			String forceDeleteStr = request.getParameter("forceDelete");
+			boolean forceDelete = false;
+			if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
+					forceDelete = true;
+			}
+			if (userId != null) {
+					xUserMgr.deleteXUser(userId, forceDelete);
+			}
+	}
 
-        @DELETE
-        @Path("/secure/groups/id/{groupId}")
-        @Produces({ "application/xml", "application/json" })
-        @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-        public void deleteSingleGroupByGroupId(@Context HttpServletRequest request, @PathParam("groupId") Long groupId) {
+	@DELETE
+	@Path("/secure/groups/id/{groupId}")
+	@Produces({ "application/xml", "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void deleteSingleGroupByGroupId(@Context HttpServletRequest request, @PathParam("groupId") Long groupId) {
                 String forceDeleteStr = request.getParameter("forceDelete");
                 boolean forceDelete = false;
                 if (StringUtils.isNotEmpty(forceDeleteStr) && "true".equalsIgnoreCase(forceDeleteStr)) {
@@ -1355,6 +1355,72 @@ public class XUserREST {
 
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== XUserREST.getSecureRangerUserStoreIfUpdated(" + serviceName + ", " + lastKnownUserStoreVersion + ", " + lastActivationTime + ")" + ret);
+		}
+		return ret;
+	}
+
+	@GET
+	@Path("/download/{serviceName}")
+	@Produces({ "application/xml", "application/json" })
+	public RangerUserStore getRangerUserStoreIfUpdated(@PathParam("serviceName") String serviceName,
+															 @QueryParam("lastKnownUserStoreVersion") Long lastKnownUserStoreVersion,
+															 @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
+															 @QueryParam("pluginId") String pluginId,
+															 @DefaultValue("") @QueryParam("clusterName") String clusterName,
+															 @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
+															 @Context HttpServletRequest request) throws Exception {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> XUserREST.getRangerUserStoreIfUpdated("
+					+ serviceName + ", " + lastKnownUserStoreVersion + ", " + lastActivationTime + ")");
+		}
+		RangerUserStore ret = null;
+		int     httpCode          = HttpServletResponse.SC_OK;
+		boolean isValid           = false;
+		String  logMsg            = null;
+		Long    downloadedVersion = null;
+
+		try {
+			XXService xService = rangerDaoManager.getXXService().findByName(serviceName);
+			if (xService != null) {
+				isValid = true;
+			}
+			if (isValid) {
+				if (lastKnownUserStoreVersion == null) {
+					lastKnownUserStoreVersion = Long.valueOf(-1);
+				}
+				try {
+					RangerUserStore rangerUserStore = xUserMgr.getRangerUserStore(lastKnownUserStoreVersion);
+					if (rangerUserStore == null) {
+						downloadedVersion = lastKnownUserStoreVersion;
+						httpCode = HttpServletResponse.SC_NOT_MODIFIED;
+						logMsg = "No change since last update";
+					} else {
+						downloadedVersion = rangerUserStore.getUserStoreVersion();
+						ret = rangerUserStore;
+						httpCode = HttpServletResponse.SC_OK;
+						logMsg = "Returning RangerUserStore =>" + (ret.toString());
+					}
+				} catch (Throwable excp) {
+					logger.error("getRangerUserStoreIfUpdated(" + serviceName + ", " + lastKnownUserStoreVersion + ") failed", excp);
+					httpCode = HttpServletResponse.SC_BAD_REQUEST;
+					logMsg = excp.getMessage();
+				}
+			}
+		} catch (Throwable excp) {
+			logger.error("getRangerUserStoreIfUpdated(" + serviceName + ", " + lastKnownUserStoreVersion + ", " + lastActivationTime + ") failed", excp);
+			httpCode = HttpServletResponse.SC_BAD_REQUEST;
+			logMsg = excp.getMessage();
+		}
+
+		assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_USERSTORE, downloadedVersion, lastKnownUserStoreVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
+
+		if (httpCode != HttpServletResponse.SC_OK) {
+			boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+			throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== XUserREST.getRangerUserStoreIfUpdated(" + serviceName + ", " + lastKnownUserStoreVersion + ", " + lastActivationTime + ")" + ret);
 		}
 		return ret;
 	}

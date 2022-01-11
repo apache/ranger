@@ -50,6 +50,7 @@ public class PolicyRefresher extends Thread {
 	private final String                         serviceName;
 	private final RangerAdminClient              rangerAdmin;
 	private final RangerRolesProvider            rolesProvider;
+	private final RangerUserStoreProvider		 userStoreProvider;
 	private final long                           pollingIntervalMs;
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
@@ -95,6 +96,7 @@ public class PolicyRefresher extends Thread {
 		this.rangerAdmin                   = (adminClient != null) ? adminClient : pluginContext.createAdminClient(pluginConfig);
 		this.gson                          = gson;
 		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
+		this.userStoreProvider             = new RangerUserStoreProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
 		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 
 		setName("PolicyRefresher(serviceName=" + serviceName + ")-" + getId());
@@ -143,7 +145,7 @@ public class PolicyRefresher extends Thread {
 	public void startRefresher() {
 		loadRoles();
 		loadPolicy();
-
+		loadUserStore();
 		super.start();
 
 		policyDownloadTimer = new Timer("policyDownloadTimer", true);
@@ -207,6 +209,7 @@ public class PolicyRefresher extends Thread {
 				trigger = policyDownloadQueue.take();
 				loadRoles();
 				loadPolicy();
+				loadUserStore();
 			} catch(InterruptedException excp) {
 				LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
 				break;
@@ -341,8 +344,6 @@ public class PolicyRefresher extends Thread {
 
 		 return svcPolicies;
 	}
-
-
 	private ServicePolicies loadFromCache() {
 
 		ServicePolicies policies = null;
@@ -399,7 +400,6 @@ public class PolicyRefresher extends Thread {
 
 		return policies;
 	}
-	
 	public void saveToCache(ServicePolicies policies) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
@@ -493,6 +493,19 @@ public class PolicyRefresher extends Thread {
 
 		//Load the Ranger UserGroup Roles
 		rolesProvider.loadUserGroupRoles(plugIn);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadRoles()");
+		}
+	}
+
+	private void loadUserStore() {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").loadGroups()");
+		}
+
+		//Load the Ranger UserGroup Roles
+		userStoreProvider.loadUserStore(plugIn);
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== PolicyRefresher(serviceName=" + serviceName + ").loadRoles()");

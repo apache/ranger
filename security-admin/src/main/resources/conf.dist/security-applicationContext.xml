@@ -46,6 +46,8 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/service/tags/download/*" security="none"/>
 	<security:http pattern="/service/roles/download/*" security="none"/>
 	<security:http pattern="/service/metrics/status" security="none" />
+	<security:http pattern="/service/xusers/download/*" security="none" />
+
 	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
 		<csrf disabled="true"/>
 		<security:headers>
