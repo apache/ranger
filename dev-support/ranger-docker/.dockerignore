@@ -2,6 +2,8 @@
 !config
 !dist/version
 !dist/ranger-*-admin.tar.gz
+!dist/ranger-*-usersync.tar.gz
+!dist/ranger-*-tagsync.tar.gz
 !dist/ranger-*-hdfs-plugin.tar.gz
 !dist/ranger-*-yarn-plugin.tar.gz
 !dist/ranger-*-hive-plugin.tar.gz
