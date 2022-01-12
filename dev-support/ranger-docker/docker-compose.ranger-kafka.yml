@@ -14,6 +14,8 @@ services:
     tty: true
     networks:
       - ranger
+    ports:
+      - "6667:6667"
     depends_on:
       ranger:
         condition: service_started
