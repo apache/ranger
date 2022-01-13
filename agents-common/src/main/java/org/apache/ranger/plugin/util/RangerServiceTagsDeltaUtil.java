@@ -88,10 +88,13 @@ public class RangerServiceTagsDeltaUtil {
 
                         if (cachedTagId == null) {
                             serviceTags.cachedTags.put(tag, tagId);
+                            tags.put(tagId, tag);
                         } else {
                             replacedIds.put(tagId, cachedTagId);
                             deltaTagIter.remove();
                         }
+                    } else {
+                        tags.put(tagId, tag);
                     }
                 }
             }
