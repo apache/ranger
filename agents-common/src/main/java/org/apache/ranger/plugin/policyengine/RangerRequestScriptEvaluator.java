@@ -78,11 +78,21 @@ public final class RangerRequestScriptEvaluator {
                                                                                  SCRIPT_VAR_TAGNAMES + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG_NAMES + ";";
 
 	private static final Pattern JSON_VAR_NAMES_PATTERN = Pattern.compile(getJsonVarNamesPattern());
+	private static final Character CHAR_QUOTE = '\'';
+	private static final Character CHAR_COMMA = ',';
 
 	private static String[] dateFormatStrings = null;
 
-	private final RangerAccessRequest accessRequest;
-	private       Boolean             result = false;
+	private final RangerAccessRequest              accessRequest;
+	private       boolean                          initDone   = false;
+	private       Map<String, String>              userAttrs  = Collections.emptyMap();
+	private       Map<String, Map<String, String>> groupAttrs = Collections.emptyMap();
+	private       Map<String, Map<String, Object>> tags       = Collections.emptyMap();
+	private       Map<String, Object>              tag        = Collections.emptyMap();
+	private       Collection<String>               userGroups = Collections.emptySet();
+	private       Collection<String>               userRoles  = Collections.emptySet();
+	private       Collection<String>               tagNames   = Collections.emptySet();
+	private       Boolean                          result     = false;
 
 	static {
 		init(null);
@@ -120,7 +130,6 @@ public final class RangerRequestScriptEvaluator {
 
 		return ret;
 	}
-
 
 	public RangerRequestScriptEvaluator(final RangerAccessRequest accessRequest) {
 		this.accessRequest = accessRequest.getReadOnlyCopy();
@@ -198,10 +207,9 @@ public final class RangerRequestScriptEvaluator {
 
 		Map<String, Object> ret        = new HashMap<>();
 		Map<String, Object> request    = new HashMap<>();
-		RangerUserStore     userStore  = RangerAccessRequestUtil.getRequestUserStoreFromContext(accessRequest.getContext());
-		Collection<String>  userGroups = getSorted(getUserGroups());
-		Collection<String>  userRoles  = getSorted(getUserRoles());
 		Date                accessTime = accessRequest.getAccessTime();
+
+		init();
 
 		if (accessTime != null) {
 			request.put(SCRIPT_FIELD_ACCESS_TIME, accessTime.getTime());
@@ -231,57 +239,16 @@ public final class RangerRequestScriptEvaluator {
 		request.put(SCRIPT_FIELD_USER_GROUPS, userGroups);
 		request.put(SCRIPT_FIELD_USER_ROLES, userRoles);
 
-		Map<String, Map<String, String>> userAttrMapping  = userStore != null ? userStore.getUserAttrMapping() : Collections.emptyMap();
-		Map<String, Map<String, String>> groupAttrMapping = userStore != null ? userStore.getGroupAttrMapping() : Collections.emptyMap();
-		Map<String, String>              userAttrs        = userAttrMapping.get(accessRequest.getUser());
-		Map<String, Map<String, String>> groupAttrs       = new HashMap<>();
-
-		userAttrs = userAttrs != null ? new HashMap<>(userAttrs) : new HashMap<>();
-
-		userAttrs.put(SCRIPT_FIELD__NAME, getUser());
-
 		request.put(SCRIPT_FIELD_USER_ATTRIBUTES, userAttrs);
-
-		if (userGroups != null) {
-			for (String groupName : userGroups) {
-				Map<String, String> attrs = groupAttrMapping.get(groupName);
-
-				attrs = attrs != null ? new HashMap<>(attrs) : new HashMap<>();
-
-				attrs.put(SCRIPT_FIELD__NAME, groupName);
-
-				groupAttrs.put(groupName, attrs);
-			}
-		}
 
 		request.put(SCRIPT_FIELD_USER_GROUP_ATTRIBUTES, groupAttrs);
 		request.put(SCRIPT_FIELD_UGA, new UserGroupsAttributes(userGroups, groupAttrs).getAttributes());
 
 		ret.put(SCRIPT_FIELD_REQUEST, request);
 
-		Set<RangerTagForEval> requestTags = RangerAccessRequestUtil.getRequestTagsFromContext(getRequestContext());
-
-		if (CollectionUtils.isNotEmpty(requestTags)) {
-			Map<String, Map<String, Object>> tags     = new HashMap();
-			Set<String>                      tagNames = new HashSet<>();
-
-			for (RangerTagForEval tag : requestTags) {
-				tags.put(tag.getType(), toMap(tag));
-				tagNames.add(tag.getType());
-			}
-
-			ret.put(SCRIPT_FIELD_TAGS, tags);
-			ret.put(SCRIPT_FIELD_TAG_NAMES, tagNames);
-
-			RangerTagForEval currentTag = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
-
-			if (currentTag != null) {
-				ret.put(SCRIPT_FIELD_TAG, toMap(currentTag));
-			}
-		} else {
-			ret.put(SCRIPT_FIELD_TAGS, Collections.emptyMap());
-			ret.put(SCRIPT_FIELD_TAG_NAMES, Collections.emptySet());
-		}
+		ret.put(SCRIPT_FIELD_TAGS, tags);
+		ret.put(SCRIPT_FIELD_TAG_NAMES, tagNames);
+		ret.put(SCRIPT_FIELD_TAG, tag);
 
 		String strRet = JsonUtils.objectToJson(ret);
 
@@ -600,6 +567,146 @@ public final class RangerRequestScriptEvaluator {
 		return ret;
 	}
 
+	public String ugNamesCsv() {
+		init();
+
+		return toCsv(userGroups);
+	}
+
+	public String ugNamesCsvQ() {
+		init();
+
+		return toCsvQ(userGroups);
+	}
+
+	public String urNamesCsv() {
+		init();
+
+		return toCsv(userRoles);
+	}
+
+	public String urNamesCsvQ() {
+		init();
+
+		return toCsvQ(userRoles);
+	}
+
+	public String tagNamesCsv() {
+		init();
+
+		return toCsv(tagNames);
+	}
+
+	public String tagNamesCsvQ() {
+		init();
+
+		return toCsvQ(tagNames);
+	}
+
+	public String userAttrNamesCsv() {
+		init();
+
+		return toCsv(getUserAttrNames());
+	}
+
+	public String userAttrNamesCsvQ() {
+		init();
+
+		return toCsvQ(getUserAttrNames());
+	}
+
+	public String ugAttrNamesCsv() {
+		init();
+
+		return toCsv(getUgAttrNames());
+	}
+
+	public String ugAttrNamesCsvQ() {
+		return toCsvQ(getUgAttrNames());
+	}
+
+	public String tagAttrNamesCsv() {
+		init();
+
+		return toCsv(getTagAttrNames());
+	}
+
+	public String tagAttrNamesCsvQ() {
+		init();
+
+		return toCsvQ(getTagAttrNames());
+	}
+
+	public String ugAttrCsv(String attrName) {
+		init();
+
+		return toCsv(getUgAttr(attrName));
+	}
+
+	public String ugAttrCsvQ(String attrName) {
+		init();
+
+		return toCsvQ(getUgAttr(attrName));
+	}
+
+	public String tagAttrCsv(String attrName) {
+		init();
+
+		return toCsv(getTagAttr(attrName));
+	}
+
+	public String tagAttrCsvQ(String attrName) {
+		init();
+
+		return toCsvQ(getTagAttr(attrName));
+	}
+
+	private void init() {
+		if (!initDone) {
+			RangerUserStore                  userStore        = RangerAccessRequestUtil.getRequestUserStoreFromContext(accessRequest.getContext());
+			Map<String, Map<String, String>> userAttrMapping  = userStore != null ? userStore.getUserAttrMapping() : Collections.emptyMap();
+			Map<String, Map<String, String>> groupAttrMapping = userStore != null ? userStore.getGroupAttrMapping() : Collections.emptyMap();
+
+			userGroups = getSorted(getUserGroups());
+			userRoles  = getSorted(getUserRoles());
+			userAttrs  = copyMap(userAttrMapping.get(accessRequest.getUser()));
+			groupAttrs = new HashMap<>();
+
+			userAttrs.put(SCRIPT_FIELD__NAME, getUser());
+
+			for (String groupName : userGroups) {
+				Map<String, String> attrs = groupAttrMapping.get(groupName);
+
+				attrs = attrs != null ? new HashMap<>(attrs) : new HashMap<>();
+
+				attrs.put(SCRIPT_FIELD__NAME, groupName);
+
+				groupAttrs.put(groupName, attrs);
+			}
+
+			Set<RangerTagForEval> requestTags = RangerAccessRequestUtil.getRequestTagsFromContext(getRequestContext());
+
+			if (CollectionUtils.isNotEmpty(requestTags)) {
+				RangerTagForEval currentTag = RangerAccessRequestUtil.getCurrentTagFromContext(getRequestContext());
+
+				tags = new HashMap();
+				tag  = (currentTag != null) ? toMap(currentTag) : Collections.emptyMap();
+
+				for (RangerTagForEval tag : requestTags) {
+					tags.put(tag.getType(), toMap(tag));
+				}
+
+				tagNames = getSorted(tags.keySet());
+			} else {
+				tags     = Collections.emptyMap();
+				tagNames = Collections.emptySet();
+				tag      = Collections.emptyMap();
+			}
+
+			initDone = true;
+		}
+	}
+
 	private Map<String, Object> getRequestContext() {
 		return accessRequest.getContext();
 	}
@@ -630,16 +737,125 @@ public final class RangerRequestScriptEvaluator {
 		return ret;
 	}
 
-	private Collection<String> getSorted(Collection<String> coll) {
-		if (coll != null && coll.size() > 1) {
-			List<String> lst = new ArrayList<>(coll);
+	private Collection<String> getSorted(Collection<String> values) {
+		final Collection<String> ret;
+
+		if (values == null) {
+			ret = Collections.emptyList();
+		} else if (values.size() > 1) {
+			List lst = new ArrayList<>(values);
 
 			Collections.sort(lst);
 
-			coll = lst;
+			ret = lst;
+		} else {
+			ret = values;
 		}
 
-		return coll;
+		return ret;
+	}
+
+	private Map<String, String> copyMap(Map<String, String> obj) { return obj == null ? new HashMap<>() : new HashMap<>(obj); }
+
+	private List<Object> getUgAttr(String attrName) {
+		List<Object> ret = new ArrayList<>();
+
+		for (String groupName : userGroups) {
+			Map<String, String> attrs = groupAttrs.get(groupName);
+			Object      val           = attrs != null ? attrs.get(attrName) : null;
+
+			if (val != null) {
+				ret.add(val);
+			}
+		}
+
+		return ret;
+	}
+
+	private List<Object> getTagAttr(String attrName) {
+		List<Object> ret = new ArrayList<>();
+
+		for (String tagName : tagNames) {
+			Map<String, Object> attrs = tags.get(tagName);
+			Object              val   = attrs != null ? attrs.get(attrName) : null;
+
+			if (val != null) {
+				ret.add(val);
+			}
+		}
+
+		return ret;
+	}
+
+	private Collection<String> getUserAttrNames() {
+		Collection<String> ret = getSorted(userAttrs.keySet());
+
+		if (ret.contains(SCRIPT_FIELD__NAME)) {
+			ret.remove(SCRIPT_FIELD__NAME);
+		}
+
+		return ret;
+	}
+
+	private Collection<String> getUgAttrNames() {
+		Set<String> ret = new HashSet<>();
+
+		for (Map<String, String> attrs : groupAttrs.values()) {
+			ret.addAll(attrs.keySet());
+		}
+
+		ret.remove(SCRIPT_FIELD__NAME);
+
+		return getSorted(ret);
+	}
+
+	private Collection<String> getTagAttrNames() {
+		Set<String> ret = new HashSet<>();
+
+		for (Map<String, Object> attrs : tags.values()) {
+			ret.addAll(attrs.keySet());
+		}
+
+		ret.remove(SCRIPT_FIELD__TYPE);
+		ret.remove(SCRIPT_FIELD__MATCH_TYPE);
+
+		return getSorted(ret);
+	}
+
+	private String toCsv(Collection<? extends Object> values) {
+		StringBuilder sb = new StringBuilder();
+
+		for (Object value : values) {
+			if (value == null) {
+				continue;
+			}
+
+			if (sb.length() > 0) {
+				sb.append(CHAR_COMMA);
+			}
+
+			sb.append(value);
+		}
+
+		return sb.toString();
+	}
+
+	private String toCsvQ(Collection<? extends Object> values) {
+		StringBuilder sb = new StringBuilder();
+
+		for (Object value : values) {
+			if (value == null) {
+				continue;
+			}
+
+			if (sb.length() > 0) {
+				sb.append(CHAR_COMMA);
+			}
+
+			sb.append(CHAR_QUOTE).append(value).append(CHAR_QUOTE);
+		}
+
+		return sb.toString();
 	}
 
 	private static String getJsonVarNamesPattern() {
