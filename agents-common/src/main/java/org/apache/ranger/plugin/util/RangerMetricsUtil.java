@@ -20,8 +20,9 @@
 package org.apache.ranger.plugin.util;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.model.RangerMetrics;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 
@@ -43,7 +44,7 @@ import java.lang.management.MemoryUsage;
  */
 public class RangerMetricsUtil {
 
-    private static final Logger LOG = Logger.getLogger(RangerMetricsUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerMetricsUtil.class);
     private static final OperatingSystemMXBean OS;
     private static final MemoryMXBean MEM_BEAN;
     public static final String NL = System.getProperty("line.separator");

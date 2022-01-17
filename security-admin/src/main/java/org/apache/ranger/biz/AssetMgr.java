@@ -37,7 +37,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.amazon.cloudwatch.CloudWatchAccessAuditsService;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
@@ -67,6 +66,8 @@ import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.*;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -133,7 +134,7 @@ public class AssetMgr extends AssetMgrBase {
 	@Autowired
 	ServiceMgr serviceMgr;
 
-	private static final Logger logger = Logger.getLogger(AssetMgr.class);
+	private static final Logger logger = LoggerFactory.getLogger(AssetMgr.class);
 
 	private static final String adminCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 

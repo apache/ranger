@@ -28,10 +28,11 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +40,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RESTErrorUtil {
 
-	private static final Logger logger = Logger.getLogger(RESTErrorUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(RESTErrorUtil.class);
 
 	@Autowired
 	StringUtil stringUtil;

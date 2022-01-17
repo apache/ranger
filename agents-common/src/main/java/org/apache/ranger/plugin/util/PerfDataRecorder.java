@@ -20,8 +20,8 @@
 package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableMap;
 
@@ -33,8 +33,8 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class PerfDataRecorder {
-	private static final Log LOG  = LogFactory.getLog(PerfDataRecorder.class);
-	private static final Log PERF = RangerPerfTracer.getPerfLogger(PerfDataRecorder.class);
+	private static final Logger LOG  = LoggerFactory.getLogger(PerfDataRecorder.class);
+	private static final Logger PERF = RangerPerfTracer.getPerfLogger(PerfDataRecorder.class);
 
 	private static volatile PerfDataRecorder instance;
 	private Map<String, PerfStatistic> perfStatistics = new HashMap<>();

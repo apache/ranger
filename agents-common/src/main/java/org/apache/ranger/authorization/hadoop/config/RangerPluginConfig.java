@@ -22,9 +22,10 @@ package org.apache.ranger.authorization.hadoop.config;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
@@ -34,7 +35,7 @@ import java.util.Set;
 
 
 public class RangerPluginConfig extends RangerConfiguration {
-    private static final Logger LOG = Logger.getLogger(RangerPluginConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPluginConfig.class);
 
     private static final char RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR = ',';
 
@@ -115,7 +116,7 @@ public class RangerPluginConfig extends RangerConfiguration {
 
         this.policyEngineOptions = policyEngineOptions;
 
-        LOG.info(policyEngineOptions);
+        LOG.info("" + policyEngineOptions);
     }
 
     protected RangerPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {

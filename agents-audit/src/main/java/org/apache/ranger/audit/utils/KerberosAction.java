@@ -20,7 +20,7 @@
 package org.apache.ranger.audit.utils;
 
 import org.apache.commons.lang3.Validate;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 import javax.security.auth.login.LoginException;
 import java.security.PrivilegedActionException;
@@ -33,11 +33,11 @@ public class KerberosAction<T> {
 
     private final KerberosUser kerberosUser;
     private final PrivilegedExceptionAction<T> action;
-    private final Log logger;
+    private final Logger logger;
 
     public KerberosAction(final KerberosUser kerberosUser,
                           final PrivilegedExceptionAction<T> action,
-                          final Log logger) {
+                          final Logger logger) {
         this.kerberosUser = kerberosUser;
         this.action = action;
         this.logger = logger;

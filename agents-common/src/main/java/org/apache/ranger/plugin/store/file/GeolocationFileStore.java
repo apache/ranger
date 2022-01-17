@@ -20,12 +20,12 @@
 package org.apache.ranger.plugin.store.file;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.geo.GeolocationMetadata;
 import org.apache.ranger.plugin.store.GeolocationStore;
 import org.apache.ranger.plugin.geo.RangerGeolocationDatabase;
 import org.apache.ranger.plugin.geo.RangerGeolocationData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -39,7 +39,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class GeolocationFileStore implements GeolocationStore {
-	private static final Log LOG = LogFactory.getLog(GeolocationFileStore.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GeolocationFileStore.class);
 
 	public static final String GeoLineCommentIdentifier = "#";
 	public static final Character GeoFieldsSeparator = ',';

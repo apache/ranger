@@ -24,8 +24,9 @@ import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SqoopResourceMgr {
 
@@ -33,7 +34,7 @@ public class SqoopResourceMgr {
 	public static final String LINK = "link";
 	public static final String JOB = "job";
 
-	private static final Logger LOG = Logger.getLogger(SqoopResourceMgr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SqoopResourceMgr.class);
 
 	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
 		Map<String, Object> ret = null;

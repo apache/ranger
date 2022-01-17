@@ -19,16 +19,16 @@
 
 package org.apache.ranger.plugin.policyengine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Set;
 
 public class TestCacheMap {
-	private static final Log LOG = LogFactory.getLog(TestCacheMap.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TestCacheMap.class);
 	private static CacheMap<String, String> testCacheMap;
 	private static int initialCapacity = 16;
 

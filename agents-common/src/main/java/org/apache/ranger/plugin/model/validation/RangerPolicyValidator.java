@@ -23,8 +23,6 @@ import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
@@ -40,10 +38,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerPolicyValidator extends RangerValidator {
 
-	private static final Log LOG = LogFactory.getLog(RangerPolicyValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyValidator.class);
 
 	public RangerPolicyValidator(ServiceStore store) {
 		super(store);

@@ -29,8 +29,6 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -39,10 +37,12 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerAuthContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
-	private static final Log LOG = LogFactory.getLog(RangerAbstractContextEnricher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractContextEnricher.class);
 
 	protected RangerContextEnricherDef enricherDef;
 	protected String                   serviceName;

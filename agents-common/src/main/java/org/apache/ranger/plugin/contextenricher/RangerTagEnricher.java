@@ -24,8 +24,6 @@ import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -49,6 +47,8 @@ import org.apache.ranger.plugin.util.RangerReadWriteLock;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
@@ -69,11 +69,11 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class RangerTagEnricher extends RangerAbstractContextEnricher {
-	private static final Log LOG = LogFactory.getLog(RangerTagEnricher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerTagEnricher.class);
 
-	private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
-	private static final Log PERF_TRIE_OP_LOG              = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
-	private static final Log PERF_SET_SERVICETAGS_LOG      = RangerPerfTracer.getPerfLogger("tagenricher.setservicetags");
+	private static final Logger PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
+	private static final Logger PERF_TRIE_OP_LOG              = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
+	private static final Logger PERF_SET_SERVICETAGS_LOG      = RangerPerfTracer.getPerfLogger("tagenricher.setservicetags");
 
 
 	private static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
@@ -896,7 +896,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	}
 
 	static class RangerTagRefresher extends Thread {
-		private static final Log LOG = LogFactory.getLog(RangerTagRefresher.class);
+		private static final Logger LOG = LoggerFactory.getLogger(RangerTagRefresher.class);
 
 		private final RangerTagRetriever tagRetriever;
 		private final RangerTagEnricher tagEnricher;
@@ -917,7 +917,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			try {
 				gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 			} catch(Throwable excp) {
-				LOG.fatal("failed to create GsonBuilder object", excp);
+				LOG.error("failed to create GsonBuilder object", excp);
 			}
 			setName("RangerTagRefresher(serviceName=" + tagRetriever.getServiceName() + ")-" + getId());
 		}

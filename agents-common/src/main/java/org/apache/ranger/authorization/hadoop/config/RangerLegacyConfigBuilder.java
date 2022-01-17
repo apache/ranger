@@ -25,12 +25,13 @@ import java.util.HashMap;
 import java.util.Map;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerLegacyConfigBuilder {
 
-	private static final Logger LOG = Logger.getLogger(RangerLegacyConfigBuilder.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerLegacyConfigBuilder.class);
 
 	static String serviceType;
 	static String legacyResource;

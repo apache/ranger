@@ -20,12 +20,12 @@
 package org.apache.ranger.plugin.util;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -36,9 +36,9 @@ import java.util.Map;
 
 public class RangerServiceTagsDeltaUtil {
 
-    private static final Log LOG = LogFactory.getLog(RangerServiceTagsDeltaUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTagsDeltaUtil.class);
 
-    private static final Log PERF_TAGS_DELTA_LOG = RangerPerfTracer.getPerfLogger("tags.delta");
+    private static final Logger PERF_TAGS_DELTA_LOG = RangerPerfTracer.getPerfLogger("tags.delta");
 
     private static boolean SUPPORTS_TAGS_DEDUP_INITIALIZED = false;
     private static boolean SUPPORTS_TAGS_DEDUP             = false;

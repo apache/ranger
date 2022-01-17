@@ -22,13 +22,14 @@ package org.apache.ranger.services.knox.client;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class KnoxResourceMgr {
 
-	private static final Logger LOG = Logger.getLogger(KnoxResourceMgr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KnoxResourceMgr.class);
 	
 	private static final String TOPOLOGY	  	 = "topology";
 	private static final String SERVICE 	 	 = "service";

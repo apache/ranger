@@ -29,11 +29,12 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
-	private static final Logger LOG = Logger.getLogger(RangerAccessRequestImpl.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestImpl.class);
 
 	private RangerAccessResource resource;
 	private String               accessType;

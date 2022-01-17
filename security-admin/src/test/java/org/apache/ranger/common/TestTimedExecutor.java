@@ -35,14 +35,14 @@ import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestTimedExecutor {
 
-	private static final Log LOG = LogFactory.getLog(TestTimedExecutor.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TestTimedExecutor.class);
 
 	@Before
 	public void before() {

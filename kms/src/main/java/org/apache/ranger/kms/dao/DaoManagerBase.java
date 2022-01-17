@@ -18,10 +18,11 @@
 package org.apache.ranger.kms.dao;
 
 import javax.persistence.EntityManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class DaoManagerBase {
-	final static Logger logger = Logger.getLogger(DaoManagerBase.class);
+	final static Logger logger = LoggerFactory.getLogger(DaoManagerBase.class);
 
 	abstract public EntityManager getEntityManager();
 

@@ -101,8 +101,11 @@ public class TestSecurityZoneREST {
 		Map<String, RangerSecurityZoneService> services = new HashMap<>();
 
 		List<HashMap<String, List<String>>> resources = new ArrayList<>();
-		resources.add((HashMap<String, List<String>>) new HashMap<String, List<String>>().put("resource_path",
-				testZone1ResoursesList));
+		HashMap<String, List<String>> resource = new HashMap<String, List<String>>();
+
+		resource.put("resource_path", testZone1ResoursesList);
+
+		resources.add(resource);
 
 		RangerSecurityZoneService zoneService = new RangerSecurityZoneService();
 

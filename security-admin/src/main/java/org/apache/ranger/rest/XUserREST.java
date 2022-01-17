@@ -40,7 +40,6 @@ import javax.ws.rs.DefaultValue;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
@@ -80,6 +79,8 @@ import org.apache.ranger.service.XUserService;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.ugsyncutil.model.UsersGroupRoleAssignments;
 import org.apache.ranger.view.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -160,7 +161,7 @@ public class XUserREST {
 	@Autowired
 	ServiceDBStore svcStore;
 	
-	static final Logger logger = Logger.getLogger(XUserMgr.class);
+	static final Logger logger = LoggerFactory.getLogger(XUserMgr.class);
 
 	// Handle XGroup
 	@GET

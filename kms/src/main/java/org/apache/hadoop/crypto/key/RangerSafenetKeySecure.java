@@ -21,7 +21,8 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -38,7 +39,7 @@ import java.security.cert.CertificateException;
  */
 public class RangerSafenetKeySecure implements RangerKMSMKI {
 
-        static final Logger logger = Logger.getLogger(RangerSafenetKeySecure.class);
+        static final Logger logger = LoggerFactory.getLogger(RangerSafenetKeySecure.class);
 
         private final String alias;
         private final String providerType;

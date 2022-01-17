@@ -25,8 +25,6 @@ import java.util.Map;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.RoleStore;
@@ -37,6 +35,8 @@ import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerPolicyAdminCache {
 
@@ -55,7 +55,7 @@ public class RangerPolicyAdminCache {
 		}
 	}
 
-	private static final Log LOG = LogFactory.getLog(RangerPolicyAdminCache.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyAdminCache.class);
 
 	private final Map<String, RangerPolicyAdminWrapper> policyAdminCache = Collections.synchronizedMap(new HashMap<>());
 

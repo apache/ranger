@@ -42,8 +42,6 @@ import javax.security.auth.Subject;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.metastore.HiveMetaStoreClient;
 import org.apache.hadoop.hive.metastore.api.FieldSchema;
@@ -52,10 +50,12 @@ import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.thrift.TException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HiveClient extends BaseClient implements Closeable {
 
-	private static final Log LOG = LogFactory.getLog(HiveClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HiveClient.class);
 	
 	private static final String ERR_MSG = "You can still save the repository and start creating "
 			+ "policies, but you would not be able to use autocomplete for "

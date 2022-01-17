@@ -22,13 +22,13 @@ package org.apache.ranger.tagsync.source.atlas;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AtlasResourceMapper {
-	private static final Log LOG = LogFactory.getLog(AtlasResourceMapper.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AtlasResourceMapper.class);
 
 	public static final String TAGSYNC_DEFAULT_CLUSTER_NAME = "ranger.tagsync.atlas.default.cluster.name";
 	public static final String ENTITY_ATTRIBUTE_QUALIFIED_NAME = "qualifiedName";

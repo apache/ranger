@@ -18,7 +18,6 @@
 
 package org.apache.ranger.patch.cliutil;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -27,12 +26,14 @@ import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.util.CLIUtil;
 import org.apache.solr.common.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ChangePasswordUtil extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(ChangePasswordUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(ChangePasswordUtil.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

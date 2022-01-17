@@ -19,14 +19,14 @@
 
 package org.apache.ranger.services.ozone.client;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hdds.conf.OzoneConfiguration;
 import org.apache.hadoop.ozone.client.OzoneBucket;
 import org.apache.hadoop.ozone.client.OzoneClientFactory;
 import org.apache.hadoop.ozone.client.OzoneKey;
 import org.apache.hadoop.ozone.client.OzoneVolume;
 import org.apache.ranger.plugin.client.BaseClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.io.IOException;
@@ -35,7 +35,7 @@ import java.util.*;
 
 public class OzoneClient extends BaseClient {
 
-    private static final Log LOG        = LogFactory.getLog(OzoneClient.class);
+    private static final Logger LOG     = LoggerFactory.getLogger(OzoneClient.class);
     private static final String ERR_MSG = "You can still save the repository and start creating policies, but you " +
             "would not be able to use autocomplete for resource names. Check ranger_admin.log for more info.";
 

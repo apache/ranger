@@ -20,12 +20,12 @@
 package org.apache.ranger.authorization.hadoop.config;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerChainedPluginConfig extends RangerPluginConfig {
 
-    private static final Log LOG = LogFactory.getLog(RangerChainedPluginConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerChainedPluginConfig.class);
 
     private final String[] legacySSLProperties           = new String[] {"xasecure.policymgr.clientssl.keystore", "xasecure.policymgr.clientssl.keystore.type", "xasecure.policymgr.clientssl.keystore.credential.file","xasecure.policymgr.clientssl.truststore", "xasecure.policymgr.clientssl.truststore.credential.file", "hadoop.security.credential.provider.path"};
     private final String[] chainedPluginPropertyPrefixes = new String[] { ".chained.services"};

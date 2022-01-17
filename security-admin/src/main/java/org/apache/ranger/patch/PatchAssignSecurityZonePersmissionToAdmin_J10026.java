@@ -28,7 +28,6 @@ import java.util.HashMap;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.db.RangerDaoManager;
@@ -36,6 +35,8 @@ import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.service.XPortalUserService;
 import org.apache.ranger.util.CLIUtil;
 import org.apache.ranger.view.VXPortalUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
@@ -43,7 +44,7 @@ import org.springframework.util.CollectionUtils;
 @Component
 public class PatchAssignSecurityZonePersmissionToAdmin_J10026 extends BaseLoader {
 
-	private static final Logger logger = Logger.getLogger(PatchAssignSecurityZonePersmissionToAdmin_J10026.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchAssignSecurityZonePersmissionToAdmin_J10026.class);
 
 	@Autowired
 	RangerDaoManager daoManager;

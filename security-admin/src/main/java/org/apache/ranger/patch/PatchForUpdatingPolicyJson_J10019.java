@@ -28,9 +28,6 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.PolicyRefUpdater;
@@ -88,6 +85,8 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -105,7 +104,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @Component
 public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchForUpdatingPolicyJson_J10019.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchForUpdatingPolicyJson_J10019.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;
@@ -548,8 +547,8 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 	}
 
 	static private class RangerPolicyRetriever {
-		static final Log LOG      = LogFactory.getLog(RangerPolicyRetriever.class);
-		static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
+		static final Logger LOG      = LoggerFactory.getLogger(RangerPolicyRetriever.class);
+		static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
 
 		private final RangerDaoManager daoMgr;
 		private final LookupCache      lookupCache = new LookupCache();

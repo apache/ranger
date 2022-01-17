@@ -54,12 +54,13 @@ import javax.naming.ldap.StartTlsResponse;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.ugsyncutil.model.LdapSyncSourceInfo;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.usergroupsync.UserGroupSink;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
@@ -67,7 +68,7 @@ import org.apache.ranger.usergroupsync.UserGroupSource;
 
 public class LdapUserGroupBuilder implements UserGroupSource {
 	
-	private static final Logger LOG = Logger.getLogger(LdapUserGroupBuilder.class);
+	private static final Logger LOG = LoggerFactory.getLogger(LdapUserGroupBuilder.class);
 
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 

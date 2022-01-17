@@ -37,8 +37,6 @@ import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -47,6 +45,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
@@ -54,8 +54,8 @@ import static org.apache.ranger.services.atlas.RangerServiceAtlas.*;
 
 
 public class RangerAtlasAuthorizer implements AtlasAuthorizer {
-    private static final Log LOG      = LogFactory.getLog(RangerAtlasAuthorizer.class);
-    private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("atlasauth.request");
+    private static final Logger LOG      = LoggerFactory.getLogger(RangerAtlasAuthorizer.class);
+    private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("atlasauth.request");
 
     private static final  Set<AtlasPrivilege> CLASSIFICATION_PRIVILEGES = new HashSet<AtlasPrivilege>() {{
         add(AtlasPrivilege.ENTITY_ADD_CLASSIFICATION);

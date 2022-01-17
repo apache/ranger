@@ -19,9 +19,9 @@ package org.apache.ranger.audit.utils;
  * under the License.
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.PrintWriter;
@@ -35,7 +35,7 @@ import java.util.Properties;
  */
 public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
 
-    private static final Log logger = LogFactory.getLog(RangerJSONAuditWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(RangerJSONAuditWriter.class);
 
     protected String JSON_FILE_EXTENSION = ".log";
 

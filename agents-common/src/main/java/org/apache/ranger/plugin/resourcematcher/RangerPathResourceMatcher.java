@@ -25,10 +25,10 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -38,7 +38,7 @@ import java.util.function.BiFunction;
 
 
 public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
-	private static final Log LOG = LogFactory.getLog(RangerPathResourceMatcher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPathResourceMatcher.class);
 
 	public static final String OPTION_PATH_SEPARATOR       = "pathSeparatorChar";
 	public static final char   DEFAULT_PATH_SEPARATOR_CHAR = org.apache.hadoop.fs.Path.SEPARATOR_CHAR;

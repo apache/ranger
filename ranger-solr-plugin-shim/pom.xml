@@ -87,6 +87,10 @@
                    <groupId>io.netty</groupId>
                    <artifactId>netty-common</artifactId>
                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>

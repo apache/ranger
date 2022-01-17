@@ -22,16 +22,16 @@ package org.apache.ranger.audit.destination;
 import java.util.Collection;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class Log4JAuditDestination extends AuditDestination {
-	private static final Log logger = LogFactory
-			.getLog(Log4JAuditDestination.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(Log4JAuditDestination.class);
 
-	private static Log auditLogger = null;
+	private static Logger auditLogger = null;
 
 	public static final String PROP_LOG4J_LOGGER = "logger";
 	public static final String DEFAULT_LOGGER_PREFIX = "ranger.audit";
@@ -54,7 +54,7 @@ public class Log4JAuditDestination extends AuditDestination {
 					+ loggerName);
 		}
 		logger.info("Logger name for " + getName() + " is " + loggerName);
-		auditLogger = LogFactory.getLog(loggerName);
+		auditLogger = LoggerFactory.getLogger(loggerName);
 		logger.info("Done initializing logger for audit. name=" + getName()
 				+ ", loggerName=" + loggerName);
 	}

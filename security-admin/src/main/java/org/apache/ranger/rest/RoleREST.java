@@ -33,8 +33,6 @@ import javax.ws.rs.core.Context;
 
 import org.apache.commons.codec.binary.StringUtils;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
@@ -66,6 +64,8 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerRoleList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -77,7 +77,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class RoleREST {
-    private static final Log LOG = LogFactory.getLog(RoleREST.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RoleREST.class);
 
     private static List<String> INVALID_USERS = new ArrayList<>();
 

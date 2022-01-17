@@ -36,9 +36,10 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -48,7 +49,7 @@ import com.sun.jersey.api.client.ClientResponse;
 
 public class ElasticsearchClient extends BaseClient {
 
-	private static final Logger LOG = Logger.getLogger(ElasticsearchClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchClient.class);
 
 	private static final String ELASTICSEARCH_INDEX_API_ENDPOINT = "/_all";
 

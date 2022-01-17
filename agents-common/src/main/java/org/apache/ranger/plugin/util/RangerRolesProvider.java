@@ -22,11 +22,11 @@ package org.apache.ranger.plugin.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileReader;
@@ -38,9 +38,9 @@ import java.util.HashSet;
 
 
 public class RangerRolesProvider {
-	private static final Log LOG = LogFactory.getLog(RangerRolesProvider.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerRolesProvider.class);
 
-	private static final Log PERF_POLICYENGINE_INIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.init");
+	private static final Logger PERF_POLICYENGINE_INIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.init");
 
 	private final String            serviceType;
 	private final String            serviceName;
@@ -83,7 +83,7 @@ public class RangerRolesProvider {
 		try {
 			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 		} catch (Throwable excp) {
-			LOG.fatal("RangerRolesProvider(): failed to create GsonBuilder object", excp);
+			LOG.error("RangerRolesProvider(): failed to create GsonBuilder object", excp);
 		}
 		this.gson = gson;
 

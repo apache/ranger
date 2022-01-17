@@ -22,19 +22,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 public class KMSMetricUtil {
-	private static final Logger logger = Logger.getLogger(KMSMetricUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(KMSMetricUtil.class);
 
 	private static final String HSM_ENABLED = "ranger.ks.hsm.enabled";
 	private static String metricType;
 	
 	public static void main(String[] args) {
+		/* LOG4J2: TODO
 		Logger.getRootLogger().setLevel(Level.OFF);
+		 */
 		logger.info("KMSMetricUtil : main()");
 		if(args.length != 2){
 			System.out.println("type: Incorrect Arguments usage : For KMSMetric Usage: metric -type  hsmenabled | encryptedkey | encryptedkeybyalgorithm");

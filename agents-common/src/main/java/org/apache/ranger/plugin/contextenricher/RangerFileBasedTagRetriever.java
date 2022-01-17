@@ -22,9 +22,9 @@ package org.apache.ranger.plugin.contextenricher;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -33,7 +33,7 @@ import java.nio.charset.Charset;
 import java.util.Map;
 
 public class RangerFileBasedTagRetriever extends RangerTagRetriever {
-	private static final Log LOG = LogFactory.getLog(RangerFileBasedTagRetriever.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerFileBasedTagRetriever.class);
 
 
 	private URL serviceTagsFileURL;

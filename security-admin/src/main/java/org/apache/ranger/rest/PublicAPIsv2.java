@@ -20,7 +20,6 @@
 package org.apache.ranger.rest;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -35,6 +34,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -66,7 +67,7 @@ import java.util.List;
 @RangerAnnotationJSMgrName("PublicMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PublicAPIsv2 {
-	private static final Logger logger = Logger.getLogger(PublicAPIsv2.class);
+	private static final Logger logger = LoggerFactory.getLogger(PublicAPIsv2.class);
 
 	@Autowired
 	ServiceREST serviceREST;

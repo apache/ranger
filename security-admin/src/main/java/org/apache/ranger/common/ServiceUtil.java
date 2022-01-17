@@ -38,7 +38,6 @@ import javax.ws.rs.WebApplicationException;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.db.RangerDaoManager;
@@ -62,12 +61,14 @@ import org.apache.ranger.view.VXPolicyList;
 import org.apache.ranger.view.VXRepository;
 import org.apache.ranger.view.VXRepositoryList;
 import org.apache.ranger.view.VXResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ServiceUtil {
-	static final Logger LOG = Logger.getLogger(ServiceUtil.class);
+	static final Logger LOG = LoggerFactory.getLogger(ServiceUtil.class);
 	private static final String REGEX_PREFIX_STR 	 = "regex:";
 	private static final int REGEX_PREFIX_STR_LENGTH = REGEX_PREFIX_STR.length();
 

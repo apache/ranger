@@ -21,11 +21,11 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -34,9 +34,9 @@ import java.util.List;
 
 public class RangerPolicyDeltaUtil {
 
-    private static final Log LOG = LogFactory.getLog(RangerPolicyDeltaUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyDeltaUtil.class);
 
-    private static final Log PERF_POLICY_DELTA_LOG = RangerPerfTracer.getPerfLogger("policy.delta");
+    private static final Logger PERF_POLICY_DELTA_LOG = RangerPerfTracer.getPerfLogger("policy.delta");
 
     public static List<RangerPolicy> applyDeltas(List<RangerPolicy> policies, List<RangerPolicyDelta> deltas, String serviceType) {
         if (LOG.isDebugEnabled()) {

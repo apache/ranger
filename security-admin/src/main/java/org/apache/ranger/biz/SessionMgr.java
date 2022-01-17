@@ -33,7 +33,6 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.HTTPUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -58,6 +57,8 @@ import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXAuthSession;
 import org.apache.ranger.view.VXAuthSessionList;
 import org.apache.ranger.view.VXLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -70,7 +71,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class SessionMgr {
 
-	static final Logger logger = Logger.getLogger(SessionMgr.class);
+	static final Logger logger = LoggerFactory.getLogger(SessionMgr.class);
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;

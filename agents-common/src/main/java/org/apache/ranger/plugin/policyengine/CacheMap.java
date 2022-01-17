@@ -18,15 +18,15 @@
  */
 package org.apache.ranger.plugin.policyengine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class CacheMap<K, V> extends LinkedHashMap<K, V> {
     private static final long serialVersionUID = 1L;
-    private static final Log LOG = LogFactory.getLog(CacheMap.class);
+    private static final Logger LOG = LoggerFactory.getLogger(CacheMap.class);
 
 
     private static final float RANGER_CACHE_DEFAULT_LOAD_FACTOR = 0.75f;

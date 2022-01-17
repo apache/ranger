@@ -27,8 +27,6 @@ import java.util.Set;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -52,11 +50,13 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.view.RangerServiceDefList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef>
 		extends RangerBaseModelService<T, V> {
-	private static final Log LOG = LogFactory.getLog(RangerServiceDefServiceBase.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefServiceBase.class);
 
 	private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS = "__accessTypeRestrictions";
 	private static final String OPTION_RESOURCE_IS_VALID_LEAF            = "__isValidLeaf";

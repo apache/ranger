@@ -40,7 +40,6 @@
             <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
             <include>commons-collections:commons-collections</include>
             <include>commons-configuration:commons-configuration:jar:${commons.configuration.version}</include>
-            <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
             <include>commons-io:commons-io:jar:${commons.io.version}</include>
             <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
             <include>com.google.guava:guava:jar:${google.guava.version}</include>

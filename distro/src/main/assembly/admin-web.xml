@@ -233,10 +233,9 @@
           <include>org.apache.tomcat.embed:tomcat-embed*</include>
           <include>org.apache.tomcat:tomcat-annotations-api*</include>
           <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
-          <include>log4j:log4j</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.ranger:ranger-plugins-common</include>
-          <include>org.slf4j:slf4j-api</include>
+          <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
           <include>org.apache.hadoop:hadoop-common</include>
           <include>commons-logging:commons-logging</include>
           <include>com.sun.jersey.contribs:jersey-multipart</include>
@@ -269,8 +268,6 @@
           <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
           <include>org.apache.httpcomponents:httpcore-nio</include>
           <include>com.fasterxml.jackson.core:jackson-core</include>
-          <include>org.apache.logging.log4j:log4j-core</include>
-          <include>org.apache.logging.log4j:log4j-api</include>
           <include>org.apache.lucene:lucene-core</include>
           <include>com.carrotsearch:hppc</include>
           <include>joda-time:joda-time</include>
@@ -278,6 +275,9 @@
           <include>org.apache.ranger:ugsyn-util</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+          <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
+          <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+          <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -301,7 +301,7 @@
           <include>commons-lang:commons-lang</include>
           <include>commons-logging:commons-logging</include>
           <include>com.google.guava:guava</include>
-          <include>org.slf4j:slf4j-api</include>
+          <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
           <include>org.apache.commons:commons-lang3</include>
           <include>org.apache.hadoop:hadoop-common</include>
           <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>

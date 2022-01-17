@@ -19,7 +19,6 @@
 
 package org.apache.ranger.elasticsearch;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.*;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.elasticsearch.action.get.MultiGetItemResponse;
@@ -36,6 +35,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,7 +49,7 @@ import java.util.*;
 
 @Component
 public class ElasticSearchUtil {
-    private static final Logger logger = Logger.getLogger(ElasticSearchUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchUtil.class);
 
     @Autowired
     StringUtil stringUtil;

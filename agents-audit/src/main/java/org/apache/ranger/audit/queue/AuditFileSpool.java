@@ -38,22 +38,22 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.slf4j.MDC;
 
 /**
  * This class temporarily stores logs in file system if the destination is
  * overloaded or down
  */
 public class AuditFileSpool implements Runnable {
-	private static final Log logger = LogFactory.getLog(AuditFileSpool.class);
+	private static final Logger logger = LoggerFactory.getLogger(AuditFileSpool.class);
 
 	public enum SPOOL_FILE_STATUS {
 		pending, write_inprogress, read_inprogress, done
@@ -163,7 +163,7 @@ public class AuditFileSpool implements Runnable {
 					+ queueProvider.getName());
 
 			if (logFolderProp == null || logFolderProp.isEmpty()) {
-				logger.fatal("Audit spool folder is not configured. Please set "
+				logger.error("Audit spool folder is not configured. Please set "
 						+ propPrefix
 						+ "."
 						+ PROP_FILE_SPOOL_LOCAL_DIR
@@ -174,7 +174,7 @@ public class AuditFileSpool implements Runnable {
 			if (!logFolder.isDirectory()) {
 				logFolder.mkdirs();
 				if (!logFolder.isDirectory()) {
-					logger.fatal("File Spool folder not found and can't be created. folder="
+					logger.error("File Spool folder not found and can't be created. folder="
 							+ logFolder.getAbsolutePath()
 							+ ", queueName="
 							+ queueProvider.getName());
@@ -224,7 +224,7 @@ public class AuditFileSpool implements Runnable {
 			if (!indexFile.exists()) {
 				boolean ret = indexFile.createNewFile();
 				if (!ret) {
-					logger.fatal("Error creating index file. fileName="
+					logger.error("Error creating index file. fileName="
 							+ indexDoneFile.getPath());
 					return false;
 				}
@@ -242,7 +242,7 @@ public class AuditFileSpool implements Runnable {
 			if (!indexDoneFile.exists()) {
 				boolean ret = indexDoneFile.createNewFile();
 				if (!ret) {
-					logger.fatal("Error creating index done file. fileName="
+					logger.error("Error creating index done file. fileName="
 							+ indexDoneFile.getPath());
 					return false;
 				}
@@ -282,7 +282,7 @@ public class AuditFileSpool implements Runnable {
 			}
 
 		} catch (Throwable t) {
-			logger.fatal("Error initializing File Spooler. queue="
+			logger.error("Error initializing File Spooler. queue="
 					+ queueProvider.getName(), t);
 			return false;
 		}
@@ -756,7 +756,7 @@ public class AuditFileSpool implements Runnable {
 			MDC.clear();
 			runLogAudit();
 		} catch (Throwable t) {
-			logger.fatal("Exited thread without abnormaly. queue="
+			logger.error("Exited thread without abnormaly. queue="
 					+ consumerProvider.getName(), t);
 		}
 	}

@@ -29,12 +29,13 @@ import com.microsoft.azure.keyvault.webkey.JsonWebKeyType;
 import java.security.Key;
 
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
 public class RangerKeyVaultKeyGenerator implements RangerKMSMKI {
 
-	static final Logger logger = Logger
+	static final Logger logger = LoggerFactory
 			.getLogger(RangerKeyVaultKeyGenerator.class);
 	private static final String AZURE_KEYVAULT_URL = "ranger.kms.azurekeyvault.url";
 	private static final String AZURE_MASTER_KEY_ALIAS = "ranger.kms.azure.masterkey.name";

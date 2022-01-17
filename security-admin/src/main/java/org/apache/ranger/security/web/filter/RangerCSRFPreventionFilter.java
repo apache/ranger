@@ -34,12 +34,13 @@ import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerCSRFPreventionFilter implements Filter {
 	
-	private static final Logger LOG = Logger.getLogger(RangerCSRFPreventionFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerCSRFPreventionFilter.class);
 		
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
 	public static final String BROWSER_USER_AGENTS_DEFAULT = "Mozilla,Opera,Chrome";

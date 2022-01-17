@@ -21,13 +21,13 @@ package org.apache.ranger.audit.queue;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.*;
 import java.util.*;
@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class AuditFileCacheProviderSpool implements Runnable {
-    private static final Log logger = LogFactory.getLog(AuditFileCacheProviderSpool.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuditFileCacheProviderSpool.class);
 
     public enum SPOOL_FILE_STATUS {
         pending, write_inprogress, read_inprogress, done
@@ -152,7 +152,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     + FILE_CACHE_PROVIDER_NAME);
 
             if (logFolderProp == null || logFolderProp.isEmpty()) {
-                logger.fatal("Audit spool folder is not configured. Please set "
+                logger.error("Audit spool folder is not configured. Please set "
                         + propPrefix
                         + "."
                         + PROP_FILE_SPOOL_LOCAL_DIR
@@ -163,7 +163,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             if (!logFolder.isDirectory()) {
                 boolean result = logFolder.mkdirs();
                 if (!logFolder.isDirectory() || !result) {
-                    logger.fatal("File Spool folder not found and can't be created. folder="
+                    logger.error("File Spool folder not found and can't be created. folder="
                             + logFolder.getAbsolutePath()
                             + ", queueName="
                             + FILE_CACHE_PROVIDER_NAME);
@@ -213,7 +213,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             if (!indexFile.exists()) {
                 boolean ret = indexFile.createNewFile();
                 if (!ret) {
-                    logger.fatal("Error creating index file. fileName="
+                    logger.error("Error creating index file. fileName="
                             + indexFile.getPath());
                     return false;
                 }
@@ -231,7 +231,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             if (!indexDoneFile.exists()) {
                 boolean ret = indexDoneFile.createNewFile();
                 if (!ret) {
-                    logger.fatal("Error creating index done file. fileName="
+                    logger.error("Error creating index done file. fileName="
                             + indexDoneFile.getPath());
                     return false;
                 }
@@ -272,7 +272,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             }
 
         } catch (Throwable t) {
-            logger.fatal("Error initializing File Spooler. queue="
+            logger.error("Error initializing File Spooler. queue="
                     + FILE_CACHE_PROVIDER_NAME, t);
             return false;
         }
@@ -770,7 +770,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             MDC.clear();
             runLogAudit();
         } catch (Throwable t) {
-            logger.fatal("Exited thread without abnormaly. queue="
+            logger.error("Exited thread without abnormaly. queue="
                     + consumerProvider.getName(), t);
         }
     }

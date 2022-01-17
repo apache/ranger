@@ -27,18 +27,18 @@ import java.util.regex.Pattern;
 
 import javax.security.auth.Subject;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class HBaseClient extends BaseClient {
 
-	private static final Log LOG 			 = LogFactory.getLog(HBaseClient.class);
+	private static final Logger LOG 			 = LoggerFactory.getLogger(HBaseClient.class);
 
 	private static Subject subj 			 = null;
 

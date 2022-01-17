@@ -24,15 +24,15 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestConsumer extends AuditDestination {
-	private static final Log logger = LogFactory.getLog(TestConsumer.class);
+	private static final Logger logger = LoggerFactory.getLogger(TestConsumer.class);
 
 	int countTotal = 0;
 	int sumTotal = 0;

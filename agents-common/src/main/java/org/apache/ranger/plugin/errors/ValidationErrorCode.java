@@ -19,8 +19,8 @@
 
 package org.apache.ranger.plugin.errors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -136,7 +136,7 @@ public enum ValidationErrorCode {
     ;
 
 
-    private static final Log LOG = LogFactory.getLog(ValidationErrorCode.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ValidationErrorCode.class);
 
     final int _errorCode;
     final String _template;

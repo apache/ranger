@@ -20,8 +20,6 @@ package org.apache.ranger.audit.utils;
  */
 
 import com.google.gson.annotations.SerializedName;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -33,6 +31,8 @@ import org.apache.orc.TypeDescription;
 import org.apache.orc.Writer;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.model.EnumRepositoryType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ import java.text.SimpleDateFormat;
 
 public class ORCFileUtil {
 
-    private static final Log logger = LogFactory.getLog(ORCFileUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(ORCFileUtil.class);
 
     private static volatile      ORCFileUtil  me    = null;
     protected CompressionKind    defaultCompression = CompressionKind.SNAPPY;

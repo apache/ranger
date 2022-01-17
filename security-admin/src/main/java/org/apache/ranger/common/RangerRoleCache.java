@@ -19,14 +19,14 @@
 
 package org.apache.ranger.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.plugin.model.RangerRole;
 
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RangerRoleCache {
-	private static final Log LOG = LogFactory.getLog(RangerRoleCache.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerRoleCache.class);
 
 	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 

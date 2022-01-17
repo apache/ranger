@@ -33,8 +33,9 @@ import javax.ws.rs.POST;
 import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.PropertiesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 
@@ -44,7 +45,7 @@ import com.sun.jersey.spi.container.ContainerRequest;
 import com.sun.jersey.spi.container.ContainerResponse;
 
 public class RangerRESTAPIFilter extends LoggingFilter {
-	Logger logger = Logger.getLogger(RangerRESTAPIFilter.class);
+	Logger logger = LoggerFactory.getLogger(RangerRESTAPIFilter.class);
 	static volatile boolean initDone = false;
 
 	boolean logStdOut = true;

@@ -19,8 +19,8 @@
 
 package org.apache.ranger.service;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +34,7 @@ public class RangerPluginActivityLogger {
     @Autowired
     RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
-    private static final Log LOG = LogFactory.getLog(RangerPluginActivityLogger.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPluginActivityLogger.class);
 
     boolean pluginActivityAuditCommitInline = false;
 

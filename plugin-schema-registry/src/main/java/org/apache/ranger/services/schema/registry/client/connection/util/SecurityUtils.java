@@ -21,8 +21,8 @@ import com.hortonworks.registries.auth.KerberosLogin;
 import com.hortonworks.registries.auth.Login;
 import com.hortonworks.registries.auth.NOOPLogin;
 import com.hortonworks.registries.auth.util.JaasConfiguration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.KeyManagerFactory;
@@ -51,7 +51,7 @@ import static org.apache.ranger.plugin.client.HadoopConfigHolder.RANGER_LOOKUP_P
 
 public class SecurityUtils {
 
-    private static final Log LOG = LogFactory.getLog(SecurityUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityUtils.class);
     private static final long KERBEROS_SYNCHRONIZATION_TIMEOUT_MS = 180000;
     private static final String REGISTY_CLIENT_JAAS_SECTION = "RegistryClient";
 

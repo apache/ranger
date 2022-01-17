@@ -24,14 +24,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyChangeLog;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
 
-    private static final Log LOG = LogFactory.getLog(XXPolicyChangeLogDao.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XXPolicyChangeLogDao.class);
 
     private static final int POLICY_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER             = 0;
     private static final int POLICY_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER    = 1;

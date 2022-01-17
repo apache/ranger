@@ -24,16 +24,16 @@ import java.util.Properties;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerRecord;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class KafkaAuditProvider extends AuditDestination {
-	private static final Log LOG = LogFactory.getLog(KafkaAuditProvider.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KafkaAuditProvider.class);
 
 	public static final String AUDIT_MAX_QUEUE_SIZE_PROP = "xasecure.audit.kafka.async.max.queue.size";
 	public static final String AUDIT_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.kafka.async.max.flush.interval.ms";
@@ -85,7 +85,7 @@ public class KafkaAuditProvider extends AuditDestination {
 				initDone = true;
 			}
 		} catch (Throwable t) {
-			LOG.fatal("Error initializing kafka:", t);
+			LOG.error("Error initializing kafka:", t);
 		}
 	}
 

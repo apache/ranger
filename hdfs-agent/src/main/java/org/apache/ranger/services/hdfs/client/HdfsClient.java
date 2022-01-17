@@ -29,8 +29,6 @@ import javax.security.auth.Subject;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
@@ -40,10 +38,12 @@ import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HdfsClient extends BaseClient {
 
-	private static final Log LOG = LogFactory.getLog(HdfsClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HdfsClient.class);
   private Configuration conf;
 
 	public HdfsClient(String serviceName, Map<String,String> connectionProperties) {

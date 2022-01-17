@@ -29,7 +29,6 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceResource;
@@ -37,6 +36,8 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.service.RangerServiceResourceService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -49,7 +50,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Component
 public class PatchForMigratingRangerServiceResource_J10037 extends BaseLoader {
 
-	private static final Logger logger = Logger.getLogger(PatchForMigratingRangerServiceResource_J10037.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchForMigratingRangerServiceResource_J10037.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

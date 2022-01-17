@@ -33,12 +33,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.storm.client.StormResourceMgr;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceStorm extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceStorm.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceStorm.class);
 	public static final String ACCESS_TYPE_GET_TOPOLOGY  = "getTopology";
 	public static final String ACCESS_TYPE_GET_TOPOLOGY_CONF  = "getTopologyConf";
 	public static final String ACCESS_TYPE_GET_USER_TOPOLOGY  = "getUserTopology";

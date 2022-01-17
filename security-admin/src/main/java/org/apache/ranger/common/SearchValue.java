@@ -24,14 +24,15 @@ package org.apache.ranger.common;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  *
  *
  */
 public class SearchValue {
-    static final Logger logger = Logger.getLogger(SearchValue.class);
+    static final Logger logger = LoggerFactory.getLogger(SearchValue.class);
 
     SearchField searchField;
     Object value = null;

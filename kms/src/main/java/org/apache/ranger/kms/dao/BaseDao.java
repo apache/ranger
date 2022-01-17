@@ -30,10 +30,11 @@ import javax.persistence.EntityTransaction;
 import javax.persistence.NoResultException;
 import javax.persistence.TypedQuery;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseDao<T> {
-	static final Logger logger = Logger.getLogger(BaseDao.class);
+	static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
 
 	protected DaoManager daoManager;
 

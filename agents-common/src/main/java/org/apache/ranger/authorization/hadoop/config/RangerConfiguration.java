@@ -27,11 +27,12 @@ import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class RangerConfiguration extends Configuration {
-	private static final Logger LOG = Logger.getLogger(RangerConfiguration.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerConfiguration.class);
 
 	protected RangerConfiguration() {
 		super(false);

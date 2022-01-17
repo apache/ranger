@@ -50,8 +50,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -200,6 +198,8 @@ import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
 import org.apache.ranger.view.VXUserList;
 import org.codehaus.jettison.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -214,7 +214,7 @@ import com.google.gson.GsonBuilder;
 
 @Component
 public class ServiceDBStore extends AbstractServiceStore {
-	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ServiceDBStore.class);
 
 	private static final String POLICY_ALLOW_EXCLUDE = "Policy Allow:Exclude";
 
@@ -408,7 +408,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 							}
 						});
 					} catch (Throwable ex) {
-						LOG.fatal("ServiceDBStore.initStore(): Failed to update DB: " + ex);
+						LOG.error("ServiceDBStore.initStore(): Failed to update DB: " + ex);
 					}
 
 					legacyServiceDefsInitDone = true;
@@ -5047,7 +5047,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 					}
 				}
 			} catch (Throwable e) {
-				LOG.fatal("updateServiceWithCustomProperty failed with exception : "+e.getMessage());
+				LOG.error("updateServiceWithCustomProperty failed with exception : "+e.getMessage());
 			}
 	}
 

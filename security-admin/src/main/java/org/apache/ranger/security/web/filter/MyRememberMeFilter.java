@@ -31,7 +31,8 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
@@ -49,7 +50,7 @@ public class MyRememberMeFilter extends RememberMeAuthenticationFilter {
 		super(authenticationManager, rememberMeServices);
 	}
 
-    private static final Logger logger = Logger.getLogger(MyRememberMeFilter.class);
+    private static final Logger logger = LoggerFactory.getLogger(MyRememberMeFilter.class);
 
     /*
      * (non-Javadoc)

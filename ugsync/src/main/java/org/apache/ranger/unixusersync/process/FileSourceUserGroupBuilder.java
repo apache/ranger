@@ -36,13 +36,14 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
-import org.apache.log4j.Logger;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.ugsyncutil.model.FileSyncSourceInfo;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.usergroupsync.AbstractUserGroupSource;
 import org.apache.ranger.usergroupsync.UserGroupSink;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -50,7 +51,7 @@ import com.google.gson.stream.JsonReader;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
 public class FileSourceUserGroupBuilder extends AbstractUserGroupSource  implements UserGroupSource {
-	private static final Logger LOG = Logger.getLogger(FileSourceUserGroupBuilder.class);
+	private static final Logger LOG = LoggerFactory.getLogger(FileSourceUserGroupBuilder.class);
 
 	private Map<String,List<String>> user2GroupListMap     = new HashMap<String,List<String>>();
 	private String                   userGroupFilename     = null;

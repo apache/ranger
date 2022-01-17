@@ -35,8 +35,6 @@ import java.util.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.permission.FsAction;
@@ -64,6 +62,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
@@ -78,8 +78,8 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
     public static final String RANGER_FILENAME_EXTENSION_SEPARATOR_PROP = "ranger.plugin.hdfs.filename.extension.separator";
 
-	private static final Log LOG = LogFactory.getLog(RangerHdfsAuthorizer.class);
-	private static final Log PERF_HDFSAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hdfsauth.request");
+	private static final Logger LOG = LoggerFactory.getLogger(RangerHdfsAuthorizer.class);
+	private static final Logger PERF_HDFSAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hdfsauth.request");
 
 	private RangerHdfsPlugin           rangerPlugin            = null;
 	private Map<FsAction, Set<String>> access2ActionListMapper = new HashMap<FsAction, Set<String>>();
@@ -819,7 +819,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 
 class RangerHdfsPlugin extends RangerBasePlugin {
-	private static final Log LOG = LogFactory.getLog(RangerHdfsPlugin.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerHdfsPlugin.class);
 
 	private static String fileNameExtensionSeparator = RangerHdfsAuthorizer.DEFAULT_FILENAME_EXTENSION_SEPARATOR;
 
@@ -994,7 +994,7 @@ class AuthzContext {
 }
 
 class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
-	private static final Log LOG = LogFactory.getLog(RangerHdfsAuditHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerHdfsAuditHandler.class);
 
 	private boolean         isAuditEnabled = false;
 	private AuthzAuditEvent auditEvent     = null;

@@ -27,7 +27,6 @@ import org.apache.http.client.config.AuthSchemes;
 import org.apache.http.config.Lookup;
 import org.apache.http.config.RegistryBuilder;
 import org.apache.http.impl.auth.SPNegoSchemeFactory;
-import org.apache.log4j.Logger;
 import org.apache.ranger.audit.destination.ElasticSearchAuditDestination;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.credutils.CredentialsProviderUtil;
@@ -36,6 +35,8 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import javax.security.auth.Subject;
@@ -55,7 +56,7 @@ import static org.apache.ranger.audit.destination.ElasticSearchAuditDestination.
 @Component
 public class ElasticSearchMgr {
 
-	private static final Logger logger = Logger.getLogger(ElasticSearchMgr.class);
+	private static final Logger logger = LoggerFactory.getLogger(ElasticSearchMgr.class);
 	public String index;
 	Subject subject;
 	String user;
@@ -90,7 +91,7 @@ public class ElasticSearchMgr {
 								getRestClientBuilder(urls, protocol, user, password, port);
 						client = new RestHighLevelClient(restClientBuilder);
 					} catch (Throwable t) {
-						logger.fatal("Can't connect to ElasticSearch: " + parameterString, t);
+						logger.error("Can't connect to ElasticSearch: " + parameterString, t);
 					}
 				}
 			}

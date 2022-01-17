@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -45,7 +45,7 @@ import org.apache.ranger.plugin.util.ServiceDefUtil;
  * initialize embedded service-defs.
  */
 public class EmbeddedServiceDefsUtil {
-	private static final Log LOG = LogFactory.getLog(EmbeddedServiceDefsUtil.class);
+	private static final Logger LOG = LoggerFactory.getLogger(EmbeddedServiceDefsUtil.class);
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
@@ -171,7 +171,7 @@ public class EmbeddedServiceDefsUtil {
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
 		} catch(Throwable excp) {
-			LOG.fatal("EmbeddedServiceDefsUtil.init(): failed", excp);
+			LOG.error("EmbeddedServiceDefsUtil.init(): failed", excp);
 		}
 
 		LOG.info("<== EmbeddedServiceDefsUtil.init()");
@@ -302,7 +302,7 @@ public class EmbeddedServiceDefsUtil {
 				LOG.info("created embedded service-def " + serviceDefName);
 			}
 		} catch(Exception excp) {
-			LOG.fatal("EmbeddedServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);
+			LOG.error("EmbeddedServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);
 		}
 
 		if(LOG.isDebugEnabled()) {

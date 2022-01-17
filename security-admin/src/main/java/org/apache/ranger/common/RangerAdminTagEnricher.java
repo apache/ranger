@@ -24,17 +24,17 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.util.RangerReadWriteLock;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerAdminTagEnricher extends RangerTagEnricher {
-    private static final Log LOG = LogFactory.getLog(RangerAdminTagEnricher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminTagEnricher.class);
 
     private static TagStore         tagStore   = null;
     private static RangerDaoManager daoManager = null;

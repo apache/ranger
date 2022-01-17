@@ -35,7 +35,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.MessageEnums;
@@ -59,6 +58,8 @@ import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXStringList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -73,7 +74,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RangerAnnotationJSMgrName("UserMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class UserREST {
-	private static final Logger logger = Logger.getLogger(UserREST.class);
+	private static final Logger logger = LoggerFactory.getLogger(UserREST.class);
 
 	@Autowired
 	StringUtil stringUtil;

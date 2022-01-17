@@ -34,11 +34,12 @@ import javax.crypto.spec.PBEParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.kms.dao.DaoManager;
 import org.apache.ranger.kms.dao.RangerMasterKeyDao;
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.entity.XXRangerMasterKey;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
@@ -47,7 +48,7 @@ import com.sun.org.apache.xml.internal.security.utils.Base64;
 
 public class RangerMasterKey implements RangerKMSMKI {
 
-    private static final Logger     logger                    = Logger.getLogger(RangerMasterKey.class);
+    private static final Logger     logger                    = LoggerFactory.getLogger(RangerMasterKey.class);
     private static final String     DEFAULT_MK_CIPHER         = "AES";
     private static final int        DEFAULT_MK_KeySize        = 256;
     private static final int        DEFAULT_SALT_SIZE         = 8;

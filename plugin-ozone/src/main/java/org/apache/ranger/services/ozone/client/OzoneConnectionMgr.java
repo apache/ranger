@@ -19,8 +19,9 @@
 
 package org.apache.ranger.services.ozone.client;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 public class OzoneConnectionMgr {
-    private static final Logger LOG = Logger.getLogger(OzoneConnectionMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OzoneConnectionMgr.class);
 
     protected ConcurrentMap<String, OzoneClient>    ozoneConnectionCache;
     protected ConcurrentMap<String, Boolean>        repoConnectStatusMap;

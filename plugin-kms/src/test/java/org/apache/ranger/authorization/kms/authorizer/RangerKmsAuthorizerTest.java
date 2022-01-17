@@ -32,7 +32,6 @@ import org.apache.hadoop.crypto.key.kms.server.KMSConfiguration;
 import org.apache.hadoop.crypto.key.kms.server.KMSWebApp;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AuthorizationException;
-import org.apache.log4j.Logger;
 import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
@@ -40,6 +39,8 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.Mockito;
 import org.mockito.runners.MockitoJUnitRunner;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Policies available from admin via:
@@ -51,7 +52,7 @@ import org.mockito.runners.MockitoJUnitRunner;
 @RunWith(MockitoJUnitRunner.class)
 public class RangerKmsAuthorizerTest {
 
-    private static final Logger LOG = Logger.getLogger(RangerKmsAuthorizerTest.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerKmsAuthorizerTest.class);
 
     private static KMSWebApp kmsWebapp;
     private static final boolean UNRESTRICTED_POLICIES_INSTALLED;
@@ -127,7 +128,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.CREATE, ugi2, KMSOp.CREATE_KEY, "newkey2", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -142,7 +143,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.CREATE, ugi3, KMSOp.CREATE_KEY, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -174,7 +175,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.DELETE, ugi2, KMSOp.DELETE_KEY, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -189,7 +190,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.DELETE, ugi3, KMSOp.DELETE_KEY, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -222,7 +223,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.ROLLOVER, ugi2, KMSOp.ROLL_NEW_VERSION, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -237,7 +238,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.ROLLOVER, ugi3, KMSOp.ROLL_NEW_VERSION, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -270,7 +271,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.GET_KEYS, ugi2, KMSOp.GET_KEYS, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -312,7 +313,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.GET_METADATA, ugi2, KMSOp.GET_METADATA, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -355,7 +356,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.GENERATE_EEK, ugi2, KMSOp.GENERATE_EEK, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -370,7 +371,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.GENERATE_EEK, ugi3, KMSOp.GENERATE_EEK, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -403,7 +404,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.DECRYPT_EEK, ugi2, KMSOp.DECRYPT_EEK, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }
@@ -418,7 +419,7 @@ public class RangerKmsAuthorizerTest {
                     KMSWebApp.getACLs().assertAccess(Type.DECRYPT_EEK, ugi3, KMSOp.DECRYPT_EEK, "newkey1", "127.0.0.1");
                     Assert.fail("Failure expected");
                 } catch (AuthorizationException ex) {
-                    LOG.error(ex);
+                    LOG.error("", ex);
                 }
                 return null;
             }

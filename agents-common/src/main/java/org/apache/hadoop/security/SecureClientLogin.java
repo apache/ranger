@@ -32,15 +32,15 @@ import javax.security.auth.login.AppConfigurationEntry.LoginModuleControlFlag;
 import javax.security.auth.login.LoginContext;
 import javax.security.auth.login.LoginException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation.AuthenticationMethod;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.util.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SecureClientLogin {
-	private static final Log LOG = LogFactory.getLog(SecureClientLogin.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SecureClientLogin.class);
 	public static final String HOSTNAME_PATTERN = "_HOST";
 
 	public synchronized static Subject loginUserFromKeytab(String user, String path) throws IOException {

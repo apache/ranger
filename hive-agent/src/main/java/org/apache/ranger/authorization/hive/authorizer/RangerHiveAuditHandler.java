@@ -24,8 +24,6 @@ import java.util.*;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveOperationType;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -34,12 +32,14 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 
 public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 
-	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultAuditHandler.class);
 
 	public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
 	public static final String  ACTION_TYPE_METADATA_OPERATION = "METADATA OPERATION";

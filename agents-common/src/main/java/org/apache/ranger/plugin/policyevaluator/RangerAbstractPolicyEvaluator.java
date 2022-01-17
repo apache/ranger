@@ -20,8 +20,6 @@
 package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -29,13 +27,15 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerAbstractPolicyEvaluator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractPolicyEvaluator.class);
 
 	private   RangerPolicy        policy;
 	private   RangerServiceDef    serviceDef;

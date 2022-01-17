@@ -24,8 +24,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.kstruct.gethostname4j.Hostname;
 
 /**
@@ -34,7 +34,7 @@ import com.kstruct.gethostname4j.Hostname;
  */
 public class RangerRESTUtils {
 
-	private static final Log LOG = LogFactory.getLog(RangerRESTUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerRESTUtils.class);
 
 	public static final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
 	public static final String REST_URL_SERVICE_GRANT_ACCESS              = "/service/plugins/services/grant/";

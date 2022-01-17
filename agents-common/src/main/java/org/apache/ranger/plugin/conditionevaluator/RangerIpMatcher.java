@@ -27,16 +27,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Credits: Large parts of this file have been lifted as is from org.apache.ranger.pdp.knox.URLBasedAuthDB.  Credits for those are due to Dilli Arumugam.
  * @author alal
  */
 public class RangerIpMatcher extends RangerAbstractConditionEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerIpMatcher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerIpMatcher.class);
 	private List<String> _exactIps = new ArrayList<>();
 	private List<String> _wildCardIps = new ArrayList<>();
 	private boolean _allowAny;

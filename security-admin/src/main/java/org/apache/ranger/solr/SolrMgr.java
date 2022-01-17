@@ -23,7 +23,6 @@ import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.*;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.solr.krb.InMemoryJAASConfiguration;
@@ -39,6 +38,8 @@ import org.apache.solr.client.solrj.impl.Krb5HttpClientBuilder;
 import org.apache.solr.client.solrj.impl.SolrHttpClientBuilder;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -52,7 +53,7 @@ import javax.security.auth.login.LoginException;
 @Component
 public class SolrMgr {
 
-    private static final Logger logger = Logger.getLogger(SolrMgr.class);
+    private static final Logger logger = LoggerFactory.getLogger(SolrMgr.class);
 
     @Autowired
     RangerBizUtil rangerBizUtil;
@@ -117,12 +118,12 @@ public class SolrMgr {
                                 solrCloudClient.setDefaultCollection(collectionName);
                                 solrClient = solrCloudClient;
                             } catch (Throwable t) {
-                                logger.fatal("Can't connect to Solr server. ZooKeepers=" + zkHosts + ", collection=" + collectionName, t);
+                                logger.error("Can't connect to Solr server. ZooKeepers=" + zkHosts + ", collection=" + collectionName, t);
                             }
 
                         } else {
                             if (solrURL == null || solrURL.isEmpty() || "none".equalsIgnoreCase(solrURL)) {
-                                logger.fatal("Solr ZKHosts and URL for Audit are empty. Please set property " + SOLR_ZK_HOSTS + " or " + SOLR_URLS_PROP);
+                                logger.error("Solr ZKHosts and URL for Audit are empty. Please set property " + SOLR_ZK_HOSTS + " or " + SOLR_URLS_PROP);
                             } else {
                                 try (Krb5HttpClientBuilder krbBuild = new Krb5HttpClientBuilder()) {
                                     SolrHttpClientBuilder kb       = krbBuild.getBuilder();
@@ -136,7 +137,7 @@ public class SolrMgr {
                                     solrClient = httpSolrClient;
                                     initDone   = true;
                                 } catch (Throwable t) {
-                                    logger.fatal("Can't connect to Solr server. URL=" + solrURL, t);
+                                    logger.error("Can't connect to Solr server. URL=" + solrURL, t);
                                 }
                             }
                         }

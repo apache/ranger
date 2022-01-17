@@ -26,13 +26,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.Timeout;
 import org.mockito.internal.util.reflection.Whitebox;
 
@@ -66,9 +60,6 @@ public class TestKMSAudit {
     filterOut = new FilterOut(memOut);
     capturedOut = new PrintStream(filterOut);
     System.setErr(capturedOut);
-    PropertyConfigurator.configure(Thread.currentThread().
-        getContextClassLoader()
-        .getResourceAsStream("log4j-kmsaudit.properties"));
     Configuration conf = new Configuration();
     this.kmsAudit = new KMSAudit(conf);
   }
@@ -76,7 +67,6 @@ public class TestKMSAudit {
   @After
   public void cleanUp() {
     System.setErr(originalOut);
-    LogManager.resetConfiguration();
     kmsAudit.shutdown();
   }
 

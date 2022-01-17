@@ -28,8 +28,6 @@ import com.google.protobuf.Service;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
@@ -74,6 +72,8 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -84,8 +84,8 @@ import com.google.protobuf.RpcController;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 public class RangerAuthorizationCoprocessor implements AccessControlService.Interface, RegionCoprocessor, MasterCoprocessor, RegionServerCoprocessor, MasterObserver, RegionObserver, RegionServerObserver, EndpointObserver, BulkLoadObserver, Coprocessor {
-	private static final Log LOG = LogFactory.getLog(RangerAuthorizationCoprocessor.class.getName());
-	private static final Log PERF_HBASEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hbaseauth.request");
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAuthorizationCoprocessor.class.getName());
+	private static final Logger PERF_HBASEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hbaseauth.request");
 	private static boolean UpdateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	private static final String GROUP_PREFIX = "@";
 
@@ -1860,7 +1860,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 
 class RangerHBasePlugin extends RangerBasePlugin {
-	private static final Log LOG = LogFactory.getLog(RangerHBasePlugin.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerHBasePlugin.class);
 	boolean isHBaseShuttingDown  = false;
 
 	public RangerHBasePlugin(String appType) {

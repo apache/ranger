@@ -17,10 +17,10 @@
 
 package org.apache.ranger.services.schema.registry.client;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 
 public class SchemaRegistryResourceMgr {
 
-    private static final Log LOG = LogFactory.getLog(SchemaRegistryResourceMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SchemaRegistryResourceMgr.class);
 
     private static final String REGISTRY_SERVICE = "registry-service";
     private static final String SERDE = "serde";

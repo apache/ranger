@@ -29,10 +29,11 @@ import java.util.concurrent.TimeUnit;
 
 import javax.security.auth.Subject;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.yarn.client.json.model.YarnSchedulerResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -42,7 +43,7 @@ import com.sun.jersey.api.client.WebResource;
 
 public class YarnClient extends BaseClient {
 
-	private static final Logger LOG = Logger.getLogger(YarnClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(YarnClient.class);
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 

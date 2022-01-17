@@ -21,7 +21,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
@@ -39,10 +38,12 @@ import org.apache.ranger.entity.XXService;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Component
 public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.BaseLoader {
-    private static final Logger logger = Logger.getLogger(PatchForAtlasToAddTypeRead_J10040.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForAtlasToAddTypeRead_J10040.class);
 
     private static final List<String> ATLAS_RESOURCES = new ArrayList<>(
             Arrays.asList("type"));

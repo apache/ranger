@@ -29,17 +29,17 @@ import java.util.TreeMap;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.solr.common.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerPolicyResourceSignature {
 
 	static final int _SignatureVersion = 1;
-	private static final Log LOG = LogFactory.getLog(RangerPolicyResourceSignature.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyResourceSignature.class);
 	static final RangerPolicyResourceSignature _EmptyResourceSignature = new RangerPolicyResourceSignature((RangerPolicy)null);
 	
 	private final String _string;

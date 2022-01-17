@@ -22,8 +22,6 @@ package org.apache.ranger.plugin.model.validation;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -38,6 +36,8 @@ import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -47,7 +47,7 @@ import java.util.Map;
 import java.util.Set;
 
 public class RangerSecurityZoneValidator extends RangerValidator {
-    private static final Log LOG = LogFactory.getLog(RangerSecurityZoneValidator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerSecurityZoneValidator.class);
 
     private final SecurityZoneStore securityZoneStore;
 

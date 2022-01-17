@@ -22,8 +22,6 @@ package org.apache.ranger.biz;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -52,6 +50,8 @@ import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -63,9 +63,9 @@ import java.util.Set;
 import java.util.TreeMap;
 
 public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
-    private static final Log LOG = LogFactory.getLog(RangerPolicyAdminImpl.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyAdminImpl.class);
 
-    private static final Log PERF_POLICYENGINE_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policyengine.request");
+    private static final Logger PERF_POLICYENGINE_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policyengine.request");
 
     private final PolicyEngine                 policyEngine;
     private final RangerAccessRequestProcessor requestProcessor;

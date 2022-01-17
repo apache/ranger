@@ -28,7 +28,6 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
@@ -59,12 +58,14 @@ import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.apache.ranger.view.VXPermMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchMigration_J10002 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchMigration_J10002.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchMigration_J10002.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

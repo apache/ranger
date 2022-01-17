@@ -22,7 +22,8 @@ package org.apache.ranger.tagsync.process;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,7 +41,7 @@ import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 
 public class TagSyncConfig extends Configuration {
-	private static final Logger LOG = Logger.getLogger(TagSyncConfig.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TagSyncConfig.class);
 
 	private static final String CONFIG_FILE = "ranger-tagsync-site.xml";
 

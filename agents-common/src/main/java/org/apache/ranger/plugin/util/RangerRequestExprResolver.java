@@ -19,10 +19,10 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
 import java.util.Objects;
@@ -31,7 +31,7 @@ import java.util.regex.Pattern;
 
 
 public class RangerRequestExprResolver {
-    private static final Log LOG = LogFactory.getLog(RangerRequestExprResolver.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerRequestExprResolver.class);
 
     private static final String  REGEX_GROUP_EXPR   = "expr";
     private static final String  SCRIPT_ENGINE_NAME = "JavaScript";

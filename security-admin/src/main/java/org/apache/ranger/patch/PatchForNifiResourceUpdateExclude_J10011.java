@@ -20,7 +20,6 @@ package org.apache.ranger.patch;
 
 import java.util.List;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
@@ -36,6 +35,8 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +46,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class PatchForNifiResourceUpdateExclude_J10011 extends BaseLoader {
-        private static final Logger logger = Logger.getLogger(PatchForNifiResourceUpdateExclude_J10011.class);
+        private static final Logger logger = LoggerFactory.getLogger(PatchForNifiResourceUpdateExclude_J10011.class);
         @Autowired
         RangerDaoManager daoMgr;
 

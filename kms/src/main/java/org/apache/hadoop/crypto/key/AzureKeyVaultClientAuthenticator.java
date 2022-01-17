@@ -41,7 +41,6 @@ import java.util.Enumeration;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
-import org.apache.log4j.Logger;
 import org.bouncycastle.asn1.pkcs.PrivateKeyInfo;
 import org.bouncycastle.cert.X509CertificateHolder;
 import org.bouncycastle.cert.jcajce.JcaX509CertificateConverter;
@@ -53,9 +52,11 @@ import org.bouncycastle.operator.InputDecryptorProvider;
 import org.bouncycastle.operator.OperatorCreationException;
 import org.bouncycastle.pkcs.PKCS8EncryptedPrivateKeyInfo;
 import org.bouncycastle.pkcs.PKCSException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
-	static final Logger logger = Logger.getLogger(AzureKeyVaultClientAuthenticator.class);
+	static final Logger logger = LoggerFactory.getLogger(AzureKeyVaultClientAuthenticator.class);
 	
 	private String authClientID;
     private String authClientSecret;

@@ -23,14 +23,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MultiDestAuditProvider extends BaseAuditHandler {
 
-	private static final Log LOG = LogFactory
-			.getLog(MultiDestAuditProvider.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(MultiDestAuditProvider.class);
 
 	protected List<AuditHandler> mProviders = new ArrayList<AuditHandler>();
 	static final String DEFAULT_NAME = "multi_dest";

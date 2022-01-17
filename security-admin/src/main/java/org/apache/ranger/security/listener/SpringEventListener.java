@@ -20,9 +20,10 @@
  package org.apache.ranger.security.listener;
 
 import java.util.Calendar;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.entity.XXAuthSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationEvent;
@@ -36,7 +37,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
 public class SpringEventListener implements
 	ApplicationListener<AbstractAuthenticationEvent> {
 
-    private static final Logger logger = Logger.getLogger(SpringEventListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(SpringEventListener.class);
 
     @Autowired
     SessionMgr sessionMgr;

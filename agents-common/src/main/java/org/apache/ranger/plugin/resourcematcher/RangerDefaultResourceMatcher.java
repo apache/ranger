@@ -20,15 +20,15 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Map;
 
 
 public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher {
-	private static final Log LOG = LogFactory.getLog(RangerDefaultResourceMatcher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultResourceMatcher.class);
 
 	@Override
 	public boolean isMatch(Object resource, Map<String, Object> evalContext) {

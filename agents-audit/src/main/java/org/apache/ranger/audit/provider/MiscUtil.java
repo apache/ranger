@@ -51,13 +51,12 @@ import javax.security.auth.login.LoginContext;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
-import org.apache.log4j.helpers.LogLog;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -65,7 +64,7 @@ import com.google.gson.GsonBuilder;
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 
 public class MiscUtil {
-	private static final Log logger = LogFactory.getLog(MiscUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(MiscUtil.class);
 
 	public static final String TOKEN_START = "%";
 	public static final String TOKEN_END = "%";
@@ -95,7 +94,7 @@ public class MiscUtil {
 			sGsonBuilder = new GsonBuilder().setDateFormat(
 					"yyyy-MM-dd HH:mm:ss.SSS").create();
 		} catch (Throwable excp) {
-			LogLog.warn(
+			logger.warn(
 					"failed to create GsonBuilder object. stringify() will return obj.toString(), instead of Json",
 					excp);
 		}
@@ -206,7 +205,7 @@ public class MiscUtil {
 			ret = propertyName != null ? System.getProperty(propertyName)
 					: null;
 		} catch (Exception excp) {
-			LogLog.warn("getSystemProperty(" + propertyName + ") failed", excp);
+			logger.warn("getSystemProperty(" + propertyName + ") failed", excp);
 		}
 
 		return ret;
@@ -218,7 +217,7 @@ public class MiscUtil {
 		try {
 			ret = envName != null ? System.getenv(envName) : null;
 		} catch (Exception excp) {
-			LogLog.warn("getenv(" + envName + ") failed", excp);
+			logger.warn("getenv(" + envName + ") failed", excp);
 		}
 
 		return ret;
@@ -232,7 +231,7 @@ public class MiscUtil {
 
 			ret = sdf.format(time);
 		} catch (Exception excp) {
-			LogLog.warn("SimpleDateFormat.format() failed: " + format, excp);
+			logger.warn("SimpleDateFormat.format() failed: " + format, excp);
 		}
 
 		return ret;
@@ -247,7 +246,7 @@ public class MiscUtil {
 
 				if (!parentDir.exists()) {
 					if (!parentDir.mkdirs()) {
-						LogLog.warn("createParents(): failed to create "
+						logger.warn("createParents(): failed to create "
 								+ parentDir.getAbsolutePath());
 					}
 				}
@@ -477,7 +476,7 @@ public class MiscUtil {
 				logger.info("Default UGI before using new Subject:"
 						+ UserGroupInformation.getLoginUser());
 			} catch (Throwable t) {
-				logger.error(t);
+				logger.error("failed to get login user", t);
 			}
 			ugi = UserGroupInformation.getUGIFromSubject(subject);
 			logger.info("SUBJECT.UGI.NAME=" + ugi.getUserName() + ", ugi="
@@ -616,7 +615,7 @@ public class MiscUtil {
 		return Collections.emptySet();
 	}
 
-	static public boolean logErrorMessageByInterval(Log useLogger,
+	static public boolean logErrorMessageByInterval(Logger useLogger,
 			String message) {
 		return logErrorMessageByInterval(useLogger, message, null);
 	}
@@ -626,7 +625,7 @@ public class MiscUtil {
 	 * @param message
 	 * @param e
 	 */
-	static public boolean logErrorMessageByInterval(Log useLogger,
+	static public boolean logErrorMessageByInterval(Logger useLogger,
 			String message, Throwable e) {
         if (message == null) {
             return false;
@@ -858,7 +857,7 @@ public class MiscUtil {
 		try {
 			local_hostname = InetAddress.getLocalHost().getHostName();
 		} catch (Throwable excp) {
-			LogLog.warn("getHostname()", excp);
+			logger.warn("getHostname()", excp);
 		}
 		if ( logger.isDebugEnabled() ) {
 			logger.debug("<== MiscUtil.initLocalHost()");

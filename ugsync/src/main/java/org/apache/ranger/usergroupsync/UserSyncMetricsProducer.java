@@ -21,13 +21,14 @@ package org.apache.ranger.usergroupsync;
 
 import java.io.File;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UserSyncMetricsProducer implements Runnable {
 
-	private static final Logger LOG = Logger.getLogger(UserSyncMetricsProducer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(UserSyncMetricsProducer.class);
 	private boolean shutdownFlag = false;
 
 	public static void main(String[] args) {

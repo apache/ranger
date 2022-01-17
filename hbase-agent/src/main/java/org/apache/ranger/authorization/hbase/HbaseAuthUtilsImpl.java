@@ -18,16 +18,16 @@
  */
 package org.apache.ranger.authorization.hbase;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hbase.client.RegionInfo;
 import org.apache.hadoop.hbase.coprocessor.RegionCoprocessorEnvironment;
 import org.apache.hadoop.hbase.security.access.Permission.Action;
 import org.apache.hadoop.hbase.util.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HbaseAuthUtilsImpl implements HbaseAuthUtils {
 
-	private static final Log LOG = LogFactory.getLog(HbaseAuthUtilsImpl.class.getName());
+	private static final Logger LOG = LoggerFactory.getLogger(HbaseAuthUtilsImpl.class.getName());
 	@Override
 	public String getAccess(Action action) {
 		switch(action) {

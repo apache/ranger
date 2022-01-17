@@ -36,8 +36,6 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Preconditions;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
@@ -62,13 +60,15 @@ import org.apache.solr.security.AuthorizationPlugin;
 import org.apache.solr.security.AuthorizationResponse;
 import org.apache.solr.security.AuthorizationContext;
 import org.apache.solr.security.AuthorizationContext.CollectionRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 
 public class RangerSolrAuthorizer extends SearchComponent implements AuthorizationPlugin {
-	private static final Log logger = LogFactory
-			.getLog(RangerSolrAuthorizer.class);
-	private static final Log PERF_SOLRAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("solrauth.request");
+	private static final Logger logger = LoggerFactory
+			.getLogger(RangerSolrAuthorizer.class);
+	private static final Logger PERF_SOLRAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("solrauth.request");
 	public static final String SUPERUSER = System.getProperty("solr.authorization.superuser", "solr");
 
 	public static final String AUTH_FIELD_PROP = "rangerAuthField";
@@ -224,7 +224,7 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 			logger.info("init(): KerberosName.rules="
 					+ MiscUtil.getKerberosNamesRules());
 		} catch (Throwable t) {
-			logger.fatal("Error creating and initializing RangerBasePlugin()", t);
+			logger.error("Error creating and initializing RangerBasePlugin()", t);
 		}
 	}
 

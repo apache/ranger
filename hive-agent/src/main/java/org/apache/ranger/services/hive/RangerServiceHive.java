@@ -37,12 +37,12 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.hive.client.HiveResourceMgr;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceHive extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceHive.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceHive.class);
 
 	public static final String RESOURCE_DATABASE  = "database";
 	public static final String RESOURCE_TABLE     = "table";

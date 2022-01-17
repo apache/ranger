@@ -18,13 +18,14 @@
 package org.apache.ranger.patch;
 
 import com.google.gson.Gson;
-import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -37,7 +38,7 @@ public class PatchForSyncSourceUpdate_J10054 extends BaseLoader{
     @Autowired
     RangerDaoManager daoManager;
 
-    private static final Logger logger = Logger.getLogger(PatchForSyncSourceUpdate_J10054.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForSyncSourceUpdate_J10054.class);
 
     @Override
     public void init() throws Exception {/* Do Nothing */}

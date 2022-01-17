@@ -22,17 +22,17 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.sqoop.client.SqoopResourceMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceSqoop extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceSqoop.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSqoop.class);
 
 	public RangerServiceSqoop() {
 		super();

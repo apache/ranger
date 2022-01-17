@@ -20,8 +20,9 @@
 package org.apache.ranger.util;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.management.ManagementFactory;
@@ -40,7 +41,7 @@ import java.lang.management.MemoryUsage;
 @Component
 public class RangerMetricsUtil {
 
-    private static final Logger LOG = Logger.getLogger(RangerMetricsUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerMetricsUtil.class);
     private static final OperatingSystemMXBean OS;
     private static final MemoryMXBean MEM_BEAN;
     public static final String NL = System.getProperty("line.separator");

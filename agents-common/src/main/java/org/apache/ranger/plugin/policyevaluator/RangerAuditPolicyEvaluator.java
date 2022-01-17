@@ -21,8 +21,6 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
@@ -32,6 +30,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -43,7 +43,7 @@ import java.util.Set;
 
 
 public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
-    private static final Log LOG = LogFactory.getLog(RangerAuditPolicyEvaluator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAuditPolicyEvaluator.class);
 
     private final RangerAuditPolicy                    auditPolicy;
     private final boolean                              matchAnyResource;

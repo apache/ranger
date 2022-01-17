@@ -25,8 +25,6 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -47,12 +45,14 @@ import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RoleRefUpdater {
-	private static final Log LOG = LogFactory.getLog(RoleRefUpdater.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RoleRefUpdater.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

@@ -45,7 +45,6 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.security.ProviderUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.plugin.util.PasswordUtils;
@@ -61,6 +60,8 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.KeySearchFilter;
 import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -76,7 +77,7 @@ import com.sun.jersey.api.client.config.DefaultClientConfig;
 @Component
 public class KmsKeyMgr {
 
-	private static final Logger logger = Logger.getLogger(KmsKeyMgr.class);
+	private static final Logger logger = LoggerFactory.getLogger(KmsKeyMgr.class);
 	
 	private static final String KMS_KEY_LIST_URI  		= "v1/keys/names";				//GET
 	private static final String KMS_ADD_KEY_URI  		= "v1/keys";					//POST

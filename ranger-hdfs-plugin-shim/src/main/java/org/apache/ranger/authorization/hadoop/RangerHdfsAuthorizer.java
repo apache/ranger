@@ -20,14 +20,14 @@
 package org.apache.ranger.authorization.hadoop;
 
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributeProvider;
 import org.apache.hadoop.hdfs.server.namenode.INodeAttributes;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerHdfsAuthorizer extends INodeAttributeProvider {
-	private static final Log LOG  = LogFactory.getLog(RangerHdfsAuthorizer.class);
+	private static final Logger LOG  = LoggerFactory.getLogger(RangerHdfsAuthorizer.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "hdfs";
 	private static final String   RANGER_HDFS_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer";

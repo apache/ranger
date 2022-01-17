@@ -29,21 +29,21 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 
 public class PolicyRefresher extends Thread {
-	private static final Log LOG = LogFactory.getLog(PolicyRefresher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PolicyRefresher.class);
 
-	private static final Log PERF_POLICYENGINE_INIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.init");
+	private static final Logger PERF_POLICYENGINE_INIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.init");
 
 	private final RangerBasePlugin               plugIn;
 	private final String                         serviceType;
@@ -87,7 +87,7 @@ public class PolicyRefresher extends Thread {
 		try {
 			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 		} catch(Throwable excp) {
-			LOG.fatal("PolicyRefresher(): failed to create GsonBuilder object", excp);
+			LOG.error("PolicyRefresher(): failed to create GsonBuilder object", excp);
 		}
 
 		RangerPluginContext pluginContext  = plugIn.getPluginContext();

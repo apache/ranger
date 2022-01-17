@@ -22,8 +22,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.sun.jersey.api.client.ClientResponse;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.audit.provider.MiscUtil;
@@ -33,6 +31,8 @@ import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.File;
@@ -47,8 +47,8 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 
 public class RangerUserStoreRefresher extends Thread {
-    private static final Log LOG = LogFactory.getLog(RangerUserStoreRefresher.class);
-    private static final Log PERF_REFRESHER_INIT_LOG = RangerPerfTracer.getPerfLogger("userstore.init");
+    private static final Logger LOG = LoggerFactory.getLogger(RangerUserStoreRefresher.class);
+    private static final Logger PERF_REFRESHER_INIT_LOG = RangerPerfTracer.getPerfLogger("userstore.init");
 
     private final RangerUserStoreRetriever userStoreRetriever;
     private final RangerUserStoreEnricher userStoreEnricher;
@@ -73,7 +73,7 @@ public class RangerUserStoreRefresher extends Thread {
         try {
             gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
         } catch(Throwable excp) {
-            LOG.fatal("failed to create GsonBuilder object", excp);
+            LOG.error("failed to create GsonBuilder object", excp);
         }
         setName("RangerUserStoreRefresher(serviceName=" + userStoreRetriever.getServiceName() + ")-" + getId());
     }

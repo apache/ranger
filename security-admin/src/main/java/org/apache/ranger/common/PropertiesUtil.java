@@ -34,10 +34,11 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeansException;
 import org.springframework.beans.factory.config.ConfigurableListableBeanFactory;
 import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
@@ -46,7 +47,7 @@ import org.springframework.beans.factory.config.PropertyPlaceholderConfigurer;
 
 public class PropertiesUtil extends PropertyPlaceholderConfigurer {
     private static Map<String, String> propertiesMap = new HashMap<String, String>();
-    private static final Logger logger = Logger.getLogger(PropertiesUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(PropertiesUtil.class);
     protected List<String> xmlPropertyConfigurer  = new ArrayList<String>();
 
     private PropertiesUtil() {

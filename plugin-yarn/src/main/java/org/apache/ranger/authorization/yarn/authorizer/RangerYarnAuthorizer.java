@@ -27,8 +27,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -44,14 +42,16 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
-	private static final Log LOG = LogFactory.getLog(RangerYarnAuthorizer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerYarnAuthorizer.class);
 
-	private static final Log PERF_YARNAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("yarnauth.request");
+	private static final Logger PERF_YARNAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("yarnauth.request");
 
 	public static final String ACCESS_TYPE_ADMIN_QUEUE = "admin-queue";
 	public static final String ACCESS_TYPE_SUBMIT_APP  = "submit-app";
@@ -334,7 +334,7 @@ class RangerYarnAccessRequest extends RangerAccessRequestImpl {
 }
 
 class RangerYarnAuditHandler extends RangerDefaultAuditHandler {
-	private static final Log LOG = LogFactory.getLog(RangerYarnAuditHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerYarnAuditHandler.class);
 
 	private final String    yarnModuleName;
 	private boolean         isAuditEnabled = false;

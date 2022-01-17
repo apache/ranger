@@ -25,8 +25,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
@@ -38,10 +36,12 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
-	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultAuditHandler.class);
 
 	private static final String       CONF_AUDIT_ID_STRICT_UUID     = "xasecure.audit.auditid.strict.uuid";
 	private static final boolean      DEFAULT_AUDIT_ID_STRICT_UUID  = false;

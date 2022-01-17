@@ -20,15 +20,15 @@ package org.apache.ranger.audit.provider;
  */
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.utils.RangerAuditWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.Properties;
 
 public class AuditWriterFactory {
-    private static final Log    logger                     = LogFactory.getLog(AuditWriterFactory.class);
+    private static final Logger logger                     = LoggerFactory.getLogger(AuditWriterFactory.class);
     public static  final String AUDIT_FILETYPE_DEFAULT     = "json";
     public static  final String AUDIT_JSON_FILEWRITER_IMPL = "org.apache.ranger.audit.utils.RangerJSONAuditWriter";
     public static  final String AUDIT_ORC_FILEWRITER_IMPL  = "org.apache.ranger.audit.utils.RangerORCAuditWriter";

@@ -21,8 +21,6 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -30,11 +28,13 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 
 public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator {
-    private static final Log LOG = LogFactory.getLog(RangerOptimizedPolicyEvaluator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerOptimizedPolicyEvaluator.class);
 
     private Set<String> roles          = new HashSet<>();
     private Set<String> groups         = new HashSet<>();

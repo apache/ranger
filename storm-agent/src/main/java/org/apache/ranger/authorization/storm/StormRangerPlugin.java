@@ -22,8 +22,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.ranger.authorization.storm.StormRangerPlugin.StormConstants.PluginConfiguration;
 import org.apache.ranger.authorization.storm.StormRangerPlugin.StormConstants.ResourceName;
@@ -32,12 +30,14 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
 public class StormRangerPlugin extends RangerBasePlugin {
 	
-	private static final Log LOG = LogFactory.getLog(StormRangerPlugin.class);
+	private static final Logger LOG = LoggerFactory.getLogger(StormRangerPlugin.class);
 	boolean initialized = false;
 
 	private final Map<String,String> impliedAccessTypes;

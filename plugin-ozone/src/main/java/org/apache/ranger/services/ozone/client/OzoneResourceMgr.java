@@ -19,10 +19,11 @@
 
 package org.apache.ranger.services.ozone.client;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ import java.util.concurrent.TimeUnit;
 
 public class OzoneResourceMgr {
 
-    private static final Logger LOG = Logger.getLogger(OzoneResourceMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OzoneResourceMgr.class);
 
     private static final String VOLUME     = "volume";
     private static final String BUCKET     = "bucket";

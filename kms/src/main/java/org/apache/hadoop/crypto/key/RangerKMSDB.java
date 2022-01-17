@@ -29,12 +29,13 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.Persistence;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 import org.apache.ranger.kms.dao.DaoManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerKMSDB {
 	
-	static final Logger logger = Logger.getLogger(RangerKMSDB.class);
+	static final Logger logger = LoggerFactory.getLogger(RangerKMSDB.class);
 	
 	private EntityManagerFactory entityManagerFactory;
 	private DaoManager daoManager;

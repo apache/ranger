@@ -21,16 +21,16 @@ package org.apache.ranger.authorization.hbase;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HbaseAuditHandlerImpl extends RangerDefaultAuditHandler implements HbaseAuditHandler {
 
-	private static final Log LOG = LogFactory.getLog(HbaseAuditHandlerImpl.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HbaseAuditHandlerImpl.class);
 	static final List<AuthzAuditEvent> _EmptyList = new ArrayList<AuthzAuditEvent>();
 	final List<AuthzAuditEvent> _allEvents = new ArrayList<AuthzAuditEvent>();
 	// we replace its contents anytime new audit events are generated.

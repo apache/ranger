@@ -32,8 +32,6 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.conditionevaluator.RangerAbstractConditionEvaluator;
 import org.apache.ranger.plugin.conditionevaluator.RangerConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -58,15 +56,17 @@ import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerDefaultPolicyEvaluator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultPolicyEvaluator.class);
 
-	private static final Log PERF_POLICY_INIT_LOG = RangerPerfTracer.getPerfLogger("policy.init");
-	private static final Log PERF_POLICY_INIT_ACLSUMMARY_LOG = RangerPerfTracer.getPerfLogger("policy.init.ACLSummary");
-	private static final Log PERF_POLICY_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policy.request");
-	private static final Log PERF_POLICYCONDITION_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policycondition.request");
+	private static final Logger PERF_POLICY_INIT_LOG = RangerPerfTracer.getPerfLogger("policy.init");
+	private static final Logger PERF_POLICY_INIT_ACLSUMMARY_LOG = RangerPerfTracer.getPerfLogger("policy.init.ACLSummary");
+	private static final Logger PERF_POLICY_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policy.request");
+	private static final Logger PERF_POLICYCONDITION_REQUEST_LOG = RangerPerfTracer.getPerfLogger("policycondition.request");
 
 	private RangerPolicyResourceMatcher     resourceMatcher;
 	private List<RangerValidityScheduleEvaluator> validityScheduleEvaluators;

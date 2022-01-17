@@ -38,8 +38,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -60,6 +58,8 @@ import org.apache.ranger.service.RangerSecurityZoneServiceService;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.view.RangerSecurityZoneList;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -73,7 +73,7 @@ import com.google.common.collect.Sets;
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class SecurityZoneREST {
-    private static final Log    LOG                                    = LogFactory.getLog(SecurityZoneREST.class);
+    private static final Logger LOG                                    = LoggerFactory.getLogger(SecurityZoneREST.class);
     private static final String STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE = "User is not authorized to access zone(s).";
 
     @Autowired

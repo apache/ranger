@@ -21,8 +21,6 @@
 package org.apache.ranger.authorization.ozone.authorizer;
 
 import com.google.common.collect.Sets;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.ozone.security.acl.IAccessAuthorizer;
 import org.apache.hadoop.ozone.security.acl.IOzoneObj;
 import org.apache.hadoop.ozone.security.acl.OzoneObj;
@@ -35,6 +33,8 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 
@@ -52,9 +52,9 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 	public static final String KEY_RESOURCE_BUCKET = "bucket";
 	public static final String KEY_RESOURCE_KEY = "key";
 
-	private static final Log PERF_OZONEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("ozoneauth.request");
+	private static final Logger PERF_OZONEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("ozoneauth.request");
 
-    private static final Log LOG = LogFactory.getLog(RangerOzoneAuthorizer.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerOzoneAuthorizer.class);
 
 	private static volatile RangerBasePlugin rangerPlugin = null;
 	RangerDefaultAuditHandler auditHandler = null;
@@ -111,7 +111,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		if (accessType == null) {
 			MiscUtil.logErrorMessageByInterval(LOG,
 					"Unsupported access type. operation=" + operation) ;
-			LOG.fatal("Unsupported access type. operation=" + operation + ", resource=" + resource);
+			LOG.error("Unsupported access type. operation=" + operation + ", resource=" + resource);
 			return returnValue;
 		}
 		String action = accessType;
@@ -144,7 +144,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 				rangerResource.setValue(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
 			}
 		} else {
-			LOG.fatal("Unsupported resource = " + resource);
+			LOG.error("Unsupported resource = " + resource);
 			MiscUtil.logErrorMessageByInterval(LOG, "Unsupported resource type " + ozoneObj.getResourceType() + " for resource = " + resource
 					+ ", request=" + rangerRequest);
 			return returnValue;

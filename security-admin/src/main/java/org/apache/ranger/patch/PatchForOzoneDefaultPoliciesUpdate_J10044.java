@@ -18,7 +18,6 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
@@ -28,6 +27,8 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -36,7 +37,7 @@ import java.util.List;
 
 @Component
 public class PatchForOzoneDefaultPoliciesUpdate_J10044 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchForOzoneDefaultPoliciesUpdate_J10044.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchForOzoneDefaultPoliciesUpdate_J10044.class);
 	public static final String ACCESS_TYPE_ALL  = "all";
 
 	@Autowired

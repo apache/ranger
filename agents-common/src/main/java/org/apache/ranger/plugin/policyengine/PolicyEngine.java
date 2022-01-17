@@ -31,8 +31,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
@@ -50,12 +48,14 @@ import org.apache.ranger.plugin.util.RangerReadWriteLock;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PolicyEngine {
-    private static final Log LOG = LogFactory.getLog(PolicyEngine.class);
+    private static final Logger LOG = LoggerFactory.getLogger(PolicyEngine.class);
 
-    private static final Log PERF_POLICYENGINE_INIT_LOG       = RangerPerfTracer.getPerfLogger("policyengine.init");
-    private static final Log PERF_POLICYENGINE_REBALANCE_LOG  = RangerPerfTracer.getPerfLogger("policyengine.rebalance");
+    private static final Logger PERF_POLICYENGINE_INIT_LOG       = RangerPerfTracer.getPerfLogger("policyengine.init");
+    private static final Logger PERF_POLICYENGINE_REBALANCE_LOG  = RangerPerfTracer.getPerfLogger("policyengine.rebalance");
 
     private final RangerPolicyRepository              policyRepository;
     private final RangerPolicyRepository              tagPolicyRepository;
