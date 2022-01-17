@@ -97,20 +97,14 @@ public class RangerKafkaAuthorizer implements Authorizer {
   public Map<Endpoint, ? extends CompletionStage<Void>> start(AuthorizerServerInfo authorizerServerInfo) {
     logger.debug("==> RangerKafkaAuthorizer.start(AuthorizerServerInfo)");
 
-    Map<Endpoint, ? extends CompletionStage<Void>> ret;
-
     try {
       activatePluginClassLoader();
 
-      ret = rangerKafkaAuthorizerImpl.start(authorizerServerInfo);
-
+      return rangerKafkaAuthorizerImpl.start(authorizerServerInfo);
     } finally {
       deactivatePluginClassLoader();
+      logger.debug("<== RangerKafkaAuthorizer.start(AuthorizerServerInfo)");
     }
-
-    logger.debug("<== RangerKafkaAuthorizer.start(AuthorizerServerInfo)");
-
-    return ret;
   }
 
   @Override
@@ -151,57 +145,42 @@ public class RangerKafkaAuthorizer implements Authorizer {
   public List<? extends CompletionStage<AclCreateResult>> createAcls(AuthorizableRequestContext requestContext, List<AclBinding> aclBindings) {
     logger.debug("==> RangerKafkaAuthorizer.createAcls(AuthorizableRequestContext, List<AclBinding>)");
 
-    List<? extends CompletionStage<AclCreateResult>> ret;
-
     try {
       activatePluginClassLoader();
 
-      ret = rangerKafkaAuthorizerImpl.createAcls(requestContext, aclBindings);
+      return rangerKafkaAuthorizerImpl.createAcls(requestContext, aclBindings);
     } finally {
       deactivatePluginClassLoader();
+      logger.debug("<== RangerKafkaAuthorizer.createAcls(AuthorizableRequestContext, List<AclBinding>)");
     }
-
-    logger.debug("<== RangerKafkaAuthorizer.createAcls(AuthorizableRequestContext, List<AclBinding>)");
-
-    return ret;
   }
 
   @Override
   public List<? extends CompletionStage<AclDeleteResult>> deleteAcls(AuthorizableRequestContext requestContext, List<AclBindingFilter> aclBindingFilters) {
     logger.debug("==> RangerKafkaAuthorizer.deleteAcls(AuthorizableRequestContext, List<AclBindingFilter>)");
 
-    List<? extends CompletionStage<AclDeleteResult>> ret;
-
     try {
       activatePluginClassLoader();
 
-      ret = rangerKafkaAuthorizerImpl.deleteAcls(requestContext, aclBindingFilters);
+      return rangerKafkaAuthorizerImpl.deleteAcls(requestContext, aclBindingFilters);
     } finally {
       deactivatePluginClassLoader();
+      logger.debug("<== RangerKafkaAuthorizer.deleteAcls(AuthorizableRequestContext, List<AclBindingFilter>)");
     }
-
-    logger.debug("<== RangerKafkaAuthorizer.deleteAcls(AuthorizableRequestContext, List<AclBindingFilter>)");
-
-    return ret;
   }
 
   @Override
   public Iterable<AclBinding> acls(AclBindingFilter filter) {
     logger.debug("==> RangerKafkaAuthorizer.acls(AclBindingFilter)");
 
-    Iterable<AclBinding> ret;
-
     try {
       activatePluginClassLoader();
 
-      ret = rangerKafkaAuthorizerImpl.acls(filter);
+      return rangerKafkaAuthorizerImpl.acls(filter);
     } finally {
       deactivatePluginClassLoader();
+      logger.debug("<== RangerKafkaAuthorizer.acls(AclBindingFilter)");
     }
-
-    logger.debug("<== RangerKafkaAuthorizer.acls(AclBindingFilter)");
-
-    return ret;
   }
 
   private void activatePluginClassLoader() {
