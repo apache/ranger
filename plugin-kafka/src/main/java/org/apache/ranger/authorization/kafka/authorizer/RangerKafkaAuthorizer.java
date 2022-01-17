@@ -249,19 +249,21 @@ public class RangerKafkaAuthorizer implements Authorizer {
     String ip = StringUtils.isNotEmpty(hostAddress) && hostAddress.charAt(0) == '/' ? hostAddress.substring(1) : hostAddress;
     Date eventTime = new Date();
 
-    boolean isInvalid = false;
     List<RangerAccessRequest> rangerRequests = new ArrayList<>();
     for (Action action : actions) {
       String accessType = mapToRangerAccessType(action.operation());
       if (accessType == null) {
-        MiscUtil.logErrorMessageByInterval(logger, "Unsupported access type. operation=" + action.operation());
-        isInvalid = true;
+        MiscUtil.logErrorMessageByInterval(logger, "Unsupported access type, requestContext=" + requestContext + ", actions=" + actions +
+            ", operation=" + action.operation());
+        return denyAll(actions);
       }
       String resourceTypeKey = mapToResourceType(action.resourcePattern().resourceType());
       if (resourceTypeKey == null) {
-        MiscUtil.logErrorMessageByInterval(logger, "Unsupported resource type. resourceType=" + action.resourcePattern().resourceType());
-        isInvalid = true;
+        MiscUtil.logErrorMessageByInterval(logger, "Unsupported resource type, requestContext=" + requestContext + ", actions=" + actions +
+            ", resourceType=" + action.resourcePattern().resourceType());
+        return denyAll(actions);
       }
+
       RangerAccessRequestImpl rangerAccessRequest = createRangerAccessRequest(
           userName,
           userGroups,
@@ -273,26 +275,23 @@ public class RangerKafkaAuthorizer implements Authorizer {
       rangerRequests.add(rangerAccessRequest);
     }
 
-    if (isInvalid) {
-      MiscUtil.logErrorMessageByInterval(logger, "Validation failed, requestContext=" + requestContext + ", actions=" + actions);
-      return denyAll(actions);
-    }
+    Collection<RangerAccessResult> results = callRangerPlugin(rangerRequests);
 
-    List<AuthorizationResult> authorizationResults = mapResults(actions, callRangerPlugin(rangerRequests));
+    List<AuthorizationResult> authorizationResults = mapResults(actions, results);
+
     logger.debug("rangerRequests={}, return={}", rangerRequests, authorizationResults);
     return authorizationResults;
   }
 
   private Collection<RangerAccessResult> callRangerPlugin(List<RangerAccessRequest> rangerRequests) {
-    Collection<RangerAccessResult> results = null;
     try {
-      results = rangerPlugin.isAccessAllowed(rangerRequests);
+      return rangerPlugin.isAccessAllowed(rangerRequests);
     } catch (Throwable t) {
       logger.error("Error while calling isAccessAllowed(). requests=" + rangerRequests, t);
+      return null;
     } finally {
       auditHandler.flushAudit();
     }
-    return results;
   }
 
   @Override
