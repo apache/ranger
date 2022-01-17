@@ -177,6 +177,7 @@
         <poi.version>4.1.2</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
+        <gcp.protobuf-java.version>3.19.1</gcp.protobuf-java.version>
         <scala.version>2.12.10</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
         <scala.xml.version>1.0.4</scala.xml.version>
@@ -224,7 +225,8 @@
         <lucene.version>8.4.0</lucene.version>
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
-        <log4j.core.version>2.16.0</log4j.core.version>
+        <!-- GCP HSM -->
+        <google.cloud.kms>2.3.0</google.cloud.kms>
     </properties>
     <profiles>
         <profile>

@@ -61,6 +61,10 @@
                     <groupId>org.apache.commons</groupId>
                     <artifactId>commons-lang3</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.google.protobuf</groupId>
+                    <artifactId>protobuf-java</artifactId>
+                </exclusion>
              </exclusions>
         </dependency>
         <dependency>
@@ -418,6 +422,16 @@
             <artifactId>javax.persistence</artifactId>
             <version>${javax.persistence.version}</version>
         </dependency>
+        <dependency>
+             <groupId>com.google.cloud</groupId>
+             <artifactId>google-cloud-kms</artifactId>
+             <version>${google.cloud.kms}</version>
+         </dependency>
+         <dependency>
+             <groupId>com.google.protobuf</groupId>
+             <artifactId>protobuf-java</artifactId>
+             <version>${gcp.protobuf-java.version}</version>
+         </dependency>
     </dependencies>
     <build>
         <pluginManagement>

@@ -120,6 +120,7 @@ public class RangerKeyVaultKeyGenerator implements RangerKMSMKI {
 		}
 	}
 
+	@Override
 	public byte[] encryptZoneKey(Key zoneKey) throws Exception {
 		JsonWebKeyEncryptionAlgorithm keyEncryptionAlgo = getZoneKeyEncryptionAlgo();
 		KeyOperationResult encryptResult = null;
@@ -139,7 +140,8 @@ public class RangerKeyVaultKeyGenerator implements RangerKMSMKI {
 		return encryptResult.result();
 	}
 
-	public byte[] dencryptZoneKey(byte[] encryptedByte) throws Exception {
+	@Override
+	public byte[] decryptZoneKey(byte[] encryptedByte) throws Exception {
 		JsonWebKeyEncryptionAlgorithm keyEncryptionAlgo = getZoneKeyEncryptionAlgo();
 		if (masterKeyBundle == null) {
 			masterKeyBundle = keyVaultClient

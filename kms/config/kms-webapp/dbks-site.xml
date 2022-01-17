@@ -293,7 +293,40 @@
         <description>Azure Key Vault url</description>
   </property>
    <!--Azure Key Vault END-->
-    
+
+	<!-- Google Cloud KMS start -->
+	<property>
+		<name>ranger.kms.gcp.enabled</name>
+		<value>false</value>
+		<description>Flag for Google Cloud HSM e.g - true or false</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.keyring.id</name>
+		<value></value>
+		<description>Name of KeyRing.</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.cred.file</name>
+		<value></value>
+		<description>Absolute path of downloaded json credential file, e.g - /path/to/credFile.json</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.project.id</name>
+		<value></value>
+		<description>Name of project on Google Cloud HSM.</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.location.id</name>
+		<value></value>
+		<description>GCP KeyRing location id, e.g - us-east1, global etc.</description>
+	</property>
+	<property>
+		<name>ranger.kms.gcp.masterkey.name</name>
+		<value></value>
+		<description>GCP Master Key Name.</description>
+	</property>
+	<!-- Google Cloud KMS end -->
+
   <!-- HSM Config -->
   <property>
   	<name>ranger.ks.hsm.type</name>

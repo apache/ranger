@@ -100,7 +100,7 @@
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
-                    <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
+                    <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
@@ -159,6 +159,40 @@
                     <include>com.microsoft.azure:azure-mgmt-eventhub</include>
                     <include>com.microsoft.azure:azure-mgmt-eventhub</include>
                     <include>com.microsoft.azure:azure-keyvault-cryptography</include>
+                    <!-- GCP -->
+                    <include>com.google.cloud:google-cloud-kms</include>
+                    <include>io.grpc:grpc-api</include>
+                    <include>io.grpc:grpc-context</include>
+                    <include>io.grpc:grpc-stub</include>
+                    <include>io.grpc:grpc-protobuf</include>
+                    <include>io.grpc:grpc-protobuf-lite</include>
+                    <include>com.google.api:api-common</include>
+                    <include>javax.annotation:javax.annotation-api</include>
+                    <include>com.google.auto.value:auto-value-annotations</include>
+                    <include>com.google.api.grpc:proto-google-common-protos</include>
+                    <include>com.google.api.grpc:proto-google-cloud-kms-v1</include>
+                    <include>com.google.api:gax</include>
+                    <include>io.opencensus:opencensus-api</include>
+                    <include>com.google.api:gax-grpc</include>
+                    <include>com.google.auth:google-auth-library-credentials</include>
+                    <include>io.grpc:grpc-netty-shaded</include>
+                    <include>io.perfmark:perfmark-api</include>
+                    <include>io.grpc:grpc-core</include>
+                    <include>com.google.android:annotations</include>
+                    <include>io.grpc:grpc-alts</include>
+                    <include>io.grpc:grpc-grpclb</include>
+                    <include>com.google.protobuf:protobuf-java-util</include>
+                    <include>org.conscrypt:conscrypt-openjdk-uber</include>
+                    <include>org.threeten:threetenbp</include>
+                    <include>io.grpc:grpc-auth</include>
+                    <include>com.google.api.grpc:proto-google-iam-v1</include>
+                    <include>com.google.auth:google-auth-library-oauth2-http</include>
+                    <include>com.google.http-client:google-http-client</include>
+                    <include>io.opencensus:opencensus-contrib-http-util</include>
+                    <include>com.google.http-client:google-http-client-gson</include>
+                    <include>io.grpc:grpc-xds</include>
+                    <include>io.grpc:grpc-services</include>
+                    <include>io.opencensus:opencensus-proto</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -190,7 +224,7 @@
                     <include>org.apache.tomcat.embed:tomcat-embed*</include>
                     <include>org.apache.tomcat:tomcat-annotations-api*</include>
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
-                    <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
+                    <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
                     <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
@@ -391,6 +425,7 @@
                 <include>DBMKTOKEYSECURE.sh</include>
                 <include>DBMKTOAZUREKEYVAULT.sh</include>
                 <include>KEYSECUREMKTOKMSDB.sh</include>
+                <include>MigrateMKeyStorageDbToGCP.sh</include>
             </includes>
             <fileMode>544</fileMode>
         </fileSet>
