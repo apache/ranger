@@ -60,6 +60,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerKafkaAuthorizer implements Authorizer {
+  private static final Logger logger = LoggerFactory.getLogger(RangerKafkaAuthorizer.class);
+  private static final Logger PERF_KAFKAAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("kafkaauth.request");
+
   public static final String ACCESS_TYPE_ALTER_CONFIGS = "alter_configs";
   public static final String KEY_TOPIC = "topic";
   public static final String KEY_CLUSTER = "cluster";
@@ -75,9 +78,6 @@ public class RangerKafkaAuthorizer implements Authorizer {
   public static final String ACCESS_TYPE_DESCRIBE_CONFIGS = "describe_configs";
   public static final String ACCESS_TYPE_CLUSTER_ACTION = "cluster_action";
   public static final String ACCESS_TYPE_IDEMPOTENT_WRITE = "idempotent_write";
-
-  private static final Logger PERF_KAFKAAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("kafkaauth.request");
-  private static final Logger logger = LoggerFactory.getLogger(RangerKafkaAuthorizer.class);
 
   private static volatile RangerBasePlugin rangerPlugin = null;
   RangerKafkaAuditHandler auditHandler = null;
@@ -134,21 +134,21 @@ public class RangerKafkaAuthorizer implements Authorizer {
     }
   }
 
-  private static RangerAccessResourceImpl getRangerAccessResource(String resourceTypeKey, String resourceName) {
+  private static RangerAccessResourceImpl createRangerAccessResource(String resourceTypeKey, String resourceName) {
     RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
     rangerResource.setValue(resourceTypeKey, resourceName);
     return rangerResource;
   }
 
-  private static RangerAccessRequestImpl getRangerAccessRequest(String userName,
-                                                                Set<String> userGroups,
-                                                                String ip,
-                                                                Date eventTime,
-                                                                String resourceTypeKey,
-                                                                String resourceName,
-                                                                String accessType) {
+  private static RangerAccessRequestImpl createRangerAccessRequest(String userName,
+                                                                   Set<String> userGroups,
+                                                                   String ip,
+                                                                   Date eventTime,
+                                                                   String resourceTypeKey,
+                                                                   String resourceName,
+                                                                   String accessType) {
     RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
-    rangerRequest.setResource(getRangerAccessResource(resourceTypeKey, resourceName));
+    rangerRequest.setResource(createRangerAccessResource(resourceTypeKey, resourceName));
     rangerRequest.setUser(userName);
     rangerRequest.setUserGroups(userGroups);
     rangerRequest.setClientIPAddress(ip);
@@ -262,7 +262,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
         MiscUtil.logErrorMessageByInterval(logger, "Unsupported resource type. resourceType=" + action.resourcePattern().resourceType());
         isInvalid = true;
       }
-      RangerAccessRequestImpl rangerAccessRequest = getRangerAccessRequest(
+      RangerAccessRequestImpl rangerAccessRequest = createRangerAccessRequest(
           userName,
           userGroups,
           ip,
