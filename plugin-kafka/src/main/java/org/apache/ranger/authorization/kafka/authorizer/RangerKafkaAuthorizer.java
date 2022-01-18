@@ -32,8 +32,6 @@ import kafka.security.auth.*;
 import kafka.network.RequestChannel.Session;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kafka.common.security.auth.KafkaPrincipal;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -41,11 +39,13 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerKafkaAuthorizer implements Authorizer {
-	private static final Log logger = LogFactory
-			.getLog(RangerKafkaAuthorizer.class);
-	private static final Log PERF_KAFKAAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("kafkaauth.request");
+	private static final Logger logger = LoggerFactory
+			.getLogger(RangerKafkaAuthorizer.class);
+	private static final Logger PERF_KAFKAAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("kafkaauth.request");
 
 	public static final String KEY_TOPIC = "topic";
 	public static final String KEY_CLUSTER = "cluster";
@@ -155,7 +155,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		if (accessType == null) {
 			if (MiscUtil.logErrorMessageByInterval(logger,
 					"Unsupported access type. operation=" + operation)) {
-				logger.fatal("Unsupported access type. session=" + session
+				logger.error("Unsupported access type. session=" + session
 						+ ", operation=" + operation + ", resource=" + resource);
 			}
 			validationFailed = true;
@@ -186,7 +186,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 		} else if (resource.resourceType().equals(DelegationToken$.MODULE$)) {
 			rangerResource.setValue(KEY_DELEGATIONTOKEN, resource.name());
 		} else {
-			logger.fatal("Unsupported resourceType=" + resource.resourceType());
+			logger.error("Unsupported resourceType=" + resource.resourceType());
 			validationFailed = true;
 		}
 

@@ -36,8 +36,6 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -82,6 +80,8 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -89,9 +89,9 @@ import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 
 public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
-	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerHiveAuthorizer.class);
 
-	private static final Log PERF_HIVEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hiveauth.request");
+	private static final Logger PERF_HIVEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hiveauth.request");
 
 	private static final char COLUMN_SEP = ',';
 

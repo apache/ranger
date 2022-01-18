@@ -22,16 +22,17 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUserPermission;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
 
-	private static final Logger logger = Logger.getLogger(XXUserPermissionDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(XXUserPermissionDao.class);
 
 	public XXUserPermissionDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);

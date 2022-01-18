@@ -21,8 +21,8 @@ package org.apache.ranger.plugin.model.validation;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.ParseException;
@@ -44,7 +44,7 @@ import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import javax.annotation.Nonnull;
 
 public class RangerValidityScheduleValidator {
-    private static final Log LOG = LogFactory.getLog(RangerValidityScheduleValidator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerValidityScheduleValidator.class);
 
     private static final ThreadLocal<DateFormat> DATE_FORMATTER = new ThreadLocal<DateFormat>() {
         @Override

@@ -20,8 +20,6 @@
 package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.util.DownloaderTask;
@@ -33,11 +31,13 @@ import java.io.File;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
-    private static final Log LOG = LogFactory.getLog(RangerUserStoreEnricher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerUserStoreEnricher.class);
 
-    private static final Log PERF_SET_USERSTORE_LOG      = RangerPerfTracer.getPerfLogger("userstoreenricher.setuserstore");
+    private static final Logger PERF_SET_USERSTORE_LOG      = RangerPerfTracer.getPerfLogger("userstoreenricher.setuserstore");
 
 
     private static final String USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION = "userStoreRefresherPollingInterval";

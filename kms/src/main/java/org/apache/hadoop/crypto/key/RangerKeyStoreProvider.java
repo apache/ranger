@@ -49,12 +49,13 @@ import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.hadoop.fs.Path;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @InterfaceAudience.Private
 public class RangerKeyStoreProvider extends KeyProvider {
 
-	static final Logger logger = Logger.getLogger(RangerKeyStoreProvider.class);
+	static final Logger logger = LoggerFactory.getLogger(RangerKeyStoreProvider.class);
 
 	public static final String SCHEME_NAME = "dbks";
 	public static final String KMS_CONFIG_DIR = "kms.config.dir";

@@ -17,8 +17,8 @@ package org.apache.ranger.service;
 
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ldap.NameNotFoundException;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.BaseLdapPathContextSource;
@@ -51,8 +51,8 @@ public final class PasswordComparisonAuthenticator extends
 	// ~ Static fields/initializers
 	// =====================================================================================
 
-	private static final Log logger = LogFactory
-			.getLog(PasswordComparisonAuthenticator.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(PasswordComparisonAuthenticator.class);
 
 	// ~ Instance fields
 	// ================================================================================================

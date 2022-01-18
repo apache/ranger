@@ -21,7 +21,6 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
@@ -33,12 +32,14 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049 extends BaseLoader {
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(PatchForAllServiceDefUpdateForDefaultAuditFilters_J10049.class);
 
 	@Autowired

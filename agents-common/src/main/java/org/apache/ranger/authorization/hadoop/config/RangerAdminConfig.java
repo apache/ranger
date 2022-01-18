@@ -20,12 +20,13 @@
 package org.apache.ranger.authorization.hadoop.config;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.security.KeyStore;
 
 public class RangerAdminConfig extends RangerConfiguration {
-    private static final Logger LOG = Logger.getLogger(RangerAdminConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminConfig.class);
 
     private static volatile RangerAdminConfig sInstance = null;
     private final boolean isFipsEnabled;

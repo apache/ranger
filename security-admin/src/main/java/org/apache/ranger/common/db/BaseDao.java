@@ -34,14 +34,15 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.RangerDaoManagerBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseDao<T> {
-	private static final Logger logger = Logger.getLogger(BaseDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
 
 	protected RangerDaoManager daoManager;
 

@@ -19,11 +19,11 @@
 
 package org.apache.ranger.policyengine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.PerfDataRecorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,7 +36,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class RangerPolicyenginePerfTester {
-    static final Log LOG = LogFactory.getLog(RangerPolicyenginePerfTester.class);
+    static final Logger LOG = LoggerFactory.getLogger(RangerPolicyenginePerfTester.class);
 
     public static void main(String[] args) {
         if (LOG.isDebugEnabled()) {

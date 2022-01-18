@@ -19,16 +19,16 @@
 
 package org.apache.ranger.plugin.service;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 
 public abstract class RangerChainedPlugin {
-    private static final Log LOG = LogFactory.getLog(RangerChainedPlugin.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerChainedPlugin.class);
 
     protected final RangerBasePlugin rootPlugin;
     protected final String           serviceType;

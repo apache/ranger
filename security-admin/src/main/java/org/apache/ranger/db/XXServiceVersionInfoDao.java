@@ -22,12 +22,12 @@ import java.util.List;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class XXServiceVersionInfoDao extends BaseDao<XXServiceVersionInfo> {
 
-	private static final Log LOG = LogFactory.getLog(XXServiceVersionInfoDao.class);
+	private static final Logger LOG = LoggerFactory.getLogger(XXServiceVersionInfoDao.class);
 
 	/**
 	 * Default Constructor

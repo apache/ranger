@@ -26,7 +26,6 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.PolicyRefUpdater;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -62,6 +61,8 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -79,7 +80,7 @@ import org.springframework.transaction.support.TransactionTemplate;
  */
 @Component
 public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchForMigratingOldRegimePolicyJson_J10046.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchForMigratingOldRegimePolicyJson_J10046.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

@@ -32,8 +32,6 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.client.CredentialsProvider;
@@ -55,12 +53,14 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosTicket;
 
 public class ElasticSearchAuditDestination extends AuditDestination {
-    private static final Log LOG = LogFactory.getLog(ElasticSearchAuditDestination.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchAuditDestination.class);
 
     public static final String CONFIG_URLS = "urls";
     public static final String CONFIG_PORT = "port";
@@ -267,7 +267,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                 long now = System.currentTimeMillis();
                 long elapsed = now - lastLoggedAt;
                 if (elapsed > TimeUnit.MINUTES.toMillis(1)) {
-                    LOG.fatal("Can't connect to ElasticSearch server: " + connectionString(), t);
+                    LOG.error("Can't connect to ElasticSearch server: " + connectionString(), t);
                     return now;
                 } else {
                     return lastLoggedAt;

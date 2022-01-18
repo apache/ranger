@@ -27,13 +27,13 @@ import java.util.Map;
 import javax.security.auth.Subject;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseClient {
-	private static final Log LOG = LogFactory.getLog(BaseClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(BaseClient.class);
 
 
 	private static final String DEFAULT_NAME_RULE = "DEFAULT";

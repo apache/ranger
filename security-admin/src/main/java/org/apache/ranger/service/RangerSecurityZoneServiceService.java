@@ -29,8 +29,6 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.view.VTrxLogAttr;
@@ -42,6 +40,8 @@ import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.util.RangerEnumUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -59,7 +59,7 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
 	@Autowired
 	ServiceDBStore serviceDBStore;
 
-    private static final Log logger = LogFactory.getLog(RangerSecurityZoneServiceService.class);
+    private static final Logger logger = LoggerFactory.getLogger(RangerSecurityZoneServiceService.class);
     private static final Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 
     private Map<Long, Set<String>> serviceNamesInZones = new HashMap<>();

@@ -40,13 +40,14 @@ import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class UserGroupSyncConfig  {
 
 	public static final String CONFIG_FILE = "ranger-ugsync-site.xml";
-	private static final Logger LOG = Logger.getLogger(UserGroupSyncConfig.class);
+	private static final Logger LOG = LoggerFactory.getLogger(UserGroupSyncConfig.class);
 
 	public static final String DEFAULT_CONFIG_FILE = "ranger-ugsync-default.xml";
 

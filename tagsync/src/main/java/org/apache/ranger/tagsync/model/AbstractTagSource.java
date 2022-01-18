@@ -20,12 +20,12 @@
 package org.apache.ranger.tagsync.model;
 
 import com.google.gson.Gson;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract  class AbstractTagSource implements TagSource {
-	private static final Log LOG = LogFactory.getLog(AbstractTagSource.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractTagSource.class);
 	private TagSink tagSink;
 	private String name;
 

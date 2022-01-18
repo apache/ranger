@@ -26,8 +26,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.JSONUtil;
@@ -41,6 +39,8 @@ import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -50,7 +50,7 @@ import com.google.common.base.Joiner;
 @Service
 @Scope("singleton")
 public class RangerServiceService extends RangerServiceServiceBase<XXService, RangerService> {
-	private static final Log LOG = LogFactory.getLog(RangerServiceService.class.getName());
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceService.class.getName());
 	@Autowired
 	JSONUtil jsonUtil;
 

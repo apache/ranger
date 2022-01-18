@@ -20,17 +20,17 @@
 package org.apache.ranger.plugin.model.validation;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.store.RoleStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class RangerRoleValidator extends RangerValidator {
-	private static final Log LOG = LogFactory.getLog(RangerRoleValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerRoleValidator.class);
 
 	public RangerRoleValidator(RoleStore store) {
 		super(store);

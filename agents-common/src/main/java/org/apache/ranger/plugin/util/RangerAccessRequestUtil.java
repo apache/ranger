@@ -26,14 +26,14 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerAccessRequestUtil {
-	private static final Log LOG = LogFactory.getLog(RangerAccessRequestUtil.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestUtil.class);
 
 	public static final String KEY_CONTEXT_TAGS                = "TAGS";
 	public static final String KEY_CONTEXT_TAG_OBJECT          = "TAG_OBJECT";

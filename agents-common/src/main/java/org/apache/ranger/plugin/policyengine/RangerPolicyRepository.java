@@ -22,8 +22,6 @@ package org.apache.ranger.plugin.policyengine;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerAbstractContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
@@ -44,6 +42,8 @@ import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,10 +60,10 @@ import static org.apache.ranger.plugin.contextenricher.RangerTagEnricher.TAG_RET
 import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.PLUGIN_AUDIT_FILTER;
 
 public class RangerPolicyRepository {
-    private static final Log LOG = LogFactory.getLog(RangerPolicyRepository.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyRepository.class);
 
-    private static final Log PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
-    private static final Log PERF_TRIE_OP_LOG              = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
+    private static final Logger PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
+    private static final Logger PERF_TRIE_OP_LOG              = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
 
     enum AuditModeEnum {
         AUDIT_ALL, AUDIT_NONE, AUDIT_DEFAULT

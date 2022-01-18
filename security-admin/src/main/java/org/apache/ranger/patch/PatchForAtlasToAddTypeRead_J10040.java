@@ -21,28 +21,29 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.entity.XXPolicy;
+import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.apache.ranger.entity.XXPolicy;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.plugin.model.RangerPolicy;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
-import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 
 @Component
 public class PatchForAtlasToAddTypeRead_J10040 extends org.apache.ranger.patch.BaseLoader {
-    private static final Logger logger = Logger.getLogger(PatchForAtlasToAddTypeRead_J10040.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForAtlasToAddTypeRead_J10040.class);
 
     private static final List<String> ATLAS_RESOURCES = new ArrayList<>(
             Arrays.asList("type"));

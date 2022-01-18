@@ -25,14 +25,14 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AsyncAuditProvider extends MultiDestAuditProvider implements
 		Runnable {
 
-	private static final Log LOG = LogFactory.getLog(AsyncAuditProvider.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AsyncAuditProvider.class);
 
 	private static int sThreadCount = 0;
 

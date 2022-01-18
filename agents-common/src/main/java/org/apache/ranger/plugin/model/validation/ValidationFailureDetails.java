@@ -19,14 +19,14 @@
 
 package org.apache.ranger.plugin.model.validation;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
 public class ValidationFailureDetails {
 
-	private static final Log LOG = LogFactory.getLog(ValidationFailureDetails.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ValidationFailureDetails.class);
 
 	final String _fieldName;
 	final String _subFieldName;

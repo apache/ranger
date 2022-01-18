@@ -18,18 +18,19 @@ package org.apache.ranger.patch;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchPasswordEncryption_J10001 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchPasswordEncryption_J10001.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchPasswordEncryption_J10001.class);
 	int lineCount = 0;
 	
 	@Autowired

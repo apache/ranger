@@ -21,8 +21,6 @@ package org.apache.ranger.authorization.hive.authorizer;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePolicyChangeListener;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePolicyProvider;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObject;
@@ -34,6 +32,8 @@ import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerAuthContextListener;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.validation.constraints.NotNull;
 import java.util.HashMap;
@@ -42,9 +42,9 @@ import java.util.Map;
 import java.util.Set;
 
 public class RangerHivePolicyProvider implements HivePolicyProvider {
-    private static final Log LOG = LogFactory.getLog(RangerHivePolicyProvider.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerHivePolicyProvider.class);
 
-    private static final Log PERF_HIVEACLPROVIDER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hiveACLProvider.request");
+    private static final Logger PERF_HIVEACLPROVIDER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hiveACLProvider.request");
 
 	private final RangerHiveAuthContextListener authContextListener = new RangerHiveAuthContextListener();
 

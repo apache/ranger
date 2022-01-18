@@ -50,7 +50,7 @@
 							<include>commons-logging:commons-logging</include>
 							<include>com.google.guava:guava</include>
 							<include>org.apache.hadoop:hadoop-auth</include>
-							<include>org.slf4j:slf4j-api</include>
+							<include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
 							<include>org.apache.hadoop:hadoop-common</include>
 							<include>org.apache.commons:commons-csv</include>
 							<include>org.apache.ranger:credentialbuilder</include>
@@ -83,6 +83,9 @@
 							<include>org.codehaus.jackson:jackson-xc:jar:${codehaus.jackson.version}</include>
 							<include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
 							<include>org.apache.commons:commons-lang3</include>
+							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+							<include>org.slf4j:log4j-over-slf4j:jar:${${slf4j.version}}</include>
+							<include>ch.qos.logback:logback-core:jar:${logback.version}</include>
 						</includes>
 					</dependencySet>
 					<dependencySet>

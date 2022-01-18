@@ -18,10 +18,10 @@
  */
 package org.apache.ranger.services.presto.client;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public class PrestoResourceManager {
-  private static final Log LOG = LogFactory.getLog(PrestoResourceManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PrestoResourceManager.class);
 
   private static final String  CATALOG 	  = "catalog";
   private static final String  SCHEMA     = "schema";

@@ -26,15 +26,15 @@ import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.ipc.RpcServer;
 import org.apache.hadoop.hbase.security.User;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HbaseUserUtilsImpl implements HbaseUserUtils {
 
-	private static final Log LOG = LogFactory.getLog(HbaseUserUtilsImpl.class.getName());
+	private static final Logger LOG = LoggerFactory.getLogger(HbaseUserUtilsImpl.class.getName());
 	private static final String SUPERUSER_CONFIG_PROP = "hbase.superuser";
 
 	// only to detect problems with initialization order, not for thread-safety.

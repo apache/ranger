@@ -34,13 +34,14 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RangerSearchUtil extends SearchUtil {
-	final static Logger logger = Logger.getLogger(RangerSearchUtil.class);
+	final static Logger logger = LoggerFactory.getLogger(RangerSearchUtil.class);
 	
 	public SearchFilter getSearchFilter(@Nonnull HttpServletRequest request, List<SortField> sortFields) {
 		Validate.notNull(request, "request");

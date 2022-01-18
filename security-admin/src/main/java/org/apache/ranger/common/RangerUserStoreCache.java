@@ -19,20 +19,20 @@
 
 package org.apache.ranger.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RangerUserStoreCache {
-	private static final Log LOG = LogFactory.getLog(RangerUserStoreCache.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerUserStoreCache.class);
 
 	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 

@@ -28,13 +28,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -47,7 +48,7 @@ public class RangerAuthenticationEntryPoint extends
 		LoginUrlAuthenticationEntryPoint {
 	public static final int SC_AUTHENTICATION_TIMEOUT = 419;
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(RangerAuthenticationEntryPoint.class);
 	static int ajaxReturnCode = -1;
 

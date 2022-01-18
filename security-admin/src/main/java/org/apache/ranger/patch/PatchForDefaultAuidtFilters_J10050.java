@@ -23,7 +23,6 @@ import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXServiceConfigMapDao;
@@ -33,13 +32,15 @@ import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForDefaultAuidtFilters_J10050 extends BaseLoader {
 
-	private static final Logger logger = Logger.getLogger(PatchForDefaultAuidtFilters_J10050.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchForDefaultAuidtFilters_J10050.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

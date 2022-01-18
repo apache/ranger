@@ -37,12 +37,13 @@ import javax.net.ssl.SSLSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class CustomSSLSocketFactory extends SSLSocketFactory{
-	private static final Logger LOG = Logger.getLogger(CustomSSLSocketFactory.class);
+	private static final Logger LOG = LoggerFactory.getLogger(CustomSSLSocketFactory.class);
 	private SSLSocketFactory sockFactory;
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 

@@ -20,10 +20,11 @@ package org.apache.ranger.patch;
 import com.google.gson.Gson;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGlobalState;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -31,7 +32,7 @@ import java.util.Map;
 
 @Component
 public class PatchForXGlobalState_J10036 extends BaseLoader {
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(PatchForXGlobalState_J10036.class);
 
 	@Autowired

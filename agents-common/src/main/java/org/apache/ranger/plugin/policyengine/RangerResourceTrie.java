@@ -22,8 +22,6 @@ package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
@@ -33,6 +31,8 @@ import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -48,10 +48,10 @@ import static org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher
 import static org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher.OPTION_PATH_SEPARATOR;
 
 public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
-    private static final Log LOG                = LogFactory.getLog(RangerResourceTrie.class);
-    private static final Log TRACE_LOG          = RangerPerfTracer.getPerfLogger("resourcetrie.trace");
-    private static final Log PERF_TRIE_INIT_LOG = RangerPerfTracer.getPerfLogger("resourcetrie.init");
-    private static final Log PERF_TRIE_OP_LOG   = RangerPerfTracer.getPerfLogger("resourcetrie.op");
+    private static final Logger LOG                = LoggerFactory.getLogger(RangerResourceTrie.class);
+    private static final Logger TRACE_LOG          = RangerPerfTracer.getPerfLogger("resourcetrie.trace");
+    private static final Logger PERF_TRIE_INIT_LOG = RangerPerfTracer.getPerfLogger("resourcetrie.init");
+    private static final Logger PERF_TRIE_OP_LOG   = RangerPerfTracer.getPerfLogger("resourcetrie.op");
 
     private static final String DEFAULT_WILDCARD_CHARS    = "*?";
     private static final String TRIE_BUILDER_THREAD_COUNT = "ranger.policyengine.trie.builder.thread.count";

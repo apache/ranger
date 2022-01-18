@@ -18,11 +18,11 @@
 
 package org.apache.ranger.audit.provider;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StandAloneAuditProviderFactory extends AuditProviderFactory {
-	private static final Log LOG = LogFactory.getLog(StandAloneAuditProviderFactory.class);
+	private static final Logger LOG = LoggerFactory.getLogger(StandAloneAuditProviderFactory.class);
 
 	private volatile static StandAloneAuditProviderFactory sFactory = null;
 

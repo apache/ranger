@@ -443,7 +443,7 @@ class BaseDB(object):
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
 		log4j_conf_file = globalDict['RANGER_ADMIN_LOG4J_CONF_FILE']
 		if not log4j_conf_file:
-			log4j_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "log4j.properties")
+			log4j_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "logback.xml")
 		else:
 			log4j_conf_file = "file:" + log4j_conf_file
 		log("[I] RANGER ADMIN LOG DIR : " + ranger_log_dir, "info")
@@ -545,7 +545,7 @@ class BaseDB(object):
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
 		log4j_conf_file = globalDict['RANGER_ADMIN_LOG4J_CONF_FILE']
 		if not log4j_conf_file:
-			log4j_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "log4j.properties")
+			log4j_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "logback.xml")
 		else:
 			log4j_conf_file = "file:" + log4j_conf_file
 
@@ -643,7 +643,7 @@ class BaseDB(object):
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
 		log4j_conf_file = globalDict['RANGER_ADMIN_LOG4J_CONF_FILE']
 		if not log4j_conf_file:
-			log4j_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "log4j.properties")
+			log4j_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "logback.xml")
 		else:
 			log4j_conf_file = "file:" + log4j_conf_file
 

@@ -23,13 +23,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
 import org.apache.ranger.tagsync.process.TagSynchronizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -39,7 +39,7 @@ import java.util.Date;
 import java.util.Properties;
 
 public class FileTagSource extends AbstractTagSource implements Runnable {
-	private static final Log LOG = LogFactory.getLog(FileTagSource.class);
+	private static final Logger LOG = LoggerFactory.getLogger(FileTagSource.class);
 
 	private String serviceTagsFileName;
 	private URL serviceTagsFileURL;

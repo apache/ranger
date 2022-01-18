@@ -23,11 +23,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class StormResourceMgr {
-	private static final 	Logger 	LOG 		= Logger.getLogger(StormResourceMgr.class);
+	private static final 	Logger 	LOG 		= LoggerFactory.getLogger(StormResourceMgr.class);
 	private static final 	String  TOPOLOGY	= "topology";
 	
 	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {

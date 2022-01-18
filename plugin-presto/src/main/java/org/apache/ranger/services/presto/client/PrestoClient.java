@@ -20,11 +20,11 @@ package org.apache.ranger.services.presto.client;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.io.Closeable;
@@ -46,7 +46,7 @@ public class PrestoClient extends BaseClient implements Closeable {
   public static final String PRESTO_USER_NAME_PROP = "user";
   public static final String PRESTO_PASSWORD_PROP = "password";
 
-  private static final Log LOG = LogFactory.getLog(PrestoClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PrestoClient.class);
 
   private static final String ERR_MSG = "You can still save the repository and start creating "
     + "policies, but you would not be able to use autocomplete for "

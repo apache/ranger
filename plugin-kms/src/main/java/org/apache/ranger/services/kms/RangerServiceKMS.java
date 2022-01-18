@@ -32,12 +32,12 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.kms.client.KMSResourceMgr;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceKMS extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceKMS.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceKMS.class);
 
 	public static final String ACCESS_TYPE_DECRYPT_EEK    = "decrypteek";
 	public static final String ACCESS_TYPE_GENERATE_EEK   = "generateeek";

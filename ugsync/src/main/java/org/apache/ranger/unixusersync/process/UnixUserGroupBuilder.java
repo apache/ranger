@@ -37,17 +37,18 @@ import java.util.Iterator;
 import com.google.common.annotations.VisibleForTesting;
 import com.google.common.collect.HashBasedTable;
 import com.google.common.collect.Table;
-import org.apache.log4j.Logger;
 import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
 import org.apache.ranger.ugsyncutil.model.UnixSyncSourceInfo;
 import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UnixUserGroupBuilder implements UserGroupSource {
 
-	private static final Logger LOG = Logger.getLogger(UnixUserGroupBuilder.class);
+	private static final Logger LOG = LoggerFactory.getLogger(UnixUserGroupBuilder.class);
 	private final static String OS = System.getProperty("os.name");
 
 	// kept for legacy support

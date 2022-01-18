@@ -32,7 +32,6 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Properties;
-import org.apache.log4j.Logger;
 import org.apache.ranger.audit.destination.ElasticSearchAuditDestination;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.common.PropertiesUtil;
@@ -42,9 +41,11 @@ import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.view.VXAccessAuditList;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ElasticSearchAccessAuditsServiceTest {
-    private static final Logger LOGGER = Logger.getLogger(ElasticSearchAccessAuditsServiceTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchAccessAuditsServiceTest.class);
 
     @Test
     @Ignore // For manual execution only

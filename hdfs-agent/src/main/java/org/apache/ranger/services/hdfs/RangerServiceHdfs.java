@@ -38,12 +38,12 @@ import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.hdfs.client.HdfsResourceMgr;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceHdfs extends RangerBaseService {
 
-    private static final Log    LOG                     = LogFactory.getLog(RangerServiceHdfs.class);
+    private static final Logger LOG                     = LoggerFactory.getLogger(RangerServiceHdfs.class);
     private static final String AUDITTOHDFS_KMS_PATH    = "/ranger/audit/kms";
     private static final String AUDITTOHDFS_POLICY_NAME = "kms-audit-path";
     public static final String  ACCESS_TYPE_READ        = "read";

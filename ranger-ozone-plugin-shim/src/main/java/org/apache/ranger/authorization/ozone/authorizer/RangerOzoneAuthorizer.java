@@ -19,17 +19,17 @@
 
 package org.apache.ranger.authorization.ozone.authorizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.ozone.om.exceptions.OMException;
 import org.apache.hadoop.ozone.security.acl.IAccessAuthorizer;
 import org.apache.hadoop.ozone.security.acl.IOzoneObj;
 import org.apache.hadoop.ozone.security.acl.RequestContext;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
-    private static final Log LOG  = LogFactory.getLog(RangerOzoneAuthorizer.class);
+    private static final Logger LOG  = LoggerFactory.getLogger(RangerOzoneAuthorizer.class);
 
     private static final String   RANGER_PLUGIN_TYPE                       = "ozone";
     private static final String   RANGER_OZONE_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.ozone.authorizer.RangerOzoneAuthorizer";

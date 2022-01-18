@@ -25,8 +25,6 @@ import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.HBaseTestingUtility;
@@ -51,6 +49,8 @@ import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.junit.Assert;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A custom RangerAdminClient is plugged into Ranger in turn, which loads security policies from a local file. These policies were 
@@ -74,7 +74,7 @@ import org.junit.Test;
 @org.junit.Ignore
 public class HBaseRangerAuthorizationTest {
 
-    private static final Log LOG = LogFactory.getLog(HBaseRangerAuthorizationTest.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(HBaseRangerAuthorizationTest.class.getName());
 
     private static int port;
     private static HBaseTestingUtility utility;

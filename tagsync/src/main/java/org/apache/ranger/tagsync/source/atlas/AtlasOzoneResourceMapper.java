@@ -20,18 +20,18 @@
 package org.apache.ranger.tagsync.source.atlas;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
-	private static final Log LOG = LogFactory.getLog(AtlasOzoneResourceMapper.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AtlasOzoneResourceMapper.class);
 
 	public static final String ENTITY_TYPE_OZONE_VOLUME  = "ozone_volume";
 	public static final String ENTITY_TYPE_OZONE_BUCKET  = "ozone_bucket";

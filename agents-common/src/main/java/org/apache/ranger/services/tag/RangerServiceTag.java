@@ -29,8 +29,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.TagStore;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Map;
@@ -41,7 +41,7 @@ import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.GROUP_PUB
 
 public class RangerServiceTag extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceTag.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTag.class);
 
 	public static final String TAG_RESOURCE_NAME = "tag";
 	public static final String RANGER_TAG_NAME_EXPIRES_ON = "EXPIRES_ON";

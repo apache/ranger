@@ -24,18 +24,18 @@ import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Sets;
 
 public class RangerServiceValidator extends RangerValidator {
-	private static final Log LOG = LogFactory.getLog(RangerServiceValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceValidator.class);
 
 	private static final Pattern SERVICE_NAME_VALIDATION_REGEX         = Pattern.compile("^[a-zA-Z0-9_-][a-zA-Z0-9_-]{0,254}", Pattern.CASE_INSENSITIVE);
 	private static final Pattern LEGACY_SERVICE_NAME_VALIDATION_REGEX  = Pattern.compile("^[a-zA-Z0-9_-][a-zA-Z0-9\\s_-]{0,254}", Pattern.CASE_INSENSITIVE);

@@ -20,12 +20,13 @@
 package org.apache.ranger.services.kms.client;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class KMSConnectionMgr {
 
-	private static final Logger LOG = Logger.getLogger(KMSConnectionMgr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KMSConnectionMgr.class);
 
 	public static KMSClient getKMSClient(final String kmsURL, String userName, String password, String rangerPrincipal, String rangerKeytab, String nameRules, String authType) {
 		KMSClient kmsClient = null;

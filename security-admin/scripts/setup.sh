@@ -1492,7 +1492,7 @@ setup_install_files(){
 	fi
 
 	if [ -z "${RANGER_ADMIN_LOG4J_CONF_FILE}" ]; then
-		RANGER_ADMIN_LOG4J_CONF_FILE=${WEBAPP_ROOT}/WEB-INF/log4j.properties
+		RANGER_ADMIN_LOG4J_CONF_FILE=${WEBAPP_ROOT}/WEB-INF/logback.xml
 	fi
 	echo "export RANGER_ADMIN_LOG4J_CONF_FILE=${RANGER_ADMIN_LOG4J_CONF_FILE}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-log4j-conf-file.sh
 	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-log4j-conf-file.sh

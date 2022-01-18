@@ -18,12 +18,12 @@
  */
 package org.apache.ranger.services.nifi.registry;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.nifi.registry.client.NiFiRegistryClient;
 import org.apache.ranger.services.nifi.registry.client.NiFiRegistryConnectionMgr;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,7 +32,7 @@ import java.util.List;
  */
 public class RangerServiceNiFiRegistry extends RangerBaseService {
 
-    private static final Log LOG = LogFactory.getLog(RangerServiceNiFiRegistry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceNiFiRegistry.class);
 
     @Override
     public HashMap<String, Object> validateConfig() throws Exception {

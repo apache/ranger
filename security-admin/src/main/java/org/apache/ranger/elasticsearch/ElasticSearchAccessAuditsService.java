@@ -19,7 +19,6 @@
 
 package org.apache.ranger.elasticsearch;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -34,6 +33,8 @@ import org.elasticsearch.action.get.GetResponse;
 import org.elasticsearch.action.get.MultiGetItemResponse;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -47,7 +48,7 @@ import java.util.Map;
 @Service
 @Scope("singleton")
 public class ElasticSearchAccessAuditsService extends org.apache.ranger.AccessAuditsService {
-	private static final Logger LOGGER = Logger.getLogger(ElasticSearchAccessAuditsService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(ElasticSearchAccessAuditsService.class);
 
 	@Autowired
 	ElasticSearchMgr elasticSearchMgr;

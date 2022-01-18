@@ -18,7 +18,6 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.JSONUtil;
@@ -33,6 +32,8 @@ import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.apache.ranger.entity.XXServiceDef;
@@ -41,7 +42,7 @@ import java.util.Map;
 
 @Component
 public class PatchForTagServiceDefUpdate_J10008 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchForTagServiceDefUpdate_J10008.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchForTagServiceDefUpdate_J10008.class);
 	public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_TAG_NAME  = "tag";
 	public static final String SCRIPT_POLICY_CONDITION_NAME = "expression";
 

@@ -27,8 +27,6 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
@@ -64,6 +62,8 @@ import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -71,7 +71,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class PolicyRefUpdater {
 
-	private static final Log LOG = LogFactory.getLog(PolicyRefUpdater.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PolicyRefUpdater.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;

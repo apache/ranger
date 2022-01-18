@@ -18,11 +18,11 @@
  */
 package org.apache.ranger.audit.queue;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.BaseAuditHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.Properties;
@@ -32,7 +32,7 @@ import java.util.Properties;
 */
 
 public class AuditFileQueue extends BaseAuditHandler {
-    private static final Log    logger = LogFactory.getLog(AuditFileQueue.class);
+    private static final Logger    logger = LoggerFactory.getLogger(AuditFileQueue.class);
 
     AuditFileQueueSpool fileSpooler = null;
     AuditHandler        consumer    = null;

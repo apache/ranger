@@ -25,10 +25,10 @@ import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.store.ServiceStore;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.RangerPolicyDeltaUtil;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -41,7 +41,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RangerServicePoliciesCache {
-	private static final Log LOG = LogFactory.getLog(RangerServicePoliciesCache.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServicePoliciesCache.class);
 
 	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 

@@ -18,12 +18,12 @@
 package org.apache.ranger.service;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyLabel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -33,7 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Scope("singleton")
 public class RangerPolicyLabelHelper {
-	private static final Log LOG = LogFactory.getLog(ServiceDBStore.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ServiceDBStore.class);
 
 	@Autowired
 	protected RangerDaoManager daoMgr;

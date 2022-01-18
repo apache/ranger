@@ -24,7 +24,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConfigUtil;
@@ -33,12 +32,14 @@ import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RangerRestUtil {
-	private static final Logger logger = Logger.getLogger(RangerRestUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(RangerRestUtil.class);
 
 	@Autowired
 	StringUtil stringUtil;

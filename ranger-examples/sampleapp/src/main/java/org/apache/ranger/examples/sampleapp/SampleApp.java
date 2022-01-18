@@ -23,11 +23,11 @@ import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 import java.nio.charset.StandardCharsets;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SampleApp {
-	private static final Log LOG = LogFactory.getLog(SampleApp.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SampleApp.class);
 
 	private static final Set<String> VALID_ACCESS_TYPES = new HashSet<String>();
 

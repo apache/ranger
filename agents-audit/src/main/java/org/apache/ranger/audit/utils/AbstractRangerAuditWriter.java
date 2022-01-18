@@ -20,11 +20,11 @@ package org.apache.ranger.audit.utils;
  */
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.*;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +38,7 @@ import java.util.Properties;
  * This is Abstract class to have common properties of Ranger Audit HDFS Destination Writer.
  */
 public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
-    private static final Log logger = LogFactory.getLog(AbstractRangerAuditWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(AbstractRangerAuditWriter.class);
 
     public static final String    PROP_FILESYSTEM_DIR              = "dir";
     public static final String    PROP_FILESYSTEM_SUBDIR           = "subdir";
@@ -154,7 +154,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
         String logFolderProp = MiscUtil.getStringProperty(props, propPrefix	+ "." + PROP_FILESYSTEM_DIR);
         if (StringUtils.isEmpty(logFolderProp)) {
-            logger.fatal("File destination folder is not configured. Please set "
+            logger.error("File destination folder is not configured. Please set "
                     + propPrefix + "."
                     + PROP_FILESYSTEM_DIR + ". name="
                     + auditProviderName);

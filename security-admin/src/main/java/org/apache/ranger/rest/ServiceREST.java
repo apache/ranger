@@ -58,8 +58,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -144,6 +142,8 @@ import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpStatus;
@@ -163,8 +163,8 @@ import com.sun.jersey.multipart.FormDataParam;
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class ServiceREST {
-	private static final Log LOG = LogFactory.getLog(ServiceREST.class);
-	private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("rest.ServiceREST");
+	private static final Logger LOG = LoggerFactory.getLogger(ServiceREST.class);
+	private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.ServiceREST");
 
 	final static public String PARAM_SERVICE_NAME     = "serviceName";
 	final static public String PARAM_SERVICE_TYPE     = "serviceType";

@@ -24,13 +24,13 @@ import org.apache.ranger.plugin.model.RangerServiceResource;
 
 import java.util.*;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class AtlasResourceMapperUtil {
-	private static final Log LOG = LogFactory.getLog(AtlasResourceMapperUtil.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AtlasResourceMapperUtil.class);
 
 	private static Map<String, AtlasResourceMapper> atlasResourceMappers = new HashMap<String, AtlasResourceMapper>();
 

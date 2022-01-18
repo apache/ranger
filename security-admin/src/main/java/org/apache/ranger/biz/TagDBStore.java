@@ -28,8 +28,6 @@ import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.MessageEnums;
@@ -59,6 +57,8 @@ import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
 import org.apache.ranger.service.RangerServiceResourceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -69,8 +69,8 @@ import javax.servlet.http.HttpServletResponse;
 
 @Component
 public class TagDBStore extends AbstractTagStore {
-	private static final Log LOG      = LogFactory.getLog(TagDBStore.class);
-	private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.TagDBStore");
+	private static final Logger LOG      = LoggerFactory.getLogger(TagDBStore.class);
+	private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.TagDBStore");
 
 
 	private static boolean SUPPORTS_TAG_DELTAS = false;

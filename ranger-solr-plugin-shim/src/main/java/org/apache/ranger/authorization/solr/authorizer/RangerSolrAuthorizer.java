@@ -23,8 +23,6 @@ package org.apache.ranger.authorization.solr.authorizer;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.handler.component.ResponseBuilder;
@@ -32,10 +30,12 @@ import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.security.AuthorizationContext;
 import org.apache.solr.security.AuthorizationPlugin;
 import org.apache.solr.security.AuthorizationResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerSolrAuthorizer extends SearchComponent implements AuthorizationPlugin {
-	private static final Log LOG = LogFactory
-			.getLog(RangerSolrAuthorizer.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(RangerSolrAuthorizer.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "solr";
 	private static final String   RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.solr.authorizer.RangerSolrAuthorizer";

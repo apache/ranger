@@ -29,8 +29,6 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.RangerTagDBRetriever;
 import org.apache.ranger.common.SearchField;
@@ -41,12 +39,14 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class RangerServiceResourceService extends RangerServiceResourceServiceBase<XXServiceResource, RangerServiceResource> {
 
-    private static final Log LOG = LogFactory.getLog(RangerServiceResourceService.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceResourceService.class);
 
     private boolean serviceUpdateNeeded = true;
 

@@ -19,12 +19,12 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 public class RangerPerfCollectorTracer extends RangerPerfTracer {
 	private final long   startTimeNanos;
 
-	public RangerPerfCollectorTracer(Log logger, String tag, String data) {
+	public RangerPerfCollectorTracer(Logger logger, String tag, String data) {
 		super(logger, tag, data);
 		startTimeNanos = System.nanoTime();
 	}

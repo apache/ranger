@@ -22,15 +22,16 @@
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXDBBase;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JPABeanCallbacks {
-	private static final Logger logger = Logger.getLogger(JPABeanCallbacks.class);
+	private static final Logger logger = LoggerFactory.getLogger(JPABeanCallbacks.class);
 
 	@PrePersist
 	void onPrePersist(Object o) {
@@ -65,7 +66,7 @@ public class JPABeanCallbacks {
 				}
 			}
 		} catch (Throwable t) {
-			logger.error(t);
+			logger.error("", t);
 		}
 
 	}
@@ -92,7 +93,7 @@ public class JPABeanCallbacks {
 				entity.setUpdateTime(DateUtil.getUTCDate());
 			}
 		} catch (Throwable t) {
-			logger.error(t);
+			logger.error("", t);
 		}
 
 	}

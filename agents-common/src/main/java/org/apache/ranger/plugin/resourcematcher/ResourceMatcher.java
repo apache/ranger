@@ -20,12 +20,12 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Collection;
@@ -33,7 +33,7 @@ import java.util.Comparator;
 import java.util.Map;
 
 abstract class ResourceMatcher {
-    private static final Log LOG = LogFactory.getLog(ResourceMatcher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ResourceMatcher.class);
 
     protected final String                    value;
     protected final RangerRequestExprResolver exprResolver;

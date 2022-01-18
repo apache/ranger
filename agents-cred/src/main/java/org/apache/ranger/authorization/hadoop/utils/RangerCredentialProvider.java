@@ -24,13 +24,13 @@ import java.util.List;
 import org.apache.hadoop.security.alias.CredentialProvider;
 import org.apache.hadoop.security.alias.CredentialProviderFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public final class RangerCredentialProvider {
 
-	private static final Log LOG = LogFactory.getLog(RangerCredentialProvider.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerCredentialProvider.class);
 
 	private static final RangerCredentialProvider CRED_PROVIDER = new RangerCredentialProvider();
 

@@ -21,8 +21,6 @@ package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
@@ -30,6 +28,8 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -37,7 +37,7 @@ import java.util.List;
 import java.util.Map;
 
 public class RangerHiveResourcesNotAccessedTogetherCondition extends RangerAbstractConditionEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerHiveResourcesNotAccessedTogetherCondition.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerHiveResourcesNotAccessedTogetherCondition.class);
 
 	private List<RangerPolicyResourceMatcher> matchers = new ArrayList<>();
 	private boolean isInitialized;

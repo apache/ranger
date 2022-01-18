@@ -20,18 +20,18 @@
 package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.channels.ClosedByInterruptException;
 import java.util.Map;
 
 public class RangerAdminUserStoreRetriever extends RangerUserStoreRetriever {
-    private static final Log LOG = LogFactory.getLog(RangerAdminUserStoreRetriever.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminUserStoreRetriever.class);
 
     private RangerAdminClient adminClient;
 

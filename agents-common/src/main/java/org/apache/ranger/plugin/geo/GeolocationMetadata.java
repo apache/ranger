@@ -20,11 +20,11 @@
 package org.apache.ranger.plugin.geo;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class GeolocationMetadata {
-	private static final Log LOG = LogFactory.getLog(GeolocationMetadata.class);
+	private static final Logger LOG = LoggerFactory.getLogger(GeolocationMetadata.class);
 
 	private String[] locationDataItemNames = new String[0];
 

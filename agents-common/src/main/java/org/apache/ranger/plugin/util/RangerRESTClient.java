@@ -47,12 +47,12 @@ import javax.ws.rs.core.Cookie;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -67,7 +67,7 @@ import com.sun.jersey.client.urlconnection.HTTPSProperties;
 
 
 public class RangerRESTClient {
-	private static final Log LOG = LogFactory.getLog(RangerRESTClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerRESTClient.class);
 
 	public static final String RANGER_PROP_POLICYMGR_URL                         = "ranger.service.store.rest.url";
 	public static final String RANGER_PROP_POLICYMGR_SSLCONFIG_FILENAME          = "ranger.service.store.rest.ssl.config.file";
@@ -247,7 +247,7 @@ public class RangerRESTClient {
 		try {
 			gsonBuilder = new GsonBuilder().setDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ").create();
 		} catch(Throwable excp) {
-			LOG.fatal("RangerRESTClient.init(): failed to create GsonBuilder object", excp);
+			LOG.error("RangerRESTClient.init(): failed to create GsonBuilder object", excp);
 		}
 
 		mIsSSL = StringUtils.containsIgnoreCase(mUrl, "https");

@@ -33,13 +33,14 @@ import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.KafkaAdminClient;
 import org.apache.kafka.clients.admin.TopicListing;
 import org.apache.kafka.clients.admin.ListTopicsResult;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ServiceKafkaClient {
-	private static final Logger LOG = Logger.getLogger(ServiceKafkaClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ServiceKafkaClient.class);
 
 	enum RESOURCE_TYPE {
 		TOPIC

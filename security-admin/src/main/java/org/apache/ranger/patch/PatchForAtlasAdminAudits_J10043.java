@@ -20,7 +20,6 @@ package org.apache.ranger.patch;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
@@ -31,12 +30,14 @@ import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForAtlasAdminAudits_J10043 extends BaseLoader {
-    private static final Logger logger = Logger.getLogger(PatchForAtlasAdminAudits_J10043.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForAtlasAdminAudits_J10043.class);
 
     private static final List<String> ATLAS_RESOURCES = new ArrayList<>(
             Arrays.asList("atlas-service"));

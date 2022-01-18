@@ -29,17 +29,17 @@ import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class write the logs to local file
  */
 public class FileAuditDestination extends AuditDestination {
-	private static final Log logger = LogFactory
-			.getLog(FileAuditDestination.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(FileAuditDestination.class);
 
 	public static final String PROP_FILE_LOCAL_DIR = "dir";
 	public static final String PROP_FILE_LOCAL_FILE_NAME_FORMAT = "filename.format";

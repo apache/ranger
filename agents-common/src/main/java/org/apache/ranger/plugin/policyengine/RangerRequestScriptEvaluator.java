@@ -21,8 +21,6 @@ package org.apache.ranger.plugin.policyengine;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -30,6 +28,8 @@ import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.script.Bindings;
 import javax.script.ScriptEngine;
@@ -55,10 +55,10 @@ import static org.apache.ranger.plugin.util.RangerCommonConstants.*;
 
 
 public final class RangerRequestScriptEvaluator {
-	private static final Log LOG = LogFactory.getLog(RangerRequestScriptEvaluator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerRequestScriptEvaluator.class);
 
-	private static final Log    PERF_POLICY_CONDITION_SCRIPT_TOJSON         = RangerPerfTracer.getPerfLogger("policy.condition.script.tojson");
-	private static final Log    PERF_POLICY_CONDITION_SCRIPT_EVAL           = RangerPerfTracer.getPerfLogger("policy.condition.script.eval");
+	private static final Logger    PERF_POLICY_CONDITION_SCRIPT_TOJSON         = RangerPerfTracer.getPerfLogger("policy.condition.script.tojson");
+	private static final Logger    PERF_POLICY_CONDITION_SCRIPT_EVAL           = RangerPerfTracer.getPerfLogger("policy.condition.script.eval");
 	private static final String TAG_ATTR_DATE_FORMAT_PROP                   = "ranger.plugin.tag.attr.additional.date.formats";
 	private static final String TAG_ATTR_DATE_FORMAT_SEPARATOR              = "||";
 	private static final String TAG_ATTR_DATE_FORMAT_SEPARATOR_REGEX        = "\\|\\|";
@@ -668,23 +668,23 @@ public final class RangerRequestScriptEvaluator {
 	}
 
 	public void logDebug(Object msg) {
-		LOG.debug(msg);
+		LOG.debug("", msg);
 	}
 
 	public void logInfo(Object msg) {
-		LOG.info(msg);
+		LOG.info("", msg);
 	}
 
 	public void logWarn(Object msg) {
-		LOG.warn(msg);
+		LOG.warn("", msg);
 	}
 
 	public void logError(Object msg) {
-		LOG.error(msg);
+		LOG.error("", msg);
 	}
 
 	public void logFatal(Object msg) {
-		LOG.fatal(msg);
+		LOG.error("", msg);
 	}
 
 	public static class UserGroupsAttributes {

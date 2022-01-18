@@ -21,17 +21,17 @@ package org.apache.ranger.audit.provider;
 import java.util.Collection;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class Log4jAuditProvider extends AuditDestination {
 
-	private static final Log LOG      = LogFactory.getLog(Log4jAuditProvider.class);
-	private static final Log AUDITLOG = LogFactory.getLog("xaaudit." + Log4jAuditProvider.class.getName());
+	private static final Logger LOG      = LoggerFactory.getLogger(Log4jAuditProvider.class);
+	private static final Logger AUDITLOG = LoggerFactory.getLogger("xaaudit." + Log4jAuditProvider.class.getName());
 
 	public static final String AUDIT_LOG4J_IS_ASYNC_PROP           = "xasecure.audit.log4j.is.async";
 	public static final String AUDIT_LOG4J_MAX_QUEUE_SIZE_PROP     = "xasecure.audit.log4j.async.max.queue.size";

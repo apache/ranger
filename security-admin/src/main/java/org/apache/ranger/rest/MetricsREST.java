@@ -28,9 +28,10 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.model.RangerMetrics;
 import org.apache.ranger.util.RangerMetricsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
@@ -42,7 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class MetricsREST {
-    private static final Logger LOG = Logger.getLogger(MetricsREST.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MetricsREST.class);
     private static final RuntimeMXBean RUNTIME = ManagementFactory.getRuntimeMXBean();
     private static final String JVM_MACHINE_ACTUAL_NAME = RUNTIME.getVmName();
     private static final String VERSION = RUNTIME.getVmVersion();

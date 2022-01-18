@@ -21,13 +21,13 @@ package org.apache.ranger.policyengine;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.util.ServicePolicies;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -36,7 +36,7 @@ import java.net.URL;
 import java.nio.charset.Charset;
 
 public class PerfTestEngine {
-	static final Log LOG      = LogFactory.getLog(PerfTestEngine.class);
+	static final Logger LOG      = LoggerFactory.getLogger(PerfTestEngine.class);
 
 	private final URL servicePoliciesFileURL;
 	private final RangerPolicyEngineOptions policyEngineOptions;

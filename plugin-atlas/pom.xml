@@ -54,6 +54,12 @@
       		<groupId>org.apache.atlas</groupId>
       		<artifactId>atlas-authorization</artifactId>
 			<version>${atlas.version}</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+            </exclusions>
     	</dependency>
      	<dependency>
       		<groupId>org.apache.atlas</groupId>
@@ -71,6 +77,10 @@
                 <exclusion>
                     <groupId>org.springframework</groupId>
                     <artifactId>spring-asm</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.slf4j</groupId>
+                    <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
     	</dependency>

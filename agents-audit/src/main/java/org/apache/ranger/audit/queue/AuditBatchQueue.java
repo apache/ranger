@@ -26,14 +26,14 @@ import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 public class AuditBatchQueue extends AuditQueue implements Runnable {
-	private static final Log logger = LogFactory.getLog(AuditBatchQueue.class);
+	private static final Logger logger = LoggerFactory.getLogger(AuditBatchQueue.class);
 
 	private BlockingQueue<AuditEventBase> queue = null;
 	private Collection<AuditEventBase> localBatchBuffer = new ArrayList<AuditEventBase>();
@@ -214,7 +214,7 @@ public class AuditBatchQueue extends AuditQueue implements Runnable {
 			MDC.clear();
 			runLogAudit();
 		} catch (Throwable t) {
-			logger.fatal("Exited thread abnormaly. queue=" + getName(), t);
+			logger.error("Exited thread abnormaly. queue=" + getName(), t);
 		}
 	}
 

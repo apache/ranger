@@ -21,8 +21,6 @@
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.hive.conf.HiveConf;
 import org.apache.hadoop.hive.conf.HiveConf.ConfVars;
 import org.apache.hadoop.hive.ql.security.HiveAuthenticationProvider;
@@ -40,10 +38,12 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObje
 import org.apache.hadoop.hive.ql.security.authorization.plugin.SettableConfigUpdater;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class RangerHiveAuthorizerBase extends AbstractHiveAuthorizer {
 
-	private static final Log LOG = LogFactory.getLog(RangerHiveAuthorizerBase.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerHiveAuthorizerBase.class);
 
 	private HiveMetastoreClientFactory mMetastoreClientFactory;
 	private HiveConf                   mHiveConf;

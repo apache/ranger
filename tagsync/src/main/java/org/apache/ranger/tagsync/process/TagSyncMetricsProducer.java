@@ -20,12 +20,13 @@ package org.apache.ranger.tagsync.process;
  */
 import java.io.File;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TagSyncMetricsProducer implements Runnable {
 
-	private static final Logger LOG = Logger.getLogger(TagSyncMetricsProducer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TagSyncMetricsProducer.class);
 	private boolean shutdownFlag = false;
 
 	public static void main(String[] args) {

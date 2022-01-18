@@ -22,12 +22,12 @@ package org.apache.ranger.plugin.audit;
 import java.util.ArrayList;
 import java.util.Collection;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerMultiResourceAuditHandler extends RangerDefaultAuditHandler {
-	private static final Log LOG = LogFactory.getLog(RangerMultiResourceAuditHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerMultiResourceAuditHandler.class);
 
 	Collection<AuthzAuditEvent> auditEvents = new ArrayList<>();
 

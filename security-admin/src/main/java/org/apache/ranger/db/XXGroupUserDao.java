@@ -25,14 +25,15 @@ import java.util.*;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXGroupUserDao extends BaseDao<XXGroupUser> {
-	private static final Logger logger = Logger.getLogger(XXGroupUserDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(XXGroupUserDao.class);
 
 	public XXGroupUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);

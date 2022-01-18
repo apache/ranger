@@ -34,12 +34,12 @@ import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.solr.client.ServiceSolrClient;
 import org.apache.ranger.services.solr.client.ServiceSolrConnectionMgr;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceSolr extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceSolr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSolr.class);
 	public static final String ACCESS_TYPE_QUERY  = "query";
 
 	public RangerServiceSolr() {

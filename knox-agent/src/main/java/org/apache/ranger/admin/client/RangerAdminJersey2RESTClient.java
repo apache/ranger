@@ -44,8 +44,6 @@ import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -53,6 +51,8 @@ import org.apache.ranger.plugin.util.*;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.glassfish.jersey.client.ClientProperties;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -65,7 +65,7 @@ import com.sun.jersey.api.client.ClientHandlerException;
 public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 	// none of the members are public -- this is only for testability.  None of these is meant to be accessible
-	private static final Log LOG = LogFactory.getLog(RangerAdminJersey2RESTClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminJersey2RESTClient.class);
 
 	boolean _isSSL = false;
 	volatile Client _client = null;

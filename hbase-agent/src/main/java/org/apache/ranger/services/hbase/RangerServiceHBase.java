@@ -34,12 +34,12 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.hbase.client.HBaseResourceMgr;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceHBase extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceHBase.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceHBase.class);
 	public static final String ACCESS_TYPE_READ  = "read";
 	public static final String ACCESS_TYPE_CREATE  = "create";
 	

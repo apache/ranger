@@ -19,11 +19,11 @@
 
 package org.apache.ranger.audit.utils;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.orc.Writer;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.security.PrivilegedExceptionAction;
@@ -37,7 +37,7 @@ import java.util.Properties;
  *  Refer README.TXT for enabling ORCWriter.
  */
 public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
-    private static final Log logger = LogFactory.getLog(RangerORCAuditWriter.class);
+    private static final Logger logger = LoggerFactory.getLogger(RangerORCAuditWriter.class);
 
     protected static final String ORC_FILE_EXTENSION = ".orc";
     protected volatile ORCFileUtil orcFileUtil       = null;

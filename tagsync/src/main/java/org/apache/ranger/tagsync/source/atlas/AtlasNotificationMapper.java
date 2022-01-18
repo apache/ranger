@@ -22,8 +22,6 @@ package org.apache.ranger.tagsync.source.atlas;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
@@ -32,6 +30,8 @@ import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntity;
 import org.apache.ranger.tagsync.source.atlasrest.RangerAtlasEntityWithTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +41,7 @@ import java.util.Map;
 public class AtlasNotificationMapper {
     private static final    int                 REPORTING_INTERVAL_FOR_UNHANDLED_ENTITYTYPE_IN_MILLIS = 5 * 60 * 1000; // 5 minutes
 
-    private static final    Log                 LOG                 = LogFactory.getLog(AtlasNotificationMapper.class);
+    private static final    Logger              LOG                 = LoggerFactory.getLogger(AtlasNotificationMapper.class);
     private static          Map<String, Long>   unhandledEventTypes = new HashMap<>();
 
     private static void logUnhandledEntityNotification(EntityNotificationWrapper entityNotification) {

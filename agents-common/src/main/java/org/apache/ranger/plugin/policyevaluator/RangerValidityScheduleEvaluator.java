@@ -21,8 +21,6 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.resourcematcher.ScheduledTimeAlwaysMatcher;
@@ -30,6 +28,8 @@ import org.apache.ranger.plugin.resourcematcher.ScheduledTimeExactMatcher;
 import org.apache.ranger.plugin.resourcematcher.ScheduledTimeMatcher;
 import org.apache.ranger.plugin.resourcematcher.ScheduledTimeRangeMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nonnull;
 import java.text.DateFormat;
@@ -44,8 +44,8 @@ import java.util.List;
 import java.util.TimeZone;
 
 public class RangerValidityScheduleEvaluator {
-    private static final Log LOG = LogFactory.getLog(RangerValidityScheduleEvaluator.class);
-    private static final Log PERF_LOG = LogFactory.getLog("test.perf.RangerValidityScheduleEvaluator");
+    private static final Logger LOG = LoggerFactory.getLogger(RangerValidityScheduleEvaluator.class);
+    private static final Logger PERF_LOG = LoggerFactory.getLogger("test.perf.RangerValidityScheduleEvaluator");
 
     private final static TimeZone defaultTZ = TimeZone.getDefault();
 

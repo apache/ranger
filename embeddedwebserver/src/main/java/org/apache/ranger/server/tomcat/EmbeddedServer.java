@@ -45,7 +45,6 @@ import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.valves.ErrorReportValve;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.log4j.PropertyConfigurator;
 
 import org.apache.ranger.credentialapi.CredentialReader;
 
@@ -92,16 +91,6 @@ public class EmbeddedServer {
 	public EmbeddedServer(String[] args) {
 		if (args.length > 0) {
 			configFile = args[0];
-		}
-
-		try {
-			// load log configuration file dynamically if log4j.properties changed
-			if (StringUtils.isNotBlank(System.getProperty("log4j.configuration"))) {
-				String logPropFile = StringUtils.splitByWholeSeparator(System.getProperty("log4j.configuration"), ":")[1];
-				PropertyConfigurator.configureAndWatch(logPropFile, 10000L);
-			}
-		} catch (Exception ignored) {
-			LOG.warning("Failed to get log4j.configuration  Reason: " + ignored.toString());
 		}
 
 		EmbeddedServerUtil.loadRangerConfigProperties(configFile);

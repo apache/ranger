@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.db.RangerDaoManager;
@@ -42,12 +41,14 @@ import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
-	private static final Logger LOG = Logger.getLogger(PatchForAtlasServiceDefUpdate_J10013.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PatchForAtlasServiceDefUpdate_J10013.class);
 	private static final int MAX_ACCESS_TYPES_IN_SERVICE_DEF = 1000;
 	@Autowired
 	RangerDaoManager daoMgr;
