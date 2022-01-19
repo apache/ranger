@@ -27,7 +27,11 @@ import java.util.Locale;
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.security.context.RangerContextHolder;
+import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.security.standalone.StandaloneSecurityHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,6 +48,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 @Component
 public class CLIUtil {
 	private static final Logger logger = LoggerFactory.getLogger(CLIUtil.class);
+	private static final String JAVA_PATCHES_CLASS_NAME_PREFIX = "Patch";
 
 	@Autowired
 	StandaloneSecurityHandler securityHandler;
@@ -61,7 +66,26 @@ public class CLIUtil {
 
 	public static Object getBean(Class<?> beanClass) {
 		init();
+		checkIfJavaPatchesExecuting(beanClass);
 		return context.getBean(beanClass);
+	}
+
+	private static void checkIfJavaPatchesExecuting(Class<?> beanClass) {
+	    if (beanClass != null) {
+	        final String className = beanClass.getSimpleName();
+	        if (StringUtils.isNotEmpty(className)) {
+	            if (className.startsWith(JAVA_PATCHES_CLASS_NAME_PREFIX)) {
+	                UserSessionBase userSessBase = new UserSessionBase();
+	                userSessBase.setUserAdmin(true);
+	                userSessBase.setAuditUserAdmin(true);
+	                userSessBase.setKeyAdmin(true);
+	                userSessBase.setAuditKeyAdmin(true);
+	                RangerSecurityContext rangerSecCtx = new RangerSecurityContext();
+	                rangerSecCtx.setUserSession(userSessBase);
+	                RangerContextHolder.setSecurityContext(rangerSecCtx);
+	            }
+	        }
+	    }
 	}
 
 	public void authenticate() throws Exception {
