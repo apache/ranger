@@ -168,6 +168,8 @@ public class PolicyRefUpdater {
 		}
 		daoMgr.getXXPolicyRefResource().batchCreate(xPolResources);
 
+		final boolean isAdmin = rangerBizUtil.checkAdminAccess();
+
 		List<XXPolicyRefRole> xPolRoles = new ArrayList<>();
 		for (String role : roleNames) {
 			if (StringUtils.isBlank(role)) {
@@ -175,7 +177,7 @@ public class PolicyRefUpdater {
 			}
 			PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.ROLE, role, xPolicy);
 			if (!associator.doAssociate(false)) {
-				if (rangerBizUtil.checkAdminAccess()) {
+				if (isAdmin) {
 					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 				} else {
 					VXResponse gjResponse = new VXResponse();
@@ -195,7 +197,7 @@ public class PolicyRefUpdater {
 
 			PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.GROUP, group, xPolicy);
 			if (!associator.doAssociate(false)) {
-				if (rangerBizUtil.checkAdminAccess()) {
+				if (isAdmin) {
 					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 				} else {
 					VXResponse gjResponse = new VXResponse();
@@ -212,7 +214,7 @@ public class PolicyRefUpdater {
 			}
 			PolicyPrincipalAssociator associator = new PolicyPrincipalAssociator(PRINCIPAL_TYPE.USER, user, xPolicy);
 			if (!associator.doAssociate(false)) {
-				if (rangerBizUtil.checkAdminAccess()) {
+				if (isAdmin) {
 					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 				} else {
 					VXResponse gjResponse = new VXResponse();
