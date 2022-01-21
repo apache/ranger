@@ -195,6 +195,10 @@
                     <include>io.grpc:grpc-xds</include>
                     <include>io.grpc:grpc-services</include>
                     <include>io.opencensus:opencensus-proto</include>
+                    <!-- TencentKMS -->
+                    <include>com.tencentcloudapi:tencentcloud-sdk-java</include>
+                    <include>com.squareup.okhttp:logging-interceptor</include>
+                    <include>com.squareup.okhttp:okhttp</include>
                 </includes>
             </binaries>
         </moduleSet>

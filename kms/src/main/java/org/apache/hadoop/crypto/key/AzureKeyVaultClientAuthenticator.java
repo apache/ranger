@@ -236,26 +236,27 @@ public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
 			return keyCert;
 		}
 	}
+
+	static class KeyCert {
+
+		X509Certificate certificate;
+		PrivateKey key;
+
+		public X509Certificate getCertificate() {
+			return certificate;
+		}
+
+		public void setCertificate(X509Certificate certificate) {
+			this.certificate = certificate;
+		}
+
+		public PrivateKey getKey() {
+			return key;
+		}
+
+		public void setKey(PrivateKey key) {
+			this.key = key;
+		}
+	}
 }
 
-class KeyCert {
-
-	X509Certificate certificate;
-	PrivateKey key;
-
-	public X509Certificate getCertificate() {
-		return certificate;
-	}
-
-	public void setCertificate(X509Certificate certificate) {
-		this.certificate = certificate;
-	}
-
-	public PrivateKey getKey() {
-		return key;
-	}
-
-	public void setKey(PrivateKey key) {
-		this.key = key;
-	}
-}

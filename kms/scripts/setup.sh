@@ -121,6 +121,12 @@ GCP_PROJECT_ID=$(get_prop 'GCP_PROJECT_ID' $PROPFILE)
 GCP_LOCATION_ID=$(get_prop 'GCP_LOCATION_ID' $PROPFILE)
 GCP_MASTER_KEY_NAME=$(get_prop 'GCP_MASTER_KEY_NAME' $PROPFILE)
 
+TENCENT_KMS_ENABLED=$(get_prop 'TENCENT_KMS_ENABLED' $PROPFILE)
+TENCENT_MASTERKEY_ID=$(get_prop 'TENCENT_MASTERKEY_ID' $PROPFILE)
+TENCENT_CLIENT_ID=$(get_prop 'TENCENT_CLIENT_ID' $PROPFILE)
+TENCENT_CLIENT_SECRET=$(get_prop 'TENCENT_CLIENT_SECRET' $PROPFILE)
+TENCENT_CLIENT_REGION=$(get_prop 'TENCENT_CLIENT_REGION' $PROPFILE)
+
 kms_principal=$(get_prop 'kms_principal' $PROPFILE)
 kms_keytab=$(get_prop 'kms_keytab' $PROPFILE)
 hadoop_conf=$(get_prop 'hadoop_conf' $PROPFILE)
@@ -232,26 +238,6 @@ password_validation(){
                 else
                         log "[I]" $2 "password validated."
                 fi
-        fi
-}
-
-password_validation_safenet_keysecure(){
-        if [ -z "$1" ]
-        then
-                log "[I] Blank password is not allowed for" $2". Please enter valid password."
-                exit 1
-        else
-                log "[I]" $2 "password validated."
-        fi
-}
-
-azure_client_secret_validation(){
-        if [ -z "$1" ]
-        then
-                log "[I] Blank password is not allowed for" $2". Please enter valid password."
-                exit 1
-        else
-                log "[I]" $2 "password validated."
         fi
 }
 
@@ -481,8 +467,10 @@ setup_kms(){
 checkIfEmpty() {
 	if [ -z "$1" ]
 	then
-		echo "Error - Since GCP is enabled, Please provide valid value for '$2', Found : '$1'";
+		log "[I] - Please provide valid value for '$2', Found : '$1'";
 		exit 1
+	else
+		log "[I] - '$2' validated";
 	fi
 }
 
@@ -654,11 +642,15 @@ update_properties() {
 	AZURE_CLIENT_SEC="ranger.kms.azure.client.secret"
 	AZURE_CLIENT_SECRET_ALIAS="ranger.ks.azure.client.secret"
 
+	TENCENT_CLIENT_SEC="ranger.kms.tencent.client.secret"
+	TENCENT_CLIENT_SECRET_ALIAS="ranger.ks.tencent.client.secret"
+
 
         HSM_ENABLED=`echo $HSM_ENABLED | tr '[:lower:]' '[:upper:]'`
         KEYSECURE_ENABLED=`echo $KEYSECURE_ENABLED | tr '[:lower:]' '[:upper:]'`
 	AZURE_KEYVAULT_ENABLED=`echo $AZURE_KEYVAULT_ENABLED | tr '[:lower:]' '[:upper:]'`
 	IS_GCP_ENABLED=`echo $IS_GCP_ENABLED | tr '[:lower:]' '[:upper:]'`
+	TENCENT_KMS_ENABLED=`echo $TENCENT_KMS_ENABLED | tr '[:lower:]' '[:upper:]'`
 
 	if [ "${keystore}" != "" ]
 	then
@@ -686,7 +678,7 @@ update_properties() {
 
                 if [ "${KEYSECURE_ENABLED}" == "TRUE" ]
                 then
-                        password_validation_safenet_keysecure "$KEYSECURE_PASSWORD" "KEYSECURE User Password"
+                        checkIfEmpty "$KEYSECURE_PASSWORD" "KEYSECURE User Password"
                         $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${KEYSECURE_PASSWORD_ALIAS}" -v "${KEYSECURE_PASSWORD}" -c 1
 
                         propertyName=ranger.kms.keysecure.login.password.alias
@@ -700,7 +692,7 @@ update_properties() {
 
 		if [ "${AZURE_KEYVAULT_ENABLED}" == "TRUE" ]
                 then
-                        azure_client_secret_validation "$AZURE_CLIENT_SECRET" "Azure Client Secret"
+                        checkIfEmpty "$AZURE_CLIENT_SECRET" "Azure Client Secret"
                         $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${AZURE_CLIENT_SECRET_ALIAS}" -v "${AZURE_CLIENT_SECRET}" -c 1
 
                         propertyName=ranger.kms.azure.client.secret.alias
@@ -712,6 +704,19 @@ update_properties() {
                         updatePropertyToFilePy $propertyName $newPropertyValue $to_file
                 fi
 
+		if [ "$TENCENT_KMS_ENABLED" == "TRUE" ]
+		then
+                        checkIfEmpty "$TENCENT_CLIENT_SECRET" "Tencent Client Secret"
+                        $PYTHON_COMMAND_INVOKER ranger_credential_helper.py -l "cred/lib/*" -f "$keystore" -k "${TENCENT_CLIENT_SECRET_ALIAS}" -v "${TENCENT_CLIENT_SECRET}" -c 1
+
+                        propertyName=ranger.kms.tencent.client.secret.alias
+                        newPropertyValue="${TENCENT_CLIENT_SECRET_ALIAS}"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                        propertyName=ranger.kms.tencent.client.secret
+                        newPropertyValue="_"
+                        updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+		fi
 
 		propertyName=ranger.ks.jpa.jdbc.credential.alias
 		newPropertyValue="${DB_CREDENTIAL_ALIAS}"
@@ -751,6 +756,10 @@ update_properties() {
 
 		propertyName="${AZURE_CLIENT_SEC}"
                 newPropertyValue="${AZURE_CLIENT_SECRET}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+		propertyName="${TENCENT_CLIENT_SEC}"
+                newPropertyValue="${TENCENT_CLIENT_SECRET}"
                 updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 
 	fi
@@ -944,6 +953,33 @@ update_properties() {
 			checkIfEmpty "$newPropertyValue" "GCP_MASTER_KEY_NAME"
 			updatePropertyToFilePy $propertyName $newPropertyValue $to_file
 		fi
+
+	########### TENCENT KEY VAULT #################
+
+
+        if [ "${TENCENT_KMS_ENABLED}" != "TRUE" ]
+        then
+                propertyName=ranger.kms.tencentkms.enabled
+                newPropertyValue="false"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+        else
+                propertyName=ranger.kms.tencentkms.enabled
+                newPropertyValue="true"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.tencent.client.id
+                newPropertyValue="${TENCENT_CLIENT_ID}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.client.region
+                newPropertyValue="${TENCENT_CLIENT_REGION}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+                propertyName=ranger.kms.tencent.masterkey.id
+                newPropertyValue="${TENCENT_MASTERKEY_ID}"
+                updatePropertyToFilePy $propertyName $newPropertyValue $to_file
+
+        fi
 
 	to_file_kms_site=$PWD/ews/webapp/WEB-INF/classes/conf/ranger-kms-site.xml
     if test -f $to_file_kms_site; then

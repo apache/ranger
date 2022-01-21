@@ -456,6 +456,11 @@
             </exclusions>
         </dependency>
         <dependency>
+            <groupId>com.tencentcloudapi</groupId>
+            <artifactId>tencentcloud-sdk-java</artifactId>
+            <version>${com.tencentcloudapi.sdk.version}</version>
+        </dependency>
+        <dependency>
             <groupId>io.reactivex</groupId>
             <artifactId>rxjava</artifactId>
             <version>${io.reactivex.rxjava.version}</version>
