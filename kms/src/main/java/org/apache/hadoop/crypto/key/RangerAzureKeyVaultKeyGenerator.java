@@ -28,19 +28,25 @@ import com.microsoft.azure.keyvault.webkey.JsonWebKeyType;
 
 import java.security.Key;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class RangerKeyVaultKeyGenerator implements RangerKMSMKI {
+public class RangerAzureKeyVaultKeyGenerator implements RangerKMSMKI {
 
 	static final Logger logger = LoggerFactory
-			.getLogger(RangerKeyVaultKeyGenerator.class);
-	private static final String AZURE_KEYVAULT_URL = "ranger.kms.azurekeyvault.url";
-	private static final String AZURE_MASTER_KEY_ALIAS = "ranger.kms.azure.masterkey.name";
-	private static final String AZURE_MASTER_KEY_TYPE = "ranger.kms.azure.masterkey.type";
-	private static final String ZONE_KEY_ENCRYPTION_ALGO = "ranger.kms.azure.zonekey.encryption.algorithm";
+			.getLogger(RangerAzureKeyVaultKeyGenerator.class);
+	static final String AZURE_KEYVAULT_URL = "ranger.kms.azurekeyvault.url";
+	static final String AZURE_MASTER_KEY_ALIAS = "ranger.kms.azure.masterkey.name";
+	static final String AZURE_MASTER_KEY_TYPE = "ranger.kms.azure.masterkey.type";
+	static final String ZONE_KEY_ENCRYPTION_ALGO = "ranger.kms.azure.zonekey.encryption.algorithm";
+	static final String AZURE_KEYVAULT_SSL_ENABLED = "ranger.kms.azure.keyvault.ssl.enabled";
+	static final String AZURE_CLIENT_ID = "ranger.kms.azure.client.id";
+	static final String AZURE_CLIENT_SECRET = "ranger.kms.azure.client.secret";
+	static final String AZURE_KEYVAULT_CERTIFICATE_PATH = "ranger.kms.azure.keyvault.certificate.path";
+	static final String AZURE_KEYVAULT_CERTIFICATE_PASSWORD = "ranger.kms.azure.keyvault.certificate.password";
 	private String keyVaultURL;
 	private String azureMasterKey;
 	private String azureMasterKeyType;
@@ -48,13 +54,69 @@ public class RangerKeyVaultKeyGenerator implements RangerKMSMKI {
 	private KeyVaultClient keyVaultClient;
 	private KeyBundle masterKeyBundle;
 
-	public RangerKeyVaultKeyGenerator(Configuration conf,
-			KeyVaultClient kvClient) {
+	public RangerAzureKeyVaultKeyGenerator(Configuration conf,
+										   KeyVaultClient kvClient) {
 		this.keyVaultURL = conf.get(AZURE_KEYVAULT_URL);
 		this.azureMasterKey = conf.get(AZURE_MASTER_KEY_ALIAS);
 		this.azureMasterKeyType = conf.get(AZURE_MASTER_KEY_TYPE);
 		this.zoneKeyEncryptionAlgo = conf.get(ZONE_KEY_ENCRYPTION_ALGO);
 		this.keyVaultClient = kvClient;
+	}
+
+	public RangerAzureKeyVaultKeyGenerator(Configuration conf) throws Exception {
+		this(conf, createKeyVaultClient(conf));
+	}
+
+	public static KeyVaultClient createKeyVaultClient(Configuration conf) throws Exception {
+		AzureKeyVaultClientAuthenticator azureKVClientAuthenticator;
+		String azureClientId = conf.get(AZURE_CLIENT_ID);
+		if (StringUtils.isEmpty(azureClientId)) {
+			throw new Exception(
+					"Azure Key Vault is enabled and client id is not configured");
+		}
+		String azureClientSecret = conf.get(AZURE_CLIENT_SECRET);
+		KeyVaultClient kvClient;
+		if (conf != null
+				&& StringUtils.isNotEmpty(conf.get(AZURE_KEYVAULT_SSL_ENABLED))
+				&& conf.get(AZURE_KEYVAULT_SSL_ENABLED).equalsIgnoreCase("false")) {
+			try {
+				if (StringUtils.isEmpty(azureClientSecret)) {
+					throw new Exception(
+							"Azure Key Vault is enabled in non SSL mode and client password/secret is not configured");
+				}
+				azureKVClientAuthenticator = new AzureKeyVaultClientAuthenticator(
+						azureClientId, azureClientSecret);
+				kvClient = new KeyVaultClient(azureKVClientAuthenticator);
+			} catch (Exception ex) {
+				throw new Exception(
+						"Error while getting key vault client object with client id and client secret : "
+								+ ex);
+			}
+		} else {
+			try {
+				azureKVClientAuthenticator = new AzureKeyVaultClientAuthenticator(
+						azureClientId);
+				String keyVaultCertPath = conf
+						.get(AZURE_KEYVAULT_CERTIFICATE_PATH);
+				if (StringUtils.isEmpty(keyVaultCertPath)) {
+					throw new Exception(
+							"Azure Key Vault is enabled in SSL mode. Please provide certificate path for authentication.");
+				}
+				String keyVaultCertPassword = conf
+						.get(AZURE_KEYVAULT_CERTIFICATE_PASSWORD);
+
+				kvClient = !StringUtils.isEmpty(keyVaultCertPassword) ? azureKVClientAuthenticator
+						.getAuthentication(keyVaultCertPath,
+								keyVaultCertPassword)
+						: azureKVClientAuthenticator.getAuthentication(
+						keyVaultCertPath, "");
+			} catch (Exception ex) {
+				throw new Exception(
+						"Error while getting key vault client object with client id and certificate. Error :  : "
+								+ ex);
+			}
+		}
+		return kvClient;
 	}
 
 	@Override

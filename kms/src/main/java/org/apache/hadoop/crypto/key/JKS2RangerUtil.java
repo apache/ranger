@@ -159,7 +159,7 @@ public class JKS2RangerUtil {
 				}
 				String azureClientSecret = conf.get(AZURE_CLIENT_SECRET);
 				AzureKeyVaultClientAuthenticator azureKVClientAuthenticator;
-				RangerKeyVaultKeyGenerator rangerKVKeyGenerator = null;
+				RangerKMSMKI rangerKVKeyGenerator = null;
 				KeyVaultClient kvClient = null;
 				if (conf != null
 						&& StringUtils.isNotEmpty(conf.get(AZURE_KEYVAULT_SSL_ENABLED))
@@ -201,7 +201,7 @@ public class JKS2RangerUtil {
 				if (kvClient != null) {
 					try {
 						dbStore = new RangerKeyStore(daoManager, conf, kvClient);
-						rangerKVKeyGenerator = new RangerKeyVaultKeyGenerator(
+						rangerKVKeyGenerator = new RangerAzureKeyVaultKeyGenerator(
 								conf, kvClient);
 						if (rangerKVKeyGenerator != null) {
 							success = rangerKVKeyGenerator

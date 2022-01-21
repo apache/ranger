@@ -17,7 +17,6 @@
 
 package org.apache.hadoop.crypto.key;
 
-import com.microsoft.azure.keyvault.KeyVaultClient;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
@@ -42,7 +41,6 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import javax.crypto.KeyGenerator;
 import javax.crypto.spec.SecretKeySpec;
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
@@ -75,12 +73,11 @@ public class RangerKeyStoreProvider extends KeyProvider {
 	private static final String KEYSECURE_PASSWORD = "ranger.kms.keysecure.login.password";
 	private static final String KEYSECURE_LOGIN = "ranger.kms.keysecure.login";
 	private static final String AZURE_KEYVAULT_ENABLED = "ranger.kms.azurekeyvault.enabled";
-	private static final String AZURE_KEYVAULT_SSL_ENABLED = "ranger.kms.azure.keyvault.ssl.enabled";
-	private static final String AZURE_CLIENT_ID = "ranger.kms.azure.client.id";
 	private static final String AZURE_CLIENT_SECRET_ALIAS = "ranger.kms.azure.client.secret.alias";
 	private static final String AZURE_CLIENT_SECRET = "ranger.kms.azure.client.secret";
-	private static final String AZURE_KEYVAULT_CERTIFICATE_PATH = "ranger.kms.azure.keyvault.certificate.path";
-	private static final String AZURE_KEYVAULT_CERTIFICATE_PASSWORD = "ranger.kms.azure.keyvault.certificate.password";
+	private static final String TENCENT_KMS_ENABLED = "ranger.kms.tencentkms.enabled";
+	private static final String TENCENT_CLIENT_SECRET = RangerTencentKMSProvider.TENCENT_CLIENT_SECRET;
+	private static final String TENCENT_CLIENT_SECRET_ALIAS = "ranger.kms.tencent.client.secret.alias";
 	private static final String IS_GCP_ENABLED = "ranger.kms.gcp.enabled";
 	private RangerKeyStore dbStore;
 	private char[] masterKey;
@@ -88,10 +85,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 	private final Map<String, Metadata> cache = new HashMap<String, Metadata>();
 	private DaoManager daoManager;
 	private Lock readLock;
-	private boolean isHSMEnabled = false;
-	private boolean azureKeyVaultEnabled = false;
-	private boolean isGCPEnabled = false;
-	private boolean isKeySecureEnabled = false;
+	private boolean keyVaultEnabled = false;
 
 	public RangerKeyStoreProvider(Configuration conf) throws Throwable {
 		super(conf);
@@ -115,12 +109,14 @@ public class RangerKeyStoreProvider extends KeyProvider {
 					"The Ranger MasterKey Password is empty or not a valid Password");
 		}
 
-		this.isHSMEnabled = conf.getBoolean(HSM_ENABLED, false);
-		this.azureKeyVaultEnabled = conf.getBoolean(AZURE_KEYVAULT_ENABLED, false);
-		this.isGCPEnabled = conf.getBoolean(IS_GCP_ENABLED, false);
-		this.isKeySecureEnabled = conf.getBoolean(KEYSECURE_ENABLED, false);
+		boolean isHSMEnabled = conf.getBoolean(HSM_ENABLED, false);
+		boolean isKeySecureEnabled = conf.getBoolean(KEYSECURE_ENABLED, false);
+		boolean isAzureKeyVaultEnabled = conf.getBoolean(AZURE_KEYVAULT_ENABLED, false);
+		boolean isGCPEnabled = conf.getBoolean(IS_GCP_ENABLED, false);
+		boolean isTencentKMSEnabled = conf.getBoolean(TENCENT_KMS_ENABLED, false);
+		this.keyVaultEnabled = isAzureKeyVaultEnabled || isGCPEnabled || isTencentKMSEnabled;
 
-		if(this.isHSMEnabled) {
+		if (isHSMEnabled) {
 			logger.info("Ranger KMS HSM is enabled for storing master key.");
 			masterKeyProvider = new RangerHSM(conf);
 			String partitionPasswd = conf.get(HSM_PARTITION_PASSWORD);
@@ -129,7 +125,18 @@ public class RangerKeyStoreProvider extends KeyProvider {
 					|| partitionPasswd.trim().equals("crypted")) {
 				throw new IOException("Partition Password doesn't exists");
 			}
-		} else if (this.isKeySecureEnabled) {
+			dbStore = new RangerKeyStore(daoManager);
+			// generate master key on HSM
+			masterKeyProvider.generateMasterKey(password);
+			try {
+				masterKey = masterKeyProvider.getMasterKey(password)
+						.toCharArray();
+			} catch (Exception ex) {
+				throw new Exception(
+						"Error while getting Safenet KeySecure master key "
+								+ ex);
+			}
+		} else if (isKeySecureEnabled) {
 			logger.info("KeySecure is enabled for storing the master key.");
 			getFromJceks(conf, CREDENTIAL_PATH, KEYSECURE_PASSWORD_ALIAS,
 					KEYSECURE_PASSWORD);
@@ -151,93 +158,42 @@ public class RangerKeyStoreProvider extends KeyProvider {
 								+ ex);
 			}
 
-		} else if (this.azureKeyVaultEnabled) {
+		} else if (isAzureKeyVaultEnabled) {
 			logger.info("Azure Key Vault is enabled for storing the master key.");
-			azureKeyVaultEnabled = true;
 			getFromJceks(conf, CREDENTIAL_PATH, AZURE_CLIENT_SECRET_ALIAS,
 					AZURE_CLIENT_SECRET);
-			String azureClientId = conf.get(AZURE_CLIENT_ID);
-			if (StringUtils.isEmpty(azureClientId)) {
+			try {
+				masterKeyProvider = new RangerAzureKeyVaultKeyGenerator(conf);
+				masterKeyProvider.onInitialization();
+				dbStore = new RangerKeyStore(daoManager, true, masterKeyProvider);
+				// ensure master key exist
+				masterKeyProvider.generateMasterKey(password);
+			} catch (Exception ex) {
 				throw new Exception(
-						"Azure Key Vault is enabled and client id is not configured");
+						"Error while generating master key and master key secret in Azure Key Vault. Error : "
+								+ ex);
 			}
-			String azureClientSecret = conf.get(AZURE_CLIENT_SECRET);
-			AzureKeyVaultClientAuthenticator azureKVClientAuthenticator;
-			KeyVaultClient kvClient = null;
-			if (conf != null
-					&& StringUtils.isNotEmpty(conf.get(AZURE_KEYVAULT_SSL_ENABLED))
-					&& conf.get(AZURE_KEYVAULT_SSL_ENABLED).equalsIgnoreCase("false")) {
-				try {
-					if (StringUtils.isEmpty(azureClientSecret)) {
-						throw new Exception(
-								"Azure Key Vault is enabled in non SSL mode and client password/secret is not configured");
-					}
-					azureKVClientAuthenticator = new AzureKeyVaultClientAuthenticator(
-							azureClientId, azureClientSecret);
-					kvClient = new KeyVaultClient(azureKVClientAuthenticator);
-				} catch (Exception ex) {
-					throw new Exception(
-							"Error while getting key vault client object with client id and client secret : "
-									+ ex);
-				}
-			} else {
-				try {
-					azureKVClientAuthenticator = new AzureKeyVaultClientAuthenticator(
-							azureClientId);
-					String keyVaultCertPath = conf
-							.get(AZURE_KEYVAULT_CERTIFICATE_PATH);
-					if (StringUtils.isEmpty(keyVaultCertPath)) {
-						throw new Exception(
-								"Azure Key Vault is enabled in SSL mode. Please provide certificate path for authentication.");
-					}
-					String keyVaultCertPassword = conf
-							.get(AZURE_KEYVAULT_CERTIFICATE_PASSWORD);
-
-					kvClient = !StringUtils.isEmpty(keyVaultCertPassword) ? azureKVClientAuthenticator
-							.getAuthentication(keyVaultCertPath,
-									keyVaultCertPassword)
-							: azureKVClientAuthenticator.getAuthentication(
-									keyVaultCertPath, "");
-				} catch (Exception ex) {
-					throw new Exception(
-							"Error while getting key vault client object with client id and certificate. Error :  : "
-									+ ex);
-				}
-			}
-			boolean success = false;
-			if (kvClient != null) {
-				try {
-					dbStore = new RangerKeyStore(daoManager, conf, kvClient);
-					masterKeyProvider = new RangerKeyVaultKeyGenerator(conf,
-							kvClient);
-					if (masterKeyProvider != null) {
-						success = masterKeyProvider.generateMasterKey(password);
-					}
-				} catch (Exception ex) {
-					throw new Exception(
-							"Error while generating master key and master key secret in Azure key vault. Error :  : "
-									+ ex);
-				}
-			} else {
+		} else if (isTencentKMSEnabled) {
+			logger.info("Ranger KMS Tencent KMS is enabled for storing master key.");
+			getFromJceks(conf, CREDENTIAL_PATH, TENCENT_CLIENT_SECRET_ALIAS,
+					TENCENT_CLIENT_SECRET);
+			try {
+				masterKeyProvider = new RangerTencentKMSProvider(conf);
+				masterKeyProvider.onInitialization();
+				dbStore = new RangerKeyStore(daoManager, true, masterKeyProvider);
+				// ensure master key exist
+				masterKeyProvider.generateMasterKey(password);
+			} catch (Exception ex) {
 				throw new Exception(
-						"Unable to get Key Vault Client. Please check the azure credentials.");
+						"Error while generating master key and master key secret in Tencent KMS. Error : "
+								+ ex);
 			}
-			if (success) {
-				try {
-					/* Master key not exportable from key vault */
-					masterKey = null;
-				} catch (Exception ex) {
-					throw new Exception(
-							"Error while getting Azure Master key Secret. Error : "
-									+ ex);
-				}
-			}
-		} else if(this.isGCPEnabled) {
+		} else if (isGCPEnabled) {
 			logger.info("Google Cloud HSM is enabled for storing the master key.");
 		    masterKeyProvider = new RangerGoogleCloudHSMProvider(conf);
 		    masterKeyProvider.onInitialization();
 		    if(masterKeyProvider != null) {
-		        this.dbStore = new RangerKeyStore(daoManager, this.isGCPEnabled, masterKeyProvider);
+		        this.dbStore = new RangerKeyStore(daoManager, true, masterKeyProvider);
 		        masterKeyProvider.generateMasterKey(password);
 		    }
 		} else {
@@ -346,7 +302,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 		}
 		try {
 			String attribute = JsonUtilsV2.mapToJson(attributes);
-			if (azureKeyVaultEnabled || this.isGCPEnabled) {
+			if (keyVaultEnabled) {
 				dbStore.addSecureKeyByteEntry(versionName, new SecretKeySpec(
 						material, cipher), cipher, bitLength, description,
 						version, attribute);
@@ -409,7 +365,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 					Metadata metadata = entry.getValue();
 					String attributes = JsonUtilsV2.mapToJson(metadata
 							.getAttributes());
-					if (azureKeyVaultEnabled || this.isGCPEnabled) {
+					if (keyVaultEnabled) {
 						Key ezkey = new KeyMetadata(metadata);
 						if (ezkey.getEncoded().length == 0) {
 							KeyGenerator keyGenerator = KeyGenerator
@@ -457,7 +413,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 		readLock.lock();
 
 		try {
-			if (azureKeyVaultEnabled || this.isGCPEnabled) {
+			if (keyVaultEnabled) {
 				byte[] decryptKeyByte = null;
 				try {
 					if (!dbStore.engineContainsAlias(versionName)) {
@@ -570,7 +526,7 @@ public class RangerKeyStoreProvider extends KeyProvider {
 						return null;
 					}
 				}
-				if (azureKeyVaultEnabled || this.isGCPEnabled) {
+				if (keyVaultEnabled) {
 					Metadata meta = dbStore.engineGetKeyMetadata(name);
 					if (meta != null) {
 						cache.put(name, meta);

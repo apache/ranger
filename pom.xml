@@ -214,7 +214,7 @@
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
         <presto.re2j.version>1.1</presto.re2j.version>
 
-    <!-- Azure Key Vault dependencies -->
+        <!-- Azure Key Vault dependencies -->
         <com.microsoft.azure.version>1.22.0</com.microsoft.azure.version>
         <com.microsoft.azure.azure-keyvault.version>1.2.1</com.microsoft.azure.azure-keyvault.version>
         <com.microsoft.azure.azure-mgmt-keyvault.version>1.22.0</com.microsoft.azure.azure-mgmt-keyvault.version>
@@ -228,8 +228,21 @@
         <lucene.version>8.4.0</lucene.version>
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
+        <jsonsmart.version>2.3.1</jsonsmart.version>
+        <nimbus-jose-jwt.version>8.22.1</nimbus-jose-jwt.version>
+        <com.amazonaws.aws-java-sdk-bom.version>1.12.125</com.amazonaws.aws-java-sdk-bom.version>
+
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
+
+        <!-- JaCoCo Properties -->
+        <jacoco.version>0.8.7</jacoco.version>
+        <sonar.java.coveragePlugin>jacoco</sonar.java.coveragePlugin>
+        <sonar.dynamicAnalysis>reuseReports</sonar.dynamicAnalysis>
+        <sonar.language>java</sonar.language>
+
+        <!-- Tencent KMS depencies -->
+        <com.tencentcloudapi.sdk.version>3.1.322</com.tencentcloudapi.sdk.version>
     </properties>
     <profiles>
         <profile>
