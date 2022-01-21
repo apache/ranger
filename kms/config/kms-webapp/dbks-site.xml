@@ -327,7 +327,40 @@
 	</property>
 	<!-- Google Cloud KMS end -->
 
-  <!-- HSM Config -->
+    <!--Tencent KMS START-->
+    <property>
+        <name>ranger.kms.tencentkms.enabled</name>
+        <value>false</value>
+        <description>Flag for Tencent KMS</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.client.id</name>
+        <value></value>
+        <description>Tencent Client Id</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.client.secret</name>
+        <value></value>
+        <description>Tencent Client Secret</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.client.secret.alias</name>
+        <value>ranger.ks.tencent.client.secret</value>
+        <description>Tencent Client Secret Alias</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.client.region</name>
+        <value>ap-beijing</value>
+        <description>Tencent Client Id</description>
+    </property>
+    <property>
+        <name>ranger.kms.tencent.masterkey.id</name>
+        <value></value>
+        <description>Tencent master key name</description>
+    </property>
+    <!--Tencent KMS END-->
+
+    <!-- HSM Config -->
   <property>
   	<name>ranger.ks.hsm.type</name>
   	<value>LunaProvider</value>

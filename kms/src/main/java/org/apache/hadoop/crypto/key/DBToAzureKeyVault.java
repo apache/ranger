@@ -178,7 +178,7 @@ public class DBToAzureKeyVault {
 				System.err.println("Key Vault is null. Please check the azure related configs.");
 				System.exit(1);
 			}
-			RangerKeyVaultKeyGenerator rangerKVKeyGenerator = new RangerKeyVaultKeyGenerator(
+			RangerKMSMKI rangerKVKeyGenerator = new RangerAzureKeyVaultKeyGenerator(
 					conf, kvClient);
 			boolean azureMKSuccess = rangerKVKeyGenerator.generateMasterKey(mKeyPass);
 			if (azureMKSuccess) {
