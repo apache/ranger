@@ -196,7 +196,7 @@
           <include>io.opentracing:opentracing-noop:jar:0.33.0</include>
           <include>io.opentracing:opentracing-util:jar:0.33.0</include>
           <include>io.opentracing.contrib:opentracing-tracerresolver:jar:0.1.8</include>
-          <include>com.google.protobuf:protobuf-java</include>
+          <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
         </includes>
       </binaries>
     </moduleSet>
