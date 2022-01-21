@@ -74,7 +74,7 @@ public class RangerHivePolicyProvider implements HivePolicyProvider {
 		    perf = RangerPerfTracer.getPerfTracer(PERF_HIVEACLPROVIDER_REQUEST_LOG, "RangerHivePolicyProvider.getResourceACLS()");
 	    }
 	    // Extract and build RangerHiveResource from inputObject
-	    RangerHiveResource hiveResource = RangerHiveAuthorizer.createHiveResource(hiveObject);
+	    RangerHiveResource hiveResource = RangerHiveAuthorizer.createHiveResource(hiveObject, null);
 	    ret = getResourceACLs(hiveResource);
 	    RangerPerfTracer.log(perf);
 		return ret;
