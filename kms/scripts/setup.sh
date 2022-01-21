@@ -451,19 +451,6 @@ copy_db_connector(){
 	fi
 }
 
-setup_kms(){
-        #copying ranger kms provider 
-	oldP=${PWD}
-        cd $PWD/ews/webapp
-        log "[I] Adding ranger kms provider as services in hadoop-common jar"
-	for f in lib/hadoop-common*.jar
-	do
-        	 ${JAVA_HOME}/bin/jar -uf ${f}  META-INF/services/org.apache.hadoop.crypto.key.KeyProviderFactory
-		chown ${unix_user}:${unix_group} ${f}
-	done
-        cd ${oldP}
-}
-
 checkIfEmpty() {
 	if [ -z "$1" ]
 	then
@@ -1295,7 +1282,6 @@ if [ "$?" == "0" ]
 then
 	update_properties
 	$PYTHON_COMMAND_INVOKER db_setup.py -javapatch
-    setup_kms
 else
 	log "[E] DB schema setup failed! Please contact Administrator."
 	exit 1

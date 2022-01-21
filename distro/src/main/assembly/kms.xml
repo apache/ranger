@@ -30,37 +30,30 @@
                 <include>org.apache.ranger:ranger-kms</include>
             </includes>
             <binaries>
-                <outputDirectory>ews/webapp/lib</outputDirectory>
+                <outputDirectory>ews/webapp/WEB-INF/classes</outputDirectory>
                 <includeDependencies>true</includeDependencies>
-                <unpack>false</unpack>
-                <includes>
+                <unpack>true</unpack>
+                <dependencySets>
+                    <dependencySet>
+                        <outputDirectory>ews/webapp/WEB-INF/lib/</outputDirectory>
+                        <unpack>false</unpack>
+                        <includes>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.googlecode.log4jdbc:log4jdbc</include>
-                    <include>org.slf4j:slf4j-api</include>
-                    <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
-                    <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
-                    <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
                     <include>com.codahale.metrics:metrics-core</include>
                     <include>org.slf4j:jul-to-slf4j</include>
-                    <include>commons-logging:commons-logging</include>
-                    <include>com.google.guava:guava</include>
-                    <include>com.sun.jersey:jersey-core</include>
-                    <include>com.sun.jersey:jersey-server</include>
                     <include>javax.servlet:servlet-api</include>
                     <include>org.mortbay.jetty:jetty</include>
                     <include>org.mortbay.jetty:jetty-util</include>
-                    <include>commons-collections:commons-collections</include>
-                    <include>commons-lang:commons-lang</include>
                     <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
                     <include>org.apache.curator:curator-framework</include>
                     <include>org.apache.curator:curator-client</include>
                     <include>org.apache.curator:curator-test</include>
                     <include>asm:asm-all</include>
-                    <include>com.sun.jersey:jersey-bundle</include>
                     <include>org.apache.httpcomponents:httpclient</include>
                     <include>javax.activation:activation</include>
                     <include>org.apache.directory.server:apacheds-i18n</include>
@@ -72,24 +65,15 @@
                     <include>commons-beanutils:commons-beanutils</include>
                     <include>commons-cli:commons-cli</include>
                     <include>commons-codec:commons-codec:jar:${commons.codec.version}</include>
-                    <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
-                    <include>org.apache.commons:commons-configuration2</include>
                     <include>commons-digester:commons-digester</include>
                     <include>commons-io:commons-io</include>
                     <include>org.apache.commons:commons-math3</include>
                     <include>commons-net:commons-net:jar:${commons.net.version}</include>
                     <include>org.apache.curator:curator-recipes</include>
-                    <include>com.google.code.gson:gson</include>
                     <include>org.apache.hadoop:hadoop-annotations</include>
-                    <include>org.apache.htrace:htrace-core4</include>
                     <include>org.apache.httpcomponents:httpcore</include>
-                    <include>org.codehaus.jackson:jackson-core-asl</include>
-                    <include>org.codehaus.jackson:jackson-jaxrs</include>
-                    <include>org.codehaus.jackson:jackson-mapper-asl</include>
-                    <include>org.codehaus.jackson:jackson-xc</include>
                     <include>javax.xml.bind:jaxb-api</include>
                     <include>com.sun.xml.bind:jaxb-impl</include>
-                    <include>com.sun.jersey:jersey-json</include>
                     <include>org.codehaus.jettison:jettison</include>
                     <include>jline:jline</include>
                     <include>com.jcraft:jsch</include>
@@ -102,11 +86,7 @@
                     <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
                     <include>org.apache.httpcomponents:httpclient:jar:${kms.httpcomponents.httpclient.version}</include>
                     <include>org.noggit:noggit:jar:${noggit.version}</include>
-                    <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
-                    <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
-                    <include>org.codehaus.woodstox:stax2-api</include>
-                    <include>com.fasterxml.woodstox:woodstox-core</include>
                     <include>com.fasterxml.jackson.core:jackson-core</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations</include>
                     <include>com.fasterxml.jackson.core:jackson-databind</include>
@@ -131,7 +111,6 @@
                     <include>javax.mail:javax.mail-api</include>
                     <include>com.sun.mail:javax.mail</include>
                     <include>com.nimbusds:nimbus-jose-jwt</include>
-                    <include>org.apache.commons:commons-lang3</include>
                     <include>com.microsoft.azure:azure-keyvault-webkey</include>
                     <include>org.bouncycastle:bcprov-jdk15on</include>
                     <include>org.bouncycastle:bcpkix-jdk15on</include>
@@ -199,19 +178,9 @@
                     <include>com.tencentcloudapi:tencentcloud-sdk-java</include>
                     <include>com.squareup.okhttp:logging-interceptor</include>
                     <include>com.squareup.okhttp:okhttp</include>
-                </includes>
-            </binaries>
-        </moduleSet>
-
-        <moduleSet>
-            <useAllReactorProjects>true</useAllReactorProjects>
-            <includes>
-                <include>org.apache.ranger:ranger-kms</include>
-            </includes>
-            <binaries>
-                <outputDirectory>ews/webapp</outputDirectory>
-                <includeDependencies>false</includeDependencies>
-                <unpack>true</unpack>
+                        </includes>
+                    </dependencySet>
+                </dependencySets>
             </binaries>
         </moduleSet>
 
@@ -221,7 +190,7 @@
                 <include>org.apache.ranger:embeddedwebserver</include>
             </includes>
             <binaries>
-                <outputDirectory>ews/webapp/WEB-INF/classes/lib</outputDirectory>
+                <outputDirectory>ews/lib</outputDirectory>
                 <includeDependencies>true</includeDependencies>
                 <unpack>false</unpack>
                 <directoryMode>755</directoryMode>
@@ -232,6 +201,8 @@
                     <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
                     <include>com.google.protobuf:protobuf-java:jar:${gcp.protobuf-java.version}</include>
                     <include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
+                    <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
                     <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
                     <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
                     <include>org.apache.ranger:ranger-plugins-common</include>
@@ -241,6 +212,23 @@
                     <include>org.apache.ranger:credentialbuilder</include>
                     <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
                     <include>org.apache.commons:commons-lang3</include>
+                    <include>org.apache.commons:commons-configuration2</include>
+                    <include>commons-lang:commons-lang</include>
+                    <include>commons-collections:commons-collections</include>
+                    <include>commons-logging:commons-logging</include>
+                    <include>org.slf4j:slf4j-api</include>
+                    <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
+                    <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+                    <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
+                    <include>com.google.guava:guava</include>
+                    <include>com.google.code.gson:gson</include>
+                    <include>com.sun.jersey:jersey-bundle</include>
+                    <include>org.codehaus.jackson:jackson-core-asl</include>
+                    <include>org.codehaus.jackson:jackson-jaxrs</include>
+                    <include>org.codehaus.jackson:jackson-mapper-asl</include>
+                    <include>org.codehaus.jackson:jackson-xc</include>
+                    <include>org.codehaus.woodstox:stax2-api</include>
+                    <include>com.fasterxml.woodstox:woodstox-core</include>
                 </includes>
             </binaries>
         </moduleSet>
@@ -266,12 +254,13 @@
         <moduleSet>
             <useAllReactorProjects>true</useAllReactorProjects>
             <includes>
+                <include>org.apache.ranger:ranger-util</include>
                 <include>org.apache.ranger:ranger-kms-plugin-shim</include>
                 <include>org.apache.ranger:ranger-plugin-classloader</include>
                 <include>org.apache.ranger:credentialbuilder</include>
             </includes>
             <binaries>
-                <outputDirectory>ews/webapp/WEB-INF/classes/lib</outputDirectory>
+                <outputDirectory>ews/webapp/WEB-INF/lib</outputDirectory>
                 <includeDependencies>false</includeDependencies>
                 <unpack>false</unpack>
                 <directoryMode>755</directoryMode>
@@ -288,14 +277,14 @@
                 <include>org.apache.ranger:ranger-kms-plugin</include>
             </includes>
             <binaries>
-                <outputDirectory>ews/webapp/WEB-INF/classes/lib/ranger-kms-plugin-impl</outputDirectory>
+                <outputDirectory>ews/webapp/WEB-INF/lib/ranger-kms-plugin-impl</outputDirectory>
                 <includeDependencies>true</includeDependencies>
                 <unpack>false</unpack>
                 <directoryMode>755</directoryMode>
                 <fileMode>644</fileMode>
                 <dependencySets>
                     <dependencySet>
-                        <outputDirectory>ews/webapp/WEB-INF/classes/lib/ranger-kms-plugin-impl</outputDirectory>
+                        <outputDirectory>ews/webapp/WEB-INF/lib/ranger-kms-plugin-impl</outputDirectory>
                         <unpack>false</unpack>
                         <includes>
                             <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
@@ -442,6 +431,12 @@
                 <include>install.properties</include>
             </includes>
             <fileMode>700</fileMode>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>ews/webapp</outputDirectory>
+            <directoryMode>0700</directoryMode>
+            <directory>${project.parent.basedir}/kms/src/main/webapp</directory>
+            <fileMode>0600</fileMode>
         </fileSet>
         <fileSet>
             <outputDirectory>ews/webapp/WEB-INF/classes/conf.dist</outputDirectory>

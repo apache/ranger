@@ -41,6 +41,7 @@ import javax.servlet.ServletContextListener;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.ServiceLoader;
 
 @InterfaceAudience.Private
 public class KMSWebApp implements ServletContextListener {
@@ -89,6 +90,27 @@ public class KMSWebApp implements ServletContextListener {
 
   private void initLogging() {
     LOG = LoggerFactory.getLogger(KMSWebApp.class);
+  }
+
+  /**
+   * @see org.apache.hadoop.crypto.key.KeyProviderFactory
+   *
+   * Code here to ensure KeyProvideFactory subclasses in ews/webapp/ can be loaded.
+   * The hadoop-common.jar in ews/lib can only load subclasses in ews/lib.
+   * This is due to the limitation of ClassLoader mechanism of java/tomcat.
+   */
+  private static KeyProvider createKeyProvider(URI uri, Configuration conf)
+          throws IOException {
+    ServiceLoader<KeyProviderFactory> serviceLoader =
+            ServiceLoader.load(KeyProviderFactory.class);
+    KeyProvider kp = null;
+    for (KeyProviderFactory factory : serviceLoader) {
+      kp = factory.createProvider(uri, conf);
+      if (kp != null) {
+        break;
+      }
+    }
+    return kp;
   }
 
   @Override
@@ -146,7 +168,7 @@ public class KMSWebApp implements ServletContextListener {
       LOG.info("kmsconf size= "+kmsConf.size() + " kms classname="+kmsConf.getClass().getName());
       LOG.info("----------------Instantiating key provider ---------------");
       KeyProvider keyProvider =
-          KeyProviderFactory.get(new URI(providerString), kmsConf);
+          createKeyProvider(new URI(providerString), kmsConf);
       Preconditions.checkNotNull(keyProvider, String.format("No" +
               " KeyProvider has been initialized, please" +
               " check whether %s '%s' is configured correctly in" +
