@@ -124,6 +124,10 @@
 		    <artifactId>commons-lang3</artifactId>
 		</exclusion>
                 <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -143,6 +147,10 @@
             <version>${atlas.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -153,6 +161,10 @@
             <artifactId>atlas-client-v1</artifactId>
             <version>${atlas.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
@@ -165,6 +177,10 @@
             <version>${atlas.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -175,6 +191,10 @@
             <artifactId>atlas-common</artifactId>
             <version>${atlas.version}</version>
 	    <exclusions>
+                <exclusion>
+                    <groupId>log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
             <exclusion>
                 <groupId>org.slf4j</groupId>
                 <artifactId>*</artifactId>

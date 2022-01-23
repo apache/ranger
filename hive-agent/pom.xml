@@ -43,6 +43,10 @@
             <version>${hive.version}</version>
             <exclusions>
                 <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -81,6 +85,10 @@
                     <artifactId>netty</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -103,6 +111,10 @@
                    <groupId>io.netty</groupId>
                    <artifactId>netty-common</artifactId>
                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.logging.log4j</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>

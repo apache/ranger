@@ -113,5 +113,10 @@
             <artifactId>commons-compress</artifactId>
             <version>${commons.compress.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-api</artifactId>
+            <version>${log4j2.version}</version>
+        </dependency>
     </dependencies>
 </project>

@@ -22,8 +22,9 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 import org.bouncycastle.crypto.RuntimeCryptoException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.api.gax.rpc.AlreadyExistsException;
 import com.google.cloud.kms.v1.CryptoKey;
@@ -41,7 +42,7 @@ import com.google.protobuf.ByteString;
 
 public class RangerGoogleCloudHSMProvider implements RangerKMSMKI {
 
-	private static final Logger logger = Logger.getLogger(RangerGoogleCloudHSMProvider.class);
+	private static final Logger logger = LoggerFactory.getLogger(RangerGoogleCloudHSMProvider.class);
 	protected static final String GCP_KEYRING_ID = "ranger.kms.gcp.keyring.id";
 	protected static final String GCP_CRED_JSON_FILE = "ranger.kms.gcp.cred.file";
 	protected static final String GCP_PROJECT_ID = "ranger.kms.gcp.project.id";
