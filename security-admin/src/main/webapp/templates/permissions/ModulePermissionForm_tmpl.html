@@ -56,26 +56,12 @@
                                                 </tr>
                                                 <tr>
                                                         <td  class="vertAlignInitial">
-                                                                <div class="selected-list clearfix" data-js="selectedGroupList">
+                                                                <div class="selected-list clearfix selectedGroupList" data-js="selectedGroupList">
                                                                 <label class="editable-empty emptySelectedGroups">No Selected Groups</label>
-                                                                {{#each groupList}}
-                                                                        <span class="selected-widget">
-                                                                                <i class="icon remove fa-fw fa fa-remove" data-id="{{./this.groupId}}"></i>&nbsp;
-                                                                                {{./this.groupName}}
-                                                                        </span>
-                                                                {{/each}}
-
                                                                 </div></td>
                                                                 <td class="vertAlignInitial" width="100%">
-                                                                <div class="selected-list clearfix" data-js="selectedUserList">
+                                                                <div class="selected-list clearfix selectedUserList" data-js="selectedUserList">
                                                                         <label class="editable-empty emptySelectedUsers" style="text-align: center;">No Selected Users</label>
-
-                                                                        {{#each userList}}
-                                                                        <span class="selected-widget">
-                                                                                <i class="icon remove fa-fw fa fa-remove" data-id="{{./this.userId}}"></i>&nbsp;
-                                                                                {{./this.userName}}
-                                                                        </span>
-                                                                {{/each}}
                                                                 </div></td>
 						</tr>
 					</tbody>
