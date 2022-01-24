@@ -68,7 +68,7 @@ define(function(require) {
                         selectUsers		: 'div[data-editors="selectUsers"]',
                         addGroupBtn		: '[data-id="addGroupBtn"]',
                         addUserBtn		: '[data-id="addUserBtn"]',
-		},
+        },
                 events : function(){
                         var events = {};
                         events['click ' + this.ui.addGroupBtn ] = 'onAddGroup';
@@ -112,23 +112,65 @@ define(function(require) {
 					},
 			}
 		},
-		render: function(options) {
-			var that = this;
-			Backbone.Form.prototype.render.call(this, options);
-                        this.$el.find('[data-js="selectedGroupList"] span i').on('click', this.removeGroup.bind(this));
-                        this.$el.find('[data-js="selectedUserList"] span i').on('click', this.removeUser.bind(this));
-			
-                        if(this.model.get('groupPermList').length <= 0){
-                                this.$el.find('.emptySelectedGroups').show();
-                        }else{
-                                this.$el.find('.emptySelectedGroups').hide();
+
+        render: function(options) {
+            var that = this;
+            Backbone.Form.prototype.render.call(this, options);
+            this.showGroupTag();
+            this.showUserTag();
+            this.$el.find('[data-js="selectedGroupList"] span i').on('click', this.removeGroup.bind(this));
+            this.$el.find('[data-js="selectedUserList"] span i').on('click', this.removeUser.bind(this));
+            if(this.model.get('groupPermList').length <= 0){
+                this.$el.find('.emptySelectedGroups').show();
+            }else{
+                this.$el.find('.emptySelectedGroups').hide();
+            }
+            if(this.model.get('userPermList').length <= 0){
+                this.$el.find('.emptySelectedUsers').show();
+            }else{
+                this.$el.find('.emptySelectedUsers').hide();
+            }
+        },
+
+        showUserTag : function() {
+            var that = this
+            var userListData = this.model.get('userPermList');
+            if(userListData &&!_.isEmpty(userListData)) {
+                var i , j;
+                for(var i=0,j=0; i<=j+200 && userListData.length > i; i++){
+                    that.$el.find('.selectedUserList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+userListData[i].userId+'"></i>&nbsp;'+userListData[i].userName+'</span>')
+                }
+                that.$el.find('.selectedUserList').scroll(function(position) {
+                    if (position.currentTarget.scrollHeight <= (position.currentTarget.clientHeight + position.currentTarget.scrollTop) + 10) {
+                        j = i;
+                        for(i; i<=j+200 && userListData.length > i; i++){
+                            that.$el.find('.selectedUserList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+userListData[i].userId+'"></i>&nbsp;'+userListData[i].userName+'</span>')
                         }
-                        if(this.model.get('userPermList').length <= 0){
-                                this.$el.find('.emptySelectedUsers').show();
-                        }else{
-                                this.$el.find('.emptySelectedUsers').hide();
+                        that.$el.find('[data-js="selectedUserList"] span i').on('click', that.removeUser.bind(that));
+                    }
+                })
+            }
+        },
+        showGroupTag : function() {
+            var that = this
+            var groupListData = this.model.get('groupPermList');
+            if (groupListData && !_.isEmpty(groupListData)) {
+                var m , n;
+                for(var m=0,n=0; m<=n+200 && groupListData.length > m; m++){
+                    that.$el.find('.selectedGroupList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+groupListData[m].groupId+'"></i>&nbsp;'+groupListData[m].groupName+'</span>')
+                }
+                that.$el.find('.selectedGroupList').scroll(function(position) {
+                    if (position.currentTarget.scrollHeight <= (position.currentTarget.clientHeight + position.currentTarget.scrollTop) + 10) {
+                        n = m;
+                        for(m; m<=n+200 && groupListData.length > m; m++){
+                            that.$el.find('.selectedGroupList').append('<span class="selected-widget"><i class="icon remove fa-fw fa fa-remove" data-id="'+groupListData[m].groupId+'"></i>&nbsp;'+groupListData[m].groupName+'</span>')
                         }
-		},
+                        that.$el.find('[data-js="selectedGroupList"] span i').on('click', that.removeGroup.bind(that));
+                    }
+                })
+            }
+        },
+
 		setupFieldsforEditModule : function(){
                         this.addedGroups = _.map(this.model.get('groupPermList'), function(g){ return { 'id' : g.groupId, 'text' : g.groupName} });
                         this.addedUsers = _.map(this.model.get('userPermList'), function(u){ return { 'id' : u.userId, 'text' : u.userName} });
