@@ -14,11 +14,11 @@
 -- limitations under the License.
 
 DELIMITER $$
-DROP FUNCTION if exists getXportalUIdByLoginId$$
-CREATE FUNCTION `getXportalUIdByLoginId`(input_val VARCHAR(100)) RETURNS int(11)
-BEGIN DECLARE myid INT; SELECT x_portal_user.id into myid FROM x_portal_user
-WHERE x_portal_user.login_id = input_val;
-RETURN myid;
+DROP PROCEDURE if exists getXportalUIdByLoginId$$
+CREATE PROCEDURE `getXportalUIdByLoginId`(IN input_val VARCHAR(100), OUT myid BIGINT)
+BEGIN
+SET myid = 0;
+SELECT x_portal_user.id into myid FROM x_portal_user WHERE x_portal_user.login_id = input_val;
 END $$
 
 DELIMITER ;
@@ -27,22 +27,23 @@ drop procedure if exists insert_statename_in_x_ranger_global_state;
 
 delimiter ;;
 create procedure insert_statename_in_x_ranger_global_state() begin
-
+	DECLARE adminID bigint;
 	if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_ranger_global_state' and column_name='state_name')
 	then
+		call getXportalUIdByLoginId('admin', adminID);
 		if not exists(select * from x_ranger_global_state where state_name='RangerRole')
 		then
-			INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerRole','{"Version":"1"}');
+			INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1,'RangerRole','{"Version":"1"}');
 		end if;
 		
 		if not exists(select * from x_ranger_global_state where state_name='RangerUserStore')
 		then
-			INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerUserStore','{"Version":"1"}');
+			INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1,'RangerUserStore','{"Version":"1"}');
 		end if;
 
 		if not exists(select * from x_ranger_global_state where state_name='RangerSecurityZone')
 		then
-			INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1,'RangerSecurityZone','{"Version":"1"}');
+			INSERT INTO x_ranger_global_state (create_time,update_time,added_by_id,upd_by_id,version,state_name,app_data) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1,'RangerSecurityZone','{"Version":"1"}');
 		end if;
 
 	end if;

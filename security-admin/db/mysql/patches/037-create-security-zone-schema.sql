@@ -179,21 +179,21 @@ CREATE TABLE IF NOT EXISTS `x_security_zone_ref_group`(
 )ROW_FORMAT=DYNAMIC;
 
 DELIMITER $$
-DROP FUNCTION if exists getXportalUIdByLoginId$$
-CREATE FUNCTION `getXportalUIdByLoginId`(input_val VARCHAR(100)) RETURNS int(11)
-BEGIN DECLARE myid INT; SELECT x_portal_user.id into myid FROM x_portal_user
-WHERE x_portal_user.login_id = input_val;
-RETURN myid;
+DROP PROCEDURE if exists getXportalUIdByLoginId$$
+CREATE PROCEDURE `getXportalUIdByLoginId`(IN input_val VARCHAR(100), OUT myid BIGINT)
+BEGIN
+SET myid = 0;
+SELECT x_portal_user.id into myid FROM x_portal_user WHERE x_portal_user.login_id = input_val;
 END $$
 
 DELIMITER ;
 
 DELIMITER $$
-DROP FUNCTION if exists getModulesIdByName$$
-CREATE FUNCTION `getModulesIdByName`(input_val VARCHAR(100)) RETURNS int(11)
-BEGIN DECLARE myid INT; SELECT x_modules_master.id into myid FROM x_modules_master
-WHERE x_modules_master.module = input_val;
-RETURN myid;
+DROP PROCEDURE if exists getModulesIdByName$$
+CREATE PROCEDURE `getModulesIdByName`(IN input_val VARCHAR(100), OUT myid BIGINT)
+BEGIN
+SET myid = 0;
+SELECT x_modules_master.id into myid FROM x_modules_master WHERE x_modules_master.module = input_val;
 END $$
 
 DELIMITER ;
@@ -201,8 +201,10 @@ DELIMITER ;
 drop procedure if exists add_unzone_entry;
 delimiter ;;
 create procedure add_unzone_entry() begin
+DECLARE adminID bigint;
 if not exists (select * from x_security_zone where id=1 and name=' ') then
-	INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (1, UTC_TIMESTAMP(),UTC_TIMESTAMP(), getXportalUIdByLoginId('admin'), getXportalUIdByLoginId('admin'), 1, ' ', '', 'Unzoned zone');
+	call getXportalUIdByLoginId('admin', adminID);
+	INSERT INTO x_security_zone(id, create_time, update_time, added_by_id, upd_by_id, version, name, jsonData, description) VALUES (1, UTC_TIMESTAMP(),UTC_TIMESTAMP(), adminID, adminID, 1, ' ', '', 'Unzoned zone');
 end if;
 end;;
 delimiter ;
@@ -226,17 +228,28 @@ drop procedure if exists add_x_policy_zone_id;
 drop procedure if exists add_security_zone_permissions;
 delimiter ;;
 create procedure add_security_zone_permissions() begin
+
+	DECLARE adminID bigint;
+	DECLARE rangerusersyncID bigint;
+	DECLARE rangertagsyncID bigint;
+	DECLARE moduleIdSecurityZone bigint;
+
+	call getXportalUIdByLoginId('admin', adminID);
+	call getXportalUIdByLoginId('rangerusersync', rangerusersyncID);
+	call getXportalUIdByLoginId('rangertagsync', rangertagsyncID);
+	call getModulesIdByName('Security Zone', moduleIdSecurityZone);
+
 	if not exists (select * from x_modules_master where module='Security Zone') then
-		INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),'Security Zone','');
+		INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Security Zone','');
 	end if;
-	if not exists (select * from x_user_module_perm where user_id=getXportalUIdByLoginId('admin') and module_id=getModulesIdByName('Security Zone')) then
-		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('admin'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+	if not exists (select * from x_user_module_perm where user_id=adminID and module_id=moduleIdSecurityZone) then
+		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (adminID,moduleIdSecurityZone,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
 	end if;
-	if not exists (select * from x_user_module_perm where user_id=getXportalUIdByLoginId('rangerusersync') and module_id=getModulesIdByName('Security Zone')) then
-		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangerusersync'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+	if not exists (select * from x_user_module_perm where user_id=rangerusersyncID and module_id=moduleIdSecurityZone) then
+		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (rangerusersyncID,moduleIdSecurityZone,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
 	end if;
-	if not exists (select * from x_user_module_perm where user_id=getXportalUIdByLoginId('rangertagsync') and module_id=getModulesIdByName('Security Zone')) then
-		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (getXportalUIdByLoginId('rangertagsync'),getModulesIdByName('Security Zone'),UTC_TIMESTAMP(),UTC_TIMESTAMP(),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);
+	if not exists (select * from x_user_module_perm where user_id=rangertagsyncID and module_id=moduleIdSecurityZone) then
+		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (rangertagsyncID,moduleIdSecurityZone,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
 	end if;
 end;;
 delimiter ;
