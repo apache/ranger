@@ -27,18 +27,16 @@
       <pattern>%d{ISO8601} %m%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${kms.log.dir}/kms-audit-${hostname}-${user}.log.%d{'.'yyyy-MM-dd}</fileNamePattern>
+      <fileNamePattern>${kms.log.dir}/kms-audit-${hostname}-${user}.log.%d{yyyy-MM-dd}</fileNamePattern>
     </rollingPolicy>
   </appender>
-  <appender name="kms-metric" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="kms-metric" class="ch.qos.logback.core.FileAppender">
     <!--See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
     <Append>false</Append>
     <File>${kms.log.dir}/ranger_kms_metric_data_for_${metric.type}.log</File>
     <encoder>
       <pattern>%m%n</pattern>
     </encoder>
-    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy"/>
-    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy"/>
   </appender>
   <appender name="kms" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
@@ -50,7 +48,7 @@
       <pattern>%d{ISO8601} %-5p %c{1} - %m%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${kms.log.dir}/ranger-kms-${hostname}-${user}.log.%d{'.'yyyy-MM-dd}</fileNamePattern>
+      <fileNamePattern>${kms.log.dir}/ranger-kms-${hostname}-${user}.log.%d{yyyy-MM-dd}</fileNamePattern>
     </rollingPolicy>
   </appender>
   <logger name="com.sun.jersey.server.wadl.generators.WadlGeneratorJAXBGrammarGenerator" level="OFF"/>

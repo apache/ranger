@@ -39,9 +39,10 @@
                     <include>org.eclipse.persistence:eclipselink</include>
                     <include>org.eclipse.persistence:javax.persistence</include>
                     <include>com.googlecode.log4jdbc:log4jdbc</include>
-                    <include>log4j:log4j</include>
                     <include>org.slf4j:slf4j-api</include>
-                    <include>org.slf4j:slf4j-log4j12</include>
+                    <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
+                    <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+                    <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
                     <include>com.codahale.metrics:metrics-core</include>
                     <include>org.slf4j:jul-to-slf4j</include>
                     <include>commons-logging:commons-logging</include>
