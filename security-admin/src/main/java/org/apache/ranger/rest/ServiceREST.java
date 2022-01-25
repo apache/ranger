@@ -3551,9 +3551,7 @@ public class ServiceREST {
 			//for zone policy create /update / delete
 			if(!StringUtils.isEmpty(policy.getZoneName()) && serviceMgr.isZoneAdmin(policy.getZoneName())){
 				isAllowed = true;
-			}else if(!StringUtils.isEmpty(policy.getZoneName()) && serviceMgr.isZoneAuditor(policy.getZoneName())){
-				isAllowed = false;
-			}else {
+			}else{
 				isAllowed = hasAdminAccess(policy, userName, userGroups);
 			}
 			
