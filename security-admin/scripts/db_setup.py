@@ -484,7 +484,7 @@ class BaseDB(object):
 		if ranger_log_dir == "$PWD":
 			ranger_log_dir = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
-		log4j_conf_file = globalDict['RANGER_ADMIN_LOG4J_CONF_FILE']
+		log4j_conf_file = globalDict.get('RANGER_ADMIN_LOG4J_CONF_FILE')
 		if not log4j_conf_file:
 			log4j_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "logback.xml")
 		else:
