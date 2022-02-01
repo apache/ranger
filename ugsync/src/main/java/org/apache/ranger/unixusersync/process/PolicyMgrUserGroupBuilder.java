@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.UnknownHostException;
 import java.security.PrivilegedAction;
+import java.util.Collections;
 import java.util.Map;
 import java.util.Set;
 import java.util.List;
@@ -85,7 +86,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	private static final String PM_UPDATE_DELETED_GROUPS_URI = "/service/xusers/ugsync/groups/visibility";	// POST
 
 	private static final String PM_UPDATE_DELETED_USERS_URI = "/service/xusers/ugsync/users/visibility";	// POST
-
 	private static final Pattern USER_OR_GROUP_NAME_VALIDATION_REGEX =
 			Pattern.compile("^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s,._\\-+/@= ]|[\u00C0-\u017F])+$", Pattern.CASE_INSENSITIVE);
 
@@ -143,6 +143,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	String nameRules;
 	Map<String, String> userMap = new LinkedHashMap<String, String>();
 	Map<String, String> groupMap = new LinkedHashMap<>();
+	Map<String, String> whiteListUserMap = new LinkedHashMap<>();
+	Map<String, String> whiteListGroupMap = new LinkedHashMap<>();
 
 	private boolean isRangerCookieEnabled;
 	private String rangerCookieName;
@@ -230,8 +232,22 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 		String userGroupRoles = config.getGroupRoleRules();
 		if (userGroupRoles != null && !userGroupRoles.isEmpty()) {
-			getRoleForUserGroups(userGroupRoles);
+			getRoleForUserGroups(userGroupRoles, userMap, groupMap);
 		}
+		String whiteListUserRoles = config.getWhileListUserRoleRules();
+		if (whiteListUserRoles != null && !whiteListUserRoles.isEmpty()) {
+			getRoleForUserGroups(whiteListUserRoles, whiteListUserMap, whiteListGroupMap);
+		}
+		String policyMgrUserRole  = whiteListUserMap.get(policyMgrUserName);
+		if (!StringUtils.equalsIgnoreCase(policyMgrUserRole, "ROLE_SYS_ADMIN")) {
+			whiteListUserMap.put(policyMgrUserName, "ROLE_SYS_ADMIN");
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("Entries in group role assignments: " + groupMap);
+			LOG.debug("Entries in whitelist group role assignments: " + whiteListGroupMap);
+		}
+
 		buildUserGroupInfo();
 
 		if (LOG.isDebugEnabled()) {
@@ -323,6 +339,29 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 		if (isStartupFlag) {
 			// This is to handle any config changes for role assignments that might impact existing users in ranger db
+			if (MapUtils.isNotEmpty(whiteListUserMap)) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("adding " + whiteListUserMap.keySet() + " for computing roles during startup");
+				}
+				computeRolesForUsers.addAll(whiteListUserMap.keySet()); // Add all the user defined in the whitelist role assignment rules
+			}
+			if (MapUtils.isNotEmpty(whiteListGroupMap)) {
+				for (String groupName : whiteListGroupMap.keySet()) {
+					Set<String> groupUsers = null;
+					if (CollectionUtils.isNotEmpty(groupUsersCache.get(groupName))) {
+						groupUsers = new HashSet<>(groupUsersCache.get(groupName));
+					} else if (CollectionUtils.isNotEmpty(deltaGroupUsers.get(groupName))) {
+						groupUsers = new HashSet<>(deltaGroupUsers.get(groupName));
+					}
+					if (groupUsers != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("adding " + groupUsers + " from " + groupName + " for computing roles during startup");
+						}
+						computeRolesForUsers.addAll(groupUsers);
+					}
+				}
+			}
+
 			if (MapUtils.isNotEmpty(userMap)) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("adding " + userMap.keySet() + " for computing roles during startup");
@@ -585,18 +624,19 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	}
 
 	private void updateUserRoles() throws Throwable {
-		if (MapUtils.isNotEmpty(groupMap) || MapUtils.isNotEmpty(userMap)) {
-			UsersGroupRoleAssignments ugRoleAssignments = new UsersGroupRoleAssignments();
-			List<String> allUsers = new ArrayList<>(computeRolesForUsers);
+		UsersGroupRoleAssignments ugRoleAssignments = new UsersGroupRoleAssignments();
+		List<String> allUsers = new ArrayList<>(computeRolesForUsers);
 
-			ugRoleAssignments.setUsers(allUsers);
-			ugRoleAssignments.setGroupRoleAssignments(groupMap);
-			ugRoleAssignments.setUserRoleAssignments(userMap);
-			if (updateRoles(ugRoleAssignments) == null) {
-				String msg = "Unable to update roles for " + allUsers;
-				LOG.error(msg);
-				throw new Exception(msg);
-			}
+		ugRoleAssignments.setUsers(allUsers);
+		ugRoleAssignments.setGroupRoleAssignments(groupMap);
+		ugRoleAssignments.setUserRoleAssignments(userMap);
+		ugRoleAssignments.setWhiteListUserRoleAssignments(whiteListUserMap);
+		ugRoleAssignments.setWhiteListGroupRoleAssignments(whiteListGroupMap);
+		ugRoleAssignments.setReset(isStartupFlag);
+		if (updateRoles(ugRoleAssignments) == null) {
+			String msg = "Unable to update roles for " + allUsers;
+			LOG.error(msg);
+			throw new Exception(msg);
 		}
 	}
 
@@ -646,7 +686,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					continue;
 				}
 
-				if (StringUtils.isEmpty(oldSyncSource) || (!StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr) && StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource))) { // update
+				if (StringUtils.isEmpty(oldSyncSource) || (!StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)
+						&& StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource))) { // update
 					if (LOG.isDebugEnabled()) {
 						if (StringUtils.isEmpty(oldSyncSource)) {
 							LOG.debug("Sync Source has changed to " + newSyncSource);
@@ -661,8 +702,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					deltaGroups.put(groupName, oldGroup);
 					noOfModifiedGroups++;
 					groupNameMap.put(groupDN, groupName);
+
 				} else if (LOG.isDebugEnabled()) {
-					LOG.debug("Skipping update for " + groupName + " as same group with different sync source already exists");
+					if (!StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource)) {
+						LOG.debug("Skipping update for " + groupName + " as same group with different sync source already exists");
+					} else {
+						LOG.debug("Skipping update for " + groupName + " as there is no change");
+					}
 				}
 
 				if (StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)) {
@@ -729,7 +775,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					continue;
 				}
 
-				if (StringUtils.isEmpty(oldSyncSource) || (!StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr) && StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource))) { // update
+				if (StringUtils.isEmpty(oldSyncSource) || (!StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)
+						&& StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource))) { // update
 					if (LOG.isDebugEnabled()) {
 						if (StringUtils.isEmpty(oldSyncSource)) {
 							LOG.debug("Sync Source has changed to " + newSyncSource);
@@ -746,7 +793,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					noOfModifiedUsers++;
 					userNameMap.put(userDN, userName);
 				} else if (LOG.isDebugEnabled()) {
-					LOG.debug("Skipping to update " + userName + " as same username with different sync source already exists");
+					if (!StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource)) {
+						LOG.debug("Skipping to update " + userName + " as same username with different sync source already exists");
+					} else {
+						LOG.debug("Skipping to update " + userName + " as there is no change");
+					}
 				}
 
 				if (StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)) {
@@ -804,14 +855,14 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				groupUserInfo.setGroupName(groupName);
 				if (CollectionUtils.isNotEmpty(addUsers)) {
 					groupUserInfo.setAddUsers(addUsers);
-					if (groupMap.containsKey(groupName)) {
+					if (groupMap.containsKey(groupName) || whiteListGroupMap.containsKey(groupName)) {
 						// Add users to the computeRole list only if there is a rule defined for the group.
 						computeRolesForUsers.addAll(addUsers);
 					}
 				}
 				if (CollectionUtils.isNotEmpty(delUsers)) {
 					groupUserInfo.setDelUsers(delUsers);
-					if (groupMap.containsKey(groupName)) {
+					if (groupMap.containsKey(groupName)|| whiteListGroupMap.containsKey(groupName)) {
 						// Add users to the computeRole list only if there is a rule defined for the group.
 						computeRolesForUsers.addAll(delUsers);
 					}
@@ -1211,6 +1262,9 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 						pagedUgRoleAssignmentsListLen > totalCount ? totalCount : pagedUgRoleAssignmentsListLen));
 				pagedUgRoleAssignmentsList.setGroupRoleAssignments(ugRoleAssignments.getGroupRoleAssignments());
 				pagedUgRoleAssignmentsList.setUserRoleAssignments(ugRoleAssignments.getUserRoleAssignments());
+				pagedUgRoleAssignmentsList.setWhiteListGroupRoleAssignments(ugRoleAssignments.getWhiteListGroupRoleAssignments());
+				pagedUgRoleAssignmentsList.setWhiteListUserRoleAssignments(ugRoleAssignments.getWhiteListUserRoleAssignments());
+				pagedUgRoleAssignmentsList.setReset(ugRoleAssignments.isReset());
 				String response = null;
 				ClientResponse clientRes = null;
 				Gson gson = new GsonBuilder().create();
@@ -1554,7 +1608,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		return response;
 	}
 
-	private void getRoleForUserGroups(String userGroupRolesData) {
+	private void getRoleForUserGroups(String userGroupRolesData, Map<String, String> userMap, Map<String, String> groupMap) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==>> getRoleForUserGroups(" + userGroupRolesData + ")");
+		}
+		Map<String, String> reverseGroupMap = new LinkedHashMap<>();
 		String roleDelimiter = config.getRoleDelimiter();
 		String userGroupDelimiter = config.getUserGroupDelimiter();
 		String userNameDelimiter = config.getUserGroupNameDelimiter();
@@ -1604,7 +1662,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 												if (userGroupCheck.trim().equalsIgnoreCase("u")) {
 													userMap.put(userGroup.trim(), roleName.trim());
 												} else if (userGroupCheck.trim().equalsIgnoreCase("g")) {
-													groupMap.put(userGroup.trim(),
+													reverseGroupMap.put(userGroup.trim(),
 															roleName.trim());
 												}
 											}
@@ -1613,12 +1671,20 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 									break;
 								default:
 									userMap.clear();
-									groupMap.clear();
+									reverseGroupMap.clear();
 									break;
 							}
 						}
 					}
 				}
+			}
+		}
+		// Reversing the order of group keys so that the last role specified in the configuration rules is applied when a user belongs to multiple groups with different roles
+		if (MapUtils.isNotEmpty(reverseGroupMap)) {
+			List<String> groupNames = new ArrayList<>(reverseGroupMap.keySet());
+			Collections.reverse(groupNames);
+			for (String group : groupNames) {
+				groupMap.put(group, reverseGroupMap.get(group));
 			}
 		}
 	}

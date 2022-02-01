@@ -2818,8 +2818,17 @@ public class XUserMgr extends XUserMgrBase {
 	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
 	public List<String> updateUserRoleAssignments(UsersGroupRoleAssignments ugRoleAssignments) {
 		List<String> updatedUsers = new ArrayList<>();
+		List<String> requestedUsers = ugRoleAssignments.getUsers();
+		Map<String, String> userMap = ugRoleAssignments.getUserRoleAssignments();
+		Map<String, String> groupMap = ugRoleAssignments.getGroupRoleAssignments();
+		Map<String, String> whiteListUserMap = ugRoleAssignments.getWhiteListUserRoleAssignments();
+		Map<String, String> whiteListGroupMap = ugRoleAssignments.getWhiteListGroupRoleAssignments();
+		if (logger.isDebugEnabled()) {
+			logger.debug("Request users for role updates = " + requestedUsers);
+		}
+
 		// For each user get groups and compute roles based on group role assignments
-		for (String userName : ugRoleAssignments.getUsers()) {
+		for (String userName : requestedUsers) {
 			VXPortalUser vXPortalUser = userMgr.getUserProfileByLoginId(userName);
 			if (vXPortalUser == null) {
 				logger.info(userName + " doesn't exist and hence ignoring role assignments");
@@ -2829,19 +2838,38 @@ public class XUserMgr extends XUserMgrBase {
 				logger.info(userName + " is internal to ranger admin and hence ignoring role assignments");
 				continue;
 			}
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("Computing role for " + userName);
+			}
+
+			Set groupUsers = getGroupsForUser(userName);
+
 			String userRole = RangerConstants.ROLE_USER;
-			Map<String, String> userMap = ugRoleAssignments.getUserRoleAssignments();
-			if (!userMap.isEmpty() && userMap.containsKey(userName)) {
+			if (MapUtils.isNotEmpty(userMap) && userMap.containsKey(userName)) {
 				// Add the user role that is defined in user role assignments
 				userRole = userMap.get(userName);
-			} else {
-				Map<String, String> groupMap = ugRoleAssignments.getGroupRoleAssignments();
-
-				if (!groupMap.isEmpty()) {
-					for (String group : getGroupsForUser(userName)) {
+			} else if (MapUtils.isNotEmpty(groupMap) && CollectionUtils.isNotEmpty(groupUsers)) {
+				for (String group : groupMap.keySet()) {
+					if (groupUsers.contains(group)) {
 						String value = groupMap.get(group);
 						if (value != null) {
 							userRole = value;
+							break;
+						}
+					}
+				}
+			}
+
+			if (MapUtils.isNotEmpty(whiteListUserMap) && whiteListUserMap.containsKey(userName)) {
+				userRole = whiteListUserMap.get(userName);
+			} else if (MapUtils.isNotEmpty(whiteListGroupMap) && CollectionUtils.isNotEmpty(groupUsers)) {
+				for (String group :  whiteListGroupMap.keySet()) {
+					if (groupUsers.contains(group)) {
+						String value = whiteListGroupMap.get(group);
+						if (value != null) {
+							userRole = value;
+							break;
 						}
 					}
 				}
@@ -2849,12 +2877,35 @@ public class XUserMgr extends XUserMgrBase {
 
 			if (!vXPortalUser.getUserRoleList().contains(userRole)) {
 				//Update the role of the user only if newly computed role is different from the existing role.
+				if (logger.isDebugEnabled()) {
+					logger.debug("Updating role for " + userName + " to " + userRole);
+				}
 				String updatedUser = setRolesByUserName(userName, Collections.singletonList(userRole));
 				if (updatedUser != null) {
 					updatedUsers.add(updatedUser);
 				}
 			}
 		}
+
+		// Reset the role of any other users that are not part of the updated role assignments rules
+		if (ugRoleAssignments.isReset()) {
+			List<String> exitingNonUserRoleUsers = daoManager.getXXPortalUser().getNonUserRoleExternalUsers();
+			if (logger.isDebugEnabled()) {
+				logger.debug("Existing non user role users = " + exitingNonUserRoleUsers);
+			}
+			for (String userName : exitingNonUserRoleUsers) {
+				if (!requestedUsers.contains(userName)) {
+					if (logger.isDebugEnabled()) {
+						logger.debug("Resetting to User role for " + userName);
+					}
+					String updatedUser = setRolesByUserName(userName, Collections.singletonList(RangerConstants.ROLE_USER));
+					if (updatedUser != null) {
+						updatedUsers.add(updatedUser);
+					}
+				}
+			}
+		}
+
 		return updatedUsers;
 	}
 

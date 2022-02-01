@@ -4018,6 +4018,8 @@ public class TestXUserMgr {
 		ugRoleAssignments.setUsers(allUsers);
 		ugRoleAssignments.setGroupRoleAssignments(groupMap);
 		ugRoleAssignments.setUserRoleAssignments(userMap);
+		ugRoleAssignments.setWhiteListUserRoleAssignments(new HashMap<>());
+		ugRoleAssignments.setWhiteListGroupRoleAssignments(new HashMap<>());
 		VXUser vXUser = vxUser();
 		List<VXUser> vXUserList=new ArrayList<VXUser>();
 		vXUserList.add(vXUser);
