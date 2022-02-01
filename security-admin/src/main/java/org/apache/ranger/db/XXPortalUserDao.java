@@ -23,6 +23,8 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.springframework.stereotype.Service;
@@ -102,5 +104,17 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 			return null;
 		}
 
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> getNonUserRoleExternalUsers() {
+		try {
+		return getEntityManager().createNamedQuery("XXPortalUser.getNonUserRoleExternalUsers", String.class)
+				.setParameter("userRole", RangerConstants.ROLE_USER)
+				.setParameter("userSource",  RangerCommonEnums.USER_EXTERNAL)
+				.getResultList();
+		} catch (Exception e) {
+			return null;
+		}
 	}
 }

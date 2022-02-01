@@ -41,6 +41,12 @@ public class UsersGroupRoleAssignments {
 
 	Map<String, String> userRoleAssignments;
 
+	Map<String, String> whiteListGroupRoleAssignments;
+
+	Map<String, String> whiteListUserRoleAssignments;
+
+	boolean isReset = false;
+
 	public List<String> getUsers() {
 		return users;
 	}
@@ -63,5 +69,29 @@ public class UsersGroupRoleAssignments {
 
 	public void setUserRoleAssignments(Map<String, String> userRoleAssignments) {
 		this.userRoleAssignments = userRoleAssignments;
+	}
+
+	public Map<String, String> getWhiteListGroupRoleAssignments() {
+		return whiteListGroupRoleAssignments;
+	}
+
+	public void setWhiteListGroupRoleAssignments(Map<String, String> whiteListGroupRoleAssignments) {
+		this.whiteListGroupRoleAssignments = whiteListGroupRoleAssignments;
+	}
+
+	public Map<String, String> getWhiteListUserRoleAssignments() {
+		return whiteListUserRoleAssignments;
+	}
+
+	public void setWhiteListUserRoleAssignments(Map<String, String> whiteListUserRoleAssignments) {
+		this.whiteListUserRoleAssignments = whiteListUserRoleAssignments;
+	}
+
+	public boolean isReset() {
+		return isReset;
+	}
+
+	public void setReset(boolean reset) {
+		isReset = reset;
 	}
 }

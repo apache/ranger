@@ -261,6 +261,9 @@ public class UserGroupSyncConfig  {
 
     private static final String GROUP_BASED_ROLE_ASSIGNMENT_RULES = "ranger.usersync.group.based.role.assignment.rules";
 
+	private static final String WHITELIST_USER_ROLE_ASSIGNMENT_RULES = "ranger.usersync.whitelist.users.role.assignment.rules";
+	private static final String DEFAULT_WHITELIST_USER_ROLE_ASSIGNMENT_RULES = "&ROLE_SYS_ADMIN:u:admin,rangerusersync,rangertagsync&ROLE_KEY_ADMIN:u:keyadmin";
+
     private static final String USERSYNC_RANGER_COOKIE_ENABLED_PROP = "ranger.usersync.cookie.enabled";
 
 	private static final String RANGER_ADMIN_COOKIE_NAME_PROPS = "ranger.usersync.dest.ranger.session.cookie.name";
@@ -1034,12 +1037,23 @@ public class UserGroupSyncConfig  {
         if (prop != null && prop.containsKey(GROUP_BASED_ROLE_ASSIGNMENT_RULES)) {
             String GroupRoleRules = prop
                     .getProperty(GROUP_BASED_ROLE_ASSIGNMENT_RULES);
-            if (GroupRoleRules != null && !GroupRoleRules.isEmpty()) {
+            if (StringUtils.isNotBlank(GroupRoleRules)) {
                 return GroupRoleRules.trim();
             }
         }
         return null;
     }
+
+	public String getWhileListUserRoleRules() {
+		if (prop != null && prop.containsKey(WHITELIST_USER_ROLE_ASSIGNMENT_RULES)) {
+			String whiteListUserRoleRules = prop
+					.getProperty(WHITELIST_USER_ROLE_ASSIGNMENT_RULES);
+			if (StringUtils.isNotBlank(whiteListUserRoleRules) ) {
+				return whiteListUserRoleRules.trim();
+			}
+		}
+		return DEFAULT_WHITELIST_USER_ROLE_ASSIGNMENT_RULES;
+	}
 
     public String getUserGroupDelimiter() {
         if (prop != null

@@ -43,6 +43,11 @@
 			and role.userRole = :userRole</query>
 	</named-query>
 
+	<named-query name="XXPortalUser.getNonUserRoleExternalUsers">
+		<query>SELECT obj.loginId FROM XXPortalUser obj, XXPortalUserRole role WHERE obj.id = role.userId
+			and role.userRole != :userRole and obj.userSource = :userSource </query>
+	</named-query>
+
 	<named-query name="XXPortalUser.getUserAddedReport">
 		<query>SELECT count(obj), function('DATE',obj.createTime) as createDate FROM XXPortalUser obj GROUP BY createDate
 		</query>
