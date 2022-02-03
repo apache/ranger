@@ -250,7 +250,7 @@ public class RangerRESTClient {
 			LOG.error("RangerRESTClient.init(): failed to create GsonBuilder object", excp);
 		}
 
-		mIsSSL = StringUtils.containsIgnoreCase(mUrl, "https");
+		mIsSSL = isSsl(mUrl);
 
 		if (mIsSSL) {
 
@@ -279,6 +279,10 @@ public class RangerRESTClient {
 			}
 
 		}
+	}
+
+	private boolean isSsl(String url) {
+		return !StringUtils.isEmpty(url) && url.toLowerCase().startsWith("https");
 	}
 
 	private KeyManager[] getKeyManagers() {
