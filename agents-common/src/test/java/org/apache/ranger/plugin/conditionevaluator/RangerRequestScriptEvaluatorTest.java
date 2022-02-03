@@ -55,25 +55,25 @@ public class RangerRequestScriptEvaluatorTest {
         RangerAccessRequest          request   = createRequest(Arrays.asList("PII", "PCI"));
         RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request);
 
-        Assert.assertEquals("test: ctx.ugNamesCsv()", "test-group1,test-group2", evaluator.evaluateScript(scriptEngine, "ctx.ugNamesCsv()"));
-        Assert.assertEquals("test: ctx.urNamesCsv()", "test-role1,test-role2", evaluator.evaluateScript(scriptEngine, "ctx.urNamesCsv()"));
-        Assert.assertEquals("test: ctx.tagNamesCsv()", "PCI,PII", evaluator.evaluateScript(scriptEngine, "ctx.tagNamesCsv()"));
-        Assert.assertEquals("test: ctx.userAttrNamesCsv()", "state", evaluator.evaluateScript(scriptEngine, "ctx.userAttrNamesCsv()"));
-        Assert.assertEquals("test: ctx.ugAttrNamesCsv()", "dept,site", evaluator.evaluateScript(scriptEngine, "ctx.ugAttrNamesCsv()"));
-        Assert.assertEquals("test: ctx.tagAttrNamesCsv()", "attr1", evaluator.evaluateScript(scriptEngine, "ctx.tagAttrNamesCsv()"));
-        Assert.assertEquals("test: ctx.ugAttrCsv('dept')", "ENGG,PROD", evaluator.evaluateScript(scriptEngine, "ctx.ugAttrCsv('dept')"));
-        Assert.assertEquals("test: ctx.ugAttrCsv('site')", "10,20", evaluator.evaluateScript(scriptEngine, "ctx.ugAttrCsv('site')"));
-        Assert.assertEquals("test: ctx.tagAttrCsv('attr1')", "PCI_value,PII_value", evaluator.evaluateScript(scriptEngine, "ctx.tagAttrCsv('attr1')"));
+        Assert.assertEquals("test: UG_NAMES_CSV", "test-group1,test-group2", evaluator.evaluateScript(scriptEngine, "UG_NAMES_CSV"));
+        Assert.assertEquals("test: UR_NAMES_CSV", "test-role1,test-role2", evaluator.evaluateScript(scriptEngine, "UR_NAMES_CSV"));
+        Assert.assertEquals("test: TAG_NAMES_CSV", "PCI,PII", evaluator.evaluateScript(scriptEngine, "TAG_NAMES_CSV"));
+        Assert.assertEquals("test: USER_ATTR_NAMES_CSV", "state", evaluator.evaluateScript(scriptEngine, "USER_ATTR_NAMES_CSV"));
+        Assert.assertEquals("test: UG_ATTR_NAMES_CSV", "dept,site", evaluator.evaluateScript(scriptEngine, "UG_ATTR_NAMES_CSV"));
+        Assert.assertEquals("test: TAG_ATTR_NAMES_CSV", "attr1", evaluator.evaluateScript(scriptEngine, "TAG_ATTR_NAMES_CSV"));
+        Assert.assertEquals("test: GET_UG_ATTR_CSV('dept')", "ENGG,PROD", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_CSV('dept')"));
+        Assert.assertEquals("test: GET_UG_ATTR_CSV('site')", "10,20", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_CSV('site')"));
+        Assert.assertEquals("test: GET_TAG_ATTR_CSV('attr1')", "PCI_value,PII_value", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_CSV('attr1')"));
 
-        Assert.assertEquals("test: ctx.ugNamesCsvQ()", "'test-group1','test-group2'", evaluator.evaluateScript(scriptEngine, "ctx.ugNamesCsvQ()"));
-        Assert.assertEquals("test: ctx.urNamesCsvQ()", "'test-role1','test-role2'", evaluator.evaluateScript(scriptEngine, "ctx.urNamesCsvQ()"));
-        Assert.assertEquals("test: ctx.tagNamesCsvQ()", "'PCI','PII'", evaluator.evaluateScript(scriptEngine, "ctx.tagNamesCsvQ()"));
-        Assert.assertEquals("test: ctx.userAttrNamesCsvQ()", "'state'", evaluator.evaluateScript(scriptEngine, "ctx.userAttrNamesCsvQ()"));
-        Assert.assertEquals("test: ctx.ugAttrNamesCsvQ()", "'dept','site'", evaluator.evaluateScript(scriptEngine, "ctx.ugAttrNamesCsvQ()"));
-        Assert.assertEquals("test: ctx.tagAttrNamesCsvQ()", "'attr1'", evaluator.evaluateScript(scriptEngine, "ctx.tagAttrNamesCsvQ()"));
-        Assert.assertEquals("test: ctx.ugAttrCsvQ('dept')", "'ENGG','PROD'", evaluator.evaluateScript(scriptEngine, "ctx.ugAttrCsvQ('dept')"));
-        Assert.assertEquals("test: ctx.ugAttrCsvQ('site')", "'10','20'", evaluator.evaluateScript(scriptEngine, "ctx.ugAttrCsvQ('site')"));
-        Assert.assertEquals("test: ctx.tagAttrCsvQ('attr1')", "'PCI_value','PII_value'", evaluator.evaluateScript(scriptEngine, "ctx.tagAttrCsvQ('attr1')"));
+        Assert.assertEquals("test: UG_NAMES_Q_CSV", "'test-group1','test-group2'", evaluator.evaluateScript(scriptEngine, "UG_NAMES_Q_CSV"));
+        Assert.assertEquals("test: UR_NAMES_Q_CSV", "'test-role1','test-role2'", evaluator.evaluateScript(scriptEngine, "UR_NAMES_Q_CSV"));
+        Assert.assertEquals("test: TAG_NAMES_Q_CSV", "'PCI','PII'", evaluator.evaluateScript(scriptEngine, "TAG_NAMES_Q_CSV"));
+        Assert.assertEquals("test: USER_ATTR_NAMES_Q_CSV", "'state'", evaluator.evaluateScript(scriptEngine, "USER_ATTR_NAMES_Q_CSV"));
+        Assert.assertEquals("test: UG_ATTR_NAMES_Q_CSV", "'dept','site'", evaluator.evaluateScript(scriptEngine, "UG_ATTR_NAMES_Q_CSV"));
+        Assert.assertEquals("test: TAG_ATTR_NAMES_Q_CSV", "'attr1'", evaluator.evaluateScript(scriptEngine, "TAG_ATTR_NAMES_Q_CSV"));
+        Assert.assertEquals("test: GET_UG_ATTR_Q_CSV('dept')", "'ENGG','PROD'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q_CSV('dept')"));
+        Assert.assertEquals("test: GET_UG_ATTR_Q_CSV('site')", "'10','20'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q_CSV('site')"));
+        Assert.assertEquals("test: GET_TAG_ATTR_Q_CSV('attr1')", "'PCI_value','PII_value'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q_CSV('attr1')"));
 
         Assert.assertTrue("test: USER._name is 'test-user'", (Boolean) evaluator.evaluateScript(scriptEngine, "USER._name == 'test-user'"));
         Assert.assertTrue("test: USER['state'] is 'CA'", (Boolean) evaluator.evaluateScript(scriptEngine, "USER['state'] == 'CA'"));
