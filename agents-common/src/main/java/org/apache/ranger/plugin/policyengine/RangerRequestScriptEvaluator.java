@@ -25,6 +25,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
+import org.apache.ranger.plugin.util.MacroProcessor;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerUserStore;
@@ -65,10 +66,11 @@ public final class RangerRequestScriptEvaluator {
                                                                                  SCRIPT_VAR_TAG + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG + ";" +
                                                                                  SCRIPT_VAR_TAGS + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAGS + ";" +
                                                                                  SCRIPT_VAR_TAGNAMES + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG_NAMES + ";";
-
 	private static final Pattern JSON_VAR_NAMES_PATTERN = Pattern.compile(getJsonVarNamesPattern());
 	private static final Character CHAR_QUOTE = '\'';
 	private static final Character CHAR_COMMA = ',';
+
+	private static final MacroProcessor MACRO_PROCESSOR = new MacroProcessor(getMacrosMap());
 
 	private static String[] dateFormatStrings = null;
 
@@ -120,15 +122,23 @@ public final class RangerRequestScriptEvaluator {
 		return ret;
 	}
 
+	public static String expandMacros(String script) {
+		return MACRO_PROCESSOR.expandMacros(script);
+	}
+
 	public RangerRequestScriptEvaluator(final RangerAccessRequest accessRequest) {
 		this.accessRequest = accessRequest.getReadOnlyCopy();
 	}
 
 	public Object evaluateScript(ScriptEngine scriptEngine, String script) {
+		script = expandMacros(script);
+
 		return evaluateScript(scriptEngine, script, needsJsonCtxEnabled(script));
 	}
 
 	public Object evaluateConditionScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
+		script = expandMacros(script);
+
 		Object ret = evaluateScript(scriptEngine, script, enableJsonCtx);
 
 		if (ret == null) {
@@ -871,6 +881,30 @@ public final class RangerRequestScriptEvaluator {
 
 		return ".*(" + StringUtils.join(varNames, '|') + ").*";
 	}
+
+	private static Map<String, String> getMacrosMap() {
+		Map<String, String> ret = new HashMap<>();
+
+		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_CSV,      "ctx.tagAttrCsv");
+		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_Q_CSV,    "ctx.tagAttrCsvQ");
+		ret.put(SCRIPT_MACRO_GET_UG_ATTR_CSV,       "ctx.ugAttrCsv");
+		ret.put(SCRIPT_MACRO_GET_UG_ATTR_Q_CSV,     "ctx.ugAttrCsvQ");
+		ret.put(SCRIPT_MACRO_TAG_ATTR_NAMES_CSV,    "ctx.tagAttrNamesCsv()");
+		ret.put(SCRIPT_MACRO_TAG_ATTR_NAMES_Q_CSV,  "ctx.tagAttrNamesCsvQ()");
+		ret.put(SCRIPT_MACRO_TAG_NAMES_CSV,         "ctx.tagNamesCsv()");
+		ret.put(SCRIPT_MACRO_TAG_NAMES_Q_CSV,       "ctx.tagNamesCsvQ()");
+		ret.put(SCRIPT_MACRO_UG_ATTR_NAMES_CSV,     "ctx.ugAttrNamesCsv()");
+		ret.put(SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV,   "ctx.ugAttrNamesCsvQ()");
+		ret.put(SCRIPT_MACRO_UG_NAMES_CSV,          "ctx.ugNamesCsv()");
+		ret.put(SCRIPT_MACRO_UG_NAMES_Q_CSV,        "ctx.ugNamesCsvQ()");
+		ret.put(SCRIPT_MACRO_UR_NAMES_CSV,          "ctx.urNamesCsv()");
+		ret.put(SCRIPT_MACRO_UR_NAMES_Q_CSV,        "ctx.urNamesCsvQ()");
+		ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_CSV,   "ctx.userAttrNamesCsv()");
+		ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV, "ctx.userAttrNamesCsvQ()");
+
+		return ret;
+	}
+
 
 	public void logDebug(Object msg) {
 		LOG.debug(Objects.toString(msg));
