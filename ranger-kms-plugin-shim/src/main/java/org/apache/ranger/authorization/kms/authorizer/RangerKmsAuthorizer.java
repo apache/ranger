@@ -36,11 +36,10 @@ public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 	private static final String   RANGER_PLUGIN_TYPE                      = "kms";
 	private static final String   RANGER_KMS_AUTHORIZER_IMPL_CLASSNAME  = "org.apache.ranger.authorization.kms.authorizer.RangerKmsAuthorizer";
 
-	private Object 	      	impl	     = null;
-	private Runnable      	implRunnable = null;
-	private KeyACLs      	implKeyACLs	 = null;
-
-	private static		RangerPluginClassLoader rangerPluginClassLoader   = null;
+	private Object                  impl                    = null;
+	private Runnable                implRunnable            = null;
+	private KeyACLs                 implKeyACLs             = null;
+	private RangerPluginClassLoader rangerPluginClassLoader = null;
 
 
 	public RangerKmsAuthorizer() {

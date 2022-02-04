@@ -40,9 +40,9 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 	private static final String   RANGER_PLUGIN_TYPE                      = "solr";
 	private static final String   RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.solr.authorizer.RangerSolrAuthorizer";
 
-	private 		AuthorizationPlugin  	rangerSolrAuthorizerImpl 	  = null;
-	private			SearchComponent			rangerSearchComponentImpl	  = null;
-	private static	RangerPluginClassLoader rangerPluginClassLoader  	  = null;
+	private AuthorizationPlugin     rangerSolrAuthorizerImpl  = null;
+	private	SearchComponent         rangerSearchComponentImpl = null;
+	private RangerPluginClassLoader rangerPluginClassLoader   = null;
 
 	public RangerSolrAuthorizer() {
 		if(LOG.isDebugEnabled()) {

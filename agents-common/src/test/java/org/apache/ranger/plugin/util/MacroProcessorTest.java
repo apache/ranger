@@ -50,7 +50,7 @@ public class MacroProcessorTest {
 			String input  = inputOutput.getKey();
 			String output = inputOutput.getValue();
 
-			assertEquals(output, processor.expandMacros(input));;
+			assertEquals(output, processor.expandMacros(input));
 		}
 	}
 }

@@ -33,8 +33,9 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
     private static final String   RANGER_PLUGIN_TYPE                       = "ozone";
     private static final String   RANGER_OZONE_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.ozone.authorizer.RangerOzoneAuthorizer";
-    private static RangerPluginClassLoader rangerPluginClassLoader         = null;
-    private IAccessAuthorizer ozoneAuthorizationProviderImpl               = null;
+
+    private RangerPluginClassLoader rangerPluginClassLoader        = null;
+    private IAccessAuthorizer       ozoneAuthorizationProviderImpl = null;
 
     public RangerOzoneAuthorizer() {
         if(LOG.isDebugEnabled()) {

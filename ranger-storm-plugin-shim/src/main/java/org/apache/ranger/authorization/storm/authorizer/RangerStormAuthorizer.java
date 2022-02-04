@@ -36,8 +36,8 @@ public class RangerStormAuthorizer implements IAuthorizer {
 	private static final String   RANGER_PLUGIN_TYPE                      = "storm";
 	private static final String   RANGER_STORM_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.storm.authorizer.RangerStormAuthorizer";
 
-	private IAuthorizer 	rangerStormAuthorizerImpl 		= null;
-	private static RangerPluginClassLoader rangerPluginClassLoader  = null;
+	private IAuthorizer 	        rangerStormAuthorizerImpl = null;
+	private RangerPluginClassLoader rangerPluginClassLoader   = null;
 	
 	public RangerStormAuthorizer() {
 		if(LOG.isDebugEnabled()) {

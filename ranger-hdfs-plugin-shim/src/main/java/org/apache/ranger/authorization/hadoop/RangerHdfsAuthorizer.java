@@ -32,8 +32,8 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 	private static final String   RANGER_PLUGIN_TYPE                      = "hdfs";
 	private static final String   RANGER_HDFS_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.hadoop.RangerHdfsAuthorizer";
 
-	private INodeAttributeProvider 	rangerHdfsAuthorizerImpl 		= null;
-	private static RangerPluginClassLoader rangerPluginClassLoader  = null;
+	private INodeAttributeProvider 	rangerHdfsAuthorizerImpl = null;
+	private RangerPluginClassLoader rangerPluginClassLoader  = null;
 	
 	public RangerHdfsAuthorizer() {
 		if(LOG.isDebugEnabled()) {

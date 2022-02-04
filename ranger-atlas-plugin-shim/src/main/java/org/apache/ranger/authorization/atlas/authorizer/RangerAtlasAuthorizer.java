@@ -38,8 +38,8 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     private static final String   RANGER_PLUGIN_TYPE                      = "atlas";
 	private static final String   RANGER_ATLAS_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.atlas.authorizer.RangerAtlasAuthorizer";
 	
-	private AtlasAuthorizer  rangerAtlasAuthorizerImpl = null;
-	private static RangerPluginClassLoader rangerPluginClassLoader  = null;
+	private AtlasAuthorizer         rangerAtlasAuthorizerImpl = null;
+	private RangerPluginClassLoader rangerPluginClassLoader   = null;
 
 	public RangerAtlasAuthorizer() {
 		if(LOG.isDebugEnabled()) {

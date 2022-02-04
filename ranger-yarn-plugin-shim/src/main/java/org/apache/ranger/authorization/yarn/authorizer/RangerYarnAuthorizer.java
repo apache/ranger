@@ -40,8 +40,8 @@ public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
 	private static final String   RANGER_PLUGIN_TYPE                      = "yarn";
 	private static final String   RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer";
 
-	private YarnAuthorizationProvider 	 	yarnAuthorizationProviderImpl = null;
-	private static RangerPluginClassLoader  rangerPluginClassLoader  	  = null;
+	private YarnAuthorizationProvider yarnAuthorizationProviderImpl = null;
+	private RangerPluginClassLoader   rangerPluginClassLoader       = null;
 	
 	public RangerYarnAuthorizer() {
 		if(LOG.isDebugEnabled()) {

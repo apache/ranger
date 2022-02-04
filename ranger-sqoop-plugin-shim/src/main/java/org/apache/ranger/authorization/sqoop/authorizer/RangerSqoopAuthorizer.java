@@ -35,8 +35,8 @@ public class RangerSqoopAuthorizer extends AuthorizationValidator {
 	private static final String RANGER_PLUGIN_TYPE = "sqoop";
 	private static final String RANGER_SQOOP_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer";
 
-	private AuthorizationValidator authorizationValidator = null;
-	private static RangerPluginClassLoader rangerPluginClassLoader = null;
+	private AuthorizationValidator  authorizationValidator  = null;
+	private RangerPluginClassLoader rangerPluginClassLoader = null;
 
 	public RangerSqoopAuthorizer() {
 		if (LOG.isDebugEnabled()) {

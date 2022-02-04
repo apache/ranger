@@ -31,10 +31,9 @@ public class RangerElasticsearchAuthorizer {
 	private static final String RANGER_PLUGIN_TYPE = "elasticsearch";
 
 	private static final String RANGER_ELASTICSEARCH_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.elasticsearch.authorizer.RangerElasticsearchAuthorizer";
-	private static RangerPluginClassLoader rangerPluginClassLoader = null;
 
-	private static ClassLoader esClassLoader = null;
-
+	private RangerPluginClassLoader          rangerPluginClassLoader          = null;
+	private ClassLoader                      esClassLoader                    = null;
 	private RangerElasticsearchAccessControl rangerElasticsearchAccessControl = null;
 
 	public RangerElasticsearchAuthorizer() {

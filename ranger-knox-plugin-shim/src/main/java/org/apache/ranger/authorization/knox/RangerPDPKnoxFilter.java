@@ -38,8 +38,8 @@ public class RangerPDPKnoxFilter implements Filter {
 	private static final String   RANGER_PLUGIN_TYPE                      = "knox";
 	private static final String   RANGER_PDP_KNOX_FILTER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.knox.RangerPDPKnoxFilter";
 	
-	private Filter 		    				rangerPDPKnoxFilteImpl	 = null;
-	private static RangerPluginClassLoader  rangerPluginClassLoader  = null;
+	private Filter                  rangerPDPKnoxFilteImpl  = null;
+	private RangerPluginClassLoader rangerPluginClassLoader = null;
 	
 	public RangerPDPKnoxFilter() {
 		if(LOG.isDebugEnabled()) {
