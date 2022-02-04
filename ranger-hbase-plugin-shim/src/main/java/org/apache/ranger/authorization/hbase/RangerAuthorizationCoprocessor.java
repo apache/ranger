@@ -63,9 +63,8 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 	private static final String   RANGER_PLUGIN_TYPE                      = "hbase";
 	private static final String   RANGER_HBASE_AUTHORIZER_IMPL_CLASSNAME  = "org.apache.ranger.authorization.hbase.RangerAuthorizationCoprocessor";
 
-	private static RangerPluginClassLoader rangerPluginClassLoader = null;
-
-	private        Object 	               						impl	                 	= null;
+	private RangerPluginClassLoader 							rangerPluginClassLoader 	= null;
+	private Object                 								impl                     	= null;
 	private MasterObserver      							    implMasterObserver       	= null;
 	private RegionObserver       							    implRegionObserver       	= null;
 	private RegionServerObserver 							    implRegionServerObserver 	= null;

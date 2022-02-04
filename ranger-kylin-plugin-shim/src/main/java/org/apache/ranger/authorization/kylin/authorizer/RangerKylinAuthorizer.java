@@ -35,8 +35,8 @@ public class RangerKylinAuthorizer extends ExternalAclProvider {
 	private static final String RANGER_PLUGIN_TYPE = "kylin";
 	private static final String RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer";
 
-	private ExternalAclProvider externalAclProvider = null;
-	private static RangerPluginClassLoader rangerPluginClassLoader = null;
+	private ExternalAclProvider     externalAclProvider     = null;
+	private RangerPluginClassLoader rangerPluginClassLoader = null;
 
 	public RangerKylinAuthorizer() {
 		if (LOG.isDebugEnabled()) {

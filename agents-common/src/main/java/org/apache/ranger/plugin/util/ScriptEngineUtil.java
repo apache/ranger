@@ -54,11 +54,11 @@ public class ScriptEngineUtil {
             }
 
             ret = manager.getEngineByName(engineName);
-        } catch (Exception exp) {
-            LOG.error("RangerScriptConditionEvaluator.init() failed with exception=" + exp);
+        } catch (Throwable exp) {
+            LOG.error("RangerScriptConditionEvaluator.init() failed", exp);
         }
 
-        if (ret == null && serviceType != null) {
+        if (ret == null) {
             LOG.warn("failed to initialize script engine '" + engineName + "' in a default manner." +
                      " Will try to get script-engine from plugin-class-loader");
 
@@ -73,7 +73,7 @@ public class ScriptEngineUtil {
                     LOG.error("Cannot get script-engine from null pluginClassLoader");
                 }
             } catch (Throwable exp) {
-                LOG.error("RangerScriptConditionEvaluator.init() failed with exception=", exp);
+                LOG.error("RangerScriptConditionEvaluator.init() failed", exp);
             }
         }
 
