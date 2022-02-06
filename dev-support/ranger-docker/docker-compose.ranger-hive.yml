@@ -31,3 +31,4 @@ services:
 
 networks:
   ranger:
+    name: rangernw
