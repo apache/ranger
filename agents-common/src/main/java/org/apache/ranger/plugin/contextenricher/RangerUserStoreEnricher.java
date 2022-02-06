@@ -35,21 +35,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
-    private static final Logger LOG = LoggerFactory.getLogger(RangerUserStoreEnricher.class);
+    private static final Logger LOG                    = LoggerFactory.getLogger(RangerUserStoreEnricher.class);
+    private static final Logger PERF_SET_USERSTORE_LOG = RangerPerfTracer.getPerfLogger("userstoreenricher.setuserstore");
 
-    private static final Logger PERF_SET_USERSTORE_LOG      = RangerPerfTracer.getPerfLogger("userstoreenricher.setuserstore");
+    public static final String USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION = "userStoreRefresherPollingInterval";
+    public static final String USERSTORE_RETRIEVER_CLASSNAME_OPTION       = "userStoreRetrieverClassName";
 
-
-    private static final String USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION = "userStoreRefresherPollingInterval";
-    private static final String USERSTORE_RETRIEVER_CLASSNAME_OPTION       = "userStoreRetrieverClassName";
-
-    private RangerUserStoreRefresher                 userStoreRefresher;
-    private RangerUserStoreRetriever                 userStoreRetriever;
-    private RangerUserStore							 rangerUserStore;
-    private boolean                                  disableCacheIfServiceNotFound = true;
-
-    private final BlockingQueue<DownloadTrigger>     userStoreDownloadQueue = new LinkedBlockingQueue<>();
-    private Timer                                    userStoreDownloadTimer;
+    private       RangerUserStoreRefresher       userStoreRefresher;
+    private       RangerUserStoreRetriever       userStoreRetriever;
+    private       RangerUserStore                rangerUserStore;
+    private       boolean                        disableCacheIfServiceNotFound = true;
+    private final BlockingQueue<DownloadTrigger> userStoreDownloadQueue = new LinkedBlockingQueue<>();
+    private       Timer                          userStoreDownloadTimer;
 
     @Override
     public void init() {

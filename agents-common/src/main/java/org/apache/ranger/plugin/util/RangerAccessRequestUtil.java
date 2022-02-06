@@ -130,6 +130,7 @@ public class RangerAccessRequestUtil {
 			ret.remove(KEY_CONTEXT_TAGS);
 			ret.remove(KEY_CONTEXT_TAG_OBJECT);
 			ret.remove(KEY_CONTEXT_RESOURCE);
+			ret.remove(KEY_CONTEXT_REQUEST);
 			// don't remove REQUESTED_RESOURCES
 		}
 

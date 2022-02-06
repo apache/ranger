@@ -19,6 +19,7 @@
 
 package org.apache.ranger.admin.client;
 
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -73,6 +74,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	HostnameVerifier _hv;
 	String _sslConfigFileName = null;
 	String _serviceName = null;
+	String _serviceNameUrlParam = null;
 	String _clusterName = null;
 	boolean _supportsPolicyDeltas = false;
 	boolean _supportsTagDeltas = false;
@@ -133,6 +135,13 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAdminJersey2RESTClient.init(" + configPropertyPrefix + "): " + _client.toString());
+		}
+
+		try {
+			this._serviceNameUrlParam = URLEncoderUtil.encodeURIParam(serviceName);
+		} catch (UnsupportedEncodingException e) {
+			LOG.warn("Unsupported encoding, serviceName=" + serviceName);
+			this._serviceNameUrlParam = serviceName;
 		}
 	}
 
@@ -271,6 +280,96 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 	@Override
 	public List<String> getTagTypes(String pattern) throws Exception {
 		throw new Exception("RangerAdminjersey2RESTClient.getTagTypes() -- *** NOT IMPLEMENTED *** ");
+	}
+
+	@Override
+	public RangerUserStore getUserStoreIfUpdated(long lastKnownUserStoreVersion, long lastActivationTimeInMillis) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAdminjersey2RESTClient.getUserStoreIfUpdated(lastKnownUserStoreVersion={}, lastActivationTimeInMillis={})", lastKnownUserStoreVersion, lastActivationTimeInMillis);
+		}
+
+		final RangerUserStore      ret;
+		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
+		final boolean              isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final Response             response;
+
+		Map<String, String> queryParams = new HashMap<String, String>();
+
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_KNOWN_USERSTORE_VERSION, Long.toString(lastKnownUserStoreVersion));
+		queryParams.put(RangerRESTUtils.REST_PARAM_LAST_ACTIVATION_TIME, Long.toString(lastActivationTimeInMillis));
+		queryParams.put(RangerRESTUtils.REST_PARAM_PLUGIN_ID, _pluginId);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CLUSTER_NAME, _clusterName);
+		queryParams.put(RangerRESTUtils.REST_PARAM_CAPABILITIES, pluginCapabilities);
+
+		if (isSecureMode) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking UserStore updated as user: {}", user);
+			}
+
+			PrivilegedAction<Response> action = () -> {
+				Response resp        = null;
+				String   relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE + _serviceNameUrlParam;
+
+				try {
+					resp = get(queryParams, relativeURL);
+				} catch (Exception e) {
+					LOG.error("Failed to get response", e);
+				}
+
+				return resp;
+			};
+
+			response = user.doAs(action);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Checking UserStore updated as user: {}", user);
+			}
+
+			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USERSTORE + _serviceNameUrlParam;
+
+			response = get(queryParams, relativeURL);
+		}
+
+		if (response == null || response.getStatus() == 304) { // NOT_MODIFIED
+			if (response == null) {
+				LOG.error("Error getting UserStore; Received NULL response!!. secureMode={}, user={}, serviceName={}", isSecureMode, user, _serviceName);
+			} else {
+				String resp = response.hasEntity() ? response.readEntity(String.class) : null;
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("No change in UserStore. secureMode={}, user={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
+							  isSecureMode, user, resp, _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
+				}
+			}
+
+			ret = null;
+		} else if (response.getStatus() == 200) { // OK
+			ret = response.readEntity(RangerUserStore.class);
+		} else if (response.getStatus() == 404) { // NOT_FOUND
+			ret = null;
+
+			LOG.error("Error getting UserStore; service not found. secureMode={}, user={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
+					  isSecureMode, user, response.getStatus(), _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
+
+			String exceptionMsg = response.hasEntity() ? response.readEntity(String.class) : null;
+
+			RangerServiceNotFoundException.throwExceptionIfServiceNotFound(_serviceName, exceptionMsg);
+
+			LOG.warn("Received 404 error code with body:[{}], Ignoring", exceptionMsg);
+		} else {
+			String resp = response.hasEntity() ? response.readEntity(String.class) : null;
+
+			LOG.warn("Error getting UserStore. secureMode={}, user={}, response={}, serviceName={}, lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}",
+					 isSecureMode, user, resp, _serviceName, lastKnownUserStoreVersion, lastActivationTimeInMillis);
+
+			ret = null;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAdminjersey2RESTClient.getUserStoreIfUpdated(lastKnownUserStoreVersion={}, lastActivationTimeInMillis={}): ret={}", lastKnownUserStoreVersion, lastActivationTimeInMillis, ret);
+		}
+
+		return ret;
 	}
 
 	// We get date from the policy manager as unix long!  This deserializer exists to deal with it.  Remove this class once we start send date/time per RFC 3339

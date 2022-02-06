@@ -786,7 +786,7 @@ public class RangerAdminRESTClient extends AbstractRangerAdminClient {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Checking UserStore updated as user : " + user);
 			}
-			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_SERCURE_GET_USERSTORE + serviceNameUrlParam;
+			String relativeURL = RangerRESTUtils.REST_URL_SERVICE_GET_USERSTORE + serviceNameUrlParam;
 			response = restClient.get(relativeURL, queryParams);
 		}
 
