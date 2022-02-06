@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -85,5 +86,104 @@ public class RangerRequestExprResolver {
         Matcher matcher = PATTERN.matcher(str);
 
         return matcher.find();
+    }
+
+    public static boolean hasUserAttributeInExpression(String str) {
+        boolean ret = false;
+        Matcher matcher = PATTERN.matcher(str);
+
+        while (matcher.find()) {
+            String expr = matcher.group(REGEX_GROUP_EXPR);
+
+            if (RangerRequestScriptEvaluator.hasUserAttributeReference(expr)) {
+                ret = true;
+
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    public static boolean hasGroupAttributeInExpression(String str) {
+        boolean ret     = false;
+        Matcher matcher = PATTERN.matcher(str);
+
+        while (matcher.find()) {
+            String expr = matcher.group(REGEX_GROUP_EXPR);
+
+            if (RangerRequestScriptEvaluator.hasGroupAttributeReference(expr)) {
+                ret = true;
+
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    public static boolean hasUserGroupAttributeInExpression(String str) {
+        boolean ret     = false;
+        Matcher matcher = PATTERN.matcher(str);
+
+        while (matcher.find()) {
+            String expr = matcher.group(REGEX_GROUP_EXPR);
+
+            if (RangerRequestScriptEvaluator.hasUserGroupAttributeReference(expr)) {
+                ret = true;
+
+                break;
+            }
+        }
+
+        return ret;
+    }
+
+    public static boolean hasUserAttributeInExpression(Collection<String> values) {
+        boolean ret = false;
+
+        if (values != null) {
+            for (String value : values) {
+                if (hasUserAttributeInExpression(value)) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public static boolean hasGroupAttributeInExpression(Collection<String> values) {
+        boolean ret = false;
+
+        if (values != null) {
+            for (String value : values) {
+                if (hasGroupAttributeInExpression(value)) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    public static boolean hasUserGroupAttributeInExpression(Collection<String> values) {
+        boolean ret = false;
+
+        if (values != null) {
+            for (String value : values) {
+                if (hasUserGroupAttributeInExpression(value)) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
     }
 }

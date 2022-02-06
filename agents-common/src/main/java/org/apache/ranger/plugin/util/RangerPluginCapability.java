@@ -69,7 +69,8 @@ public class RangerPluginCapability {
         RANGER_PLUGIN_CAPABILITY_CHAINED_PLUGINS("Chained Plugins"),
         RANGER_PLUGIN_CAPABILITY_SUPERUSER_PERMISSIONS("Super-user Permissions"),
         RANGER_PLUGIN_CAPABILITY_USERSTORE_DOWNLOAD("UserStore Download"),
-        RANGER_PLUGIN_CAPABILITY_AUDIT_POLICY("Audit Policy");
+        RANGER_PLUGIN_CAPABILITY_AUDIT_POLICY("Audit Policy"),
+        RANGER_PLUGIN_CAPABILITY_UGT_ATTRIBUTES_IN_POLICY("User/group/tag attributes in policy");
 
         private final String name;
         RangerPluginFeature(String name) {

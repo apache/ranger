@@ -31,6 +31,8 @@ import org.apache.ranger.audit.provider.StandAloneAuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAuditConfig;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.plugin.contextenricher.RangerAdminUserStoreRetriever;
+import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
@@ -68,6 +70,8 @@ public class RangerBasePlugin {
 	private       RangerAccessResultProcessor resultProcessor;
 	private       RangerRoles                 roles;
 	private final List<RangerChainedPlugin>   chainedPlugins;
+	private final boolean                     enableImplicitUserStoreEnricher;
+	private       boolean                     isUserStoreEnricherAddedImplcitly = false;
 
 
 	public RangerBasePlugin(String serviceType, String appId) {
@@ -95,6 +99,8 @@ public class RangerBasePlugin {
 		setServiceAdmins(serviceAdmins);
 
 		RangerRequestScriptEvaluator.init(pluginConfig);
+
+		this.enableImplicitUserStoreEnricher = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".enable.implicit.userstore.enricher", false);
 
 		this.chainedPlugins = initChainedPlugins();
 	}
@@ -252,6 +258,18 @@ public class RangerBasePlugin {
 	public void setPolicies(ServicePolicies policies) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> setPolicies(" + policies + ")");
+		}
+
+		if (enableImplicitUserStoreEnricher && policies != null && !ServiceDefUtil.isUserStoreEnricherPresent(policies)) {
+			String retrieverClassName = getConfig().get(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, RangerAdminUserStoreRetriever.class.getCanonicalName());
+			String retrieverPollIntMs = getConfig().get(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, Integer.toString(60 * 1000));
+
+			// in case of delta, policies will only have changes; hence add userStoreEnricher if it was implicitly added previous calls to setPolicies()
+			if (RangerPolicyDeltaUtil.hasPolicyDeltas(policies) == Boolean.TRUE && isUserStoreEnricherAddedImplcitly) {
+				ServiceDefUtil.addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
+			} else {
+				isUserStoreEnricherAddedImplcitly = ServiceDefUtil.addUserStoreEnricherIfNeeded(policies, retrieverClassName, retrieverPollIntMs);
+			}
 		}
 
 		// guard against catastrophic failure during policy engine Initialization or
@@ -991,6 +1009,31 @@ public class RangerBasePlugin {
 				}
 			}
 		}
+		return ret;
+	}
+
+	public RangerUserStoreEnricher getUserStoreEnricher() {
+		RangerUserStoreEnricher ret         = null;
+		RangerAuthContext       authContext = getCurrentRangerAuthContext();
+
+		if (authContext != null) {
+			Map<RangerContextEnricher, Object> contextEnricherMap = authContext.getRequestContextEnrichers();
+
+			if (MapUtils.isNotEmpty(contextEnricherMap)) {
+				Set<RangerContextEnricher> contextEnrichers = contextEnricherMap.keySet();
+
+				for (RangerContextEnricher enricher : contextEnrichers) {
+					if (enricher instanceof RangerUserStoreEnricher) {
+						ret = (RangerUserStoreEnricher) enricher;
+
+						ret.getRangerUserStore();
+
+						break;
+					}
+				}
+			}
+		}
+
 		return ret;
 	}
 

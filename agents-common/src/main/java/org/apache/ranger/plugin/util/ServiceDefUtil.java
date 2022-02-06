@@ -23,14 +23,26 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
+import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.util.ServicePolicies.SecurityZoneInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -41,6 +53,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class ServiceDefUtil {
+    private static final Logger LOG = LoggerFactory.getLogger(ServiceDefUtil.class);
+
+    private static final String USER_STORE_ENRICHER = RangerUserStoreEnricher.class.getCanonicalName();
 
     public static boolean getOption_enableDenyAndExceptionsInPolicies(RangerServiceDef serviceDef, RangerPluginContext pluginContext) {
         boolean ret = false;
@@ -97,7 +112,7 @@ public class ServiceDefUtil {
         return ret;
     }
 
-    public static Integer getLeafResourceLevel(RangerServiceDef serviceDef, Map<String, RangerPolicy.RangerPolicyResource> policyResource) {
+    public static Integer getLeafResourceLevel(RangerServiceDef serviceDef, Map<String, RangerPolicyResource> policyResource) {
         Integer ret = null;
 
         RangerResourceDef resourceDef = getLeafResourceDef(serviceDef, policyResource);
@@ -109,11 +124,11 @@ public class ServiceDefUtil {
         return ret;
     }
 
-    public static RangerResourceDef getLeafResourceDef(RangerServiceDef serviceDef, Map<String, RangerPolicy.RangerPolicyResource> policyResource) {
+    public static RangerResourceDef getLeafResourceDef(RangerServiceDef serviceDef, Map<String, RangerPolicyResource> policyResource) {
         RangerResourceDef ret = null;
 
         if(serviceDef != null && policyResource != null) {
-            for(Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : policyResource.entrySet()) {
+            for(Map.Entry<String, RangerPolicyResource> entry : policyResource.entrySet()) {
                 if (!isEmpty(entry.getValue())) {
                     String            resource    = entry.getKey();
                     RangerResourceDef resourceDef = ServiceDefUtil.getResourceDef(serviceDef, resource);
@@ -150,7 +165,7 @@ public class ServiceDefUtil {
         return ret;
     }
 
-    public static boolean isEmpty(RangerPolicy.RangerPolicyResource policyResource) {
+    public static boolean isEmpty(RangerPolicyResource policyResource) {
         boolean ret = true;
         if (policyResource != null) {
             List<String> resourceValues = policyResource.getValues();
@@ -466,4 +481,230 @@ public class ServiceDefUtil {
         return ret;
     }
 
+    public static boolean isUserStoreEnricherPresent(ServicePolicies policies) {
+        boolean                        ret          = false;
+        RangerServiceDef               serviceDef   = policies != null ? policies.getServiceDef() : null;
+        List<RangerContextEnricherDef> enricherDefs = serviceDef != null ? serviceDef.getContextEnrichers() : null;
+
+        if (enricherDefs != null) {
+            for (RangerContextEnricherDef enricherDef : enricherDefs) {
+                if (StringUtils.equals(enricherDef.getEnricher(), USER_STORE_ENRICHER)) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("isUserStoreEnricherPresent(service={}): ret={}", policies.getServiceName(), ret);
+        }
+
+        return ret;
+    }
+
+    public static boolean addUserStoreEnricher(ServicePolicies policies, String retrieverClassName, String retrieverPollIntMs) {
+        boolean          ret         = false;
+        RangerServiceDef serviceDef = policies != null ? policies.getServiceDef() : null;
+
+        if (serviceDef != null && !isUserStoreEnricherPresent(policies)) {
+            List<RangerContextEnricherDef> enricherDefs = serviceDef.getContextEnrichers();
+
+            if (enricherDefs == null) {
+                enricherDefs = new ArrayList<>();
+            }
+
+            long enricherItemId = enricherDefs.size() + 1;
+
+            for (RangerServiceDef.RangerContextEnricherDef enricherDef : enricherDefs) {
+                if (enricherDef.getItemId() >= enricherItemId) {
+                    enricherItemId = enricherDef.getItemId() + 1;
+                }
+            }
+
+            Map<String, String> enricherOptions = new HashMap<>();
+
+            enricherOptions.put(RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION, retrieverClassName);
+            enricherOptions.put(RangerUserStoreEnricher.USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, retrieverPollIntMs);
+
+            RangerServiceDef.RangerContextEnricherDef userStoreEnricher = new RangerServiceDef.RangerContextEnricherDef(enricherItemId, "userStoreEnricher", USER_STORE_ENRICHER, enricherOptions);
+
+            enricherDefs.add(userStoreEnricher);
+
+            serviceDef.setContextEnrichers(enricherDefs);
+
+            LOG.info("addUserStoreEnricher(serviceName={}): added userStoreEnricher {}", policies.getServiceName(), userStoreEnricher);
+        }
+
+        return ret;
+    }
+
+
+    public static boolean addUserStoreEnricherIfNeeded(ServicePolicies policies, String retrieverClassName, String retrieverPollIntMs) {
+        boolean          ret        = false;
+        RangerServiceDef serviceDef = policies != null ? policies.getServiceDef() : null;
+
+        if (serviceDef != null && !isUserStoreEnricherPresent(policies)) {
+            boolean addEnricher = anyPolicyHasUserGroupAttributeExpression(policies.getPolicies());
+
+            if (!addEnricher) {
+                List<RangerPolicy> tagPolicies = policies.getTagPolicies() != null ? policies.getTagPolicies().getPolicies() : null;
+
+                addEnricher = anyPolicyHasUserGroupAttributeExpression(tagPolicies);
+            }
+
+            if (!addEnricher) {
+                addEnricher = anyPolicyDeltaHasUserGroupAttributeExpression(policies.getPolicyDeltas());
+            }
+
+            if (!addEnricher) {
+                Map<String, SecurityZoneInfo> zoneInfos = policies.getSecurityZones();
+
+                if (zoneInfos != null) {
+                    for (SecurityZoneInfo zoneInfo : zoneInfos.values()) {
+                        addEnricher = anyPolicyHasUserGroupAttributeExpression(zoneInfo.getPolicies());
+
+                        if (!addEnricher) {
+                            addEnricher = anyPolicyDeltaHasUserGroupAttributeExpression(zoneInfo.getPolicyDeltas());
+                        }
+
+                        if (addEnricher) {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            if (addEnricher) {
+                addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
+
+                ret = true;
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean anyPolicyHasUserGroupAttributeExpression(List<RangerPolicy> policies) {
+        boolean ret = false;
+
+        if (policies != null) {
+            for (RangerPolicy policy : policies) {
+                if (policyHasUserGroupAttributeExpression(policy)) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("addUserStoreEnricherIfNeeded(service={}): policy(id={}, name={}) has reference to user/group attribute. Adding enricher", policy.getService(), policy.getId(), policy.getName());
+                    }
+
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean anyPolicyDeltaHasUserGroupAttributeExpression(List<RangerPolicyDelta> policyDeltas) {
+        boolean ret = false;
+
+        if (policyDeltas != null) {
+            for (RangerPolicyDelta policyDelta : policyDeltas) {
+                RangerPolicy policy = policyDelta.getPolicy();
+
+                if (policyHasUserGroupAttributeExpression(policy)) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("addUserStoreEnricherIfNeeded(service={}): policy(id={}, name={}) has reference to user/group attribute. Adding enricher", policy.getService(), policy.getId(), policy.getName());
+                    }
+
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean policyHasUserGroupAttributeExpression(RangerPolicy policy) {
+        boolean ret = false;
+
+        if (policy != null) {
+            if (MapUtils.isNotEmpty(policy.getResources())) {
+                for (RangerPolicyResource resource : policy.getResources().values()) {
+                    ret = RangerRequestExprResolver.hasUserGroupAttributeInExpression(resource.getValues());
+
+                    if (ret) {
+                        break;
+                    }
+                }
+            }
+
+            if (!ret) {
+                ret = anyPolicyConditionHasUserGroupAttributeReference(policy.getConditions());
+            }
+
+            if (!ret) {
+                ret = anyPolicyItemHasUserGroupAttributeExpression(policy.getPolicyItems()) ||
+                      anyPolicyItemHasUserGroupAttributeExpression(policy.getDenyPolicyItems()) ||
+                      anyPolicyItemHasUserGroupAttributeExpression(policy.getAllowExceptions()) ||
+                      anyPolicyItemHasUserGroupAttributeExpression(policy.getDenyExceptions()) ||
+                      anyPolicyItemHasUserGroupAttributeExpression(policy.getDataMaskPolicyItems()) ||
+                      anyPolicyItemHasUserGroupAttributeExpression(policy.getRowFilterPolicyItems());
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean anyPolicyItemHasUserGroupAttributeExpression(List<? extends RangerPolicyItem> policyItems) {
+        boolean ret = false;
+
+        if (policyItems != null) {
+            for (RangerPolicyItem policyItem : policyItems) {
+                if (policyItemHasUserGroupAttributeExpression(policyItem)) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean policyItemHasUserGroupAttributeExpression(RangerPolicyItem policyItem) {
+        boolean ret = false;
+
+        if (policyItem != null) {
+            ret = anyPolicyConditionHasUserGroupAttributeReference(policyItem.getConditions());
+
+            if (!ret && policyItem instanceof RangerRowFilterPolicyItem) {
+                RangerRowFilterPolicyItem rowFilterPolicyItem = (RangerRowFilterPolicyItem) policyItem;
+                RangerPolicyItemRowFilterInfo rowFilterInfo       = rowFilterPolicyItem.getRowFilterInfo();
+                String                        filterExpr          = rowFilterInfo != null ? rowFilterInfo.getFilterExpr() : "";
+
+                ret = RangerRequestExprResolver.hasUserGroupAttributeInExpression(filterExpr);
+            }
+        }
+
+        return ret;
+    }
+
+    private static boolean anyPolicyConditionHasUserGroupAttributeReference(List<RangerPolicyItemCondition> conditions) {
+        boolean ret = false;
+
+        if (conditions != null) {
+            for (RangerPolicyItemCondition condition : conditions) {
+                if (RangerRequestScriptEvaluator.hasUserGroupAttributeReference(condition.getValues())) {
+                    ret = true;
+
+                    break;
+                }
+            }
+        }
+
+        return ret;
+    }
 }

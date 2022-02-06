@@ -66,7 +66,9 @@ public final class RangerRequestScriptEvaluator {
                                                                                  SCRIPT_VAR_TAG + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG + ";" +
                                                                                  SCRIPT_VAR_TAGS + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAGS + ";" +
                                                                                  SCRIPT_VAR_TAGNAMES + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_TAG_NAMES + ";";
-	private static final Pattern JSON_VAR_NAMES_PATTERN = Pattern.compile(getJsonVarNamesPattern());
+	private static final Pattern JSON_VAR_NAMES_PATTERN   = Pattern.compile(getJsonVarNamesPattern());
+	private static final Pattern USER_ATTRIBUTES_PATTERN  = Pattern.compile(getUserAttributesPattern());
+	private static final Pattern GROUP_ATTRIBUTES_PATTERN = Pattern.compile(getGroupAttributesPattern());
 	private static final Character CHAR_QUOTE = '\'';
 	private static final Character CHAR_COMMA = ',';
 
@@ -117,7 +119,43 @@ public final class RangerRequestScriptEvaluator {
 	public static boolean needsJsonCtxEnabled(String script) {
 		Matcher matcher = JSON_VAR_NAMES_PATTERN.matcher(script);
 
-		boolean ret = matcher.matches();
+		boolean ret = matcher.find();
+
+		return ret;
+	}
+
+	public static boolean hasUserAttributeReference(String script) {
+		Matcher matcher = USER_ATTRIBUTES_PATTERN.matcher(script);
+
+		boolean ret = matcher.find();
+
+		return ret;
+	}
+
+	public static boolean hasGroupAttributeReference(String script) {
+		Matcher matcher = GROUP_ATTRIBUTES_PATTERN.matcher(script);
+
+		boolean ret = matcher.find();
+
+		return ret;
+	}
+
+	public static boolean hasUserGroupAttributeReference(String script) {
+		return hasUserAttributeReference(script) || hasGroupAttributeReference(script);
+	}
+
+	public static boolean hasUserGroupAttributeReference(Collection<String> scripts) {
+		boolean ret = false;
+
+		if (scripts != null) {
+			for (String script : scripts) {
+				if (hasUserGroupAttributeReference(script)) {
+					ret = true;
+
+					break;
+				}
+			}
+		}
 
 		return ret;
 	}
@@ -879,7 +917,39 @@ public final class RangerRequestScriptEvaluator {
 		varNames.add(SCRIPT_VAR_URNAMES);
 		varNames.add(SCRIPT_VAR_USER);
 
-		return ".*(" + StringUtils.join(varNames, '|') + ").*";
+		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
+	}
+
+	private static String getUserAttributesPattern() {
+		List<String> varNames = new ArrayList<>();
+
+		varNames.add(SCRIPT_VAR_USER);
+		varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_CSV);
+		varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV);
+
+		varNames.add("userAttrNamesCsv");
+		varNames.add("userAttrNamesCsvQ");
+
+		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
+	}
+
+	private static String getGroupAttributesPattern() {
+		List<String> varNames = new ArrayList<>();
+
+		varNames.add(SCRIPT_VAR_UG);
+		varNames.add(SCRIPT_VAR_UGA);
+
+		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_CSV);
+		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_Q_CSV);
+		varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_CSV);
+		varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV);
+
+		varNames.add("ugAttrCsv");
+		varNames.add("ugAttrCsvQ");
+		varNames.add("ugAttrNamesCsv");
+		varNames.add("ugAttrNamesCsvQ");
+
+		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
 	}
 
 	private static Map<String, String> getMacrosMap() {
