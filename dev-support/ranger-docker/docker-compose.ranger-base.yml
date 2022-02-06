@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile.ranger-base
     image: ranger-base
+    container_name: ranger-base
     networks:
       - ranger
     environment:
@@ -12,3 +13,4 @@ services:
 
 networks:
   ranger:
+    name: rangernw
