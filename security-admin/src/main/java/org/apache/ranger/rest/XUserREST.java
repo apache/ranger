@@ -1299,7 +1299,7 @@ public class XUserREST {
     @Path("/download/{serviceName}")
     @Produces({ "application/xml", "application/json" })
     public RangerUserStore getRangerUserStoreIfUpdated(@PathParam("serviceName") String serviceName,
-                                                       @QueryParam("lastKnownUserStoreVersion") Long lastKnownUserStoreVersion,
+													   @DefaultValue("-1") @QueryParam("lastKnownUserStoreVersion") Long lastKnownUserStoreVersion,
                                                        @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
                                                        @QueryParam("pluginId") String pluginId,
                                                        @DefaultValue("") @QueryParam("clusterName") String clusterName,
@@ -1313,8 +1313,9 @@ public class XUserREST {
         boolean         isValid  = false;
         int             httpCode = HttpServletResponse.SC_OK;
         String          logMsg   = null;
+        Long   downloadedVersion = null;
 
-        try {
+		try {
             bizUtil.failUnauthenticatedIfNotAllowed();
 
             isValid = serviceUtil.isValidService(serviceName, request);
@@ -1326,16 +1327,11 @@ public class XUserREST {
             logMsg   = e.getMessage();
         }
 
-        Long downloadedVersion = null;
-
         if (isValid) {
             try {
                 XXService xService = rangerDaoManager.getXXService().findByName(serviceName);
 
                 if (xService != null) {
-                    if (lastKnownUserStoreVersion == null) {
-                        lastKnownUserStoreVersion = Long.valueOf(-1);
-                    }
 
                     RangerUserStore rangerUserStore = xUserMgr.getRangerUserStore(lastKnownUserStoreVersion);
 
@@ -1377,7 +1373,7 @@ public class XUserREST {
 	@Path("/secure/download/{serviceName}")
 	@Produces({ "application/xml", "application/json" })
 	public RangerUserStore getSecureRangerUserStoreIfUpdated(@PathParam("serviceName") String serviceName,
-															 @QueryParam("lastKnownUserStoreVersion") Long lastKnownUserStoreVersion,
+															 @DefaultValue("-1") @QueryParam("lastKnownUserStoreVersion") Long lastKnownUserStoreVersion,
 															 @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
 															 @QueryParam("pluginId") String pluginId,
 															 @DefaultValue("") @QueryParam("clusterName") String clusterName,
@@ -1402,9 +1398,6 @@ public class XUserREST {
 				isValid = true;
 			}
 			if (isValid) {
-				if (lastKnownUserStoreVersion == null) {
-					lastKnownUserStoreVersion = Long.valueOf(-1);
-				}
 				XXServiceDef xServiceDef = rangerDaoManager.getXXServiceDef().getById(xService.getType());
 				RangerService rangerService = svcStore.getServiceByName(serviceName);
 

@@ -2990,7 +2990,7 @@ public class ServiceREST {
 	@Produces({ "application/json", "application/xml" })
 	public ServicePolicies getServicePoliciesIfUpdated(
 			@PathParam("serviceName") String serviceName,
-			@QueryParam("lastKnownVersion") Long lastKnownVersion,
+			@DefaultValue("-1") @QueryParam("lastKnownVersion") Long lastKnownVersion,
 			@DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
 			@QueryParam("pluginId") String pluginId,
 			@DefaultValue("") @QueryParam("clusterName") String clusterName,
@@ -3023,11 +3023,8 @@ public class ServiceREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg = e.getMessage();
 		}
-		if (isValid) {
-			if (lastKnownVersion == null) {
-				lastKnownVersion = Long.valueOf(-1);
-			}
 
+		if (isValid) {
 			try {
 				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion + ",lastActivationTime=" + lastActivationTime + ")");
@@ -3072,7 +3069,7 @@ public class ServiceREST {
 	@Produces({ "application/json", "application/xml" })
 	public ServicePolicies getSecureServicePoliciesIfUpdated(
 			@PathParam("serviceName") String serviceName,
-			@QueryParam("lastKnownVersion") Long lastKnownVersion,
+			@DefaultValue("-1") @QueryParam("lastKnownVersion") Long lastKnownVersion,
 			@DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
 			@QueryParam("pluginId") String pluginId,
 			@DefaultValue("") @QueryParam("clusterName") String clusterName,
@@ -3105,10 +3102,8 @@ public class ServiceREST {
 			httpCode = HttpServletResponse.SC_BAD_REQUEST;
 			logMsg = e.getMessage();
 		}
+
 		if (isValid) {
-			if (lastKnownVersion == null) {
-				lastKnownVersion = Long.valueOf(-1);
-			}
 			try {
 				if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 					perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getSecureServicePoliciesIfUpdated(serviceName=" + serviceName + ",lastKnownVersion=" + lastKnownVersion + ",lastActivationTime=" + lastActivationTime + ")");
