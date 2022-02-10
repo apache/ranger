@@ -231,7 +231,7 @@
         "accessType":"select","user":"user1","userGroups":[],"requestData":"select from employee.personal;' for user1"
 
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":5}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"ALLOW 'select ssn from employee.personal;' for user1 using EXPIRES_ON tag",
       "request":{

@@ -179,7 +179,7 @@
         "resource":{"elements":{}},
         "accessType":"","user":"hive","userGroups":["public"],"requestData":"show databases for hive"
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":1}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     }
   ,
     {"name":"ALLOW 'use default;' for hive",
@@ -195,7 +195,7 @@
         "resource":{"elements":{"database":"employee"}},
         "accessType":"","user":"hive","userGroups":["public"],"requestData":"use employee for hive"
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":1}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     }
     ,
     {"name":"DENY 'select ssn from employee.personal;' for hive",
