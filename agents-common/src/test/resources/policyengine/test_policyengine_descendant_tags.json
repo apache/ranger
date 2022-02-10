@@ -253,7 +253,7 @@
         "resource":{"elements":{"database":"default"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"'use default;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     }
     ,
     {
@@ -289,7 +289,7 @@
         "resource":{"elements":{}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"'show databases;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     }
   ]
 }

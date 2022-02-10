@@ -436,6 +436,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_descendantTagsDeny() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_descendant_tags_deny.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 
 	@Test
 	public void testPolicyEngine_auditFilterHive() {
