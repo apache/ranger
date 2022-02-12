@@ -24,12 +24,7 @@ COPY ./downloads/postgresql-42.2.16.jre7.jar      /home/ranger/dist/
 
 COPY ./scripts/ranger.sh                         ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-admin-install.properties   ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-hdfs-service-dev_hdfs.py   ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-yarn-service-dev_yarn.py   ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-hive-service-dev_hive.py   ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-hbase-service-dev_hbase.py ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-kafka-service-dev_kafka.py ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-knox-service-dev_knox.py   ${RANGER_SCRIPTS}/
+COPY ./scripts/create-ranger-services.py         ${RANGER_SCRIPTS}/
 
 RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin && \
