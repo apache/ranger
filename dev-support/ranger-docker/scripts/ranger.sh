@@ -37,13 +37,7 @@ if [ "${SETUP_RANGER}" == "true" ]
 then
   # Wait for Ranger Admin to become ready
   sleep 30
-
-  python3 ${RANGER_SCRIPTS}/ranger-hdfs-service-dev_hdfs.py
-  python3 ${RANGER_SCRIPTS}/ranger-yarn-service-dev_yarn.py
-  python3 ${RANGER_SCRIPTS}/ranger-hive-service-dev_hive.py
-  python3 ${RANGER_SCRIPTS}/ranger-hbase-service-dev_hbase.py
-  python3 ${RANGER_SCRIPTS}/ranger-kafka-service-dev_kafka.py
-  python3 ${RANGER_SCRIPTS}/ranger-knox-service-dev_knox.py
+  python3 ${RANGER_SCRIPTS}/create-ranger-services.py
 fi
 
 RANGER_ADMIN_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.server.tomcat.EmbeddedServer" | awk '{print $2}'`
