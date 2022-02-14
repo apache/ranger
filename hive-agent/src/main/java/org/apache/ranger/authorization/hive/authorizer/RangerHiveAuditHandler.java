@@ -42,6 +42,10 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultAuditHandler.class);
 
 	public static final String  ACCESS_TYPE_ROWFILTER = "ROW_FILTER";
+	public static final String  ACCESS_TYPE_INSERT    = "INSERT";
+	public static final String  ACCESS_TYPE_UPDATE    = "UPDATE";
+	public static final String  ACCESS_TYPE_DELETE    = "DELETE";
+	public static final String  ACCESS_TYPE_TRUNCATE  = "TRUNCATE";
 	public static final String  ACTION_TYPE_METADATA_OPERATION = "METADATA OPERATION";
 	public static final String  URL_RESOURCE_TYPE = "url";
 	public static final String CONF_AUDIT_QUERY_REQUEST_SIZE = "xasecure.audit.solr.limit.query.req.size";
@@ -155,6 +159,19 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 				String action = request.getAction();
 				if (ACTION_TYPE_METADATA_OPERATION.equals(action)) {
 					accessType = ACTION_TYPE_METADATA_OPERATION;
+				} else if (HiveAccessType.UPDATE.toString().equalsIgnoreCase(accessType)) {
+					String commandStr = request.getRequestData();
+					if (StringUtils.isNotBlank(commandStr)) {
+						if (StringUtils.startsWithIgnoreCase(commandStr, ACCESS_TYPE_INSERT)) {
+							accessType = ACCESS_TYPE_INSERT;
+						} else if (StringUtils.startsWithIgnoreCase(commandStr, ACCESS_TYPE_UPDATE)) {
+							accessType = ACCESS_TYPE_UPDATE;
+						} else if (StringUtils.startsWithIgnoreCase(commandStr, ACCESS_TYPE_DELETE)) {
+							accessType = ACCESS_TYPE_DELETE;
+						} else if (StringUtils.startsWithIgnoreCase(commandStr, ACCESS_TYPE_TRUNCATE)) {
+							accessType = ACCESS_TYPE_TRUNCATE;
+						}
+					}
 				}
 			}
 
