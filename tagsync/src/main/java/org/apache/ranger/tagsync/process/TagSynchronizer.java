@@ -393,17 +393,13 @@ public class TagSynchronizer {
 			LOG.info("Configured for Kerberos Authentication");
 
 			if (SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
-				LOG.error("Invalid Kerberos principal and/or keytab specified. Failed to initialize Kerberos identity");
-			} else {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Trying to get kerberos identity");
 				}
 
-				UserGroupInformation kerberosIdentity;
-
 				try {
 					UserGroupInformation.loginUserFromKeytab(principal, keytab);
-					kerberosIdentity = UserGroupInformation.getLoginUser();
+					UserGroupInformation kerberosIdentity = UserGroupInformation.getLoginUser();
 					if (kerberosIdentity != null) {
 						props.put(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY, kerberosIdentity.getUserName());
 						if (LOG.isDebugEnabled()) {
@@ -416,6 +412,8 @@ public class TagSynchronizer {
 				} catch (IOException exception) {
 					LOG.error("Failed to get UGI from principal:[" + principal + "], and keytab:[" + keytab + "]", exception);
 				}
+			} else {
+				LOG.error("Invalid Kerberos principal and/or keytab specified. Failed to initialize Kerberos identity");
 			}
 		} else {
 			LOG.info("Not configured for Kerberos Authentication");
