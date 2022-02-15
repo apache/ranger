@@ -1605,9 +1605,9 @@ validateDefaultUsersPassword(){
         then
                 log "[E] validatePassword(). Password for ${1} user cannot be blank"
                 exit 1
-        elif ! [[ ${#2} -ge 8 && "$2" =~ [A-Za-z] && "$2" =~ [0-9] ]] || [[ "${2}" =~ [\"\`\\"'"] ]]
+        elif ! [[ ${#2} -ge 8 && "$2" =~ [A-Z] && "$2" =~ [a-z] && "$2" =~ [0-9] ]] || [[ "${2}" =~ [\"\`\\"'"] ]]
         then
-                log "[E] validatePassword(). ${1} password change failed. Password should be minimum 8 characters with minimum one alphabet and one numeric. Unsupported special characters are \\\`'\""
+                log "[E] validatePassword(). ${1} password change failed. Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric. Unsupported special characters are \\\`'\""
                 exit 1
         fi
 }
