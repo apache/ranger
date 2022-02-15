@@ -3082,7 +3082,7 @@ public class ServiceREST {
 		boolean isValid          = false;
 
 		try {
-			bizUtil.failUnauthenticatedIfNotAllowed();
+			bizUtil.failUnauthenticatedDownloadIfNotAllowed();
 
 			isValid = serviceUtil.isValidateHttpsAuthentication(serviceName, request);
 		} catch (WebApplicationException webException) {

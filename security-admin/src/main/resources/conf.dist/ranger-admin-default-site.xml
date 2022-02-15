@@ -171,6 +171,27 @@
 		<value>5</value>
 	</property>
 
+<!-- # anonymous access -->
+	<property>
+		<name>ranger.admin.allow.unauthenticated.access</name>
+		<value>false</value>
+		<description>
+			Enable unauthenticated access, it can not be used in production environment.
+			See security-applicationContext.xml for more.
+		</description>
+	</property>
+	<property>
+		<name>ranger.admin.allow.unauthenticated.download.access</name>
+		<value>false</value>
+		<description>
+			Enable unauthenticated download access. It enables /service/tags/download, /service/roles/download/ and
+			/service/plugins/policies/download only.
+			In the kerberos environment where the security requirements are not particularly high, it can be used to
+			avoid the trouble of download only ranger plugin accessing ranger via kerberos to download policies and
+			roles. In many cases, this kind of downloading behavior does not need to be protected.
+		</description>
+	</property>
+
 <!-- #hacks -->
 	<property>
 		<name>ranger.allow.hack</name>

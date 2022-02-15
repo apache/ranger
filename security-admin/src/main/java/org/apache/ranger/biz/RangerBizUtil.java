@@ -119,6 +119,7 @@ public class RangerBizUtil {
 
 	String auditDBType = AUDIT_STORE_RDBMS;
 	private final boolean allowUnauthenticatedAccessInSecureEnvironment;
+	private final boolean allowUnauthenticatedDownloadAccessInSecureEnvironment;
 
 	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
 
@@ -126,6 +127,8 @@ public class RangerBizUtil {
 		RangerAdminConfig config = RangerAdminConfig.getInstance();
 
 		allowUnauthenticatedAccessInSecureEnvironment = config.getBoolean("ranger.admin.allow.unauthenticated.access", false);
+		allowUnauthenticatedDownloadAccessInSecureEnvironment = config.getBoolean("ranger.admin.allow.unauthenticated.download.access",
+				allowUnauthenticatedAccessInSecureEnvironment);
 
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty("ranger.user.firstname.maxlength", "16"));
 		maxDisplayNameLength = PropertiesUtil.getIntProperty("ranger.bookmark.name.maxlen", maxDisplayNameLength);
@@ -462,6 +465,17 @@ public class RangerBizUtil {
 			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
 			if (currentUserSession == null) {
 				if (!allowUnauthenticatedAccessInSecureEnvironment) {
+					throw new Exception("Unauthenticated access not allowed");
+				}
+			}
+		}
+	}
+
+	public void failUnauthenticatedDownloadIfNotAllowed() throws Exception {
+		if (UserGroupInformation.isSecurityEnabled()) {
+			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+			if (currentUserSession == null) {
+				if (!allowUnauthenticatedDownloadAccessInSecureEnvironment) {
 					throw new Exception("Unauthenticated access not allowed");
 				}
 			}
