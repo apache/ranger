@@ -156,11 +156,8 @@ public class RangerTagDBRetriever {
 	private boolean initializeTagCache(XXService xService) {
 		boolean ret;
 		try {
-			TagRetrieverServiceResourceContext  serviceResourceContext  = new TagRetrieverServiceResourceContext(xService);
-			TagRetrieverTagDefContext           tagDefContext           = new TagRetrieverTagDefContext(xService);
-
-			serviceResources    = serviceResourceContext.getAllServiceResources();
-			tagDefs             = tagDefContext.getAllTagDefs();
+			serviceResources = new TagRetrieverServiceResourceContext(xService).getAllServiceResources();
+			tagDefs          = new TagRetrieverTagDefContext(xService).getAllTagDefs();
 
 			ret = true;
 		} catch (Exception ex) {
@@ -270,7 +267,6 @@ public class RangerTagDBRetriever {
 					ret.add(serviceResource);
 				}
 			}
-
 			return ret;
 		}
 
@@ -279,6 +275,8 @@ public class RangerTagDBRetriever {
 
 			if (iterServiceResource.hasNext()) {
 				XXServiceResource xServiceResource = iterServiceResource.next();
+
+				iterServiceResource.remove();
 
 				if (xServiceResource != null && StringUtils.isNotEmpty(xServiceResource.getTags())) {
 					ret = new RangerServiceResource();
@@ -330,7 +328,6 @@ public class RangerTagDBRetriever {
 					ret.put(tagDef.getId(), tagDef);
 				}
 			}
-
 			return ret;
 		}
 
@@ -339,6 +336,8 @@ public class RangerTagDBRetriever {
 
 			if (iterTagDef.hasNext()) {
 				XXTagDef xTagDef = iterTagDef.next();
+
+				iterTagDef.remove();
 
 				if (xTagDef != null) {
 					ret = new RangerTagDef();

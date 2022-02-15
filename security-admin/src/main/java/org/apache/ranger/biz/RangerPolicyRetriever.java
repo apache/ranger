@@ -523,6 +523,8 @@ public class RangerPolicyRetriever {
 			if (service != null && iterPolicy != null && iterPolicy.hasNext()) {
 				XXPolicy xPolicy = iterPolicy.next();
 
+				iterPolicy.remove();
+
 				if (xPolicy != null) {
 					String policyText = xPolicy.getPolicyText();
 
