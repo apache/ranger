@@ -1316,7 +1316,7 @@ public class XUserREST {
         Long   downloadedVersion = null;
 
 		try {
-            bizUtil.failUnauthenticatedIfNotAllowed();
+            bizUtil.failUnauthenticatedDownloadIfNotAllowed();
 
             isValid = serviceUtil.isValidService(serviceName, request);
         } catch (WebApplicationException webException) {
