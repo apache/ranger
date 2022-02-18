@@ -28,6 +28,8 @@
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${logdir}/ranger-admin-${hostname}-${user}.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <maxHistory>15</maxHistory>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
   </appender>
   <appender name="sql_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -37,10 +39,12 @@
     <file>${logdir}/ranger_admin_sql.log</file>
     <append>true</append>
     <encoder>
-      <pattern>%d [%t] %-5p %C{6} (%F:%L) %msg%n</pattern>
+      <pattern>%d [%t] %-5p %C{6} \(%F:%L\) %msg%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${logdir}/ranger_admin_sql.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <maxHistory>15</maxHistory>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
   </appender>
   <appender name="perf_appender" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -54,6 +58,8 @@
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${logdir}/ranger_admin_perf.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <maxHistory>15</maxHistory>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
   </appender>
   <appender name="patch_logger" class="ch.qos.logback.core.rolling.RollingFileAppender">
@@ -63,28 +69,30 @@
     <append>true</append>
     <file>${logdir}/ranger_db_patch.log</file>
     <encoder>
-      <pattern>%d [%t] %-5p %C{6} (%F:%L) %msg%n</pattern>
+      <pattern>%d [%t] %-5p %C{6} \(%F:%L\) %msg%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${logdir}/ranger_db_patch.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <maxHistory>15</maxHistory>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
   </appender>
   <logger name="xa" additivity="false" level="info">
     <appender-ref ref="xa_log_appender"/>
   </logger>
-  <logger name="jdbc.connection" additivity="false" level="fatal">
+  <logger name="jdbc.connection" additivity="false" level="error">
     <appender-ref ref="sql_appender"/>
   </logger>
-  <logger name="org.apache.ranger.perf" level="DEBUG">
+  <logger name="org.apache.ranger.perf" additivity="false" level="info">
     <appender-ref ref="perf_appender"/>
   </logger>
-  <logger name="jdbc.audit" additivity="false" level="fatal">
+  <logger name="jdbc.audit" additivity="false" level="error">
     <appender-ref ref="sql_appender"/>
   </logger>
   <logger name="org.apache.ranger.patch" additivity="false" level="info">
     <appender-ref ref="patch_logger"/>
   </logger>
-  <logger name="jdbc.resultset" additivity="false" level="fatal">
+  <logger name="jdbc.resultset" additivity="false" level="error">
     <appender-ref ref="sql_appender"/>
   </logger>
   <logger name="org.springframework" additivity="false" level="warn">
@@ -99,7 +107,7 @@
   <logger name="org.apache.ranger" additivity="false" level="info">
     <appender-ref ref="xa_log_appender"/>
   </logger>
-  <logger name="jdbc.sqlonly" additivity="false" level="fatal">
+  <logger name="jdbc.sqlonly" additivity="false" level="error">
     <appender-ref ref="sql_appender"/>
   </logger>
   <root level="warn">

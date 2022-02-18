@@ -28,6 +28,8 @@
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${kms.log.dir}/kms-audit-${hostname}-${user}.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <maxHistory>15</maxHistory>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
   </appender>
   <appender name="kms-metric" class="ch.qos.logback.core.FileAppender">
@@ -49,6 +51,8 @@
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${kms.log.dir}/ranger-kms-${hostname}-${user}.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <maxHistory>15</maxHistory>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
   </appender>
   <logger name="com.sun.jersey.server.wadl.generators.WadlGeneratorJAXBGrammarGenerator" level="OFF"/>

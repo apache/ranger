@@ -27,6 +27,8 @@
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${logdir}/usersync-${hostname}-${user}.log.%d{'.'yyyy-MM-dd}</fileNamePattern>
+      <maxHistory>15</maxHistory>
+      <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
   </appender>
   <root level="info">
