@@ -16,7 +16,7 @@
   limitations under the License.
 -->
 
-<configuration>
+<configuration scan="true">
   <appender name="logFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <!--See http://logback.qos.ch/manual/appenders.html#RollingFileAppender-->
     <!--and http://logback.qos.ch/manual/appenders.html#TimeBasedRollingPolicy-->
@@ -26,7 +26,7 @@
       <pattern>%d{dd MMM yyyy HH:mm:ss} %5p %c{1} [%t] - %m%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
-      <fileNamePattern>${logdir}/usersync-${hostname}-${user}.log.%d{yyyy-MM-dd}</fileNamePattern>
+      <fileNamePattern>${logdir}/usersync-${hostname}-${user}.log.%d{'.'yyyy-MM-dd}</fileNamePattern>
       <maxHistory>15</maxHistory>
       <cleanHistoryOnStart>true</cleanHistoryOnStart>
     </rollingPolicy>
