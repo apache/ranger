@@ -53,7 +53,7 @@ confDistBaseDirName = 'conf.dist'
 
 outputFileName = 'ranger-tagsync-site.xml'
 installPropFileName = 'install.properties'
-log4jFileName          = 'logback.xml'
+logbackFileName          = 'logback.xml'
 install2xmlMapFileName = 'installprop2xml.properties'
 templateFileName = 'ranger-tagsync-template.xml'
 initdProgramName = 'ranger-tagsync'
@@ -365,7 +365,7 @@ def main():
 		if (not os.path.isdir(dir)):
 			os.makedirs(dir,0o755)
 
-	defFileList = [ log4jFileName ]
+	defFileList = [ logbackFileName ]
 	for defFile in defFileList:
 		fn = join(confDistDirName, defFile)
 		if ( isfile(fn) ):

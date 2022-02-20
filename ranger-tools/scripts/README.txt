@@ -56,7 +56,7 @@ This file describes how to build, setup, configure and run the performance testi
 	
 	Please review the contents of these files and modify to suit your profiling needs.
 
-	Update conf/log4j.properties to specify the filename where perf run results will be written to. Property to update is 'log4j.appender.PERF.File'.
+	Update conf/logback.xml to specify the filename where perf run results will be written to. Property to update is 'log4j.appender.PERF.File'.
 
 6.	Run the tool with the following command
 

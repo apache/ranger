@@ -141,7 +141,7 @@ sso_enabled=$(get_prop 'sso_enabled' $PROPFILE)
 sso_providerurl=$(get_prop 'sso_providerurl' $PROPFILE)
 sso_publickey=$(get_prop 'sso_publickey' $PROPFILE)
 RANGER_ADMIN_LOG_DIR=$(eval echo "$(get_prop 'RANGER_ADMIN_LOG_DIR' $PROPFILE)")
-RANGER_ADMIN_LOG4J_CONF_FILE=$(eval echo "$(get_prop 'RANGER_ADMIN_LOG4J_CONF_FILE' $PROPFILE)")
+RANGER_ADMIN_LOGBACK_CONF_FILE=$(eval echo "$(get_prop 'RANGER_ADMIN_LOGBACK_CONF_FILE' $PROPFILE)")
 RANGER_PID_DIR_PATH=$(eval echo "$(get_prop 'RANGER_PID_DIR_PATH' $PROPFILE)")
 
 spnego_principal=$(get_prop 'spnego_principal' $PROPFILE)
@@ -1491,12 +1491,12 @@ setup_install_files(){
 		fi
 	fi
 
-	if [ -z "${RANGER_ADMIN_LOG4J_CONF_FILE}" ]; then
-		RANGER_ADMIN_LOG4J_CONF_FILE=${WEBAPP_ROOT}/WEB-INF/logback.xml
+	if [ -z "${RANGER_ADMIN_LOGBACK_CONF_FILE}" ]; then
+		RANGER_ADMIN_LOGBACK_CONF_FILE=${WEBAPP_ROOT}/WEB-INF/classes/conf/logback.xml
 	fi
-	echo "export RANGER_ADMIN_LOG4J_CONF_FILE=${RANGER_ADMIN_LOG4J_CONF_FILE}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-log4j-conf-file.sh
-	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-log4j-conf-file.sh
-	log "[I] RANGER ADMIN LOG4J CONF FILE : ${RANGER_ADMIN_LOG4J_CONF_FILE}"
+	echo "export RANGER_ADMIN_LOGBACK_CONF_FILE=${RANGER_ADMIN_LOGBACK_CONF_FILE}" > ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-logback-conf-file.sh
+	chmod a+rx ${WEBAPP_ROOT}/WEB-INF/classes/conf/ranger-admin-env-logback-conf-file.sh
+	log "[I] RANGER ADMIN LOGBACK CONF FILE : ${RANGER_ADMIN_LOGBACK_CONF_FILE}"
 
 	if [ -z "${RANGER_ADMIN_LOG_DIR}" ] || [ ${RANGER_ADMIN_LOG_DIR} == ${XAPOLICYMGR_DIR} ]; then 
                 RANGER_ADMIN_LOG_DIR=${XAPOLICYMGR_DIR}/ews/logs;
