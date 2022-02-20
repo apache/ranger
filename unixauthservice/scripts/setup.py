@@ -57,7 +57,7 @@ defaultCertFileName = 'unixauthservice.jks'
 outputFileName = 'ranger-ugsync-site.xml'
 installPropFileName = 'install.properties'
 defaultSiteXMLFileName = 'ranger-ugsync-default.xml'
-log4jFileName = 'logback.xml'
+logbackFileName = 'logback.xml'
 install2xmlMapFileName = 'installprop2xml.properties'
 templateFileName = 'ranger-ugsync-template.xml'
 initdProgramName = 'ranger-usersync'
@@ -410,7 +410,7 @@ def main():
         if (not os.path.isdir(dir)):
             os.makedirs(dir, 0o750)
 
-    defFileList = [defaultSiteXMLFileName, log4jFileName]
+    defFileList = [defaultSiteXMLFileName, logbackFileName]
     for defFile in defFileList:
         fn = join(confDistDirName, defFile)
         if (isfile(fn)):
