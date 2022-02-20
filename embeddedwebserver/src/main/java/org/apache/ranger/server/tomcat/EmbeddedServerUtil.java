@@ -64,6 +64,19 @@ public class EmbeddedServerUtil {
 		return ret;
 	}
 
+	public static boolean getBooleanConfig(String key, boolean defaultValue) {
+		boolean ret = defaultValue;
+		String retStr = getConfig(key);
+		try {
+			if (retStr != null) {
+				ret = Boolean.parseBoolean(retStr);
+			}
+		} catch (Exception err) {
+			LOG.severe(retStr + " can't be parsed to int. Reason: " + err.toString());
+		}
+		return ret;
+	}
+
 	public static int getIntConfig(String key, int defaultValue) {
 		int ret = defaultValue;
 		String retStr = getConfig(key);

@@ -298,12 +298,27 @@
 
 	<property>
 		<name>ranger.accesslog.dateformat</name>
-		<value>yyyy-MM-dd</value>
+		<value>-yyyy-MM-dd</value>
 	</property>
 
 	<property>
 		<name>ranger.accesslog.pattern</name>
-		<value>%h %l %u %t "%r" %s %b "%{Referer}i" "%{User-Agent}i"</value>
+		<value>%h %l %u %t "%r" %s %b %D "%{Referer}i" "%{User-Agent}i"</value>
+	</property>
+
+	<property>
+		<name>ranger.accesslog.rotate.enabled</name>
+		<value>true</value>
+	</property>
+
+	<property>
+		<name>ranger.accesslog.rotate.max_days</name>
+		<value>15</value>
+	</property>
+
+	<property>
+		<name>ranger.accesslog.rotate.rename_on_rotate</name>
+		<value>15</value>
 	</property>
 
 	<property>

@@ -78,7 +78,9 @@ public class EmbeddedServer {
 	private static final String ACCESS_LOG_PREFIX = "ranger.accesslog.prefix";
 	private static final String ACCESS_LOG_DATE_FORMAT = "ranger.accesslog.dateformat";
 	private static final String ACCESS_LOG_PATTERN = "ranger.accesslog.pattern";
-	private static final String ACCESS_LOG_ROTATE_MAX_DAYS = "ranger.accesslog.rotate.max.days";
+	private static final String ACCESS_LOG_ROTATE_ENABLED = "ranger.accesslog.rotate.enabled";
+	private static final String ACCESS_LOG_ROTATE_MAX_DAYS = "ranger.accesslog.rotate.max_days";
+	private static final String ACCESS_LOG_ROTATE_RENAME_ON_ROTATE = "ranger.accesslog.rotate.rename_on_rotate";
 	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
 	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
 	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLSv1.2";
@@ -193,13 +195,15 @@ public class EmbeddedServer {
 		valve.setAsyncSupported(true);
 		valve.setBuffered(false);
 		valve.setEnabled(true);
-		valve.setPrefix(EmbeddedServerUtil.getConfig(ACCESS_LOG_PREFIX,"access-" + hostName +"-"));
-		valve.setFileDateFormat(EmbeddedServerUtil.getConfig(ACCESS_LOG_DATE_FORMAT, "yyyy-MM-dd.HH"));
+		valve.setPrefix(EmbeddedServerUtil.getConfig(ACCESS_LOG_PREFIX,"access-" + hostName));
+		valve.setFileDateFormat(EmbeddedServerUtil.getConfig(ACCESS_LOG_DATE_FORMAT, "-yyyy-MM-dd.HH"));
 		valve.setDirectory(logDirectory.getAbsolutePath());
 		valve.setSuffix(".log");
+		valve.setRotatable(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ROTATE_ENABLED, true));
 		valve.setMaxDays(EmbeddedServerUtil.getIntConfig(ACCESS_LOG_ROTATE_MAX_DAYS,15));
+		valve.setRenameOnRotate(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ROTATE_RENAME_ON_ROTATE, false));
 
-		String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b" : "%h %l %u %t \"%r\" %s %b";
+		String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b %D" : "%h %l %u %t \"%r\" %s %b %D";
 		String logPattern = EmbeddedServerUtil.getConfig(ACCESS_LOG_PATTERN, defaultAccessLogPattern);
 		valve.setPattern(logPattern);
 
