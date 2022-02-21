@@ -125,17 +125,8 @@ public class RangerKeyStoreProvider extends KeyProvider {
 					|| partitionPasswd.trim().equals("crypted")) {
 				throw new IOException("Partition Password doesn't exists");
 			}
-			dbStore = new RangerKeyStore(daoManager);
-			// generate master key on HSM
-			masterKeyProvider.generateMasterKey(password);
-			try {
-				masterKey = masterKeyProvider.getMasterKey(password)
-						.toCharArray();
-			} catch (Exception ex) {
-				throw new Exception(
-						"Error while getting Safenet KeySecure master key "
-								+ ex);
-			}
+			this.dbStore = new RangerKeyStore(daoManager);
+			this.generateAndGetMasterKey(masterKeyProvider, password);
 		} else if (isKeySecureEnabled) {
 			logger.info("KeySecure is enabled for storing the master key.");
 			getFromJceks(conf, CREDENTIAL_PATH, KEYSECURE_PASSWORD_ALIAS,
@@ -199,21 +190,27 @@ public class RangerKeyStoreProvider extends KeyProvider {
 		} else {
 			logger.info("Ranger KMS Database is enabled for storing master key.");
 			masterKeyProvider = new RangerMasterKey(daoManager);
-			dbStore = new RangerKeyStore(daoManager);
-			masterKeyProvider.generateMasterKey(password);
-			// code to retrieve rangerMasterKey password
-			try {
-				masterKey = masterKeyProvider.getMasterKey(password)
-						.toCharArray();
-			} catch (Exception ex) {
-				throw new Exception("Error while getting Ranger Master key "
-						+ ex);
-			}
+			this.dbStore = new RangerKeyStore(this.daoManager);
+			this.generateAndGetMasterKey(masterKeyProvider, password);
 		}
 		reloadKeys();
 		ReadWriteLock lock = new ReentrantReadWriteLock(true);
 		readLock = lock.readLock();
 	}
+
+    private void generateAndGetMasterKey(final RangerKMSMKI masterKeyProvider, final String password) {
+        try {
+            masterKeyProvider.generateMasterKey(password);
+        } catch (Throwable cause) {
+            throw new RuntimeException("Error while generating Ranger Master key, Error - ", cause);
+        }
+
+        try {
+            this.masterKey = masterKeyProvider.getMasterKey(password).toCharArray();
+        } catch (Throwable cause) {
+            throw new RuntimeException("Error while getting Ranger Master key, Error - ", cause);
+        }
+    }
 
 	public static Configuration getDBKSConf() {
 		Configuration newConfig = getConfiguration(true, DBKS_SITE_XML);
