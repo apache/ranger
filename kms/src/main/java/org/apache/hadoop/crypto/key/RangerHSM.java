@@ -21,7 +21,9 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+import org.bouncycastle.crypto.RuntimeCryptoException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -65,9 +67,10 @@ public class RangerHSM implements RangerKMSMKI {
         passwd = conf.get(PARTITION_PASSWORD);
         partitionName = conf.get(PARTITION_NAME);
         hsm_keystore = conf.get(HSM_TYPE);
+        String errorMsg = StringUtils.EMPTY;
         try {
             ByteArrayInputStream is1 = new ByteArrayInputStream(("tokenlabel:" + partitionName).getBytes());
-            logger.debug("Loading HSM tokenlabel : " + partitionName);
+            logger.debug("Loading HSM : Tokenlabel - '{}', Type - '{}' ", partitionName, hsm_keystore);
             myStore = KeyStore.getInstance("Luna");
             if (myStore == null) {
                 logger.error("Luna not found. Please verify the Ranger KMS HSM configuration setup.");
@@ -75,61 +78,64 @@ public class RangerHSM implements RangerKMSMKI {
 				myStore.load(is1, passwd.toCharArray());
 			}
         } catch (KeyStoreException kse) {
-            logger.error("Unable to create keystore object : " + kse.getMessage());
+            errorMsg = "Unable to create keystore object : " + kse.getMessage();
         } catch (NoSuchAlgorithmException nsae) {
-            logger.error("Unexpected NoSuchAlgorithmException while loading keystore : " + nsae.getMessage());
+            errorMsg = "Unexpected NoSuchAlgorithmException while loading keystore : " + nsae.getMessage();
         } catch (CertificateException e) {
-            logger.error("Unexpected CertificateException while loading keystore : " + e.getMessage());
+            errorMsg = "Unexpected CertificateException while loading keystore : " + e.getMessage();
         } catch (IOException e) {
-            logger.error("Unexpected IOException while loading keystore : " + e.getMessage());
+            errorMsg = "Unexpected IOException while loading keystore : " + e.getMessage();
+        }
+
+        if (StringUtils.isNotEmpty(errorMsg)) {
+            throw new RuntimeCryptoException(errorMsg);
         }
     }
 
     @Override
     public boolean generateMasterKey(String password) throws Throwable {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> RangerHSM.generateMasterKey()");
-        }
-        if (myStore != null && myStore.size() < 1) {
+        logger.debug("==> RangerHSM.generateMasterKey()");
+
+        if (!this.myStore.containsAlias(alias)) {
             KeyGenerator keyGen = null;
             SecretKey aesKey = null;
             try {
-                logger.info("Generating AES Master Key for HSM Provider");
+                logger.info("Generating AES Master Key for '{}' HSM Provider", hsm_keystore);
                 keyGen = KeyGenerator.getInstance(MK_CIPHER, hsm_keystore);
                 keyGen.init(MK_KeySize);
                 aesKey = keyGen.generateKey();
                 myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
                 return true;
             } catch (Exception e) {
-                logger.error("generateMasterKey : Exception during Ranger Master Key Generation - " + e.getMessage());
-                return false;
+                logger.error("generateMasterKey : Exception during Ranger Master Key Generation - {}", e.getMessage());
             }
+        } else {
+            logger.info("Master key with alias - '{}' already exists!", alias);
         }
+
+        logger.debug("<== RangerHSM.generateMasterKey()");
+
         return false;
     }
 
     @Override
     public String getMasterKey(String password) throws Throwable {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> RangerHSM.getMasterKey()");
-        }
+        logger.debug("==> RangerHSM.getMasterKey()");
         if (myStore != null) {
             try {
-                if (logger.isDebugEnabled()) {
-                    logger.debug("Searching for Ranger Master Key in Luna Keystore");
-                }
+                logger.debug("Searching for Ranger Master Key in Luna Keystore");
                 boolean result = myStore.containsAlias(alias);
                 if (result == true) {
-                    if (logger.isDebugEnabled()) {
-                        logger.debug("Ranger Master Key is present in Keystore");
-                    }
+                    logger.debug("Ranger Master Key is present in Keystore");
                     SecretKey key = (SecretKey) myStore.getKey(alias, password.toCharArray());
                     return Base64.encode(key.getEncoded());
                 }
             } catch (Exception e) {
-                logger.error("getMasterKey : Exception searching for Ranger Master Key - " + e.getMessage());
+                logger.error("getMasterKey : Exception searching for Ranger Master Key - {} ", e.getMessage());
             }
         }
+        logger.debug("<== RangerHSM.getMasterKey()");
+
         return null;
     }
 
@@ -140,7 +146,7 @@ public class RangerHSM implements RangerKMSMKI {
                 myStore.setKeyEntry(alias, aesKey, password.toCharArray(), (java.security.cert.Certificate[]) null);
                 return true;
             } catch (KeyStoreException e) {
-                logger.error("setMasterKey : Exception while setting Master Key - " + e.getMessage());
+                logger.error("setMasterKey : Exception while setting Master Key, Error - {} ", e.getMessage());
             }
         }
         return false;
