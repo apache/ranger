@@ -48,6 +48,7 @@ import org.apache.hadoop.hdfs.util.ReadOnlyList;
 import org.apache.hadoop.ipc.CallerContext;
 import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.AccessControlException;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
@@ -1060,18 +1061,16 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 	@Override
 	public 	String getAdditionalInfo(RangerAccessRequest request) {
-		StringBuilder 			sb   = null;
 		String        additionalInfo = super.getAdditionalInfo(request);
-		if (additionalInfo == null) {
-			sb = new StringBuilder("");
-		} else {
-			sb = new StringBuilder(additionalInfo);
+		Map addInfoMap = JsonUtils.jsonToMapStringString(additionalInfo);
+		if(addInfoMap == null || addInfoMap.isEmpty()) {
+		      addInfoMap = new HashMap<String,String>();
 		}
 		String accessTypes = getAccessTypesAsString(request);
-		if (accessTypes != null) {
-			sb.append(", \"accessTypes\":[").append(accessTypes).append("]");
+		if (addInfoMap != null && accessTypes != null) {
+			addInfoMap.put("accessTypes", "[" + accessTypes + "]");
 		}
-		return sb.toString();
+		return JsonUtils.mapToJson(addInfoMap);
 	}
 
 	public void logHadoopEvent(String path, FsAction action, boolean accessGranted) {

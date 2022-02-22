@@ -30,6 +30,7 @@ import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
@@ -266,11 +267,12 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		if (StringUtils.isBlank(request.getRemoteIPAddress()) && CollectionUtils.isEmpty(request.getForwardedAddresses())) {
 			return null;
 		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("{\"remote-ip-address\":").append(request.getRemoteIPAddress())
-				.append(", \"forwarded-ip-addresses\":[").append(StringUtils.join(request.getForwardedAddresses(), ", ")).append("]");
+		Map<String,String> addInfomap=new HashMap<String,String>();
+		addInfomap.put("forwarded-ip-addresses", "[" + StringUtils.join(request.getForwardedAddresses(), ", ") + "]");
+		addInfomap.put("remote-ip-address", request.getRemoteIPAddress());
+		String addInfojsonStr = JsonUtils.mapToJson(addInfomap);
+		return addInfojsonStr;
 
-		return sb.toString();
 	}
 
 	private String generateNextAuditEventId() {
