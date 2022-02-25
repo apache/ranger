@@ -24,6 +24,7 @@ import java.io.IOException;
 import java.util.Map;
 
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.apache.solr.common.StringUtils;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.handler.component.ResponseBuilder;
 import org.apache.solr.handler.component.SearchComponent;
@@ -126,12 +127,21 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerSolrAuthorizer.close(Resource)");
 		}
-		try {
-			activatePluginClassLoader();
+		// close() to be forwarded only for authorizer instance
+		boolean isAuthorizer = StringUtils.equals(super.getName(), RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME);
+		if (isAuthorizer) {
 
-			rangerSolrAuthorizerImpl.close();
-		} finally {
-			deactivatePluginClassLoader();
+			try {
+				activatePluginClassLoader();
+
+				rangerSolrAuthorizerImpl.close();
+			} finally {
+				deactivatePluginClassLoader();
+			}
+		} else {
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("RangerSolrAuthorizer.close(): not forwarding for instance '" + super.getName() + "'");
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {
