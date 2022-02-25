@@ -54,18 +54,8 @@
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_${scala.binary.version}</artifactId>
+            <artifactId>kafka-clients</artifactId>
             <version>${kafka.version}</version>
-            <exclusions>
-                <exclusion>
-                   <groupId>io.netty</groupId>
-                   <artifactId>netty-handler</artifactId>
-                </exclusion>
-                <exclusion>
-                   <groupId>io.netty</groupId>
-                   <artifactId>netty-transport-native-epoll</artifactId>
-                </exclusion>
-            </exclusions>
         </dependency>
     </dependencies>
 </project>
