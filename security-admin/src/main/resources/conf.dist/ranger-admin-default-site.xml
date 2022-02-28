@@ -636,4 +636,8 @@
             <name>ranger.tomcat.work.dir</name>
             <value></value>
           </property>
+	<property>
+		<name>ranger.allow.kerberos.auth.login.browser</name>
+		<value>false</value>
+	</property>
 </configuration>
