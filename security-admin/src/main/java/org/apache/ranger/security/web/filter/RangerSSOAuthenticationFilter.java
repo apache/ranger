@@ -251,6 +251,32 @@ public class RangerSSOAuthenticationFilter implements Filter {
 				url = url.replace(RestUtil.LOCAL_LOGIN_URL, "");
 				LOG.warn("There is an active session and if you want local login to ranger, try this on a separate browser");
 				((HttpServletResponse)servletResponse).sendRedirect(url);
+        } else if (!ssoEnabled && ((HttpServletRequest) servletRequest).getRequestURI().contains(RestUtil.LOCAL_LOGIN_URL) && !isAuthenticated() &&
+				( isWebUserAgent(userAgent) || isBrowserAgent(userAgent))) {
+			// if sso is not enabled and request has locallogin then need to redirect user to the login page.
+			String url = ((HttpServletRequest) servletRequest).getRequestURI().replace(RestUtil.LOCAL_LOGIN_URL+"/", "");
+			url = url.replace(RestUtil.LOCAL_LOGIN_URL, "login.jsp");
+			// invalidating session
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Request does not have any authentication and contains local login url redirecting to login page.");
+			}
+			((HttpServletRequest) servletRequest).getSession().invalidate();
+
+			((HttpServletResponse)servletResponse).sendRedirect(url);
+		} else if (!ssoEnabled && !((HttpServletRequest) servletRequest).getRequestURI().contains(RestUtil.LOCAL_LOGIN_URL) && !isAuthenticated() &&
+				( isWebUserAgent(userAgent) || isBrowserAgent(userAgent)) && !isKerberosAuthEnabled()) {
+			// if sso is not enabled and request has is from browser and user is not authenticated and browser kerberos auth is not enabled
+			// then need to redirect user to the login page.
+			String url = ((HttpServletRequest) servletRequest).getRequestURI() ;
+			if (!url.contains("login.jsp")) {
+				url = url + "login.jsp";
+			}
+			// invalidating session
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Request does not have any authentication, redirecting to login page.");
+			}
+			((HttpServletRequest) servletRequest).getSession().invalidate();
+			((HttpServletResponse)servletResponse).sendRedirect(url);
 		}
 		//if sso is not enable or the request is not from browser then proceed further with next filter
 		else {
@@ -576,4 +602,27 @@ public class RangerSSOAuthenticationFilter implements Filter {
                 }
                 return loginURL;
         }
+
+
+    protected boolean isBrowserAgent(String userAgent) {
+        boolean isWeb = false;
+        String agents = PropertiesUtil.getProperty("ranger.krb.browser-useragents-regex", RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT);
+        if (agents == null) {
+            agents = RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT;
+        }
+        String[] browserUserAgents = agents.split(",");
+        if (browserUserAgents.length > 0 && userAgent != null) {
+            for (String ua : browserUserAgents) {
+                if (userAgent.toLowerCase().startsWith(ua.toLowerCase())) {
+                    isWeb = true;
+                    break;
+                }
+            }
+        }
+        return isWeb;
+    }
+
+	protected boolean isKerberosAuthEnabled() {
+		return PropertiesUtil.getBooleanProperty("ranger.allow.kerberos.auth.login.browser", false);
+	}
 }
