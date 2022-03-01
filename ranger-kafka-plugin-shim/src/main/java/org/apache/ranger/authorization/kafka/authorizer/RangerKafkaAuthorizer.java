@@ -69,8 +69,8 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
       rangerKafkaAuthorizerImpl = cls.newInstance();
     } catch (Exception e) {
-      // check what need to be done
       logger.error("Error Enabling RangerKafkaPlugin", e);
+      throw new IllegalStateException("Error Enabling RangerKafkaPlugin", e);
     } finally {
       deactivatePluginClassLoader();
     }

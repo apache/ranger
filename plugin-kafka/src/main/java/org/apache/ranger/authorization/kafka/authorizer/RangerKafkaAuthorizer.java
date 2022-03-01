@@ -208,13 +208,13 @@ public class RangerKafkaAuthorizer implements Authorizer {
             logger.error("Error getting principal.", t);
           }
           rangerPlugin = new RangerBasePlugin("kafka", "kafka");
+          logger.info("Calling plugin.init()");
+          rangerPlugin.init();
+          auditHandler = new RangerKafkaAuditHandler();
+          rangerPlugin.setResultProcessor(auditHandler);
         }
       }
     }
-    logger.info("Calling plugin.init()");
-    rangerPlugin.init();
-    auditHandler = new RangerKafkaAuditHandler();
-    rangerPlugin.setResultProcessor(auditHandler);
   }
 
   @Override
