@@ -21,7 +21,6 @@ package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -297,18 +296,31 @@ public class RangerKafkaAuthorizer implements Authorizer {
   @Override
   public List<? extends CompletionStage<AclCreateResult>> createAcls(AuthorizableRequestContext requestContext, List<AclBinding> aclBindings) {
     logger.error("createAcls is not supported by Ranger for Kafka");
-    return Collections.emptyList();
+
+    return aclBindings.stream()
+        .map(ab -> {
+          CompletableFuture<AclCreateResult> completableFuture = new CompletableFuture<>();
+          completableFuture.completeExceptionally(new UnsupportedOperationException("createAcls is not supported by Ranger for Kafka"));
+          return completableFuture;
+        })
+        .collect(Collectors.toList());
   }
 
   @Override
   public List<? extends CompletionStage<AclDeleteResult>> deleteAcls(AuthorizableRequestContext requestContext, List<AclBindingFilter> aclBindingFilters) {
     logger.error("deleteAcls is not supported by Ranger for Kafka");
-    return Collections.emptyList();
+    return aclBindingFilters.stream()
+        .map(ab -> {
+          CompletableFuture<AclDeleteResult> completableFuture = new CompletableFuture<>();
+          completableFuture.completeExceptionally(new UnsupportedOperationException("deleteAcls is not supported by Ranger for Kafka"));
+          return completableFuture;
+        })
+        .collect(Collectors.toList());
   }
 
   @Override
   public Iterable<AclBinding> acls(AclBindingFilter filter) {
     logger.error("(getting) acls is not supported by Ranger for Kafka");
-    return Collections.emptyList();
+    throw new UnsupportedOperationException("(getting) acls is not supported by Ranger for Kafka");
   }
 }
