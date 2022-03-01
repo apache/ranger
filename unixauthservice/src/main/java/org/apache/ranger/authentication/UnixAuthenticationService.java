@@ -79,6 +79,7 @@ public class UnixAuthenticationService {
 	private String keyStorePath;
 	private String keyStoreType;
 	private List<String> enabledProtocolsList;
+	private List<String> enabledCipherSuiteList;
 	private String keyStorePathPassword;
 	private String trustStorePath;
 	private String trustStorePathPassword;
@@ -227,7 +228,9 @@ public class UnixAuthenticationService {
 		SSLEnabled = (SSLEnabledProp != null &&  (SSLEnabledProp.equalsIgnoreCase("true")));
 		String defaultEnabledProtocols = "TLSv1.2";
 		String enabledProtocols = prop.getProperty("ranger.usersync.https.ssl.enabled.protocols", defaultEnabledProtocols);
+		String enabledCipherSuites = prop.getProperty("ranger.usersync.https.ssl.enabled.cipher.suites", "");
 		enabledProtocolsList=new ArrayList<String>(Arrays.asList(enabledProtocols.toUpperCase().trim().split("\\s*,\\s*")));
+		enabledCipherSuiteList = new ArrayList<String>(Arrays.asList(enabledCipherSuites.toUpperCase().trim().split("\\s*,\\s*")));
 //		LOG.info("Key:" + keyStorePath);
 //		LOG.info("KeyPassword:" + keyStorePathPassword);
 //		LOG.info("TrustStore:" + trustStorePath);
@@ -320,6 +323,23 @@ public class UnixAuthenticationService {
 			
 			if (!allowedProtocols.isEmpty()) {
 				secureSocket.setEnabledProtocols(allowedProtocols.toArray(new String[0]));
+			}
+			String[] enabledCipherSuites = secureSocket.getEnabledCipherSuites();
+			Set<String> allowedCipherSuites = new HashSet<String>();
+			for(String enabledCipherSuite : enabledCipherSuites) {
+				if (enabledCipherSuiteList.contains(enabledCipherSuite)) {
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Enabling CipherSuite : [" + enabledCipherSuite + "]");
+					}
+					allowedCipherSuites.add(enabledCipherSuite);
+				} else {
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Disabling CipherSuite : [" + enabledCipherSuite + "]");
+					}
+				}
+			}
+			if (!allowedCipherSuites.isEmpty()) {
+				secureSocket.setEnabledCipherSuites(allowedCipherSuites.toArray(new String[0]));
 			}
 		}
 		
