@@ -61,7 +61,6 @@ import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParseException;
-import com.sun.jersey.api.client.ClientHandlerException;
 
 public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
@@ -1192,7 +1191,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		} else if (isLastUrl) {
 			LOG.error("Failed to communicate with all Ranger Admin's URL's : [ " + configURLs + " ]");
 
-			throw new ClientHandlerException("Failed to communicate with all Ranger Admin's URL : [ "+ configURLs+" ]", ex);
+			throw new ProcessingException("Failed to communicate with all Ranger Admin's URL : [ "+ configURLs+" ]", ex);
 		}
 
 		return ret;
