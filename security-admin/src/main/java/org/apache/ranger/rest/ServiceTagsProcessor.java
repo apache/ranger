@@ -175,7 +175,9 @@ public class ServiceTagsProcessor {
 						perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.createOrUpdate_service_resource(" + resourceId + ")");
 					}
 					if (existing == null) {
-
+						if (StringUtils.isBlank(resource.getServiceName())) {
+							resource.setServiceName(serviceTags.getServiceName());
+						}
 						resourceInStore = tagStore.createServiceResource(resource);
 
 					} else if (StringUtils.isEmpty(resource.getServiceName()) || MapUtils.isEmpty(resource.getResourceElements())) {
