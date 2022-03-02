@@ -212,8 +212,6 @@ public class RangerServiceTagsDeltaUtil {
                 serviceResource.setUpdatedBy(null);
                 serviceResource.setUpdateTime(null);
                 serviceResource.setGuid(null);
-
-                serviceResource.setServiceName(null);
             }
         }
     }
