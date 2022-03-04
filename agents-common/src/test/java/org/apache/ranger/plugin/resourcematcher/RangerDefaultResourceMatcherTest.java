@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.junit.Test;
 
@@ -69,15 +70,22 @@ public class RangerDefaultResourceMatcherTest {
 
     static class MatcherWrapper extends RangerDefaultResourceMatcher {
         MatcherWrapper(String policyValue, boolean exclude) {
+            RangerResourceDef   resourceDef    = new RangerResourceDef();
+            Map<String, String> matcherOptions = new HashMap<>();
+
+            matcherOptions.put(OPTION_WILD_CARD, Boolean.toString(policyValue.contains(WILDCARD_ASTERISK)));
+            matcherOptions.put(OPTION_IGNORE_CASE, Boolean.toString(false));
+
+            resourceDef.setMatcherOptions(matcherOptions);
+
+            setResourceDef(resourceDef);
+
             RangerPolicy.RangerPolicyResource policyResource = new RangerPolicy.RangerPolicyResource();
             policyResource.setIsExcludes(exclude);
             policyResource.setValues(Lists.newArrayList(policyValue));
             setPolicyResource(policyResource);
 
-            if (policyValue.contains(WILDCARD_ASTERISK)) {
-                this.optWildCard = true;
-            }
-            this.optIgnoreCase = false;
+
             init();
         }
     }
