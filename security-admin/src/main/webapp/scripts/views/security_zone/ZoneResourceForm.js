@@ -330,7 +330,6 @@ define(function(require) {
                         closeOnSelect: true,
                         tags: true,
                         multiple: true,
-                        minimumInputLength: 1,
                         width: '220px',
                         tokenSeparators: [" "],
                         initSelection: function(element, callback) {
