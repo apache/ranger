@@ -21,9 +21,11 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,7 +38,8 @@ public class RangerURLResourceMatcherTest {
             { "hdfs://hostname:8020/app/warehouse/data/emp.db",    "hdfs://hostname:8020/app/warehouse/*", true, true, true, "user" },
             { "hdfs://hostname:8020/app/warehouse/data/emp.db",     "hdfs://hostname:8020/*",     true,  true,  true,  "user" },
             { "hdfs://hostname:8020/app/warehouse/data/emp.db",     "hdfs://hostname:8020/app/*", true,  false, true,  "user" },
-            { "hdfs://hostname:8020/app/warehouse/data/emp.db",     "hdfs://hostname:8020/app/*", false, false, true,  "user" },
+            { "hdfs://hostname:8020/app/warehouse/data/emp.db",     "hdfs://hostname:8020/app/*", false, false, false, "user" }, // simple string match
+            { "hdfs://hostname:8020/app/*",                         "hdfs://hostname:8020/app/*", false, false, true,  "user" }, // simple string match
             { "hdfs://hostname:8020/app/warehouse/data/emp.db",     "hdfs://hostname:8020/app/",  true,  true,  true,  "user" },
             { "s3a://app/warehouse/data/emp.db",                    "s3a://app/*",                true,  true,  true,  "user" },
             { "adls:/app/warehouse/data/emp.db",                    "adls://app/*",               true,  true,  false, "user" },
@@ -74,7 +77,12 @@ public class RangerURLResourceMatcherTest {
 
     static class MatcherWrapper extends RangerURLResourceMatcher {
         MatcherWrapper(String policyValue, boolean optWildcard, boolean isRecursive) {
-            super.optWildCard = optWildcard;
+            RangerResourceDef   resourceDef    = new RangerResourceDef();
+            Map<String, String> matcherOptions = Collections.singletonMap(OPTION_WILD_CARD, Boolean.toString(optWildcard));
+
+            resourceDef.setMatcherOptions(matcherOptions);
+
+            setResourceDef(resourceDef);
 
             RangerPolicy.RangerPolicyResource policyResource = new RangerPolicy.RangerPolicyResource();
             policyResource.setIsRecursive(isRecursive);

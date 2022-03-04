@@ -21,10 +21,12 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.junit.Test;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -49,6 +51,8 @@ public class RangerPathResourceMatcherTest {
             { "/app/hbase/test.tbl",  "/app/hive/test*",   true, false, false, "user" },
             { "/app/hive/test.db",    "/app/hive/test.db", true, false, true, "user" },
             { "/app/hbase/test.tbl",  "/app/hive/test.db", true, false, false, "user" },
+            { "app/hive/*",           "app/hive/*",        false, false, true, "user" },  // simple string match
+            { "app/hive/test.db",     "app/hive/*",        false, false, false, "user" }, // simple string match
     };
 
     Object[][] dataForSelfOrChildScope = {
@@ -126,7 +130,12 @@ public class RangerPathResourceMatcherTest {
 
     static class MatcherWrapper extends RangerPathResourceMatcher {
         MatcherWrapper(String policyValue, boolean optWildcard, boolean isRecursive) {
-            super.optWildCard = optWildcard;
+            RangerResourceDef   resourceDef    = new RangerResourceDef();
+            Map<String, String> matcherOptions = Collections.singletonMap(OPTION_WILD_CARD, Boolean.toString(optWildcard));
+
+            resourceDef.setMatcherOptions(matcherOptions);
+
+            setResourceDef(resourceDef);
 
             RangerPolicy.RangerPolicyResource policyResource = new RangerPolicy.RangerPolicyResource();
             policyResource.setIsRecursive(isRecursive);
@@ -134,7 +143,7 @@ public class RangerPathResourceMatcherTest {
             setPolicyResource(policyResource);
 
             init();
-        }
+       }
     }
 
 }
