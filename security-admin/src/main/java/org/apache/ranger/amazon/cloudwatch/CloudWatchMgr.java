@@ -22,7 +22,7 @@ package org.apache.ranger.amazon.cloudwatch;
 import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination.CONFIG_PREFIX;
 import static org.apache.ranger.audit.destination.AmazonCloudWatchAuditDestination.PROP_REGION;
 
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.PropertiesUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

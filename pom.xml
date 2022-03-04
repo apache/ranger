@@ -233,7 +233,7 @@
         <joda.time.version>2.10.6</joda.time.version>
         <jsonsmart.version>2.3.1</jsonsmart.version>
         <nimbus-jose-jwt.version>8.22.1</nimbus-jose-jwt.version>
-        <com.amazonaws.aws-java-sdk-bom.version>1.12.125</com.amazonaws.aws-java-sdk-bom.version>
+        <aws-java-sdk.version>1.12.125</aws-java-sdk.version>
 
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
