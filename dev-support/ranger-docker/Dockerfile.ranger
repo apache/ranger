@@ -36,4 +36,6 @@ RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory
     mkdir -p /usr/share/java/ && \
     mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql.jar
 
+USER ranger
+
 ENTRYPOINT [ "/home/ranger/scripts/ranger.sh" ]

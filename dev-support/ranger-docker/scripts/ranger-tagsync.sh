@@ -31,7 +31,7 @@ then
   touch ${RANGER_HOME}/.setupDone
 fi
 
-su -c "cd ${RANGER_HOME}/tagsync && ./ranger-tagsync-services.sh start" ranger
+cd ${RANGER_HOME}/tagsync && ./ranger-tagsync-services.sh start
 
 RANGER_TAGSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.tagsync.process.TagSynchronizer" | awk '{print $2}'`
 

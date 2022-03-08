@@ -31,6 +31,15 @@ RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-usersync.tar.gz --direct
     mkdir -p /var/run/ranger && \
     mkdir -p /var/log/ranger/usersync && \
     ln -s /usr/bin/python3 /usr/bin/python && \
-    chown -R ranger:ranger ${RANGER_HOME}/usersync/ /var/run/ranger/ /var/log/ranger/
+    mkdir -p /etc/ranger && \
+    touch /etc/init.d/ranger-usersync && \
+    ln -s /etc/init.d/ranger-usersync /etc/rc2.d/S99ranger-usersync && \
+    ln -s /etc/init.d/ranger-usersync /etc/rc2.d/K00ranger-usersync && \
+    ln -s /etc/init.d/ranger-usersync /etc/rc3.d/S99ranger-usersync && \
+    ln -s /etc/init.d/ranger-usersync /etc/rc3.d/K00ranger-usersync && \
+    ln -s ${RANGER_HOME}/usersync/ranger-usersync-services.sh /usr/bin/ranger-usersync && \
+    chown -R ranger:ranger ${RANGER_HOME}/usersync/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-usersync
+
+USER ranger
 
 ENTRYPOINT [ "/home/ranger/scripts/ranger-usersync.sh" ]

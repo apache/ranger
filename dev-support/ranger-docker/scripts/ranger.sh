@@ -26,12 +26,12 @@ fi
 
 if [ "${SETUP_RANGER}" == "true" ]
 then
-  su -c "cd ${RANGER_HOME}/admin && ./setup.sh" ranger
+  cd ${RANGER_HOME}/admin && ./setup.sh
 
   touch ${RANGER_HOME}/.setupDone
 fi
 
-su -c "cd ${RANGER_HOME}/admin && ./ews/ranger-admin-services.sh start" ranger
+cd ${RANGER_HOME}/admin && ./ews/ranger-admin-services.sh start
 
 if [ "${SETUP_RANGER}" == "true" ]
 then

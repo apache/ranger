@@ -31,7 +31,7 @@ then
   touch ${RANGER_HOME}/.setupDone
 fi
 
-su -c "cd ${RANGER_HOME}/usersync && ./start.sh" ranger
+cd ${RANGER_HOME}/usersync && ./start.sh
 
 RANGER_USERSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.authentication.UnixAuthenticationService" | awk '{print $2}'`
 
