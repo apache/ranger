@@ -343,15 +343,13 @@ def initializeInitD(ownerName):
                 for prefix in initPrefixList:
                     scriptFn = prefix + initdProgramName
                     scriptName = join(rcDir, scriptFn)
-                    if isfile(scriptName) or os.path.islink(scriptName):
-                        os.remove(scriptName)
-                    os.symlink(initdFn, scriptName)
+                    if not (isfile(scriptName) or os.path.islink(scriptName)):
+                        os.symlink(initdFn, scriptName)
         userSyncScriptName = "ranger-usersync-services.sh"
         localScriptName = os.path.abspath(join(RANGER_USERSYNC_HOME, userSyncScriptName))
         ubinScriptName = join("/usr/bin", initdProgramName)
-        if isfile(ubinScriptName) or os.path.islink(ubinScriptName):
-            os.remove(ubinScriptName)
-        os.symlink(localScriptName, ubinScriptName)
+        if not (isfile(ubinScriptName) or os.path.islink(ubinScriptName)):
+            os.symlink(localScriptName, ubinScriptName)
 
 
 def createJavaKeystoreForSSL(fn, passwd):
@@ -574,15 +572,21 @@ def main():
                 os.chmod(fn, 0o750)
 
     if isfile(nativeAuthProgramName):
-        os.chown(nativeAuthProgramName, rootOwnerId, groupId)
-        os.chmod(nativeAuthProgramName, 0o750)
+        try:
+                os.chown(nativeAuthProgramName, rootOwnerId, groupId)
+                os.chmod(nativeAuthProgramName, 0o750)
+        except PermissionError:
+                print("WARNING: chmod(4550), chown(%s:%s) failed for Unix Authentication Program (%s) " % ("root", groupName, nativeAuthProgramName))
     else:
         print("WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
         nativeAuthProgramName, "root", groupName))
 
     if isfile(pamAuthProgramName):
-        os.chown(pamAuthProgramName, rootOwnerId, groupId)
-        os.chmod(pamAuthProgramName, 0o750)
+        try:
+                os.chown(pamAuthProgramName, rootOwnerId, groupId)
+                os.chmod(pamAuthProgramName, 0o750)
+        except PermissionError:
+                print("WARNING: chmod(0o750), chown(%s:%s) failed for Unix Authentication Program (%s) " % ("root", groupName, pamAuthProgramName))
     else:
         print("WARNING: Unix Authentication Program (%s) is not available for setting chmod(4550), chown(%s:%s) " % (
         pamAuthProgramName, "root", groupName))

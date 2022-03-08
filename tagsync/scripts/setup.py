@@ -318,16 +318,14 @@ def initializeInitD():
 				for  prefix in initPrefixList:
 					scriptFn = prefix + initdProgramName
 					scriptName = join(rcDir, scriptFn)
-					if isfile(scriptName):
-						os.remove(scriptName)
+					if not (isfile(scriptName) or os.path.islink(scriptName)):
+						os.symlink(initdFn,scriptName)
 					#print "+ ln -sf %s %s" % (initdFn, scriptName)
-					os.symlink(initdFn,scriptName)
 		tagSyncScriptName = "ranger-tagsync-services.sh"
 		localScriptName = os.path.abspath(join(installPropDirName,tagSyncScriptName))
 		ubinScriptName = join("/usr/bin",tagSyncScriptName)
-		if isfile(ubinScriptName) or os.path.islink(ubinScriptName):
-			os.remove(ubinScriptName)
-		os.symlink(localScriptName,ubinScriptName)
+		if not (isfile(ubinScriptName) or os.path.islink(ubinScriptName)):
+			os.symlink(localScriptName,ubinScriptName)
 
 def write_env_files(exp_var_name, log_path, file_name):
         final_path = "{0}/{1}".format(confBaseDirName,file_name)
