@@ -55,6 +55,12 @@ public class RangerKafkaAuthorizer implements Authorizer {
     logger.debug("<== RangerKafkaAuthorizer.RangerKafkaAuthorizer()");
   }
 
+  private static String toString(AuthorizableRequestContext requestContext) {
+    return requestContext == null ? null :
+        String.format("AuthorizableRequestContext{principal=%s, clientAddress=%s, clientId=%s}",
+            requestContext.principal(), requestContext.clientAddress(), requestContext.clientId());
+  }
+
   private void init() {
     logger.debug("==> RangerKafkaAuthorizer.init()");
 
@@ -124,7 +130,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
 
   @Override
   public List<AuthorizationResult> authorize(AuthorizableRequestContext requestContext, List<Action> actions) {
-    logger.debug("==> RangerKafkaAuthorizer.authorize(AuthorizableRequestContext={}, List<Action>={})", requestContext, actions);
+    logger.debug("==> RangerKafkaAuthorizer.authorize(AuthorizableRequestContext={}, List<Action>={})", toString(requestContext), actions);
 
     List<AuthorizationResult> ret;
 

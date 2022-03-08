@@ -172,6 +172,12 @@ public class RangerKafkaAuthorizer implements Authorizer {
         .collect(Collectors.toList());
   }
 
+  private static String toString(AuthorizableRequestContext requestContext) {
+    return requestContext == null ? null :
+        String.format("AuthorizableRequestContext{principal=%s, clientAddress=%s, clientId=%s}",
+            requestContext.principal(), requestContext.clientAddress(), requestContext.clientId());
+  }
+
   @Override
   public void close() {
     logger.info("close() called on authorizer.");
@@ -252,14 +258,14 @@ public class RangerKafkaAuthorizer implements Authorizer {
     for (Action action : actions) {
       String accessType = mapToRangerAccessType(action.operation());
       if (accessType == null) {
-        MiscUtil.logErrorMessageByInterval(logger, "Unsupported access type, requestContext=" + requestContext + ", actions=" + actions +
-            ", operation=" + action.operation());
+        MiscUtil.logErrorMessageByInterval(logger, "Unsupported access type, requestContext=" + toString(requestContext) +
+            ", actions=" + actions + ", operation=" + action.operation());
         return denyAll(actions);
       }
       String resourceTypeKey = mapToResourceType(action.resourcePattern().resourceType());
       if (resourceTypeKey == null) {
-        MiscUtil.logErrorMessageByInterval(logger, "Unsupported resource type, requestContext=" + requestContext + ", actions=" + actions +
-            ", resourceType=" + action.resourcePattern().resourceType());
+        MiscUtil.logErrorMessageByInterval(logger, "Unsupported resource type, requestContext=" + toString(requestContext) +
+            ", actions=" + actions + ", resourceType=" + action.resourcePattern().resourceType());
         return denyAll(actions);
       }
 
@@ -286,7 +292,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
     try {
       return rangerPlugin.isAccessAllowed(rangerRequests);
     } catch (Throwable t) {
-      logger.error("Error while calling isAccessAllowed(). requests=" + rangerRequests, t);
+      logger.error("Error while calling isAccessAllowed(). requests={}", rangerRequests, t);
       return null;
     } finally {
       auditHandler.flushAudit();
