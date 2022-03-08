@@ -216,7 +216,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
             return;
         }
 
-        if ( System.currentTimeMillis() > nextRollOverTime.getTime() ) {
+        if ( System.currentTimeMillis() >= nextRollOverTime.getTime() ) {
             logger.info("Closing file. Rolling over. name=" + auditProviderName
                     + ", fileName=" + currentFileName);
             try {
