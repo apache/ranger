@@ -934,7 +934,6 @@ define(function(require) {
 		$el.parents('body').find('.datepicker').hide();
 		input.datepicker({
 			autoclose : true,
-                        dateFormat : 'yy-mm-dd',
 		}).on('changeDate', function(ev) {
 			callback(ev.date);
 			input.datepicker("hide");
