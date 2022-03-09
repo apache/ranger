@@ -4258,6 +4258,9 @@ ul.tagit li.tagit-new {
     width: 110%;
     margin-bottom: -7px;
 }
+.ui-datepicker.ui-widget.ui-widget-content {
+  width: 20%;
+}
 /*.field-sameLevel10 .select2-container-multi .select2-choices,
 .field-sameLevel30table .select2-container-multi .select2-choices,
 .field-sameLevel20database .select2-container-multi .select2-choices,

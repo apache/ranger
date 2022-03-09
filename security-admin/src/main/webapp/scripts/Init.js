@@ -59,7 +59,7 @@ require.config({
             exports: 'Globalize'
         },
         'bootstrap-datepicker': {
-            deps: ['bootstrap']
+            deps: ['jquery-ui', 'bootstrap']
         },
 
         'bootstrap-notify': {
