@@ -95,6 +95,114 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 	}
 
 	@Test
+	public void testUserSearchFilterWithWildcards() throws Throwable {
+		config.setUserNameAttribute("sAMAccountName");
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setPagedResultsEnabled(true);
+		config.setGroupnames("memberof=cn=Group2*");
+		ldapBuilder.init();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(10, sink.getTotalUsers());
+	}
+
+	@Test
+	public void testUserSearchFilterWithShortname() throws Throwable {
+		config.setUserNameAttribute("sAMAccountName");
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setPagedResultsEnabled(true);
+		config.setGroupnames("memberof=CN=Group20");
+		ldapBuilder.init();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(10, sink.getTotalUsers());
+	}
+
+	@Test
+	public void testUserSearchFilterWithMultipleShortname() throws Throwable {
+		config.setUserNameAttribute("sAMAccountName");
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setPagedResultsEnabled(true);
+		config.setGroupnames("memberof=CN=Group20;CN=Group19");
+		ldapBuilder.init();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(21, sink.getTotalUsers());
+	}
+
+	@Test
+	public void testUserSearchFilterWithMultipleWildcards() throws Throwable {
+		config.setUserNameAttribute("sAMAccountName");
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setPagedResultsEnabled(true);
+		config.setGroupnames("memberof=CN=Group2*;memberof=CN=Group1*");
+		ldapBuilder.init();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(111, sink.getTotalUsers());
+	}
+
+	@Test
+	public void testUserSearchFilterWithMultipleDNs() throws Throwable {
+		config.setUserNameAttribute("sAMAccountName");
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setPagedResultsEnabled(true);
+		config.setGroupnames("memberof=CN=Group14,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com;memberof=CN=Group20,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		ldapBuilder.init();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(21, sink.getTotalUsers());
+	}
+
+	@Test
+	public void testUserSearchFilterWithInvalidDNs() throws Throwable {
+		config.setUserNameAttribute("sAMAccountName");
+		config.setUserSearchBase("DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserSearchFilter("");
+		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
+		config.setUserGroupMemberAttributeName("member");
+		config.setUserObjectClass("organizationalPerson");
+		config.setGroupObjectClass("groupOfNames");
+		config.setGroupSearchEnabled(true);
+		config.setPagedResultsEnabled(true);
+		config.setGroupnames("uid=Group14,OU=Groups,DC=ranger;memberuid=Group20,OU=Groups,DC=ranger,DC=qe");
+		ldapBuilder.init();
+		sink.init();
+		ldapBuilder.updateSink(sink);
+		assertEquals(111, sink.getTotalUsers());
+	}
+
+	@Test
 	public void testUpdateSinkTotalUsers() throws Throwable {
 		config.setUserNameAttribute("sAMAccountName");
 		config.setUserSearchBase("cn=users,DC=ranger,DC=qe,DC=hortonworks,DC=com");
@@ -126,6 +234,7 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		config.setGroupSearchEnabled(false);
 		config.setPagedResultsEnabled(false);
 		config.setGroupSearchFirstEnabled(false);
+		config.setGroupnames("");
 		//config.setGroupHierarchyLevel(0);
 		ldapBuilder.init();
 		sink.init();
@@ -137,7 +246,6 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 	public void testUpdateSinkUserFilter() throws Throwable {
 		config.setUserNameAttribute("sAMAccountName");
 		config.setUserSearchBase("cn=users,DC=ranger,DC=qe,DC=hortonworks,DC=com");
-		//config.setUserSearchFilter("(|(memberof=cn=usersGroup9,ou=Group,dc=openstacklocal)(memberof=cn=usersGroup4,ou=Group,dc=openstacklocal))");
 		config.setUserSearchFilter("(|(memberof=CN=Group10,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com)(memberof=CN=Group11,OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com))");
 		config.setGroupSearchBase("OU=Groups,DC=ranger,DC=qe,DC=hortonworks,DC=com");
 		config.setUserGroupMemberAttributeName("member");
@@ -256,6 +364,7 @@ public class TestLdapUserGroup extends AbstractLdapTestUnit{
 		config.setGroupSearchEnabled(false);
 		config.setPagedResultsEnabled(true);
 		config.setGroupSearchFirstEnabled(false);
+		config.setGroupnames("");
 		ldapBuilder.init();
 		sink.init();
 		ldapBuilder.updateSink(sink);

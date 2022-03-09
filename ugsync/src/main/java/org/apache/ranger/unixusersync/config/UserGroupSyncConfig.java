@@ -141,6 +141,7 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_USER_OBJECT_CLASS = "ranger.usersync.ldap.user.objectclass";
 	private static final String DEFAULT_USER_OBJECT_CLASS = "person";
 
+    private static final String LGSYNC_GROUPNAMES = "ranger.usersync.ldap.groupnames";
 	private static final String LGSYNC_USER_SEARCH_FILTER = "ranger.usersync.ldap.user.searchfilter";
 
 	private static final String LGSYNC_USER_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.nameattribute";
@@ -679,6 +680,22 @@ public class UserGroupSyncConfig  {
 		return val;
 	}
 
+    public String getGroupNames() {
+        return prop.getProperty(LGSYNC_GROUPNAMES);
+    }
+
+    public Set<String> getGroupNameSet() {
+        String groupNames =  getGroupNames();
+		Set<String> groupNamegSet = new HashSet<String>();
+		if (StringUtils.isNotEmpty(groupNames)) {
+			StringTokenizer st = new StringTokenizer(groupNames, ";");
+			while (st.hasMoreTokens()) {
+				groupNamegSet.add(st.nextToken().trim().toLowerCase());
+			}
+		}
+        return groupNamegSet;
+    }
+
 	public Set<String> getUserGroupNameAttributeSet() {
 		String uga =  getUserGroupNameAttribute();
 		StringTokenizer st = new StringTokenizer(uga, ",");
@@ -1199,6 +1216,11 @@ public class UserGroupSyncConfig  {
 	/* Used only for unit testing */
 	public void setGroupHierarchyLevel(int groupHierarchyLevel) {
 		prop.setProperty(LGSYNC_GROUP_HIERARCHY_LEVELS, String.valueOf(groupHierarchyLevel));
+	}
+
+	/* Used only for unit testing */
+	public void setGroupnames(String groupnames) {
+		prop.setProperty(LGSYNC_GROUPNAMES, groupnames);
 	}
 
 	public String getUserSyncMetricsFileName() throws IOException {
