@@ -2763,40 +2763,16 @@ public class XUserMgr extends XUserMgrBase {
 		return groups.getListSize();
 	}
 
-	private void createOrDeleteXGroupUsers(GroupUserInfo groupUserInfo, Map<String, Long> usersFromDB) {
-		checkAdminAccess();
-		xaBizUtil.blockAuditorRoleUser();
-		String groupName = groupUserInfo.getGroupName();
-		if (CollectionUtils.isEmpty(groupUserInfo.getAddUsers()) && CollectionUtils.isEmpty(groupUserInfo.getDelUsers())) {
-			logger.info("Group memberships for source are empty for " + groupName);
-			return;
-		}
-		Set<String> groupUsers = groupUserInfo.getAddUsers();
-		if (CollectionUtils.isNotEmpty(groupUsers)) {
-			if (logger.isDebugEnabled()) {
-				logger.debug("No. of new users in group" + groupName + " = " + groupUsers.size());
-			}
-			xGroupUserService.createOrUpdateXGroupUsers(groupName, groupUsers, usersFromDB);
-		}
-
-		if (CollectionUtils.isNotEmpty(groupUserInfo.getDelUsers())) {
-			for (String username : groupUserInfo.getDelUsers()) {
-				try {
-					deleteXGroupAndXUser(groupName, username);
-				} catch (Exception excp) {
-					logger.warn("Ignoring invalid group/user found while updating group memberships group = "
-							+ groupName + " and user = " + username);
-					if (logger.isDebugEnabled()) {
-						logger.debug("createOrDeleteXGroupUsers(): Ignoring invalid group/user found while updating group memberships "
-								+ groupName + " and " + username, excp);
-					}
-				}
-			}
-		}
-	}
-
 	public int createOrDeleteXGroupUserList(List<GroupUserInfo> groupUserInfoList) {
 		int updatedGroups = 0;
+		Long mb = 1024L * 1024L;
+		if (logger.isDebugEnabled()) {
+			logger.debug("==>> createOrDeleteXGroupUserList");
+			logger.debug("Max memory = " + Runtime.getRuntime().maxMemory()/mb + " Free memory = " + Runtime.getRuntime().freeMemory()/mb
+					+ " Total memory = " + Runtime.getRuntime().totalMemory()/mb);
+		}
+		checkAdminAccess();
+		xaBizUtil.blockAuditorRoleUser();
 		if (CollectionUtils.isNotEmpty(groupUserInfoList)) {
 			if (logger.isDebugEnabled()) {
 				logger.debug("No. of groups to be updated = " + groupUserInfoList.size());
@@ -2805,12 +2781,19 @@ public class XUserMgr extends XUserMgrBase {
 			if (MapUtils.isNotEmpty(usersFromDB)) {
 				if (logger.isDebugEnabled()) {
 					logger.debug("No. of users in DB = " + usersFromDB.size());
+					logger.debug("After users from DB - Max memory = " + Runtime.getRuntime().maxMemory()/mb + " Free memory = " + Runtime.getRuntime().freeMemory()/mb
+							+ " Total memory = " + Runtime.getRuntime().totalMemory()/mb);
 				}
 				for (GroupUserInfo groupUserInfo : groupUserInfoList) {
-					createOrDeleteXGroupUsers(groupUserInfo, usersFromDB);
+					xGroupUserService.createOrDeleteXGroupUsers(groupUserInfo, usersFromDB);
 				}
 				updatedGroups = groupUserInfoList.size();
 			}
+		}
+		if (logger.isDebugEnabled()) {
+			logger.debug("<<== createOrDeleteXGroupUserList");
+			logger.debug("Max memory = " + Runtime.getRuntime().maxMemory()/mb + " Free memory = " + Runtime.getRuntime().freeMemory()/mb
+					+ " Total memory = " + Runtime.getRuntime().totalMemory()/mb);
 		}
 		return updatedGroups;
 	}
