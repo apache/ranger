@@ -26,10 +26,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.common.view.VTrxLogAttr;
 import org.apache.ranger.entity.XXAsset;
 import org.apache.ranger.entity.XXGroup;
@@ -37,17 +39,12 @@ import org.apache.ranger.entity.XXGroupUser;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.util.RangerEnumUtil;
 import org.apache.ranger.view.VXGroupUser;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.PlatformTransactionManager;
-import org.springframework.transaction.TransactionDefinition;
-import org.springframework.transaction.TransactionStatus;
-import org.springframework.transaction.support.TransactionCallback;
-import org.springframework.transaction.support.TransactionTemplate;
 
 @Service
 @Scope("singleton")
@@ -58,10 +55,9 @@ public class XGroupUserService extends
 
 	@Autowired
 	RangerEnumUtil xaEnumUtil;
-
+	
 	@Autowired
-	@Qualifier(value = "transactionManager")
-	PlatformTransactionManager txManager;
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 	
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	static {
@@ -115,61 +111,64 @@ public class XGroupUserService extends
 		return vxGroupUser;
 	}
 
-	public void createOrUpdateXGroupUsers(String groupName, Set<String> users, Map<String, Long> usersFromDB) {
-		XXGroup xxGroup = daoManager.getXXGroup().findByGroupName(groupName);
+	public void createOrDeleteXGroupUsers(GroupUserInfo groupUserInfo, Map<String, Long> usersFromDB) {
 		if (logger.isDebugEnabled()) {
-			logger.debug("createOrUpdateXGroupUsers(): groupname =  " + groupName + " users = " + users);
+			logger.debug("==>> createOrDeleteXGroupUsers for " + groupUserInfo.getGroupName());
+			Long mb = 1024L * 1024L;
+			logger.debug("==>> createOrDeleteXGroupUsers: Max memory = " + Runtime.getRuntime().maxMemory() / mb + " Free memory = " + Runtime.getRuntime().freeMemory() / mb
+					+ " Total memory = " + Runtime.getRuntime().totalMemory() / mb);
 		}
+		String groupName = groupUserInfo.getGroupName();
+		if (CollectionUtils.isEmpty(groupUserInfo.getAddUsers()) && CollectionUtils.isEmpty(groupUserInfo.getDelUsers())) {
+			logger.info("Group memberships for source are empty for " + groupName);
+			return;
+		}
+		XXGroup xxGroup = daoManager.getXXGroup().findByGroupName(groupName);
 		if (xxGroup == null) {
 			if (logger.isDebugEnabled()) {
-				logger.debug("createOrUpdateXGroupUsers(): groupname =  " + groupName
+				logger.debug("createOrDeleteXGroupUsers(): groupname =  " + groupName
 						+ " doesn't exist in database. Hence ignoring group membership updates");
 			}
 			return;
 		}
-		Map<String, XXGroupUser> groupUsers = daoManager.getXXGroupUser().findUsersByGroupName(groupName);
-		for (String username : users) {
-			if (usersFromDB.containsKey(username)) {
-				// Add or update group user mapping only if the user exists in x_user table.
-				TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-				txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-				try {
-					txTemplate.execute(new TransactionCallback<Object>() {
-						@Override
-						public Object doInTransaction(TransactionStatus status) {
-							XXGroupUser xxGroupUser = groupUsers.get(username);
-							boolean groupUserMappingExists = true;
-							if (xxGroupUser == null) {
-								xxGroupUser = new XXGroupUser();
-								groupUserMappingExists = false;
-							}
-							xxGroupUser.setAddedByUserId(createdByUserId);
-							xxGroupUser.setUpdatedByUserId(createdByUserId);
+		/* findUsersByGroupName returns all the entries from x_group_users table for a given group name and corresponding usernames from x_user table.
+			Return Map has username as key and XXGroupUser object as value.
+		 */
 
-							if (groupUserMappingExists) {
-								xxGroupUser = getDao().update(xxGroupUser);
-							} else {
-								VXGroupUser vXGroupUser = new VXGroupUser();
-								vXGroupUser.setUserId(usersFromDB.get(username));
-								vXGroupUser.setName(groupName);
-								vXGroupUser.setParentGroupId(xxGroup.getId());
-								xxGroupUser = mapViewToEntityBean(vXGroupUser, xxGroupUser, 0);
-								xxGroupUser = getDao().create(xxGroupUser);
-							}
-							VXGroupUser vXGroupUser = postCreate(xxGroupUser);
-							if (logger.isDebugEnabled()) {
-								logger.debug(String.format("createOrUpdateXGroupUsers(): Create or update group user mapping with groupname =  " + vXGroupUser.getName()
-										+ " username = %s userId = %d", username, vXGroupUser.getUserId()));
-							}
-							return null;
-						}
-					});
-				} catch (Throwable ex) {
-					logger.error("XGroupUserService.createOrUpdateXGroupUsers: Failed to update DB for group users: ", ex);
-					throw restErrorUtil.createRESTException("Failed to create or update group users ",
-							MessageEnums.ERROR_CREATING_OBJECT);
+		Map<String, XXGroupUser> groupUsers = daoManager.getXXGroupUser().findUsersByGroupName(groupName);
+
+		if (CollectionUtils.isNotEmpty(groupUserInfo.getAddUsers())) {
+			Set<String> addUsers = groupUserInfo.getAddUsers();
+			if (logger.isDebugEnabled()) {
+				logger.debug("No. of new users in group" + groupName + " = " + addUsers.size());
+			}
+			for (String username : addUsers) {
+				if (usersFromDB.containsKey(username)) {
+					// Add or update group user mapping only if the user exists in x_user table.
+					transactionSynchronizationAdapter.executeOnTransactionCommit(new GroupUserMappingUpdator(groupName, xxGroup.getId(), username, usersFromDB.get(username), groupUsers.get(username), false));
 				}
 			}
+		}
+
+		if (CollectionUtils.isNotEmpty(groupUserInfo.getDelUsers())) {
+			Set<String> delUsers = groupUserInfo.getDelUsers();
+			if (logger.isDebugEnabled()) {
+				logger.debug("No. of deleted users in group" + groupName + " = " + delUsers.size());
+			}
+
+			for (String username : delUsers) {
+				if (usersFromDB.containsKey(username)) {
+					// delete group user mapping only if the user exists in x_user table..
+					transactionSynchronizationAdapter.executeOnTransactionCommit(new GroupUserMappingUpdator(groupName, xxGroup.getId(), username, usersFromDB.get(username), groupUsers.get(username), true));
+				}
+			}
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<<== createOrDeleteXGroupUsers for " + groupUserInfo.getGroupName());
+			Long mb = 1024L * 1024L;
+			logger.debug("<<== createOrDeleteXGroupUsers: Max memory = " + Runtime.getRuntime().maxMemory() / mb + " Free memory = " + Runtime.getRuntime().freeMemory() / mb
+					+ " Total memory = " + Runtime.getRuntime().totalMemory() / mb);
 		}
 	}
 
@@ -265,5 +264,69 @@ public class XGroupUserService extends
 		return trxLogList;
 	}
 
+	private class GroupUserMappingUpdator implements Runnable {
+		private String groupName;
+		private Long groupId;
+		private String userName;
+		private Long userId;
+		private XXGroupUser xxGroupUser;
+		private boolean isDelete;
+
+		GroupUserMappingUpdator(String groupName, Long groupId, String userName, Long userId, XXGroupUser xxGroupUser, boolean isDelete) {
+			this.groupName = groupName;
+			this.groupId = groupId;
+			this.userName = userName;
+			this.userId = userId;
+			this.xxGroupUser = xxGroupUser;
+			this.isDelete = isDelete;
+		}
+
+		@Override
+		public void run() {
+			updateGroupUserMappings();
+		}
+
+		private void updateGroupUserMappings() {
+			if (logger.isDebugEnabled()) {
+				logger.debug("==> GroupUserMappingUpdator.updateGroupUserMappings(" + groupName + ", " + userName + ")");
+			}
+
+			if (isDelete) {
+				if (xxGroupUser != null) {
+					getDao().remove(xxGroupUser.getId());
+					if (logger.isDebugEnabled()) {
+						logger.debug("createOrDeleteXGroupUsers(): deleted group user mapping with groupname =  " + groupName
+								+ " username = " + userName);
+					}
+				}
+			} else {
+				boolean groupUserMappingExists = true;
+				if (xxGroupUser == null) {
+					xxGroupUser = new XXGroupUser();
+					groupUserMappingExists = false;
+				}
+				xxGroupUser.setAddedByUserId(createdByUserId);
+				xxGroupUser.setUpdatedByUserId(createdByUserId);
+
+				if (groupUserMappingExists) {
+					xxGroupUser = getDao().update(xxGroupUser);
+				} else {
+					VXGroupUser vXGroupUser = new VXGroupUser();
+					vXGroupUser.setUserId(userId);
+					vXGroupUser.setName(groupName);
+					vXGroupUser.setParentGroupId(groupId);
+					xxGroupUser = mapViewToEntityBean(vXGroupUser, xxGroupUser, 0);
+					xxGroupUser = getDao().create(xxGroupUser);
+				}
+				if (logger.isDebugEnabled()) {
+					logger.debug(String.format("createOrDeleteXGroupUsers(): Create or update group user mapping with groupname =  " + groupName
+							+ " username = %s userId = %d", userName, xxGroupUser.getUserId()));
+				}
+			}
+			if (logger.isDebugEnabled()) {
+				logger.debug("<== GroupUserMappingUpdator.updateGroupUserMappings(" + groupName + ", " + userName + ")");
+			}
+		}
+	}
 	
 }
