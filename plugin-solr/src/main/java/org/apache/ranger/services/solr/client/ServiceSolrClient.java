@@ -43,6 +43,7 @@ import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.apache.ranger.services.solr.RangerSolrConstants;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrResponse;
@@ -52,6 +53,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.impl.Krb5HttpClientBuilder;
 import org.apache.solr.client.solrj.impl.SolrHttpClientBuilder;
 import org.apache.solr.client.solrj.request.CollectionAdminRequest;
+import org.apache.solr.client.solrj.request.ConfigSetAdminRequest;
 import org.apache.solr.client.solrj.request.CoreAdminRequest;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.CoreAdminResponse;
@@ -63,18 +65,6 @@ import org.slf4j.LoggerFactory;
 
 public class ServiceSolrClient {
 	private static final Logger LOG = LoggerFactory.getLogger(ServiceSolrClient.class);
-
-	enum RESOURCE_TYPE {
-		COLLECTION, FIELD
-	}
-
-	private static final String errMessage = " You can still save the repository and start creating "
-			+ "policies, but you would not be able to use autocomplete for "
-			+ "resource names. Check server logs for more info.";
-
-	private static final String COLLECTION_KEY = "collection";
-	private static final String FIELD_KEY = "field";
-	private static final long LOOKUP_TIMEOUT_SEC = 5;
 
 	private String username;
 	private String password;
@@ -125,8 +115,12 @@ public class ServiceSolrClient {
 		} catch (Exception e) {
 			LOG.error("Error connecting to Solr. solrClient=" + solrClient, e);
 			String failureMsg = "Unable to connect to Solr instance." + e.getMessage();
-			BaseClient.generateResponseDataMap(false, failureMsg, failureMsg + errMessage, null, null, responseData);
+			BaseClient.generateResponseDataMap(false, failureMsg, failureMsg + RangerSolrConstants.errMessage, null, null, responseData);
 		}
+	}
+
+	private List<String> getSchemaList(List<String> ignoreSchemaList) throws Exception {
+		return getCollectionList(ignoreSchemaList);
 	}
 
 	private List<String> getCollectionList(List<String> ignoreCollectionList)
@@ -230,6 +224,31 @@ public class ServiceSolrClient {
 		return new ArrayList<String>(fieldSet);
 	}
 
+
+	private List<String> getConfigList(List<String> ignoreConfigList)
+			throws Exception {
+
+		ConfigSetAdminRequest request = new ConfigSetAdminRequest.List();
+
+		String decPassword = getDecryptedPassword();
+		if (!this.isKerberosAuth && username != null && decPassword != null) {
+			request.setBasicAuthCredentials(username, decPassword);
+		}
+		SolrResponse response = request.process(solrClient);
+		List<String> list = new ArrayList<String>();
+		List<String> responseConfigSetList = (ArrayList<String>)response.getResponse().get("configSets");
+		if(CollectionUtils.isEmpty(responseConfigSetList)) {
+			return list;
+		}
+		for (String responseConfigSet : responseConfigSetList) {
+			if (ignoreConfigList == null
+					|| !ignoreConfigList.contains(responseConfigSet)) {
+				list.add(responseConfigSet);
+			}
+		}
+		return list;
+	}
+
 	public List<String> getResources(ResourceLookupContext context) {
 
 		String userInput = context.getUserInput();
@@ -238,8 +257,10 @@ public class ServiceSolrClient {
 		List<String> resultList = null;
 		List<String> collectionList = null;
 		List<String> fieldList = null;
+		List<String> configList = null;
+		List<String> schemaList = null;
 
-		RESOURCE_TYPE lookupResource = RESOURCE_TYPE.COLLECTION;
+		RangerSolrConstants.RESOURCE_TYPE lookupResource = RangerSolrConstants.RESOURCE_TYPE.COLLECTION;
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== getResources() UserInput: \""
@@ -249,16 +270,26 @@ public class ServiceSolrClient {
 
 		if (userInput != null && resource != null) {
 			if (resourceMap != null && !resourceMap.isEmpty()) {
-				collectionList = resourceMap.get(COLLECTION_KEY);
-				fieldList = resourceMap.get(FIELD_KEY);
+				collectionList = resourceMap.get(RangerSolrConstants.COLLECTION_KEY);
+				fieldList = resourceMap.get(RangerSolrConstants.FIELD_KEY);
+				configList = resourceMap.get(RangerSolrConstants.CONFIG_KEY);
+				schemaList = resourceMap.get(RangerSolrConstants.SCHEMA_KEY);
 			}
 			switch (resource.trim().toLowerCase()) {
-			case COLLECTION_KEY:
-				lookupResource = RESOURCE_TYPE.COLLECTION;
+			case RangerSolrConstants.COLLECTION_KEY:
+				lookupResource = RangerSolrConstants.RESOURCE_TYPE.COLLECTION;
 				break;
-			case FIELD_KEY:
-				lookupResource = RESOURCE_TYPE.FIELD;
+			case RangerSolrConstants.FIELD_KEY:
+				lookupResource = RangerSolrConstants.RESOURCE_TYPE.FIELD;
 				break;
+			case RangerSolrConstants.CONFIG_KEY:
+				lookupResource = RangerSolrConstants.RESOURCE_TYPE.CONFIG;
+				break;
+			case RangerSolrConstants.ADMIN_KEY:
+				lookupResource = RangerSolrConstants.RESOURCE_TYPE.ADMIN;
+				break;
+			case RangerSolrConstants.SCHEMA_KEY:
+				lookupResource = RangerSolrConstants.RESOURCE_TYPE.SCHEMA;
 			default:
 				break;
 			}
@@ -270,8 +301,10 @@ public class ServiceSolrClient {
 
 				final List<String> finalCollectionList = collectionList;
 				final List<String> finalFieldList = fieldList;
+				final List<String> finalConfigList = configList;
+				final List<String> finalSchemaList = schemaList;
 
-				if (lookupResource == RESOURCE_TYPE.COLLECTION) {
+				if (lookupResource == RangerSolrConstants.RESOURCE_TYPE.COLLECTION) {
 					// get the collection list for given Input
 					callableObj = new Callable<List<String>>() {
 						@Override
@@ -287,7 +320,8 @@ public class ServiceSolrClient {
 											try {
 												ret = getCollectionList(finalCollectionList);
 											} catch (Exception e) {
-												LOG.error("Unable to get collections, Error : " + e.getMessage(), new Throwable(e));
+												LOG.error("Unable to get collections, Error : " + e.getMessage(),
+														new Throwable(e));
 											}
 											return ret;
 										}
@@ -306,12 +340,12 @@ public class ServiceSolrClient {
 									retList.addAll(list);
 								}
 							} catch (Exception ex) {
-								LOG.error("Error getting collection.", ex);
+								LOG.error("Error getting collections.", ex);
 							}
 							return retList;
 						};
 					};
-				} else if (lookupResource == RESOURCE_TYPE.FIELD) {
+				} else if (lookupResource == RangerSolrConstants.RESOURCE_TYPE.FIELD) {
 					callableObj = new Callable<List<String>>() {
 						@Override
 						public List<String> call() {
@@ -326,7 +360,8 @@ public class ServiceSolrClient {
 											try {
 												ret = getFieldList(finalCollectionList, finalFieldList);
 											} catch (Exception e) {
-												LOG.error("Unable to get field list, Error : " + e.getMessage(), new Throwable(e));
+												LOG.error("Unable to get field list, Error : " + e.getMessage(),
+														new Throwable(e));
 											}
 											return ret;
 										}
@@ -345,7 +380,112 @@ public class ServiceSolrClient {
 									retList.addAll(list);
 								}
 							} catch (Exception ex) {
-								LOG.error("Error getting collection.", ex);
+								LOG.error("Error getting collections.", ex);
+							}
+							return retList;
+						};
+					};
+				} else if (lookupResource == RangerSolrConstants.RESOURCE_TYPE.CONFIG) {
+					// get the config list for given Input
+					callableObj = new Callable<List<String>>() {
+						@Override
+						public List<String> call() {
+							List<String> retList = new ArrayList<String>();
+							try {
+								List<String> list = null;
+								if (isKerberosAuth) {
+									list = Subject.doAs(loginSubject, new PrivilegedAction<List<String>>() {
+										@Override
+										public List<String> run() {
+											List<String> ret = null;
+											try {
+												ret = getConfigList(finalConfigList);
+											} catch (Exception e) {
+												LOG.error("Unable to get Solr configs, Error : " + e.getMessage(),
+														new Throwable(e));
+											}
+											return ret;
+										}
+									});
+								} else {
+									list = getConfigList(finalConfigList);
+								}
+								if (userInputFinal != null
+										&& !userInputFinal.isEmpty()) {
+									for (String value : list) {
+										if (value.startsWith(userInputFinal)) {
+											retList.add(value);
+										}
+									}
+								} else {
+									retList.addAll(list);
+								}
+							} catch (Exception ex) {
+								LOG.error("Error getting Solr configs.", ex);
+							}
+							return retList;
+						}
+
+						;
+					} ;
+				} else if (lookupResource == RangerSolrConstants.RESOURCE_TYPE.ADMIN) {
+					List<String> retList = new ArrayList<String>();
+					try {
+						List<String> list = RangerSolrConstants.ADMIN_TYPE.VALUE_LIST;
+
+						if (userInputFinal != null
+								&& !userInputFinal.isEmpty()) {
+							for (String value : list) {
+								if (value.startsWith(userInputFinal)) {
+									retList.add(value);
+								}
+							}
+						} else {
+							retList.addAll(list);
+						}
+					} catch (Exception ex) {
+						LOG.error("Error getting Solr admin resources.", ex);
+					}
+					resultList = retList;
+
+				} else if (lookupResource == RangerSolrConstants.RESOURCE_TYPE.SCHEMA) {
+					// get the collection list for given Input, since there is no way of getting a list of the available
+					// schemas
+					callableObj = new Callable<List<String>>() {
+						@Override
+						public List<String> call() {
+							List<String> retList = new ArrayList<String>();
+							try {
+								List<String> list = null;
+								if (isKerberosAuth) {
+									list = Subject.doAs(loginSubject, new PrivilegedAction<List<String>>() {
+										@Override
+										public List<String> run() {
+											List<String> ret = null;
+											try {
+												ret = getSchemaList(finalSchemaList);
+											} catch (Exception e) {
+												LOG.error("Unable to get collections for schema listing, Error : "
+														+ e.getMessage(), new Throwable(e));
+											}
+											return ret;
+										}
+									});
+								} else {
+									list = getSchemaList(finalSchemaList);
+								}
+								if (userInputFinal != null
+										&& !userInputFinal.isEmpty()) {
+									for (String value : list) {
+										if (value.startsWith(userInputFinal)) {
+											retList.add(value);
+										}
+									}
+								} else {
+									retList.addAll(list);
+								}
+							} catch (Exception ex) {
+								LOG.error("Error getting collections for schema listing.", ex);
 							}
 							return retList;
 						};
@@ -355,13 +495,14 @@ public class ServiceSolrClient {
 				if (callableObj != null) {
 					synchronized (this) {
 						resultList = TimedEventUtil.timedTask(callableObj,
-								LOOKUP_TIMEOUT_SEC, TimeUnit.SECONDS);
+								RangerSolrConstants.LOOKUP_TIMEOUT_SEC, TimeUnit.SECONDS);
 					}
 				}
 			} catch (Exception e) {
-				LOG.error("Unable to get solr resources.", e);
+				LOG.error("Unable to get Solr resources.", e);
 			}
-		}
+
+		} // end if userinput != null
 
 		return resultList;
 	}
@@ -471,8 +612,8 @@ public class ServiceSolrClient {
 	private HadoopException createException(String msgDesc, Exception exp) {
 		HadoopException hdpException = new HadoopException(msgDesc, exp);
 		final String fullDescription = exp != null ? BaseClient.getMessage(exp) : msgDesc;
-		hdpException.generateResponseDataMap(false, fullDescription + errMessage,
-			msgDesc + errMessage, null, null);
+		hdpException.generateResponseDataMap(false, fullDescription + RangerSolrConstants.errMessage,
+			msgDesc + RangerSolrConstants.errMessage, null, null);
 		return hdpException;
 	}
 

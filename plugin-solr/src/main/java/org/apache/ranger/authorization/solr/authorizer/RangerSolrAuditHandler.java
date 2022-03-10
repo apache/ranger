@@ -24,6 +24,7 @@ import org.apache.ranger.plugin.audit.RangerMultiResourceAuditHandler;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.services.solr.RangerSolrConstants;
 
 import java.util.Arrays;
 import java.util.List;
@@ -45,7 +46,7 @@ public class RangerSolrAuditHandler extends RangerMultiResourceAuditHandler {
     @Override
     public void processResult(RangerAccessResult result) {
         // We don't audit operation for user "solr" on collection "ranger_audits" to avoid recursive
-        // loging due to updated of ranger_audits collection by solr plugin's audit creation.
+        // logging due to updated of ranger_audits collection by solr plugin's audit creation.
         if (!isAuditingNeeded(result)) {
             return;
         }
@@ -57,7 +58,7 @@ public class RangerSolrAuditHandler extends RangerMultiResourceAuditHandler {
         boolean                  ret       = true;
         RangerAccessRequest      request   = result.getAccessRequest();
         RangerAccessResourceImpl resource  = (RangerAccessResourceImpl) request.getResource();
-        String resourceName                = (String) resource.getValue(RangerSolrAuthorizer.KEY_COLLECTION);
+        String resourceName                = (String) resource.getValue(RangerSolrConstants.COLLECTION_KEY);
         String requestUser                 = request.getUser();
         if (resourceName != null && resourceName.equals(RANGER_AUDIT_COLLECTION) && excludeUsers.contains(requestUser)) {
            ret = false;

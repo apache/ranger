@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory;
 public class RangerServiceSolr extends RangerBaseService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSolr.class);
-	public static final String ACCESS_TYPE_QUERY  = "query";
+	public static final String ACCESS_TYPE_QUERY  = RangerSolrConstants.ACCESS_TYPE.QUERY.toString();
 
 	public RangerServiceSolr() {
 		super();
