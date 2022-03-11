@@ -427,7 +427,7 @@ public class RoleREST {
                 throw new Exception("Invalid role user(s)");
             }
 
-            role = getRoleIfAccessible(roleId, serviceName, execUser, userMgr.getGroupsForUser(execUser));
+            role = getRoleIfAccessible(roleName, serviceName, execUser, userMgr.getGroupsForUser(execUser));
 
             Set<RangerRole.RoleMember> roleUsers = new HashSet<>();
             Set<RangerRole.RoleMember> roleGroups = new HashSet<>();
@@ -464,7 +464,7 @@ public class RoleREST {
             role.setUsers(new ArrayList<>(roleUsers));
             role.setGroups(new ArrayList<>(roleGroups));
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, true);
 
         } catch(WebApplicationException excp) {
             throw excp;
@@ -518,7 +518,7 @@ public class RoleREST {
                 }
             }
 
-            role = roleStore.updateRole(role);
+            role = roleStore.updateRole(role, true);
 
         } catch(WebApplicationException excp) {
             throw excp;
