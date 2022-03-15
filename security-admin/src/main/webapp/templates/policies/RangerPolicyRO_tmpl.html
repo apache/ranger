@@ -199,7 +199,7 @@
                 </thead>
                 <tbody>
                     {{#ifCond this.policyItems.length '==' "0"}}
-                        <td class="emptySet text-muted" colspan='{{this.headers.length}}'>No Data Found !!</td>
+                        <td class="emptySet text-muted" colspan='{{this.headers.length}}'>No policy items of "{{this.title}}" are present</td>
                     {{else}}
                         {{#each this.policyItems}}
                             <tr>
