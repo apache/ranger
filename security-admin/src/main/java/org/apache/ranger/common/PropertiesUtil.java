@@ -260,6 +260,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 				db_ssl_enabled="false";
 			}
 			db_ssl_enabled=db_ssl_enabled.toLowerCase();
+                       String ranger_jpa_jdbc_url=propertiesMap.get("ranger.jpa.jdbc.url");
 			if("true".equalsIgnoreCase(db_ssl_enabled)){
 				String db_ssl_required=propertiesMap.get("ranger.db.ssl.required");
 				if(StringUtils.isEmpty(db_ssl_required)|| !"true".equalsIgnoreCase(db_ssl_required)){
@@ -283,7 +284,7 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 				props.put("ranger.db.ssl.verifyServerCertificate", db_ssl_verifyServerCertificate);
 				propertiesMap.put("ranger.db.ssl.auth.type", db_ssl_auth_type);
 				props.put("ranger.db.ssl.auth.type", db_ssl_auth_type);
-				String ranger_jpa_jdbc_url=propertiesMap.get("ranger.jpa.jdbc.url");
+
 				if(StringUtils.isNotEmpty(ranger_jpa_jdbc_url) && !ranger_jpa_jdbc_url.contains("?")){
 					StringBuffer ranger_jpa_jdbc_url_ssl=new StringBuffer(ranger_jpa_jdbc_url);
 					if (RangerBizUtil.getDBFlavor()==AppConstants.DB_FLAVOR_MYSQL) {
@@ -305,7 +306,32 @@ public class PropertiesUtil extends PropertyPlaceholderConfigurer {
 					props.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url);
 				}
 				logger.info("ranger.jpa.jdbc.url="+ranger_jpa_jdbc_url);
-			}
+                               } else {
+				           String ranger_jpa_jdbc_url_extra_args="";
+					   if(!StringUtils.isEmpty(ranger_jpa_jdbc_url)) {
+						   if (ranger_jpa_jdbc_url.contains("?")) {
+							   ranger_jpa_jdbc_url_extra_args = ranger_jpa_jdbc_url.substring(ranger_jpa_jdbc_url.indexOf("?")+1);
+							   ranger_jpa_jdbc_url = ranger_jpa_jdbc_url.substring(0, ranger_jpa_jdbc_url.indexOf("?"));
+						   }
+						   if (RangerBizUtil.getDBFlavor()==AppConstants.DB_FLAVOR_MYSQL) {
+							   StringBuilder ranger_jpa_jdbc_url_no_ssl=new StringBuilder(ranger_jpa_jdbc_url);
+							   if (!ranger_jpa_jdbc_url_extra_args.contains("useSSL")) {
+								   ranger_jpa_jdbc_url_no_ssl.append("?useSSL=false");
+							   }
+							   if (!StringUtils.isEmpty(ranger_jpa_jdbc_url_extra_args) && ranger_jpa_jdbc_url_no_ssl.toString().contains("useSSL")) {
+								   ranger_jpa_jdbc_url_no_ssl.append("&").append(ranger_jpa_jdbc_url_extra_args);
+							   } else if (!StringUtils.isEmpty(ranger_jpa_jdbc_url_extra_args) && !ranger_jpa_jdbc_url_no_ssl.toString().contains("useSSL")) {
+								   ranger_jpa_jdbc_url_no_ssl.append("?").append(ranger_jpa_jdbc_url_extra_args);
+							   }
+							   propertiesMap.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url_no_ssl.toString());
+						   }
+						   ranger_jpa_jdbc_url=propertiesMap.get("ranger.jpa.jdbc.url");
+						   if(StringUtils.isNotEmpty(ranger_jpa_jdbc_url)) {
+							   props.put("ranger.jpa.jdbc.url", ranger_jpa_jdbc_url);
+						   }
+						   logger.info("ranger.jpa.jdbc.url="+ranger_jpa_jdbc_url);
+					   }
+			   }
 		}
 	}
 
