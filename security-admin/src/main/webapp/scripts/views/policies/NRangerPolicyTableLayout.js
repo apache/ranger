@@ -524,7 +524,8 @@ define(function(require) {
                 var resourceSearchOpt = _.map(resources, function(resource) {
                     return {
                         'name': resource.name,
-                        'label': resource.label
+                        'label': resource.label,
+                        'description':resource.description
                     };
                 });
                 var PolicyStatusValue = _.map(XAEnums.ActiveStatus, function(status) {
@@ -571,8 +572,6 @@ define(function(require) {
                     info :localization.tt('h.roleMsg'),
                     urlLabel : 'roleName'
                 }];
-                // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-                //  {text : 'Today',label :'today'}];
                 var info = {
                     collection: localization.tt('h.collection'),
                     column: localization.tt('lbl.columnName'),
@@ -604,7 +603,7 @@ define(function(require) {
                     return {
                         'text': opt.label,
                         'label': 'resource:' + opt.name,
-                        'info': info[opt.name],
+                        'info': !_.isUndefined(info[opt.name]) ? info[opt.name] : opt.description,
                         'urlLabel': XAUtil.stringToCamelCase(opt.label.toLowerCase()),
                     };
                 });
