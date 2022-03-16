@@ -379,7 +379,7 @@ define(function(require) {
                 type                        :'Policy for all type.',
                 udf                         :'Hive udf.',
                 pluginStatus                :'Plugin Status',
-                clusterName                 :'Name of ambari cluster',
+                clusterName                 :'Name of cluster',
                 zoneName                    :"Name of Zone",
                 policyVersion               :'Policy Version',
                 url        					:'Hive url.',
