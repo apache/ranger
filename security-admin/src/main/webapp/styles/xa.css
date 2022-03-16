@@ -1926,6 +1926,16 @@ input[type="radio"], input[type="checkbox"] {margin-top: 0;}
     margin-top: -2px;
     font-size: 11px;
 }
+.pause-play {
+  background-color: transparent;
+  border: 0;
+  float: right;
+  font-weight: 700;
+  color: #000;
+  text-shadow: 0 1px 0 #fff;
+  opacity: 1.5;
+  padding-right: 10px;
+}
 .control-label-align {
 	width: 80px !important;
 }

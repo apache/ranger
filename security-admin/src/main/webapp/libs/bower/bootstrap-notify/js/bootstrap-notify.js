@@ -45,7 +45,7 @@
       onClose: null,
       onClosed: null,
       icon_type: 'class',
-      template: '<div data-notify="container" class="col-xs-11 col-sm-4 alert alert-{0}" role="alert"><button type="button" aria-hidden="true" class="close" data-notify="dismiss">&times;</button><span data-notify="icon"></span> <span data-notify="title">{1}</span> <span data-notify="message">{2}</span><div class="progress" data-notify="progressbar"><div class="progress-bar progress-bar-{0}" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div></div><a href="{3}" target="{4}" data-notify="url"></a></div>'
+      template: '<div data-notify="container" class="col-xs-11 col-sm-4 alert alert-{0}" role="alert"><button type="button" aria-hidden="true" class="close" data-notify="dismiss">&times;</button><button type="button" class="pause-play" aria-hidden="true" data-notify="pause-play"><i class="fa fa-pause fa-1"></i></button><span data-notify="icon"></span> <span data-notify="title">{1}</span> <span data-notify="message">{2}</span><div class="progress" data-notify="progressbar"><div class="progress-bar progress-bar-{0}" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="width: 0%;"></div></div><a href="{3}" target="{4}" data-notify="url"></a></div>'
     };
 
   String.format = function() {
@@ -157,7 +157,10 @@
     buildNotify: function () {
       var content = this.settings.content;
       this.$ele = $(String.format(this.settings.template, this.settings.type, content.title, content.message, content.url, content.target));
-      this.$ele.attr('data-notify-position', this.settings.placement.from + '-' + this.settings.placement.align);   
+      this.$ele.attr('data-notify-position', this.settings.placement.from + '-' + this.settings.placement.align);
+      this.settings.type == "danger" ? this.$ele.find('[data-notify="dismiss"]').css({"color":"#a94442"}) : this.$ele.find('[data-notify="dismiss"]').css({"color":"#3c763d"});
+      this.settings.type == "danger" ? this.$ele.find('[data-notify="pause-play"]').css({"color":"#a94442"}) : this.$ele.find('[data-notify="dismiss"]').css({"color":"#3c763d"});
+      this.$ele.find('[data-notify="dismiss"]').css({"color":"#a94442"})
       if (!this.settings.allow_dismiss) {
         this.$ele.find('[data-notify="dismiss"]').css('display', 'none');
       }
@@ -263,6 +266,10 @@
         self.close();
       })
 
+      this.$ele.find('[data-notify="pause-play"]').on('click', function() {
+        self.pause();
+      })
+
       this.$ele.mouseover(function(e) {
         $(this).data('data-hover', "true");
       }).mouseout(function(e) {
@@ -279,7 +286,7 @@
             self.$ele.data('notify-delay', delay);
             self.$ele.find('[data-notify="progressbar"] > div').attr('aria-valuenow', percent).css('width', percent + '%');
           }
-          if (delay <= -(self.settings.timer)) {
+          if (delay <= -(self.settings.timer) && !self.$ele.find('[data-notify="pause-play"] i').hasClass('fa-play')) {
             clearInterval(timer);
             self.close();
           }
@@ -316,6 +323,15 @@
           }
         }
       }, 600);
+    },
+    pause: function(e) {
+      if(this.$ele.find('[data-notify="pause-play"] i').hasClass('fa-pause')) {
+        this.$ele.find('[data-notify="pause-play"] i').removeClass('fa-pause');
+        this.$ele.find('[data-notify="pause-play"] i').addClass('fa-play');
+      } else {
+        this.$ele.find('[data-notify="pause-play"] i').addClass('fa-pause');
+        this.$ele.find('[data-notify="pause-play"] i').removeClass('fa-play');
+      }
     },
     reposition: function(posX) {
       var self = this,
