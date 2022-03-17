@@ -41,6 +41,7 @@ import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.authentication.LockedException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.authentication.jaas.DefaultJaasAuthenticationProvider;
 import org.springframework.security.authentication.jaas.memory.InMemoryConfiguration;
@@ -62,6 +63,7 @@ import org.springframework.security.authentication.dao.DaoAuthenticationProvider
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.apache.ranger.biz.UserMgr;
+import org.apache.ranger.biz.SessionMgr;
 
 
 
@@ -73,7 +75,12 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
 	@Autowired
 	UserMgr userMgr;
+
+	@Autowired
+	SessionMgr sessionMgr;
+
 	private static final Logger logger = LoggerFactory.getLogger(RangerAuthenticationProvider.class);
+
 	private String rangerAuthenticationMethod;
 
 	private LdapAuthenticator authenticator;
@@ -137,6 +144,14 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 					return authentication;
 				}
 			}
+
+			// Following are JDBC
+			if (sessionMgr.isLoginIdLocked(authentication.getName())) {
+				logger.debug("Failed to authenticate since user account is locked");
+
+				throw new LockedException(String.format("User account {} is locked", authentication.getName()));
+			}
+
 			if (this.isFipsEnabled) {
 				try {
 					authentication = getJDBCAuthentication(authentication,"");

@@ -157,6 +157,19 @@
 		<value>1</value>
 	</property>
 
+<!-- #auto lock when too many failed logon attempts -->
+	<property>
+		<name>ranger.admin.login.autolock.enabled</name>
+		<value>true</value>
+	</property>
+	<property>
+		<name>ranger.admin.login.autolock.window.seconds</name>
+		<value>300</value>
+	</property>
+	<property>
+		<name>ranger.admin.login.autolock.maxfailure</name>
+		<value>5</value>
+	</property>
 
 <!-- #hacks -->
 	<property>
