@@ -44,6 +44,7 @@ import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXAuthSessionDao;
 import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.entity.XXPortalUserRole;
@@ -453,7 +454,33 @@ public class SessionMgr {
 		VXAuthSession vXAuthSession = authSessionService.populateViewBean(xXAuthSession);
 		return vXAuthSession;
 	}
-	
+
+	/**
+	 * Check whether the user failed to log in so many times that we need to lock it for
+	 * a while. The current limit of is to fail at most n times in a sliding time window,
+	 * otherwise the login verification will not be performed in the future.
+	 * @param loginId
+	 * @return
+	 */
+	public boolean isLoginIdLocked(String loginId) {
+		boolean ret             = false;
+		boolean autoLockEnabled = PropertiesUtil.getBooleanProperty("ranger.admin.login.autolock.enabled", true);
+
+		if (autoLockEnabled) {
+			int  windowSeconds    = PropertiesUtil.getIntProperty("ranger.admin.login.autolock.window.seconds", 300);
+			int  maxFailuresCount = PropertiesUtil.getIntProperty("ranger.admin.login.autolock.maxfailure", 5);
+			long failuresCount    = daoManager.getXXAuthSession().getRecentAuthFailureCountByLoginId(loginId, windowSeconds);
+
+			ret = failuresCount >= maxFailuresCount;
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("isLoginIdLocked(loginId={}): windowSeconds={}, maxFailuresCount={}, failuresCount={}, ret={}", loginId, windowSeconds, maxFailuresCount, failuresCount, ret);
+			}
+		}
+
+		return ret;
+	}
+
 	public boolean isValidXAUser(String loginId) {
 		XXPortalUser pUser = daoManager.getXXPortalUser().findByLoginId(loginId);
 		if (pUser == null) {

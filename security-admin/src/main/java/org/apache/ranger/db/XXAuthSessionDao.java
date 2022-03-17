@@ -19,10 +19,12 @@
 
  package org.apache.ranger.db;
 
+import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAuthSession;
 import org.springframework.stereotype.Service;
@@ -63,5 +65,16 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 			return null;
 		}
 	}
+
+	public long getRecentAuthFailureCountByLoginId(String loginId, int timeRangezSecond){
+		Date authWindowStartTime = new Date(DateUtil.getUTCDate().getTime() - timeRangezSecond * 1000);
+
+		return getEntityManager()
+				.createNamedQuery("XXAuthSession.getRecentAuthFailureCountByLoginId", Long.class)
+				.setParameter("loginId", loginId)
+				.setParameter("authWindowStartTime", authWindowStartTime)
+				.getSingleResult();
+	}
+
 }
 

@@ -24,6 +24,18 @@
 			   WHERE obj.extSessionId = :sessionId
 		</query>
 	</named-query>
+	<named-query name="XXAuthSession.getRecentAuthFailureCountByLoginId">
+		<query>SELECT COUNT(1) FROM XXAuthSession obj
+			WHERE obj.loginId = :loginId
+			  AND obj.authStatus != 1
+			  AND obj.createTime &gt; COALESCE(
+			    (SELECT MAX(obj2.createTime) FROM XXAuthSession obj2
+			      WHERE obj2.loginId = :loginId
+			        AND obj2.authStatus = 1
+			        AND obj2.createTime &gt; :authWindowStartTime),
+			    :authWindowStartTime)
+		</query>
+	</named-query>
 
 	<!-- XXPortalUser -->
 	<named-query name="XXPortalUser.findByEmailAddress">

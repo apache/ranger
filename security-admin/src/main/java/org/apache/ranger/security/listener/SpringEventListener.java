@@ -30,6 +30,7 @@ import org.springframework.security.authentication.event.AbstractAuthenticationE
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authentication.event.AuthenticationFailureDisabledEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
+import org.springframework.security.authentication.event.AuthenticationFailureLockedEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
@@ -49,6 +50,8 @@ public class SpringEventListener implements
 		process((AuthenticationSuccessEvent) event);
 	    } else if (event instanceof AuthenticationFailureBadCredentialsEvent) {
 		process((AuthenticationFailureBadCredentialsEvent) event);
+	    } else if (event instanceof AuthenticationFailureLockedEvent) {
+		process((AuthenticationFailureLockedEvent) event);
 	    } else if (event instanceof AuthenticationFailureDisabledEvent) {
 		process((AuthenticationFailureDisabledEvent) event);
 	    }
@@ -93,6 +96,17 @@ public class SpringEventListener implements
 		remoteAddress, sessionId);
     }
 
+    protected void process(AuthenticationFailureLockedEvent authFailEvent) {
+		Authentication           auth          = authFailEvent.getAuthentication();
+		WebAuthenticationDetails details       = (WebAuthenticationDetails) auth.getDetails();
+		String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
+		String                   sessionId     = details != null ? details.getSessionId() : "";
+
+		logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:" + remoteAddress + " | User Locked");
+
+		sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_LOCKED, XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(), remoteAddress, sessionId);
+	}
+
     protected void process(AuthenticationFailureDisabledEvent authFailEvent) {
 	Authentication auth = authFailEvent.getAuthentication();
 	WebAuthenticationDetails details = (WebAuthenticationDetails) auth
@@ -102,7 +116,7 @@ public class SpringEventListener implements
 	String sessionId = details != null ? details.getSessionId() : "";
 
 	logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:"
-		+ remoteAddress);
+		+ remoteAddress + " | User Disabled");
 
 	sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_DISABLED,
 		XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(),
