@@ -30,4 +30,10 @@ public class RangerTagResource extends RangerAccessResourceImpl {
 		super.setValue(KEY_TAG, tagType);
 		super.setServiceDef(tagServiceDef);
 	}
+
+	public RangerTagResource(String tagType, RangerServiceDef tagServiceDef, String ownerUser) {
+		super.setValue(KEY_TAG, tagType);
+		super.setServiceDef(tagServiceDef);
+		super.setOwnerUser(ownerUser);
+	}
 }
