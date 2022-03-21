@@ -31,8 +31,11 @@ import java.util.Map;
 public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 	private final RangerPolicyResourceMatcher.MatchType matchType;
 	public RangerTagAccessRequest(RangerTagForEval resourceTag, RangerServiceDef tagServiceDef, RangerAccessRequest request) {
+		String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
+
 		matchType = resourceTag.getMatchType();
-		super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef));
+
+		super.setResource(new RangerTagResource(resourceTag.getType(), tagServiceDef, owner));
 		super.setUser(request.getUser());
 		super.setUserGroups(request.getUserGroups());
 		super.setUserRoles(request.getUserRoles());
@@ -46,8 +49,6 @@ public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 		RangerAccessRequestUtil.setCurrentTagInContext(request.getContext(), resourceTag);
 		RangerAccessRequestUtil.setCurrentResourceInContext(request.getContext(), request.getResource());
 		RangerAccessRequestUtil.setCurrentUserInContext(request.getContext(), request.getUser());
-
-		String owner = request.getResource() != null ? request.getResource().getOwnerUser() : null;
 
 		if (StringUtils.isNotEmpty(owner)) {
 			RangerAccessRequestUtil.setOwnerInContext(request.getContext(), owner);
