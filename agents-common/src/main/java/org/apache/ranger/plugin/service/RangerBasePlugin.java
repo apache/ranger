@@ -1081,10 +1081,17 @@ public class RangerBasePlugin {
 				continue;
 			}
 
+			String serviceType = pluginConfig.get(chainedServicePropPrefix + "." + chainedService + ".service.type");
+			if (StringUtils.isBlank(serviceType)) {
+				LOG.error("Ignoring chained service " + chainedService + ": not service type specified");
+
+				continue;
+			}
+
 			try {
 				@SuppressWarnings("unchecked")
 				Class<RangerChainedPlugin> pluginClass   = (Class<RangerChainedPlugin>) Class.forName(className);
-				RangerChainedPlugin        chainedPlugin = pluginClass.getConstructor(RangerBasePlugin.class, String.class).newInstance(this, chainedService);
+				RangerChainedPlugin        chainedPlugin = pluginClass.getConstructor(RangerBasePlugin.class, String.class, String.class).newInstance(this, serviceType, chainedService);
 
 				ret.add(chainedPlugin);
 			} catch (Throwable t) {
