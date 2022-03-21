@@ -980,7 +980,7 @@ ul.tagit li.tagit-choice .tagit-close {
 }
 
 .ui-menu.ui-widget.ui-widget-content.ui-autocomplete.ui-front.tagit-autocomplete {
-  width: 50% !important;
+  width: 21% !important;
 }
 
 table.backgrid tr > td > .label {
@@ -2870,6 +2870,10 @@ div#zoneServiceAccordion table thead {
 
 .text-muted {
   opacity: 0.7;
+}
+
+.text-muted-select2 {
+  opacity: 0.5;
 }
 
 .center {

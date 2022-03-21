@@ -1542,11 +1542,17 @@ define(function(require) {
                             return null;
                         }else{
                             return {
-                                id : term,
+                                id : "<b><i class='text-muted-select2'>Create</i></b> " + term,
                                 text: term
                             };
                         }
                     }
+                },
+                formatResult : function(result){
+                    return result.id;
+                },
+                formatSelection : function(result){
+                    return result.text;
                 },
             };
 
