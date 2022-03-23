@@ -1698,6 +1698,10 @@ background-color: #444444;
 	border:none;
 	word-break: break-all;
 }
+.alert-danger {
+  z-index: 1050 !important;
+}
+
 tr.disable-policy td {
 	background-color: #F0F0F0;
 }
