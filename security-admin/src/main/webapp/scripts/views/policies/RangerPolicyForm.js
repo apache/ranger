@@ -712,7 +712,12 @@ define(function(require){
                             } else {
                                 response();
                             }
-                        }).fail(function(){
+                        }).fail(function(responses){
+                            if (responses && responses.responseJSON && responses.responseJSON.msgDesc) {
+                                XAUtil.notifyError('Error', responses.responseJSON.msgDesc);
+                            } else {
+                                XAUtil.notifyError('Error', localization.tt('msg.resourcesLookup'));
+                            }
                             response();
                         });
                         setTimeout(function(){
@@ -821,8 +826,12 @@ define(function(require){
 							};
 						},
 						transport: function (options) {
-                                                        $.ajax(options).fail(function() {
-								console.log("ajax failed");
+							$.ajax(options).fail(function(response) {
+								if (response && response.responseJSON && response.responseJSON.msgDesc) {
+									XAUtil.notifyError('Error', response.responseJSON.msgDesc);
+								} else {
+									XAUtil.notifyError('Error', localization.tt('msg.resourcesLookup'));
+								}
 								this.success({
 									resultSize : 0
 								});
