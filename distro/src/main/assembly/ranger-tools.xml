@@ -140,5 +140,11 @@
       <destName>README.txt</destName>
       <fileMode>644</fileMode>
     </file>
+    <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/create_requests.py</source>
+      <outputDirectory></outputDirectory>
+      <destName>create_requests.py</destName>
+      <fileMode>644</fileMode>
+    </file>
   </files>
 </assembly>
