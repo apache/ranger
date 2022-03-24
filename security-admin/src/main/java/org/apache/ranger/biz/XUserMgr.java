@@ -2605,11 +2605,10 @@ public class XUserMgr extends XUserMgrBase {
 	protected void validatePassword(VXUser vXUser) {
 		if (vXUser.getPassword() != null && !vXUser.getPassword().isEmpty()) {
 			boolean checkPassword = false;
-			String pattern = "(?=.*[0-9])(?=.*[a-zA-Z]).{8,}";
-			checkPassword = vXUser.getPassword().trim().matches(pattern);
+			checkPassword = vXUser.getPassword().trim().matches(StringUtil.VALIDATION_CRED);
 			if (!checkPassword) {
-				logger.warn("validatePassword(). Password should be minimum 8 characters with min one alphabet and one numeric.");
-				throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters with min one alphabet and one numeric", null);
+				logger.warn("validatePassword(). Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric.");
+				throw restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric.", null);
 			}
 		} else {
 			logger.warn("validatePassword(). Password cannot be blank/null.");

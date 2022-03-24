@@ -2708,7 +2708,7 @@ public class TestXUserMgr {
 		setup();
 		VXUser vxUser = vxUser();
 		vxUser.setPassword("password");
-		Mockito.when(restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters with min one alphabet and one numeric", null)).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric", null)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		xUserMgr.validatePassword(vxUser);
 	}
