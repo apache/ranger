@@ -102,7 +102,7 @@ public class SpringEventListener implements
 		String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
 		String                   sessionId     = details != null ? details.getSessionId() : "";
 
-		logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:" + remoteAddress + " | User Locked");
+		logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:" + remoteAddress + " | User account is locked");
 
 		sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_LOCKED, XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(), remoteAddress, sessionId);
 	}
