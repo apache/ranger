@@ -573,7 +573,8 @@ create table dbo.x_policy (
 	policy_text text DEFAULT NULL NULL,
 	zone_id bigint DEFAULT '1' NOT NULL,
 	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id),
-	CONSTRAINT x_policy_UK_name_service_zone UNIQUE NONCLUSTERED (name,service,zone_id)
+	CONSTRAINT x_policy_UK_name_service_zone UNIQUE NONCLUSTERED (name,service,zone_id),
+	CONSTRAINT x_policy_UK_guid_service UNIQUE NONCLUSTERED (guid,service)
 )
 GO
 create table dbo.x_service_config_def (
@@ -2254,6 +2255,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('056',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('057',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
