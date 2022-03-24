@@ -6,7 +6,7 @@
     "id":3,
     "resources":[
       {"name":"database","level":1,"mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Database","description":"Hive Database"},
-      {"name":"url","level":1,"mandatory":true,"lookupSupported":false,"recursiveSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"URL","description":"URL"},
+      {"name":"url","level":1,"mandatory":true,"lookupSupported":false,"recursiveSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerURLResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"URL","description":"URL"},
       {"name":"hiveservice","level":1,"mandatory":true,"lookupSupported":false,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"HiveService","description":"HiveService"},
       {"name":"table","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive Table","description":"Hive Table"},
       {"name":"udf","level":2,"parent":"database","mandatory":true,"lookupSupported":true,"matcher":"org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher","matcherOptions":{"wildCard":true, "ignoreCase":true},"label":"Hive UDF","description":"Hive UDF"},
@@ -117,10 +117,24 @@
       "policyItems":[
         {"accesses":[{"type":"select","isAllowed":true}],"users":["user1","user3","user4"],"groups":["group1","group2"],"delegateAdmin":false}
       ]
+    },
+    {"id":201,"name":"url=http://qe-s3-bucket-mst/test_abcd/abcd/ URL-access-policy","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"url":{"values": ["http://qe-s3-bucket-mst/test_abcd/abcd/"], "isRecursive":true}},
+      "policyItems":[
+        {"accesses":[{"type":"read","isAllowed":true},{"type":"write","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false}
+      ]
     }
   ],
 
   "tests":[
+    {"name":"ALLOW 'read http://qe-s3-bucket-mst/test_abcd/abcd;' for user1",
+      "request":{
+        "resource":{"elements":{"url":["http://qe-s3-bucket-mst/test_abcd/abcd", "http://qe-s3-bucket-mst/test_abcd/abcd/"]}},
+        "accessType":"read","user":"user1","userGroups":["users"],"requestData":"read http://qe-s3-bucket-mst/test_abcd/abcd for user1"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":201}
+    }
+  ,
     {"name":"ALLOW '_any access to no-database' for user5: match when request has less levels than policy",
       "request":{
         "resource":{"elements":{}},
@@ -177,12 +191,12 @@
       "result":{"isAudited":true,"isAllowed":true,"policyId":200}
     }
   ,
-    {"name":"DENY 'read s3a://qe-s3-bucket-mst/test_abcd/abcd/non-existent;' for user1",
+    {"name":"ALLOW 'read s3a://qe-s3-bucket-mst/test_abcd/abcd/non-existent;' for user1",
       "request":{
         "resource":{"elements":{"url":"s3a://qe-s3-bucket-mst/test_abcd/abcd/non-existent"}},
         "accessType":"read","user":"user1","userGroups":["users"],"requestData":"read s3a://qe-s3-bucket-mst/test_abcd/abcd/non-existent for user1"
       },
-      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":200}
     }
   ,
     {"name":"DENY 'select tmp_1 from db1.tmp ;' for user1",
