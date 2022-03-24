@@ -26,7 +26,7 @@ for i in data['serviceResources']:
     resource_id = i['id']
     # dictionary with table, database, or column
     resource_elements = i['resourceElements']
-    temp = {'name': "request-" + str(resource_id), 'request': {'resource': {'elements': {}}, 'accessType': "select", 'user': "hrt_1", 'userGroups': [], 'requestData': "request-" + str(resource_id)}, 'result': {'isAudited': 'true', 'isAllowed': 'true', 'policyId': 2}}
+    temp = {'name': "request-" + str(resource_id), 'request': {'resource': {'elements': {}}, 'accessType': "select", 'user': "hrt_1", 'userGroups': [], 'requestData': "request-" + str(resource_id)}, 'result': {'isAudited': 'true', 'isAllowed': 'false', 'policyId': resource_id}}
 
     resource_keys = resource_elements.keys()
     for resource_key in resource_keys:

@@ -71,6 +71,7 @@ public class RangerPolicyenginePerfTester {
             RangerConfiguration configuration = new PerfTestConfiguration(configurationFileURL);
             policyEngineOptions.optimizeTrieForSpace = configuration.getBoolean("ranger.policyengine.option.optimize.policy.trie.for.space", false);
             policyEngineOptions.optimizeTagTrieForSpace = configuration.getBoolean("ranger.policyengine.option.optimize.tag.trie.for.space", false);
+            policyEngineOptions.optimizeTagTrieForRetrieval = configuration.getBoolean("ranger.policyengine.option.optimize.tag.trie.for.retrieval", false);
 
             PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, policyEngineOptions, configurationFileURL);
             if (!perfTestEngine.init()) {

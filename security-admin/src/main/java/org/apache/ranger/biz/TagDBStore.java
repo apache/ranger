@@ -1016,6 +1016,13 @@ public class TagDBStore extends AbstractTagStore {
 			ret.setTags(tagMap);
 			ret.setServiceResources(resources);
 			ret.setResourceToTagIds(resourceToTagIds);
+
+			if (RangerServiceTagsDeltaUtil.isSupportsTagsDedup()) {
+				final int countOfDuplicateTags = ret.dedupTags();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + ret.getTags().size() + "].");
+				}
+			}
 		}
 
 		if (LOG.isDebugEnabled()) {
