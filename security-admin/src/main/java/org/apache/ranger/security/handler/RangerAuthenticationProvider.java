@@ -36,6 +36,7 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.util.Pbkdf2PasswordEncoderCust;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.support.MessageSourceAccessor;
 import org.springframework.ldap.core.support.DefaultTlsDirContextAuthenticationStrategy;
 import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -48,6 +49,7 @@ import org.springframework.security.authentication.jaas.memory.InMemoryConfigura
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.SpringSecurityMessageSource;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -87,6 +89,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 
 	private boolean ssoEnabled = false;
 	private final boolean isFipsEnabled;
+	protected MessageSourceAccessor messages = SpringSecurityMessageSource.getAccessor();
 
 	public RangerAuthenticationProvider() {
 		this.isFipsEnabled = RangerAdminConfig.getInstance().isFipsEnabled();
@@ -149,7 +152,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			if (sessionMgr.isLoginIdLocked(authentication.getName())) {
 				logger.debug("Failed to authenticate since user account is locked");
 
-				throw new LockedException(String.format("User account {} is locked", authentication.getName()));
+				throw new LockedException(messages.getMessage("AbstractUserDetailsAuthenticationProvider.locked", "User account is locked"));
 			}
 
 			if (this.isFipsEnabled) {
