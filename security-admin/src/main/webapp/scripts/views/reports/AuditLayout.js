@@ -47,7 +47,7 @@ define(function(require) {
 	var RangerPolicyRO				= require('views/policies/RangerPolicyRO');
 	var vPlugableServiceDiffDetail	= require('views/reports/PlugableServiceDiffDetail');
     var vLoginSessionDetail         = require('views/reports/LoginSessionDetail');
-    var RangerZoneList              = require('collections/RangerZoneList');
+    var RangerZoneBase              = require('model_bases/RangerZoneBase');
     var AuditAccessLogDetail        = require('views/reports/AuditAccessLogDetailView');
 
 	var moment = require('moment');
@@ -524,14 +524,17 @@ define(function(require) {
 								XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
 								break;
 							case 'Zone Name' :
-								var rangerZoneList = new RangerZoneList(), zoneList = [];
+								var rangerZoneList = new RangerZoneBase(), zoneList = [];
 								rangerZoneList.fetch({
 									cache : false,
-									async : false
+									async : false,
+									url: "service/public/v2/api/zone-headers",
 								})
-								rangerZoneList.each(function(m){
-									zoneList.push({'label' : m.get('name'), 'value' : m.get('name')});
-								});
+								if (rangerZoneList && rangerZoneList.attributes) {
+									_.map(rangerZoneList.attributes,function(m){
+										zoneList.push({'label' : m.name, 'value' : m.name});
+									});
+								}
 								callback(zoneList);
 								break;
 						}

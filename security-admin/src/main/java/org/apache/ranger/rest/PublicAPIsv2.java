@@ -21,14 +21,17 @@ package org.apache.ranger.rest;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
+import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.slf4j.Logger;
@@ -42,7 +45,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.DefaultValue;
+import javax.ws.rs.GET;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import java.util.ArrayList;
@@ -70,6 +83,9 @@ public class PublicAPIsv2 {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
+
+    @Autowired
+    SecurityZoneDBStore securityZoneStore;
 
 	/*
 	 * SecurityZone Creation API
@@ -121,6 +137,63 @@ public class PublicAPIsv2 {
     public List<RangerSecurityZone> getAllZones(@Context HttpServletRequest request){
 		return securityZoneRest.getAllZones(request).getSecurityZones();
 	}
+
+    /**
+     * Get {@link List} of security zone header info.
+     * This API is authorized to every authenticated user.
+     * @return {@link List} of {@link RangerSecurityZoneHeaderInfo} if present.
+     */
+    @GET
+    @Path("/api/zone-headers")
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> PublicAPIsv2.getSecurityZoneHeaderInfoList()");
+        }
+
+        List<RangerSecurityZoneHeaderInfo> ret;
+        try {
+            ret = securityZoneStore.getSecurityZoneHeaderInfoList();
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            logger.error("PublicAPIsv2.getSecurityZoneHeaderInfoList() failed", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== PublicAPIsv2.getSecurityZoneHeaderInfoList():" + ret);
+        }
+        return ret;
+    }
+
+    /**
+     * Get service header info {@link List} for given zone.
+     * This API is authorized to every authenticated user.
+     * @param zoneId
+     * @return {@link List} of {@link RangerServiceHeaderInfo} for given zone if present.
+     */
+    @GET
+    @Path("/api/zones/{zoneId}/service-headers")
+    public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(@PathParam("zoneId") Long zoneId) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> PublicAPIsv2.getServiceHeaderInfoListByZoneId({})" + zoneId);
+        }
+
+        List<RangerServiceHeaderInfo> ret;
+        try {
+            ret = securityZoneStore.getServiceHeaderInfoListByZoneId(zoneId);
+        } catch (WebApplicationException excp) {
+            throw excp;
+        } catch (Throwable excp) {
+            logger.error("PublicAPIsv2.getServiceHeaderInfoListByZoneId() failed", excp);
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== PublicAPIsv2.getServiceHeaderInfoListByZoneId():" + ret);
+        }
+        return ret;
+    }
 
 	/*
 	* ServiceDef Manipulation APIs

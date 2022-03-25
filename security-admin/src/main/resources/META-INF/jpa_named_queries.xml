@@ -1583,6 +1583,12 @@
 	     </query>
 	 </named-query>
 
+    <named-query name="XXSecurityZoneRefService.findServiceHeaderInfosByZoneId">
+        <query>
+            SELECT obj.serviceId, obj.serviceName FROM XXSecurityZoneRefService obj WHERE obj.zoneId = :zoneId
+        </query>
+    </named-query>
+
     <named-query name="XXSecurityZoneRefTagService.findByZoneId">
         <query>
             select obj from XXSecurityZoneRefTagService obj where obj.zoneId = :zoneId
@@ -1594,6 +1600,12 @@
 	         select obj from XXSecurityZoneRefTagService obj where obj.tagServiceName = :tagServiceName and obj.zoneId = :zoneId
 	     </query>
 	 </named-query>
+
+    <named-query name="XXSecurityZoneRefTagService.findServiceHeaderInfosByZoneId">
+        <query>
+            SELECT obj.tagServiceId, obj.tagServiceName FROM XXSecurityZoneRefTagService obj WHERE obj.zoneId = :zoneId
+        </query>
+    </named-query>
 
 	<named-query name="XXSecurityZoneRefUser.findByZoneId">
         <query>
@@ -1619,9 +1631,15 @@
         </query>
     </named-query>
 
-	<named-query name="XXSecurityZone.findZoneNamesByGroupId">
+    <named-query name="XXSecurityZone.findZoneNamesByGroupId">
         <query>
             select distinct obj.name from XXSecurityZone obj, XXSecurityZoneRefGroup refObj where obj.id = refObj.zoneId and refObj.groupId = :groupId
+        </query>
+    </named-query>
+
+    <named-query name="XXSecurityZone.findAllZoneHeaderInfos">
+        <query>
+            SELECT obj.id, obj.name FROM XXSecurityZone obj WHERE obj.id != :unzoneId
         </query>
     </named-query>
 

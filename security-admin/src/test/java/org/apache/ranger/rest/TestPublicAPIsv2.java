@@ -18,6 +18,7 @@
 package org.apache.ranger.rest;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -25,13 +26,16 @@ import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 
+import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
@@ -84,7 +88,10 @@ public class TestPublicAPIsv2 {
 
 	@Mock
 	RESTErrorUtil restErrorUtil;
-	
+
+	@Mock
+	SecurityZoneDBStore securityZoneStore;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 	
@@ -606,4 +613,63 @@ public class TestPublicAPIsv2 {
 		Assert.assertEquals(dbRangerPolicies.size(), rangerPolicies.size());
 		Mockito.verify(serviceREST).getPolicies(request);
 	}
+
+    @Test
+    public void testGetAllZoneNames() throws Exception {
+        List<RangerSecurityZoneHeaderInfo> zoneHeaderInfoList = new ArrayList<>();
+        zoneHeaderInfoList.add(new RangerSecurityZoneHeaderInfo(2L, "zone-1"));
+        zoneHeaderInfoList.add(new RangerSecurityZoneHeaderInfo(3L, "zone-2"));
+
+        Mockito.when(securityZoneStore.getSecurityZoneHeaderInfoList()).thenReturn(zoneHeaderInfoList);
+
+        List<RangerSecurityZoneHeaderInfo> returnedZoneHeaderInfoList = publicAPIsv2.getSecurityZoneHeaderInfoList();
+        Assert.assertEquals(returnedZoneHeaderInfoList.size(), zoneHeaderInfoList.size());
+        Mockito.verify(securityZoneStore, Mockito.times(1)).getSecurityZoneHeaderInfoList();
+    }
+
+    @Test
+    public void testGetServiceNamesForZone() throws Exception {
+        Long zoneId1           = 2L;
+        Long zoneId2           = 3L;
+        Long nonExistingZondId = 101L;
+
+        List<RangerServiceHeaderInfo> rangerServiceList1     = new ArrayList<RangerServiceHeaderInfo>();
+        List<RangerServiceHeaderInfo> rangerServiceList2     = new ArrayList<RangerServiceHeaderInfo>();
+
+        rangerServiceList1.add(new RangerServiceHeaderInfo(1L, "hdfs_1", false));
+        rangerServiceList1.add(new RangerServiceHeaderInfo(2L, "hive_1", false));
+        rangerServiceList1.add(new RangerServiceHeaderInfo(3L, "hbase_1", false));
+        rangerServiceList1.add(new RangerServiceHeaderInfo(4L, "tag_1", true));
+
+        rangerServiceList2.add(new RangerServiceHeaderInfo(5L, "yarn_1", false));
+
+        Mockito.when(securityZoneStore.getServiceHeaderInfoListByZoneId(null)).thenReturn(Collections.emptyList());
+        Mockito.when(securityZoneStore.getServiceHeaderInfoListByZoneId(zoneId1)).thenReturn(rangerServiceList1);
+        Mockito.when(securityZoneStore.getServiceHeaderInfoListByZoneId(zoneId2)).thenReturn(rangerServiceList2);
+        Mockito.when(securityZoneStore.getServiceHeaderInfoListByZoneId(nonExistingZondId)).thenReturn(Collections.emptyList());
+
+        // Null
+        List<RangerServiceHeaderInfo> returnedServicesNull = publicAPIsv2.getServiceHeaderInfoListByZoneId(null);
+
+        Mockito.verify(securityZoneStore, Mockito.times(1)).getServiceHeaderInfoListByZoneId(null);
+        Assert.assertEquals(returnedServicesNull.size(), 0);
+
+        // Non existing zoneId
+        List<RangerServiceHeaderInfo> returnedServicesNonExisting = publicAPIsv2.getServiceHeaderInfoListByZoneId(nonExistingZondId);
+
+        Mockito.verify(securityZoneStore, Mockito.times(1)).getServiceHeaderInfoListByZoneId(null);
+        Assert.assertEquals(returnedServicesNonExisting.size(), 0);
+
+        // zoneId1
+        List<RangerServiceHeaderInfo> returnedServicesZone1 = publicAPIsv2.getServiceHeaderInfoListByZoneId(zoneId1);
+
+        Mockito.verify(securityZoneStore, Mockito.times(1)).getServiceHeaderInfoListByZoneId(zoneId1);
+        Assert.assertEquals(returnedServicesZone1.size(), rangerServiceList1.size());
+
+        // zoneId2
+        List<RangerServiceHeaderInfo> returnedServicesZone2 = publicAPIsv2.getServiceHeaderInfoListByZoneId(zoneId2);
+
+        Mockito.verify(securityZoneStore, Mockito.times(1)).getServiceHeaderInfoListByZoneId(zoneId2);
+        Assert.assertEquals(returnedServicesZone2.size(), rangerServiceList2.size());
+    }
 }
