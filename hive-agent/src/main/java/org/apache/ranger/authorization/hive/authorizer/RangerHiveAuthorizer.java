@@ -197,7 +197,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(" ==> RangerHiveAuthorizer.createRole()");
 		}
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 		String currentUserName = getGrantorUsername(adminGrantor);
 		List<String> roleNames     = Arrays.asList(roleName);
 		List<String> userNames     = Arrays.asList(currentUserName);
@@ -240,7 +240,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			LOG.debug("RangerHiveAuthorizer.dropRole()");
 		}
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 
 		UserGroupInformation ugi       = getCurrentUserGroupInfo();
 		boolean	             result    = false;
@@ -287,7 +287,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		List<String> ret = new ArrayList<String>();
 		String user = ugi.getShortUserName();
 		List<String> userNames = Arrays.asList(user);
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 		try {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== getCurrentRoleNames() for user " + user);
@@ -352,7 +352,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			LOG.debug("==> RangerHiveAuthorizer.getAllRoles()");
 		}
 		List<String>           ret          = new ArrayList<>();
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 		List<String> 		   userNames    = null;
 		boolean	               result       = false;
 
@@ -410,7 +410,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		List<HiveRoleGrant>    ret          = new ArrayList<>();
 		List<String>	       roleNames    = Arrays.asList(roleName);
 		List<String>           userNames    = null;
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 		boolean	               result       = false;
 
 		if (hivePlugin == null) {
@@ -474,7 +474,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		List<HiveRoleGrant>     ret           = new ArrayList<>();
 		List<String> 			principalInfo = null;
 		List<String>            userNames     = null;
-		RangerHiveAuditHandler  auditHandler  = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler  auditHandler  = new RangerHiveAuditHandler(hivePlugin.getConfig());
 		boolean	       		    result        = false;
 
 		if (hivePlugin == null) {
@@ -541,7 +541,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		LOG.debug("RangerHiveAuthorizerBase.grantRole()");
 
 		boolean	               result       = false;
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 		String 				   username     = getGrantorUsername(grantorPrinc);
 		List<String> 		   principals   = new ArrayList<>();
 		try {
@@ -618,7 +618,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		boolean result = false;
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 
 		String 		  grantorUserName = getGrantorUsername(grantorPrinc);
 		List<String>  principals      = new ArrayList<>();
@@ -717,7 +717,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 
 		try {
 			List<HivePrivilegeObject> outputs = new ArrayList<>(Arrays.asList(hivePrivObject));
@@ -758,7 +758,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			throw new HiveAuthzPluginException("GRANT/REVOKE not supported in Ranger HiveAuthorizer. Please use Ranger Security Admin to setup access control.");
 		}
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 
 		try {
 			List<HivePrivilegeObject> outputs = new ArrayList<>(Arrays.asList(hivePrivObject));
@@ -799,7 +799,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			throw new HiveAccessControlException("Permission denied: user information not available");
 		}
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 
 		RangerPerfTracer perf = null;
 
@@ -1128,7 +1128,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		RangerPerfTracer perf = null;
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 
 		if(RangerPerfTracer.isPerfTraceEnabled(PERF_HIVEAUTH_REQUEST_LOG)) {
 			perf = RangerPerfTracer.getPerfTracer(PERF_HIVEAUTH_REQUEST_LOG, "RangerHiveAuthorizer.filterListCmdObjects()");
@@ -1344,7 +1344,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 		String ret = null;
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 
 		try {
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
@@ -1385,7 +1385,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		boolean ret = false;
 		String columnTransformer = columnName;
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 
 		try {
 			HiveAuthzSessionContext sessionContext = getHiveAuthzSessionContext();
@@ -3006,7 +3006,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		String user = ugi.getShortUserName();
 		Set<String> groups = Sets.newHashSet(ugi.getGroupNames());
 
-		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler();
+		RangerHiveAuditHandler auditHandler = new RangerHiveAuditHandler(hivePlugin.getConfig());
 		try {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> RangerHiveAuthorizer.getCurrentRoleNamesFromRanger() for user " + user + ", userGroups: " + groups);
