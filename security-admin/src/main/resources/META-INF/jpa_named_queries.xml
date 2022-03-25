@@ -343,6 +343,10 @@
 		<query>select obj from XXPolicy obj, XXService xSvc where obj.service = xSvc.id 
 				and obj.resourceSignature = :resSignature and xSvc.name = :serviceName and obj.isEnabled = :isPolicyEnabled</query>
 	</named-query>
+
+	<named-query name="XXPolicy.findByPolicyStatus">
+		<query>select obj from XXPolicy obj where obj.isEnabled = :isPolicyEnabled</query>
+	</named-query>
 	
 	<!--  currently not exposed but should be when we have a use case for it -->
 	<named-query name="XXPolicy.findByResourceSignature">
