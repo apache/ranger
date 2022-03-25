@@ -25,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
@@ -59,6 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 
 public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
     private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyAdminImpl.class);
@@ -176,22 +178,7 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
 
     @Override
     public boolean isDelegatedAdminAccessAllowedForModify(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext) {
-        boolean ret = isDelegatedAdminAccessAllowed(policy, user, userGroups, roles, false, evalContext);
-        if (ret) {
-            // Get old policy from policy-engine
-            RangerPolicy oldPolicy = null;
-            if (policy.getId() != null) {
-                try {
-                    oldPolicy = serviceDBStore.getPolicy(policy.getId());
-                } catch (Exception e) {
-                    // Ignore
-                }
-            }
-            if (oldPolicy != null) {
-                ret = isDelegatedAdminAccessAllowed(oldPolicy, user, userGroups, roles, false, evalContext);
-            }
-        }
-        return ret;
+        return isDelegatedAdminAccessAllowed(policy, user, userGroups, roles, false, evalContext);
     }
 
     boolean isDelegatedAdminAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, boolean isRead, Map<String, Object> evalContext) {
@@ -217,46 +204,104 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             final RangerPolicyRepository matchedRepository = policyEngine.getRepositoryForMatchedZone(policy);
 
             if (matchedRepository != null) {
-                // RANGER-3082
-                // Convert policy resources to by substituting macros with ASTERISK
-                Map<String, RangerPolicyResource> modifiedPolicyResources = getPolicyResourcesWithMacrosReplaced(policy.getResources(), wildcardEvalContext);
-                Set<String> accessTypes = getAllAccessTypes(policy, getServiceDef());
-
-                if (LOG.isDebugEnabled()) {
-                    LOG.debug("Checking admin-access for the access-types:[" + accessTypes + "]");
-                }
-
-                for (RangerPolicyEvaluator evaluator : matchedRepository.getPolicyEvaluators()) {
-                    Set<String> allowedAccesses = evaluator.getAllowedAccesses(modifiedPolicyResources, user, userGroups, roles, accessTypes, evalContext);
-
-                    if (allowedAccesses == null) {
-                        continue;
+                if (isRead) {
+                    Set<String> accessTypes = getAllAccessTypes(policy, getServiceDef());
+                    ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, accessTypes, true, evalContext);
+                } else {
+                    // Get old policy from policy-engine
+                    RangerPolicy oldPolicy = null;
+                    if (policy.getId() != null) {
+                        try {
+                            oldPolicy = serviceDBStore.getPolicy(policy.getId());
+                        } catch (Exception e) {
+                            LOG.error("Cannot get old policy from DB: policy-id:[" + policy.getId() + "]");
+                        }
                     }
 
-                    boolean isAllowedAccessesModified = accessTypes.removeAll(allowedAccesses);
+                    if (oldPolicy != null) {
+                        String oldResourceSignature = getResourceSignature(oldPolicy);
+                        String newResourceSignature = getResourceSignature(policy);
 
-                    if (isRead && isAllowedAccessesModified) {
-                        ret = true;
-                        break;
-                    }
-
-                    if (CollectionUtils.isEmpty(accessTypes)) {
-                        ret = true;
-                        break;
+                        if (StringUtils.equals(oldResourceSignature, newResourceSignature)) {
+                            Set<String> modifiedAccessTypes = getAllModifiedAccessTypes(oldPolicy, policy, getServiceDef());
+                            ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, modifiedAccessTypes, false, evalContext);
+                        } else {
+                            Set<String> removedAccessTypes = getAllAccessTypes(oldPolicy, getServiceDef());
+                            // Ensure that current policy-engine (without current policy) allows old-policy to be modified
+                            final boolean isOldPolicyChangeAllowed = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, oldPolicy, user, userGroups, roles, removedAccessTypes, false, evalContext);
+                            if (isOldPolicyChangeAllowed) {
+                                Set<String> addedAccessTypes = getAllAccessTypes(policy, getServiceDef());
+                                ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, addedAccessTypes, false, evalContext);
+                            }
+                        }
+                    } else {
+                        LOG.warn("Cannot get unmodified policy with id:[" + policy.getId() + "]. Checking if thi");
+                        Set<String> addedAccessTypes = getAllAccessTypes(policy, getServiceDef());
+                        ret = isDelegatedAdminAccessAllowedForPolicy(matchedRepository, policy, user, userGroups, roles, addedAccessTypes, false, evalContext);
                     }
                 }
-                if (!ret && CollectionUtils.isNotEmpty(accessTypes)) {
-                    LOG.info("Accesses : " + accessTypes + " are not authorized for the policy:[" + policy.getId() + "] by any of delegated-admin policies");
-                }
-
             }
-
         }
 
         RangerPerfTracer.log(perf);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowed(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", " + isRead + ", " + evalContext + "): " + ret);
+        }
+
+        return ret;
+    }
+
+    private boolean isDelegatedAdminAccessAllowedForPolicy(RangerPolicyRepository matchedRepository, RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Set<String> accessTypes, boolean isRead, Map<String, Object> evalContext) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerPolicyAdminImpl.isDelegatedAdminAccessAllowedForPolicy(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", accessTypes" + accessTypes + ", " + isRead + ", " + evalContext + ")");
+        }
+
+        boolean ret = false;
+
+        if (accessTypes == null) {
+            LOG.error("Could not get added access-types for policy-id:[" + policy.getId() + "]");
+        } else if (accessTypes.isEmpty()) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("No need to check any access-types for delegated admin check");
+            }
+            ret = true;
+        } else {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("Checking admin-access for the access-types:[" + accessTypes + "]");
+            }
+
+            // RANGER-3082
+            // Convert policy resources to by substituting macros with ASTERISK
+            Map<String, RangerPolicyResource> modifiedPolicyResources = getPolicyResourcesWithMacrosReplaced(policy.getResources(), wildcardEvalContext);
+
+            for (RangerPolicyEvaluator evaluator : matchedRepository.getPolicyEvaluators()) {
+                Set<String> allowedAccesses = evaluator.getAllowedAccesses(modifiedPolicyResources, user, userGroups, roles, accessTypes, evalContext);
+
+                if (allowedAccesses == null) {
+                    continue;
+                }
+
+                boolean isAllowedAccessesModified = accessTypes.removeAll(allowedAccesses);
+
+                if (isRead && isAllowedAccessesModified) {
+                    ret = true;
+                    break;
+                }
+
+                if (CollectionUtils.isEmpty(accessTypes)) {
+                    ret = true;
+                    break;
+                }
+            }
+
+            if (!ret && CollectionUtils.isNotEmpty(accessTypes)) {
+                LOG.info("Accesses : " + accessTypes + " are not authorized for the policy:[" + policy.getId() + "] by any of delegated-admin policies");
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerPolicyAdminImpl.isDelegatedAdminAccessAllowedForPolicy(" + policy.getId() + ", " + user + ", " + userGroups + ", " + roles + ", accessTypes" + accessTypes + ", " + isRead + ", " + evalContext + "): " + ret);
         }
 
         return ret;
@@ -731,6 +776,123 @@ public class RangerPolicyAdminImpl implements RangerPolicyAdmin {
             }
         }
         return ret;
+    }
+
+    private Set<String> getAllModifiedAccessTypes(RangerPolicy oldPolicy, RangerPolicy policy, RangerServiceDef serviceDef) {
+
+        Set<String> ret = new HashSet<>();
+
+        Map<String, Set<String>> oldUserAccesses  = new HashMap<>();
+        Map<String, Set<String>> oldGroupAccesses = new HashMap<>();
+        Map<String, Set<String>> oldRoleAccesses  = new HashMap<>();
+
+        Map<String, Set<String>> newUserAccesses  = new HashMap<>();
+        Map<String, Set<String>> newGroupAccesses = new HashMap<>();
+        Map<String, Set<String>> newRoleAccesses  = new HashMap<>();
+
+        collectAccessTypes(oldPolicy, serviceDef, oldUserAccesses, oldGroupAccesses, oldRoleAccesses);
+        collectAccessTypes(policy, serviceDef, newUserAccesses, newGroupAccesses, newRoleAccesses);
+
+        ret.addAll(getAccessTypesDiff(newUserAccesses, oldUserAccesses));
+        ret.addAll(getAccessTypesDiff(newGroupAccesses, oldGroupAccesses));
+        ret.addAll(getAccessTypesDiff(newRoleAccesses, oldRoleAccesses));
+
+        return ret;
+    }
+
+    private void collectAccessTypes(RangerPolicy policy, RangerServiceDef serviceDef, Map<String, Set<String>> userAccesses, Map<String, Set<String>> groupAccesses, Map<String, Set<String>> roleAccesses) {
+        Map<String, Collection<String>> expandedAccesses = ServiceDefUtil.getExpandedImpliedGrants(serviceDef);
+
+        if (MapUtils.isNotEmpty(expandedAccesses)) {
+
+            Integer policyType = policy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : policy.getPolicyType();
+
+            if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
+                collectAccessTypes(expandedAccesses, policy.getPolicyItems(), userAccesses, groupAccesses, roleAccesses);
+                collectAccessTypes(expandedAccesses, policy.getDenyPolicyItems(), userAccesses, groupAccesses, roleAccesses);
+                collectAccessTypes(expandedAccesses, policy.getAllowExceptions(), userAccesses, groupAccesses, roleAccesses);
+                collectAccessTypes(expandedAccesses, policy.getDenyExceptions(), userAccesses, groupAccesses, roleAccesses);
+            } else if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
+                collectAccessTypes(expandedAccesses, policy.getDataMaskPolicyItems(), userAccesses, groupAccesses, roleAccesses);
+            } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+                collectAccessTypes(expandedAccesses, policy.getRowFilterPolicyItems(), userAccesses, groupAccesses, roleAccesses);
+            } else {
+                LOG.error("Unknown policy-type :[" + policyType + "], returning empty access-type set");
+            }
+        }
+    }
+
+    private void collectAccessTypes(Map<String, Collection<String>> expandedAccesses, List<? extends RangerPolicy.RangerPolicyItem> policyItems, Map<String, Set<String>> userAccesses, Map<String, Set<String>> groupAccesses, Map<String, Set<String>> roleAccesses) {
+        for (RangerPolicy.RangerPolicyItem item : policyItems) {
+
+            List<RangerPolicy.RangerPolicyItemAccess> accesses = item.getAccesses();
+            Set<String> accessTypes = new HashSet<>();
+
+            for (RangerPolicy.RangerPolicyItemAccess access : accesses) {
+                accessTypes.addAll(expandedAccesses.get(access.getType()));
+            }
+
+            for (String user : item.getUsers()) {
+                Set<String> oldAccesses = userAccesses.get(user);
+                if (oldAccesses != null) {
+                    oldAccesses.addAll(accessTypes);
+                } else {
+                    userAccesses.put(user, accessTypes);
+                }
+            }
+
+            for (String group : item.getGroups()) {
+                Set<String> oldAccesses = groupAccesses.get(group);
+                if (oldAccesses != null) {
+                    oldAccesses.addAll(accessTypes);
+                } else {
+                    groupAccesses.put(group, accessTypes);
+                }
+            }
+
+            for (String role : item.getRoles()) {
+                Set<String> oldAccesses = roleAccesses.get(role);
+                if (oldAccesses != null) {
+                    oldAccesses.addAll(accessTypes);
+                } else {
+                    roleAccesses.put(role, accessTypes);
+                }
+            }
+        }
+    }
+
+    private Set<String> getAccessTypesDiff(Map<String, Set<String>> newAccessesMap, Map<String, Set<String>> oldAccessesMap) {
+        Set<String> ret = new HashSet<>();
+
+        for (Map.Entry<String, Set<String>> entry : newAccessesMap.entrySet()) {
+            Set<String> oldAccesses = oldAccessesMap.get(entry.getKey());
+            if (oldAccesses != null) {
+                Collection<String> added = CollectionUtils.subtract(entry.getValue(), oldAccesses);
+                ret.addAll(added);
+            } else {
+                ret.addAll(entry.getValue());
+            }
+        }
+        for (Map.Entry<String, Set<String>> entry : oldAccessesMap.entrySet()) {
+            Set<String> newAccesses = newAccessesMap.get(entry.getKey());
+            if (newAccesses != null) {
+                Collection<String> removed = CollectionUtils.subtract(entry.getValue(), newAccesses);
+                ret.addAll(removed);
+            } else {
+                ret.addAll(entry.getValue());
+            }
+        }
+        return ret;
+    }
+
+    private String getResourceSignature(final RangerPolicy policy) {
+        Map<String, RangerPolicyResourceSignature.ResourceSerializer> resources = new TreeMap<>();
+        for (Map.Entry<String, RangerPolicyResource> entry : policy.getResources().entrySet()) {
+            String resourceName = entry.getKey();
+            RangerPolicyResourceSignature.ResourceSerializer resourceView = new RangerPolicyResourceSignature.ResourceSerializer(entry.getValue());
+            resources.put(resourceName, resourceView);
+        }
+        return resources.toString();
     }
 
 }
