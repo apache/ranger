@@ -246,7 +246,7 @@ public class TestXUserMgr {
 		vxUser.setName(userLoginID);
 		vxUser.setUserRoleList(userRoleList);
 		vxUser.setGroupNameList(groupNameList);
-		vxUser.setPassword("usertest123");
+		vxUser.setPassword("Usertest123");
 		vxUser.setEmailAddress("test@test.com");
 		return vxUser;
 	}
@@ -322,7 +322,7 @@ public class TestXUserMgr {
 		userProfile.setFirstName("user12");
 		userProfile.setLastName("test12");
 		userProfile.setLoginId(userLoginID);
-		userProfile.setPassword("usertest123");
+		userProfile.setPassword("Usertest123");
 		userProfile.setUserSource(1);
 		userProfile.setPublicScreenName("testuser");
 		userProfile.setId(userId);
@@ -2708,7 +2708,7 @@ public class TestXUserMgr {
 		setup();
 		VXUser vxUser = vxUser();
 		vxUser.setPassword("password");
-		Mockito.when(restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric", null)).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException("serverMsg.xuserMgrValidatePassword", MessageEnums.INVALID_PASSWORD, null, "Password should be minimum 8 characters, at least one uppercase letter, one lowercase letter and one numeric.", null)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
 		xUserMgr.validatePassword(vxUser);
 	}
