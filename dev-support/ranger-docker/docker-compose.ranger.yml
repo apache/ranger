@@ -6,6 +6,7 @@ services:
       dockerfile: Dockerfile.ranger
       args:
         - RANGER_VERSION=${RANGER_VERSION}
+        - RANGER_DB_TYPE=${RANGER_DB_TYPE}
     image: ranger:latest
     container_name: ranger
     hostname: ranger.example.com
@@ -19,11 +20,12 @@ services:
       ranger-zk:
         condition: service_started
       ranger-db:
-        condition: service_started
+        condition: service_healthy
       ranger-solr:
         condition: service_started
     environment:
       - RANGER_VERSION
+      - RANGER_DB_TYPE
     command:
       - /home/ranger/scripts/ranger.sh
 
@@ -54,16 +56,6 @@ services:
       - solr-precreate
       - ranger_audits
       - /opt/solr/server/solr/configsets/ranger_audits/
-
-  ranger-db:
-    build:
-      context: .
-      dockerfile: Dockerfile.ranger-db
-    image: ranger-db
-    container_name: ranger-db
-    hostname: ranger-db.example.com
-    networks:
-      - ranger
 
 networks:
   ranger:

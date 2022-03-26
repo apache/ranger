@@ -16,30 +16,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-echo "export JAVA_HOME=${JAVA_HOME}" >> ${HADOOP_HOME}/etc/hadoop/hadoop-env.sh
 
-cat <<EOF > /etc/ssh/ssh_config
-Host *
-   StrictHostKeyChecking no
-   UserKnownHostsFile=/dev/null
-EOF
+CREATE USER 'rangeradmin'@'%'         IDENTIFIED BY 'rangerR0cks!';
+CREATE USER 'rangeradmin'@'localhost' IDENTIFIED BY 'rangerR0cks!';
+CREATE USER 'rangeradmin'@'ranger-db' IDENTIFIED BY 'rangerR0cks!';
 
-cat <<EOF > ${HADOOP_HOME}/etc/hadoop/core-site.xml
-<configuration>
-  <property>
-    <name>fs.defaultFS</name>
-    <value>hdfs://ranger-hadoop:9000</value>
-  </property>
-</configuration>
-EOF
+CREATE DATABASE ranger;
+GRANT ALL PRIVILEGES ON ranger.* TO 'rangeradmin'@'%';
+GRANT ALL PRIVILEGES ON ranger.* TO 'rangeradmin'@'localhost';
+GRANT ALL PRIVILEGES ON ranger.* TO 'rangeradmin'@'ranger-db';
 
-cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hive-site.xml
-cp ${RANGER_SCRIPTS}/hive-site.xml ${HIVE_HOME}/conf/hiveserver2-site.xml
-su -c "${HIVE_HOME}/bin/schematool -dbType ${RANGER_DB_TYPE} -initSchema" hive
+CREATE USER 'hive'@'%'         IDENTIFIED BY 'rangerR0cks!';
+CREATE USER 'hive'@'localhost' IDENTIFIED BY 'rangerR0cks!';
+CREATE USER 'hive'@'ranger-db' IDENTIFIED BY 'rangerR0cks!';
 
-mkdir -p /opt/hive/logs
-chown -R hive:hadoop /opt/hive/
-chmod g+w /opt/hive/logs
+CREATE DATABASE hive;
+GRANT ALL PRIVILEGES ON hive.* TO 'hive'@'%';
+GRANT ALL PRIVILEGES ON hive.* TO 'hive'@'localhost';
+GRANT ALL PRIVILEGES ON hive.* TO 'hive'@'ranger-db';
 
-cd ${RANGER_HOME}/ranger-hive-plugin
-./enable-hive-plugin.sh
+FLUSH PRIVILEGES;
