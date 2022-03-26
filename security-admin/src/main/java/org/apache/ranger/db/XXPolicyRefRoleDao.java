@@ -25,6 +25,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.biz.RangerPolicyRetriever;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicyRefRole;
@@ -112,9 +113,21 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
 		if(policyId == null) {
 			return;
 		}
-		getEntityManager()
-			.createNamedQuery("XXPolicyRefRole.deleteByPolicyId", tClass)
-			.setParameter("policyId", policyId).executeUpdate();
+
+        // First select ids according to policyId, then delete records according to ids
+        // The purpose of dividing the delete sql into these two steps is to avoid deadlocks at rr isolation level
+        List<Long> ids = getEntityManager()
+                .createNamedQuery("XXPolicyRefRole.findIdsByPolicyId", Long.class)
+                .setParameter("policyId", policyId)
+                .getResultList();
+
+        if (CollectionUtils.isEmpty(ids)) {
+            return;
+        }
+
+        getEntityManager()
+                .createNamedQuery("XXPolicyRefRole.deleteByIds", tClass)
+                .setParameter("ids", ids).executeUpdate();
 	}
 }
 
