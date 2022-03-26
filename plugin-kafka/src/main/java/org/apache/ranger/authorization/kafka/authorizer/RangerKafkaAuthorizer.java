@@ -21,6 +21,7 @@ package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -248,6 +249,9 @@ public class RangerKafkaAuthorizer implements Authorizer {
   }
 
   private List<AuthorizationResult> wrappedAuthorization(AuthorizableRequestContext requestContext, List<Action> actions) {
+    if (CollectionUtils.isEmpty(actions)) {
+      return Collections.emptyList();
+    }
     String userName = requestContext.principal() == null ? null : requestContext.principal().getName();
     Set<String> userGroups = MiscUtil.getGroupsForRequestUser(userName);
     String hostAddress = requestContext.clientAddress().getHostAddress();
