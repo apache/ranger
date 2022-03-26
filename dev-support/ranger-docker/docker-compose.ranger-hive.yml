@@ -8,6 +8,7 @@ services:
         - HIVE_HADOOP_VERSION=${HIVE_HADOOP_VERSION}
         - HIVE_VERSION=${HIVE_VERSION}
         - RANGER_VERSION=${RANGER_VERSION}
+        - RANGER_DB_TYPE=${RANGER_DB_TYPE}
     image: ranger-hive
     container_name: ranger-hive
     hostname: ranger-hive.example.com
@@ -28,6 +29,7 @@ services:
       - HIVE_HADOOP_VERSION
       - HIVE_VERSION
       - RANGER_VERSION
+      - RANGER_DB_TYPE
 
 networks:
   ranger:

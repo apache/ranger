@@ -17,14 +17,17 @@
 FROM ranger-base:latest
 
 ARG RANGER_VERSION
+ARG RANGER_DB_TYPE
 
 COPY ./dist/version                               /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/
 COPY ./downloads/postgresql-42.2.16.jre7.jar      /home/ranger/dist/
+COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
+COPY ./downloads/log4jdbc-1.2.jar                 /home/ranger/dist/
 
-COPY ./scripts/ranger.sh                         ${RANGER_SCRIPTS}/
-COPY ./scripts/ranger-admin-install.properties   ${RANGER_SCRIPTS}/
-COPY ./scripts/create-ranger-services.py         ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger.sh                                         ${RANGER_SCRIPTS}/
+COPY ./scripts/ranger-admin-install-${RANGER_DB_TYPE}.properties ${RANGER_SCRIPTS}/ranger-admin-install.properties
+COPY ./scripts/create-ranger-services.py                         ${RANGER_SCRIPTS}/
 
 RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-admin ${RANGER_HOME}/admin && \
@@ -34,7 +37,9 @@ RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --directory
     mkdir -p /var/log/ranger && \
     chown -R ranger:ranger ${RANGER_HOME}/admin/ /var/run/ranger/ /var/log/ranger/ && \
     mkdir -p /usr/share/java/ && \
-    mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql.jar
+    mv /home/ranger/dist/postgresql-42.2.16.jre7.jar /usr/share/java/postgresql.jar && \
+    mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /usr/share/java/mysql-connector.jar && \
+    mv /home/ranger/dist/log4jdbc-1.2.jar ${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
 
 USER ranger
 
