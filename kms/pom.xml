@@ -440,6 +440,10 @@
                     <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
+                <exclusion>
+                    <groupId>com.github.spotbugs</groupId>
+                    <artifactId>spotbugs-annotations</artifactId>
+                </exclusion>
             </exclusions>
         </dependency>
         <dependency>
