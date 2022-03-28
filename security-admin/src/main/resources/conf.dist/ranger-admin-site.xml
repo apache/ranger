@@ -75,6 +75,18 @@
 		<value>true</value>
 	</property>
 	<property>
+		<name>ranger.audit.amazon_cloudwatch.region</name>
+		<value>us-east-2</value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_group</name>
+		<value>ranger_audits</value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_stream_prefix</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.audit.solr.urls</name>
 		<value>http://##solr_host##:6083/solr/ranger_audits</value>
 		<description></description>

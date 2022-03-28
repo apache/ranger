@@ -177,6 +177,18 @@
 		<value></value>
 	</property>
 	<property>
+		<name>ranger.audit.amazon_cloudwatch.region</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_group</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_stream_prefix</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.jpa.audit.jdbc.dialect</name>
 		<value></value>
 	</property>

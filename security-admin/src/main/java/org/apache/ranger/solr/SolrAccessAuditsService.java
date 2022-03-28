@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.apache.ranger.AccessAuditsService;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -154,7 +155,7 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 
 		value = doc.getFieldValue("policyVersion");
 		if (value != null) {
-			accessAudit.setPolicyVersion(solrUtil.toLong(value));
+			accessAudit.setPolicyVersion(MiscUtil.toLong(value));
 		}
 
 		value = doc.getFieldValue("access");
@@ -206,15 +207,15 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		//}
 		value = doc.getFieldValue("result");
 		if (value != null) {
-			accessAudit.setAccessResult(solrUtil.toInt(value));
+			accessAudit.setAccessResult(MiscUtil.toInt(value));
 		}
 		value = doc.getFieldValue("policy");
 		if (value != null) {
-			accessAudit.setPolicyId(solrUtil.toLong(value));
+			accessAudit.setPolicyId(MiscUtil.toLong(value));
 		}
 		value = doc.getFieldValue("repoType");
 		if (value != null) {
-			accessAudit.setRepoType(solrUtil.toInt(value));
+			accessAudit.setRepoType(MiscUtil.toInt(value));
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
 			if (xServiceDef != null) {
 				accessAudit.setServiceType(xServiceDef.getName());
@@ -235,19 +236,19 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		}
 		value = doc.getFieldValue("evtTime");
 		if (value != null) {
-			accessAudit.setEventTime(solrUtil.toDate(value));
+			accessAudit.setEventTime(MiscUtil.toDate(value));
 		}
 		value = doc.getFieldValue("seq_num");
 		if (value != null) {
-			accessAudit.setSequenceNumber(solrUtil.toLong(value));
+			accessAudit.setSequenceNumber(MiscUtil.toLong(value));
 		}
 		value = doc.getFieldValue("event_count");
 		if (value != null) {
-			accessAudit.setEventCount(solrUtil.toLong(value));
+			accessAudit.setEventCount(MiscUtil.toLong(value));
 		}
 		value = doc.getFieldValue("event_dur_ms");
 		if (value != null) {
-			accessAudit.setEventDuration(solrUtil.toLong(value));
+			accessAudit.setEventDuration(MiscUtil.toLong(value));
 		}
 		value = doc.getFieldValue("tags");
 		if (value != null) {

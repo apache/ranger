@@ -37,6 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.amazon.cloudwatch.CloudWatchAccessAuditsService;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -113,6 +114,9 @@ public class AssetMgr extends AssetMgrBase {
 
 	@Autowired
 	ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
+
+	@Autowired
+	CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
 
 	@Autowired
 	XPolicyService xPolicyService;
@@ -1129,6 +1133,8 @@ public class AssetMgr extends AssetMgrBase {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_CloudWatch.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+            return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {
             return xAccessAuditService.searchXAccessAudits(searchCriteria);
         }
