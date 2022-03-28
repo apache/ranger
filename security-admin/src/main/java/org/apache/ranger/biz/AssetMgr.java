@@ -47,6 +47,7 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.elasticsearch.ElasticSearchAccessAuditsService;
 import org.apache.ranger.entity.XXPermMap;
@@ -122,7 +123,7 @@ public class AssetMgr extends AssetMgrBase {
 	XPolicyService xPolicyService;
 
 	@Autowired
-	RangerPluginActivityLogger activityLogger;
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
 	RangerPluginInfoService pluginInfoService;
@@ -664,7 +665,7 @@ public class AssetMgr extends AssetMgrBase {
 
 					}
 				};
-				activityLogger.commitAfterTransactionComplete(commitWork);
+				transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
 			}
 		} else {
 			ret = rangerDaoManager.getXXPolicyExportAudit().create(xXPolicyExportAudit);
@@ -734,6 +735,7 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
 		final boolean isTagVersionResetNeeded;
+		final Runnable commitWork;
 
 		if (httpCode == HttpServletResponse.SC_NOT_MODIFIED) {
 			// Create or update PluginInfo record after transaction is completed. If it is created in-line here
@@ -758,15 +760,13 @@ public class AssetMgr extends AssetMgrBase {
 					break;
 			}
 
-			Runnable commitWork = new Runnable() {
+			commitWork = new Runnable() {
 				@Override
 				public void run() {
 					doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
 				}
 			};
-			activityLogger.commitAfterTransactionComplete(commitWork);
 		} else if (httpCode == HttpServletResponse.SC_NOT_FOUND) {
-			Runnable commitWork;
 			if ((isPolicyDownloadRequest(entityType) && (pluginInfo.getPolicyActiveVersion() == null || pluginInfo.getPolicyActiveVersion() == -1))
 					|| (isTagDownloadRequest(entityType) && (pluginInfo.getTagActiveVersion() == null || pluginInfo.getTagActiveVersion() == -1))
 					|| (isRoleDownloadRequest(entityType) && (pluginInfo.getRoleActiveVersion() == null || pluginInfo.getRoleActiveVersion() == -1))
@@ -785,12 +785,16 @@ public class AssetMgr extends AssetMgrBase {
 					}
 				};
 			}
-			activityLogger.commitAfterTransactionComplete(commitWork);
-
 		} else {
 			isTagVersionResetNeeded = false;
+			commitWork = null;
 			doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
 		}
+
+		if (commitWork != null) {
+			transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
+		}
+
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest(entityType) + ", httpCode = " + httpCode + ")");
 		}
