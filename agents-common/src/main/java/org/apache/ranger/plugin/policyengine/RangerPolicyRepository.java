@@ -991,7 +991,7 @@ public class RangerPolicyRepository {
             for(RangerPolicyEvaluator policyEvaluator : this.auditPolicyEvaluators) {
                 RangerPolicy policy = policyEvaluator.getPolicy();
 
-                LOG.debug("rowFilter policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
+                LOG.debug("audit policy evaluation order: #" + (++order) + " - policy id=" + policy.getId() + "; name=" + policy.getName() + "; evalOrder=" + policyEvaluator.getEvalOrder());
             }
         }
     }
