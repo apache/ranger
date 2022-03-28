@@ -476,6 +476,11 @@
              <artifactId>protobuf-java</artifactId>
              <version>${gcp.protobuf-java.version}</version>
          </dependency>
+         <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${gcp.protobuf-java.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>

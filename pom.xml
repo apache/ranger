@@ -178,8 +178,8 @@
         <presto.version>333</presto.version>
         <poi.version>5.1.0</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <protobuf-java.version>2.5.0</protobuf-java.version>
-        <gcp.protobuf-java.version>3.19.1</gcp.protobuf-java.version>
+        <protobuf-java.version>3.19.3</protobuf-java.version>
+        <gcp.protobuf-java.version>3.19.3</gcp.protobuf-java.version>
         <scala.version>2.12.10</scala.version>
         <scala.binary.version>2.12</scala.binary.version>
         <scala.xml.version>1.0.4</scala.xml.version>
