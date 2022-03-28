@@ -29,17 +29,6 @@
     <properties>
         <skipJSTests>false</skipJSTests>
     </properties>
-    <dependencyManagement>
-        <dependencies>
-            <dependency>
-                <groupId>com.amazonaws</groupId>
-                <artifactId>aws-java-sdk-bom</artifactId>
-                <version>${com.amazonaws.aws-java-sdk-bom.version}</version>
-                <type>pom</type>
-                <scope>import</scope>
-            </dependency>
-        </dependencies>
-    </dependencyManagement>
     <dependencies>
         <dependency>
             <groupId>org.antlr</groupId>
@@ -679,7 +668,8 @@
         </dependency>
         <dependency>
             <groupId>com.amazonaws</groupId>
-            <artifactId>aws-java-sdk-logs</artifactId>
+            <artifactId>aws-java-sdk-bundle</artifactId>
+            <version>${aws-java-sdk.version}</version>
         </dependency>
     </dependencies>
     <build>
