@@ -35,6 +35,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.*;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.entity.XXGroupPermission;
 import org.apache.ranger.entity.XXModuleDef;
 import org.apache.ranger.entity.XXUserPermission;
@@ -159,6 +160,9 @@ public class XUserMgr extends XUserMgrBase {
 
 	@Autowired
 	StringUtil stringUtil;
+
+	@Autowired
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
 	@Qualifier(value = "transactionManager")
@@ -2514,94 +2518,19 @@ public class XUserMgr extends XUserMgrBase {
 			throw restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA);
 		}
 
-		VXUser vXUser = null;
-		VXPortalUser vXPortalUser=null;
 		XXUser xxUser = daoManager.getXXUser().findByUserName(userName);
-		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(userName);
-		String actualPassword = "";
-		if(xxUser!=null){
+		if (xxUser == null) {
+			transactionSynchronizationAdapter.executeOnTransactionCommit(new ExternalUserCreator(userName));
+		}
+
+		xxUser = daoManager.getXXUser().findByUserName(userName);
+		VXUser vXUser = null;
+		if (xxUser != null) {
 			vXUser = xUserService.populateViewBean(xxUser);
-			return vXUser;
 		}
-		if(xxUser==null){
-			vXUser=new VXUser();
-			vXUser.setName(userName);
-			vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
-			vXUser.setDescription(vXUser.getName());
-			actualPassword = vXUser.getPassword();
-		}
-		if(xXPortalUser==null){
-            int noOfRetries = 0;
-			do {
-			    try {
-                    TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-                    txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
-                    noOfRetries++;
-					final VXUser vxUserFinal = vXUser;
-                    xXPortalUser = txTemplate.execute(new TransactionCallback<XXPortalUser>() {
-                        @Override
-                        public XXPortalUser doInTransaction(TransactionStatus status) {
-                            XXPortalUser ret = daoManager.getXXPortalUser().findByLoginId(userName);
-                            if (ret == null) {
-								if (logger.isDebugEnabled()) {
-									logger.debug("createServiceConfigUser(): Couldn't find " + userName + " and hence creating user in x_portal_user table");
-								}
-								VXPortalUser vXPortalUser=new VXPortalUser();
-								vXPortalUser.setLoginId(userName);
-								vXPortalUser.setEmailAddress(vxUserFinal.getEmailAddress());
-								vXPortalUser.setFirstName(vxUserFinal.getFirstName());
-								vXPortalUser.setLastName(vxUserFinal.getLastName());
-								vXPortalUser.setPassword(vxUserFinal.getPassword());
-								vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
-								ArrayList<String> roleList = new ArrayList<String>();
-								roleList.add(RangerConstants.ROLE_USER);
-								vXPortalUser.setUserRoleList(roleList);
-								ret = userMgr.mapVXPortalUserToXXPortalUser(vXPortalUser);
-                                ret = userMgr.createUser(ret, RangerCommonEnums.STATUS_ENABLED, roleList);
-                                if (logger.isDebugEnabled()) {
-                                        logger.debug("createServiceConfigUser(): Successfully created user in x_portal_user table " + ret.getLoginId());
-                                }
-                            }
-                           return ret;
-                        }
-                    });
-                } catch (Exception excp) {
-                    logger.warn("createServiceConfigUser(): Failed to update x_portal_user table and retry count =  " + noOfRetries);
-                    xXPortalUser = null;
-                }
-            } while (noOfRetries < MAX_DB_TRANSACTION_RETRIES && (xXPortalUser == null));
-		}
-		VXUser createdXUser=null;
-		if (xxUser == null && vXUser != null) {
-			try {
-				createdXUser = xUserService.createResource(vXUser);
-			} catch (Exception ex) {
-				logger.error("Error creating user: " + vXUser.getName(), ex);
-			}
-		}
-		if(createdXUser!=null){
-			try{
-				logger.info("User created: "+createdXUser.getName());
-				createdXUser.setPassword(actualPassword);
-				List<XXTrxLog> trxLogList = xUserService.getTransactionLog(createdXUser, "create");
-				String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
-				createdXUser.setPassword(hiddenPassword);
-				xaBizUtil.createTrxLog(trxLogList);
-				if(xXPortalUser!=null){
-					vXPortalUser=userMgr.mapXXPortalUserToVXPortalUserForDefaultAccount(xXPortalUser);
-					assignPermissionToUser(vXPortalUser, true);
-				}
-			}catch(Exception ex){
-				logger.error("Error while assigning permissions to user: "+createdXUser.getName(),ex);
-			}
-		}else{
-			xxUser = daoManager.getXXUser().findByUserName(userName);
-			if(xxUser!=null){
-				createdXUser = xUserService.populateViewBean(xxUser);
-			}
-		}
-		return createdXUser;
+		return vXUser;
 	}
+
 	protected void validatePassword(VXUser vXUser) {
 		if (vXUser.getPassword() != null && !vXUser.getPassword().isEmpty()) {
 			boolean checkPassword = false;
@@ -3215,5 +3144,91 @@ public class XUserMgr extends XUserMgrBase {
 		}
 		vXUserList = xUserService.lookupXUsers(searchCriteria, vXUserList);
 		return vXUserList;
+	}
+
+	private class ExternalUserCreator implements Runnable {
+		private String userName;
+
+		ExternalUserCreator(String user) {
+			this.userName = user;
+		}
+
+		@Override
+		public void run() {
+			createExternalUser();
+		}
+
+		private void createExternalUser() {
+			if (logger.isDebugEnabled()) {
+				logger.debug("==> ExternalUserCreator.createExternalUser(username=" + userName);
+			}
+
+			XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(userName);
+			if (xXPortalUser == null) {
+				if (logger.isDebugEnabled()) {
+					logger.debug("createExternalUser(): Couldn't find " + userName+ " and hence creating user in x_portal_user table");
+				}
+				VXPortalUser vXPortalUser = new VXPortalUser();
+				vXPortalUser.setLoginId(userName);
+				vXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+				ArrayList<String> roleList = new ArrayList<String>();
+				roleList.add(RangerConstants.ROLE_USER);
+				vXPortalUser.setUserRoleList(roleList);
+				xXPortalUser = userMgr.mapVXPortalUserToXXPortalUser(vXPortalUser);
+				try {
+					xXPortalUser = userMgr.createUser(xXPortalUser, RangerCommonEnums.STATUS_ENABLED, roleList);
+					if (logger.isDebugEnabled()) {
+						logger.debug("createExternalUser(): Successfully created user in x_portal_user table " + xXPortalUser.getLoginId());
+					}
+				} catch (Exception ex) {
+					throw new RuntimeException("Failed to create user " + userName + " in x_portal_user table. retrying", ex);
+				}
+			}
+
+			VXUser createdXUser = null;
+			String actualPassword = "";
+			XXUser xXUser = daoManager.getXXUser().findByUserName(userName);
+			if (xXPortalUser != null && xXUser == null) {
+				VXUser vXUser = new VXUser();
+				vXUser.setName(userName);
+				vXUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
+				vXUser.setDescription(vXUser.getName());
+				actualPassword = vXUser.getPassword();
+				try {
+					createdXUser = xUserService.createResource(vXUser);
+					if (logger.isDebugEnabled()) {
+						logger.debug("createExternalUser(): Successfully created user in x_user table " + vXUser.getName());
+					}
+				} catch (Exception ex) {
+					throw new RuntimeException("Failed to create user " + userName + " in x_user table. retrying", ex);
+				}
+			}
+
+			if (createdXUser != null) {
+				logger.info("User created: " + createdXUser.getName());
+				try {
+					createdXUser.setPassword(actualPassword);
+					List<XXTrxLog> trxLogList = xUserService.getTransactionLog(createdXUser, "create");
+					String hiddenPassword = PropertiesUtil.getProperty("ranger.password.hidden", "*****");
+					createdXUser.setPassword(hiddenPassword);
+					xaBizUtil.createTrxLog(trxLogList);
+				} catch (Exception ex) {
+					throw new RuntimeException("Error while creating trx logs for user: " + createdXUser.getName(), ex);
+				}
+
+				try {
+					if (xXPortalUser != null) {
+						VXPortalUser createdXPortalUser = userMgr.mapXXPortalUserToVXPortalUserForDefaultAccount(xXPortalUser);
+						assignPermissionToUser(createdXPortalUser, true);
+					}
+				} catch (Exception ex) {
+					throw new RuntimeException("Error while assigning permissions to user: " + createdXUser.getName(), ex);
+				}
+			}
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("<== ExternalUserCreator.createExternalUser(username=" + userName);
+			}
+		}
 	}
 }

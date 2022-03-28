@@ -37,6 +37,7 @@ import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXAuditMapDao;
 import org.apache.ranger.db.XXAuthSessionDao;
@@ -226,6 +227,10 @@ public class TestXUserMgr {
 
 	@Mock
 	XUgsyncAuditInfoService xUgsyncAuditInfoService;
+
+	@Mock
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -2108,33 +2113,40 @@ public class TestXUserMgr {
 	@Test
 	public void test49createServiceConfigUser() {
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 		VXUser vxUser = vxUser();
 		XXUser xXUser = xxUser(vxUser);
 		VXPortalUser userProfile = userProfile();
-		XXPortalUser xXPortalUser = xxPortalUser(userProfile);
+		Collection<String> userRoleList =getRoleList();
 		VXUserPermission vXUserPermission=vxUserPermission();
 		XXUserPermission xUserPermissionObj = xxUserPermission();
 		xUserPermissionObj.setModuleId(vXUserPermission.getModuleId());
 		xUserPermissionObj.setUserId(vXUserPermission.getUserId());
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(vxUser.getName())).thenReturn(xXUser);
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.findByLoginId(vxUser.getName())).thenReturn(xXPortalUser);
 		Mockito.when(xUserService.populateViewBean(xXUser)).thenReturn(vxUser);
 		VXUser serviceConfigUser=xUserMgr.createServiceConfigUser(vxUser.getName());
 		Assert.assertNotNull(serviceConfigUser);
 		Assert.assertEquals(xXUser.getName(), serviceConfigUser.getName());
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(vxUser.getName())).thenReturn(null);
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.findByLoginId(vxUser.getName())).thenReturn(null);
-		Mockito.when(userDao.findByLoginId(vxUser.getName())).thenReturn(null);
-		Mockito.when(xUserService.createResource((VXUser) Mockito.any())).thenReturn(vxUser);
-		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(xxUserDao.findByUserName(vxUser.getName())).thenReturn(null, xXUser);
 		UserSessionBase userSession = Mockito.mock(UserSessionBase.class);
 		Set<UserSessionBase> userSessions = new HashSet<UserSessionBase>();
 		userSessions.add(userSession);
+
+		userProfile.setUserRoleList(userRoleList);
+		List<XXUserPermission> xUserPermissionsList = new ArrayList<XXUserPermission>();
+		XXUserPermission xUserPermissionObj2 = new XXUserPermission();
+		xUserPermissionObj2.setAddedByUserId(userId);
+		xUserPermissionObj2.setCreateTime(new Date());
+		xUserPermissionObj2.setId(userId);
+		xUserPermissionObj2.setIsAllowed(1);
+		xUserPermissionObj2.setModuleId(1L);
+		xUserPermissionObj2.setUpdatedByUserId(userId);
+		xUserPermissionObj2.setUpdateTime(new Date());
+		xUserPermissionObj2.setUserId(userId);
+		xUserPermissionsList.add(xUserPermissionObj2);
+
 		serviceConfigUser=xUserMgr.createServiceConfigUser(vxUser.getName());
 		Assert.assertNotNull(serviceConfigUser);
 		Assert.assertEquals(xXUser.getName(), serviceConfigUser.getName());
@@ -3303,29 +3315,20 @@ public class TestXUserMgr {
 	@Test
 	public void test99createServiceConfigUser() {
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
-		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 		VXUser vxUser = vxUser();
 		XXUser xXUser = xxUser(vxUser);
-		VXPortalUser userProfile = userProfile();
-		XXPortalUser xXPortalUser = xxPortalUser(userProfile);
 		VXUserPermission vXUserPermission=vxUserPermission();
 		XXUserPermission xUserPermissionObj = xxUserPermission();
 		xUserPermissionObj.setModuleId(vXUserPermission.getModuleId());
 		xUserPermissionObj.setUserId(vXUserPermission.getUserId());
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(vxUser.getName())).thenReturn(xXUser);
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.findByLoginId(vxUser.getName())).thenReturn(xXPortalUser);
 		Mockito.when(xUserService.populateViewBean(xXUser)).thenReturn(vxUser);
 		VXUser serviceConfigUser=xUserMgr.createServiceConfigUser(vxUser.getName());
 		Assert.assertNotNull(serviceConfigUser);
 		Assert.assertEquals(xXUser.getName(), serviceConfigUser.getName());
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(vxUser.getName())).thenReturn(null);
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
-		Mockito.when(userDao.findByLoginId(vxUser.getName())).thenReturn(null);
-		Mockito.when(xUserService.createResource((VXUser) Mockito.any())).thenReturn(null);
-		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		UserSessionBase userSession = Mockito.mock(UserSessionBase.class);
 		Set<UserSessionBase> userSessions = new HashSet<UserSessionBase>();
 		userSessions.add(userSession);
@@ -4620,8 +4623,6 @@ public class TestXUserMgr {
 	public void test130UpdateXUser() {
 		destroySession();
 		setup();
-		destroySession();
-		setup();
 		VXUser vxUser = vxUser();
 		Mockito.when(restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
@@ -4642,16 +4643,31 @@ public class TestXUserMgr {
 	public void test132CreateExternalUser() {
 		destroySession();
 		setup();
-		setup();
+		ArrayList<String> roleList = new ArrayList<String>();
+		roleList.add(RangerConstants.ROLE_USER);
+		VXPortalUser vXPortalUser = userProfile();
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		VXUser vXUser = vxUser();
 		VXUser createdXUser = vxUser();
+		XXUser xXUser = xxUser(vXUser);
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
-		Mockito.when(xxUserDao.findByUserName(vXUser.getName())).thenReturn(null);
-		XXPortalUserDao xXPortalUserDao = Mockito.mock(XXPortalUserDao.class);
-		Mockito.when(daoManager.getXXPortalUser()).thenReturn(xXPortalUserDao);
-		Mockito.when(xXPortalUserDao.findByLoginId(vXUser.getName().trim())).thenReturn(null);
-		Mockito.when(xUserService.createResource((VXUser) Mockito.any())).thenReturn(createdXUser);
+		
+		Mockito.when(xxUserDao.findByUserName(vXUser.getName())).thenReturn(null, xXUser);
+		Mockito.when(xUserService.populateViewBean(xXUser)).thenReturn(vXUser);
+
+		vXPortalUser.setUserRoleList(roleList);
+		List<XXUserPermission> xUserPermissionsList = new ArrayList<XXUserPermission>();
+		XXUserPermission xUserPermissionObj = new XXUserPermission();
+		xUserPermissionObj.setAddedByUserId(userId);
+		xUserPermissionObj.setCreateTime(new Date());
+		xUserPermissionObj.setId(userId);
+		xUserPermissionObj.setIsAllowed(1);
+		xUserPermissionObj.setModuleId(1L);
+		xUserPermissionObj.setUpdatedByUserId(userId);
+		xUserPermissionObj.setUpdateTime(new Date());
+		xUserPermissionObj.setUserId(userId);
+		xUserPermissionsList.add(xUserPermissionObj);
+
 		createdXUser = xUserMgr.createExternalUser(vXUser.getName());
 		Assert.assertNotNull(createdXUser);
 		Assert.assertEquals(createdXUser.getName(), vXUser.getName());
