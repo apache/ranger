@@ -45,7 +45,6 @@
 							<include>log4j:log4j</include>
 							<include>commons-cli:commons-cli</include>
 							<include>commons-collections:commons-collections</include>
-							<include>org.apache.commons:commons-configuration2</include>
 							<include>commons-lang:commons-lang</include>
 							<include>commons-logging:commons-logging</include>
 							<include>com.google.guava:guava</include>
@@ -60,8 +59,6 @@
 							<include>commons-codec:commons-codec</include>
 							<include>org.apache.ranger:ranger-plugins-common</include>
 							<include>org.apache.ranger:ugsync-util</include>
-							<include>org.codehaus.woodstox:stax2-api</include>
-							<include>com.fasterxml.woodstox:woodstox-core</include>
 							<include>org.apache.htrace:htrace-core4</include>
 							<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
 							<include>net.java.dev.jna:jna:jar:${jna.version}</include>
