@@ -346,7 +346,7 @@ class BaseDB(object):
 						sys.exit(1)
 					isSchemaCreated=False
 					countTries = 0
-					while(isSchemaCreated==False or countTries<2):
+					while(isSchemaCreated==False and countTries<3):
 						countTries=countTries+1
 						isFirstTableExist = self.check_table(db_name, db_user, db_password, first_table)
 						isLastTableExist = self.check_table(db_name, db_user, db_password, last_table)
@@ -1336,8 +1336,6 @@ def main(argv):
 		last_table='X_POLICY_REF_GROUP'
 
 	elif XA_DB_FLAVOR == "POSTGRES":
-		db_user=db_user.lower()
-		db_name=db_name.lower()
 		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type,is_override_db_connection_string,db_override_jdbc_connection_string)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME , postgres_dbversion_catalog)

@@ -665,8 +665,6 @@ def main(argv):
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME ,oracle_core_file)
 
 	elif XA_DB_FLAVOR == "POSTGRES":
-		db_user=db_user.lower()
-		db_name=db_name.lower()
 		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME , postgres_core_file)
