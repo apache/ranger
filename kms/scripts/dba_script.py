@@ -654,13 +654,13 @@ class PostgresConf(BaseDB):
 					log("[I] User does not exists, Creating user : " + db_user, "info")
 					get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
 					if is_unix:
-						query = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, db_password)
-						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\"" %(db_user, masked_pwd_string)
+						query = get_cmd + " -query \"CREATE USER \\\"%s\\\" WITH LOGIN PASSWORD '%s';\"" %(db_user, db_password)
+						query_with_masked_pwd = get_cmd + " -query \"CREATE USER \\\"%s\\\" WITH LOGIN PASSWORD '%s';\"" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(shlex.split(query))
 					elif os_name == "WINDOWS":
-						query = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\" -c ;" %(db_user, db_password)
-						query_with_masked_pwd = get_cmd + " -query \"CREATE USER %s WITH LOGIN PASSWORD '%s';\" -c ;" %(db_user, masked_pwd_string)
+						query = get_cmd + " -query \"CREATE USER \\\"%s\\\" WITH LOGIN PASSWORD '%s';\" -c ;" %(db_user, db_password)
+						query_with_masked_pwd = get_cmd + " -query \"CREATE USER \\\"%s\\\" WITH LOGIN PASSWORD '%s';\" -c ;" %(db_user, masked_pwd_string)
 						jisql_log(query_with_masked_pwd, db_root_password)
 						ret = subprocess.call(query)
 					if ret == 0:
@@ -673,7 +673,7 @@ class PostgresConf(BaseDB):
 						log("[E] Postgres user " +db_user+" creation failed..", "error")
 						sys.exit(1)
 				else:
-					logFile("CREATE USER %s WITH LOGIN PASSWORD '%s';" %(db_user, db_password))
+					logFile("CREATE USER \"%s\" WITH LOGIN PASSWORD '%s';" %(db_user, db_password))
 
 	def verify_db(self, root_user, db_root_password, db_name,dryMode):
 		if dryMode == False:
@@ -700,11 +700,11 @@ class PostgresConf(BaseDB):
 				log("[I] Database does not exist, Creating database : " + db_name,"info")
 				get_cmd = self.get_jisql_cmd(root_user, db_root_password, 'postgres')
 				if is_unix:
-					query = get_cmd + " -query \"create database %s with OWNER %s;\"" %(db_name, db_user)
+					query = get_cmd + " -query \"create database \\\"%s\\\" with OWNER \\\"%s\\\";\"" %(db_name, db_user)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(shlex.split(query))
 				elif os_name == "WINDOWS":
-					query = get_cmd + " -query \"create database %s with OWNER %s;\" -c ;" %(db_name, db_user)
+					query = get_cmd + " -query \"create database \\\"%s\\\" with OWNER \\\"%s\\\";\" -c ;" %(db_name, db_user)
 					jisql_log(query, db_root_password)
 					ret = subprocess.call(query)
 				if ret != 0:
@@ -718,18 +718,18 @@ class PostgresConf(BaseDB):
 						log("[E] Database creation failed..","error")
 						sys.exit(1)
 			else:
-				logFile("CREATE DATABASE %s WITH OWNER %s;" %(db_name, db_user))
+				logFile("CREATE DATABASE \"%s\" WITH OWNER \"%s\";" %(db_name, db_user))
 
 	def grant_xa_db_user(self, root_user, db_name, db_user, db_password, db_root_password , is_revoke,dryMode):
 		if dryMode == False:
 			log("[I] Granting privileges TO user '"+db_user+"' on db '"+db_name+"'" , "info")
 			get_cmd = self.get_jisql_cmd(root_user, db_root_password, db_name)
 			if is_unix:
-				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE %s to %s;\"" %(db_name, db_user)
+				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE \\\"%s\\\" to \\\"%s\\\";\"" %(db_name, db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE %s to %s;\" -c ;" %(db_name, db_user)
+				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON DATABASE \\\"%s\\\" to \\\"%s\\\";\" -c ;" %(db_name, db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(query)
 			if ret != 0:
@@ -737,11 +737,11 @@ class PostgresConf(BaseDB):
 				sys.exit(1)
 
 			if is_unix:
-				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO %s;\"" %(db_user)
+				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO \\\"%s\\\";\"" %(db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(shlex.split(query))
 			elif os_name == "WINDOWS":
-				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO %s;\" -c ;" %(db_user)
+				query = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SCHEMA public TO \\\"%s\\\";\" -c ;" %(db_user)
 				jisql_log(query, db_root_password)
 				ret = subprocess.call(query)
 			if ret != 0:
@@ -762,14 +762,14 @@ class PostgresConf(BaseDB):
 					tablename , value = each_line.strip().split(" |",1)
 					tablename = tablename.strip()
 					if is_unix:
-						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\"" %(tablename,db_user)
+						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO \\\"%s\\\";\"" %(tablename,db_user)
 						jisql_log(query1, db_root_password)
 						ret = subprocess.call(shlex.split(query1))
 						if ret != 0:
 							log("[E] Granting all privileges on tablename "+tablename+" to user "+db_user+" failed..", "error")
 							sys.exit(1)
 					elif os_name == "WINDOWS":
-						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO %s;\" -c ;" %(tablename,db_user)
+						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON TABLE %s TO \\\"%s\\\";\" -c ;" %(tablename,db_user)
 						jisql_log(query1, db_root_password)
 						ret = subprocess.call(query1)
 						if ret != 0:
@@ -791,14 +791,14 @@ class PostgresConf(BaseDB):
 					sequence_name , value = each_line.strip().split(" |",1)
 					sequence_name = sequence_name.strip()
 					if is_unix:
-						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\"" %(sequence_name,db_user)
+						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO \\\"%s\\\";\"" %(sequence_name,db_user)
 						jisql_log(query1, db_root_password)
 						ret = subprocess.call(shlex.split(query1))
 						if ret != 0:
 							log("[E] Granting all privileges on sequence "+sequence_name+" to user "+db_user+" failed..", "error")
 							sys.exit(1)
 					elif os_name == "WINDOWS":
-						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO %s;\" -c ;" %(sequence_name,db_user)
+						query1 = get_cmd + " -query \"GRANT ALL PRIVILEGES ON SEQUENCE %s TO \\\"%s\\\";\" -c ;" %(sequence_name,db_user)
 						jisql_log(query1, db_root_password)
 						ret = subprocess.call(query1)
 						if ret != 0:
@@ -807,18 +807,18 @@ class PostgresConf(BaseDB):
 
 			log("[I] Granting privileges TO user '"+db_user+"' on db '"+db_name+"' Done" , "info")
 		else:
-			logFile("GRANT ALL PRIVILEGES ON DATABASE %s to %s;" %(db_name, db_user))
-			logFile("GRANT ALL PRIVILEGES ON SCHEMA public TO %s;" %( db_user))
-			logFile("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO %s;" %(db_user))
-			logFile("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO %s;" %(db_user))
+			logFile("GRANT ALL PRIVILEGES ON DATABASE \"%s\" to \"%s\";" %(db_name, db_user))
+			logFile("GRANT ALL PRIVILEGES ON SCHEMA public TO \"%s\";" %( db_user))
+			logFile("GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO \"%s\";" %(db_user))
+			logFile("GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO \"%s\";" %(db_user))
 
 	def writeDrymodeCmd(self, xa_db_root_user, xa_db_root_password, db_user, db_password, db_name):
 		logFile("# Login to POSTGRES Server from a POSTGRES dba user(i.e 'postgres') to execute below sql statements.")
-		logFile("CREATE USER %s WITH LOGIN PASSWORD '%s';" %(db_user, db_password))
-		logFile("CREATE DATABASE %s WITH OWNER %s;" %(db_name, db_user))
+		logFile("CREATE USER \"%s\" WITH LOGIN PASSWORD '%s';" %(db_user, db_password))
+		logFile("CREATE DATABASE \"%s\" WITH OWNER \"%s\";" %(db_name, db_user))
 		logFile("# Login to POSTGRES Server from a POSTGRES dba user(i.e 'postgres') on '%s' database to execute below sql statements."%(db_name))
-		logFile("GRANT ALL PRIVILEGES ON DATABASE %s to %s;" %(db_name, db_user))
-		logFile("GRANT ALL PRIVILEGES ON SCHEMA public TO %s;" %(db_user))
+		logFile("GRANT ALL PRIVILEGES ON DATABASE \"%s\" to \"%s\";" %(db_name, db_user))
+		logFile("GRANT ALL PRIVILEGES ON SCHEMA public TO \"%s\";" %(db_user))
 
 class SqlServerConf(BaseDB):
 	# Constructor
@@ -1442,8 +1442,6 @@ def main(argv):
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,oracle_core_file)
 
 	elif XA_DB_FLAVOR == "POSTGRES":
-		db_user=db_user.lower()
-		db_name=db_name.lower()
 		POSTGRES_CONNECTOR_JAR=CONNECTOR_JAR
 		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type)
 		xa_db_core_file = os.path.join(RANGER_KMS_HOME,postgres_core_file)

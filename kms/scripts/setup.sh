@@ -548,9 +548,6 @@ update_properties() {
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
 	then
-		db_name=`echo ${db_name} | tr '[:upper:]' '[:lower:]'`
-		db_user=`echo ${db_user} | tr '[:upper:]' '[:lower:]'`
-
 		if [ "${db_ssl_enabled}" == "true" ]
 		then
 			if test -f $db_ssl_certificate_file; then
