@@ -228,6 +228,18 @@
           "delegateAdmin": false
         }
       ]
+    },
+    { "id": 103, "name":  "masking: employee.personal.ssl - normal priority", "isEnabled":  true, "isAuditEnabled":  true, "policyType": 1, "policyPriority": 0,
+      "resources": { "database": { "values": [ "employee" ] }, "table": { "values": [ "personal" ] }, "column": { "values": [ "ssn" ] } },
+      "dataMaskPolicyItems": [
+        { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "user1" ], "dataMaskInfo": { "dataMaskType": "NONE" } }
+      ]
+    },
+    { "id": 104, "name":  "masking: employee.personal.ssl - override priority", "isEnabled":  true, "isAuditEnabled":  true, "policyType": 1, "policyPriority": 1,
+      "resources": { "database": { "values": [ "employee" ] }, "table": { "values": [ "personal" ] }, "column": { "values": [ "ssn" ] } },
+      "dataMaskPolicyItems": [
+        { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "user3" ], "dataMaskInfo": { "dataMaskType": "NONE" } }
+      ]
     }
   ],
   "tagPolicyInfo": {
@@ -418,7 +430,8 @@
               }
             ],
             "users": [
-              "user2"
+              "user2",
+              "user3"
             ],
             "groups": [],
             "delegateAdmin": false,
@@ -470,6 +483,17 @@
         }
       },
       "dataMaskResult":{"additionalInfo":{"maskType":"SHUFFLE","maskCondition":null,"maskValue":null},"policyId":1}
+    },
+    {
+      "name": "'select ssn from employee.personal;' for user3 - maskType=NONE (resource-policy override)",
+      "request": {
+        "resource": { "elements": { "database": "employee", "table": "personal", "column": "ssn" } },
+        "accessType": "select", "user": "user3", "requestData": "select ssn from employee.personal;' for user2",
+        "context": {
+          "TAGS": "[{\"type\":\"RESTRICTED\"}]"
+        }
+      },
+      "dataMaskResult":{"additionalInfo":{"maskType":"NONE","maskCondition":null,"maskValue":null},"policyId":104}
     },
     {
       "name": "'select ssn from employee.personal;' for hive - maskType=NONE",

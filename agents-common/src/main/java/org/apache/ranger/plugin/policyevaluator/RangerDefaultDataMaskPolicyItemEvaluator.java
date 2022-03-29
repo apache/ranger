@@ -45,10 +45,16 @@ public class RangerDefaultDataMaskPolicyItemEvaluator extends RangerDefaultPolic
 	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
 		RangerPolicyItemDataMaskInfo dataMaskInfo = getDataMaskInfo();
 
-		if (result.getMaskType() == null && dataMaskInfo != null) {
+		if (dataMaskInfo != null) {
 			result.setMaskType(dataMaskInfo.getDataMaskType());
 			result.setMaskCondition(dataMaskInfo.getConditionExpr());
 			result.setMaskedValue(dataMaskInfo.getValueExpr());
+			result.setIsAccessDetermined(true);
+			result.setPolicyPriority(policyEvaluator.getPolicyPriority());
+			result.setPolicyId(policyEvaluator.getId());
+			result.setReason(getComments());
+			result.setPolicyVersion(policyEvaluator.getPolicy().getVersion());
+
 			policyEvaluator.updateAccessResult(result, matchType, true, getComments());
 		}
 	}
