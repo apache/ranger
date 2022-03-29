@@ -87,7 +87,7 @@ define(function(require){
 					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.newPassword") +' *',
 					validators  : ['required',
-					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :' Invalid password'}],
+					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$/,message :' Invalid password'}],
 					editorAttrs : {'oncopy':'return false;','autocomplete':'off'},
 					errorMsg    : localization.tt('validationMessages.passwordError')
 				},
@@ -95,7 +95,7 @@ define(function(require){
 					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.passwordConfirm") +' *',
 					validators  : ['required',{type: 'match', field: 'password', message: 'Passwords must match !'},
-					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :' Invalid password'}],
+					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$/,message :' Invalid password'}],
 					editorAttrs : {'oncopy':'return false;','autocomplete':'off'},
 					errorMsg    : localization.tt('validationMessages.passwordError')
 				},
