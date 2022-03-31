@@ -18,6 +18,7 @@
 package org.apache.ranger.patch;
 
 import com.google.gson.Gson;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXPortalUser;
@@ -83,10 +84,10 @@ public class PatchForSyncSourceUpdate_J10054 extends BaseLoader{
         for( XXUser xUser: users) {
             String syncSource      = xUser.getSyncSource();
             String otherAttributes = xUser.getOtherAttributes();
-            if (otherAttributes != null && syncSource == null){
+            if (StringUtils.isNotEmpty(otherAttributes) && StringUtils.isEmpty(syncSource)){
                 syncSource = (String) gson.fromJson(otherAttributes, Map.class).get(UgsyncCommonConstants.SYNC_SOURCE);
                 xUser.setSyncSource(syncSource);
-                if (syncSource != null) {
+                if (StringUtils.isNotEmpty(syncSource)) {
                     XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(xUser.getName());
                     if (xXPortalUser != null && xXPortalUser.getUserSource() == 0){
                         /* updating the user source to external for users which had some sync source prior to upgrade
@@ -117,9 +118,9 @@ public class PatchForSyncSourceUpdate_J10054 extends BaseLoader{
         for( XXGroup xGroup: groups) {
             String syncSource      = xGroup.getSyncSource();
             String otherAttributes = xGroup.getOtherAttributes();
-            if (otherAttributes != null && syncSource == null){
+            if (StringUtils.isNotEmpty(otherAttributes) && StringUtils.isEmpty(syncSource)){
                 syncSource = (String) gson.fromJson(otherAttributes, Map.class).get(UgsyncCommonConstants.SYNC_SOURCE);
-                if (syncSource != null && xGroup.getGroupSource() == 0){
+                if (StringUtils.isNotEmpty(syncSource) && xGroup.getGroupSource() == 0){
                     xGroup.setGroupSource(1);
                     if (logger.isDebugEnabled()) {
                         logger.debug("GROUP: Name: " + xGroup.getName() + " groupSource changed to External");
