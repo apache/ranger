@@ -586,6 +586,24 @@
     </fileSet>
 
     <fileSet>
+      <outputDirectory>ews/webapp/apidocs</outputDirectory>
+      <directory>${project.parent.basedir}/docs/target/apidocs/ui</directory>
+      <excludes>
+        <exclude>index.html</exclude>
+      </excludes>
+      <includes>
+        <include>swagger.json</include>
+      </includes>
+      <fileMode>544</fileMode>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>ews/webapp/apidocs</outputDirectory>
+      <directory>${project.parent.basedir}/docs/src/site/resources</directory>
+      <fileMode>544</fileMode>
+    </fileSet>
+
+    <fileSet>
       <outputDirectory></outputDirectory>
       <directory>${project.parent.basedir}/security-admin</directory>
       <includes>

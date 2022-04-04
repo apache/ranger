@@ -86,6 +86,7 @@ define(function(require) {
         restCsrfCustomHeader = header;
         restCsrfMethodsToIgnore = {};
         restCsrfToken = headerToken;
+        localStorage.setItem("csrfToken" , headerToken)
         methods.map(function(method) { restCsrfMethodsToIgnore[method] = true; });
         $.ajaxSetup({
           beforeSend: addRestCsrfCustomHeader
