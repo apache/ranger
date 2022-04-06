@@ -254,7 +254,7 @@ public class RangerKafkaAuthorizer implements Authorizer {
     }
     String userName = requestContext.principal() == null ? null : requestContext.principal().getName();
     Set<String> userGroups = MiscUtil.getGroupsForRequestUser(userName);
-    String hostAddress = requestContext.clientAddress().getHostAddress();
+    String hostAddress = requestContext.clientAddress() == null ? null : requestContext.clientAddress().getHostAddress();
     String ip = StringUtils.isNotEmpty(hostAddress) && hostAddress.charAt(0) == '/' ? hostAddress.substring(1) : hostAddress;
     Date eventTime = new Date();
 
