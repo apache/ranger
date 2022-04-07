@@ -159,7 +159,7 @@
         <kafka.version>2.8.1</kafka.version>
         <kerby.version>1.0.0</kerby.version>
         <knox.gateway.version>1.4.0</knox.gateway.version>
-        <kylin.version>2.6.6</kylin.version>
+        <kylin.version>3.1.3</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <logback.version>1.2.10</logback.version>
