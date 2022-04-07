@@ -176,7 +176,7 @@
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
         <presto.version>333</presto.version>
-        <poi.version>5.1.0</poi.version>
+        <poi.version>5.2.2</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>3.19.3</protobuf-java.version>
         <gcp.protobuf-java.version>3.19.3</gcp.protobuf-java.version>
