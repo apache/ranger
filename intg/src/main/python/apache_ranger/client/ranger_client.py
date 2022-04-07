@@ -27,6 +27,7 @@ from apache_ranger.model.ranger_role          import RangerRole
 from apache_ranger.model.ranger_security_zone import RangerSecurityZone
 from apache_ranger.model.ranger_service       import RangerService
 from apache_ranger.model.ranger_service_def   import RangerServiceDef
+from apache_ranger.model.ranger_user          import RangerUser
 from apache_ranger.utils                      import *
 from requests                                 import Session
 from requests                                 import Response
@@ -467,12 +468,21 @@ class RangerClientPrivate:
         logging.getLogger("requests").setLevel(logging.WARNING)
 
     # URLs
-    URI_DELETE_USER  = "service/xusers/secure/users/{name}"
-    URI_DELETE_GROUP = "service/xusers/secure/groups/{name}"
+    URI_BASE_PRIVATE = "service/xusers/secure"
+
+    URI_CREATE_USER = URI_BASE_PRIVATE + "/users"
+    URI_DELETE_USER  = URI_BASE_PRIVATE + "/users/{name}"
+    URI_DELETE_GROUP = URI_BASE_PRIVATE + "/groups/{name}"
 
     # APIs
     DELETE_USER  = API(URI_DELETE_USER, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
     DELETE_GROUP = API(URI_DELETE_GROUP, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    CREATE_USER  = API(URI_CREATE_USER, HttpMethod.POST, HTTPStatus.OK)
+
+    def create_user(self, user):
+        resp = self.client_http.call_api(RangerClientPrivate.CREATE_USER, request_data=user)
+
+        return type_coerce(resp, RangerUser)
 
     def delete_user(self, userName, execUser, isForceDelete='true'):
         self.client_http.call_api(RangerClientPrivate.DELETE_USER.format_path({ 'name': userName }), { 'execUser': execUser, 'forceDelete': isForceDelete })
