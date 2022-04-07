@@ -24,7 +24,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <hbase.jetty.version>9.3.27.v20190418</hbase.jetty.version>
-        <hadoop.version>3.1.1</hadoop.version>
+        <hadoop.version>3.1.4</hadoop.version>
     </properties>
     <parent>
         <groupId>org.apache.ranger</groupId>
