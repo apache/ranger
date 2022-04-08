@@ -2036,6 +2036,7 @@ public class TestUserMgr {
 		user.setLoginId(userProfile.getLoginId());
 		String encryptCred = userMgr.encrypt(userProfile.getLoginId(), userProfile.getPassword());
 		user.setPassword(encryptCred);
+		user.setOldPasswords(encryptCred);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(userDao.findByLoginId(Mockito.anyString())).thenReturn(user);
 		Mockito.when(stringUtil.equals(Mockito.anyString(), Mockito.nullable(String.class))).thenReturn(true);

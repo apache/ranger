@@ -31,10 +31,15 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.RangerConstants;
+
+import java.util.Date;
 
 
 @Entity
@@ -164,6 +169,13 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	 */
 	@Column(name="SYNC_SOURCE")
 	protected String syncSource;
+
+	@Column(name="OLD_PASSWORDS")
+	protected String oldPasswords;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="PASSWORD_UPDATED_TIME")
+	protected Date passwordUpdatedTime = DateUtil.getUTCDate();
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -363,6 +375,22 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	 */
 	public String getSyncSource() { return syncSource; }
 
+	public String getOldPasswords() {
+		return oldPasswords;
+	}
+
+	public void setOldPasswords(String oldPasswords) {
+		this.oldPasswords = oldPasswords;
+	}
+
+	public Date getPasswordUpdatedTime() {
+		return passwordUpdatedTime;
+	}
+
+	public void setPasswordUpdatedTime(Date passwordUpdatedTime) {
+		this.passwordUpdatedTime = passwordUpdatedTime;
+	}
+
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -381,6 +409,7 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 		str += "notes={" + notes + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
 		str += "syncSource={" + syncSource + "} ";
+		str += "passwordUpdatedTime={" + passwordUpdatedTime + "} ";
 		str += "}";
 		return str;
 	}
