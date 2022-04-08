@@ -218,6 +218,8 @@ create table dbo.x_portal_user(
 	notes varchar(4000) DEFAULT NULL NULL,
 	other_attributes varchar(4000) DEFAULT NULL NULL,
 	sync_source varchar(4000) DEFAULT NULL NULL,
+	old_passwords varchar(4000) DEFAULT NULL,
+	password_updated_time datetime DEFAULT NULL,
 	CONSTRAINT x_portal_user_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_portal_user_UK_login_id UNIQUE NONCLUSTERED (login_id)
 )
@@ -2260,6 +2262,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('057',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

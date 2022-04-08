@@ -511,6 +511,11 @@
 		<value>false</value>
 		<description></description>
 	</property>
+	<property>
+		<name>ranger.password.history.count</name>
+		<value>4</value>
+		<description></description>
+	</property>
 	<!-- # DB Info for audit_DB -->
 
 	<property>
