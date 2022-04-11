@@ -535,6 +535,7 @@ define(function(require) {
 										zoneList.push({'label' : m.name, 'value' : m.name});
 									});
 								}
+								zoneList = _.sortBy(zoneList, 'label')
 								callback(zoneList);
 								break;
 						}
