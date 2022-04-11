@@ -375,7 +375,7 @@
 
 	<property>
 		<name>ranger.jpa.jdbc.preferredtestquery</name>
-		<value>select 1;</value>
+		<value>select 1</value>
 		<description></description>
 	</property>
 

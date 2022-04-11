@@ -80,7 +80,7 @@
   <logger name="xa" additivity="false" level="info">
     <appender-ref ref="xa_log_appender"/>
   </logger>
-  <logger name="jdbc.connection" additivity="false" level="error">
+  <logger name="com.mchange" additivity="false" level="error">
     <appender-ref ref="sql_appender"/>
   </logger>
   <logger name="org.apache.ranger.perf" additivity="false" level="info">
