@@ -388,6 +388,7 @@ define(function(require){
             var zoneName = _.map(this.rangerZoneList.attributes, function(m){
                 return { 'id':m.name, 'text':m.name, 'zoneId' : m.id}
             });
+            zoneName = _.sortBy(zoneName, 'id')
             if(!_.isEmpty(App.vZone.vZoneName) && !_.isUndefined(App.vZone.vZoneName)){
                 this.ui.selectZoneName.val(App.vZone.vZoneName);
             }

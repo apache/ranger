@@ -672,6 +672,7 @@ define(function(require) {'use strict';
 			var zoneListOptions = _.map(this.rangerZoneList.attributes, function(m){
 				return { 'id':m.name, 'text':m.name}
 			});
+			zoneListOptions = _.sortBy(zoneListOptions, 'id')
                         var tags = [];
                         if (this.urlParam && this.urlParam['policyLabelsPartial'] && !_.isEmpty(this.urlParam['policyLabelsPartial'])) {
                                 tags.push( { 'id' : _.escape( this.urlParam['policyLabelsPartial'] ), 'text' : _.escape( this.urlParam['policyLabelsPartial'] ) } );
