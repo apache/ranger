@@ -641,7 +641,7 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
-		newPropertyValue="select 1;"
+		newPropertyValue="select 1"
 		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 	if [ "${DB_FLAVOR}" == "ORACLE" ]
@@ -675,7 +675,7 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
-		newPropertyValue="select 1 from dual;"
+		newPropertyValue="select 1 from dual"
 		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 	if [ "${DB_FLAVOR}" == "POSTGRES" ]
@@ -715,7 +715,7 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
-		newPropertyValue="select 1;"
+		newPropertyValue="select 1"
 		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 
@@ -742,7 +742,7 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
-		newPropertyValue="select 1;"
+		newPropertyValue="select 1"
 		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 
@@ -769,7 +769,7 @@ update_properties() {
 		updatePropertyToFilePy $propertyName $newPropertyValue $to_file_default
 
 		propertyName=ranger.jpa.jdbc.preferredtestquery
-		newPropertyValue="select 1;"
+		newPropertyValue="select 1"
 		updatePropertyToFilePy $propertyName "${newPropertyValue}" $to_file_default
 	fi
 
