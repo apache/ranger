@@ -35,6 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -94,9 +95,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
 
         if (TRACE_LOG.isTraceEnabled()) {
-            StringBuilder sb = new StringBuilder();
-            root.toString("", sb);
-            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.copyTrie(name=" + other.resourceDef.getName() + "):\n{" + sb.toString() + "}");
+            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.copyTrie(name=" + other.resourceDef.getName() + "):\n[" + dumpTrie() + "]");
         }
     }
 
@@ -170,9 +169,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         }
 
         if (TRACE_LOG.isTraceEnabled()) {
-            StringBuilder sb = new StringBuilder();
-            root.toString("", sb);
-            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.init(name=" + resourceDef.getName() + "):\n{" + sb.toString() + "}");
+            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.init(name=" + resourceDef.getName() + "):\n[" + dumpTrie() + "]");
         }
 
         if(LOG.isDebugEnabled()) {
@@ -231,9 +228,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         RangerPerfTracer.logAlways(perf);
 
         if (TRACE_LOG.isTraceEnabled()) {
-            StringBuilder sb = new StringBuilder();
-            root.toString("", sb);
-            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.add(name=" + resource + "):\n{" + sb.toString() + "}");
+            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.add(name=" + resource + "):\n[" + dumpTrie() + "]");
         }
     }
 
@@ -262,9 +257,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         RangerPerfTracer.logAlways(perf);
 
         if (TRACE_LOG.isTraceEnabled()) {
-            StringBuilder sb = new StringBuilder();
-            root.toString("", sb);
-            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.delete(name=" + resource + "):\n{" + sb.toString() + "}");
+            TRACE_LOG.trace("Trie Dump from RangerResourceTrie.delete(name=" + resource + "):\n[" + dumpTrie()+ "]");
         }
     }
 
@@ -272,11 +265,17 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         if (root != null) {
             root.wrapUpUpdate();
             if (TRACE_LOG.isTraceEnabled()) {
-                StringBuilder sb = new StringBuilder();
-                root.toString("", sb);
-                TRACE_LOG.trace("Trie Dump from RangerResourceTrie.wrapUpUpdate(name=" + resourceDef.getName() + "):\n{" + sb.toString() + "}");
+                TRACE_LOG.trace("Trie Dump from RangerResourceTrie.wrapUpUpdate(name=" + resourceDef.getName() + "):\n[" + dumpTrie() + "]");
             }
         }
+    }
+
+    public StringBuilder dumpTrie() {
+        StringBuilder sb = new StringBuilder();
+        if (root != null) {
+            root.toString("", sb);
+        }
+        return sb;
     }
 
     TrieNode<T> getRoot() {
@@ -669,7 +668,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         RangerPerfTracer.logAlways(perf);
 
         if(LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerResourceTrie.getEvaluatorsForResource(" + resource + ", " + scope + "): evaluatorCount=" + (ret == null ? 0 : ret.size()));
+            LOG.debug("<== RangerResourceTrie.getEvaluatorsForResource(" + resource + ", " + scope + "): evaluators=" + (ret == null ? null : Arrays.deepToString(ret.toArray())));
         }
 
         return ret;
