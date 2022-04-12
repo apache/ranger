@@ -80,6 +80,7 @@ public class RangerClient {
     private static final String URI_ZONE_BY_ID            = URI_ZONE + "/%d";
     private static final String URI_ZONE_BY_NAME          = URI_ZONE + "/name/%s";
 
+    private static final String URI_SERVICE_TAGS          = URI_SERVICE + "/%s/tags";
     private static final String URI_PLUGIN_INFO           = URI_BASE + "/plugins/info";
     private static final String URI_POLICY_DELTAS         = URI_BASE + "/server/policydeltas";
 
@@ -135,6 +136,8 @@ public class RangerClient {
     public static final API REVOKE_ROLE         = new API(URI_REVOKE_ROLE, HttpMethod.PUT, Response.Status.OK);
     public static final API FIND_ROLES          = new API(URI_ROLE, HttpMethod.GET, Response.Status.OK);
 
+    public static final API IMPORT_SERVICE_TAGS  = new API(URI_SERVICE_TAGS, HttpMethod.PUT, Response.Status.NO_CONTENT);
+    public static final API GET_SERVICE_TAGS     = new API(URI_SERVICE_TAGS, HttpMethod.GET, Response.Status.OK);
     public static final API GET_PLUGIN_INFO      = new API(URI_PLUGIN_INFO, HttpMethod.GET, Response.Status.OK);
     public static final API DELETE_POLICY_DELTAS = new API(URI_POLICY_DELTAS, HttpMethod.DELETE, Response.Status.NO_CONTENT);
 
@@ -396,6 +399,14 @@ public class RangerClient {
     /*
      * Admin APIs
      */
+    public void importServiceTags(String serviceName, RangerServiceTags svcTags) throws RangerServiceException {
+        callAPI(IMPORT_SERVICE_TAGS.applyUrlFormat(serviceName), null, svcTags, (GenericType<Void>) null);
+    }
+
+    public RangerServiceTags getServiceTags(String serviceName) throws RangerServiceException {
+        return callAPI(GET_SERVICE_TAGS.applyUrlFormat(serviceName), null, null, RangerServiceTags.class);
+    }
+
     public List<RangerPluginInfo> getPluginsInfo() throws RangerServiceException {
         return callAPI(GET_PLUGIN_INFO, null, null, new GenericType<List<RangerPluginInfo>>(){});
     }

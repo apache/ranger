@@ -27,6 +27,7 @@ from apache_ranger.model.ranger_role          import RangerRole
 from apache_ranger.model.ranger_security_zone import RangerSecurityZone
 from apache_ranger.model.ranger_service       import RangerService
 from apache_ranger.model.ranger_service_def   import RangerServiceDef
+from apache_ranger.model.ranger_service_tags  import RangerServiceTags
 from apache_ranger.utils                      import *
 from requests                                 import Session
 from requests                                 import Response
@@ -262,6 +263,14 @@ class RangerClient:
 
 
     # Admin APIs
+    def import_service_tags(self, serviceName, svcTags):
+        self.client_http.call_api(RangerClient.IMPORT_SERVICE_TAGS.format_path({ 'serviceName': serviceName }), request_data=svcTags)
+
+    def get_service_tags(self, serviceName):
+        resp = self.client_http.call_api(RangerClient.GET_SERVICE_TAGS.format_path({ 'serviceName': serviceName }))
+
+        return type_coerce(resp, RangerServiceTags)
+
     def delete_policy_deltas(self, days, reloadServicePoliciesCache):
         self.client_http.call_api(RangerClient.DELETE_POLICY_DELTAS, { 'days': days, 'reloadServicePoliciesCache': reloadServicePoliciesCache})
 
@@ -298,6 +307,7 @@ class RangerClient:
     URI_ZONE_BY_ID          = URI_ZONE + "/{id}"
     URI_ZONE_BY_NAME        = URI_ZONE + "/name/{name}"
 
+    URI_SERVICE_TAGS        = URI_SERVICE + "/{serviceName}/tags"
     URI_PLUGIN_INFO         = URI_BASE + "/plugins/info"
     URI_POLICY_DELTAS       = URI_BASE + "/server/policydeltas"
 
@@ -352,6 +362,8 @@ class RangerClient:
     REVOKE_ROLE               = API(URI_REVOKE_ROLE, HttpMethod.PUT, HTTPStatus.OK)
     FIND_ROLES                = API(URI_ROLE, HttpMethod.GET, HTTPStatus.OK)
 
+    IMPORT_SERVICE_TAGS       = API(URI_SERVICE_TAGS, HttpMethod.PUT, HTTPStatus.NO_CONTENT)
+    GET_SERVICE_TAGS          = API(URI_SERVICE_TAGS, HttpMethod.GET, HTTPStatus.OK)
     GET_PLUGIN_INFO           = API(URI_PLUGIN_INFO, HttpMethod.GET, HTTPStatus.OK)
     DELETE_POLICY_DELTAS      = API(URI_POLICY_DELTAS, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
 
