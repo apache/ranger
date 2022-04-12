@@ -454,10 +454,20 @@ public class RangerBasePlugin {
 
 		if (ret != null) {
 			for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("BasePlugin.isAccessAllowed result=[" + ret + "]");
+					LOG.debug("Calling chainedPlugin.isAccessAllowed for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "]");
+				}
 				RangerAccessResult chainedResult = chainedPlugin.isAccessAllowed(request);
 
 				if (chainedResult != null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("chainedPlugin.isAccessAllowed for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "] returned result=[" + chainedResult + "]");
+					}
 					updateResultFromChainedResult(ret, chainedResult);
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("After updating result from chainedPlugin.isAccessAllowed for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "], result=" + ret + "]");
+					}
 				}
 			}
 

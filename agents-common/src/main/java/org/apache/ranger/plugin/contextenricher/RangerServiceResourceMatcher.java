@@ -80,4 +80,9 @@ public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluat
 			return Long.compare(me.getId(), other.getId());
 		}
 	}
+
+	@Override
+	public String toString() {
+		return String.valueOf(getId());
+	}
 }
