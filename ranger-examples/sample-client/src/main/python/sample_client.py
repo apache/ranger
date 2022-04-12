@@ -16,11 +16,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 
-from apache_ranger.model.ranger_service import *
-from apache_ranger.client.ranger_client import *
-from apache_ranger.model.ranger_policy  import *
+from apache_ranger.client.ranger_client          import *
+from apache_ranger.model.ranger_policy           import *
+from apache_ranger.model.ranger_service          import *
+from apache_ranger.model.ranger_service_resource import *
+from apache_ranger.model.ranger_service_tags     import *
+from apache_ranger.model.ranger_tagdef           import *
+from apache_ranger.model.ranger_tag              import *
+from datetime                                    import datetime
+
 
 
 ## create a client to connect to Apache Ranger admin server
@@ -50,8 +55,9 @@ print('    ' + str(len(service_defs)) + ' service-defs found')
 for service_def in service_defs:
     print('        ' + 'id: ' + str(service_def.id) + ', name: ' + service_def.name)
 
+now = datetime.now()
 
-service_name = 'dev_hive-' + str(int(time.time() * 1000))
+service_name = 'dev_hive-' + now.strftime('%Y%m%d-%H%M%S-%f')
 
 print('Creating service: name=' + service_name)
 
@@ -271,6 +277,47 @@ updated_policy2 = ranger.update_policy(service_name, policy_name, updated_policy
 print('    updated policy: id: ' + str(updated_policy2.id) + ', description: ' + saved_value + ', updatedDescription: ' + updated_policy2.description)
 
 
+tagdef_test1 = RangerTagDef({'name': 'test1', 'attributeDefs': [ RangerTagAttributeDef({'name': 'attr1', 'type': 'string'}) ]})
+tagdef_test2 = RangerTagDef({'name' : 'test2'})
+
+tag_test1_val1 = RangerTag({'type': 'test1', 'attributes': {'attr1': 'val1'}})
+tag_test1_val2 = RangerTag({'type': 'test1', 'attributes': {'attr1': 'val2'}})
+tag_test2     = RangerTag({'type': 'test2'})
+
+db1 = RangerServiceResource({'id': 1, 'serviceName': service_name})
+db1.resourceElements = { 'database': RangerPolicyResource({ 'values': [ 'db1' ]})}
+
+db2 = RangerServiceResource({'id': 2, 'serviceName': service_name})
+db2.resourceElements = { 'database': RangerPolicyResource({ 'values': [ 'db2' ]})}
+
+tags = RangerServiceTags({'serviceName': service_name})
+tags.op               = RangerServiceTags.OP_SET
+tags.tagDefinitions   = { 0: tagdef_test1, 1: tagdef_test2 }
+tags.tags             = { 0: tag_test1_val1, 1: tag_test1_val2, 2: tag_test2 }
+tags.serviceResources = [ db1, db2 ]
+tags.resourceToTagIds = { 1: [ 0, 2 ], 2: [ 1, 2 ]}
+
+print('Importing tags: ' + str(tags))
+
+ranger.import_service_tags(service_name, tags)
+
+service_tags = ranger.get_service_tags(service_name)
+
+print('Imported tags: ' + str(service_tags))
+
+tags.op               = RangerServiceTags.OP_DELETE
+tags.tagDefinitions   = None
+tags.tags             = None
+tags.resourceToTagIds = None
+
+print('Deleting tags: ' + str(tags))
+
+ranger.import_service_tags(service_name, tags)
+
+service_tags = ranger.get_service_tags(service_name)
+
+print('Service tags after delete: ' + str(service_tags))
+
 print('Deleting policy: id=' + str(policy_id))
 
 ranger.delete_policy_by_id(policy_id)
@@ -313,7 +360,7 @@ for security_zone in security_zones:
 print('Listing roles..')
 roles = ranger.find_roles()
 
-print('    ' + str(len(roles)) + ' roles zones found')
+print('    ' + str(len(roles)) + ' roles found')
 for role in roles:
     print('        id: ' + str(role.id) + ', name: ' + role.name)
 

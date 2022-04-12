@@ -24,9 +24,15 @@ import org.apache.commons.cli.*;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.model.RangerServiceTags;
+import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -158,6 +164,55 @@ public class SampleClient {
         rangerClient.deletePolicy(serviceName, policyName);
         LOG.info("Policy {} successfully deleted", policyName);
 
+        /* import tags */
+        RangerTagDef tagDefTest1 = new RangerTagDef("test1");
+        RangerTagDef tagDefTest2 = new RangerTagDef("test2");
+
+        tagDefTest1.setAttributeDefs(Arrays.asList(new RangerTagAttributeDef("attr1", "string")));
+
+        RangerTag tagTest1Val1 = new RangerTag(tagDefTest1.getName(), Collections.singletonMap("attr1", "val1"));
+        RangerTag tagTest1Val2 = new RangerTag(tagDefTest1.getName(), Collections.singletonMap("attr1", "val2"));
+        RangerTag tagTest2     = new RangerTag(tagDefTest2.getName(), Collections.emptyMap());
+
+        RangerServiceResource db1 = new RangerServiceResource(serviceName, Collections.singletonMap("database", new RangerPolicyResource("db1")));
+        RangerServiceResource db2 = new RangerServiceResource(serviceName, Collections.singletonMap("database", new RangerPolicyResource("db2")));
+
+        db1.setId(1L);
+        db2.setId(2L);
+
+        RangerServiceTags serviceTags = new RangerServiceTags();
+
+        serviceTags.setOp(RangerServiceTags.OP_SET);
+        serviceTags.getTagDefinitions().put(0L, tagDefTest1);
+        serviceTags.getTagDefinitions().put(1L, tagDefTest2);
+        serviceTags.getTags().put(0L, tagTest1Val1);
+        serviceTags.getTags().put(1L, tagTest1Val2);
+        serviceTags.getTags().put(2L, tagTest2);
+        serviceTags.getServiceResources().add(db1);
+        serviceTags.getServiceResources().add(db2);
+        serviceTags.getResourceToTagIds().put(db1.getId(), Arrays.asList(0L, 2L));
+        serviceTags.getResourceToTagIds().put(db2.getId(), Arrays.asList(1L, 2L));
+
+        LOG.info("Importing tags: {}", serviceTags);
+
+        rangerClient.importServiceTags(serviceName, serviceTags);
+
+        RangerServiceTags serviceTags2 = rangerClient.getServiceTags(serviceName);
+
+        LOG.info("Imported tags: {}", serviceTags2);
+
+        serviceTags.setOp(RangerServiceTags.OP_DELETE);
+        serviceTags.setTagDefinitions(Collections.emptyMap());
+        serviceTags.setTags(Collections.emptyMap());
+        serviceTags.setResourceToTagIds(Collections.emptyMap());
+
+        LOG.info("Deleting tags: {}" + serviceTags);
+
+        rangerClient.importServiceTags(serviceName, serviceTags);
+
+        serviceTags2 = rangerClient.getServiceTags(serviceName);
+
+        LOG.info("Service tags after delete: {}", serviceTags2);
 
         /*
         Delete a Service

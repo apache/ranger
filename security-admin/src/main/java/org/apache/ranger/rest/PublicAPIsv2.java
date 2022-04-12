@@ -32,8 +32,10 @@ import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.model.RangerServiceTags;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -597,6 +599,52 @@ public class PublicAPIsv2 {
 												 @DefaultValue("") @QueryParam("zoneName") String zoneName) {
 		serviceREST.deletePolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
 	}
+
+	@PUT
+	@Path("/api/service/{serviceName}/tags")
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void importServiceTags(@PathParam("serviceName") String serviceName, RangerServiceTags svcTags) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.importServiceTags()");
+		}
+
+		ServiceTags serviceTags = RangerServiceTags.toServiceTags(svcTags);
+
+		// overwrite serviceName with the one given in url
+		serviceTags.setServiceName(serviceName);
+
+		tagREST.importServiceTags(serviceTags);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.importServiceTags()");
+		}
+	}
+
+	@GET
+	@Path("/api/service/{serviceName}/tags")
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public RangerServiceTags getServiceTags(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.getServiceTags()");
+		}
+
+		Long              lastKnownVersion   = -1L;
+		Long              lastActivationTime = 0L;
+		String            pluginId           = null;
+		Boolean           supportsTagDeltas  = false;
+		String            pluginCapabilities = "";
+		ServiceTags       tags               = tagREST.getServiceTagsIfUpdated(serviceName, lastKnownVersion, lastActivationTime, pluginId, supportsTagDeltas, pluginCapabilities, request);
+		RangerServiceTags ret                = RangerServiceTags.toRangerServiceTags(tags);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.getServiceTags()");
+		}
+
+		return ret;
+	}
+
 
 	@GET
 	@Path("/api/plugins/info")
