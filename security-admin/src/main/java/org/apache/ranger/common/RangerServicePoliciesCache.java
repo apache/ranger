@@ -228,7 +228,7 @@ public class RangerServicePoliciesCache {
 						}
 					}
 				} else {
-					LOG.error("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached ServicePolicies and wait Queue Length:[" +lock.getQueueLength() + "], servicePolicies version:[" + servicePolicies.getPolicyVersion() + "]");
+					LOG.error("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached ServicePolicies and wait Queue Length:[" +lock.getQueueLength() + "], servicePolicies version:[" + (servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L) + "]");
 					ret = this.servicePolicies;
 				}
 			} catch (InterruptedException exception) {
