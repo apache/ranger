@@ -167,6 +167,7 @@
         <log4j2.version>2.17.1</log4j2.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.pmd.plugin.version>3.14.0</maven.pmd.plugin.version>
+        <maven.surefire.plugin.version>3.0.0-M6</maven.surefire.plugin.version>
         <metrics.core.version>3.0.2</metrics.core.version>
         <mockito.version>3.0.0</mockito.version>
         <mockito.all.version>1.10.19</mockito.all.version>
@@ -873,7 +874,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-surefire-plugin</artifactId>
-                    <version>2.21.0</version>
+                    <version>${maven.surefire.plugin.version}</version>
                     <configuration>
                         <argLine>${argLine} -Djava.library.path="${hadoop.library.path}${path.separator}${java.library.path}"</argLine>
                         <skipTests>${skipTests}</skipTests>
@@ -1162,4 +1163,13 @@
             </plugin>
         </plugins>
     </build>
+    <reporting>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-report-plugin</artifactId>
+                <version>${maven.surefire.plugin.version}</version>
+            </plugin>
+        </plugins>
+    </reporting>
 </project>
