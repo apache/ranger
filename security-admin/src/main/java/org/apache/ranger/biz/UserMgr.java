@@ -23,7 +23,6 @@ import java.io.UnsupportedEncodingException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -118,8 +117,6 @@ public class UserMgr {
 	GUIDUtil guidUtil;
 
 	private final boolean isFipsEnabled;
-	private static final int DEFAULT_PASSWORD_HISTORY_COUNT = 4;
-	private int passwordHistoryCount = PropertiesUtil.getIntProperty("ranger.password.history.count", DEFAULT_PASSWORD_HISTORY_COUNT);
 	
 	String publicRoles[] = new String[] { RangerConstants.ROLE_USER,
 			RangerConstants.ROLE_OTHER };
@@ -143,9 +140,6 @@ public class UserMgr {
 			logger.debug("UserMgr()");
 		}
 		this.isFipsEnabled = RangerAdminConfig.getInstance().isFipsEnabled();
-		if (passwordHistoryCount < 0) {
-			passwordHistoryCount = 0;
-		}
 	}
 
 	public XXPortalUser createUser(VXPortalUser userProfile, int userStatus,
@@ -166,7 +160,6 @@ public class UserMgr {
 		String saltEncodedpasswd = encrypt(user.getLoginId(),
 				user.getPassword());
 		user.setPassword(saltEncodedpasswd);
-		user.setPasswordUpdatedTime(DateUtil.getUTCDate());
 		daoManager.getXXPortalUser().create(user);
 		XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(user.getLoginId());
 		// Create the XXPortalUserRole entries for this user
@@ -444,29 +437,13 @@ public class UserMgr {
 		}
 
 		String encryptedNewPwd = encrypt(pwdChange.getLoginId(),pwdChange.getUpdPassword());
-		String oldPasswordStr = gjUser.getOldPasswords();
-		List<String> oldPasswords;
-
-		if (StringUtils.isNotEmpty(oldPasswordStr)) {
-			oldPasswords = new ArrayList<>(Arrays.asList(oldPasswordStr.split(",")));
-		} else {
-			oldPasswords = new ArrayList<>();
-		}
-		oldPasswords.add(gjUser.getPassword());
-		while (oldPasswords.size() > this.passwordHistoryCount) {
-			oldPasswords.remove(0);
-		}
-		boolean isNewPasswordDifferent = oldPasswords.isEmpty();
-		for (String oldPassword : oldPasswords) {
-			if (this.isFipsEnabled) {
-				isNewPasswordDifferent = isNewPasswordDifferent(pwdChange.getLoginId(), oldPassword, encryptedNewPwd);
+		//check current password and provided new password different
+		boolean isNewPasswordDifferent;
+		if (this.isFipsEnabled) {
+				isNewPasswordDifferent = isNewPasswordDifferent(pwdChange.getLoginId(), pwdChange.getOldPassword(), pwdChange.getUpdPassword());
 			} else {
-				isNewPasswordDifferent = !encryptedNewPwd.equals(oldPassword);
+				isNewPasswordDifferent = !encryptedNewPwd.equals(currentPassword);
 			}
-			if (!isNewPasswordDifferent){
-				break;
-			}
-		}
 			if (isNewPasswordDifferent) {
 				List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 				XXTrxLog xTrxLog = new XXTrxLog();
@@ -480,7 +457,6 @@ public class UserMgr {
 				trxLogList.add(xTrxLog);
 	                        rangerBizUtil.createTrxLog(trxLogList);
 				gjUser.setPassword(encryptedNewPwd);
-				updateOldPasswords(gjUser, oldPasswords);
 				gjUser = daoManager.getXXPortalUser().update(gjUser);
 				ret.setMsgDesc("Password successfully updated");
 				ret.setStatusCode(VXResponse.STATUS_SUCCESS);
@@ -491,12 +467,6 @@ public class UserMgr {
 				throw restErrorUtil.createRESTException("serverMsg.userMgrOldPassword",MessageEnums.INVALID_INPUT_DATA, gjUser.getId(),"password", gjUser.toString());
 		}
 		return ret;
-	}
-
-	private void updateOldPasswords(XXPortalUser gjUser, List<String> oldPasswords) {
-		String oldPasswordStr = CollectionUtils.isNotEmpty(oldPasswords) ? StringUtils.join(oldPasswords, ",") : null;
-		gjUser.setOldPasswords(oldPasswordStr);
-		gjUser.setPasswordUpdatedTime(DateUtil.getUTCDate());
 	}
 
 	/**
@@ -1368,15 +1338,6 @@ public class UserMgr {
 			String encryptedNewPwd = encrypt(xXPortalUser.getLoginId(),
 					updatedPassword);
             if (xXPortalUser.getUserSource() != RangerCommonEnums.USER_EXTERNAL) {
-				String oldPasswordsStr = xXPortalUser.getOldPasswords();
-				List<String> oldPasswords;
-				if (StringUtils.isNotEmpty(oldPasswordsStr)) {
-					oldPasswords = new ArrayList<>(Arrays.asList(oldPasswordsStr.split(",")));
-				} else {
-					oldPasswords = new ArrayList<>();
-				}
-				oldPasswords.add(encryptedNewPwd);
-				updateOldPasswords(xXPortalUser, oldPasswords);
 		xXPortalUser.setPassword(encryptedNewPwd);
              }
              xXPortalUser = daoManager.getXXPortalUser().update(xXPortalUser);
