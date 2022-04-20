@@ -20,6 +20,7 @@
 package org.apache.ranger.authorization.atlas.authorizer;
 
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
+import org.apache.atlas.authorize.AtlasAssetAccessorRequest;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
 import org.apache.atlas.authorize.AtlasRelationshipAccessRequest;
@@ -27,9 +28,12 @@ import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasTypesDefFilterRequest;
 import org.apache.atlas.authorize.AtlasAuthorizer;
+import org.apache.atlas.model.instance.AtlasAssetAccessor;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.List;
 
 public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     private static final Logger LOG = LoggerFactory.getLogger(RangerAtlasAuthorizer.class);
@@ -173,6 +177,29 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
 		if (isDebugEnabled) {
 			LOG.debug("<== isAccessAllowed(AtlasTypeAccessRequest): " + ret);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public List<AtlasAssetAccessor> assetAccessors(AtlasAssetAccessorRequest request) {
+		if (isDebugEnabled) {
+			LOG.debug("==> assetAccessors(" + request + ")");
+		}
+
+		List<AtlasAssetAccessor> ret = null;
+
+		try {
+			activatePluginClassLoader();
+
+			ret = rangerAtlasAuthorizerImpl.assetAccessors(request);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if (isDebugEnabled) {
+			LOG.debug("<== assetAccessors(): " + request);
 		}
 
 		return ret;

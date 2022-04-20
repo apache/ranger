@@ -514,6 +514,17 @@ public class RangerBasePlugin {
 		return ret;
 	}
 
+	public RangerAccessResult getAssetAccessors(RangerAccessRequest request) {
+		RangerAccessResult ret          = null;
+		RangerPolicyEngine policyEngine = this.policyEngine;
+
+		if (policyEngine != null) {
+			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, null);
+		}
+
+		return ret;
+	}
+
 	public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 		RangerAccessResult ret          = null;

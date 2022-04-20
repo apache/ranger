@@ -51,6 +51,11 @@ public class RangerAccessRequestReadOnly implements RangerAccessRequest {
 	public String getAccessType() { return source.getAccessType(); }
 
 	@Override
+	public boolean isAccessorsRequested() {
+		return source.isAccessorsRequested();
+	}
+
+	@Override
 	public boolean isAccessTypeAny() { return source.isAccessTypeAny(); }
 
 	@Override

@@ -51,6 +51,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private String				 clusterName;
 	private String				 clusterType;
 
+	private boolean isAccessorsRequested;
 	private boolean isAccessTypeAny;
 	private boolean isAccessTypeDelegatedAdmin;
 	private ResourceMatchingScope resourceMatchingScope = ResourceMatchingScope.SELF;
@@ -81,6 +82,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	public RangerAccessRequestImpl(RangerAccessRequest request) {
 		setResource(request.getResource());
 		setAccessType(request.getAccessType());
+		setAccessorsRequested(request.isAccessorsRequested());
 		setUser(request.getUser());
 		setUserGroups(request.getUserGroups());
 		setUserRoles(request.getUserRoles());
@@ -177,6 +179,14 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	@Override
 	public boolean isAccessTypeDelegatedAdmin() {
 		return isAccessTypeDelegatedAdmin;
+	}
+
+	public boolean isAccessorsRequested() {
+		return isAccessorsRequested;
+	}
+
+	public void setAccessorsRequested(boolean accessorsRequested) {
+		isAccessorsRequested = accessorsRequested;
 	}
 
 	public void setResource(RangerAccessResource resource) {
@@ -311,6 +321,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 
 		sb.append("resource={").append(resource).append("} ");
 		sb.append("accessType={").append(accessType).append("} ");
+		sb.append("isAccessorsRequested=").append(isAccessorsRequested).append(",");
 		sb.append("user={").append(user).append("} ");
 
 		sb.append("userGroups={");

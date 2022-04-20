@@ -15,6 +15,7 @@
 # limitations under the License
 
 mvn install:install-file -DgroupId=org.apache.atlas -DartifactId=atlas-authorization -Dversion=3.0.0-SNAPSHOT -Dpackaging=jar -Dfile=plugin-atlas/external-libs/atlas-authorization-3.0.0-SNAPSHOT.jar
+mvn install:install-file -DgroupId=org.apache.atlas -DartifactId=atlas-intg -Dversion=3.0.0-SNAPSHOT -Dpackaging=jar -Dfile=plugin-atlas/external-libs/atlas-intg-3.0.0-SNAPSHOT.jar
 
 echo "Maven Building"
 mvn -pl '!plugin-kylin,!ranger-kylin-plugin-shim, !hdfs-agent, !ranger-hdfs-plugin-shim, !plugin-elasticsearch, !ranger-elasticsearch-plugin-shim, !plugin-kafka, !ranger-kafka-plugin-shim, !kms, !plugin-kms, !ranger-kms-plugin-shim, !plugin-kudu, !plugin-kylin, !ranger-kylin-plugin-shim, !plugin-nifi, !plugin-nifi-registry, !plugin-ozone, !ranger-ozone-plugin-shim, !plugin-presto, !ranger-presto-plugin-shim, !plugin-solr, !ranger-solr-plugin-shim, !plugin-schema-registry, !plugin-sqoop, !ranger-sqoop-plugin-shim, !plugin-yarn, !ranger-yarn-plugin-shim, !hbase-agent, !ranger-hbase-plugin-shim, !hive-agent, !ranger-hive-plugin-shim, !knox-agent, !ranger-knox-plugin-shim, !ranger-storm-plugin-shim' -DskipJSTests -DskipTests=true -Drat.skip=true clean package -Pall -Denforcer.skip=true

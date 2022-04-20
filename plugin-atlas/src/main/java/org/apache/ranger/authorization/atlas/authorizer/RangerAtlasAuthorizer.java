@@ -19,8 +19,8 @@
 
 package org.apache.ranger.authorization.atlas.authorizer;
 
-
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
+import org.apache.atlas.authorize.AtlasAssetAccessorRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
@@ -30,6 +30,7 @@ import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizer;
 import org.apache.atlas.authorize.AtlasPrivilege;
+import org.apache.atlas.model.instance.AtlasAssetAccessor;
 import org.apache.atlas.model.typedef.AtlasBaseTypeDef;
 import org.apache.atlas.model.typedef.AtlasTypesDef;
 import org.apache.atlas.model.discovery.AtlasSearchResult;
@@ -42,6 +43,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
@@ -222,7 +224,78 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         return ret;
     }
 
+    @Override
+    public List<AtlasAssetAccessor> assetAccessors(AtlasAssetAccessorRequest request) {
 
+        for (AtlasAssetAccessor atlasAssetAccessor :  request.getRequest()) {
+            final RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+            final RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl();
+
+            rangerRequest.setAccessorsRequested(true);
+
+            final AtlasEntityHeader        entityHeader   = atlasAssetAccessor.getEntity();
+            final String                   action         = AtlasPrivilege.valueOf(atlasAssetAccessor.getAction()).getType();
+            final Set<String>              entityTypes    = request.getEntityTypeAndAllSuperTypes(entityHeader.getTypeName());
+            final String                   entityId       = request.getEntityId(entityHeader);
+            final String                   ownerUser      = (String) entityHeader.getAttribute(RESOURCE_ENTITY_OWNER);
+
+            rangerResource.setValue(RESOURCE_ENTITY_TYPE, entityTypes);
+            rangerResource.setValue(RESOURCE_ENTITY_ID, entityId);
+            rangerResource.setOwnerUser(ownerUser);
+            rangerRequest.setAccessType(action);
+            rangerRequest.setAction(action);
+            rangerRequest.setUser(request.getUser());
+            rangerRequest.setUserGroups(request.getUserGroups());
+            rangerRequest.setClientIPAddress(request.getClientIPAddress());
+            rangerRequest.setAccessTime(request.getAccessTime());
+            rangerRequest.setResource(rangerResource);
+            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
+            if (StringUtils.isNotEmpty(atlasAssetAccessor.getClassification()) && CLASSIFICATION_PRIVILEGES.contains(AtlasPrivilege.valueOf(atlasAssetAccessor.getAction()))) {
+                rangerResource.setValue(RESOURCE_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(atlasAssetAccessor.getClassification()));
+            } else if (AtlasPrivilege.ENTITY_ADD_LABEL.equals(request.getAction()) || AtlasPrivilege.ENTITY_REMOVE_LABEL.equals(request.getAction())) {
+                rangerResource.setValue(RESOURCE_ENTITY_LABEL, atlasAssetAccessor.getLabel());
+            } else if (AtlasPrivilege.ENTITY_UPDATE_BUSINESS_METADATA.equals(request.getAction())) {
+                rangerResource.setValue(RESOURCE_ENTITY_BUSINESS_METADATA, atlasAssetAccessor.getBusinessMetadata());
+            }
+
+            RangerAccessResult result = null;
+            Set<String> tagNames = request.getClassificationNames(entityHeader);
+            if (CollectionUtils.isNotEmpty(tagNames)) {
+                setClassificationsToRequestContext(tagNames, rangerRequest);
+
+                // check authorization for each classification
+                for (String classificationToAuthorize : tagNames) {
+                    rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
+
+                    result = getAccessors(rangerRequest);
+                }
+            } else {
+                rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, ENTITY_NOT_CLASSIFIED);
+
+                result = getAccessors(rangerRequest);
+            }
+
+            if (result != null && CollectionUtils.isNotEmpty(result.getMatchedItems())) {
+                for (RangerPolicy.RangerPolicyItem item : result.getMatchedItems()) {
+                    if (CollectionUtils.isNotEmpty(item.getUsers())) {
+                        atlasAssetAccessor.getUsers().addAll(item.getUsers());
+                    }
+
+                    if (CollectionUtils.isNotEmpty(item.getRoles())) {
+                        atlasAssetAccessor.getRoles().addAll(item.getRoles());
+                    }
+
+                    if (CollectionUtils.isNotEmpty(item.getGroups())) {
+                        atlasAssetAccessor.getGroups().addAll(item.getGroups());
+                    }
+                }
+            }
+        }
+
+        return request.getRequest();
+    }
 
     public boolean isAccessAllowed(AtlasRelationshipAccessRequest request) throws AtlasAuthorizationException {
         if (LOG.isDebugEnabled()) {
@@ -567,6 +640,28 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         }
 
         return ret;
+    }
+
+    private RangerAccessResult getAccessors(RangerAccessRequestImpl request) {
+        RangerAccessResult result = null;
+
+        RangerBasePlugin plugin = atlasPlugin;
+        String userName = request.getUser();
+
+        if (plugin != null) {
+
+            groupUtil.setUserStore(atlasPlugin.getUserStore());
+            request.setUserGroups(groupUtil.getContainedGroups(userName));
+
+            LOG.warn("Setting UserGroup for user :"+ userName + " Groups: " + groupUtil.getContainedGroups(userName) );
+
+            result = plugin.getAssetAccessors(request);
+
+        } else {
+            LOG.warn("RangerAtlasPlugin not initialized. Could not find Accessors!!!");
+        }
+
+        return result;
     }
 
     private void checkAccessAndScrub(AtlasEntityHeader entity, AtlasSearchResultScrubRequest request) throws AtlasAuthorizationException {
