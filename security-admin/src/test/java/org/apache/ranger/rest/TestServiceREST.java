@@ -19,6 +19,7 @@ package org.apache.ranger.rest;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Date;
@@ -1762,7 +1763,7 @@ public class TestServiceREST {
 		SearchFilter filter = new SearchFilter();
 		filter.setParam("serviceType", "value");
 
-		File jsonPolicyFile = new File(importPoliceTestFilePath);
+		File jsonPolicyFile = getFile(importPoliceTestFilePath);
 		InputStream uploadedInputStream = new FileInputStream(jsonPolicyFile);
 		FormDataContentDisposition fileDetail = FormDataContentDisposition.name("file")
 				.fileName(jsonPolicyFile.getName()).size(uploadedInputStream.toString().length()).build();
@@ -1827,7 +1828,7 @@ public class TestServiceREST {
 		SearchFilter filter = new SearchFilter();
 		filter.setParam("serviceType", "value");
 
-		File jsonPolicyFile = new File(importPoliceTestFilePath);
+		File jsonPolicyFile = getFile(importPoliceTestFilePath);
 		InputStream uploadedInputStream = new FileInputStream(jsonPolicyFile);
 		FormDataContentDisposition fileDetail = FormDataContentDisposition.name("file")
 				.fileName(jsonPolicyFile.getName()).size(uploadedInputStream.toString().length()).build();
@@ -1858,6 +1859,14 @@ public class TestServiceREST {
 		serviceREST.importPoliciesFromFile(request, null, zoneInputStream, uploadedInputStream, fileDetail, isOverride, "unzoneToUnZone");
 		Mockito.verify(svcStore).createPolicy(rangerPolicy);
 
+	}
+
+	private File getFile(String testFilePath) throws IOException {
+		File jsonPolicyFile = new File(testFilePath);
+		if (jsonPolicyFile.getCanonicalPath().contains("/target/jstest")) {
+			jsonPolicyFile = new File(jsonPolicyFile.getCanonicalPath().replace("/target/jstest", ""));
+		}
+		return jsonPolicyFile;
 	}
 
 	@Test
