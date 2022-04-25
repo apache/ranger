@@ -860,7 +860,7 @@ public class RoleREST {
                     }
                 } else {
                     LOG.error("getSecureRangerRolesIfUpdated(" + serviceName + ", " + lastKnownRoleVersion + ") failed as User doesn't have permission to UserGroupRoles");
-                    httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+                    httpCode = HttpServletResponse.SC_FORBIDDEN; // assert user is authenticated.
                     logMsg = "User doesn't have permission to download UserGroupRoles";
                 }
 

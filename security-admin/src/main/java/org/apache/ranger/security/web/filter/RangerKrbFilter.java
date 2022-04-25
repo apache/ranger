@@ -620,11 +620,11 @@ public class RangerKrbFilter implements Filter {
       sb.append("\"").append(token).append("\"");
     }
 
-    if (path != null) {
+    if (StringUtils.isNotEmpty(path)) {
       sb.append("; Path=").append(path);
     }
 
-    if (domain != null) {
+    if (StringUtils.isNotEmpty(domain)) {
       sb.append("; Domain=").append(domain);
     }
 
