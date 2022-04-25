@@ -164,8 +164,8 @@
         <libpam4j.version>1.10</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
         <logback.version>1.2.10</logback.version>
-        <log4j.version>1.2.17</log4j.version>
-        <log4j2.version>2.17.1</log4j2.version>
+        <reload4j.version>1.2.19</reload4j.version>
+        <log4j2.version>2.17.2</log4j2.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.pmd.plugin.version>3.14.0</maven.pmd.plugin.version>
         <maven.surefire.plugin.version>3.0.0-M6</maven.surefire.plugin.version>
