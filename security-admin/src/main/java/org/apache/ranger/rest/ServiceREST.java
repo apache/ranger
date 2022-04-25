@@ -1231,7 +1231,7 @@ public class ServiceREST {
 
 					if (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
 						VXResponse vXResponse = new VXResponse();
-						vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+						vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
 						vXResponse.setMsgDesc("Operation denied. LoggedInUser=" + vxUser.getId() + " is not permitted to perform the action.");
 						throw restErrorUtil.generateRESTException(vXResponse);
 					}
@@ -1467,7 +1467,7 @@ public class ServiceREST {
 
 					if (vxUser.getUserRoleList().contains(RangerConstants.ROLE_ADMIN_AUDITOR) || vxUser.getUserRoleList().contains(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
 						VXResponse vXResponse = new VXResponse();
-						vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+						vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
 						vXResponse.setMsgDesc("Operation denied. LoggedInUser=" + vxUser.getId() + " is not permitted to perform the action.");
 						throw restErrorUtil.generateRESTException(vXResponse);
 					}
@@ -3152,7 +3152,7 @@ public class ServiceREST {
 
 				} else {
 					LOG.error("getSecureServicePoliciesIfUpdated(" + serviceName + ", " + lastKnownVersion + ") failed as User doesn't have permission to download Policy");
-					httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+					httpCode = HttpServletResponse.SC_FORBIDDEN; // assert user is authenticated.
 					logMsg = "User doesn't have permission to download policy";
 				}
 			} catch (Throwable excp) {
@@ -3553,7 +3553,7 @@ public class ServiceREST {
 			
 
 			if (!isAllowed) {
-				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED,
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
 						"User '" + userName + "' does not have delegated-admin privilege on given resources", true);
 			}
 		} else {
@@ -4039,7 +4039,7 @@ public class ServiceREST {
 			}
 
 			if (!isAllowed) {
-				throw restErrorUtil.createRESTException(HttpServletResponse.SC_UNAUTHORIZED, "User '"
+				throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User '"
 						+ userName + "' does not have delegated-admin privilege on given resources", true);
 			}
 		} else {

@@ -1334,14 +1334,14 @@ public class XUserMgr extends XUserMgrBase {
 		if (session != null) {
 			if (!session.isUserAdmin()) {
 				VXResponse vXResponse = new VXResponse();
-				vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+				vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
 				vXResponse.setMsgDesc("Operation" + " denied. LoggedInUser=" + (session != null ? session.getXXPortalUser().getId() : "Not Logged In")
 						+ " ,isn't permitted to perform the action.");
 				throw restErrorUtil.generateRESTException(vXResponse);
 			}
 		} else {
 			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
 			vXResponse.setMsgDesc("Bad Credentials");
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}
@@ -1356,7 +1356,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		} else {
 			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
 			vXResponse.setMsgDesc("Bad Credentials");
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}
@@ -1490,7 +1490,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		} else {
 			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null or role is null
 			vXResponse.setMsgDesc("Bad Credentials");
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}
@@ -2486,7 +2486,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		} else {
 			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
 			vXResponse.setMsgDesc("Bad Credentials");
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}

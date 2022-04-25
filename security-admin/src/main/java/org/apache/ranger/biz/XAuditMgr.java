@@ -110,7 +110,7 @@ public class XAuditMgr extends XAuditMgrBase {
 			}
 		} else {
 			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
 			vXResponse.setMsgDesc("Bad Credentials");
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}

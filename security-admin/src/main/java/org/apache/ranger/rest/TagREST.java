@@ -1222,7 +1222,7 @@ public class TagREST {
 				}
 			}else{
 				LOG.error("getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ") failed as User doesn't have permission to download tags");
-				httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+				httpCode = HttpServletResponse.SC_FORBIDDEN; // assert user is authenticated.
 				logMsg = "User doesn't have permission to download tags";
 			}
         } catch (WebApplicationException webException) {

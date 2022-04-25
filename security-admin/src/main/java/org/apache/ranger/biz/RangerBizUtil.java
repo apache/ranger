@@ -1456,7 +1456,7 @@ public class RangerBizUtil {
                 if (session != null) {
                         if (session.isAuditKeyAdmin() || session.isAuditUserAdmin()) {
                                 VXResponse vXResponse = new VXResponse();
-                                vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                                vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
                                 vXResponse.setMsgDesc("Operation"
                                                 + " denied. LoggedInUser="
                                                 +  session.getXXPortalUser().getId()
@@ -1465,7 +1465,7 @@ public class RangerBizUtil {
                         }
                 } else {
                         VXResponse vXResponse = new VXResponse();
-                        vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                        vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
                         vXResponse.setMsgDesc("Bad Credentials");
                         throw restErrorUtil.generateRESTException(vXResponse);
                 }
@@ -1537,8 +1537,13 @@ public class RangerBizUtil {
 
 	public boolean checkAdminAccess() {
 		UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
-
-		return currentUserSession != null && currentUserSession.isUserAdmin();
+		if (currentUserSession != null) {
+			return currentUserSession.isUserAdmin();
+		} else {
+			VXResponse vXResponse = new VXResponse();
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
+			vXResponse.setMsgDesc("Bad Credentials");
+			throw restErrorUtil.generateRESTException(vXResponse);
+		}
 	}
-
 }

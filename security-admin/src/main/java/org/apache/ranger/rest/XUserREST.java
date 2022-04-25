@@ -1429,7 +1429,7 @@ public class XUserREST {
 					}
 				} else {
 					logger.error("getSecureRangerUserStoreIfUpdated(" + serviceName + ", " + lastKnownUserStoreVersion + ") failed as User doesn't have permission to download UsersAndGroups");
-					httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+					httpCode = HttpServletResponse.SC_FORBIDDEN; // assert user is authenticated.
 					logMsg = "User doesn't have permission to download UsersAndGroups";
 				}
 			}

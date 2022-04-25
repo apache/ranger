@@ -119,7 +119,7 @@ public class RangerPreAuthSecurityHandler {
 			return true;
 		}
 		VXResponse gjResponse = new VXResponse();
-        gjResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+        gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN); // assert user is authenticated.
         gjResponse.setMsgDesc("User is not allowed to access the API");
         throw restErrorUtil.generateRESTException(gjResponse);
 	}
