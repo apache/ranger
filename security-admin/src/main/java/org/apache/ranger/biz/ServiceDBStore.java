@@ -3022,6 +3022,20 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return ret;
 	}
 
+    public boolean resetPolicyCache(final String serviceName) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ServiceDBStore.resetPolicyCache(" + serviceName + ")");
+        }
+
+        boolean ret = RangerServicePoliciesCache.getInstance().resetCache(serviceName);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== ServiceDBStore.resetPolicyCache(): ret=" + ret);
+        }
+
+        return ret;
+    }
+
 	private static class RangerPolicyDeltaComparator implements Comparator<RangerPolicyDelta>, java.io.Serializable {
 		@Override
 		public int compare(RangerPolicyDelta me, RangerPolicyDelta other) {

@@ -139,6 +139,50 @@ public class RangerServicePoliciesCache {
 		return ret;
 	}
 
+    /**
+     * Reset policy cache using serviceName if provided.
+     * If serviceName is empty, reset everything.
+     * @param serviceName
+     * @return true if was able to reset policy cache, false otherwise
+     */
+    public boolean resetCache(final String serviceName) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerServicePoliciesCache.resetCache({})", serviceName);
+        }
+
+        boolean ret = false;
+        synchronized (this) {
+            if (!servicePoliciesMap.isEmpty()) {
+                if (StringUtils.isBlank(serviceName)) {
+                    servicePoliciesMap.clear();
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("RangerServicePoliciesCache.resetCache(): Removed policy caching for all services.");
+                    }
+                    ret = true;
+                } else {
+                    ServicePoliciesWrapper removedServicePoliciesWrapper = servicePoliciesMap.remove(serviceName.trim()); // returns null if key not found
+                    ret = removedServicePoliciesWrapper != null;
+
+                    if (ret) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("RangerServicePoliciesCache.resetCache(): Removed policy caching for [{}] service.", serviceName);
+                        }
+                    } else {
+                        LOG.warn("RangerServicePoliciesCache.resetCache(): Caching for [{}] service not found, hence reset is skipped.", serviceName);
+                    }
+                }
+            } else {
+                LOG.warn("RangerServicePoliciesCache.resetCache(): Policy cache is already empty.");
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerServicePoliciesCache.resetCache(): ret={}", ret);
+        }
+
+        return ret;
+    }
+
 	private class ServicePoliciesWrapper {
 		final Long          serviceId;
 		ServicePolicies     servicePolicies;
