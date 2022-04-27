@@ -1596,8 +1596,8 @@ public class ServiceREST {
 			LOG.debug("<== ServiceREST.secureRevokeAccess(" + serviceName + ", " + revokeRequest + "): " + ret);
 		}
 		return ret;
-	}	
-	
+	}
+
 	@POST
 	@Path("/policies")
 	@Produces({ "application/json", "application/xml" })
@@ -1908,7 +1908,7 @@ public class ServiceREST {
 		return ret;
 	}
 
-        @GET
+	@GET
 	@Path("/policies")
 	@Produces({ "application/json", "application/xml" })
 	public RangerPolicyList getPolicies(@Context HttpServletRequest request) {
@@ -1956,6 +1956,42 @@ public class ServiceREST {
 		}
 		return ret;
 	}
+
+    @GET
+    @Path("/policies/cache/reset")
+    @Produces({ "application/json", "application/xml" })
+    public boolean resetPolicyCache(@QueryParam("name") String name) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ServiceREST.resetPolicyCache(" + name + ")");
+        }
+
+        // check for ADMIN access
+        if (!bizUtil.isAdmin()) {
+            boolean isServiceAdmin = false;
+            String  loggedInUser   = bizUtil.getCurrentUserLoginId();
+
+            if (StringUtils.isNotEmpty(name)) {
+                try {
+                    RangerService rangerService = svcStore.getServiceByName(name);
+                    isServiceAdmin = bizUtil.isUserServiceAdmin(rangerService, loggedInUser);
+                } catch (Exception e) {
+                    LOG.warn("Failed to find if user [" + loggedInUser + "] has service admin privileges on service [" + name + "]", e);
+                }
+            }
+
+            if (!isServiceAdmin) {
+                throw restErrorUtil.createRESTException("User cannot reset policy cache", MessageEnums.OPER_NO_PERMISSION);
+            }
+        }
+
+        boolean ret = svcStore.resetPolicyCache(name);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== ServiceREST.resetPolicyCache(): ret=" + ret);
+        }
+
+        return ret;
+    }
 
 	@GET
 	@Path("/policies/downloadExcel")
