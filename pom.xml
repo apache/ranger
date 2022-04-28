@@ -310,6 +310,7 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>ranger-authn</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -607,6 +608,7 @@
                 <module>ranger-presto-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>ranger-authn</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
