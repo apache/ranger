@@ -149,7 +149,7 @@ public class RangerAuthenticationProvider implements AuthenticationProvider {
 			}
 
 			// Following are JDBC
-			if (sessionMgr.isLoginIdLocked(authentication.getName())) {
+			if (authentication != null && authentication.getName() != null && sessionMgr.isLoginIdLocked(authentication.getName())) {
 				logger.debug("Failed to authenticate since user account is locked");
 
 				throw new LockedException(messages.getMessage("AbstractUserDetailsAuthenticationProvider.locked", "User account is locked"));
