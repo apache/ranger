@@ -69,6 +69,7 @@ public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPoli
 
 			if (result.getFilterExpr() != null) {
 				policyEvaluator.updateAccessResult(result, matchType, true, getComments());
+				result.setIsAccessDetermined(true);
 			}
 		}
 	}
