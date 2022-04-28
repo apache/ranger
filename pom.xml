@@ -159,6 +159,7 @@
         <jsr250.version>1.0</jsr250.version>
         <jsr305.version>1.3.9</jsr305.version>
         <junit.version>4.13.1</junit.version>
+        <junit.jupiter.version>5.10.0</junit.jupiter.version>
         <kafka.version>2.8.1</kafka.version>
         <kerby.version>1.0.0</kerby.version>
         <knox.gateway.version>1.4.0</knox.gateway.version>
@@ -321,6 +322,7 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>ranger-authn</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -716,6 +718,7 @@
                 <module>ranger-presto-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
+                <module>ranger-authn</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
