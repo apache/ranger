@@ -66,4 +66,11 @@ public abstract class RangerChainedPlugin {
 
     public boolean  isAuthorizeOnlyWithChainedPlugin() { return false; }
 
+    public RangerAccessResult evalDataMaskPolicies(RangerAccessRequest request) {
+        return null; // no-op
+    }
+
+    public RangerAccessResult evalRowFilterPolicies(RangerAccessRequest request) {
+        return null; // no-op
+    }
 }

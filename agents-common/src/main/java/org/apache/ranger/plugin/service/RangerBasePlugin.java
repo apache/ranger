@@ -532,6 +532,29 @@ public class RangerBasePlugin {
 		if(policyEngine != null) {
 			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, resultProcessor);
 
+			if (ret != null) {
+				for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("BasePlugin.evalDataMaskPolicies result=[" + ret + "]");
+						LOG.debug("Calling chainedPlugin.evalDataMaskPolicies for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "]");
+					}
+
+					RangerAccessResult chainedResult = chainedPlugin.evalDataMaskPolicies(request);
+
+					if (chainedResult != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("chainedPlugin.evalDataMaskPolicies for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "] returned result=[" + chainedResult + "]");
+						}
+
+						updateResultFromChainedResult(ret, chainedResult);
+
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("After updating result from chainedPlugin.evalDataMaskPolicies for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "], result=" + ret + "]");
+						}
+					}
+				}
+			}
+
 			policyEngine.evaluateAuditPolicies(ret);
 		}
 
@@ -544,6 +567,29 @@ public class RangerBasePlugin {
 
 		if(policyEngine != null) {
 			ret = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, resultProcessor);
+
+			if (ret != null) {
+				for (RangerChainedPlugin chainedPlugin : chainedPlugins) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("BasePlugin.evalRowFilterPolicies result=[" + ret + "]");
+						LOG.debug("Calling chainedPlugin.evalRowFilterPolicies for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "]");
+					}
+
+					RangerAccessResult chainedResult = chainedPlugin.evalRowFilterPolicies(request);
+
+					if (chainedResult != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("chainedPlugin.evalRowFilterPolicies for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "] returned result=[" + chainedResult + "]");
+						}
+
+						updateResultFromChainedResult(ret, chainedResult);
+
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("After updating result from chainedPlugin.evalRowFilterPolicies for service:[" + chainedPlugin.plugin.pluginConfig.getServiceName() + "], result=" + ret + "]");
+						}
+					}
+				}
+			}
 
 			policyEngine.evaluateAuditPolicies(ret);
 		}
@@ -1107,6 +1153,7 @@ public class RangerBasePlugin {
 
 	private void updateResultFromChainedResult(RangerAccessResult result, RangerAccessResult chainedResult) {
 		boolean overrideResult = false;
+		int     policyType     = result.getPolicyType();
 
 		if (chainedResult.getIsAccessDetermined()) { // only if chained-result is definitive
 			// override if result is not definitive or chained-result is by a higher priority policy
@@ -1130,6 +1177,14 @@ public class RangerBasePlugin {
 			result.setPolicyVersion(chainedResult.getPolicyVersion());
 			result.setPolicyPriority(chainedResult.getPolicyPriority());
 			result.setZoneName(chainedResult.getZoneName());
+
+			if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK) {
+				result.setMaskType(chainedResult.getMaskType());
+				result.setMaskCondition(chainedResult.getMaskCondition());
+				result.setMaskedValue(chainedResult.getMaskedValue());
+			} else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
+				result.setFilterExpr(chainedResult.getFilterExpr());
+			}
 		}
 
 		if (!result.getIsAuditedDetermined() && chainedResult.getIsAuditedDetermined()) {
