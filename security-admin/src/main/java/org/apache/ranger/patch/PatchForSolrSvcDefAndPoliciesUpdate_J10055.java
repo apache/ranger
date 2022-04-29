@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -45,6 +46,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
@@ -135,7 +137,16 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
             logger.error("Error whille executing PatchForSolrSvcDefAndPoliciesUpdate_J10055.", e);
             System.exit(1);
         }
-        logger.info("<== PatchForSolrSvcDefAndPoliciesUpdate_J10055.execLoad()");
+
+		try {
+			// For RANGER-3725 - Update atlas default audit filter
+			updateDefaultAuditFilter(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
+		} catch (Throwable t) {
+			logger.error("Failed to update atlas default audit filter, Error - ", t);
+			System.exit(1);
+		}
+
+		logger.info("<== PatchForSolrSvcDefAndPoliciesUpdate_J10055.execLoad()");
     }
 
 	private void updateExistingRangerResPolicy(Long svcDefId) throws Exception {
@@ -468,4 +479,37 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
         }
         logger.info("<== PatchForSolrSvcDefAndPoliciesUpdate_J10055.deleteOldAccessTypeRefs(" + svcDefId + ")");
     }
+
+	private void updateDefaultAuditFilter(final String svcDefName) throws Exception {
+		logger.info("==> PatchForSolrSvcDefAndPoliciesUpdate_J10055.updateAtlasDefaultAuditFilter()");
+		final RangerServiceDef embeddedAtlasServiceDef = EmbeddedServiceDefsUtil.instance()
+				.getEmbeddedServiceDef(svcDefName);
+		final List<RangerServiceConfigDef> embdSvcConfDefList = embeddedAtlasServiceDef != null ? embeddedAtlasServiceDef.getConfigs() : new ArrayList<RangerServiceConfigDef>();
+		String embdAuditFilterStr = StringUtils.EMPTY;
+
+		if (CollectionUtils.isNotEmpty(embdSvcConfDefList)) {
+			for (RangerServiceConfigDef embdSvcConfDef : embdSvcConfDefList) {
+				if (StringUtils.equals(embdSvcConfDef.getName(), ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
+					embdAuditFilterStr = embdSvcConfDef.getDefaultValue(); // new audit filter str
+					break;
+				}
+			}
+		}
+
+		if (StringUtils.isNotEmpty(embdAuditFilterStr)) {
+			final RangerServiceDef serviceDbDef = this.svcDBStore.getServiceDefByName(svcDefName);
+			for (RangerServiceConfigDef dbSvcDefConfig : serviceDbDef.getConfigs()) {
+				if (dbSvcDefConfig != null && StringUtils.equals(dbSvcDefConfig.getName(), ServiceDBStore.RANGER_PLUGIN_AUDIT_FILTERS)) {
+					final String dbAuditFilterStr = dbSvcDefConfig.getDefaultValue();
+					if (!StringUtils.equalsIgnoreCase(dbAuditFilterStr, embdAuditFilterStr)) {
+						dbSvcDefConfig.setDefaultValue(embdAuditFilterStr);
+						this.svcDBStore.updateServiceDef(serviceDbDef);
+						logger.info("Updated " + serviceDbDef.getName() + " service default audit filter.");
+					}
+					break;
+				}
+			}
+		}
+		logger.info("<== PatchForSolrSvcDefAndPoliciesUpdate_J10055.updateAtlasDefaultAuditFilter()");
+	}
 }

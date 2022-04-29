@@ -477,7 +477,7 @@
 			"validationMessage": "",
 			"uiHint":"",
 			"label": "Ranger Default Audit Filters",
-			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['atlas'] ,'isAudited':false} ]"
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['atlas'] ,'isAudited':false}, {'accessResult':'ALLOWED', 'isAudited':false, 'actions':['entity-read'], 'accessTypes':['entity-read'], 'users':['nifi']} ]"
 		}
 	],
 	"options": {
