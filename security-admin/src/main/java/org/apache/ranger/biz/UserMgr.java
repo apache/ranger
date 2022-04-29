@@ -561,6 +561,7 @@ public class UserMgr {
 		gjUser.setPublicScreenName(userProfile.getPublicScreenName());
 		gjUser.setOtherAttributes(userProfile.getOtherAttributes());
 		gjUser.setSyncSource(userProfile.getSyncSource());
+		gjUser.setStatus(userProfile.getStatus());
 		if (userProfile.getFirstName() != null
 				&& userProfile.getLastName() != null
 				&& !userProfile.getFirstName().trim().isEmpty()

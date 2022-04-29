@@ -117,4 +117,15 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 			return null;
 		}
 	}
+
+	public List<XXPortalUser> findByUserSourceAndStatus(final int source, final int status) {
+		try {
+			return getEntityManager().createNamedQuery("XXPortalUser.findByUserSourceAndStatus", tClass)
+					.setParameter("userSource", source)
+					.setParameter("status", status)
+					.getResultList();
+		} catch (Exception e) {
+			return null;
+		}
+	}
 }
