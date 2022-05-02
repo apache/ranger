@@ -215,6 +215,7 @@ public abstract class RangerBaseService {
 	private void addCustomRangerDefaultPolicies(List<RangerPolicy> ret, Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap, String policyPropertyPrefix) throws Exception {
 		String policyName  = configs.get(policyPropertyPrefix + PROP_DEFAULT_POLICY_NAME_SUFFIX);
 		String description = configs.get(policyPropertyPrefix + "description");
+		Boolean isDenyAllElse = Boolean.valueOf(configs.get(policyPropertyPrefix + "isDenyAllElse"));
 
 		if (StringUtils.isEmpty(description)) {
 			description = "Policy for " + policyName;
@@ -230,6 +231,7 @@ public abstract class RangerBaseService {
 		policy.setDescription(description);
 		policy.setName(policyName);
 		policy.setResources(policyResourceMap);
+		policy.setIsDenyAllElse(isDenyAllElse);
 
 		for (int i = 1; ; i++) {
 			String policyItemPropertyPrefix = policyPropertyPrefix + "policyItem." + i + ".";
