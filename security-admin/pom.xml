@@ -754,6 +754,11 @@
             <artifactId>log4j-to-slf4j</artifactId>
             <version>${log4j2.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-authn</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
