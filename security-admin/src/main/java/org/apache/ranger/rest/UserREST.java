@@ -115,7 +115,7 @@ public class UserREST {
 	 * @return
 	 */
 	@GET
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_USERS + "\")")
 	public VXPortalUserList searchUsers(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -162,7 +162,7 @@ public class UserREST {
 	 */
 	@GET
 	@Path("{userId}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_PROFILE_FOR_USER + "\")")
 	public VXPortalUser getUserProfileForUser(@PathParam("userId") Long userId) {
 		try {
@@ -184,7 +184,7 @@ public class UserREST {
 
 	@POST
 	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE + "\")")
 	public VXPortalUser create(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
@@ -197,7 +197,7 @@ public class UserREST {
 	@POST
 	@Path("/default")
 	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER + "\")")
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
@@ -213,7 +213,7 @@ public class UserREST {
 
 	@PUT
 	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@RangerAnnotationRestAPI(updates_classes = "VUserProfile")
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE + "\")")
 	public VXPortalUser update(VXPortalUser userProfile,
@@ -236,7 +236,7 @@ public class UserREST {
 
 	@PUT
 	@Path("/{userId}/roles")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES + "\")")
 	public VXResponse setUserRoles(@PathParam("userId") Long userId,
 			VXStringList roleList) {
@@ -255,7 +255,7 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/deactivate")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DEACTIVATE_USER + "\")")
 	@RangerAnnotationClassName(class_name = VXPortalUser.class)
 	public VXPortalUser deactivateUser(@PathParam("userId") Long userId) {
@@ -276,7 +276,7 @@ public class UserREST {
 	 */
 	@GET
 	@Path("/profile")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXPortalUser getUserProfile(@Context HttpServletRequest request) {
 		try {
 			logger.debug("getUserProfile(). httpSessionId="
@@ -297,7 +297,7 @@ public class UserREST {
 
 	@GET
 	@Path("/firstnames")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public String suggestUserFirstName(@QueryParam("letters") String letters,
 			@Context HttpServletRequest req) {
 		return null;
@@ -310,7 +310,7 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/passwordchange")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXResponse changePassword(@PathParam("userId") Long userId,
 			VXPasswordChange changePassword) {
 		if(changePassword==null || stringUtil.isEmpty(changePassword.getLoginId())){
@@ -338,7 +338,7 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/emailchange")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	public VXPortalUser changeEmailAddress(@PathParam("userId") Long userId,
 			VXPasswordChange changeEmail) {
 		if(changeEmail==null || stringUtil.isEmpty(changeEmail.getLoginId())){
