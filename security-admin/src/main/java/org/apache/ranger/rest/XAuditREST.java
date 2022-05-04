@@ -69,7 +69,7 @@ public class XAuditREST {
 	// Handle XTrxLog
 	@GET
 	@Path("/trx_log/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_TRX_LOG + "\")")
 	public VXTrxLog getXTrxLog(
 			@PathParam("id") Long id) {
@@ -78,7 +78,7 @@ public class XAuditREST {
 
 	@POST
 	@Path("/trx_log")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_TRX_LOG + "\")")
 	public VXTrxLog createXTrxLog(VXTrxLog vXTrxLog) {
 		 return xAuditMgr.createXTrxLog(vXTrxLog);
@@ -86,7 +86,7 @@ public class XAuditREST {
 
 	@PUT
 	@Path("/trx_log")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_TRX_LOG + "\")")
 	public VXTrxLog updateXTrxLog(VXTrxLog vXTrxLog) {
 		 return xAuditMgr.updateXTrxLog(vXTrxLog);
@@ -110,7 +110,7 @@ public class XAuditREST {
 	 */
 	@GET
 	@Path("/trx_log")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_TRX_LOG + "\")")
 	public VXTrxLogList searchXTrxLogs(@Context HttpServletRequest request) {
 		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -120,7 +120,7 @@ public class XAuditREST {
 
 	@GET
 	@Path("/trx_log/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_TRX_LOGS + "\")")
 	public VXLong countXTrxLogs(@Context HttpServletRequest request) {
 		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -138,7 +138,7 @@ public class XAuditREST {
 	 */
 	@GET
 	@Path("/access_audit")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ACCESS_AUDITS + "\")")
 	public VXAccessAuditList searchXAccessAudits(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xAccessAuditService.sortFields);
@@ -147,7 +147,7 @@ public class XAuditREST {
 
 	@GET
 	@Path("/access_audit/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_ACCESS_AUDITS + "\")")
 	public VXLong countXAccessAudits(@Context HttpServletRequest request) {
 		 SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
