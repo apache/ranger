@@ -33,6 +33,9 @@ delimiter ;;
 create procedure remove_x_policy_zone_id() begin
 if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy') then
   if exists (select * from information_schema.columns where table_schema=database() and table_name = 'x_policy' and column_name = 'zone_id') then
+        if exists(select * FROM INFORMATION_SCHEMA.KEY_COLUMN_USAGE WHERE REFERENCED_TABLE_NAME = 'x_security_zone' AND TABLE_SCHEMA  = database() AND TABLE_NAME = 'x_policy' AND CONSTRAINT_NAME = 'x_policy_FK_zone_id') then
+            ALTER TABLE `x_policy` DROP FOREIGN KEY `x_policy_FK_zone_id`;
+        end if;
     ALTER TABLE `x_policy` DROP COLUMN `zone_id`;
   end if;
  end if;
@@ -237,11 +240,11 @@ create procedure add_security_zone_permissions() begin
 	call getXportalUIdByLoginId('admin', adminID);
 	call getXportalUIdByLoginId('rangerusersync', rangerusersyncID);
 	call getXportalUIdByLoginId('rangertagsync', rangertagsyncID);
-	call getModulesIdByName('Security Zone', moduleIdSecurityZone);
 
 	if not exists (select * from x_modules_master where module='Security Zone') then
 		INSERT INTO `x_modules_master` (`create_time`,`update_time`,`added_by_id`,`upd_by_id`,`module`,`url`) VALUES (UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,'Security Zone','');
 	end if;
+	call getModulesIdByName('Security Zone', moduleIdSecurityZone);
 	if not exists (select * from x_user_module_perm where user_id=adminID and module_id=moduleIdSecurityZone) then
 		INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (adminID,moduleIdSecurityZone,UTC_TIMESTAMP(),UTC_TIMESTAMP(),adminID,adminID,1);
 	end if;
