@@ -480,6 +480,19 @@ public class TagDBStore extends AbstractTagStore {
 		return ret;
 	}
 
+    public boolean resetTagCache(final String serviceName) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagDBStore.resetTagCache({})", serviceName);
+        }
+
+        boolean ret = RangerServiceTagsCache.getInstance().resetCache(serviceName);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagDBStore.resetTagCache(): ret={}", ret);
+        }
+
+        return ret;
+    }
 
 	@Override
 	public RangerServiceResource createServiceResource(RangerServiceResource resource) throws Exception {
