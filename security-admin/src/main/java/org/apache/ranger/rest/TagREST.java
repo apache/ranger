@@ -25,6 +25,7 @@ import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.biz.TagDBStore;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
@@ -596,6 +597,42 @@ public class TagREST {
         }
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.getAllTags(): " + ret);
+        }
+
+        return ret;
+    }
+
+    @GET
+    @Path(TagRESTConstants.TAGS_RESOURCE + "cache/reset")
+    @Produces({ "application/json", "application/xml" })
+    public boolean resetTagCache(@QueryParam("serviceName") String serviceName) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.resetTagCache({})", serviceName);
+        }
+
+        // check for ADMIN access
+        if (!bizUtil.isAdmin()) {
+            boolean isServiceAdmin = false;
+            String  loggedInUser   = bizUtil.getCurrentUserLoginId();
+
+            if (StringUtils.isNotEmpty(serviceName)) {
+                try {
+                    RangerService rangerService = svcStore.getServiceByName(serviceName);
+                    isServiceAdmin = bizUtil.isUserServiceAdmin(rangerService, loggedInUser);
+                } catch (Exception e) {
+                    LOG.warn("Failed to find if user [" + loggedInUser + "] has service admin privileges on service [" + serviceName + "]", e);
+                }
+            }
+
+            if (!isServiceAdmin) {
+                throw restErrorUtil.createRESTException("User cannot reset tag cache", MessageEnums.OPER_NO_PERMISSION);
+            }
+        }
+
+        boolean ret = tagStore.resetTagCache(serviceName);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.resetTagCache(): ret={}", ret);
         }
 
         return ret;

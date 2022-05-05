@@ -153,6 +153,50 @@ public class RangerServiceTagsCache {
 		return ret;
 	}
 
+    /**
+     * Reset service tag cache using serviceName if provided.
+     * If serviceName is empty, reset everything.
+     * @param serviceName
+     * @return true if was able to reset service tag cache, false otherwise
+     */
+    public boolean resetCache(final String serviceName) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerServiceTagsCache.resetCache({})", serviceName);
+        }
+
+        boolean ret = false;
+        synchronized (this) {
+            if (!serviceTagsMap.isEmpty()) {
+                if (StringUtils.isBlank(serviceName)) {
+                    serviceTagsMap.clear();
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("RangerServiceTagsCache.resetCache(): Removed policy caching for all services.");
+                    }
+                    ret = true;
+                } else {
+                    ServiceTagsWrapper removedServicePoliciesWrapper = serviceTagsMap.remove(serviceName.trim()); // returns null if key not found
+                    ret = removedServicePoliciesWrapper != null;
+
+                    if (ret) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("RangerServiceTagsCache.resetCache(): Removed policy caching for [{}] service.", serviceName);
+                        }
+                    } else {
+                        LOG.warn("RangerServiceTagsCache.resetCache(): Caching for [{}] service not found, hence reset is skipped.", serviceName);
+                    }
+                }
+            } else {
+                LOG.warn("RangerServiceTagsCache.resetCache(): Policy cache is already empty.");
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerServiceTagsCache.resetCache(): ret={}", ret);
+        }
+
+        return ret;
+    }
+
 	private class ServiceTagsWrapper {
 		final Long serviceId;
 		ServiceTags serviceTags;
