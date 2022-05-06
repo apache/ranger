@@ -16,7 +16,7 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.ranger.services.presto.client;
+package org.apache.ranger.services.trino.client;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringEscapeUtils;
@@ -43,11 +43,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 
-public class PrestoClient extends BaseClient implements Closeable {
-  public static final String PRESTO_USER_NAME_PROP = "user";
-  public static final String PRESTO_PASSWORD_PROP = "password";
+public class TrinoClient extends BaseClient implements Closeable {
+  public static final String TRINO_USER_NAME_PROP = "user";
+  public static final String TRINO_PASSWORD_PROP = "password";
 
-  private static final Logger LOG = LoggerFactory.getLogger(PrestoClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TrinoClient.class);
 
   private static final String ERR_MSG = "You can still save the repository and start creating "
     + "policies, but you would not be able to use autocomplete for "
@@ -55,12 +55,12 @@ public class PrestoClient extends BaseClient implements Closeable {
 
   private Connection con;
 
-  public PrestoClient(String serviceName) throws Exception {
+  public TrinoClient(String serviceName) throws Exception {
     super(serviceName, null);
     init();
   }
 
-  public PrestoClient(String serviceName, Map<String, String> properties) throws Exception {
+  public TrinoClient(String serviceName, Map<String, String> properties) throws Exception {
     super(serviceName, properties);
     init();
   }
@@ -79,7 +79,7 @@ public class PrestoClient extends BaseClient implements Closeable {
     String driverClassName = prop.getProperty("jdbc.driverClassName");
     String url = prop.getProperty("jdbc.url");
 
-    Properties prestoProperties = new Properties();
+    Properties trinoProperties = new Properties();
     String decryptedPwd = null;
     try {
       decryptedPwd=PasswordUtils.decryptPassword(getConfigHolder().getPassword());
@@ -91,9 +91,9 @@ public class PrestoClient extends BaseClient implements Closeable {
       decryptedPwd = prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD);
       }
     }
-    prestoProperties.put(PRESTO_USER_NAME_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_USER_NAME_PROP));
+    trinoProperties.put(TRINO_USER_NAME_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_USER_NAME_PROP));
     if (prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD) != null) {
-      prestoProperties.put(PRESTO_PASSWORD_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD));
+      trinoProperties.put(TRINO_PASSWORD_PROP, decryptedPwd);
     }
 
     if (driverClassName != null) {
@@ -102,7 +102,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         DriverManager.registerDriver(driver);
       } catch (SQLException e) {
         String msgDesc = "initConnection: Caught SQLException while registering"
-          + " the Presto driver.";
+          + " the Trino driver.";
         HadoopException hdpException = new HadoopException(msgDesc, e);
         hdpException.generateResponseDataMap(false, getMessage(e),
           msgDesc + ERR_MSG, null, null);
@@ -129,7 +129,7 @@ public class PrestoClient extends BaseClient implements Closeable {
           msgDesc + ERR_MSG, null, null);
         throw hdpException;
       } catch (SecurityException se) {
-        String msgDesc = "initConnection: unable to initiate connection to Presto instance,"
+        String msgDesc = "initConnection: unable to initiate connection to Trino instance,"
           + " The caller's class loader is not the same as or an ancestor "
           + "of the class loader for the current class and invocation of "
           + "s.checkPackageAccess() denies access to the package of this class.";
@@ -138,7 +138,7 @@ public class PrestoClient extends BaseClient implements Closeable {
           msgDesc + ERR_MSG, null, null);
         throw hdpException;
       } catch (Throwable t) {
-        String msgDesc = "initConnection: Unable to connect to Presto instance, "
+        String msgDesc = "initConnection: Unable to connect to Trino instance, "
           + "please provide valid value of field : {jdbc.driverClassName}.";
         HadoopException hdpException = new HadoopException(msgDesc, t);
         hdpException.generateResponseDataMap(false, getMessage(t),
@@ -148,21 +148,21 @@ public class PrestoClient extends BaseClient implements Closeable {
     }
 
     try {
-      con = DriverManager.getConnection(url, prestoProperties);
+      con = DriverManager.getConnection(url, trinoProperties);
     } catch (SQLException e) {
-      String msgDesc = "Unable to connect to Presto instance.";
+      String msgDesc = "Unable to connect to Trino instance.";
       HadoopException hdpException = new HadoopException(msgDesc, e);
       hdpException.generateResponseDataMap(false, getMessage(e),
         msgDesc + ERR_MSG, null, null);
       throw hdpException;
     } catch (SecurityException se) {
-      String msgDesc = "Unable to connect to Presto instance.";
+      String msgDesc = "Unable to connect to Trino instance.";
       HadoopException hdpException = new HadoopException(msgDesc, se);
       hdpException.generateResponseDataMap(false, getMessage(se),
         msgDesc + ERR_MSG, null, null);
       throw hdpException;
     } catch (Throwable t) {
-      String msgDesc = "initConnection: Unable to connect to Presto instance, ";
+      String msgDesc = "initConnection: Unable to connect to Trino instance, ";
       HadoopException hdpException = new HadoopException(msgDesc, t);
       hdpException.generateResponseDataMap(false, getMessage(t),
         msgDesc + ERR_MSG, null, null);
@@ -180,7 +180,7 @@ public class PrestoClient extends BaseClient implements Closeable {
 
       try {
         if (needle != null && !needle.isEmpty() && !needle.equals("*")) {
-          // Cannot use a prepared statement for this as presto does not support that
+          // Cannot use a prepared statement for this as trino does not support that
           sql += " LIKE '" + StringEscapeUtils.escapeSql(needle) + "%'";
         }
         stat = con.createStatement();
@@ -224,7 +224,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getCatalogs(ndl, catList);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient.getCatalogList() :Unable to get the Database List", he);
+          LOG.error("<== TrinoClient.getCatalogList() :Unable to get the Database List", he);
           throw he;
         }
         return ret;
@@ -275,7 +275,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         hdpException.generateResponseDataMap(false, getMessage(sqlt),
           msgDesc + ERR_MSG, null, null);
         if (LOG.isDebugEnabled()) {
-          LOG.debug("<== PrestoClient.getSchemas() Error : ", sqlt);
+          LOG.debug("<== TrinoClient.getSchemas() Error : ", sqlt);
         }
         throw hdpException;
       } catch (SQLException sqle) {
@@ -285,7 +285,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         hdpException.generateResponseDataMap(false, getMessage(sqle),
           msgDesc + ERR_MSG, null, null);
         if (LOG.isDebugEnabled()) {
-          LOG.debug("<== PrestoClient.getSchemas() Error : ", sqle);
+          LOG.debug("<== TrinoClient.getSchemas() Error : ", sqle);
         }
         throw hdpException;
       }
@@ -306,7 +306,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getSchemas(ndl, cats, shms);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient.getSchemaList() :Unable to get the Schema List", he);
+          LOG.error("<== TrinoClient.getSchemaList() :Unable to get the Schema List", he);
         }
         return ret;
       }
@@ -357,7 +357,7 @@ public class PrestoClient extends BaseClient implements Closeable {
           hdpException.generateResponseDataMap(false, getMessage(sqlt),
             msgDesc + ERR_MSG, null, null);
           if (LOG.isDebugEnabled()) {
-            LOG.debug("<== PrestoClient.getTables() Error : ", sqlt);
+            LOG.debug("<== TrinoClient.getTables() Error : ", sqlt);
           }
           throw hdpException;
         } catch (SQLException sqle) {
@@ -367,7 +367,7 @@ public class PrestoClient extends BaseClient implements Closeable {
           hdpException.generateResponseDataMap(false, getMessage(sqle),
             msgDesc + ERR_MSG, null, null);
           if (LOG.isDebugEnabled()) {
-            LOG.debug("<== PrestoClient.getTables() Error : ", sqle);
+            LOG.debug("<== TrinoClient.getTables() Error : ", sqle);
           }
           throw hdpException;
         }
@@ -389,7 +389,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getTables(ndl, cats, shms, tbls);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient.getTableList() :Unable to get the Column List", he);
+          LOG.error("<== TrinoClient.getTableList() :Unable to get the Column List", he);
           throw he;
         }
         return ret;
@@ -453,7 +453,7 @@ public class PrestoClient extends BaseClient implements Closeable {
           hdpException.generateResponseDataMap(false, getMessage(sqlt),
             msgDesc + ERR_MSG, null, null);
           if (LOG.isDebugEnabled()) {
-            LOG.debug("<== PrestoClient.getColumns() Error : ", sqlt);
+            LOG.debug("<== TrinoClient.getColumns() Error : ", sqlt);
           }
           throw hdpException;
         } catch (SQLException sqle) {
@@ -463,7 +463,7 @@ public class PrestoClient extends BaseClient implements Closeable {
           hdpException.generateResponseDataMap(false, getMessage(sqle),
             msgDesc + ERR_MSG, null, null);
           if (LOG.isDebugEnabled()) {
-            LOG.debug("<== PrestoClient.getColumns() Error : ", sqle);
+            LOG.debug("<== TrinoClient.getColumns() Error : ", sqle);
           }
           throw hdpException;
         }
@@ -486,7 +486,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getColumns(ndl, cats, shms, tbls, cols);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient.getColumnList() :Unable to get the Column List", he);
+          LOG.error("<== TrinoClient.getColumnList() :Unable to get the Column List", he);
           throw he;
         }
         return ret;
@@ -498,7 +498,7 @@ public class PrestoClient extends BaseClient implements Closeable {
   public static Map<String, Object> connectionTest(String serviceName,
                                                    Map<String, String> connectionProperties)
     throws Exception {
-    PrestoClient client = null;
+    TrinoClient client = null;
     Map<String, Object> resp = new HashMap<String, Object>();
 
     boolean status = false;
@@ -506,7 +506,7 @@ public class PrestoClient extends BaseClient implements Closeable {
     List<String> testResult = null;
 
     try {
-      client = new PrestoClient(serviceName, connectionProperties);
+      client = new TrinoClient(serviceName, connectionProperties);
       if (client != null) {
         testResult = client.getCatalogList("*", null);
         if (testResult != null && testResult.size() != 0) {
@@ -544,7 +544,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         con.close();
       }
     } catch (SQLException e) {
-      LOG.error("Unable to close Presto SQL connection", e);
+      LOG.error("Unable to close Trino SQL connection", e);
     }
   }
 

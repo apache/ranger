@@ -490,6 +490,25 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
+        <include>org.apache.ranger:ranger-trino-plugin</include>
+      </includes>
+      <binaries>
+        <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/trino</outputDirectory>
+        <includeDependencies>true</includeDependencies>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <includes>
+          <include>org.apache.ranger:ranger-trino-plugin</include>
+          <include>io.trino:trino-spi:jar:${trino.version}</include>
+          <include>io.trino:trino-jdbc:jar:${trino.version}</include>
+        </includes>
+      </binaries>
+    </moduleSet>
+
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
         <include>org.apache.ranger:ranger-kudu-plugin</include>
       </includes>
       <binaries>
