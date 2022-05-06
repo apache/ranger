@@ -289,7 +289,6 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
 
                     try {
                         if (isAllResources) {
-                            newRes.setValue("*");
                             for (NEW_RESOURCE resType : NEW_RESOURCE.values()) {
                                 createNewPolicy(resType.name(), newPolicyForNewResource, newRes, exPolicy.getName());
                             }
