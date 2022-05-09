@@ -26,9 +26,13 @@ then
 
   echo "ssh" > /etc/pdsh/rcmd_default
 
-  ${RANGER_SCRIPTS}/ranger-hbase-setup.sh
 
-  touch ${HBASE_HOME}/.setupDone
+  if "${RANGER_SCRIPTS}"/ranger-hbase-setup.sh;
+  then
+    touch "${HBASE_HOME}"/.setupDone
+  else
+    echo "Ranger Hbase Setup Script didn't complete proper execution."
+  fi
 fi
 
 su -c "${HBASE_HOME}/bin/start-hbase.sh" hbase
@@ -36,4 +40,9 @@ su -c "${HBASE_HOME}/bin/start-hbase.sh" hbase
 HBASE_MASTER_PID=`ps -ef  | grep -v grep | grep -i "org.apache.hadoop.hbase.master.HMaster" | awk '{print $2}'`
 
 # prevent the container from exiting
-tail --pid=$HBASE_MASTER_PID -f /dev/null
+if [ -z "$HBASE_MASTER_PID" ]
+then
+  echo "The HBase process probably exited, no process id found!"
+else
+  tail --pid=$HBASE_MASTER_PID -f /dev/null
+fi

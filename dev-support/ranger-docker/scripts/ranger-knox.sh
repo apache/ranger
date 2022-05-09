@@ -26,9 +26,13 @@ then
 
   echo "ssh" > /etc/pdsh/rcmd_default
 
-  ${RANGER_SCRIPTS}/ranger-knox-setup.sh
 
-  touch ${KNOX_HOME}/.setupDone
+  if "${RANGER_SCRIPTS}"/ranger-knox-setup.sh;
+  then
+    touch "${KNOX_HOME}"/.setupDone
+  else
+    echo "Ranger Knox Setup Script didn't complete proper execution."
+  fi
 fi
 
 su -c "${KNOX_HOME}/bin/ldap.sh start" knox
@@ -38,4 +42,9 @@ su -c "${KNOX_HOME}/bin/gateway.sh start" knox
 KNOX_GATEWAY_PID=`ps -ef  | grep -v grep | grep -i "gateway.jar" | awk '{print $2}'`
 
 # prevent the container from exiting
-tail --pid=$KNOX_GATEWAY_PID -f /dev/null
+if [ -z "$KNOX_GATEWAY_PID" ]
+then
+  echo "The Knox Gateway process probably exited, no process id found!"
+else
+  tail --pid=$KNOX_GATEWAY_PID -f /dev/null
+fi
