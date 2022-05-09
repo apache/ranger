@@ -49,4 +49,5 @@ ENV HIVE_HOME   /opt/hive
 ENV HADOOP_HOME /opt/hadoop
 ENV PATH        /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/hive/bin:/opt/hadoop/bin
 
+
 ENTRYPOINT [ "/home/ranger/scripts/ranger-hive.sh" ]
