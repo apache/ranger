@@ -35,9 +35,22 @@ then
   touch ${HIVE_HOME}/.setupDone
 fi
 
-su -c "${HIVE_HOME}/bin/hiveserver2" hive
+cd "${HIVE_HOME}" || exit
 
-HIVESERVER2_PID=`ps -ef  | grep -v grep | grep -i "org.apache.hive.service.server.HiveServer2" | awk '{print $2}'`
+# Start Hive MetaStore
+su -c "nohup ${HIVE_HOME}/bin/hive --service metastore > metastore.log 2>&1 &" hive
+
+# Start HiveServer2
+su -c "nohup ${HIVE_HOME}/bin/hiveserver2 > hive-server2.log 2>&1 &" hive
+
+sleep 10
+
+HIVE_SERVER2_PID=`ps -ef  | grep -v grep | grep -i "org.apache.hive.service.server.HiveServer2" | awk '{print $2}'`
 
 # prevent the container from exiting
-tail --pid=$HIVESERVER2_PID -f /dev/null
+if [ -z "$HIVE_SERVER2_PID" ]
+then
+  echo "The HiveServer2 process probably exited, no process id found!"
+else
+  tail --pid="$HIVE_SERVER2_PID" -f /dev/null
+fi
