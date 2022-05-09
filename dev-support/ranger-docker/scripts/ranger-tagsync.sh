@@ -26,9 +26,13 @@ fi
 
 if [ "${SETUP_RANGER}" == "true" ]
 then
-  cd ${RANGER_HOME}/tagsync && ./setup.sh
-
-  touch ${RANGER_HOME}/.setupDone
+  cd "${RANGER_HOME}"/tagsync || exit
+  if ./setup.sh;
+  then
+    touch "${RANGER_HOME}"/.setupDone
+  else
+    echo "Ranger TagSync Setup Script didn't complete proper execution."
+  fi
 fi
 
 cd ${RANGER_HOME}/tagsync && ./ranger-tagsync-services.sh start
@@ -36,4 +40,9 @@ cd ${RANGER_HOME}/tagsync && ./ranger-tagsync-services.sh start
 RANGER_TAGSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.tagsync.process.TagSynchronizer" | awk '{print $2}'`
 
 # prevent the container from exiting
-tail --pid=$RANGER_TAGSYNC_PID -f /dev/null
+if [ -z "$RANGER_TAGSYNC_PID" ]
+then
+  echo "The TagSync process probably exited, no process id found!"
+else
+  tail --pid=$RANGER_TAGSYNC_PID -f /dev/null
+fi

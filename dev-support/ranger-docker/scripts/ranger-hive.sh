@@ -30,9 +30,13 @@ then
 
   echo "ssh" > /etc/pdsh/rcmd_default
 
-  ${RANGER_SCRIPTS}/ranger-hive-setup.sh
 
-  touch ${HIVE_HOME}/.setupDone
+  if "${RANGER_SCRIPTS}"/ranger-hive-setup.sh;
+  then
+    touch "${HIVE_HOME}"/.setupDone
+  else
+    echo "Ranger Hive Setup Script didn't complete proper execution."
+  fi
 fi
 
 cd "${HIVE_HOME}" || exit

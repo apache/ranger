@@ -26,9 +26,13 @@ fi
 
 if [ "${SETUP_RANGER}" == "true" ]
 then
-  cd ${RANGER_HOME}/usersync && ./setup.sh
-
-  touch ${RANGER_HOME}/.setupDone
+  cd "${RANGER_HOME}"/usersync || exit
+  if ./setup.sh;
+  then
+    touch "${RANGER_HOME}"/.setupDone
+  else
+    echo "Ranger UserSync Setup Script didn't complete proper execution."
+  fi
 fi
 
 cd ${RANGER_HOME}/usersync && ./start.sh
@@ -36,4 +40,9 @@ cd ${RANGER_HOME}/usersync && ./start.sh
 RANGER_USERSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.authentication.UnixAuthenticationService" | awk '{print $2}'`
 
 # prevent the container from exiting
-tail --pid=$RANGER_USERSYNC_PID -f /dev/null
+if [ -z "$RANGER_USERSYNC_PID" ]
+then
+  echo "The UserSync process probably exited, no process id found!"
+else
+  tail --pid=$RANGER_USERSYNC_PID -f /dev/null
+fi

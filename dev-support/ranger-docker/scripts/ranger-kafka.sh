@@ -26,9 +26,13 @@ then
 
   echo "ssh" > /etc/pdsh/rcmd_default
 
-  ${RANGER_SCRIPTS}/ranger-kafka-setup.sh
 
-  touch ${KAFKA_HOME}/.setupDone
+  if "${RANGER_SCRIPTS}"/ranger-kafka-setup.sh;
+  then
+    touch "${KAFKA_HOME}"/.setupDone
+  else
+    echo "Ranger Kafka Setup Script didn't complete proper execution."
+  fi
 fi
 
 su -c "cd ${KAFKA_HOME} && CLASSPATH=${KAFKA_HOME}/config ./bin/kafka-server-start.sh config/server.properties" kafka
