@@ -1230,6 +1230,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 
 		if(CollectionUtils.isNotEmpty(hiveObjs)) {
+			IMetaStoreClient metaStoreClient = getMetaStoreClient();
+
 			for (HivePrivilegeObject hiveObj : hiveObjs) {
 				HivePrivilegeObjectType hiveObjType = hiveObj.getType();
 
@@ -1247,7 +1249,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 					String database = hiveObj.getDbname();
 					String table    = hiveObj.getObjectName();
 
-					String rowFilterExpr = getRowFilterExpression(queryContext, database, table);
+					String rowFilterExpr = getRowFilterExpression(queryContext, hiveObj, metaStoreClient);
 
 					if (StringUtils.isNotBlank(rowFilterExpr)) {
 						if(LOG.isDebugEnabled()) {
@@ -1262,7 +1264,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						List<String> columnTransformers = new ArrayList<String>();
 
 						for (String column : hiveObj.getColumns()) {
-							boolean isColumnTransformed = addCellValueTransformerAndCheckIfTransformed(queryContext, database, table, column, columnTransformers);
+							boolean isColumnTransformed = addCellValueTransformerAndCheckIfTransformed(queryContext, hiveObj, column, columnTransformers, metaStoreClient);
 
 							if(LOG.isDebugEnabled()) {
 								LOG.debug("addCellValueTransformerAndCheckIfTransformed(database=" + database + ", table=" + table + ", column=" + column + "): " + isColumnTransformed);
@@ -1331,12 +1333,15 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return result != null && result.isRowFilterEnabled() && StringUtils.isNotEmpty(result.getFilterExpr());
 	}
 
-	private String getRowFilterExpression(HiveAuthzContext context, String databaseName, String tableOrViewName) throws SemanticException {
+	private String getRowFilterExpression(HiveAuthzContext context, HivePrivilegeObject tableOrView, IMetaStoreClient metaStoreClient) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
 			throw new SemanticException("user information not available");
 		}
+
+		String databaseName    = tableOrView.getDbname();
+		String tableOrViewName = tableOrView.getObjectName();
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> getRowFilterExpression(" + databaseName + ", " + tableOrViewName + ")");
@@ -1353,9 +1358,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			Set<String>             roles          = getCurrentRolesForUser(user, groups);
 			HiveObjectType          objectType     = HiveObjectType.TABLE;
 			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName);
-			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, roles, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
 
-			RangerAccessResult result = hivePlugin.evalRowFilterPolicies(request, auditHandler);
+			setOwnerUser(resource, tableOrView, metaStoreClient);
+
+			RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
+			RangerAccessResult      result  = hivePlugin.evalRowFilterPolicies(request, auditHandler);
 
 			if(isRowFilterEnabled(result)) {
 				ret = result.getFilterExpr();
@@ -1371,12 +1378,16 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return ret;
 	}
 
-	private boolean addCellValueTransformerAndCheckIfTransformed(HiveAuthzContext context, String databaseName, String tableOrViewName, String columnName, List<String> columnTransformers) throws SemanticException {
+	private boolean addCellValueTransformerAndCheckIfTransformed(HiveAuthzContext context, HivePrivilegeObject tableOrView, String columnName, List<String> columnTransformers, IMetaStoreClient metaStoreClient) throws SemanticException {
 		UserGroupInformation ugi = getCurrentUserGroupInfo();
 
 		if(ugi == null) {
 			throw new SemanticException("user information not available");
 		}
+
+
+		String databaseName    = tableOrView.getDbname();
+		String tableOrViewName = tableOrView.getObjectName();
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> addCellValueTransformerAndCheckIfTransformed(" + databaseName + ", " + tableOrViewName + ", " + columnName + ")");
@@ -1394,9 +1405,11 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			Set<String>             roles          = getCurrentRolesForUser(user, groups);
 			HiveObjectType          objectType     = HiveObjectType.COLUMN;
 			RangerHiveResource      resource       = new RangerHiveResource(objectType, databaseName, tableOrViewName, columnName);
-			RangerHiveAccessRequest request        = new RangerHiveAccessRequest(resource, user, groups, roles, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
 
-			RangerAccessResult result = hivePlugin.evalDataMaskPolicies(request, auditHandler);
+			setOwnerUser(resource, tableOrView, metaStoreClient);
+
+			RangerHiveAccessRequest request = new RangerHiveAccessRequest(resource, user, groups, roles, objectType.name(), HiveAccessType.SELECT, context, sessionContext);
+			RangerAccessResult      result  = hivePlugin.evalDataMaskPolicies(request, auditHandler);
 
 			ret = isDataMaskEnabled(result);
 
