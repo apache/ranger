@@ -23,7 +23,6 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
-import org.apache.ranger.plugin.util.PasswordUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -80,17 +79,6 @@ public class PrestoClient extends BaseClient implements Closeable {
     String url = prop.getProperty("jdbc.url");
 
     Properties prestoProperties = new Properties();
-    String decryptedPwd = null;
-    try {
-      decryptedPwd=PasswordUtils.decryptPassword(getConfigHolder().getPassword());
-    } catch (Exception ex) {
-    LOG.info("Password decryption failed");
-    decryptedPwd = null;
-    } finally {
-      if (decryptedPwd == null) {
-      decryptedPwd = prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD);
-      }
-    }
     prestoProperties.put(PRESTO_USER_NAME_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_USER_NAME_PROP));
     if (prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD) != null) {
       prestoProperties.put(PRESTO_PASSWORD_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD));
