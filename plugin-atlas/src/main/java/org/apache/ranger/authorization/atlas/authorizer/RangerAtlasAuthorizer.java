@@ -20,7 +20,6 @@
 package org.apache.ranger.authorization.atlas.authorizer;
 
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
-import org.apache.atlas.authorize.AtlasAssetAccessorRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
@@ -30,7 +29,7 @@ import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizer;
 import org.apache.atlas.authorize.AtlasPrivilege;
-import org.apache.atlas.model.instance.AtlasAssetAccessor;
+import org.apache.atlas.model.instance.AtlasAccessor;
 import org.apache.atlas.model.typedef.AtlasBaseTypeDef;
 import org.apache.atlas.model.typedef.AtlasTypesDef;
 import org.apache.atlas.model.discovery.AtlasSearchResult;
@@ -54,6 +53,7 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.*;
 
@@ -225,78 +225,6 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
     }
 
     @Override
-    public List<AtlasAssetAccessor> assetAccessors(AtlasAssetAccessorRequest request) {
-
-        for (AtlasAssetAccessor atlasAssetAccessor :  request.getRequest()) {
-            final RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
-            final RangerAccessRequestImpl  rangerRequest  = new RangerAccessRequestImpl();
-
-            rangerRequest.setAccessorsRequested(true);
-
-            final AtlasEntityHeader        entityHeader   = atlasAssetAccessor.getEntity();
-            final String                   action         = AtlasPrivilege.valueOf(atlasAssetAccessor.getAction()).getType();
-            final Set<String>              entityTypes    = request.getEntityTypeAndAllSuperTypes(entityHeader.getTypeName());
-            final String                   entityId       = request.getEntityId(entityHeader);
-            final String                   ownerUser      = (String) entityHeader.getAttribute(RESOURCE_ENTITY_OWNER);
-
-            rangerResource.setValue(RESOURCE_ENTITY_TYPE, entityTypes);
-            rangerResource.setValue(RESOURCE_ENTITY_ID, entityId);
-            rangerResource.setOwnerUser(ownerUser);
-            rangerRequest.setAccessType(action);
-            rangerRequest.setAction(action);
-            rangerRequest.setUser(request.getUser());
-            rangerRequest.setUserGroups(request.getUserGroups());
-            rangerRequest.setClientIPAddress(request.getClientIPAddress());
-            rangerRequest.setAccessTime(request.getAccessTime());
-            rangerRequest.setResource(rangerResource);
-            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
-            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
-
-            if (StringUtils.isNotEmpty(atlasAssetAccessor.getClassification()) && CLASSIFICATION_PRIVILEGES.contains(AtlasPrivilege.valueOf(atlasAssetAccessor.getAction()))) {
-                rangerResource.setValue(RESOURCE_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(atlasAssetAccessor.getClassification()));
-            } else if (AtlasPrivilege.ENTITY_ADD_LABEL.equals(request.getAction()) || AtlasPrivilege.ENTITY_REMOVE_LABEL.equals(request.getAction())) {
-                rangerResource.setValue(RESOURCE_ENTITY_LABEL, atlasAssetAccessor.getLabel());
-            } else if (AtlasPrivilege.ENTITY_UPDATE_BUSINESS_METADATA.equals(request.getAction())) {
-                rangerResource.setValue(RESOURCE_ENTITY_BUSINESS_METADATA, atlasAssetAccessor.getBusinessMetadata());
-            }
-
-            RangerAccessResult result = null;
-            Set<String> tagNames = request.getClassificationNames(entityHeader);
-            if (CollectionUtils.isNotEmpty(tagNames)) {
-                setClassificationsToRequestContext(tagNames, rangerRequest);
-
-                // check authorization for each classification
-                for (String classificationToAuthorize : tagNames) {
-                    rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
-
-                    result = getAccessors(rangerRequest);
-                }
-            } else {
-                rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, ENTITY_NOT_CLASSIFIED);
-
-                result = getAccessors(rangerRequest);
-            }
-
-            if (result != null && CollectionUtils.isNotEmpty(result.getMatchedItems())) {
-                for (RangerPolicy.RangerPolicyItem item : result.getMatchedItems()) {
-                    if (CollectionUtils.isNotEmpty(item.getUsers())) {
-                        atlasAssetAccessor.getUsers().addAll(item.getUsers());
-                    }
-
-                    if (CollectionUtils.isNotEmpty(item.getRoles())) {
-                        atlasAssetAccessor.getRoles().addAll(item.getRoles());
-                    }
-
-                    if (CollectionUtils.isNotEmpty(item.getGroups())) {
-                        atlasAssetAccessor.getGroups().addAll(item.getGroups());
-                    }
-                }
-            }
-        }
-
-        return request.getRequest();
-    }
-
     public boolean isAccessAllowed(AtlasRelationshipAccessRequest request) throws AtlasAuthorizationException {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> isAccessAllowed(" + request + ")");
@@ -382,6 +310,188 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
         return ret;
     }
 
+    @Override
+    public AtlasAccessor getAccessors(AtlasEntityAccessRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getAccessors(" + request + ")");
+        }
+
+        AtlasAccessor accessor = new AtlasAccessor();
+        RangerPerfTracer perf = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerAtlasAuthorizer.getAccessors(" + request + ")");
+            }
+
+            final RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+            final RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl();
+
+            toRangerRequest(request, rangerRequest, rangerResource);
+            rangerRequest.setAccessorsRequested(true);
+
+            RangerAccessResult result = null;
+            Set<String> tagNames = request.getEntityClassifications();
+            if (CollectionUtils.isNotEmpty(tagNames)) {
+                setClassificationsToRequestContext(tagNames, rangerRequest);
+
+                // check authorization for each classification
+                for (String classificationToAuthorize : tagNames) {
+                    rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
+
+                    result = getAccessors(rangerRequest);
+                    collectAccessors(result, accessor);
+                }
+            } else {
+                rangerResource.setValue(RESOURCE_ENTITY_CLASSIFICATION, ENTITY_NOT_CLASSIFIED);
+
+                result = getAccessors(rangerRequest);
+                collectAccessors(result, accessor);
+            }
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getAccessors(" + request + "): " + accessor);
+        }
+        return accessor;
+    }
+
+    @Override
+    public AtlasAccessor getAccessors(AtlasRelationshipAccessRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getAccessors(" + request + ")");
+        }
+
+        AtlasAccessor accessor = new AtlasAccessor();
+        RangerPerfTracer perf = null;
+        RangerAccessResult result = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerAtlasAuthorizer.getAccessors(" + request + ")");
+            }
+
+            final String      action                = request.getAction() != null ? request.getAction().getType() : null;
+            RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+            RangerAccessRequestImpl rangerRequest   = new RangerAccessRequestImpl(rangerResource, action, request.getUser(),
+                                                            request.getUserGroups(), null);
+            rangerRequest.setAccessorsRequested(true);
+
+
+            final Set<String> end1EntityTypeAndSuperTypes = request.getEnd1EntityTypeAndAllSuperTypes();
+            final Set<String> end1Classifications         = new HashSet<>(request.getEnd1EntityClassifications());
+            final String      end1EntityId                = request.getEnd1EntityId();
+
+            final Set<String> end2EntityTypeAndSuperTypes = request.getEnd2EntityTypeAndAllSuperTypes();
+            final Set<String> end2Classifications         = new HashSet<>(request.getEnd2EntityClassifications());
+            final String      end2EntityId                = request.getEnd2EntityId();
+
+
+            String relationShipType = request.getRelationshipType();
+
+
+            rangerRequest.setClientIPAddress(request.getClientIPAddress());
+            rangerRequest.setAccessTime(request.getAccessTime());
+            rangerRequest.setAction(action);
+            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
+            rangerResource.setValue(RESOURCE_RELATIONSHIP_TYPE, relationShipType);
+
+
+            Set<String> classificationsWithSuperTypesEnd1 = new HashSet();
+
+            for (String classificationToAuthorize : end1Classifications) {
+                classificationsWithSuperTypesEnd1.addAll(request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
+            }
+
+            rangerResource.setValue(RESOURCE_END_ONE_ENTITY_TYPE, end1EntityTypeAndSuperTypes);
+            rangerResource.setValue(RESOURCE_END_ONE_ENTITY_CLASSIFICATION, classificationsWithSuperTypesEnd1);
+            rangerResource.setValue(RESOURCE_END_ONE_ENTITY_ID, end1EntityId);
+
+
+            Set<String> classificationsWithSuperTypesEnd2 = new HashSet();
+
+            for (String classificationToAuthorize : end2Classifications) {
+                classificationsWithSuperTypesEnd2.addAll(request.getClassificationTypeAndAllSuperTypes(classificationToAuthorize));
+            }
+
+            rangerResource.setValue(RESOURCE_END_TWO_ENTITY_TYPE, end2EntityTypeAndSuperTypes);
+            rangerResource.setValue(RESOURCE_END_TWO_ENTITY_CLASSIFICATION, classificationsWithSuperTypesEnd2);
+            rangerResource.setValue(RESOURCE_END_TWO_ENTITY_ID, end2EntityId);
+
+            result = getAccessors(rangerRequest);
+            collectAccessors(result, accessor);
+
+            // Check tag-based access.
+            setClassificationsToRequestContext(classificationsWithSuperTypesEnd1, rangerRequest);
+            RangerAccessResult resultEnd1 = getAccessors(rangerRequest); // tag-based accessors with end1 classification
+
+            if (hasAccessors(result)) {
+                // end1 has accessors with tag based policy/policies
+                setClassificationsToRequestContext(classificationsWithSuperTypesEnd2, rangerRequest);
+                RangerAccessResult resultEnd2 = getAccessors(rangerRequest); // tag-based accessors with end2 classification
+                collectAccessors(resultEnd1, resultEnd2, accessor);
+            }
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getAccessors(" + request + "): " + accessor);
+        }
+
+        return accessor;
+    }
+
+    @Override
+    public AtlasAccessor getAccessors(AtlasTypeAccessRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getAccessors(" + request + ")");
+        }
+
+        AtlasAccessor accessor = new AtlasAccessor();
+        RangerPerfTracer perf = null;
+
+        try {
+            if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+                perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "RangerAtlasAuthorizer.getAccessors(" + request + ")");
+            }
+
+            final String action = request.getAction() != null ? request.getAction().getType() : null;
+
+            RangerAccessResourceImpl rangerResource = new RangerAccessResourceImpl();
+            RangerAccessRequestImpl rangerRequest = new RangerAccessRequestImpl(rangerResource, action, request.getUser(), request.getUserGroups(), null);
+            rangerRequest.setAccessorsRequested(true);
+
+
+            final String typeName     = request.getTypeDef() != null ? request.getTypeDef().getName() : null;
+            final String typeCategory = request.getTypeDef() != null && request.getTypeDef().getCategory() != null ? request.getTypeDef().getCategory().name() : null;
+
+            rangerResource.setValue(RESOURCE_TYPE_NAME, typeName);
+            rangerResource.setValue(RESOURCE_TYPE_CATEGORY, typeCategory);
+
+            rangerRequest.setClientIPAddress(request.getClientIPAddress());
+            rangerRequest.setAccessTime(request.getAccessTime());
+            rangerRequest.setAction(action);
+            rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+            rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
+
+            RangerAccessResult result = getAccessors(rangerRequest);
+            collectAccessors(result, accessor);
+
+        } finally {
+            RangerPerfTracer.log(perf);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getAccessors(" + request + "): " + accessor);
+        }
+        return accessor;
+    }
 
     @Override
     public void scrubSearchResults(AtlasSearchResultScrubRequest request) throws AtlasAuthorizationException {
@@ -691,6 +801,103 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
                 scrubEntityHeader(entity, request.getTypeRegistry());
             }
         }
+    }
+
+    private void toRangerRequest(AtlasEntityAccessRequest request, RangerAccessRequestImpl rangerRequest, RangerAccessResourceImpl rangerResource){
+
+        final String                   action         = request.getAction() != null ? request.getAction().getType() : null;
+        final Set<String>              entityTypes    = request.getEntityTypeAndAllSuperTypes();
+        final String                   entityId       = request.getEntityId();
+        final String                   classification = request.getClassification() != null ? request.getClassification().getTypeName() : null;
+        final String                   ownerUser      = request.getEntity() != null ? (String) request.getEntity().getAttribute(RESOURCE_ENTITY_OWNER) : null;
+
+        rangerResource.setValue(RESOURCE_ENTITY_TYPE, entityTypes);
+        rangerResource.setValue(RESOURCE_ENTITY_ID, entityId);
+        rangerResource.setOwnerUser(ownerUser);
+        rangerRequest.setAccessType(action);
+        rangerRequest.setAction(action);
+        rangerRequest.setUser(request.getUser());
+        rangerRequest.setUserGroups(request.getUserGroups());
+        rangerRequest.setClientIPAddress(request.getClientIPAddress());
+        rangerRequest.setAccessTime(request.getAccessTime());
+        rangerRequest.setResource(rangerResource);
+        rangerRequest.setForwardedAddresses(request.getForwardedAddresses());
+        rangerRequest.setRemoteIPAddress(request.getRemoteIPAddress());
+
+        if (AtlasPrivilege.ENTITY_ADD_LABEL.equals(request.getAction()) || AtlasPrivilege.ENTITY_REMOVE_LABEL.equals(request.getAction())) {
+            rangerResource.setValue(RESOURCE_ENTITY_LABEL, request.getLabel());
+        } else if (AtlasPrivilege.ENTITY_UPDATE_BUSINESS_METADATA.equals(request.getAction())) {
+            rangerResource.setValue(RESOURCE_ENTITY_BUSINESS_METADATA, request.getBusinessMetadata());
+        } else if (StringUtils.isNotEmpty(classification) && CLASSIFICATION_PRIVILEGES.contains(request.getAction())) {
+            rangerResource.setValue(RESOURCE_CLASSIFICATION, request.getClassificationTypeAndAllSuperTypes(classification));
+        }
+    }
+
+    private void collectAccessors(RangerAccessResult result, AtlasAccessor accessor) {
+        if (result != null && CollectionUtils.isNotEmpty(result.getMatchedItems())) {
+            for (RangerPolicy.RangerPolicyItem item : result.getMatchedItems()) {
+                if (CollectionUtils.isNotEmpty(item.getUsers())) {
+                    accessor.getUsers().addAll(item.getUsers());
+                }
+
+                if (CollectionUtils.isNotEmpty(item.getRoles())) {
+                    accessor.getRoles().addAll(item.getRoles());
+                }
+
+                if (CollectionUtils.isNotEmpty(item.getGroups())) {
+                    accessor.getGroups().addAll(item.getGroups());
+                }
+            }
+        }
+    }
+
+    private void collectAccessors(RangerAccessResult resultEnd1, RangerAccessResult resultEnd2, AtlasAccessor accessor) {
+
+        if (resultEnd1 == null || resultEnd2 == null || CollectionUtils.isEmpty(resultEnd1.getMatchedItems()) ||
+                                                        CollectionUtils.isEmpty(resultEnd2.getMatchedItems()))  {
+            return;
+        }
+
+        final List<String> usersEnd1 = new ArrayList<>();
+        final List<String> rolesEnd1 = new ArrayList<>();
+        final List<String> groupsEnd1 = new ArrayList<>();
+
+        final List<String> usersEnd2 = new ArrayList<>();
+        final List<String> rolesEnd2 = new ArrayList<>();
+        final List<String> groupsEnd2 = new ArrayList<>();
+
+        // Collect lists of accessors for both results
+        resultEnd1.getMatchedItems().forEach(x -> {
+            usersEnd1.addAll(x.getUsers());
+            rolesEnd1.addAll(x.getRoles());
+            groupsEnd1.addAll(x.getGroups());
+        });
+
+        resultEnd2.getMatchedItems().forEach(x -> {
+            usersEnd2.addAll(x.getUsers());
+            rolesEnd2.addAll(x.getRoles());
+            groupsEnd2.addAll(x.getGroups());
+        });
+
+        // Retain only common accessors
+        usersEnd1.retainAll(usersEnd2);
+        rolesEnd1.retainAll(rolesEnd2);
+        groupsEnd1.retainAll(groupsEnd2);
+
+        // add accessors to the response
+        accessor.getUsers().addAll(usersEnd1);
+        accessor.getRoles().addAll(rolesEnd1);
+        accessor.getGroups().addAll(groupsEnd1);
+    }
+
+    private boolean hasAccessors(RangerAccessResult result){
+
+        for (RangerPolicy.RangerPolicyItem item : result.getMatchedItems()) {
+            if (CollectionUtils.isNotEmpty(item.getUsers()) || CollectionUtils.isNotEmpty(item.getRoles()) && CollectionUtils.isNotEmpty(item.getGroups())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     class RangerAtlasPlugin extends RangerBasePlugin {

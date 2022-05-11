@@ -758,13 +758,11 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			ret.setIsAccessDetermined(false); // discard result by tag-policies, to evaluate resource policies for possible override
 
 			List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchPolicyEvaluators(request, policyType);
-			LOG.info("Resource based evaluator policy Ids: " + Arrays.toString(evaluators.stream().map(x -> x.getPolicy().getId()).toArray()));
 
 			for (RangerPolicyEvaluator evaluator : evaluators) {
 				ret.setIsAuditedDetermined(false);
 				ret.setIsAccessDetermined(false);
 
-				LOG.info("evaluating " + evaluator.getPolicy().getId());
 				if (!evaluator.isApplicable(accessTime)) {
 					continue;
 				}
@@ -789,7 +787,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				}
 
 				if (ret.getIsAuditedDetermined() && ret.getIsAccessDetermined() && !request.isAccessorsRequested()) {
-					LOG.info("all matched " + ret.getPolicyId());
 					break;
 				}
 			}
@@ -832,7 +829,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		List<PolicyEvaluatorForTag> policyEvaluators = tagPolicyRepository == null ? null : tagPolicyRepository.getLikelyMatchPolicyEvaluators(request, tags, policyType, accessTime);
 
 		if (CollectionUtils.isNotEmpty(policyEvaluators)) {
-			LOG.info("Tag based evaluator policy Ids: " + Arrays.toString(policyEvaluators.stream().map(x -> x.getEvaluator().getPolicy().getId()).toArray()));
 			final boolean useTagPoliciesFromDefaultZone = !policyEngine.isResourceZoneAssociatedWithTagService(zoneName);
 
 			for (PolicyEvaluatorForTag policyEvaluator : policyEvaluators) {

@@ -28,7 +28,7 @@ import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasTypesDefFilterRequest;
 import org.apache.atlas.authorize.AtlasAuthorizer;
-import org.apache.atlas.model.instance.AtlasAssetAccessor;
+import org.apache.atlas.model.instance.AtlasAccessor;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -183,26 +183,76 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 	}
 
 	@Override
-	public List<AtlasAssetAccessor> assetAccessors(AtlasAssetAccessorRequest request) {
+	public AtlasAccessor getAccessors(AtlasEntityAccessRequest request) {
 		if (isDebugEnabled) {
-			LOG.debug("==> assetAccessors(" + request + ")");
+			LOG.debug("==> getAccessors(AtlasEntityAccessRequest)");
 		}
 
-		List<AtlasAssetAccessor> ret = null;
+		AtlasAccessor ret = null;
 
 		try {
 			activatePluginClassLoader();
 
-			ret = rangerAtlasAuthorizerImpl.assetAccessors(request);
+			ret = rangerAtlasAuthorizerImpl.getAccessors(request);
 		} finally {
 			deactivatePluginClassLoader();
 		}
 
 		if (isDebugEnabled) {
-			LOG.debug("<== assetAccessors(): " + request);
+			LOG.debug("<== getAccessors(): " + request);
 		}
 
 		return ret;
+	}
+
+	@Override
+	public AtlasAccessor getAccessors(AtlasRelationshipAccessRequest request) {
+		{
+			if (isDebugEnabled) {
+				LOG.debug("==> getAccessors(AtlasRelationshipAccessRequest)");
+			}
+
+			AtlasAccessor ret = null;
+
+			try {
+				activatePluginClassLoader();
+
+				ret = rangerAtlasAuthorizerImpl.getAccessors(request);
+			} finally {
+				deactivatePluginClassLoader();
+			}
+
+			if (isDebugEnabled) {
+				LOG.debug("<== getAccessors(): " + request);
+			}
+
+			return ret;
+		}
+	}
+
+	@Override
+	public AtlasAccessor getAccessors(AtlasTypeAccessRequest request) {
+		{
+			if (isDebugEnabled) {
+				LOG.debug("==> getAccessors(AtlasTypeAccessRequest)");
+			}
+
+			AtlasAccessor ret = null;
+
+			try {
+				activatePluginClassLoader();
+
+				ret = rangerAtlasAuthorizerImpl.getAccessors(request);
+			} finally {
+				deactivatePluginClassLoader();
+			}
+
+			if (isDebugEnabled) {
+				LOG.debug("<== getAccessors(): " + request);
+			}
+
+			return ret;
+		}
 	}
 
 
