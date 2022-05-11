@@ -159,7 +159,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		}
 
 		if (request.isAccessorsRequested()) {
-			//skip checking user/group/owner if policy item in case entity level access request
+			//skip checking user/group/owner if policy item in case get accessors request
 			return true;
 		}
 

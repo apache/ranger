@@ -52,8 +52,15 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
-import java.util.*;
-import java.util.stream.Collectors;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.ListIterator;
+import java.util.Map;
+import java.util.Set;
 
 import static org.apache.ranger.services.atlas.RangerServiceAtlas.*;
 
@@ -429,7 +436,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             setClassificationsToRequestContext(classificationsWithSuperTypesEnd1, rangerRequest);
             RangerAccessResult resultEnd1 = getAccessors(rangerRequest); // tag-based accessors with end1 classification
 
-            if (hasAccessors(result)) {
+            if (hasAccessors(resultEnd1)) {
                 // end1 has accessors with tag based policy/policies
                 setClassificationsToRequestContext(classificationsWithSuperTypesEnd2, rangerRequest);
                 RangerAccessResult resultEnd2 = getAccessors(rangerRequest); // tag-based accessors with end2 classification
@@ -835,19 +842,12 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
     private void collectAccessors(RangerAccessResult result, AtlasAccessor accessor) {
         if (result != null && CollectionUtils.isNotEmpty(result.getMatchedItems())) {
-            for (RangerPolicy.RangerPolicyItem item : result.getMatchedItems()) {
-                if (CollectionUtils.isNotEmpty(item.getUsers())) {
-                    accessor.getUsers().addAll(item.getUsers());
-                }
 
-                if (CollectionUtils.isNotEmpty(item.getRoles())) {
-                    accessor.getRoles().addAll(item.getRoles());
-                }
-
-                if (CollectionUtils.isNotEmpty(item.getGroups())) {
-                    accessor.getGroups().addAll(item.getGroups());
-                }
-            }
+            result.getMatchedItems().forEach(x -> {
+                accessor.getUsers().addAll(x.getUsers());
+                accessor.getRoles().addAll(x.getRoles());
+                accessor.getGroups().addAll(x.getGroups());
+            });
         }
     }
 
