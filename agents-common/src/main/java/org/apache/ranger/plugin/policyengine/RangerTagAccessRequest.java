@@ -40,6 +40,7 @@ public class RangerTagAccessRequest extends RangerAccessRequestImpl {
 		super.setAccessType(request.getAccessType());
 		super.setAccessTime(request.getAccessTime());
 		super.setRequestData(request.getRequestData());
+		super.setAccessorsRequested(request.isAccessorsRequested());
 
 		Map<String, Object> requestContext = request.getContext();
 
