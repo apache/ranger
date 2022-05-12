@@ -211,7 +211,10 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		try {
 			remoteAddr = RpcServer.getRemoteAddress().get();
 		} catch (NoSuchElementException e) {
-			LOG.info("Unable to get remote Address");
+			// HBase services will sometimes make calls as a part of
+			// internal operations. It is not worth logging when we do
+			// not have a remote address (a client's remote address).
+			LOG.trace("Unable to get remote Address");
 		}
 
 		if(remoteAddr == null) {
