@@ -1183,12 +1183,12 @@ public class RangerBasePlugin {
 		int     policyType     = result.getPolicyType();
 
 		if (chainedResult.getIsAccessDetermined()) { // only if chained-result is definitive
-			// override if result is not definitive or chained-result is by a higher priority policy
-			overrideResult = !result.getIsAccessDetermined() || chainedResult.getPolicyPriority() > result.getPolicyPriority();
+			// override if chained-result is by a higher priority policy or result is not definitive or the result is not-allowed and no matching Ranger policy found
+			overrideResult = chainedResult.getPolicyPriority() > result.getPolicyPriority() || !result.getIsAccessDetermined() || (!result.getIsAllowed() && result.getPolicyId() == -1L);
 
 			if (!overrideResult) {
-				// override if chained-result is from the same policy priority, and if denies access
-				if (chainedResult.getPolicyPriority() == result.getPolicyPriority() && !chainedResult.getIsAllowed()) {
+				// override if chained-result is from the same policy priority, and if denies access with a specific policy id
+				if (chainedResult.getPolicyPriority() == result.getPolicyPriority() && (!chainedResult.getIsAllowed() && chainedResult.getPolicyId() != -1L)) {
 					// let's not override if result is already denied
 					if (result.getIsAllowed()) {
 						overrideResult = true;
