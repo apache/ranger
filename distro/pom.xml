@@ -75,7 +75,6 @@
                                         <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
                                         <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
-                                        <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
                                         <descriptor>src/main/assembly/sample-client.xml</descriptor>
                                     </descriptors>
                                 </configuration>
@@ -86,6 +85,62 @@
             </build>
         </profile>
 
+        <profile>
+            <id>ranger-jdk11</id>
+            <activation>
+                <jdk>11</jdk>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-assembly-plugin</artifactId>
+                        <version>${assembly.plugin.version}</version>
+                        <configuration>
+                            <finalName>ranger-${project.version}</finalName>
+                            <outputDirectory>../target</outputDirectory>
+                        </configuration>
+                        <executions>
+                            <execution>
+                                <goals>
+                                    <goal>single</goal>
+                                </goals>
+                                <phase>package</phase>
+                                <configuration>
+                                    <skipAssembly>false</skipAssembly>
+                                    <descriptors>
+                                        <descriptor>src/main/assembly/hdfs-agent.xml</descriptor>
+                                        <descriptor>src/main/assembly/hive-agent.xml</descriptor>
+                                        <descriptor>src/main/assembly/hbase-agent.xml</descriptor>
+                                        <descriptor>src/main/assembly/knox-agent.xml</descriptor>
+                                        <descriptor>src/main/assembly/storm-agent.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-kafka.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-yarn.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-ozone.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-solr.xml</descriptor>
+                                        <descriptor>src/main/assembly/admin-web.xml</descriptor>
+                                        <descriptor>src/main/assembly/solr_audit_conf.xml</descriptor>
+                                        <descriptor>src/main/assembly/usersync.xml</descriptor>
+                                        <descriptor>src/main/assembly/tagsync.xml</descriptor>
+                                        <descriptor>src/main/assembly/migration-util.xml</descriptor>
+                                        <descriptor>src/main/assembly/kms.xml</descriptor>
+                                        <descriptor>src/main/assembly/ranger-tools.xml</descriptor>
+                                        <descriptor>src/main/assembly/ranger-src.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-atlas.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-sqoop.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-kylin.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-elasticsearch.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-schema-registry.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-presto.xml</descriptor>
+                                        <descriptor>src/main/assembly/plugin-trino.xml</descriptor>
+                                        <descriptor>src/main/assembly/sample-client.xml</descriptor>
+                                    </descriptors>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
         <profile>
             <id>ranger-admin</id>
             <build>
