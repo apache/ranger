@@ -698,6 +698,65 @@ public final class RangerRequestScriptEvaluator {
 		return toCsvQ(getTagAttr(attrName));
 	}
 
+	public boolean hasTag(String tagName) {
+		init();
+
+		return tags.containsKey(tagName);
+	}
+
+	public boolean hasUserAttr(String attrName) {
+		init();
+
+		return userAttrs.containsKey(attrName);
+	}
+
+	public boolean hasUgAttr(String attrName) {
+		init();
+
+		boolean ret = false;
+
+		for (Map<String, String> attrs : groupAttrs.values()) {
+			if (attrs.containsKey(attrName)) {
+				ret = true;
+
+				break;
+			}
+		}
+
+		return ret;
+	}
+
+	public boolean hasTagAttr(String attrName) {
+		init();
+
+		boolean               ret  = false;
+		Set<RangerTagForEval> tags = RangerAccessRequestUtil.getRequestTagsFromContext(accessRequest.getContext());
+
+		if (tags != null) {
+			for (RangerTagForEval tag : tags) {
+				if (tag.getAttributes().containsKey(attrName)) {
+					ret = true;
+
+					break;
+				}
+			}
+		}
+
+		return ret;
+	}
+
+	public boolean isInGroup(String groupName) {
+		init();
+
+		return userGroups.contains(groupName);
+	}
+
+	public boolean isInRole(String roleName) {
+		init();
+
+		return userRoles.contains(roleName);
+	}
+
 	private void init() {
 		if (!initDone) {
 			RangerUserStore                  userStore        = RangerAccessRequestUtil.getRequestUserStoreFromContext(accessRequest.getContext());
@@ -926,9 +985,11 @@ public final class RangerRequestScriptEvaluator {
 		varNames.add(SCRIPT_VAR_USER);
 		varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_CSV);
 		varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV);
+		varNames.add(SCRIPT_MACRO_HAS_USER_ATTR);
 
 		varNames.add("userAttrNamesCsv");
 		varNames.add("userAttrNamesCsvQ");
+		varNames.add("hasUserAttr");
 
 		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
 	}
@@ -943,11 +1004,13 @@ public final class RangerRequestScriptEvaluator {
 		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_Q_CSV);
 		varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_CSV);
 		varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV);
+		varNames.add(SCRIPT_MACRO_HAS_UG_ATTR);
 
 		varNames.add("ugAttrCsv");
 		varNames.add("ugAttrCsvQ");
 		varNames.add("ugAttrNamesCsv");
 		varNames.add("ugAttrNamesCsvQ");
+		varNames.add("hasUgAttr");
 
 		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
 	}
@@ -971,6 +1034,12 @@ public final class RangerRequestScriptEvaluator {
 		ret.put(SCRIPT_MACRO_UR_NAMES_Q_CSV,        "ctx.urNamesCsvQ()");
 		ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_CSV,   "ctx.userAttrNamesCsv()");
 		ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV, "ctx.userAttrNamesCsvQ()");
+		ret.put(SCRIPT_MACRO_HAS_TAG,               "ctx.hasTag");
+		ret.put(SCRIPT_MACRO_HAS_USER_ATTR,         "ctx.hasUserAttr");
+		ret.put(SCRIPT_MACRO_HAS_UG_ATTR,           "ctx.hasUgAttr");
+		ret.put(SCRIPT_MACRO_HAS_TAG_ATTR,          "ctx.hasTagAttr");
+		ret.put(SCRIPT_MACRO_IS_IN_GROUP,           "ctx.isInGroup");
+		ret.put(SCRIPT_MACRO_IS_IN_ROLE,            "ctx.isInRole");
 
 		return ret;
 	}
