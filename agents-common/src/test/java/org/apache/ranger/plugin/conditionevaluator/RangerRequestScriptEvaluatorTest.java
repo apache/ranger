@@ -76,12 +76,14 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertEquals("test: GET_TAG_ATTR_Q_CSV('attr1')", "'PCI_value','PII_value'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q_CSV('attr1')"));
 
         Assert.assertTrue("test: USER._name is 'test-user'", (Boolean) evaluator.evaluateScript(scriptEngine, "USER._name == 'test-user'"));
+        Assert.assertTrue("test: HAS_USER_ATTR(state)", (Boolean)evaluator.evaluateScript(scriptEngine, "HAS_USER_ATTR('state')"));
+        Assert.assertFalse("test: HAS_USER_ATTR(notExists)", (Boolean)evaluator.evaluateScript(scriptEngine, "HAS_USER_ATTR('notExists')"));
         Assert.assertTrue("test: USER['state'] is 'CA'", (Boolean) evaluator.evaluateScript(scriptEngine, "USER['state'] == 'CA'"));
         Assert.assertTrue("test: USER.state is 'CA'", (Boolean) evaluator.evaluateScript(scriptEngine, "USER.state == 'CA'"));
 
-        Assert.assertTrue("test: UGNAMES has test-group1", (Boolean)evaluator.evaluateScript(scriptEngine, "UGNAMES.indexOf('test-group1') != -1"));
-        Assert.assertTrue("test: UGNAMES has test-group2", (Boolean)evaluator.evaluateScript(scriptEngine, "UGNAMES.indexOf('test-group2') != -1"));
-        Assert.assertTrue("test: UGNAMES doesn't have test-group3", (Boolean)evaluator.evaluateScript(scriptEngine, "UGNAMES.indexOf('test-group3') == -1"));
+        Assert.assertTrue("test: IS_IN_GROUP(test-group1)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_GROUP('test-group1')"));
+        Assert.assertTrue("test: IS_IN_GROUP(test-group2)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_GROUP('test-group2')"));
+        Assert.assertFalse("test: IS_IN_GROUP(notExists)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_GROUP('notExists')"));
 
         Assert.assertTrue("test: UG['test-group1'].dept is 'ENGG'", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group1'].dept == 'ENGG'"));
         Assert.assertTrue("test: UG['test-group1'].site is 10", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group1'].site == 10"));
@@ -90,9 +92,9 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertTrue("test: UG['test-group3'] is null", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group3'] == null"));
         Assert.assertTrue("test: UG['test-group1'].notExists is null", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group1'].notExists == null"));
 
-        Assert.assertTrue("test: URNAMES has test-role1", (Boolean)evaluator.evaluateScript(scriptEngine, "URNAMES.indexOf('test-role1') != -1"));
-        Assert.assertTrue("test: URNAMES has test-role2", (Boolean)evaluator.evaluateScript(scriptEngine, "URNAMES.indexOf('test-role2') != -1"));
-        Assert.assertTrue("test: URNAMES doesn't have test-role3", (Boolean)evaluator.evaluateScript(scriptEngine, "URNAMES.indexOf('test-role3') == -1"));
+        Assert.assertTrue("test: IS_IN_ROLE(test-role1)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_ROLE('test-role1')"));
+        Assert.assertTrue("test: IS_IN_ROLE(test-role2)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_ROLE('test-role2')"));
+        Assert.assertFalse("test: IS_IN_ROLE(notExists)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_ROLE('notExists')"));
 
         Assert.assertTrue("test: UGA.sVal['dept'] is 'ENGG'", (Boolean)evaluator.evaluateScript(scriptEngine, "UGA.sVal['dept'] == 'ENGG'"));
         Assert.assertTrue("test: UGA.sVal['site'] is 10", (Boolean) evaluator.evaluateScript(scriptEngine, "UGA.sVal['site'] == 10"));
@@ -103,6 +105,9 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertTrue("test: UGA.mVal['dept'] has 'ENGG'", (Boolean) evaluator.evaluateScript(scriptEngine, "UGA.mVal['dept'].indexOf('ENGG') != -1"));
         Assert.assertTrue("test: UGA.mVal['dept'] has 'PROD'", (Boolean) evaluator.evaluateScript(scriptEngine, "UGA.mVal['dept'].indexOf('PROD') != -1"));
         Assert.assertTrue("test: UGA.mVal['dept'] doesn't have 'EXEC'", (Boolean) evaluator.evaluateScript(scriptEngine, "UGA.mVal['dept'].indexOf('EXEC') == -1"));
+        Assert.assertTrue("test: HAS_UG_ATTR(dept)", (Boolean)evaluator.evaluateScript(scriptEngine, "HAS_UG_ATTR('dept')"));
+        Assert.assertTrue("test: HAS_UG_ATTR(site)", (Boolean)evaluator.evaluateScript(scriptEngine, "HAS_UG_ATTR('site')"));
+        Assert.assertFalse("test: HAS_UG_ATTR(notExists)", (Boolean)evaluator.evaluateScript(scriptEngine, "HAS_UG_ATTR('notExists')"));
 
         Assert.assertTrue("test: REQ.accessTyp is 'select'", (Boolean) evaluator.evaluateScript(scriptEngine, "REQ.accessType == 'select'"));
         Assert.assertTrue("test: REQ.action is 'query'", (Boolean) evaluator.evaluateScript(scriptEngine, "REQ.action == 'query'"));
@@ -115,14 +120,16 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertTrue("test: TAG._type is 'PII'", (Boolean) evaluator.evaluateScript(scriptEngine, "TAG._type == 'PII'"));
         Assert.assertTrue("test: TAG.attr1 is 'PII_value'", (Boolean) evaluator.evaluateScript(scriptEngine, "TAG.attr1 == 'PII_value'"));
         Assert.assertTrue("test: TAGS.length is 2", (Boolean) evaluator.evaluateScript(scriptEngine, "Object.keys(TAGS).length == 2"));
-        Assert.assertEquals("test: TAGS has PII", evaluator.evaluateScript(scriptEngine, "TAGS.PII._type"), "PII");
-        Assert.assertEquals("test: TAGS has PCI", evaluator.evaluateScript(scriptEngine, "TAGS.PCI._type"), "PCI");
-        Assert.assertEquals("test: TAGS has PII.attr1=PII_value", evaluator.evaluateScript(scriptEngine, "TAGS['PII'].attr1"), "PII_value");
-        Assert.assertEquals("test: TAGS has PCI.attr1=PCI_value", evaluator.evaluateScript(scriptEngine, "TAGS['PCI'].attr1"), "PCI_value");
+        Assert.assertEquals("test: TAG PII has attr1=PII_value", evaluator.evaluateScript(scriptEngine, "TAGS['PII'].attr1"), "PII_value");
+        Assert.assertEquals("test: TAG PCI has attr1=PCI_value", evaluator.evaluateScript(scriptEngine, "TAGS['PCI'].attr1"), "PCI_value");
+        Assert.assertTrue("test: TAG PII doesn't have PII.notExists", (Boolean) evaluator.evaluateScript(scriptEngine, "TAGS['PII'].notExists == undefined"));
+        Assert.assertTrue("test: HAS_TAG_ATTR(attr1)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG_ATTR('attr1')"));
+        Assert.assertFalse("test: HAS_TAG_ATTR(notExists)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG_ATTR('notExists')"));
 
         Assert.assertTrue("test: TAGNAMES.length is 2", (Boolean) evaluator.evaluateScript(scriptEngine, "TAGNAMES.length == 2"));
-        Assert.assertTrue("test: TAGNAMES has 'PII'", (Boolean)evaluator.evaluateScript(scriptEngine, "TAGNAMES.indexOf('PII') != -1"));
-        Assert.assertTrue("test: TAGNAMES has 'PCI'", (Boolean)evaluator.evaluateScript(scriptEngine, "TAGNAMES.indexOf('PCI') != -1"));
+        Assert.assertTrue("test: HAS_TAG(PII)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG('PII')"));
+        Assert.assertTrue("test: HAS_TAG(PCI)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG('PCI')"));
+        Assert.assertFalse("test: HAS_TAG(notExists)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG('notExists')"));
     }
 
 
