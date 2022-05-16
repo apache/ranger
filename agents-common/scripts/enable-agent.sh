@@ -818,11 +818,19 @@ fi
 
 if [ "${HCOMPONENT_NAME}" = "trino" ]
 then
+  # Configure logback file using System Property logback.configurationFile in jvm.config
+  jvm_config_file=`ls ${HCOMPONENT_CONF_DIR}/jvm.config 2> /dev/null`
+  cp -n ${PROJ_INSTALL_DIR}/trino-ranger-plugin-logback.xml ${HCOMPONENT_CONF_DIR}/trino-ranger-plugin-logback.xml
+  logback_file=`ls ${HCOMPONENT_CONF_DIR}/trino-ranger-plugin-logback.xml 2> /dev/null`
+
 	if [ "${action}" = "enable" ]
 	then
 		controlName="ranger"
+		addOrUpdatePropertyToFile -Dlogback.configurationFile ${logback_file} ${jvm_config_file}
 	else
 		controlName="allow-all"
+		sed -i '/-Dlogback.configurationFile/d' ${HCOMPONENT_CONF_DIR}/jvm.config
+		rm ${HCOMPONENT_CONF_DIR}/trino-ranger-plugin-logback.xml
 	fi
 	dt=`date '+%Y%m%d%H%M%S'`
 	fn=`ls ${HCOMPONENT_CONF_DIR}/access-control.properties 2> /dev/null`
