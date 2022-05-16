@@ -125,6 +125,8 @@ PROJ_LIB_PLUGIN_DIR=${PROJ_INSTALL_DIR}/${PLUGIN_DEPENDENT_LIB_DIR}
 
 HCOMPONENT_INSTALL_DIR_NAME=$(getInstallProperty 'COMPONENT_INSTALL_DIR_NAME')
 
+# Install Environment property used for trino plugin.
+INSTALL_ENV=$(getInstallProperty 'INSTALL_ENV')
 
 CUSTOM_USER=$(getInstallProperty 'CUSTOM_USER')
 CUSTOM_USER=${CUSTOM_USER// }
@@ -220,6 +222,11 @@ elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
     fi
 elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
     HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugin/ranger
+	#Configure ranger plugin location for trino docker environment
+    if [ "${INSTALL_ENV}" = "docker" ];then
+	   HCOMPONENT_LIB_DIR=/usr/lib/trino/plugin/ranger
+    fi
+
     if [ ! -d "${HCOMPONENT_LIB_DIR}" ]; then
         echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
         mkdir -p ${HCOMPONENT_LIB_DIR}
@@ -256,6 +263,9 @@ elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
 elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
+	if [ "${INSTALL_ENV}" = "docker" ];then
+	   HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}
+    fi
 fi
 
 HCOMPONENT_ARCHIVE_CONF_DIR=${HCOMPONENT_CONF_DIR}/.archive
