@@ -150,95 +150,34 @@
     }
   },
   "policies": [
-    {
-      "id": 101,
-      "name": "db=*: audit-all-access",
-      "isEnabled": true,
-      "isAuditEnabled": true,
-      "resources": {
-        "database": {
-          "values": [
-            "*"
-          ]
-        },
-        "table": {
-          "values": [
-            "*"
-          ]
-        },
-        "column": {
-          "values": [
-            "*"
-          ]
-        }
-      },
+    { "id": 101, "name": "db=*: audit-all-access", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "database": { "values": [ "*" ] }, "table": { "values": [ "*" ] }, "column": { "values": [ "*" ] } },
       "policyItems": [
-        {
-          "accesses": [
-            {
-              "type": "all",
-              "isAllowed": true
-            }
-          ],
-          "users": [
-            "hive",
-            "user1",
-            "user2"
-          ],
-          "groups": [
-            "public"
-          ],
-          "delegateAdmin": false
-        }
+        { "accesses": [ { "type": "all", "isAllowed": true } ], "users": [ "hive", "user1", "user2" ], "groups": [ "public" ], "delegateAdmin": false }
       ]
     },
-    {
-      "id": 102,
-      "name": "db=*, udf=*: audit-all-access",
-      "isEnabled": true,
-      "isAuditEnabled": true,
-      "resources": {
-        "database": {
-          "values": [
-            "*"
-          ]
-        },
-        "udf": {
-          "values": [
-            "*"
-          ]
-        }
-      },
+    { "id": 102, "name": "db=*, udf=*: audit-all-access", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "database": { "values": [ "*" ] }, "udf": { "values": [ "*" ] } },
       "policyItems": [
-        {
-          "accesses": [
-            {
-              "type": "all",
-              "isAllowed": true
-            }
-          ],
-          "users": [
-            "hive",
-            "user1",
-            "user2"
-          ],
-          "groups": [
-            "public"
-          ],
-          "delegateAdmin": false
-        }
+        { "accesses": [ { "type": "all", "isAllowed": true } ], "users": [ "hive", "user1", "user2" ], "groups": [ "public" ], "delegateAdmin": false }
       ]
     },
-    { "id": 103, "name":  "masking: employee.personal.ssl - normal priority", "isEnabled":  true, "isAuditEnabled":  true, "policyType": 1, "policyPriority": 0,
+    { "id": 103, "name":  "masking: employee.personal.ssn - normal priority", "isEnabled":  true, "isAuditEnabled":  true, "policyType": 1, "policyPriority": 0,
       "resources": { "database": { "values": [ "employee" ] }, "table": { "values": [ "personal" ] }, "column": { "values": [ "ssn" ] } },
       "dataMaskPolicyItems": [
         { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "user1" ], "dataMaskInfo": { "dataMaskType": "NONE" } }
       ]
     },
-    { "id": 104, "name":  "masking: employee.personal.ssl - override priority", "isEnabled":  true, "isAuditEnabled":  true, "policyType": 1, "policyPriority": 1,
+    { "id": 104, "name":  "masking: employee.personal.ssn - override priority", "isEnabled":  true, "isAuditEnabled":  true, "policyType": 1, "policyPriority": 1,
       "resources": { "database": { "values": [ "employee" ] }, "table": { "values": [ "personal" ] }, "column": { "values": [ "ssn" ] } },
       "dataMaskPolicyItems": [
         { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "user3" ], "dataMaskInfo": { "dataMaskType": "NONE" } }
+      ]
+    },
+    { "id": 105, "name":  "masking: employee.personal.name - normal priority", "isEnabled":  true, "isAuditEnabled":  true, "policyType": 1, "policyPriority": 0,
+      "resources": { "database": { "values": [ "employee" ] }, "table": { "values": [ "personal" ] }, "column": { "values": [ "name" ] } },
+      "dataMaskPolicyItems": [
+        { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "user1", "user2", "user4" ], "dataMaskInfo": { "dataMaskType": "NONE" } }
       ]
     }
   ],
@@ -391,129 +330,77 @@
       ]
     },
     "tagPolicies": [
-      {
-        "id": 1,
-        "name": "RESTRICTED_TAG_POLICY",
-        "isEnabled": true,
-        "isAuditEnabled": true,
-        "policyType": 1,
-        "resources": {
-          "tag": {
-            "values": [
-              "RESTRICTED"
-            ],
-            "isRecursive": false
-          }
-        },
+      { "id": 1, "name": "RESTRICTED", "isEnabled": true, "isAuditEnabled": true, "policyType": 1, "policyPriority": 0,
+        "resources": { "tag": { "values": [ "RESTRICTED" ], "isRecursive": false } },
         "dataMaskPolicyItems": [
-          {
-            "accesses": [
-              {
-                "type": "select",
-                "isAllowed": true
-              }
-            ],
-            "users": [
-              "user1"
-            ],
-            "groups": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "MASK"
-            }
-          },
-          {
-            "accesses": [
-              {
-                "type": "select",
-                "isAllowed": true
-              }
-            ],
-            "users": [
-              "user2",
-              "user3"
-            ],
-            "groups": [],
-            "delegateAdmin": false,
-            "dataMaskInfo": {
-              "dataMaskType": "SHUFFLE"
-            }
-          }
+          { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "user1" ],          "dataMaskInfo": { "dataMaskType": "MASK" } },
+          { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "user2", "user3" ], "dataMaskInfo": { "dataMaskType": "SHUFFLE" } }
         ]
       }
     ]
   },
   "tests": [
-    {
-      "name": "'select ssn from employee.personal;' for user1 - maskType=MASK",
+    { "name": "'select ssn from employee.personal;' for user1 - maskType=MASK",
       "request": {
-        "resource": {
-          "elements": {
-            "database": "employee",
-            "table": "personal",
-            "column": "ssn"
-          }
-        },
-        "accessType": "select",
-        "user": "user1",
-        "userGroups": [],
-        "requestData": "select ssn from employee.personal;' for user1",
-        "context": {
-          "TAGS": "[{\"type\":\"RESTRICTED\"}]"
-        }
+        "resource": { "elements": { "database": "employee", "table": "personal", "column": "ssn" } },
+        "accessType": "select", "user": "user1", "userGroups": [], "requestData": "select ssn from employee.personal;' for user1",
+        "context": { "TAGS": "[{\"type\":\"RESTRICTED\"}]" }
       },
-      "dataMaskResult":{"additionalInfo":{"maskType":"MASK","maskCondition":null,"maskValue":null},"policyId":1}
+      "dataMaskResult": { "additionalInfo": { "maskType": "MASK", "maskCondition": null, "maskValue" :null }, "policyId": 1 }
     },
     {
       "name": "'select ssn from employee.personal;' for user2 - maskType=SHUFFLE",
       "request": {
-        "resource": {
-          "elements": {
-            "database": "employee",
-            "table": "personal",
-            "column": "ssn"
-          }
-        },
-        "accessType": "select",
-        "user": "user2",
-        "userGroups": [],
-        "requestData": "select ssn from employee.personal;' for user2",
-        "context": {
-          "TAGS": "[{\"type\":\"RESTRICTED\"}]"
-        }
+        "resource": { "elements": { "database": "employee", "table": "personal", "column": "ssn" } },
+        "accessType": "select", "user": "user2", "userGroups": [], "requestData": "select ssn from employee.personal;' for user2",
+        "context": { "TAGS": "[{\"type\":\"RESTRICTED\"}]" }
       },
-      "dataMaskResult":{"additionalInfo":{"maskType":"SHUFFLE","maskCondition":null,"maskValue":null},"policyId":1}
+      "dataMaskResult": { "additionalInfo": { "maskType": "SHUFFLE", "maskCondition": null, "maskValue": null }, "policyId": 1 }
     },
     {
       "name": "'select ssn from employee.personal;' for user3 - maskType=NONE (resource-policy override)",
       "request": {
         "resource": { "elements": { "database": "employee", "table": "personal", "column": "ssn" } },
         "accessType": "select", "user": "user3", "requestData": "select ssn from employee.personal;' for user2",
-        "context": {
-          "TAGS": "[{\"type\":\"RESTRICTED\"}]"
-        }
+        "context": { "TAGS": "[{\"type\":\"RESTRICTED\"}]" }
       },
-      "dataMaskResult":{"additionalInfo":{"maskType":"NONE","maskCondition":null,"maskValue":null},"policyId":104}
+      "dataMaskResult": { "additionalInfo": { "maskType": "NONE", "maskCondition": null, "maskValue": null }, "policyId": 104 }
     },
     {
       "name": "'select ssn from employee.personal;' for hive - maskType=NONE",
       "request": {
-        "resource": {
-          "elements": {
-            "database": "employee",
-            "table": "personal",
-            "column": "ssn"
-          }
-        },
-        "accessType": "select",
-        "user": "hive",
-        "userGroups": [],
-        "requestData": "select ssn from employee.personal;' for hive",
-        "context": {
-          "TAGS": "[{\"type\":\"RESTRICTED\"}]"
-        }
+        "resource": { "elements": { "database": "employee", "table": "personal", "column": "ssn" } },
+        "accessType": "select", "user": "hive", "userGroups": [], "requestData": "select ssn from employee.personal;' for hive",
+        "context": { "TAGS": "[{\"type\":\"RESTRICTED\"}]" }
       },
-      "dataMaskResult":{"additionalInfo":{"maskType":null,"maskCondition":null,"maskValue":null},"policyId":-1}
+      "dataMaskResult": { "additionalInfo": { "maskType": null, "maskCondition": null, "maskValue": null }, "policyId": -1 }
+    },
+    {
+      "name": "'select name from employee.personal;' for user1 - maskType=MASK",
+      "request": {
+        "resource": { "elements": { "database": "employee", "table": "personal", "column": "name" } },
+        "accessType": "select", "user": "user1", "userGroups": [], "requestData": "select name from employee.personal;' for user1",
+        "context": { "TAGS": "[{\"type\":\"RESTRICTED\"}]" }
+      },
+      "dataMaskResult": { "additionalInfo": { "maskType": "MASK", "maskCondition": null, "maskValue": null }, "policyId": 1 }
+    },
+    {
+      "name": "'select name from employee.personal;' for user2 - maskType=SHUFFLE",
+      "request": {
+        "resource": { "elements": { "database": "employee", "table": "personal", "column": "name" } },
+        "accessType": "select", "user": "user2", "userGroups": [], "requestData": "select name from employee.personal;' for user2",
+        "context": { "TAGS": "[{\"type\":\"RESTRICTED\"}]" }
+      },
+      "dataMaskResult": { "additionalInfo": { "maskType": "SHUFFLE", "maskCondition": null, "maskValue": null }, "policyId": 1 }
+    },
+    {
+      "name": "'select name from employee.personal;' for user4 - maskType=NONE",
+      "request": {
+        "resource": { "elements": { "database": "employee", "table": "personal", "column": "name" } },
+        "accessType": "select", "user": "user4", "userGroups": [], "requestData": "select name from employee.personal;' for user2",
+        "context": { "TAGS": "[{\"type\":\"RESTRICTED\"}]" }
+      },
+      "dataMaskResult": { "additionalInfo": { "maskType": "NONE", "maskCondition": null, "maskValue": null }, "policyId": 105 }
     }
   ]
 }
