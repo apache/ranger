@@ -103,7 +103,7 @@ class BaseDB(object):
 
 class MysqlConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
@@ -115,8 +115,6 @@ class MysqlConf(BaseDB):
 		self.javax_net_ssl_keyStorePassword=javax_net_ssl_keyStorePassword
 		self.javax_net_ssl_trustStore=javax_net_ssl_trustStore
 		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
-		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
-		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		path = RANGER_KMS_HOME
@@ -129,20 +127,11 @@ class MysqlConf(BaseDB):
 					db_ssl_cert_param=" -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
 				else:
 					db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
-		else:
-			if "useSSL" not in db_name:
-				db_ssl_param="?useSSL=false"
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring %s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.db_override_jdbc_connection_string,user,password)
-			else:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
+			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
 		elif os_name == "WINDOWS":
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string,user, password)
-			else:
-				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name,db_ssl_param,user, password)
+			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name,db_ssl_param, user, password)
 		return jisql_cmd
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -204,12 +193,10 @@ class MysqlConf(BaseDB):
 
 class OracleConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
 		self.host = host 
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
-		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
-		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password):
 		path = RANGER_KMS_HOME
@@ -226,15 +213,9 @@ class OracleConf(BaseDB):
 			cstring="jdbc:oracle:thin:@//%s" %(self.host)
 
 		if is_unix:
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string, user, password)
-			else:
-				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, cstring, user, password)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, cstring, user, password)
 		elif os_name == "WINDOWS":
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string, user, password)
-			else:
-				jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, cstring, user, password)
+			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, cstring, user, password)
 		return jisql_cmd
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -311,7 +292,7 @@ class OracleConf(BaseDB):
 
 class PostgresConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
@@ -326,8 +307,6 @@ class PostgresConf(BaseDB):
 		self.javax_net_ssl_trustStore=javax_net_ssl_trustStore
 		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
 		self.javax_net_ssl_trustStore_type=javax_net_ssl_trustStore_type.lower()
-		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
-		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
@@ -347,15 +326,9 @@ class PostgresConf(BaseDB):
 			else:
 				db_ssl_param="?ssl=%s" %(self.db_ssl_enabled)
 		if is_unix:
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string,user, password)
-			else:
-				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, password)
+			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, password)
 		elif os_name == "WINDOWS":
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string,user, password)
-			else:
-				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
+			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
 		return jisql_cmd
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -416,27 +389,19 @@ class PostgresConf(BaseDB):
 
 class SqlServerConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
-		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
-		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring %s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, user, password, self.db_override_jdbc_connection_string)
-			else:
-				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, user, password, self.host,db_name)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR,path, user, password, self.host,db_name)
 		elif os_name == "WINDOWS":
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring %s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.db_override_jdbc_connection_string)
-			else:
-				jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring jdbc:sqlserver://%s;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
+			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring jdbc:sqlserver://%s;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
 		return jisql_cmd
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -494,26 +459,18 @@ class SqlServerConf(BaseDB):
 
 class SqlAnywhereConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
-		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
-		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password, db_name):
 		path = RANGER_KMS_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver sapsajdbc4 -cstring %s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,self.db_override_jdbc_connection_string)
-			else:
-				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
+			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
 		elif os_name == "WINDOWS":
-			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
-				jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver sapsajdbc4 -cstring %s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,self.db_override_jdbc_connection_string)
-			else:
-				jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
+			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
 		return jisql_cmd
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -652,8 +609,6 @@ def main(argv):
 	db_ssl_certificate_file=''
 	javax_net_ssl_trustStore_type='bcfks'
 	javax_net_ssl_keyStore_type='bcfks'
-	is_override_db_connection_string='false'
-	db_override_jdbc_connection_string=''
 
 	if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "POSTGRES":
 		if 'db_ssl_enabled' in globalDict:
@@ -698,11 +653,6 @@ def main(argv):
 						if javax_net_ssl_keyStorePassword is None or javax_net_ssl_keyStorePassword =="":
 							log("[E] Invalid ssl keystore password!","error")
 							sys.exit(1)
-	if 'is_override_db_connection_string' in globalDict:
-		is_override_db_connection_string=globalDict['is_override_db_connection_string'].lower()
-	if 'db_override_jdbc_connection_string' in globalDict:
-		db_override_jdbc_connection_string=globalDict['db_override_jdbc_connection_string'].strip()
-
 
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
