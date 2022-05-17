@@ -63,7 +63,7 @@ import java.util.*;
 public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 	private static final Logger LOG = LoggerFactory.getLogger(AtlasRESTTagSource.class);
 
-    	private static final int REQUESTED_ENTITIES_LIMIT_MAX = 10000;
+
     	private static final ThreadLocal<DateFormat> DATE_FORMATTER = new ThreadLocal<DateFormat>() {
 		@Override
 		protected DateFormat initialValue() {
@@ -79,6 +79,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 	private String[] restUrls         = null;
 	private boolean  isKerberized     = false;
 	private String[] userNamePassword = null;
+	private int      entitiesBatchSize = TagSyncConfig.DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
 
 	private Thread myThread = null;
 
@@ -134,6 +135,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
 
 		sleepTimeBetweenCycleInMillis = TagSyncConfig.getTagSourceAtlasDownloadIntervalInMillis(properties);
 		isKerberized = TagSyncConfig.getTagsyncKerberosIdentity(properties) != null;
+		entitiesBatchSize = TagSyncConfig.getAtlasRestSourceEntitiesBatchSize(properties);
 
 		String restEndpoint       = TagSyncConfig.getAtlasRESTEndpoint(properties);
 		String sslConfigFile = TagSyncConfig.getAtlasRESTSslConfigFile(properties);
@@ -256,7 +258,7 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
             //searchParams.setIncludeSubClassifications(true);
             //searchParams.setIncludeSubTypes(true);
             searchParams.setIncludeClassificationAttributes(true);
-            searchParams.setLimit(REQUESTED_ENTITIES_LIMIT_MAX);
+            searchParams.setLimit(entitiesBatchSize);
 
             boolean isMoreData;
             int     nextStartIndex = 0;

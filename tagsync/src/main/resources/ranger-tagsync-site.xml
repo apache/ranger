@@ -54,6 +54,10 @@
 		<value>900000</value>
 	</property>
 	<property>
+		<name>ranger.tagsync.source.atlasrest.entities.batch.size</name>
+		<value>10000</value>
+	</property>
+	<property>
 		<name>ranger.tagsync.source.file</name>
 		<value>false</value>
 	</property>

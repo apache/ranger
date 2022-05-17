@@ -97,6 +97,7 @@ public class TagSyncConfig extends Configuration {
 
 	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 15000;
 	private static final long DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL = 900000;
+	public  static final int  DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = 10000;
 	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
 	private static final long DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL = 10000;
 
@@ -120,7 +121,7 @@ public class TagSyncConfig extends Configuration {
 	private static final int     DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE = 1;
 	private static final String  TAGSYNC_SINK_MAX_BATCH_SIZE_PROP    = "ranger.tagsync.dest.ranger.max.batch.size";
 
-
+	private static final String TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = "ranger.tagsync.source.atlasrest.entities.batch.size";
 
 
 	private Properties props;
@@ -540,4 +541,18 @@ public class TagSyncConfig extends Configuration {
 		return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
 	}
 
+	static public int getAtlasRestSourceEntitiesBatchSize(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE);
+		int    ret = DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
+
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Integer.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+
+		return ret;
+	}
 }
