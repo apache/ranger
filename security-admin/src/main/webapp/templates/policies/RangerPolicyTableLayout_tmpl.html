@@ -46,6 +46,10 @@
 {{/if}}
 <h3 class="wrap-header bold"> {{tt 'lbl.listOfPolicies'}} : {{rangerService.attributes.displayName}} </h3>
 <div class="wrap non-collapsible m-height ">
+    <div class="alert alert-warning {{displayClass}}" data-id="policyInfoAlert">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <i class="fa-fw fa fa-info-circle searchInfoUserAccess padding-right-10"></i>{{{infoMsg}}}
+    </div>
     <div>
         <div class="row margin-bottom-11">
             <div class="col-md-9">
