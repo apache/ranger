@@ -133,8 +133,9 @@ define(function(require) {
 		Service_KNOX:{value:4, label:'knox', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
 		Service_STORM:{value:5, label:'storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'},
 		Service_SOLR:{value:6, label:'solr', rbkey:'xa.enum.AssetType.ASSET_SOLR', tt: 'lbl.AssetType_ASSET_SOLR'},
-    SERVICE_TAG:{value:7, label:'tag', rbkey:'xa.enum.ServiceType.SERVICE_TAG', tt: 'lbl.ServiceType_SERVICE_TAG'},
-    Service_KMS:{value:8, label:'kms', rbkey:'xa.enum.ServiceType.SERVICE_KMS', tt: 'lbl.ServiceType_SERVICE_KMS'}
+		SERVICE_TAG:{value:7, label:'tag', rbkey:'xa.enum.ServiceType.SERVICE_TAG', tt: 'lbl.ServiceType_SERVICE_TAG'},
+		Service_KMS:{value:8, label:'kms', rbkey:'xa.enum.ServiceType.SERVICE_KMS', tt: 'lbl.ServiceType_SERVICE_KMS'},
+		Service_YARN:{value:8, label:'yarn', rbkey:'xa.enum.ServiceType.SERVICE_YARN', tt: 'lbl.ServiceType_SERVICE_YARN'}
 	});
 
 	XAEnums.AuthStatus = mergeParams(XAEnums.AuthStatus, {
@@ -371,10 +372,13 @@ define(function(require) {
 		XA_PERM_TYPE_GET_USER_TOPOLOGY:{value:29, label:'Get User Topology', rbkey:'xa.enum.XAPermType.XA_PERM_TYPE_ALLOW', tt: 'lbl.XAPermType_XA_PERM_TYPE_ALLOW'},
 		XA_PERM_TYPE_GET_TOPOLOGY_INFO:{value:30, label:'Get Topology Info', rbkey:'xa.enum.XAPermType.XA_PERM_TYPE_ALLOW', tt: 'lbl.XAPermType_XA_PERM_TYPE_ALLOW'},
 		XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL:{value:31, label:'Upload New Credential', rbkey:'xa.enum.XAPermType.XA_PERM_TYPE_ALLOW', tt: 'lbl.XAPermType_XA_PERM_TYPE_ALLOW'},
-		
-        
 	});
-	
+
+	XAEnums.PluginConfig = mergeParams(XAEnums.PluginConfig, {
+		HDFS : {configName:"xasecure.add-hadoop-authorization"},
+		YARN : {configName:"ranger.add-yarn-authorization"}
+	})
+
 	XAEnums.MenuPermissions =  mergeParams(XAEnums.MenuPermissions, {
                 XA_RESOURCE_BASED_POLICIES:{value:1, label:'Resource Based Policies', rbkey:'xa.enum.MenuPermissions.XA_RESOURCE_BASED_POLICIES', tt: 'lbl.XAPermForType_XA_RESOURCE_BASED_POLICIES'},
                 XA_USER_GROUPS:{value:2, label:'Users/Groups', rbkey:'xa.enum.MenuPermissions.XA_USER_GROUP', tt: 'lbl.XAPermForType_XA_USER_GROUPS'},

@@ -51,6 +51,13 @@ define(function(require) {
             template: RangerPolicyTableLayoutTmpl,
 
             templateHelpers: function() {
+                var infoMsg ="", displayClass = "d-none";
+                if(this.rangerService && this.rangerService.get('type')){
+                    if(this.rangerService.get('type') == XAEnums.ServiceType.Service_HDFS.label || this.rangerService.get('type') == XAEnums.ServiceType.Service_YARN.label) {
+                        infoMsg = XAUtil.pluginConfigInfo(this.rangerService.get('type').toUpperCase())
+                        displayClass = "show"
+                    }
+                }
                 return {
                     rangerService: this.rangerService,
                     rangerServiceDef: this.rangerServiceDefModel,
@@ -61,7 +68,8 @@ define(function(require) {
                     setNewUi : localStorage.getItem('setOldUI') == "true" ? false : true,
                     isNotAuditorOrKMSAuditor : !XAUtil.isAuditorOrKMSAuditor(SessionMgr),
                     isNotUser : ! SessionMgr.isUser(),
-
+                    displayClass : displayClass,
+                    infoMsg : infoMsg,
                 };
             },
 

@@ -2020,5 +2020,9 @@ define(function(require) {
         }
     };
 
+    XAUtils.pluginConfigInfo = function (serviceName) {
+       return 'By default, fallback to '+ serviceName +' ACLs are enabled. If access cannot be determined by Ranger policies, authorization will fall back to '+ serviceName +' ACLs. If this behavior needs to be changed, modify '+serviceName+' plugin config - <i>'+XAEnums.PluginConfig[serviceName].configName+'</i>.'
+    };
+
 	return XAUtils;
 });
