@@ -106,6 +106,10 @@ public class RangerBasePlugin {
 	}
 
 	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles) {
+		this(pluginConfig, policies, tags, roles, null);
+	}
+
+	public RangerBasePlugin(RangerPluginConfig pluginConfig, ServicePolicies policies, ServiceTags tags, RangerRoles roles, RangerUserStore userStore) {
 		this(pluginConfig);
 
 		init();
@@ -120,6 +124,16 @@ public class RangerBasePlugin {
 				tagEnricher.setServiceTags(tags);
 			} else {
 				LOG.warn("RangerBasePlugin(tagsVersion=" + tags.getTagVersion() + "): no tag enricher found. Plugin will not enforce tag-based policies");
+			}
+		}
+
+		if (userStore != null) {
+			RangerUserStoreEnricher userStoreEnricher = getUserStoreEnricher();
+
+			if (userStoreEnricher != null) {
+				userStoreEnricher.setRangerUserStore(userStore);
+			} else {
+				LOG.warn("RangerBasePlugin(userStoreVersion=" + userStore.getUserStoreVersion() + "): no userstore enricher found. Plugin will not enforce user/group attribute-based policies");
 			}
 		}
 	}
@@ -251,6 +265,13 @@ public class RangerBasePlugin {
 	public long getRolesVersion() {
 		RangerPolicyEngine policyEngine = this.policyEngine;
 		Long               ret          = policyEngine != null ? policyEngine.getRoleVersion() : null;
+
+		return ret != null ? ret : -1L;
+	}
+
+	public long getUserStoreVersion() {
+		RangerUserStoreEnricher userStoreEnricher = getUserStoreEnricher();
+		Long                    ret               = userStoreEnricher != null ? userStoreEnricher.getUserStoreVersion() : null;
 
 		return ret != null ? ret : -1L;
 	}

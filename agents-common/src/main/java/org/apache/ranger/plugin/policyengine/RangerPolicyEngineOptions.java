@@ -31,9 +31,11 @@ public class RangerPolicyEngineOptions {
 	public boolean disableTrieLookupPrefilter = false;
 	public boolean disablePolicyRefresher = false;
 	public boolean disableTagRetriever = false;
+	public boolean disableUserStoreRetriever = false;
 	public boolean cacheAuditResults = true;
 	public boolean evaluateDelegateAdminOnly = false;
 	public boolean enableTagEnricherWithLocalRefresher = false;
+	public boolean enableUserStoreEnricherWithLocalRefresher = false;
 	public boolean disableAccessEvaluationWithPolicyACLSummary = true;
 	public boolean optimizeTrieForRetrieval = false;
 	public boolean disableRoleResolution = true;
@@ -53,9 +55,11 @@ public class RangerPolicyEngineOptions {
 		this.disableTrieLookupPrefilter = other.disableTrieLookupPrefilter;
 		this.disablePolicyRefresher = other.disablePolicyRefresher;
 		this.disableTagRetriever = other.disableTagRetriever;
+		this.disableUserStoreRetriever = other.disableUserStoreRetriever;
 		this.cacheAuditResults = other.cacheAuditResults;
 		this.evaluateDelegateAdminOnly = other.evaluateDelegateAdminOnly;
 		this.enableTagEnricherWithLocalRefresher = other.enableTagEnricherWithLocalRefresher;
+		this.enableUserStoreEnricherWithLocalRefresher = other.enableUserStoreEnricherWithLocalRefresher;
 		this.disableAccessEvaluationWithPolicyACLSummary = other.disableAccessEvaluationWithPolicyACLSummary;
 		this.optimizeTrieForRetrieval = other.optimizeTrieForRetrieval;
 		this.disableRoleResolution = other.disableRoleResolution;
@@ -72,6 +76,7 @@ public class RangerPolicyEngineOptions {
 		disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
 		disablePolicyRefresher = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.policy.refresher", false);
 		disableTagRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", false);
+		disableUserStoreRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", false);
 
 		cacheAuditResults = conf.getBoolean(propertyPrefix + ".policyengine.option.cache.audit.results", true);
 
@@ -80,6 +85,7 @@ public class RangerPolicyEngineOptions {
 		}
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = false;
+		enableUserStoreEnricherWithLocalRefresher = false;
 		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
 		disableRoleResolution = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.role.resolution", true);
@@ -96,14 +102,15 @@ public class RangerPolicyEngineOptions {
 		disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
 		disablePolicyRefresher = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.policy.refresher", true);
 		disableTagRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", true);
+		disableUserStoreRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", true);
 
 		cacheAuditResults = false;
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = false;
+		enableUserStoreEnricherWithLocalRefresher = false;
 		disableAccessEvaluationWithPolicyACLSummary = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.access.evaluation.with.policy.acl.summary", true);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
 		disableRoleResolution = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.role.resolution", true);
-
 	}
 
 	public void configureDelegateAdmin(Configuration conf, String propertyPrefix) {
@@ -113,13 +120,13 @@ public class RangerPolicyEngineOptions {
 		disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
 		disablePolicyRefresher = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.policy.refresher", true);
 		disableTagRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", true);
+		disableUserStoreRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", true);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
-
 
 		cacheAuditResults = false;
 		evaluateDelegateAdminOnly = true;
 		enableTagEnricherWithLocalRefresher = false;
-
+		enableUserStoreEnricherWithLocalRefresher = false;
 	}
 
 	public void configureRangerAdminForPolicySearch(Configuration conf, String propertyPrefix) {
@@ -129,12 +136,13 @@ public class RangerPolicyEngineOptions {
 		disableTrieLookupPrefilter = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.trie.lookup.prefilter", false);
 		disablePolicyRefresher = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.policy.refresher", true);
 		disableTagRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.tag.retriever", false);
+		disableUserStoreRetriever = conf.getBoolean(propertyPrefix + ".policyengine.option.disable.userstore.retriever", false);
 		optimizeTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.retrieval", false);
-
 
 		cacheAuditResults = false;
 		evaluateDelegateAdminOnly = false;
 		enableTagEnricherWithLocalRefresher = true;
+		enableUserStoreEnricherWithLocalRefresher = true;
 
 		optimizeTrieForSpace = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.trie.for.space", false);
 		optimizeTagTrieForRetrieval = conf.getBoolean(propertyPrefix + ".policyengine.option.optimize.tag.trie.for.retrieval", false);
@@ -165,9 +173,11 @@ public class RangerPolicyEngineOptions {
 					&& this.disableTrieLookupPrefilter == that.disableTrieLookupPrefilter
 					&& this.disablePolicyRefresher == that.disablePolicyRefresher
 					&& this.disableTagRetriever == that.disableTagRetriever
+					&& this.disableUserStoreRetriever == that.disableUserStoreRetriever
 					&& this.cacheAuditResults == that.cacheAuditResults
 					&& this.evaluateDelegateAdminOnly == that.evaluateDelegateAdminOnly
 					&& this.enableTagEnricherWithLocalRefresher == that.enableTagEnricherWithLocalRefresher
+					&& this.enableUserStoreEnricherWithLocalRefresher == that.enableUserStoreEnricherWithLocalRefresher
 					&& this.optimizeTrieForRetrieval == that.optimizeTrieForRetrieval
 					&& this.disableRoleResolution == that.disableRoleResolution
 					&& this.optimizeTrieForSpace == that.optimizeTrieForSpace
@@ -193,11 +203,15 @@ public class RangerPolicyEngineOptions {
 		ret *= 2;
 		ret += disableTagRetriever ? 1 : 0;
 		ret *= 2;
+		ret += disableUserStoreRetriever ? 1 : 0;
+		ret *= 2;
 		ret += cacheAuditResults ? 1 : 0;
 		ret *= 2;
 		ret += evaluateDelegateAdminOnly ? 1 : 0;
 		ret *= 2;
 		ret += enableTagEnricherWithLocalRefresher ? 1 : 0;
+		ret *= 2;
+		ret += enableUserStoreEnricherWithLocalRefresher ? 1 : 0;
 		ret *= 2;
 		ret += optimizeTrieForRetrieval ? 1 : 0;
 		ret *= 2;
@@ -222,7 +236,9 @@ public class RangerPolicyEngineOptions {
 				", disableTagPolicyEvaluation: " + disableTagPolicyEvaluation +
 				", disablePolicyRefresher: " + disablePolicyRefresher +
 				", disableTagRetriever: " + disableTagRetriever +
+				", disableUserStoreRetriever: " + disableUserStoreRetriever +
 				", enableTagEnricherWithLocalRefresher: " + enableTagEnricherWithLocalRefresher +
+				", enableUserStoreEnricherWithLocalRefresher: " + enableUserStoreEnricherWithLocalRefresher +
 				", disableTrieLookupPrefilter: " + disableTrieLookupPrefilter +
 				", optimizeTrieForRetrieval: " + optimizeTrieForRetrieval +
 				", cacheAuditResult: " + cacheAuditResults +
