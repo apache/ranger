@@ -768,8 +768,16 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						ret.setIsAccessDetermined(true);
 					}
 				} else if (ret.getIsAllowed()) {
-					if (ret.getPolicyPriority() > evaluator.getPolicyPriority()) {
-						ret.setIsAccessDetermined(true);
+					if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
+						// for access, allow decision made earlier by a policy with higher priority will be final
+						if (ret.getPolicyPriority() > evaluator.getPolicyPriority()) {
+							ret.setIsAccessDetermined(true);
+						}
+					} else {
+						// for other types (mask/row-filter), decision made earlier by a policy with same priority or higher will be final
+						if (ret.getPolicyPriority() >= evaluator.getPolicyPriority()) {
+							ret.setIsAccessDetermined(true);
+						}
 					}
 				}
 

@@ -32,12 +32,17 @@ then
 
   echo "ssh" > /etc/pdsh/rcmd_default
 
-  ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh
 
-  su -c "${HADOOP_HOME}/bin/hdfs namenode -format" hdfs
+  if "${RANGER_SCRIPTS}"/ranger-hadoop-setup.sh;
+  then
+    su -c "${HADOOP_HOME}/bin/hdfs namenode -format" hdfs
 
-  CREATE_HDFS_DIR=true
-  touch ${HADOOP_HOME}/.setupDone
+    CREATE_HDFS_DIR=true
+
+    touch "${HADOOP_HOME}"/.setupDone
+  else
+    echo "Ranger Hadoop Setup Script didn't complete proper execution."
+  fi
 fi
 
 su -c "${HADOOP_HOME}/sbin/start-dfs.sh" hdfs
@@ -51,4 +56,9 @@ fi
 NAMENODE_PID=`ps -ef  | grep -v grep | grep -i "org.apache.hadoop.hdfs.server.namenode.NameNode" | awk '{print $2}'`
 
 # prevent the container from exiting
-tail --pid=$NAMENODE_PID -f /dev/null
+if [ -z "$NAMENODE_PID" ]
+then
+  echo "The NameNode process probably exited, no process id found!"
+else
+  tail --pid=$NAMENODE_PID -f /dev/null
+fi

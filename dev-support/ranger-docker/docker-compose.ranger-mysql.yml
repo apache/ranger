@@ -11,7 +11,8 @@ services:
     networks:
       - ranger
     healthcheck:
-      test: ["CMD-SHELL", 'mysqladmin ping']
+      # Double dollar($$) is required to expand the env variable
+      test: "mysql -u root -p$$MYSQL_ROOT_PASSWORD ranger -e 'select 1' > /dev/null"
       interval: 10s
       timeout: 2s
       retries: 30

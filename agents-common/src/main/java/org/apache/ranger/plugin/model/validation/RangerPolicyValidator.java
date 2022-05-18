@@ -963,7 +963,10 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.debug("policy item accesses collection was null/empty!");
 		} else {
 			Set<String> accessTypes = getAccessTypes(serviceDef);
-			for (RangerPolicyItemAccess access : accesses) {
+			Set<String> uniqueAccesses = new HashSet<>();
+			Iterator<RangerPolicyItemAccess> accessTypeIterator = accesses.iterator();
+			while (accessTypeIterator.hasNext()) {
+				RangerPolicyItemAccess access = accessTypeIterator.next();
 				if (access == null) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS;
 					failures.add(new ValidationFailureDetailsBuilder()
@@ -975,7 +978,12 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = false;
 				} else {
 					// we want to go through all elements even though one may be bad so all failures are captured
-					valid = isValidPolicyItemAccess(access, failures, accessTypes) && valid;
+					if (uniqueAccesses.contains(access.getType())) {
+						accessTypeIterator.remove();
+					} else {
+						valid = isValidPolicyItemAccess(access, failures, accessTypes) && valid;
+						uniqueAccesses.add(access.getType());
+					}
 				}
 			}
 		}

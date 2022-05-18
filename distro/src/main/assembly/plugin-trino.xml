@@ -214,6 +214,12 @@
             <fileMode>755</fileMode>
         </file>
         <file>
+            <source>${project.parent.basedir}/plugin-trino/scripts/trino-ranger-plugin-logback.xml</source>
+            <outputDirectory></outputDirectory>
+            <destName>trino-ranger-plugin-logback.xml</destName>
+            <fileMode>755</fileMode>
+        </file>
+        <file>
             <source>${project.parent.basedir}/security-admin/scripts/ranger_credential_helper.py</source>
             <outputDirectory></outputDirectory>
             <fileMode>755</fileMode>

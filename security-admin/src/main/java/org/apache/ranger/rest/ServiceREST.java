@@ -1957,12 +1957,21 @@ public class ServiceREST {
 		return ret;
 	}
 
+    /**
+     * Resets/ removes service policy cache for given service.
+     * @param serviceName non-empty serviceName
+     * @return {@code true} if successfully reseted/ removed for given service, {@code false} otherwise.
+     */
     @GET
     @Path("/policies/cache/reset")
     @Produces({ "application/json", "application/xml" })
-    public boolean resetPolicyCache(@QueryParam("name") String name) {
+    public boolean resetPolicyCache(@QueryParam("serviceName") String serviceName) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ServiceREST.resetPolicyCache(" + name + ")");
+            LOG.debug("==> ServiceREST.resetPolicyCache(" + serviceName + ")");
+        }
+
+        if (StringUtils.isEmpty(serviceName)) {
+            throw restErrorUtil.createRESTException("Required parameter [serviceName] is missing.", MessageEnums.INVALID_INPUT_DATA);
         }
 
         // check for ADMIN access
@@ -1970,13 +1979,11 @@ public class ServiceREST {
             boolean isServiceAdmin = false;
             String  loggedInUser   = bizUtil.getCurrentUserLoginId();
 
-            if (StringUtils.isNotEmpty(name)) {
-                try {
-                    RangerService rangerService = svcStore.getServiceByName(name);
-                    isServiceAdmin = bizUtil.isUserServiceAdmin(rangerService, loggedInUser);
-                } catch (Exception e) {
-                    LOG.warn("Failed to find if user [" + loggedInUser + "] has service admin privileges on service [" + name + "]", e);
-                }
+            try {
+                RangerService rangerService = svcStore.getServiceByName(serviceName);
+                isServiceAdmin = bizUtil.isUserServiceAdmin(rangerService, loggedInUser);
+            } catch (Exception e) {
+                LOG.warn("Failed to find if user [" + loggedInUser + "] has service admin privileges on service [" + serviceName + "]", e);
             }
 
             if (!isServiceAdmin) {
@@ -1984,10 +1991,36 @@ public class ServiceREST {
             }
         }
 
-        boolean ret = svcStore.resetPolicyCache(name);
+        boolean ret = svcStore.resetPolicyCache(serviceName);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== ServiceREST.resetPolicyCache(): ret=" + ret);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Resets/ removes service policy cache for all.
+     * @return {@code true} if successfully reseted/ removed, {@code false} otherwise.
+     */
+    @GET
+    @Path("/policies/cache/reset-all")
+    @Produces({ "application/json", "application/xml" })
+    public boolean resetPolicyCacheAll() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ServiceREST.resetPolicyCacheAll()");
+        }
+
+        // check for ADMIN access
+        if (!bizUtil.isAdmin()) {
+            throw restErrorUtil.createRESTException("User cannot reset policy cache", MessageEnums.OPER_NO_PERMISSION);
+        }
+
+        boolean ret = svcStore.resetPolicyCache(null);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== ServiceREST.resetPolicyCacheAll(): ret=" + ret);
         }
 
         return ret;
