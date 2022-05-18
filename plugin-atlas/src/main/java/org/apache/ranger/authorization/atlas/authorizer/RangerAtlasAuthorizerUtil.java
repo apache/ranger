@@ -87,8 +87,7 @@ public class RangerAtlasAuthorizerUtil {
 
     static void collectAccessors(RangerAccessResult resultEnd1, RangerAccessResult resultEnd2, AtlasAccessorResponse accessorResponse) {
 
-        if (resultEnd1 == null || resultEnd2 == null || CollectionUtils.isEmpty(resultEnd1.getMatchedItems()) ||
-                CollectionUtils.isEmpty(resultEnd2.getMatchedItems()))  {
+        if (resultEnd2 == null || CollectionUtils.isEmpty(resultEnd2.getMatchedItems()))  {
             return;
         }
 
@@ -125,6 +124,9 @@ public class RangerAtlasAuthorizerUtil {
     }
 
     static boolean hasAccessors(RangerAccessResult result) {
+        if (result == null) {
+            return false;
+        }
 
         for (RangerPolicy.RangerPolicyItem item : result.getMatchedItems()) {
             if (CollectionUtils.isNotEmpty(item.getUsers()) || CollectionUtils.isNotEmpty(item.getRoles()) && CollectionUtils.isNotEmpty(item.getGroups())) {
