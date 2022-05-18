@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.atlas.authorizer;
 
+import org.apache.atlas.authorize.AtlasAccessorResponse;
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
@@ -27,7 +28,6 @@ import org.apache.atlas.authorize.AtlasTypeAccessRequest;
 import org.apache.atlas.authorize.AtlasAuthorizationException;
 import org.apache.atlas.authorize.AtlasTypesDefFilterRequest;
 import org.apache.atlas.authorize.AtlasAuthorizer;
-import org.apache.atlas.model.instance.AtlasAccessor;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -180,12 +180,12 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 	}
 
 	@Override
-	public AtlasAccessor getAccessors(AtlasEntityAccessRequest request) {
+	public AtlasAccessorResponse getAccessors(AtlasEntityAccessRequest request) {
 		if (isDebugEnabled) {
 			LOG.debug("==> getAccessors(AtlasEntityAccessRequest)");
 		}
 
-		AtlasAccessor ret = null;
+		AtlasAccessorResponse ret = null;
 
 		try {
 			activatePluginClassLoader();
@@ -203,13 +203,13 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 	}
 
 	@Override
-	public AtlasAccessor getAccessors(AtlasRelationshipAccessRequest request) {
+	public AtlasAccessorResponse getAccessors(AtlasRelationshipAccessRequest request) {
 		{
 			if (isDebugEnabled) {
 				LOG.debug("==> getAccessors(AtlasRelationshipAccessRequest)");
 			}
 
-			AtlasAccessor ret = null;
+			AtlasAccessorResponse ret = null;
 
 			try {
 				activatePluginClassLoader();
@@ -228,13 +228,13 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 	}
 
 	@Override
-	public AtlasAccessor getAccessors(AtlasTypeAccessRequest request) {
+	public AtlasAccessorResponse getAccessors(AtlasTypeAccessRequest request) {
 		{
 			if (isDebugEnabled) {
 				LOG.debug("==> getAccessors(AtlasTypeAccessRequest)");
 			}
 
-			AtlasAccessor ret = null;
+			AtlasAccessorResponse ret = null;
 
 			try {
 				activatePluginClassLoader();

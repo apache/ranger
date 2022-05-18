@@ -1297,7 +1297,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                 if(evaluator.isMatch(request)) {
                     ret = evaluator;
 
-                    if (!request.isAccessorsRequested()){
+                    if (!request.isAccessorsRequested()) {
                     	break;
 					}
 					result.addMatchedItem(evaluator.getPolicyItem());
