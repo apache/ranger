@@ -202,6 +202,12 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
 
     }
 
+    public Long getUserStoreVersion() {
+        RangerUserStore localUserStore = this.rangerUserStore;
+
+        return localUserStore != null ? localUserStore.getUserStoreVersion() : null;
+    }
+
     @Override
     public boolean preCleanup() {
         if (LOG.isDebugEnabled()) {

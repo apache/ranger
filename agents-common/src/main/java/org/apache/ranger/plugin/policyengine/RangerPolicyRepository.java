@@ -27,6 +27,7 @@ import org.apache.ranger.plugin.contextenricher.RangerAbstractContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerContextEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
+import org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher;
 import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
@@ -57,6 +58,7 @@ import java.util.Map;
 import java.util.Set;
 
 import static org.apache.ranger.plugin.contextenricher.RangerTagEnricher.TAG_RETRIEVER_CLASSNAME_OPTION;
+import static org.apache.ranger.plugin.contextenricher.RangerUserStoreEnricher.USERSTORE_RETRIEVER_CLASSNAME_OPTION;
 import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.PLUGIN_AUDIT_FILTER;
 
 public class RangerPolicyRepository {
@@ -1017,12 +1019,24 @@ public class RangerPolicyRepository {
                     }
                 }
 
-                if (!options.disableContextEnrichers || options.enableTagEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
-                    // This will be true only if the engine is initialized within ranger-admin
+                if (options.disableUserStoreRetriever && StringUtils.equals(enricherDef.getEnricher(), RangerUserStoreEnricher.class.getName())) {
+                    if (MapUtils.isNotEmpty(enricherDef.getEnricherOptions())) {
+                        Map<String, String> enricherOptions = new HashMap<>(enricherDef.getEnricherOptions());
+
+                        enricherOptions.remove(USERSTORE_RETRIEVER_CLASSNAME_OPTION);
+
+                        enricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), enricherDef.getEnricher(), enricherOptions);
+                    }
+                }
+
+                if (!options.disableContextEnrichers) {
                     RangerServiceDef.RangerContextEnricherDef contextEnricherDef = enricherDef;
 
+                    // Following will be true only if the engine is initialized within ranger-admin
                     if (options.enableTagEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerTagEnricher.class.getName())) {
                         contextEnricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), "org.apache.ranger.common.RangerAdminTagEnricher", null);
+                    } else if (options.enableUserStoreEnricherWithLocalRefresher && StringUtils.equals(enricherDef.getEnricher(), RangerUserStoreEnricher.class.getName())) {
+                        contextEnricherDef = new RangerServiceDef.RangerContextEnricherDef(enricherDef.getItemId(), enricherDef.getName(), "org.apache.ranger.common.RangerAdminUserStoreEnricher", null);
                     }
 
                     RangerContextEnricher contextEnricher = buildContextEnricher(contextEnricherDef, options);
