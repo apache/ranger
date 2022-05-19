@@ -228,9 +228,19 @@ public class RangerPolicyDeltaUtil {
                 LOG.warn("Downloaded ServicePolicies are [" + servicePolicies + "]");
                 ret = null;
             } else if (!isPoliciesExist && !isPolicyDeltasExist) {
-                LOG.warn("ServicePolicies do not contain any policies or policy-deltas!! There are no material changes in the policies.");
+                LOG.warn("ServicePolicies do not contain any policies or policy-deltas!!");
                 LOG.warn("Downloaded ServicePolicies are [" + servicePolicies + "]");
-                ret = null;
+                if (servicePolicies.getPolicyDeltas() == null) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Complete set of servicePolicies is received. There may be a change to service. Forcing to create a new policy engine!");
+                    }
+                    ret = false;    // Force new policy engine creation from servicePolicies
+                } else {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("servicePolicy deltas are received. There are no material changes in the policies.");
+                    }
+                    ret = null;
+                }
             } else {
                 ret = isPolicyDeltasExist;
             }
