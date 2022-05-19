@@ -19,6 +19,7 @@
 
 package org.apache.ranger.biz;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -159,6 +160,9 @@ public class RangerPolicyAdminCache {
 					LOG.error("Old policy engine is null! Cannot apply deltas without old policy engine!");
 				}
 			} else {
+				if (policies.getPolicies() == null) {
+					policies.setPolicies(new ArrayList<>());
+				}
 				policyAdmin = addPolicyAdmin(policies, roles, options);
 			}
 		} else {
