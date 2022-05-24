@@ -344,7 +344,7 @@ public class RangerSystemAccessControl
    */
   @Override
   public void checkCanCreateSchema(SystemSecurityContext context, CatalogSchemaName schema) {
-    if (!hasPermission(createResource(schema.getCatalogName()), context, PrestoAccessType.CREATE)) {
+    if (!hasPermission(createResource(schema.getCatalogName(), schema.getSchemaName()), context, PrestoAccessType.CREATE)) {
       LOG.debug("RangerSystemAccessControl.checkCanCreateSchema(" + schema.getSchemaName() + ") denied");
       AccessDeniedException.denyCreateSchema(schema.getSchemaName());
     }
