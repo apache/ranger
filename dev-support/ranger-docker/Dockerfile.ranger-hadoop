@@ -41,7 +41,9 @@ RUN tar xvfz /home/ranger/dist/hadoop-${HADOOP_VERSION}.tar.gz --directory=/opt/
     tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-yarn-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${RANGER_VERSION}-yarn-plugin /opt/ranger/ranger-yarn-plugin && \
     rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-yarn-plugin.tar.gz && \
-    cp -f /home/ranger/scripts/ranger-yarn-plugin-install.properties /opt/ranger/ranger-yarn-plugin/install.properties
+    cp -f /home/ranger/scripts/ranger-yarn-plugin-install.properties /opt/ranger/ranger-yarn-plugin/install.properties && \
+    chmod 744 ${RANGER_SCRIPTS}/ranger-hadoop-setup.sh ${RANGER_SCRIPTS}/ranger-hadoop.sh ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh && \
+    chown hdfs:hadoop ${RANGER_SCRIPTS}/ranger-hadoop-mkdir.sh
 
 ENV HADOOP_HOME        /opt/hadoop
 ENV HADOOP_CONF_DIR    /opt/hadoop/etc/hadoop
