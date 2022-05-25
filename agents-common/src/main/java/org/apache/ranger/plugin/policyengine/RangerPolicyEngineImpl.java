@@ -759,10 +759,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			List<RangerPolicyEvaluator> evaluators = policyRepository.getLikelyMatchPolicyEvaluators(request, policyType);
 
 			for (RangerPolicyEvaluator evaluator : evaluators) {
-				if (request.isAccessorsRequested()) {
-					ret.setIsAccessDetermined(false);
-				}
-
 				if (!evaluator.isApplicable(accessTime)) {
 					continue;
 				}
@@ -834,10 +830,6 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			for (PolicyEvaluatorForTag policyEvaluator : policyEvaluators) {
 				RangerPolicyEvaluator evaluator      = policyEvaluator.getEvaluator();
 				String                policyZoneName = evaluator.getPolicy().getZoneName();
-
-				if (request.isAccessorsRequested()) {
-					result.setIsAccessDetermined(false);
-				}
 
 				if (useTagPoliciesFromDefaultZone) {
 					if (StringUtils.isNotEmpty(policyZoneName)) {

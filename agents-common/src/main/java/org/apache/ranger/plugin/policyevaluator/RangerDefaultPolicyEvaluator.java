@@ -242,7 +242,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
         if (request != null && result != null) {
 
-			if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined()) {
+			if (!result.getIsAccessDetermined() || !result.getIsAuditedDetermined() || request.isAccessorsRequested()) {
 				RangerPolicyResourceMatcher.MatchType matchType;
 
 				if (RangerTagAccessRequest.class.isInstance(request)) {
@@ -277,7 +277,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 								result.setAuditPolicyId(getPolicy().getId());
 							}
 						}
-						if (!result.getIsAccessDetermined()) {
+						if (!result.getIsAccessDetermined() || request.isAccessorsRequested()) {
 							if (hasMatchablePolicyItem(request)) {
 								evaluatePolicyItems(request, matchType, result);
 							}
@@ -1270,7 +1270,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 	protected RangerPolicyItemEvaluator getMatchingPolicyItemForAccessPolicyForSpecificAccess(RangerAccessRequest request, RangerAccessResult result) {
 		RangerPolicyItemEvaluator ret = getMatchingPolicyItem(request, result, denyEvaluators, denyExceptionEvaluators);
 
-		if(ret == null && !result.getIsAccessDetermined()) { // a deny policy could have set isAllowed=true, but in such case it wouldn't set isAccessDetermined=true
+		if(ret == null && (!result.getIsAccessDetermined() || request.isAccessorsRequested())) { // a deny policy could have set isAllowed=true, but in such case it wouldn't set isAccessDetermined=true
 			ret = getMatchingPolicyItem(request, result, allowEvaluators, allowExceptionEvaluators);
 		}
 
