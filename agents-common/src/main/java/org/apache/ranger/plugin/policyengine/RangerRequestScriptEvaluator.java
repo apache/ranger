@@ -704,6 +704,12 @@ public final class RangerRequestScriptEvaluator {
 		return tags.containsKey(tagName);
 	}
 
+	public boolean hasAnyTag() {
+		init();
+
+		return !tags.isEmpty();
+	}
+
 	public boolean hasUserAttr(String attrName) {
 		init();
 
@@ -755,6 +761,18 @@ public final class RangerRequestScriptEvaluator {
 		init();
 
 		return userRoles.contains(roleName);
+	}
+
+	public boolean isInAnyGroup() {
+		init();
+
+		return !userGroups.isEmpty();
+	}
+
+	public boolean isInAnyRole() {
+		init();
+
+		return !userRoles.isEmpty();
 	}
 
 	private void init() {
@@ -1035,11 +1053,17 @@ public final class RangerRequestScriptEvaluator {
 		ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_CSV,   "ctx.userAttrNamesCsv()");
 		ret.put(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV, "ctx.userAttrNamesCsvQ()");
 		ret.put(SCRIPT_MACRO_HAS_TAG,               "ctx.hasTag");
+		ret.put(SCRIPT_MACRO_HAS_ANY_TAG,           "ctx.hasAnyTag()");
+		ret.put(SCRIPT_MACRO_HAS_NO_TAG,            "!ctx.hasAnyTag()");
 		ret.put(SCRIPT_MACRO_HAS_USER_ATTR,         "ctx.hasUserAttr");
 		ret.put(SCRIPT_MACRO_HAS_UG_ATTR,           "ctx.hasUgAttr");
 		ret.put(SCRIPT_MACRO_HAS_TAG_ATTR,          "ctx.hasTagAttr");
 		ret.put(SCRIPT_MACRO_IS_IN_GROUP,           "ctx.isInGroup");
 		ret.put(SCRIPT_MACRO_IS_IN_ROLE,            "ctx.isInRole");
+		ret.put(SCRIPT_MACRO_IS_IN_ANY_GROUP,       "ctx.isInAnyGroup()");
+		ret.put(SCRIPT_MACRO_IS_IN_ANY_ROLE,        "ctx.isInAnyRole()");
+		ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP,   "!ctx.isInAnyGroup()");
+		ret.put(SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE,    "!ctx.isInAnyRole()");
 
 		return ret;
 	}

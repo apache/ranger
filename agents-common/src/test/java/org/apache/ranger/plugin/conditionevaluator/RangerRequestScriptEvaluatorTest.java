@@ -84,6 +84,8 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertTrue("test: IS_IN_GROUP(test-group1)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_GROUP('test-group1')"));
         Assert.assertTrue("test: IS_IN_GROUP(test-group2)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_GROUP('test-group2')"));
         Assert.assertFalse("test: IS_IN_GROUP(notExists)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_GROUP('notExists')"));
+        Assert.assertTrue("test: IS_IN_ANY_GROUP", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_ANY_GROUP"));
+        Assert.assertFalse("test: IS_NOT_IN_ANY_GROUP", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_NOT_IN_ANY_GROUP"));
 
         Assert.assertTrue("test: UG['test-group1'].dept is 'ENGG'", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group1'].dept == 'ENGG'"));
         Assert.assertTrue("test: UG['test-group1'].site is 10", (Boolean) evaluator.evaluateScript(scriptEngine, "UG['test-group1'].site == 10"));
@@ -95,6 +97,8 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertTrue("test: IS_IN_ROLE(test-role1)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_ROLE('test-role1')"));
         Assert.assertTrue("test: IS_IN_ROLE(test-role2)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_ROLE('test-role2')"));
         Assert.assertFalse("test: IS_IN_ROLE(notExists)", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_ROLE('notExists')"));
+        Assert.assertTrue("test: IS_IN_ANY_ROLE", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_IN_ANY_ROLE"));
+        Assert.assertFalse("test: IS_NOT_IN_ANY_ROLE", (Boolean)evaluator.evaluateScript(scriptEngine, "IS_NOT_IN_ANY_ROLE"));
 
         Assert.assertTrue("test: UGA.sVal['dept'] is 'ENGG'", (Boolean)evaluator.evaluateScript(scriptEngine, "UGA.sVal['dept'] == 'ENGG'"));
         Assert.assertTrue("test: UGA.sVal['site'] is 10", (Boolean) evaluator.evaluateScript(scriptEngine, "UGA.sVal['site'] == 10"));
@@ -130,6 +134,8 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertTrue("test: HAS_TAG(PII)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG('PII')"));
         Assert.assertTrue("test: HAS_TAG(PCI)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG('PCI')"));
         Assert.assertFalse("test: HAS_TAG(notExists)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG('notExists')"));
+        Assert.assertTrue("test: HAS_ANY_TAG", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_ANY_TAG"));
+        Assert.assertFalse("test: HAS_NO_TAG", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_NO_TAG"));
     }
 
 
