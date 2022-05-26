@@ -116,9 +116,15 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_MACRO_USER_ATTR_NAMES_CSV   = "USER_ATTR_NAMES_CSV";
 	public static final String SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV = "USER_ATTR_NAMES_Q_CSV";
 	public static final String SCRIPT_MACRO_HAS_TAG               = "HAS_TAG";
+	public static final String SCRIPT_MACRO_HAS_ANY_TAG           = "HAS_ANY_TAG";
+	public static final String SCRIPT_MACRO_HAS_NO_TAG            = "HAS_NO_TAG";
 	public static final String SCRIPT_MACRO_HAS_USER_ATTR         = "HAS_USER_ATTR";
 	public static final String SCRIPT_MACRO_HAS_UG_ATTR           = "HAS_UG_ATTR";
 	public static final String SCRIPT_MACRO_HAS_TAG_ATTR          = "HAS_TAG_ATTR";
 	public static final String SCRIPT_MACRO_IS_IN_GROUP           = "IS_IN_GROUP";
 	public static final String SCRIPT_MACRO_IS_IN_ROLE            = "IS_IN_ROLE";
+	public static final String SCRIPT_MACRO_IS_IN_ANY_GROUP       = "IS_IN_ANY_GROUP";
+	public static final String SCRIPT_MACRO_IS_IN_ANY_ROLE        = "IS_IN_ANY_ROLE";
+	public static final String SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP   = "IS_NOT_IN_ANY_GROUP";
+	public static final String SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE    = "IS_NOT_IN_ANY_ROLE";
 }
