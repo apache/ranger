@@ -602,6 +602,11 @@ public class TagREST {
         return ret;
     }
 
+    /**
+     * Resets/ removes tag policy cache for given service.
+     * @param serviceName non-empty service-name
+     * @return {@code true} if successfully reseted/ removed for given service, {@code false} otherwise.
+     */
     @GET
     @Path(TagRESTConstants.TAGS_RESOURCE + "cache/reset")
     @Produces({ "application/json", "application/xml" })
@@ -610,18 +615,20 @@ public class TagREST {
             LOG.debug("==> TagREST.resetTagCache({})", serviceName);
         }
 
+        if (StringUtils.isEmpty(serviceName)) {
+            throw restErrorUtil.createRESTException("Required parameter [serviceName] is missing.", MessageEnums.INVALID_INPUT_DATA);
+        }
+
         // check for ADMIN access
         if (!bizUtil.isAdmin()) {
             boolean isServiceAdmin = false;
             String  loggedInUser   = bizUtil.getCurrentUserLoginId();
 
-            if (StringUtils.isNotEmpty(serviceName)) {
-                try {
-                    RangerService rangerService = svcStore.getServiceByName(serviceName);
-                    isServiceAdmin = bizUtil.isUserServiceAdmin(rangerService, loggedInUser);
-                } catch (Exception e) {
-                    LOG.warn("Failed to find if user [" + loggedInUser + "] has service admin privileges on service [" + serviceName + "]", e);
-                }
+            try {
+                RangerService rangerService = svcStore.getServiceByName(serviceName);
+                isServiceAdmin = bizUtil.isUserServiceAdmin(rangerService, loggedInUser);
+            } catch (Exception e) {
+                LOG.warn("Failed to find if user [" + loggedInUser + "] has service admin privileges on service [" + serviceName + "]", e);
             }
 
             if (!isServiceAdmin) {
@@ -633,6 +640,32 @@ public class TagREST {
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.resetTagCache(): ret={}", ret);
+        }
+
+        return ret;
+    }
+
+    /**
+     * Resets/ removes tag policy cache for all.
+     * @return {@code true} if successfully reseted/ removed, {@code false} otherwise.
+     */
+    @GET
+    @Path(TagRESTConstants.TAGS_RESOURCE + "cache/reset-all")
+    @Produces({ "application/json", "application/xml" })
+    public boolean resetTagCacheAll() {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagREST.resetTagCacheAll()");
+        }
+
+        // check for ADMIN access
+        if (!bizUtil.isAdmin()) {
+            throw restErrorUtil.createRESTException("User cannot reset policy cache", MessageEnums.OPER_NO_PERMISSION);
+        }
+
+        boolean ret = tagStore.resetTagCache(null);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagREST.resetTagCacheAll(): ret={}", ret);
         }
 
         return ret;
