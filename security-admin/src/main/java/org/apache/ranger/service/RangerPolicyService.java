@@ -42,8 +42,6 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.type.TypeReference;
 import org.slf4j.Logger;
@@ -60,23 +58,23 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	@Autowired
 	JSONUtil jsonUtil;
 	
-	public static final String POLICY_RESOURCE_CLASS_FIELD_NAME = "resources";
-	public static final String POLICY_ITEM_CLASS_FIELD_NAME = "policyItems";
-	public static final String POLICY_NAME_CLASS_FIELD_NAME = "name";
-	public static final String POLICY_DESCRIPTION_CLASS_FIELD_NAME = "description";
-	public static final String DENYPOLICY_ITEM_CLASS_FIELD_NAME = "denyPolicyItems";
-	public static final String ALLOW_EXCEPTIONS_CLASS_FIELD_NAME="allowExceptions";
-	public static final String DENY_EXCEPTIONS_CLASS_FIELD_NAME="denyExceptions";
-	public static final String DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME="dataMaskPolicyItems";
-	public static final String ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME="rowFilterPolicyItems";
-	public static final String IS_ENABLED_CLASS_FIELD_NAME="isEnabled";
-	public static final String IS_AUDIT_ENABLED_CLASS_FIELD_NAME="isAuditEnabled";
-        public static final String POLICY_LABELS_CLASS_FIELD_NAME="policyLabels";
-        public static final String POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME="validitySchedules";
-        public static final String POLICY_PRIORITY_CLASS_FIELD_NAME="policyPriority";
-        public static final String POLICY_CONDITION_CLASS_FIELD_NAME="conditions";
-        public static final String POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME="isDenyAllElse";
-        public static final String POLICY_ZONE_NAME_CLASS_FIELD_NAME="zoneName";
+	public static final String POLICY_RESOURCE_CLASS_FIELD_NAME                   = "resources";
+	public static final String POLICY_ITEM_CLASS_FIELD_NAME                       = "policyItems";
+	public static final String POLICY_NAME_CLASS_FIELD_NAME                       = "name";
+	public static final String POLICY_DESCRIPTION_CLASS_FIELD_NAME                = "description";
+	public static final String DENYPOLICY_ITEM_CLASS_FIELD_NAME                   = "denyPolicyItems";
+	public static final String ALLOW_EXCEPTIONS_CLASS_FIELD_NAME                  = "allowExceptions";
+	public static final String DENY_EXCEPTIONS_CLASS_FIELD_NAME                   = "denyExceptions";
+	public static final String DATAMASK_POLICY_ITEM_CLASS_FIELD_NAME              = "dataMaskPolicyItems";
+	public static final String ROWFILTER_POLICY_ITEM_CLASS_FIELD_NAME             = "rowFilterPolicyItems";
+	public static final String IS_ENABLED_CLASS_FIELD_NAME                        = "isEnabled";
+	public static final String IS_AUDIT_ENABLED_CLASS_FIELD_NAME                  = "isAuditEnabled";
+	public static final String POLICY_LABELS_CLASS_FIELD_NAME                     = "policyLabels";
+	public static final String POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME          = "validitySchedules";
+	public static final String POLICY_PRIORITY_CLASS_FIELD_NAME                   = "policyPriority";
+	public static final String POLICY_CONDITION_CLASS_FIELD_NAME                  = "conditions";
+	public static final String POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME           = "isDenyAllElse";
+	public static final String POLICY_ZONE_NAME_CLASS_FIELD_NAME                  = "zoneName";
 
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	String actionCreate;
@@ -86,23 +84,23 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	String actionImportDelete;
 
 	static {
-		trxLogAttrs.put("name", new VTrxLogAttr("name", "Policy Name", false));
-		trxLogAttrs.put("description", new VTrxLogAttr("description", "Policy Description", false));
-		trxLogAttrs.put("isEnabled", new VTrxLogAttr("isEnabled", "Policy Status", false));
-		trxLogAttrs.put("resources", new VTrxLogAttr("resources", "Policy Resources", false));
-                trxLogAttrs.put("conditions", new VTrxLogAttr("conditions", "Policy Conditions", false));
-		trxLogAttrs.put("policyItems", new VTrxLogAttr("policyItems", "Policy Items", false));
-		trxLogAttrs.put("denyPolicyItems", new VTrxLogAttr("denyPolicyItems", "DenyPolicy Items", false));
-		trxLogAttrs.put("allowExceptions", new VTrxLogAttr("allowExceptions", "Allow Exceptions", false));
-		trxLogAttrs.put("denyExceptions", new VTrxLogAttr("denyExceptions", "Deny Exceptions", false));
-		trxLogAttrs.put("dataMaskPolicyItems", new VTrxLogAttr("dataMaskPolicyItems", "Masked Policy Items", false));
+		trxLogAttrs.put("name",            		new VTrxLogAttr("name", "Policy Name", false));
+		trxLogAttrs.put("description",     		new VTrxLogAttr("description", "Policy Description", false));
+		trxLogAttrs.put("isEnabled",       		new VTrxLogAttr("isEnabled", "Policy Status", false));
+		trxLogAttrs.put("resources",       		new VTrxLogAttr("resources", "Policy Resources", false));
+		trxLogAttrs.put("conditions",      		new VTrxLogAttr("conditions", "Policy Conditions", false));
+		trxLogAttrs.put("policyItems",     		new VTrxLogAttr("policyItems", "Policy Items", false));
+		trxLogAttrs.put("denyPolicyItems", 		new VTrxLogAttr("denyPolicyItems", "DenyPolicy Items", false));
+		trxLogAttrs.put("allowExceptions",      new VTrxLogAttr("allowExceptions", "Allow Exceptions", false));
+		trxLogAttrs.put("denyExceptions",       new VTrxLogAttr("denyExceptions", "Deny Exceptions", false));
+		trxLogAttrs.put("dataMaskPolicyItems",  new VTrxLogAttr("dataMaskPolicyItems", "Masked Policy Items", false));
 		trxLogAttrs.put("rowFilterPolicyItems", new VTrxLogAttr("rowFilterPolicyItems", "Row level filter Policy Items", false));
-		trxLogAttrs.put("isAuditEnabled", new VTrxLogAttr("isAuditEnabled", "Audit Status", false));
-		trxLogAttrs.put("policyLabels", new VTrxLogAttr("policyLabels", "Policy Labels", false));
-		trxLogAttrs.put("validitySchedules", new VTrxLogAttr("validitySchedules", "Validity Schedules", false));
-		trxLogAttrs.put("policyPriority", new VTrxLogAttr("policyPriority", "Priority", false));
-		trxLogAttrs.put("zoneName", new VTrxLogAttr("zoneName", "Zone Name", false));
-                trxLogAttrs.put("isDenyAllElse", new VTrxLogAttr("isDenyAllElse", "Deny All Other Accesses", false));
+		trxLogAttrs.put("isAuditEnabled",       new VTrxLogAttr("isAuditEnabled", "Audit Status", false));
+		trxLogAttrs.put("policyLabels",         new VTrxLogAttr("policyLabels", "Policy Labels", false));
+		trxLogAttrs.put("validitySchedules",    new VTrxLogAttr("validitySchedules", "Validity Schedules", false));
+		trxLogAttrs.put("policyPriority",       new VTrxLogAttr("policyPriority", "Priority", false));
+		trxLogAttrs.put("zoneName",             new VTrxLogAttr("zoneName", "Zone Name", false));
+		trxLogAttrs.put("isDenyAllElse",        new VTrxLogAttr("isDenyAllElse", "Deny All Other Accesses", false));
 	}
 	
 	public RangerPolicyService() {
@@ -127,22 +125,18 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	@Override
 	protected void validateForCreate(RangerPolicy vObj) {
 		// TODO Auto-generated method stub
-		
 	}
 
 	@Override
 	protected void validateForUpdate(RangerPolicy vObj, XXPolicy entityObj) {
 		// TODO Auto-generated method stub
-		
 	}
 	
 	@Override
 	protected RangerPolicy populateViewBean(XXPolicy xPolicy) {
 		RangerPolicyRetriever retriever = new RangerPolicyRetriever(daoMgr);
 
-		RangerPolicy vPolicy = retriever.getPolicy(xPolicy);
-		
-		return vPolicy;
+		return retriever.getPolicy(xPolicy);
 	}
 	
 	public RangerPolicy getPopulatedViewObject(XXPolicy xPolicy) {
@@ -161,7 +155,6 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		Field[] fields = vObj.getClass().getDeclaredFields();
 
 		try {
-			
 			Field nameField = vObj.getClass().getDeclaredField("name");
 			nameField.setAccessible(true);
 			String objectName = "" + nameField.get(vObj);
@@ -175,8 +168,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				}
 			}
 
-			Field[] superClassFields = vObj.getClass().getSuperclass()
-					.getDeclaredFields();
+			Field[] superClassFields = vObj.getClass().getSuperclass().getDeclaredFields();
 			for (Field field : superClassFields) {
 				if ("isEnabled".equalsIgnoreCase(field.getName())) {
 					XXTrxLog xTrx = processFieldToCreateTrxLog(field, objectName, vObj, mObj, oldPolicy, action);
@@ -186,12 +178,10 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					break;
 				}
 			}
-		} catch (IllegalAccessException illegalAcc) {
+		} catch (IllegalAccessException | NoSuchFieldException illegalAcc) {
 			logger.error("Transaction log failure.", illegalAcc);
-		} catch (NoSuchFieldException noSuchField) {
-			logger.error("Transaction log failure.", noSuchField);
 		}
-		
+
 		return trxLogList;
 	}
 
@@ -224,7 +214,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		field.setAccessible(true);
 		String fieldName = field.getName();
 		XXTrxLog xTrxLog = new XXTrxLog();
-                XXService parentObj = daoMgr.getXXService().findByName(vObj.getService());
+		XXService parentObj = daoMgr.getXXService().findByName(vObj.getService());
 		try {
 			VTrxLogAttr vTrxLogAttr = trxLogAttrs.get(fieldName);
 
@@ -253,7 +243,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
     					for(RangerDataMaskPolicyItem policyItem : vObj.getDataMaskPolicyItems()) {
     						if(policyItem.getDataMaskInfo() != null && policyItem.getDataMaskInfo().getDataMaskType() != null) {
     							List<XXDataMaskTypeDef> xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getAll();
-    							if(CollectionUtils.isNotEmpty(xDataMaskDef) && xDataMaskDef != null ) {
+    							if(CollectionUtils.isNotEmpty(xDataMaskDef)) {
     								for (XXDataMaskTypeDef xxDataMaskTypeDef : xDataMaskDef) {
     									if(xxDataMaskTypeDef.getName().equalsIgnoreCase(policyItem.getDataMaskInfo().getDataMaskType())) {
     										String label = xxDataMaskTypeDef.getLabel();
@@ -285,8 +275,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					value = processIsAuditEnabledClassFieldNameForTrxLog(field.get(vObj));
 				} else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					value = processPolicyNameForTrxLog(field.get(vObj));
-				}
-                                else {
+				} else {
     				value = "" + field.get(vObj);
     			}
 			}
@@ -343,7 +332,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if (oldPolicy != null) {
 						oldValue = processPolicyNameForTrxLog(oldPolicy.getDescription());
 					}
-				}  else if (ALLOW_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (ALLOW_EXCEPTIONS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processPolicyItemsForTrxLog(oldPolicy.getAllowExceptions());
 					}
@@ -358,7 +347,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 							for(RangerDataMaskPolicyItem oldPolicyItem : oldPolicy.getDataMaskPolicyItems()) {
 								if(oldPolicyItem.getDataMaskInfo() != null && oldPolicyItem.getDataMaskInfo().getDataMaskType() != null) {
 									List<XXDataMaskTypeDef> xDataMaskDef = daoMgr.getXXDataMaskTypeDef().getAll();
-									if(CollectionUtils.isNotEmpty(xDataMaskDef) && xDataMaskDef != null ) {
+									if(CollectionUtils.isNotEmpty(xDataMaskDef)) {
 										for (XXDataMaskTypeDef xxDataMaskTypeDef : xDataMaskDef) {
 											if(xxDataMaskTypeDef.getName().equalsIgnoreCase(oldPolicyItem.getDataMaskInfo().getDataMaskType())) {
 												String oldLabel = xxDataMaskTypeDef.getLabel();
@@ -379,7 +368,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if (oldPolicy != null) {
 						oldValue = processRowFilterPolicyItemForTrxLog(oldPolicy.getRowFilterPolicyItems());
 					}
-				}else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (IS_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
 						oldValue = processIsEnabledClassFieldNameForTrxLog(oldPolicy.getIsEnabled());
 					}
@@ -387,26 +376,23 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if (oldPolicy != null) {
 						oldValue = processIsAuditEnabledClassFieldNameForTrxLog(oldPolicy.getIsAuditEnabled());
 					}
-				}else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					oldValue = processPolicyLabelsClassFieldNameForTrxLog(oldPolicy.getPolicyLabels());
 				} else if (POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					oldValue = processValiditySchedulesClassFieldNameForTrxLog(oldPolicy.getValiditySchedules());
 				} else if (POLICY_PRIORITY_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					oldValue = processPriorityClassFieldNameForTrxLog(oldPolicy.getPolicyPriority());
-				}
-                                else if (POLICY_CONDITION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-                                        if (oldPolicy != null) {
-                                                oldValue = processPolicyItemsForTrxLog(oldPolicy.getConditions());
-                                        }
-                                }
-				else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (POLICY_CONDITION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					if (oldPolicy != null) {
+						oldValue = processPolicyItemsForTrxLog(oldPolicy.getConditions());
+					}
+				} else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					oldValue = oldPolicy != null ? processPolicyNameForTrxLog(oldPolicy.getZoneName()) : "";
 
 				} else if (POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					oldValue = oldPolicy != null
-							? processIsAuditEnabledClassFieldNameForTrxLog(String.valueOf(oldPolicy.getIsDenyAllElse()))
-							: "";
+					oldValue = oldPolicy != null ? processIsAuditEnabledClassFieldNameForTrxLog(String.valueOf(oldPolicy.getIsDenyAllElse())) : "";
 				}
+
 				//start comparing old and new values
 				if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					// Compare old and new resources
@@ -453,7 +439,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if(compareTwoRowFilterPolicyItemList(value, oldValue)) {
 						return null;
 					}
-				}else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if(compareTwoPolicyName(value, oldValue)) {
 					    return null;
 					}
@@ -461,16 +447,11 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					if(compareTwoPolicyName(value, oldValue)) {
 					    return null;
 					}
-				} else if (IS_AUDIT_ENABLED_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					if (compareTwoPolicyName(value, oldValue)) {
-						return null;
-					}
 				} else if (POLICY_LABELS_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (compareTwoPolicyLabelList(value, oldValue)) {
 						return null;
 					}
-				}
-				else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if(StringUtils.isBlank(oldValue)) {
 						if (!(stringUtil.isEmpty(value) && compareTwoPolicyName(value, oldValue))) {
 							oldValue=value;
@@ -478,22 +459,28 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 							return null;
 						}
 					}
-				}
-				else if (POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+				} else if (POLICY_IS_DENY_ALL_ELSE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					// comparing old and new value for isDenyAllElse
 					if (compareTwoPolicyName(value, oldValue)) {
 						return null;
 					}
-				}else if (POLICY_PRIORITY_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-				 if(StringUtils.equals(value, oldValue)) {
-					 return null;
-				 }
+				} else if (POLICY_PRIORITY_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					if(StringUtils.equals(value, oldValue)) {
+						return null;
+					}
+				} else if (POLICY_CONDITION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					if(StringUtils.equals(value, oldValue)) {
+						return null;
+					}
+				} else if (POLICY_VALIDITYSCHEDULES_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+					if(StringUtils.equals(value, oldValue)) {
+						return null;
+					}
 				}
 
 				xTrxLog.setPreviousValue(oldValue);
 				xTrxLog.setNewValue(value);
-			}
-			else if (action == OPERATION_IMPORT_CREATE_CONTEXT) {
+			} else if (action == OPERATION_IMPORT_CREATE_CONTEXT) {
 				if(restrictIsDenyAllElseLogForMaskingAndRowfilterPolicy(fieldName, vObj) == null) {
 					return null;
 				}
@@ -517,7 +504,6 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		xTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_POLICY);
 		xTrxLog.setObjectId(vObj.getId());
 		xTrxLog.setObjectName(objectName);
-
 		xTrxLog.setParentObjectClassType(AppConstants.CLASS_TYPE_XA_SERVICE);
 		xTrxLog.setParentObjectId(parentObj.getId());
 		xTrxLog.setParentObjectName(parentObj.getName());
@@ -525,44 +511,35 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		return xTrxLog;
 	}
 
-        private boolean compareTwoPolicyLabelList(String value, String oldValue) {
-                if (value == null && oldValue == null) {
-                        return true;
-                }
-                if (value == "" && oldValue == "") {
-                        return true;
-                }
-                if (stringUtil.isEmpty(value) || stringUtil.isEmpty(oldValue)) {
-                        return false;
-                }
-                ObjectMapper mapper = JsonUtilsV2.getMapper();
-                try {
-                        List<String> obj = mapper.readValue(value, new TypeReference<List<String>>() {
-                        });
-                        List<String> oldObj = mapper.readValue(oldValue, new TypeReference<List<String>>() {
-                        });
-                        int oldListSize = oldObj.size();
-                        int listSize = obj.size();
-                        if (oldListSize != listSize) {
-                                return false;
-                        }
-                        for (String polItem : obj) {
-                                if (!oldObj.contains(polItem)) {
-                                        return false;
-                                }
-                        }
-                        return true;
-                } catch (JsonParseException e) {
-                        throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
-                                        MessageEnums.INVALID_INPUT_DATA);
-                } catch (JsonMappingException e) {
-                        throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
-                                        MessageEnums.INVALID_INPUT_DATA);
-                } catch (IOException e) {
-                        throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(),
-                                        MessageEnums.INVALID_INPUT_DATA);
-                }
-        }
+	private boolean compareTwoPolicyLabelList(String value, String oldValue) {
+		if (value == null && oldValue == null) {
+			return true;
+		}
+		if (value == "" && oldValue == "") {
+			return true;
+		}
+		if (stringUtil.isEmpty(value) || stringUtil.isEmpty(oldValue)) {
+			return false;
+		}
+		ObjectMapper mapper = JsonUtilsV2.getMapper();
+		try {
+			List<String> obj = mapper.readValue(value, new TypeReference<List<String>>() {});
+			List<String> oldObj = mapper.readValue(oldValue, new TypeReference<List<String>>() {});
+			int oldListSize = oldObj.size();
+			int listSize = obj.size();
+			if (oldListSize != listSize) {
+				return false;
+			}
+			for (String polItem : obj) {
+				if (!oldObj.contains(polItem)) {
+					return false;
+				}
+			}
+			return true;
+		} catch (IOException e) {
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
+		}
+	}
 
 	private boolean compareTwoPolicyItemList(String value, String oldValue) {
 		if (value == null && oldValue == null) {
@@ -596,18 +573,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				}
 			}
 			return true;
-		} catch (JsonParseException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		} catch (JsonMappingException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
 		} catch (IOException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
 		}
 	}
 
@@ -641,18 +608,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				}
 			}
 			return true;
-		} catch (JsonParseException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		} catch (JsonMappingException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
 		} catch (IOException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
 		}
 	}
 
@@ -662,7 +619,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return "";
 		}
 		List<RangerPolicyItem> rangerPolicyItems = (List<RangerPolicyItem>) value;
-		if(rangerPolicyItems == null || rangerPolicyItems.isEmpty()) {
+		if(rangerPolicyItems.isEmpty()) {
 			return "";
 		}
 		String ret = jsonUtil.readListToString(rangerPolicyItems);
@@ -693,28 +650,27 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		if (value == null) {
 			return "";
 		}
-		String name = (String) value;
-		return name;
+		return (String) value;
 	}
 
 	@SuppressWarnings("unchecked")
-        private String processPolicyLabelsClassFieldNameForTrxLog(Object value) {
-                if (value == null) {
-                        return "";
-                }
-                List<String> policyLabels = (List<String>) value;
-                String ret = jsonUtil.readListToString(policyLabels);
-                return ret;
-        }
+	private String processPolicyLabelsClassFieldNameForTrxLog(Object value) {
+		if (value == null) {
+				return "";
+		}
+		List<String> policyLabels = (List<String>) value;
+		return jsonUtil.readListToString(policyLabels);
+	}
+
 	@SuppressWarnings("unchecked")
 	private String processValiditySchedulesClassFieldNameForTrxLog(Object value) {
 		if (value == null) {
 			return "";
 		}
 		List<RangerValiditySchedule> validitySchedules = (List<RangerValiditySchedule>) value;
-		String ret = jsonUtil.readListToString(validitySchedules);
-		return ret;
+		return jsonUtil.readListToString(validitySchedules);
 	}
+
 	@SuppressWarnings("unchecked")
 	private String processPriorityClassFieldNameForTrxLog(Object value) {
 		if (value == null) {
@@ -729,7 +685,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return "";
 		}
 		List<RangerDataMaskPolicyItem> rangerPolicyItems = (List<RangerDataMaskPolicyItem>) value;
-		if(rangerPolicyItems == null || rangerPolicyItems.isEmpty()) {
+		if(rangerPolicyItems.isEmpty()) {
 			return "";
 		}
 		String ret = jsonUtil.readListToString(rangerPolicyItems);
@@ -745,7 +701,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return "";
 		}
 		List<RangerRowFilterPolicyItem> rangerPolicyItems = (List<RangerRowFilterPolicyItem>) value;
-		if(rangerPolicyItems == null || rangerPolicyItems.isEmpty()) {
+		if(rangerPolicyItems.isEmpty()) {
 			return "";
 		}
 		String ret = jsonUtil.readListToString(rangerPolicyItems);
@@ -754,18 +710,17 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		}
 		return ret;
 	}
+
 	private String processIsEnabledClassFieldNameForTrxLog(Object value) {
 		if(value == null)
 			return null;
-		String isEnabled = String.valueOf(value);
-			return isEnabled;
+		return String.valueOf(value);
 	}
 
 	private String processIsAuditEnabledClassFieldNameForTrxLog(Object value) {
 		if(value == null)
 			return null;
-		String isAuditEnabled = String.valueOf(value);
-		return isAuditEnabled;
+		return String.valueOf(value);
 	}
 
 	private boolean compareTwoDataMaskingPolicyItemList(String value, String oldValue) {
@@ -797,18 +752,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				}
 			}
 			return true;
-		} catch (JsonParseException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		} catch (JsonMappingException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
 		} catch (IOException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
 		}
 	}
 
@@ -841,18 +786,8 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 				}
 			}
 			return true;
-		} catch (JsonParseException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
-		} catch (JsonMappingException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
 		} catch (IOException e) {
-			throw restErrorUtil.createRESTException(
-					"Invalid input data: " + e.getMessage(),
-					MessageEnums.INVALID_INPUT_DATA);
+			throw restErrorUtil.createRESTException("Invalid input data: " + e.getMessage(), MessageEnums.INVALID_INPUT_DATA);
 		}
 	}
 }
