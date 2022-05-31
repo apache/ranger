@@ -19,6 +19,7 @@
 
 package org.apache.ranger.authorization.atlas.authorizer;
 
+import org.apache.atlas.authorize.AtlasAccessorResponse;
 import org.apache.atlas.authorize.AtlasAdminAccessRequest;
 import org.apache.atlas.authorize.AtlasEntityAccessRequest;
 import org.apache.atlas.authorize.AtlasSearchResultScrubRequest;
@@ -176,6 +177,79 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 		}
 
 		return ret;
+	}
+
+	@Override
+	public AtlasAccessorResponse getAccessors(AtlasEntityAccessRequest request) {
+		if (isDebugEnabled) {
+			LOG.debug("==> getAccessors(AtlasEntityAccessRequest)");
+		}
+
+		AtlasAccessorResponse ret = null;
+
+		try {
+			activatePluginClassLoader();
+
+			ret = rangerAtlasAuthorizerImpl.getAccessors(request);
+		} finally {
+			deactivatePluginClassLoader();
+		}
+
+		if (isDebugEnabled) {
+			LOG.debug("<== getAccessors(): " + request);
+		}
+
+		return ret;
+	}
+
+	@Override
+	public AtlasAccessorResponse getAccessors(AtlasRelationshipAccessRequest request) {
+		{
+			if (isDebugEnabled) {
+				LOG.debug("==> getAccessors(AtlasRelationshipAccessRequest)");
+			}
+
+			AtlasAccessorResponse ret = null;
+
+			try {
+				activatePluginClassLoader();
+
+				ret = rangerAtlasAuthorizerImpl.getAccessors(request);
+			} finally {
+				deactivatePluginClassLoader();
+			}
+
+			if (isDebugEnabled) {
+				LOG.debug("<== getAccessors(): " + request);
+			}
+
+			return ret;
+		}
+	}
+
+	@Override
+	public AtlasAccessorResponse getAccessors(AtlasTypeAccessRequest request) {
+		{
+			if (isDebugEnabled) {
+				LOG.debug("==> getAccessors(AtlasTypeAccessRequest)");
+			}
+
+			AtlasAccessorResponse ret = null;
+
+			try {
+				activatePluginClassLoader();
+
+				ret = rangerAtlasAuthorizerImpl.getAccessors(request);
+			} finally {
+				deactivatePluginClassLoader();
+			}
+
+			if (isDebugEnabled) {
+				LOG.debug("<== getAccessors(): " + request);
+			}
+
+			return ret;
+		}
 	}
 
 

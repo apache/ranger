@@ -252,7 +252,7 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
     protected boolean hasMatchablePolicyItem(RangerAccessRequest request) {
         boolean ret = false;
 
-        if (hasPublicGroup || hasCurrentUser || isOwnerMatch(request) || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups()) || (CollectionUtils.isNotEmpty(roles) && CollectionUtils.containsAny(roles, RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext())))) {
+        if (request.isAccessorsRequested() || hasPublicGroup || hasCurrentUser || isOwnerMatch(request) || users.contains(request.getUser()) || CollectionUtils.containsAny(groups, request.getUserGroups()) || (CollectionUtils.isNotEmpty(roles) && CollectionUtils.containsAny(roles, RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext())))) {
            if (hasAllPerms || request.isAccessTypeAny()) {
                 ret = true;
             } else {

@@ -782,8 +782,8 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					}
 				}
 
-				if (ret.getIsAuditedDetermined() && ret.getIsAccessDetermined()) {
-					break;            // Break out of policy-evaluation loop
+				if (ret.getIsAuditedDetermined() && ret.getIsAccessDetermined() && !request.isAccessorsRequested()) {
+					break;
 				}
 			}
 
@@ -884,7 +884,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					}
 				}
 
-				if (result.getIsAuditedDetermined() && result.getIsAccessDetermined()) {
+				if (result.getIsAuditedDetermined() && result.getIsAccessDetermined() && !request.isAccessorsRequested()) {
 					break;            // Break out of policy-evaluation loop
 				}
 			}

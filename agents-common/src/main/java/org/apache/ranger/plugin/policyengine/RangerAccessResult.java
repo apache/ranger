@@ -24,7 +24,9 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class RangerAccessResult {
@@ -52,6 +54,7 @@ public class RangerAccessResult {
 	private long     evaluatedPoliciesCount;
 	private String   reason;
 	private Map<String, Object> additionalInfo;
+	private List<RangerPolicy.RangerPolicyItem> matchedItems = new ArrayList<>();
 
 	public RangerAccessResult(final int policyType, final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
 		this.serviceName = serviceName;
@@ -81,6 +84,7 @@ public class RangerAccessResult {
 		this.evaluatedPoliciesCount = other.evaluatedPoliciesCount;
 		this.reason      = other.getReason();
 		this.additionalInfo = other.additionalInfo == null ? new HashMap<String, Object>() : new HashMap<>(other.additionalInfo);
+		this.matchedItems = new ArrayList<>(other.matchedItems);
 	}
 
 	public void setAuditResultFrom(final RangerAccessResult other) {
@@ -250,6 +254,18 @@ public class RangerAccessResult {
 		if (MapUtils.isNotEmpty(additionalInfo)) {
 			additionalInfo.remove(key);
 		}
+	}
+
+	public List<RangerPolicy.RangerPolicyItem> getMatchedItems() {
+		return matchedItems;
+	}
+
+	public void setMatchedItems(List<RangerPolicy.RangerPolicyItem> matchedItems) {
+		this.matchedItems = matchedItems;
+	}
+
+	public void addMatchedItem(RangerPolicy.RangerPolicyItem matchedItem) {
+		this.matchedItems.add(matchedItem);
 	}
 
 	/**

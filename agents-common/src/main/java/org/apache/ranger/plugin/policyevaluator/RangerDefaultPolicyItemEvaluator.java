@@ -158,6 +158,11 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 			LOG.debug("==> RangerDefaultPolicyItemEvaluator.matchUserGroupAndOwner(" + request + ")");
 		}
 
+		if (request.isAccessorsRequested()) {
+			//skip checking user/group/owner if policy item in case get accessors request
+			return true;
+		}
+
 		boolean ret = false;
 
 		String user = request.getUser();
