@@ -43,7 +43,8 @@ RUN tar xvfz /home/ranger/dist/apache-hive-${HIVE_VERSION}-bin.tar.gz --director
     tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-hive-plugin.tar.gz --directory=/opt/ranger && \
     ln -s /opt/ranger/ranger-${RANGER_VERSION}-hive-plugin /opt/ranger/ranger-hive-plugin && \
     rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-hive-plugin.tar.gz && \
-    cp -f /home/ranger/scripts/ranger-hive-plugin-install.properties /opt/ranger/ranger-hive-plugin/install.properties
+    cp -f /home/ranger/scripts/ranger-hive-plugin-install.properties /opt/ranger/ranger-hive-plugin/install.properties && \
+    chmod 744 ${RANGER_SCRIPTS}/ranger-hive-setup.sh ${RANGER_SCRIPTS}/ranger-hive.sh
 
 ENV HIVE_HOME   /opt/hive
 ENV HADOOP_HOME /opt/hadoop

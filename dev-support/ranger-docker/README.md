@@ -26,30 +26,42 @@ Docker files in this folder create docker images and run them to build Apache Ra
 1. Ensure that you have recent version of Docker installed from [docker.io](http://www.docker.io) (as of this writing: Engine 20.10.5, Compose 1.28.5).
    Make sure to configure docker with at least 6gb of memory.
 
-2. Set this folder as your working directory.
+2. Update environment variables in ```.env``` file, if necessary
 
-3. Update environment variables in .env file, if necessary
+3. Set ```dev-support/ranger-docker``` as your working directory.
 
 4. Execute following command to download necessary archives to setup Ranger/HDFS/Hive/HBase/Kafka/Knox services:
-     ./download-archives.sh
 
-5. Build and deploy Apache Ranger in containers using docker-compose
+   ```chmod +x download-archives.sh && ./download-archives.sh```
 
-   5.1. Execute following command to build Apache Ranger:
+5. Build Apache Ranger in containers using docker-compose
 
-        docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
+   1. Execute following command to build Apache Ranger:
 
-   Time taken to complete the build might vary (upto an hour), depending on status of ${HOME}/.m2 directory cache.
+      ```docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up```
 
-   5.2. Execute following command to start Ranger, Ranger enabled HDFS/YARN/HBase/Hive/Kafka/Knox and dependent services (Solr, DB) in containers:
+      Time taken to complete the build might vary (upto an hour), depending on status of ${HOME}/.m2 directory cache.
+   
+   2. Alternatively, the following commands can be executed from the parent directory
+      1. To generate tarballs:```mvn clean package -DskipTests```
+      
+      2. Copy the tarballs and version file to ```dev-support/ranger-docker/dist```
+         ~~~
+         cp target/ranger-* dev-support/ranger-docker/dist/
+         cp target/version dev-support/ranger-docker/dist/
+         ~~~
+      3. Build the ranger-base image:
+         ```docker-compose -f docker-compose.ranger-base.yml build --no-cache```
+         
+6. Execute following command to start Ranger, Ranger enabled HDFS/YARN/HBase/Hive/Kafka/Knox and dependent services (Solr, DB) in containers:
 
         export RANGER_DB_TYPE=postgres
         docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml up -d
 
 	- valid values for RANGER_DB_TYPE: mysql or postgres
-
-   5.3. To rebuild specific images and start containers with the new image, use following command:
+      
+7. To rebuild specific images and start containers with the new image, use following command:
 
         docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-usersync.yml -f docker-compose.ranger-tagsync.yml -f docker-compose.ranger-hadoop.yml -f docker-compose.ranger-hbase.yml -f docker-compose.ranger-kafka.yml -f docker-compose.ranger-hive.yml -f docker-compose.ranger-knox.yml up -d --no-deps --force-recreate --build <service-1> <service-2>
 
-6. Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)
+8. Ranger Admin can be accessed at http://localhost:6080 (admin/rangerR0cks!)

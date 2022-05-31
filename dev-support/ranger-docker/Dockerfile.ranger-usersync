@@ -38,7 +38,8 @@ RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-usersync.tar.gz --direct
     ln -s /etc/init.d/ranger-usersync /etc/rc3.d/S99ranger-usersync && \
     ln -s /etc/init.d/ranger-usersync /etc/rc3.d/K00ranger-usersync && \
     ln -s ${RANGER_HOME}/usersync/ranger-usersync-services.sh /usr/bin/ranger-usersync && \
-    chown -R ranger:ranger ${RANGER_HOME}/usersync/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-usersync
+    chown -R ranger:ranger ${RANGER_HOME}/usersync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-usersync && \
+    chmod 744 ${RANGER_SCRIPTS}/ranger-usersync.sh
 
 USER ranger
 

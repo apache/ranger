@@ -41,7 +41,8 @@ RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-tagsync.tar.gz --directo
     ln -s /etc/init.d/ranger-tagsync /etc/rc3.d/S99ranger-tagsync && \
     ln -s /etc/init.d/ranger-tagsync /etc/rc3.d/K00ranger-tagsync && \
     ln -s ${RANGER_HOME}/tagsync/ranger-tagsync-services.sh /usr/bin/ranger-tagsync-services.sh && \
-    chown -R ranger:ranger ${RANGER_HOME}/tagsync/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-tagsync
+    chown -R ranger:ranger ${RANGER_HOME}/tagsync/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ /etc/ranger /etc/init.d/ranger-tagsync && \
+    chmod 744 ${RANGER_SCRIPTS}/ranger-tagsync.sh
 
 USER ranger
 

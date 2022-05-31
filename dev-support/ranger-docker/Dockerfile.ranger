@@ -33,7 +33,7 @@ RUN    tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-admin.tar.gz --direct
     && cp -f ${RANGER_SCRIPTS}/ranger-admin-install.properties ${RANGER_HOME}/admin/install.properties \
     && mkdir -p /var/run/ranger \
     && mkdir -p /var/log/ranger \
-    && chown -R ranger:ranger ${RANGER_HOME}/admin/ /var/run/ranger/ /var/log/ranger/ \
+    && chown -R ranger:ranger ${RANGER_HOME}/admin/ ${RANGER_SCRIPTS}/ /var/run/ranger/ /var/log/ranger/ \
     && mkdir -p /usr/share/java/
 
 FROM ranger AS ranger_postgres

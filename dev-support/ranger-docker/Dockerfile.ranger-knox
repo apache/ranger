@@ -38,7 +38,8 @@ RUN apt-get update && apt-get install -y expect && \
     ln -s /opt/ranger/ranger-${RANGER_VERSION}-knox-plugin /opt/ranger/ranger-knox-plugin && \
     rm -f /home/ranger/dist/ranger-${RANGER_VERSION}-knox-plugin.tar.gz && \
     cp -f /home/ranger/scripts/ranger-knox-plugin-install.properties /opt/ranger/ranger-knox-plugin/install.properties && \
-    cp -f /home/ranger/scripts/ranger-knox-sandbox.xml /opt/knox/conf/topologies/sandbox.xml
+    cp -f /home/ranger/scripts/ranger-knox-sandbox.xml /opt/knox/conf/topologies/sandbox.xml && \
+    chmod 744 ${RANGER_SCRIPTS}/ranger-knox-setup.sh ${RANGER_SCRIPTS}/ranger-knox.sh ${RANGER_SCRIPTS}/ranger-knox-expect.sh
 
 ENV KNOX_HOME  /opt/knox
 ENV PATH       /usr/java/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/knox/bin
