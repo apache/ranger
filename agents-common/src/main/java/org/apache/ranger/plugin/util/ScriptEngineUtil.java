@@ -36,6 +36,9 @@ public class ScriptEngineUtil {
 
 
     public static ScriptEngine createScriptEngine(String engineName, String serviceType) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + ")");
+        }
         ScriptEngine ret = null;
 
         try {
@@ -58,9 +61,10 @@ public class ScriptEngineUtil {
             LOG.error("RangerScriptConditionEvaluator.init() failed", exp);
         }
 
+        LOG.debug((ret == null ? " Failed to create " : " Created ") + "Script Engine '" + engineName + "' in a default manner.");
+
         if (ret == null) {
-            LOG.warn("failed to initialize script engine '" + engineName + "' in a default manner." +
-                     " Will try to get script-engine from plugin-class-loader");
+            LOG.warn("Will try to get script-engine from plugin-class-loader for service-type:[" + serviceType + "]");
 
             RangerPluginClassLoader pluginClassLoader;
 
@@ -76,7 +80,9 @@ public class ScriptEngineUtil {
                 LOG.error("RangerScriptConditionEvaluator.init() failed", exp);
             }
         }
-
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + ") : ret=" + ret);
+        }
         return ret;
     }
 }

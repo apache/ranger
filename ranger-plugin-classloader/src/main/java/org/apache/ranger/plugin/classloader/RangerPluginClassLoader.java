@@ -19,7 +19,6 @@
 
 package org.apache.ranger.plugin.classloader;
 
-import java.io.IOException;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.security.AccessController;
@@ -43,6 +42,8 @@ import javax.script.ScriptEngineManager;
 public class RangerPluginClassLoader extends URLClassLoader {
     private static final Logger LOG = LoggerFactory.getLogger(RangerPluginClassLoader.class);
 
+    private static final String TAG_SERVICE_TYPE = "tag";
+
     private static final Map<String, RangerPluginClassLoader> pluginClassLoaders = new HashMap<>();
 
     private final MyClassLoader            componentClassLoader;
@@ -52,12 +53,8 @@ public class RangerPluginClassLoader extends URLClassLoader {
         super(RangerPluginClassLoaderUtil.getInstance().getPluginFilesForServiceTypeAndPluginclass(pluginType, pluginClass), null);
 
         componentClassLoader = AccessController.doPrivileged(
-                                    new PrivilegedAction<MyClassLoader>() {
-                                        public MyClassLoader run() {
-                                                return  new MyClassLoader(Thread.currentThread().getContextClassLoader());
-                                        }
-                                    }
-                                );
+                (PrivilegedAction<MyClassLoader>) () -> new MyClassLoader(Thread.currentThread().getContextClassLoader())
+        );
     }
 
     public static RangerPluginClassLoader getInstance(final String pluginType, final Class<?> pluginClass ) throws Exception {
@@ -70,12 +67,8 @@ public class RangerPluginClassLoader extends URLClassLoader {
                 if (ret == null) {
                     if (pluginClass != null) {
                         ret = AccessController.doPrivileged(
-                                new PrivilegedExceptionAction<RangerPluginClassLoader>() {
-                                    public RangerPluginClassLoader run() throws Exception {
-                                        return new RangerPluginClassLoader(pluginType, pluginClass);
-                                    }
-                                }
-                            );
+                                (PrivilegedExceptionAction<RangerPluginClassLoader>) () -> new RangerPluginClassLoader(pluginType, pluginClass)
+                        );
                     } else if (pluginType == null) { // let us pick an existing entry from pluginClassLoaders
                         if (!pluginClassLoaders.isEmpty()) {
                             // to be predictable, sort the keys
@@ -87,12 +80,16 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
                             ret = pluginClassLoaders.get(pluginTypeToUse);
 
-                            LOG.info("RangerPluginClassLoader.getInstance(pluginType={}): using classLoader for pluginType={}", pluginType, pluginTypeToUse);
+                            LOG.info("RangerPluginClassLoader.getInstance(pluginType=null): using classLoader for pluginType={}", pluginTypeToUse);
                         }
                     }
 
                     if (ret != null) {
                         pluginClassLoaders.put(pluginType, ret);
+
+                        if (pluginType != null && !pluginType.equals(TAG_SERVICE_TYPE)) {
+                            pluginClassLoaders.put(TAG_SERVICE_TYPE, ret);
+                        }
                     }
                 }
             }
@@ -117,7 +114,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
 
             ret = super.findClass(name);
         } catch( Throwable e ) {
-           // Use the Component ClassLoader findclass to load when childClassLoader fails to find
+           // Use the Component ClassLoader findClass to load when childClassLoader fails to find
            if (LOG.isDebugEnabled()) {
                LOG.debug("RangerPluginClassLoader.findClass(" + name + "): calling componentClassLoader.findClass()");
            }
@@ -199,7 +196,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
     }
 
     @Override
-    public Enumeration<URL> findResources(String name) throws IOException {
+    public Enumeration<URL> findResources(String name) {
         final Enumeration<URL> ret;
 
         if (LOG.isDebugEnabled()) {
@@ -315,12 +312,12 @@ public class RangerPluginClassLoader extends URLClassLoader {
         }
 
         @Override
-        public Class<?> findClass(String name) throws ClassNotFoundException { //NOPMD
+        public Class<?> findClass(String name) throws ClassNotFoundException { //NO PMD
            return super.findClass(name);
         }
     }
 
-   static class MergeEnumeration implements Enumeration<URL> { //NOPMD
+   static class MergeEnumeration implements Enumeration<URL> { //NO PMD
         final Enumeration<URL> e1;
         final Enumeration<URL> e2;
 
@@ -361,7 +358,15 @@ public class RangerPluginClassLoader extends URLClassLoader {
             }
         }
 
-        ScriptEngineManager manager = classLoader != null ? new ScriptEngineManager(classLoader) : new ScriptEngineManager();
+        ScriptEngineManager manager;
+
+        if (classLoader != null) {
+            LOG.debug("Creating a ScriptEngineManager with a classloader:[" + classLoader + "]");
+            manager = new ScriptEngineManager(classLoader);
+        } else {
+            LOG.debug("Creating a ScriptEngineManager without a classloader");
+            manager = new ScriptEngineManager();
+        }
 
         if (LOG.isDebugEnabled()) {
             List<ScriptEngineFactory> factories = manager.getEngineFactories();
@@ -378,10 +383,10 @@ public class RangerPluginClassLoader extends URLClassLoader {
         final ScriptEngine ret = manager.getEngineByName(engineName);
 
         if (ret == null) {
-            LOG.error("scriptEngine for JavaScript is null!!");
+            LOG.error("scriptEngine for '" + engineName + "' is null!!");
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("scriptEngine for JavaScript:[" + ret + "]");
+                LOG.debug("scriptEngine for '" + engineName + "':[" + ret + "]");
             }
         }
 
