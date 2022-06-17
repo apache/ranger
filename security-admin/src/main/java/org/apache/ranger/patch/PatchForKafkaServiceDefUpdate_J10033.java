@@ -22,6 +22,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerValidatorFactory;
@@ -95,6 +96,9 @@ public class PatchForKafkaServiceDefUpdate_J10033 extends BaseLoader {
 
 	@Autowired
 	ServiceDBStore svcStore;
+
+	@Autowired
+	XUserMgr xUserMgr;
 
 	public static void main(String[] args) {
 		logger.info("main()");
@@ -349,8 +353,13 @@ public class PatchForKafkaServiceDefUpdate_J10033 extends BaseLoader {
 					}
 					XXUser xxUser = daoMgr.getXXUser().findByUserName(user);
 					if (xxUser == null) {
-						throw new RuntimeException(user + ": user does not exist. policy='" + xxPolicy.getName()
-								+ "' service='" + xxPolicy.getService() + "' user='" + user + "'");
+						logger.info(user +" user is not found, adding user: "+user);
+						xUserMgr.createServiceConfigUser(user);
+						xxUser = daoMgr.getXXUser().findByUserName(user);
+						if (xxUser == null) {
+							throw new RuntimeException(user + ": user does not exist. policy='" + xxPolicy.getName()
+							+ "' service='" + xxPolicy.getService() + "' user='" + user + "'");
+						}
 					}
 					XXPolicyItemUserPerm xUserPerm = new XXPolicyItemUserPerm();
 					xUserPerm.setUserId(xxUser.getId());

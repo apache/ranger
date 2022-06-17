@@ -2492,7 +2492,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRED)
+	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
 	public VXUser createServiceConfigUser(String userName){
 		if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
 			logger.error("User Name: "+userName);

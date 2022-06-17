@@ -32,6 +32,7 @@ import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.PolicyRefUpdater;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXGroupDao;
 import org.apache.ranger.db.XXPolicyDao;
@@ -118,6 +119,9 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 
 	@Autowired
 	PolicyRefUpdater policyRefUpdater;
+
+	@Autowired
+	XUserMgr xUserMgr;
 
 	private final Map<String, Long>              groupIdMap         = new HashMap<>();
 	private final Map<String, Long>              userIdMap          = new HashMap<>();
@@ -351,7 +355,12 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 				XXUser userObject = userDao.findByUserName(user);
 
 				if (userObject == null) {
-					throw new Exception(user + ": unknown user in policy [id=" + policyId + "]");
+					logger.info(user +" user is not found, adding user: "+user);
+					xUserMgr.createServiceConfigUser(user);
+					userObject = userDao.findByUserName(user);
+					if (userObject == null) {
+						throw new Exception(user + ": unknown user in policy [id=" + policyId + "]");
+					}
 				}
 
 				userId = userObject.getId();
