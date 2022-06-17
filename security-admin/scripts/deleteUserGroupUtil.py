@@ -14,13 +14,12 @@
 
 import argparse
 import os,sys
-import pycurl
 import getpass
 import logging
-try:
-	from StringIO import StringIO as BytesIO
-except ImportError:
-	from io import BytesIO
+import time
+import requests
+
+s = requests.Session()
 
 def log(msg,type):
 	if type == 'info':
@@ -54,44 +53,25 @@ def printUsage():
 	log("[I] -debug: Enables debugging","info")
 	sys.exit(1)
 
-def processRequest(url,usernamepassword,data,method,isHttps,certfile,isDebug):
-	buffer = BytesIO()
-	header = BytesIO()
-	c = pycurl.Curl()
-	c.setopt(c.URL, url)
-	c.setopt(pycurl.HTTPHEADER, ['Content-Type: application/json','Accept: application/json'])
-	c.setopt(pycurl.USERPWD, usernamepassword)
-	c.setopt(pycurl.VERBOSE, 0)
-	if isHttps==True:
-		c.setopt(pycurl.SSL_VERIFYPEER,1)
-		c.setopt(pycurl.SSL_VERIFYHOST,2)
-		c.setopt(pycurl.CAINFO, certfile)
+def processRequest(url, username, password, data, method, isHttps, certfile, isDebug):
+	verify = isHttps
+	if isHttps:
+		verify = certfile
+	if method.lower() == 'get':
+		response = s.get(url, data=data, auth=(username, password),verify=verify)
+	elif method.lower() == 'delete':
+		response = s.delete(url, data=data, auth=(username, password),verify=verify)
+	else:
+		log("[E] Unsupported method"+method,'error')
+		pass
 
-	c.setopt(c.WRITEFUNCTION ,buffer.write)
-	c.setopt(c.HEADERFUNCTION,header.write)
-	# setting proper method and parameters
-	if method == 'get' :
-		c.setopt(pycurl.HTTPGET, 1)
-	elif method == 'delete' :
-		c.setopt(pycurl.CUSTOMREQUEST, "DELETE")
-		c.setopt(c.POSTFIELDS, str(data))
-	else :
-		log("[E] Unknown Http Request method found, only get or delete method are allowed!","error")
-
-	c.perform()
-	# getting response
-	response = buffer.getvalue()
-	headerResponse = header.getvalue()
-	response_code=0
-	response_code=str(c.getinfo(pycurl.RESPONSE_CODE))
-	response_code=int(response_code)
-	buffer.close()
-	header.close()
-	c.close()
+	#log("[I] Request time: %s seconds" % str(response.elapsed.total_seconds()),"info")
+	response_code = response.status_code
 	if isDebug ==True or (response_code!=200 and response_code!=204):
-		log('Request URL = ' + str(url), "info")
-		log('Response    = ' + str(headerResponse), "info")
+		log('Request URL = ' + str(url),'debug')
+		log('Response    = ' + str(response.headers),'debug')
 	return response_code
+
 def validateArgs(argv):
 	if(len(argv)<7):
 		log("[E] insufficient number of arguments. Found " + str(len(argv)) + "; expected at least 7","error")
@@ -121,6 +101,7 @@ def validateArgs(argv):
 			printUsage()
 
 def main(argv):
+	start_time = time.time()
 	FORMAT = '%(asctime)-15s %(message)s'
 	logging.basicConfig(format=FORMAT, level=logging.DEBUG)
 	inputPath=""
@@ -213,16 +194,18 @@ def main(argv):
 	if isUser==True and isGroup==True:
 		log("[E] -users and -groups both option were provided, only one is allowed.","error")
 		printUsage()
+	io_time = 0
 	if password =="" :
+		io_start_time = time.time()
 		password=getpass.getpass("Enter Ranger Admin password : ")
-
-	usernamepassword=user+":"+password
+		io_end_time = time.time()
+		io_time = io_end_time - io_start_time
 	url=host+'/service/xusers/secure/users/roles/userName/'+user
 	response_code=0
 	try:
-		response_code=processRequest(url,usernamepassword,None,'get',isHttps,certfile,False)
-	except pycurl.error as e:
-		print(e)
+		response_code=processRequest(url,user,password,None,'get',isHttps,certfile,False)
+	except Exception as e:
+		log("[E] request error: %s:" % (e), "error")
 		sys.exit(1)
 	if response_code == 302 or response_code==401 or response_code==403:
 		log("[E] Authentication Error:Please try with valid credentials!","error")
@@ -243,14 +226,12 @@ def main(argv):
 		url=host+'/service/xusers'+restpath+line+tail
 		method='delete'
 		data=None
-		response_code=processRequest(url,usernamepassword,data,method,isHttps,certfile,isDebug)
+		response_code=processRequest(url,user,password,data,method,isHttps,certfile,isDebug)
 		if response_code==302 or response_code==401:
 			if isUser==True:
 				log("[E] failed while deleting user '" + line + "'. Please verify the parameters","error")
 			elif isGroup==True:
 				log("[E] failed while deleting group '" + line + "'. Please verify the parameters","error")
-			buffer.close()
-			header.close()
 			break
 		elif response_code==204:
 			if isUser==True:
@@ -280,4 +261,10 @@ def main(argv):
 			log("[I] Number of user deleted : "+str(processedRows),"info")
 		elif isGroup==True:
 			log("[I] Number of group deleted : "+str(processedRows),"info")
+		end_time = time.time()
+		log("[I] Total time for io : "+str(io_time),"info")
+		log("[I] Total time taken for execution : "+str(end_time-start_time)+" seconds","info")
+		log("[I] Averge time taken for execution : "+str(float(end_time-start_time)/float(processedRows))+" seconds","info")
+		log("[I] Total time taken for deletion : "+str(end_time-start_time-io_time)+" seconds","info")
+		log("[I] Averge time taken for deletion : "+str(float(end_time-start_time-io_time)/float(processedRows))+" seconds","info")
 main(sys.argv)
