@@ -34,6 +34,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.PolicyACLSummary;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher.MatchType;
 import org.apache.ranger.plugin.service.RangerDefaultRequestProcessor;
@@ -307,18 +308,30 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						policyPriority = evaluator.getPolicyPriority();
 					}
 
-					MatchType matchType = tagMatchTypeMap.get(evaluator.getId());
+					MatchType matchType = tagMatchTypeMap.get(evaluator.getPolicyId());
+
+					boolean isMatched = false;
 
 					if (matchType == null) {
-						matchType = evaluator.getPolicyResourceMatcher().getMatchType(request.getResource(), request.getContext());
-					}
+						for (RangerPolicyResourceEvaluator resourceEvaluator : evaluator.getResourceEvaluators()) {
+							matchType = resourceEvaluator.getPolicyResourceMatcher().getMatchType(request.getResource(), request.getContext());
 
-					final boolean isMatched;
+							if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+								isMatched = matchType != MatchType.NONE;
+							} else {
+								isMatched = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS;
+							}
 
-					if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-						isMatched = matchType != MatchType.NONE;
+							if (isMatched) {
+								break;
+							}
+						}
 					} else {
-						isMatched = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS;
+						if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+							isMatched = matchType != MatchType.NONE;
+						} else {
+							isMatched = matchType == MatchType.SELF || matchType == MatchType.SELF_AND_ALL_DESCENDANTS;
+						}
 					}
 
 					if (!isMatched) {
@@ -1009,10 +1022,10 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 					RangerTagForEval tag = tagEvaluator.getTag();
 
 					allEvaluators.add(evaluator);
-					tagMatchTypeMap.put(evaluator.getId(), tag.getMatchType());
+					tagMatchTypeMap.put(evaluator.getPolicyId(), tag.getMatchType());
 
 					if (CollectionUtils.isNotEmpty(tag.getValidityPeriods())) {
-						policyIdForTemporalTags.add(evaluator.getId());
+						policyIdForTemporalTags.add(evaluator.getPolicyId());
 					}
 				}
 			}
@@ -1166,7 +1179,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 			return;
 		}
 
-		boolean isConditional = policyIdForTemporalTags.contains(evaluator.getId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
+		boolean isConditional = policyIdForTemporalTags.contains(evaluator.getPolicyId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
 
 		for (Map.Entry<String, Map<String, PolicyACLSummary.AccessResult>> userAccessInfo : aclSummary.getUsersAccessInfo().entrySet()) {
 			final String userName = userAccessInfo.getKey();
@@ -1239,7 +1252,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		PolicyACLSummary aclSummary = evaluator.getPolicyACLSummary();
 
 		if (aclSummary != null) {
-			boolean isConditional = policyIdForTemporalTags.contains(evaluator.getId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
+			boolean isConditional = policyIdForTemporalTags.contains(evaluator.getPolicyId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
 
 			for (RowFilterResult rowFilterResult : aclSummary.getRowFilters()) {
 				rowFilterResult = copyRowFilter(rowFilterResult);
@@ -1257,7 +1270,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		PolicyACLSummary aclSummary = evaluator.getPolicyACLSummary();
 
 		if (aclSummary != null) {
-			boolean isConditional = policyIdForTemporalTags.contains(evaluator.getId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
+			boolean isConditional = policyIdForTemporalTags.contains(evaluator.getPolicyId()) || evaluator.getValidityScheduleEvaluatorsCount() != 0;
 
 			for (DataMaskResult dataMaskResult : aclSummary.getDataMasks()) {
 				dataMaskResult = copyDataMask(dataMaskResult);

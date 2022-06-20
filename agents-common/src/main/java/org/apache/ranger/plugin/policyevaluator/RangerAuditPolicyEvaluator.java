@@ -26,7 +26,6 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerServiceDef;
-import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
@@ -82,11 +81,6 @@ public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
     }
 
     @Override
-    public boolean isAncestorOf(RangerResourceDef resourceDef) {
-        return matchAnyResource || super.isAncestorOf(resourceDef);
-    }
-
-    @Override
     public void evaluate(RangerAccessRequest request, RangerAccessResult result) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerAuditPolicyEvaluator.evaluate(" + auditPolicy.getId() + ", " + request + ", " + result + ")");
@@ -119,33 +113,39 @@ public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
     }
 
     private boolean matchResource(RangerAccessRequest request) {
-        final boolean ret;
+        boolean ret = false;
 
         if (!matchAnyResource) {
-            RangerPolicyResourceMatcher.MatchType matchType;
+            for (RangerPolicyResourceEvaluator resourceEvaluator : getResourceEvaluators()) {
+                RangerPolicyResourceMatcher.MatchType matchType;
 
-            if (RangerTagAccessRequest.class.isInstance(request)) {
-                matchType = ((RangerTagAccessRequest) request).getMatchType();
+                if (RangerTagAccessRequest.class.isInstance(request)) {
+                    matchType = ((RangerTagAccessRequest) request).getMatchType();
 
-                if (matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
-                    matchType = RangerPolicyResourceMatcher.MatchType.SELF;
-                }
-            } else {
-                RangerPolicyResourceMatcher resourceMatcher = getPolicyResourceMatcher();
-
-                if (resourceMatcher != null) {
-                    matchType = resourceMatcher.getMatchType(request.getResource(), request.getContext());
+                    if (matchType == RangerPolicyResourceMatcher.MatchType.ANCESTOR) {
+                        matchType = RangerPolicyResourceMatcher.MatchType.SELF;
+                    }
                 } else {
-                    matchType = RangerPolicyResourceMatcher.MatchType.NONE;
-                }
-            }
+                    RangerPolicyResourceMatcher resourceMatcher = resourceEvaluator.getPolicyResourceMatcher();
 
-            if (request.isAccessTypeAny()) {
-                ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-            } else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
-                ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
-            } else {
-                ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
+                    if (resourceMatcher != null) {
+                        matchType = resourceMatcher.getMatchType(request.getResource(), request.getContext());
+                    } else {
+                        matchType = RangerPolicyResourceMatcher.MatchType.NONE;
+                    }
+                }
+
+                if (request.isAccessTypeAny()) {
+                    ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+                } else if (request.getResourceMatchingScope() == RangerAccessRequest.ResourceMatchingScope.SELF_OR_DESCENDANTS) {
+                    ret = matchType != RangerPolicyResourceMatcher.MatchType.NONE;
+                } else {
+                    ret = matchType == RangerPolicyResourceMatcher.MatchType.SELF || matchType == RangerPolicyResourceMatcher.MatchType.SELF_AND_ALL_DESCENDANTS;
+                }
+
+                if (ret) {
+                    break;
+                }
             }
         } else {
             ret = true;

@@ -24,7 +24,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
@@ -32,7 +32,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 
-public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluator {
+public class RangerServiceResourceMatcher implements RangerResourceEvaluator {
 	public static final Comparator<RangerServiceResourceMatcher> ID_COMPARATOR = new IdComparator();
 
 	private final RangerServiceResource       serviceResource;

@@ -51,7 +51,7 @@ public class RangerDefaultDataMaskPolicyItemEvaluator extends RangerDefaultPolic
 			result.setMaskedValue(dataMaskInfo.getValueExpr());
 			result.setIsAccessDetermined(true);
 			result.setPolicyPriority(policyEvaluator.getPolicyPriority());
-			result.setPolicyId(policyEvaluator.getId());
+			result.setPolicyId(policyEvaluator.getPolicyId());
 			result.setReason(getComments());
 			result.setPolicyVersion(policyEvaluator.getPolicy().getVersion());
 
