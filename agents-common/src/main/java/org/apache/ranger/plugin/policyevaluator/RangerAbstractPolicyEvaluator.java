@@ -21,27 +21,38 @@ package org.apache.ranger.plugin.policyevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
+import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvaluator {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractPolicyEvaluator.class);
 
-	private   RangerPolicy        policy;
-	private   RangerServiceDef    serviceDef;
-	private   RangerResourceDef   leafResourceDef;
-	private   int                 evalOrder;
-	protected RangerPluginContext pluginContext = null;
+	private static final AtomicLong NEXT_RESOURCE_EVALUATOR_ID = new AtomicLong(1);
+
+	private   RangerPolicy                        policy;
+	private   RangerServiceDef                    serviceDef;
+	private   boolean                             needsDynamicEval = false;
+	private   int                                 evalOrder;
+	private   List<RangerPolicyResourceEvaluator> resourceEvaluators = Collections.emptyList();
+	protected RangerPluginContext                 pluginContext      = null;
 
 
 	public void setPluginContext(RangerPluginContext pluginContext) { this.pluginContext = pluginContext; }
@@ -54,23 +65,38 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 			LOG.debug("==> RangerAbstractPolicyEvaluator.init(" + policy + ", " + serviceDef + ")");
 		}
 
-		this.policy          = getPrunedPolicy(policy);
-		this.serviceDef      = serviceDef;
-		this.leafResourceDef = ServiceDefUtil.getLeafResourceDef(serviceDef, getPolicyResource());
+		this.policy           = getPrunedPolicy(policy);
+		this.serviceDef       = serviceDef;
+		this.needsDynamicEval = false;
+
+		List<RangerPolicyResourceEvaluator>  resourceEvaluators = new ArrayList<>();
+		RangerDefaultPolicyResourceEvaluator resourceEvaluator  = new RangerDefaultPolicyResourceEvaluator(NEXT_RESOURCE_EVALUATOR_ID.getAndIncrement(), policy.getResources(), getPolicyType(), serviceDef, options.getServiceDefHelper());
+
+		resourceEvaluators.add(resourceEvaluator);
+
+		this.needsDynamicEval = this.needsDynamicEval || resourceEvaluator.getPolicyResourceMatcher().getNeedsDynamicEval();
+
+		if (CollectionUtils.isNotEmpty(policy.getAdditionalResources())) {
+			for (Map<String, RangerPolicyResource> additionalResource : policy.getAdditionalResources()) {
+				resourceEvaluator = new RangerDefaultPolicyResourceEvaluator(NEXT_RESOURCE_EVALUATOR_ID.getAndIncrement(), additionalResource, getPolicyType(), serviceDef, options.getServiceDefHelper());
+
+				resourceEvaluators.add(resourceEvaluator);
+
+				this.needsDynamicEval = this.needsDynamicEval || resourceEvaluator.getPolicyResourceMatcher().getNeedsDynamicEval();
+			}
+		}
+
+		this.resourceEvaluators = resourceEvaluators;
 
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerAbstractPolicyEvaluator.init(" + this.policy + ", " + serviceDef + ")");
 		}
 	}
 
-	@Override
-	public long getId() {
-		return policy != null ? policy.getId() :-1;
-	}
+	public int getPolicyType() {
+		Integer ret = policy != null ? policy.getPolicyType() : null;
 
-	@Override
-	public Map<String, RangerPolicy.RangerPolicyResource> getPolicyResource() {
-		return policy !=null ? policy.getResources() : null;
+		return ret != null ? ret.intValue() : RangerPolicy.POLICY_TYPE_ACCESS;
 	}
 
 	@Override
@@ -79,18 +105,25 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	}
 
 	@Override
+	public long getPolicyId() {
+		Long ret = policy != null ? policy.getId() : null;
+
+		return ret != null ? ret.longValue() : -1;
+	}
+
+	@Override
 	public int getPolicyPriority() {
 		return policy != null && policy.getPolicyPriority() != null ? policy.getPolicyPriority() : RangerPolicy.POLICY_PRIORITY_NORMAL;
 	}
 
 	@Override
-	public RangerServiceDef getServiceDef() {
-		return serviceDef;
+	public List<RangerPolicyResourceEvaluator> getResourceEvaluators() {
+		return resourceEvaluators;
 	}
 
 	@Override
-	public boolean isAncestorOf(RangerResourceDef resourceDef) {
-		return ServiceDefUtil.isAncestorOf(serviceDef, leafResourceDef, resourceDef);
+	public RangerServiceDef getServiceDef() {
+		return serviceDef;
 	}
 
 	public boolean hasAllow() {
@@ -104,6 +137,8 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	public boolean hasDeny() {
 		return policy != null && (policy.getIsDenyAllElse() || CollectionUtils.isNotEmpty(policy.getDenyPolicyItems()));
 	}
+
+	protected boolean needsDynamicEval() { return needsDynamicEval; }
 
 	private RangerPolicy getPrunedPolicy(final RangerPolicy policy) {
 		if(LOG.isDebugEnabled()) {
@@ -198,5 +233,58 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 		sb.append("}");
 
 		return sb;
+	}
+
+	public class RangerDefaultPolicyResourceEvaluator implements RangerPolicyResourceEvaluator {
+		private final long                               id;
+		private final Map<String, RangerPolicyResource>  resource;
+		private final RangerDefaultPolicyResourceMatcher resourceMatcher;
+		private final RangerResourceDef                  leafResourceDef;
+
+		public RangerDefaultPolicyResourceEvaluator(long id, Map<String, RangerPolicyResource> resource, int policyType, RangerServiceDef serviceDef, RangerServiceDefHelper serviceDefHelper) {
+			this.id              = id;
+			this.resource        = resource;
+			this.leafResourceDef = ServiceDefUtil.getLeafResourceDef(serviceDef, resource);
+			this.resourceMatcher = new RangerDefaultPolicyResourceMatcher();
+
+			this.resourceMatcher.setPolicyResources(resource, policyType);
+			this.resourceMatcher.setServiceDef(serviceDef);
+			this.resourceMatcher.setServiceDefHelper(serviceDefHelper);
+			this.resourceMatcher.init();
+		}
+
+		@Override
+		public RangerPolicyEvaluator getPolicyEvaluator() {
+			return RangerAbstractPolicyEvaluator.this;
+		}
+
+		@Override
+		public long getId() {
+			return id;
+		}
+
+		@Override
+		public RangerPolicyResourceMatcher getPolicyResourceMatcher() {
+			return resourceMatcher;
+		}
+
+		@Override
+		public Map<String, RangerPolicyResource> getPolicyResource() {
+			return resource;
+		}
+
+		@Override
+		public RangerResourceMatcher getResourceMatcher(String resourceName) {
+			return resourceMatcher.getResourceMatcher(resourceName);
+		}
+
+		@Override
+		public boolean isAncestorOf(RangerResourceDef resourceDef) {
+			if (resourceMatcher.getPolicyType() == RangerPolicy.POLICY_TYPE_AUDIT && (resource == null || resource.isEmpty())) {
+				return true;
+			} else {
+				return ServiceDefUtil.isAncestorOf(serviceDef, leafResourceDef, resourceDef);
+			}
+		}
 	}
 }

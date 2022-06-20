@@ -32,6 +32,8 @@ public interface RangerPolicyResourceMatcher {
 	enum MatchScope { SELF, SELF_OR_DESCENDANT, SELF_OR_ANCESTOR, DESCENDANT, ANCESTOR, ANY, SELF_AND_ALL_DESCENDANTS}
 	enum MatchType { NONE, SELF, DESCENDANT, ANCESTOR, SELF_AND_ALL_DESCENDANTS}
 
+	void init();
+
 	void setServiceDef(RangerServiceDef serviceDef);
 
 	void setPolicy(RangerPolicy policy);
@@ -41,8 +43,6 @@ public interface RangerPolicyResourceMatcher {
 	void setPolicyResources(Map<String, RangerPolicyResource> policyResources, int policyType);
 
 	void setServiceDefHelper(RangerServiceDefHelper serviceDefHelper);
-
-	void init();
 
 	RangerServiceDef getServiceDef();
 

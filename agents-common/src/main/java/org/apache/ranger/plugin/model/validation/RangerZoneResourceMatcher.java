@@ -23,7 +23,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
@@ -33,7 +33,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator {
+public class RangerZoneResourceMatcher implements RangerResourceEvaluator {
     private static final Logger LOG = LoggerFactory.getLogger(RangerZoneResourceMatcher.class);
 
     private final String                                         securityZoneName;

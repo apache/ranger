@@ -25,7 +25,8 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
@@ -37,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -48,7 +50,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import static org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher.DEFAULT_PATH_SEPARATOR_CHAR;
 import static org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher.OPTION_PATH_SEPARATOR;
 
-public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
+public class RangerResourceTrie<T extends RangerResourceEvaluator> {
     private static final Logger LOG                = LoggerFactory.getLogger(RangerResourceTrie.class);
     private static final Logger TRACE_LOG          = RangerPerfTracer.getPerfLogger("resourcetrie.trace");
     private static final Logger PERF_TRIE_INIT_LOG = RangerPerfTracer.getPerfLogger("resourcetrie.init");
@@ -358,7 +360,7 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
         return dest;
     }
 
-    private TrieNode<T> buildTrie(RangerResourceDef resourceDef, List<T> evaluators, int builderThreadCount) {
+    private <E> TrieNode<T> buildTrie(RangerResourceDef resourceDef, List<E> evaluators, int builderThreadCount) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> buildTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isMultiThreaded=" + (builderThreadCount > 1) + ")");
         }
@@ -393,46 +395,60 @@ public class RangerResourceTrie<T extends RangerPolicyResourceEvaluator> {
             builderThreadMap = null;
         }
 
-        for (T evaluator : evaluators) {
-            Map<String, RangerPolicyResource> policyResources = evaluator.getPolicyResource();
-            RangerPolicyResource              policyResource  = policyResources != null ? policyResources.get(resourceName) : null;
+        for (E evaluator : evaluators) {
+            final List<T> resourceEvaluators;
 
-            if (policyResource == null) {
-                if (evaluator.isAncestorOf(resourceDef)) {
-                    addInheritedEvaluator(evaluator);
-                }
+            if (evaluator instanceof RangerPolicyEvaluator) {
+                resourceEvaluators = (List<T>) ((RangerPolicyEvaluator) evaluator).getResourceEvaluators();
+            } else if (evaluator instanceof RangerResourceEvaluator) {
+                resourceEvaluators = Collections.singletonList((T) evaluator);
+            } else {
+                LOG.error("buildTrie(): unexpected evaluator class " + evaluator.getClass().getCanonicalName());
 
-                continue;
+                resourceEvaluators = Collections.emptyList();
             }
 
-            if (policyResource.getIsExcludes()) {
-                addInheritedEvaluator(evaluator);
-            } else {
-                RangerResourceMatcher resourceMatcher = evaluator.getResourceMatcher(resourceName);
+            for (T resourceEvaluator : resourceEvaluators) {
+                Map<String, RangerPolicyResource> policyResources = resourceEvaluator.getPolicyResource();
+                RangerPolicyResource              policyResource  = policyResources != null ? policyResources.get(resourceName) : null;
 
-                if (resourceMatcher != null && (resourceMatcher.isMatchAny())) {
-                    ret.addWildcardEvaluator(evaluator);
+                if (policyResource == null) {
+                    if (resourceEvaluator.isAncestorOf(resourceDef)) {
+                        addInheritedEvaluator(resourceEvaluator);
+                    }
+
+                    continue;
+                }
+
+                if (policyResource.getIsExcludes()) {
+                    addInheritedEvaluator(resourceEvaluator);
                 } else {
-                    if (CollectionUtils.isNotEmpty(policyResource.getValues())) {
-                        for (String resource : policyResource.getValues()) {
-                            if (!isMultiThreaded) {
-                                insert(ret, resource, policyResource.getIsRecursive(), evaluator);
-                            } else {
-                                try {
-                                    lastUsedThreadIndex = insert(ret, resource, policyResource.getIsRecursive(), evaluator, builderThreadMap, builderThreads, lastUsedThreadIndex);
-                                } catch (InterruptedException ex) {
-                                    LOG.error("Failed to dispatch " + resource + " to " + builderThreads.get(lastUsedThreadIndex));
-                                    LOG.error("Failing and retrying with one thread");
+                    RangerResourceMatcher resourceMatcher = resourceEvaluator.getResourceMatcher(resourceName);
 
-                                    ret = null;
+                    if (resourceMatcher != null && (resourceMatcher.isMatchAny())) {
+                        ret.addWildcardEvaluator(resourceEvaluator);
+                    } else {
+                        if (CollectionUtils.isNotEmpty(policyResource.getValues())) {
+                            for (String resource : policyResource.getValues()) {
+                                if (!isMultiThreaded) {
+                                    insert(ret, resource, policyResource.getIsRecursive(), resourceEvaluator);
+                                } else {
+                                    try {
+                                        lastUsedThreadIndex = insert(ret, resource, policyResource.getIsRecursive(), resourceEvaluator, builderThreadMap, builderThreads, lastUsedThreadIndex);
+                                    } catch (InterruptedException ex) {
+                                        LOG.error("Failed to dispatch " + resource + " to " + builderThreads.get(lastUsedThreadIndex));
+                                        LOG.error("Failing and retrying with one thread");
 
-                                    break;
+                                        ret = null;
+
+                                        break;
+                                    }
                                 }
                             }
-                        }
 
-                        if (ret == null) {
-                            break;
+                            if (ret == null) {
+                                break;
+                            }
                         }
                     }
                 }

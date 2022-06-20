@@ -539,19 +539,21 @@ public abstract class RangerValidator {
 
 	/**
 	 * Converts, in place, the resources defined in the policy to have lower-case resource-def-names
-	 * @param policy
+	 * @param resources
 	 * @return
 	 */
 
-	void convertPolicyResourceNamesToLower(RangerPolicy policy) {
+	void convertPolicyResourceNamesToLower(Map<String, RangerPolicyResource> resources) {
 		Map<String, RangerPolicyResource> lowerCasePolicyResources = new HashMap<>();
-		if (policy.getResources() != null) {
-			for (Map.Entry<String, RangerPolicyResource> entry : policy.getResources().entrySet()) {
+		if (resources != null) {
+			for (Map.Entry<String, RangerPolicyResource> entry : resources.entrySet()) {
 				String lowerCasekey = entry.getKey().toLowerCase();
 				lowerCasePolicyResources.put(lowerCasekey, entry.getValue());
 			}
+
+			resources.clear();
+			resources.putAll(lowerCasePolicyResources);
 		}
-		policy.setResources(lowerCasePolicyResources);
 	}
 
 	Map<String, String> getValidationRegExes(RangerServiceDef serviceDef) {

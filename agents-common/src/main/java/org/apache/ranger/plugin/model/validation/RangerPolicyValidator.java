@@ -489,6 +489,15 @@ public class RangerPolicyValidator extends RangerValidator {
 				valid = isValidResourceNames(policy, failures, serviceDef) && valid;
 				valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
 				valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName(), isAdmin) && valid;
+
+				List<Map<String, RangerPolicyResource>> additionalResources = policy.getAdditionalResources();
+
+				if (additionalResources != null) {
+					for (Map<String, RangerPolicyResource> additionalResource : additionalResources) {
+						valid = isValidResourceValues(additionalResource, failures, serviceDef) && valid;
+						valid = isValidResourceFlags(additionalResource, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName(), isAdmin) && valid;
+					}
+				}
 			}
 		}
 
@@ -565,17 +574,43 @@ public class RangerPolicyValidator extends RangerValidator {
 	}
 	
 	boolean isValidResourceNames(final RangerPolicy policy, final List<ValidationFailureDetails> failures, final RangerServiceDef serviceDef) {
-		
-		if(LOG.isDebugEnabled()) {
+
+		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerPolicyValidator.isValidResourceNames(%s, %s, %s)", policy, failures, serviceDef));
 		}
 
 		boolean valid = true;
-		convertPolicyResourceNamesToLower(policy);
-		Set<String> policyResources = policy.getResources().keySet();
+
+		Map<String, RangerPolicyResource> resources = policy.getResources();
+
+		if (resources != null) {
+			valid = isValidResourceNames(resources, failures, serviceDef, policy.getPolicyType()) && valid;
+
+			List<Map<String, RangerPolicyResource>> additionalResources  = policy.getAdditionalResources();
+
+			if (additionalResources != null) {
+				for (Map<String, RangerPolicyResource> additionalResource : additionalResources) {
+					valid = isValidResourceNames(additionalResource, failures, serviceDef, policy.getPolicyType()) && valid;
+				}
+			}
+
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceNames(%s, %s, %s): %s", policy, failures, serviceDef, valid));
+		}
+
+		return valid;
+	}
+
+	boolean isValidResourceNames(Map<String, RangerPolicyResource> resources, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef, Integer policyType) {
+		boolean valid = true;
+
+		convertPolicyResourceNamesToLower(resources);
+		Set<String> policyResources = resources.keySet();
 
 		RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef);
-		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(policy.getPolicyType()); // this can be empty but not null!
+		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(policyType); // this can be empty but not null!
 		if (hierarchies.isEmpty()) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies, possibly due to invalid service def!!");
@@ -650,7 +685,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceNames(%s, %s, %s): %s", policy, failures, serviceDef, valid));
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceNames(%s, %s, %s): %s", resources, failures, serviceDef, valid));
 		}
 		return valid;
 	}

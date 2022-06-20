@@ -29,7 +29,6 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -68,27 +67,28 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	// For future use
 	private static final long serialVersionUID = 1L;
 
-	private String                            service;
-	private String                            name;
-	private Integer                           policyType;
-	private Integer                           policyPriority;
-	private String                            description;
-	private String							  resourceSignature;
-	private Boolean                           isAuditEnabled;
-	private Map<String, RangerPolicyResource> resources;
-	private List<RangerPolicyItemCondition>   conditions;
-	private List<RangerPolicyItem>            policyItems;
-	private List<RangerPolicyItem>            denyPolicyItems;
-	private List<RangerPolicyItem>            allowExceptions;
-	private List<RangerPolicyItem>            denyExceptions;
-	private List<RangerDataMaskPolicyItem>    dataMaskPolicyItems;
-	private List<RangerRowFilterPolicyItem>   rowFilterPolicyItems;
-	private String                            serviceType;
-	private Map<String, Object>               options;
-	private List<RangerValiditySchedule>      validitySchedules;
-	private List<String>                      policyLabels;
-	private String                            zoneName;
-	private Boolean                           isDenyAllElse;
+	private String                                  service;
+	private String                                  name;
+	private Integer                                 policyType;
+	private Integer                                 policyPriority;
+	private String                                  description;
+	private String                                  resourceSignature;
+	private Boolean                                 isAuditEnabled;
+	private Map<String, RangerPolicyResource>       resources;
+	private List<Map<String, RangerPolicyResource>> additionalResources;
+	private List<RangerPolicyItemCondition>         conditions;
+	private List<RangerPolicyItem>                  policyItems;
+	private List<RangerPolicyItem>                  denyPolicyItems;
+	private List<RangerPolicyItem>                  allowExceptions;
+	private List<RangerPolicyItem>                  denyExceptions;
+	private List<RangerDataMaskPolicyItem>          dataMaskPolicyItems;
+	private List<RangerRowFilterPolicyItem>         rowFilterPolicyItems;
+	private String                                  serviceType;
+	private Map<String, Object>                     options;
+	private List<RangerValiditySchedule>            validitySchedules;
+	private List<String>                            policyLabels;
+	private String                                  zoneName;
+	private Boolean                                 isDenyAllElse;
 
 	public RangerPolicy() {
 		this(null, null, null, null, null, null, null, null, null, null, null);
@@ -155,6 +155,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		setResourceSignature(other.getResourceSignature());
 		setIsAuditEnabled(other.getIsAuditEnabled());
 		setResources(other.getResources());
+		setAdditionalResources(other.getAdditionalResources());
 		setConditions(other.getConditions());
 		setPolicyItems(other.getPolicyItems());
 		setDenyPolicyItems(other.getDenyPolicyItems());
@@ -320,6 +321,28 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		if(resources != null) {
 			for(Map.Entry<String, RangerPolicyResource> e : resources.entrySet()) {
 				this.resources.put(e.getKey(), e.getValue());
+			}
+		}
+	}
+
+	public List<Map<String, RangerPolicyResource>> getAdditionalResources() {
+		return additionalResources;
+	}
+
+	public void setAdditionalResources(List<Map<String, RangerPolicyResource>> additionalResources) {
+		this.additionalResources = additionalResources;
+	}
+
+	public void addResource(Map<String, RangerPolicyResource> resources) {
+		if (resources != null && !resources.isEmpty()) {
+			if (this.resources == null || this.resources.isEmpty()) {
+				this.resources = resources;
+			} else {
+				if (this.additionalResources == null) {
+					this.additionalResources = new ArrayList<>();
+				}
+
+				this.additionalResources.add(resources);
 			}
 		}
 	}
@@ -558,6 +581,19 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			}
 		}
 		sb.append("} ");
+		sb.append("additionalResources={");
+		if(additionalResources != null) {
+			for(Map<String, RangerPolicyResource> additionalResource : additionalResources) {
+				sb.append("{");
+				for(Map.Entry<String, RangerPolicyResource> e : additionalResource.entrySet()) {
+					sb.append(e.getKey()).append("={");
+					e.getValue().toString(sb);
+					sb.append("} ");
+				}
+				sb.append("} ");
+			}
+		}
+		sb.append("} ");
                 sb.append("policyLabels={");
                 if(policyLabels != null) {
                         for(String policyLabel : policyLabels) {
@@ -650,7 +686,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 
         //sb.append("validitySchedules={").append(validitySchedules).append("} ");
         sb.append("validitySchedules={");
-        if (CollectionUtils.isNotEmpty(validitySchedules)) {
+        if (validitySchedules != null) {
             for (RangerValiditySchedule schedule : validitySchedules) {
                 if (schedule != null) {
                     sb.append("schedule={").append(schedule).append("}");

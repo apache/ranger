@@ -21,7 +21,7 @@ package org.apache.ranger.plugin.policyengine;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
@@ -39,22 +39,21 @@ import static org.junit.Assert.assertEquals;
 
 
 public class TestPathResourceTrie {
-	private static final RangerResourceDef   PATH_RESOURCE_DEF      = getPathResourceDef();
+	private static final RangerResourceDef       PATH_RESOURCE_DEF = getPathResourceDef();
+	private static final RangerResourceEvaluator EVAL_             = getEvaluator("/");
+	private static final RangerResourceEvaluator EVAL_nr           = getEvaluator("/", false, false);
+	private static final RangerResourceEvaluator EVAL_HOME         = getEvaluator("/home");
+	private static final RangerResourceEvaluator EVAL_HOME_        = getEvaluator("/home/");
+	private static final RangerResourceEvaluator EVAL_TMPnr        = getEvaluator("/tmp", false, false);
+	private static final RangerResourceEvaluator EVAL_TMP_nr       = getEvaluator("/tmp/", false, false);
+	private static final RangerResourceEvaluator EVAL_TMP_AB       = getEvaluator("/tmp/ab");
+	private static final RangerResourceEvaluator EVAL_TMP_A_B      = getEvaluator("/tmp/a/b");
+	private static final RangerResourceEvaluator EVAL_TMP_AC_D_E_F = getEvaluator("/tmp/ac/d/e/f");
+	private static final RangerResourceEvaluator EVAL_TMPFILE      = getEvaluator("/tmpfile");
+	private static final RangerResourceEvaluator EVAL_TMPdTXT      = getEvaluator("/tmp.txt");
+	private static final RangerResourceEvaluator EVAL_TMPA_B       = getEvaluator("/tmpa/b");
 
-	private static final RangerPolicyResourceEvaluator EVAL_             = getEvaluator("/");
-	private static final RangerPolicyResourceEvaluator EVAL_nr           = getEvaluator("/", false, false);
-	private static final RangerPolicyResourceEvaluator EVAL_HOME         = getEvaluator("/home");
-	private static final RangerPolicyResourceEvaluator EVAL_HOME_        = getEvaluator("/home/");
-	private static final RangerPolicyResourceEvaluator EVAL_TMPnr        = getEvaluator("/tmp", false, false);
-	private static final RangerPolicyResourceEvaluator EVAL_TMP_nr       = getEvaluator("/tmp/", false, false);
-	private static final RangerPolicyResourceEvaluator EVAL_TMP_AB       = getEvaluator("/tmp/ab");
-	private static final RangerPolicyResourceEvaluator EVAL_TMP_A_B      = getEvaluator("/tmp/a/b");
-	private static final RangerPolicyResourceEvaluator EVAL_TMP_AC_D_E_F = getEvaluator("/tmp/ac/d/e/f");
-	private static final RangerPolicyResourceEvaluator EVAL_TMPFILE      = getEvaluator("/tmpfile");
-	private static final RangerPolicyResourceEvaluator EVAL_TMPdTXT      = getEvaluator("/tmp.txt");
-	private static final RangerPolicyResourceEvaluator EVAL_TMPA_B       = getEvaluator("/tmpa/b");
-
-	private static final List<RangerPolicyResourceEvaluator> EVALUATORS = Arrays.asList(EVAL_,
+	private static final List<RangerResourceEvaluator> EVALUATORS = Arrays.asList(EVAL_,
 																						EVAL_nr,
 																						EVAL_HOME,
 																						EVAL_HOME_,
@@ -68,7 +67,7 @@ public class TestPathResourceTrie {
 																						EVAL_TMPA_B
 																						);
 
-	private final RangerResourceTrie<RangerPolicyResourceEvaluator> trie = new RangerResourceTrie<>(PATH_RESOURCE_DEF, EVALUATORS);
+	private final RangerResourceTrie<RangerResourceEvaluator> trie = new RangerResourceTrie<>(PATH_RESOURCE_DEF, EVALUATORS);
 
 	@Test
 	public void testChildrenScope() {
@@ -100,9 +99,9 @@ public class TestPathResourceTrie {
 		verifyEvaluators("invalid: does-not-begin-with-sep", scope);
 	}
 
-	private void verifyEvaluators(String resource, RangerAccessRequest.ResourceMatchingScope scope, RangerPolicyResourceEvaluator... evaluators) {
-		Set<RangerPolicyResourceEvaluator> expected = evaluators.length == 0 ? null : new HashSet<>(Arrays.asList(evaluators));
-		Set<RangerPolicyResourceEvaluator> result   = trie.getEvaluatorsForResource(resource, scope);
+	private void verifyEvaluators(String resource, RangerAccessRequest.ResourceMatchingScope scope, RangerResourceEvaluator... evaluators) {
+		Set<RangerResourceEvaluator> expected = evaluators.length == 0 ? null : new HashSet<>(Arrays.asList(evaluators));
+		Set<RangerResourceEvaluator> result   = trie.getEvaluatorsForResource(resource, scope);
 
 		assertEquals("incorrect evaluators for resource "  + resource, expected, result);
 	}
@@ -125,15 +124,15 @@ public class TestPathResourceTrie {
 		return ret;
 	}
 
-	private static RangerPolicyResourceEvaluator getEvaluator(String resource) {
+	private static RangerResourceEvaluator getEvaluator(String resource) {
 		return  new TestPolicyResourceEvaluator(new RangerPolicyResource(resource, false, true));
 	}
 
-	private static RangerPolicyResourceEvaluator getEvaluator(String resource, boolean  isExcludes, boolean isRecursive) {
+	private static RangerResourceEvaluator getEvaluator(String resource, boolean  isExcludes, boolean isRecursive) {
 		return  new TestPolicyResourceEvaluator(new RangerPolicyResource(resource, isExcludes, isRecursive));
 	}
 
-	private static class TestPolicyResourceEvaluator implements RangerPolicyResourceEvaluator {
+	private static class TestPolicyResourceEvaluator implements RangerResourceEvaluator {
 		private static long nextId = 1;
 
 		private final long                  id;

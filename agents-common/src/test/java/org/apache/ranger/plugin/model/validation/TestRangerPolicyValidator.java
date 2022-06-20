@@ -811,7 +811,30 @@ public class TestRangerPolicyValidator {
 		_failures.clear(); Assert.assertFalse("Policy with resources for multiple hierarchies missing mandatory resources for all pontential matches", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
 		_utils.checkFailureForSemanticError(_failures, "policy resources", "missing mandatory");
 	}
-	
+
+	@Test
+	public void test_isValidResource_additionalResources() throws Exception {
+		String                                  serviceName         = "a-service-def";
+		Date                                    now                 = new Date();
+		List<RangerResourceDef>                 resourceDefs        = _utils.createResourceDefs(resourceDefData_multipleHierarchies);
+		Map<String, RangerPolicyResource>       resources           = _utils.createPolicyResourceMap(policyResourceMap_good);
+		List<Map<String, RangerPolicyResource>> additionalResources = new ArrayList<>();
+
+		when(_serviceDef.getName()).thenReturn(serviceName );
+		when(_serviceDef.getUpdateTime()).thenReturn(now);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		when(_policy.getResources()).thenReturn(resources);
+		when(_policy.getAdditionalResources()).thenReturn(additionalResources);
+
+		Assert.assertTrue("valid resources and empty additionalResources", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+
+		additionalResources.add(_utils.createPolicyResourceMap(policyResourceMap_good));
+		Assert.assertTrue("valid resources and additionalResources[0]", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+
+		additionalResources.add(_utils.createPolicyResourceMap(policyResourceMap_bad));
+		Assert.assertFalse("valid resources and invalid additionalResources[1]", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+	}
+
 	@Test
 	public final void test_isValidServiceWithZone_happyPath() throws Exception{
 		boolean isAdmin = true;

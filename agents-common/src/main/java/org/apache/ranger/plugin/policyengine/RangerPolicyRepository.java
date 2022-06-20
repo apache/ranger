@@ -39,6 +39,7 @@ import org.apache.ranger.plugin.policyevaluator.RangerAuditPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerCachedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerOptimizedPolicyEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.store.AbstractServiceStore;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
@@ -701,20 +702,20 @@ public class RangerPolicyRepository {
             perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_OP_LOG, "RangerPolicyRepository.getLikelyMatchEvaluators(resource=" + resource.getAsString() + ")");
         }
 
-        List<String>                     resourceKeys = resource == null ? null : options.getServiceDefHelper().getOrderedResourceNames(resource.getKeys());
-        Set<RangerPolicyEvaluator>       smallestList = null;
+        List<String>                       resourceKeys = resource == null ? null : options.getServiceDefHelper().getOrderedResourceNames(resource.getKeys());
+        Set<RangerPolicyResourceEvaluator> smallestList = null;
 
         if (CollectionUtils.isNotEmpty(resourceKeys)) {
 
             for (String resourceName : resourceKeys) {
-                RangerResourceTrie<RangerPolicyEvaluator> trie = resourceTrie.get(resourceName);
+                RangerResourceTrie<RangerPolicyResourceEvaluator> trie = resourceTrie.get(resourceName);
 
                 if (trie == null) { // if no trie exists for this resource level, ignore and continue to next level
                     continue;
                 }
 
-                Set<RangerPolicyEvaluator> serviceResourceMatchersForResource = trie.getEvaluatorsForResource(resource.getValue(resourceName), request.getResourceMatchingScope());
-                Set<RangerPolicyEvaluator> inheritedResourceMatchers = trie.getInheritedEvaluators();
+                Set<RangerPolicyResourceEvaluator> serviceResourceMatchersForResource = trie.getEvaluatorsForResource(resource.getValue(resourceName), request.getResourceMatchingScope());
+                Set<RangerPolicyResourceEvaluator> inheritedResourceMatchers          = trie.getInheritedEvaluators();
 
                 if (smallestList != null) {
                     if (CollectionUtils.isEmpty(inheritedResourceMatchers) && CollectionUtils.isEmpty(serviceResourceMatchersForResource)) {
@@ -724,7 +725,7 @@ public class RangerPolicyRepository {
                     } else if (CollectionUtils.isEmpty(serviceResourceMatchersForResource)) {
                         smallestList.retainAll(inheritedResourceMatchers);
                     } else {
-                        Set<RangerPolicyEvaluator> smaller, bigger;
+                        Set<RangerPolicyResourceEvaluator> smaller, bigger;
                         if (serviceResourceMatchersForResource.size() < inheritedResourceMatchers.size()) {
                             smaller = serviceResourceMatchersForResource;
                             bigger = inheritedResourceMatchers;
@@ -732,7 +733,7 @@ public class RangerPolicyRepository {
                             smaller = inheritedResourceMatchers;
                             bigger = serviceResourceMatchersForResource;
                         }
-                        Set<RangerPolicyEvaluator> tmp = new HashSet<>();
+                        Set<RangerPolicyResourceEvaluator> tmp = new HashSet<>();
                         if (smallestList.size() < smaller.size()) {
                             smallestList.stream().filter(smaller::contains).forEach(tmp::add);
                             smallestList.stream().filter(bigger::contains).forEach(tmp::add);
@@ -748,7 +749,7 @@ public class RangerPolicyRepository {
                     }
                 } else {
                     if (CollectionUtils.isEmpty(inheritedResourceMatchers) || CollectionUtils.isEmpty(serviceResourceMatchersForResource)) {
-                        Set<RangerPolicyEvaluator> tmp = CollectionUtils.isEmpty(inheritedResourceMatchers) ? serviceResourceMatchersForResource : inheritedResourceMatchers;
+                        Set<RangerPolicyResourceEvaluator> tmp = CollectionUtils.isEmpty(inheritedResourceMatchers) ? serviceResourceMatchersForResource : inheritedResourceMatchers;
                         smallestList = resourceKeys.size() == 1 || CollectionUtils.isEmpty(tmp) ? tmp : new HashSet<>(tmp);
                     } else {
                         smallestList = new HashSet<>(serviceResourceMatchersForResource);
@@ -764,8 +765,31 @@ public class RangerPolicyRepository {
         }
 
         if (smallestList != null) {
-            ret = new ArrayList<>(smallestList);
-            ret.sort(RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR);
+            if (smallestList.size() == 0) {
+                ret = new ArrayList<>();
+            } else if (smallestList.size() == 1) {
+                ret = new ArrayList<>(1);
+
+                for (RangerPolicyResourceEvaluator resourceEvaluator : smallestList) {
+                    RangerPolicyEvaluator policyEvaluator = resourceEvaluator.getPolicyEvaluator();
+
+                    ret.add(policyEvaluator);
+                }
+            } else {
+                ret = new ArrayList<>(smallestList.size());
+
+                Set<Long> policyIds = new HashSet<>();
+
+                for (RangerPolicyResourceEvaluator resourceEvaluator : smallestList) {
+                    RangerPolicyEvaluator policyEvaluator = resourceEvaluator.getPolicyEvaluator();
+
+                    if (policyIds.add(policyEvaluator.getPolicyId())) {
+                        ret.add(policyEvaluator);
+                    }
+                }
+
+                ret.sort(RangerPolicyEvaluator.EVAL_ORDER_COMPARATOR);
+            }
         }
 
         RangerPerfTracer.logAlways(perf);
@@ -1224,7 +1248,7 @@ public class RangerPolicyRepository {
 
             String resourceDefName = resourceDef.getName();
 
-            RangerResourceTrie<RangerPolicyEvaluator> trie = trieMap.get(resourceDefName);
+            RangerResourceTrie<RangerPolicyResourceEvaluator> trie = trieMap.get(resourceDefName);
 
             if (trie == null) {
                 if (RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE == policyDeltaType || RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE == policyDeltaType) {
@@ -1251,18 +1275,23 @@ public class RangerPolicyRepository {
         }
     }
 
-    private void addEvaluatorToTrie(RangerPolicyEvaluator newEvaluator, RangerResourceTrie<RangerPolicyEvaluator> trie, String resourceDefName) {
+    private void addEvaluatorToTrie(RangerPolicyEvaluator newEvaluator, RangerResourceTrie<RangerPolicyResourceEvaluator> trie, String resourceDefName) {
         if (newEvaluator != null) {
-            RangerPolicy.RangerPolicyResource resource = newEvaluator.getPolicyResource().get(resourceDefName);
-            trie.add(resource, newEvaluator);
+            for (RangerPolicyResourceEvaluator resourceEvaluator : newEvaluator.getResourceEvaluators()) {
+                RangerPolicy.RangerPolicyResource resource = resourceEvaluator.getPolicyResource().get(resourceDefName);
+
+                trie.add(resource, resourceEvaluator);
+            }
         } else {
             LOG.warn("Unexpected: newPolicyEvaluator is null for resource:[" + resourceDefName + "]");
         }
     }
 
-    private void removeEvaluatorFromTrie(RangerPolicyEvaluator oldEvaluator, RangerResourceTrie<RangerPolicyEvaluator> trie, String resourceDefName) {
+    private void removeEvaluatorFromTrie(RangerPolicyEvaluator oldEvaluator, RangerResourceTrie<RangerPolicyResourceEvaluator> trie, String resourceDefName) {
         if (oldEvaluator != null) {
-            trie.delete(oldEvaluator.getPolicyResource().get(resourceDefName), oldEvaluator);
+            for (RangerPolicyResourceEvaluator resourceEvaluator : oldEvaluator.getResourceEvaluators()) {
+                trie.delete(resourceEvaluator.getPolicyResource().get(resourceDefName), resourceEvaluator);
+            }
         }
     }
 

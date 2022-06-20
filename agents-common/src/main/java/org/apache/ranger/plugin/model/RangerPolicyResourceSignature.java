@@ -132,7 +132,7 @@ public class RangerPolicyResourceSignature {
 			}
 			return valid;
 		}
-		
+
 		@Override
 		public String toString() {
 			// invalid/empty policy gets a deterministic signature as if it had an
@@ -144,13 +144,9 @@ public class RangerPolicyResourceSignature {
 			if (_policy.getPolicyType() != null) {
 				type = _policy.getPolicyType();
 			}
-			Map<String, ResourceSerializer> resources = new TreeMap<>();
-			for (Map.Entry<String, RangerPolicyResource> entry : _policy.getResources().entrySet()) {
-				String resourceName = entry.getKey();
-				ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
-				resources.put(resourceName, resourceView);
-			}
-			String resource = resources.toString();
+
+			String resource = toSignatureString(_policy.getResources(), _policy.getAdditionalResources());
+
 			if (CollectionUtils.isNotEmpty(_policy.getValiditySchedules())) {
 				resource += _policy.getValiditySchedules().toString();
 			}
@@ -173,6 +169,39 @@ public class RangerPolicyResourceSignature {
 			return result;
 		}
 
+	}
+
+	public static String toSignatureString(Map<String, RangerPolicyResource> resource) {
+		Map<String, ResourceSerializer> resources = new TreeMap<>();
+
+		for (Map.Entry<String, RangerPolicyResource> entry : resource.entrySet()) {
+			String             resourceName = entry.getKey();
+			ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
+
+			resources.put(resourceName, resourceView);
+		}
+
+		return resources.toString();
+	}
+
+	public static String toSignatureString(Map<String, RangerPolicyResource> resource, List<Map<String, RangerPolicyResource>> additionalResources) {
+		String ret = toSignatureString(resource);
+
+		if (additionalResources != null && !additionalResources.isEmpty()) {
+			List<String> signatures = new ArrayList<>(additionalResources.size() + 1);
+
+			signatures.add(ret);
+
+			for (Map<String, RangerPolicyResource> additionalResource : additionalResources) {
+				signatures.add(toSignatureString(additionalResource));
+			}
+
+			Collections.sort(signatures);
+
+			ret = signatures.toString();
+		}
+
+		return ret;
 	}
 
 	static public class ResourceSerializer {

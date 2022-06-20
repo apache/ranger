@@ -26,7 +26,7 @@ import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
 import java.util.Map;
 
-public interface RangerPolicyResourceEvaluator {
+public interface RangerResourceEvaluator {
     long getId();
 
     RangerPolicyResourceMatcher getPolicyResourceMatcher();
