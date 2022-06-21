@@ -48,7 +48,6 @@ public class MetricsREST {
     private static final String JVM_MACHINE_ACTUAL_NAME = RUNTIME.getVmName();
     private static final String VERSION = RUNTIME.getVmVersion();
     private static final String JVM_MACHINE_REPRESENTATION_NAME = RUNTIME.getName();
-    private static final long UP_TIME_OF_JVM = RUNTIME.getUptime();
     private static final String JVM_VENDOR_NAME =  RUNTIME.getVmVendor();
 
     @Autowired
@@ -67,7 +66,7 @@ public class MetricsREST {
         vmDetails.put("JVM Machine Actual Name", JVM_MACHINE_ACTUAL_NAME);
         vmDetails.put("version", VERSION);
         vmDetails.put("JVM Machine Representation Name", JVM_MACHINE_REPRESENTATION_NAME);
-        vmDetails.put("Up time of JVM", UP_TIME_OF_JVM);
+        vmDetails.put("Up time of JVM", RUNTIME.getUptime());
         vmDetails.put("JVM Vendor Name", JVM_VENDOR_NAME);
         vmDetails.putAll(jvmMetricUtil.getValues());
         jvm.put("jvm",vmDetails);
