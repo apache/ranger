@@ -370,6 +370,9 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
 			newPolicyForNewResource.setConditions(exPolicy.getConditions());
 			newPolicyForNewResource.setIsDenyAllElse(exPolicy.getIsDenyAllElse());
 			newPolicyForNewResource.setZoneName(exPolicy.getZoneName());
+			newPolicyForNewResource.setIsEnabled(exPolicy.getIsEnabled());
+			newPolicyForNewResource.setIsAuditEnabled(exPolicy.getIsAuditEnabled());
+			newPolicyForNewResource.setPolicyType(exPolicy.getPolicyType());
 
 			try {
 				if (isAllResources) {
@@ -406,6 +409,9 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
         newPolicy.setResources(resForNewPol);
         newPolicy.setResourceSignature(null);
         newPolicy.setGuid(null);
+        if (logger.isDebugEnabled()) {
+            logger.debug("newPolicy:"+newPolicy);
+        }
         this.svcDBStore.createPolicy(newPolicy);
     }
 
