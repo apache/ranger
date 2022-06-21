@@ -27,8 +27,8 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerValidatorFactory;
@@ -45,6 +45,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
+import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
@@ -52,12 +53,14 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
-    private static final Logger logger             = Logger.getLogger(PatchForSolrSvcDefAndPoliciesUpdate_J10055.class);
+    private static final Logger logger             = LoggerFactory.getLogger(PatchForSolrSvcDefAndPoliciesUpdate_J10055.class);
     private static final String ACCESS_TYPE_UPDATE = "update";
     private static final String ACCESS_TYPE_QUERY  = "query";
     private static final String ACCESS_TYPE_ADMIN  = "solr_admin";
@@ -69,6 +72,8 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
     private static final String ACCESS_TYPE_ADMIN_TAG  = "solr:solr_admin";
     private static final String ACCESS_TYPE_OTHERS_TAG = "solr:others";
     private enum NEW_RESOURCE { admin, config, schema }
+
+    private static final String SVC_ACCESS_TYPE_CONFIG_SUFFIX = "accessTypes";
 
     private static final String     SOLR_SVC_DEF_NAME      = EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_SOLR_NAME;
     private static RangerServiceDef embeddedSolrServiceDef = null;
@@ -134,7 +139,7 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
                 throw new RuntimeException("Error while updating " + SOLR_SVC_DEF_NAME + " service-def");
             }
         } catch (Exception e) {
-            logger.error("Error whille executing PatchForSolrSvcDefAndPoliciesUpdate_J10055.", e);
+            logger.error("Error whille executing PatchForSolrSvcDefAndPoliciesUpdate_J10055 - ", e);
             System.exit(1);
         }
 
@@ -142,7 +147,7 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
 			// For RANGER-3725 - Update atlas default audit filter
 			updateDefaultAuditFilter(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME);
 		} catch (Throwable t) {
-			logger.error("Failed to update atlas default audit filter, Error - ", t);
+			logger.error("Failed to update atlas default audit filter - ", t);
 			System.exit(1);
 		}
 
@@ -159,6 +164,7 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
 				filter.setParam(SearchFilter.FETCH_ZONE_UNZONE_POLICIES, "true");
 				updateResPolicies(svcDBStore.getServicePolicies(dbService.getId(), filter));
 				updateZoneResourceMapping(dbService);
+				updateServiceConfig(dbService);
 			}
 		}
 		logger.info("<== PatchForSolrSvcDefAndPoliciesUpdate_J10055.updateExistingRangerResPolicy(...)");
@@ -236,8 +242,7 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
                     updateTagPolicyItemAccess(exPolicy.getDenyExceptions());
                     this.svcDBStore.updatePolicy(exPolicy);
                 } catch (Exception e) {
-                    logger.error("Failed to apply the patch, Error - " + e.getCause());
-                    e.printStackTrace();
+                    logger.error("Failed to apply the patch - ", e);
                     System.exit(1);
                 }
             }
@@ -297,8 +302,7 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
                         }
 
                     } catch (Exception e) {
-                        logger.error("Failed to apply the patch, Error Msg - " + e.getCause());
-                        e.printStackTrace();
+                        logger.error("Failed to apply the patch - ", e);
                         System.exit(1);
                     }
                 }
@@ -310,8 +314,7 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
                     updateResPolicyItemAccess(exPolicy.getDenyExceptions());
                     this.svcDBStore.updatePolicy(exPolicy);
                 } catch (Exception e) {
-                    logger.error("Failed to apply the patch, Error - " + e.getCause());
-                    e.printStackTrace();
+                    logger.error("Failed to apply the patch - ", e);
                     System.exit(1);
                 }
             }
@@ -478,6 +481,39 @@ public class PatchForSolrSvcDefAndPoliciesUpdate_J10055 extends BaseLoader {
         }
         logger.info("<== PatchForSolrSvcDefAndPoliciesUpdate_J10055.deleteOldAccessTypeRefs(" + svcDefId + ")");
     }
+
+	private void updateServiceConfig(final XXService dbService) throws Exception {
+
+		final RangerService rangerSvc = this.svcDBStore.getService(dbService.getId());
+		final Map<String, String> configMap = rangerSvc != null ? rangerSvc.getConfigs() : null;
+		Set<String> accessTypeSet = new HashSet<String>();
+
+		if (MapUtils.isNotEmpty(configMap)) {
+			for (final Map.Entry<String, String> entry : configMap.entrySet()) {
+				final String configKey = entry.getKey();
+				final String configValue = entry.getValue();
+				accessTypeSet = new HashSet<String>();
+				if (StringUtils.endsWith(configKey, SVC_ACCESS_TYPE_CONFIG_SUFFIX) && StringUtils.isNotEmpty(configValue)) {
+					final String[] accessTypeArray = configValue.split(",");
+					for (String access : accessTypeArray) {
+						if (!ACCESS_TYPE_OTHERS.equalsIgnoreCase(access) && !ACCESS_TYPE_ADMIN.equalsIgnoreCase(access)) {
+							accessTypeSet.add(access);
+						} else {
+							if (ACCESS_TYPE_ADMIN.equalsIgnoreCase(access)) {
+								accessTypeSet.add(ACCESS_TYPE_QUERY);
+								accessTypeSet.add(ACCESS_TYPE_UPDATE);
+							} else if (ACCESS_TYPE_OTHERS.equalsIgnoreCase(access)) {
+								accessTypeSet.add(ACCESS_TYPE_QUERY);
+							}
+						}
+					}
+					configMap.put(configKey, StringUtils.join(accessTypeSet, ","));
+				}
+			}
+			rangerSvc.setConfigs(configMap);
+			this.svcDBStore.updateService(rangerSvc, null);
+		}
+	}
 
 	private void updateDefaultAuditFilter(final String svcDefName) throws Exception {
 		logger.info("==> PatchForSolrSvcDefAndPoliciesUpdate_J10055.updateAtlasDefaultAuditFilter()");
