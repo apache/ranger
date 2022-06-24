@@ -305,8 +305,11 @@ public class XGroupUserService extends
 					xxGroupUser = new XXGroupUser();
 					groupUserMappingExists = false;
 				}
-				xxGroupUser.setAddedByUserId(createdByUserId);
-				xxGroupUser.setUpdatedByUserId(createdByUserId);
+				XXPortalUser xXPortalUser = daoManager.getXXPortalUser().getById(createdByUserId);
+				if (xXPortalUser != null) {
+					xxGroupUser.setAddedByUserId(createdByUserId);
+					xxGroupUser.setUpdatedByUserId(createdByUserId);
+				}
 
 				if (groupUserMappingExists) {
 					xxGroupUser = getDao().update(xxGroupUser);
