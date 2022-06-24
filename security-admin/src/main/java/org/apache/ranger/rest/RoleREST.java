@@ -698,6 +698,9 @@ public class RoleREST {
             LOG.debug("==> getUserRoles()");
         }
         try {
+            if (xUserService.getXUserByUserName(userName) == null) {
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "User:" + userName + " not found", false);
+            }
             Set<RangerRole> roleList = roleStore.getRoleNames(userName, userMgr.getGroupsForUser(userName));
             for (RangerRole role : roleList) {
                 ret.add(role.getName());
