@@ -156,7 +156,15 @@ policy.name        = policy_name
 policy.description = 'test description'
 policy.resources   = { 'database': RangerPolicyResource({ 'values': ['test_db'] }),
                        'table':    RangerPolicyResource({ 'values': ['test_tbl'] }),
-					   'column':   RangerPolicyResource({ 'values': ['*'] }) }
+                       'column':   RangerPolicyResource({ 'values': ['*'] }) }
+policy.add_resource({ 'database': RangerPolicyResource({ 'values': ['test_db1'] }),
+                      'table':    RangerPolicyResource({ 'values': ['test_tbl1'] }),
+                      'column':   RangerPolicyResource({ 'values': ['*'] }) })
+policy.add_resource({ 'database': RangerPolicyResource({ 'values': ['test_db2'] }),
+                      'table':    RangerPolicyResource({ 'values': ['test_tbl2'] }),
+                      'column':   RangerPolicyResource({ 'values': ['*'] }) })
+
+
 
 allowItem1          = RangerPolicyItem()
 allowItem1.users    = [ 'admin' ]
@@ -189,7 +197,7 @@ data_mask_policy.name        = data_mask_policy_name
 data_mask_policy.description = 'test description'
 data_mask_policy.resources   = { 'database': RangerPolicyResource({ 'values': ['test_db'] }),
                                  'table':    RangerPolicyResource({ 'values': ['test_tbl'] }),
-					             'column':   RangerPolicyResource({ 'values': ['test_col'] }) }
+                                 'column':   RangerPolicyResource({ 'values': ['test_col'] }) }
 
 policyItem1              = RangerDataMaskPolicyItem()
 policyItem1.users        = [ 'admin' ]
