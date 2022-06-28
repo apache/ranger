@@ -47,6 +47,8 @@ public class RangerPluginCapability {
 	- Super-user permission
 	- UserStore download
 	- Audit-policies
+	- User/group/tag attributes in policy
+	- additional resources in policy
      */
     private final long pluginCapabilities;
     private static final String baseRangerCapabilities = computeBaseCapabilities();
@@ -70,7 +72,8 @@ public class RangerPluginCapability {
         RANGER_PLUGIN_CAPABILITY_SUPERUSER_PERMISSIONS("Super-user Permissions"),
         RANGER_PLUGIN_CAPABILITY_USERSTORE_DOWNLOAD("UserStore Download"),
         RANGER_PLUGIN_CAPABILITY_AUDIT_POLICY("Audit Policy"),
-        RANGER_PLUGIN_CAPABILITY_UGT_ATTRIBUTES_IN_POLICY("User/group/tag attributes in policy");
+        RANGER_PLUGIN_CAPABILITY_UGT_ATTRIBUTES_IN_POLICY("User/group/tag attributes in policy"),
+        RANGER_PLUGIN_CAPABILITY_ADDITIONAL_RESOURCES_IN_POLICY("additional resources in policy");
 
         private final String name;
         RangerPluginFeature(String name) {
