@@ -22,6 +22,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class RangerAccessResult {
 	private long     evaluatedPoliciesCount;
 	private String   reason;
 	private Map<String, Object> additionalInfo;
-	private List<RangerPolicy.RangerPolicyItem> matchedItems = new ArrayList<>();
+	private List<RangerPolicyItemEvaluator> matchedItems = new ArrayList<>();
 
 	public RangerAccessResult(final int policyType, final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
 		this.serviceName = serviceName;
@@ -256,15 +257,15 @@ public class RangerAccessResult {
 		}
 	}
 
-	public List<RangerPolicy.RangerPolicyItem> getMatchedItems() {
+	public List<RangerPolicyItemEvaluator> getMatchedItems() {
 		return matchedItems;
 	}
 
-	public void setMatchedItems(List<RangerPolicy.RangerPolicyItem> matchedItems) {
+	public void setMatchedItems(List<RangerPolicyItemEvaluator> matchedItems) {
 		this.matchedItems = matchedItems;
 	}
 
-	public void addMatchedItem(RangerPolicy.RangerPolicyItem matchedItem) {
+	public void addMatchedItem(RangerPolicyItemEvaluator matchedItem) {
 		this.matchedItems.add(matchedItem);
 	}
 
