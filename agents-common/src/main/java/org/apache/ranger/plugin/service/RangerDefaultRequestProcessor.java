@@ -49,8 +49,11 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
     public void preProcess(RangerAccessRequest request) {
 
         setResourceServiceDef(request);
+
+        RangerAccessRequestImpl reqImpl = null;
+
         if (request instanceof RangerAccessRequestImpl) {
-            RangerAccessRequestImpl reqImpl = (RangerAccessRequestImpl) request;
+            reqImpl = (RangerAccessRequestImpl) request;
 
             if (reqImpl.getClientIPAddress() == null) {
                 reqImpl.extractAndSetClientIPAddress(policyEngine.getUseForwardedIPAddress(), policyEngine.getTrustedProxyAddresses());
@@ -78,6 +81,10 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         Set<String> roles = request.getUserRoles();
         if (CollectionUtils.isEmpty(roles)) {
             roles = policyEngine.getPluginContext().getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
+
+            if (reqImpl != null && roles != null && !roles.isEmpty()) {
+                reqImpl.setUserRoles(roles);
+            }
         }
 
         if (CollectionUtils.isNotEmpty(roles)) {

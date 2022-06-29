@@ -840,12 +840,14 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				}
 			}
 
-			if (userRoles !=null) {
-				for (String userRole : userRoles) {
-					accesses = aclSummary.getRolesAccessInfo().get(userRole);
-					accessResult = lookupAccess(userRole, accessType, accesses);
-					if (accessResult != null) {
-						break;
+			if (accessResult == null) {
+				if (userRoles != null) {
+					for (String userRole : userRoles) {
+						accesses = aclSummary.getRolesAccessInfo().get(userRole);
+						accessResult = lookupAccess(userRole, accessType, accesses);
+						if (accessResult != null) {
+							break;
+						}
 					}
 				}
 			}
