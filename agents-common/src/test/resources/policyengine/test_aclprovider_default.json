@@ -394,6 +394,30 @@
                 "users": ["user1", "user2"]
               }
             ]
+          },
+          { "id": 21, "name": "db=user_{USER}, table=*, column=*", "isEnabled": true, "isAuditEnabled":  true, "isDenyAllElse": false,
+            "resources": { "database": { "values": [ "user_{USER}*" ] }, "table": { "values": [ "*" ] }, "column": { "values": [ "*" ] } },
+            "policyItems": [
+              { "accesses": [ { "type": "select" }, { "type": "update" } ],
+                "groups": [ "public" ]
+              }
+            ]
+          },
+          { "id": 22, "name": "db=dept_${{USER.dept}}, table=*, column=*", "isEnabled": true, "isAuditEnabled":  true, "isDenyAllElse": false,
+            "resources": { "database": { "values": [ "dept_${{USER.dept}}" ] }, "table": { "values": [ "*" ] }, "column": { "values": [ "*" ] } },
+            "policyItems": [
+              { "accesses": [ { "type": "select" } ],
+                "groups": [ "public", "engg" ]
+              }
+            ]
+          },
+          { "id": 23, "name": "db=dept_engg, table=*, column=*", "isEnabled": true, "isAuditEnabled":  true, "isDenyAllElse": false,
+            "resources": { "database": { "values": [ "dept_engg" ] }, "table": { "values": [ "*" ] }, "column": { "values": [ "*" ] } },
+            "policyItems": [
+              { "accesses": [ { "type": "select" } ],
+                "groups": [ "engg" ]
+              }
+            ]
           }
         ],
         "tagPolicies": {
@@ -557,6 +581,14 @@
       },
 
       "tests": [
+        { "name": "{USER} macro in database name",
+          "resource": { "elements": { "database": "user_madhan", "table": "test_tbl1" } },
+          "groupPermissions": { "public":  { "select":  { "result": 2, "isFinal": true }, "update": { "result": 2, "isFinal": true } } }
+        },
+        { "name": "${{USER.dept}} macro in database name",
+          "resource": { "elements": { "database": "dept_engg", "table": "test_tbl1" } },
+          "groupPermissions": { "public":  { "select":  { "result": 2, "isFinal": true } }, "engg":  { "select":  { "result": 1, "isFinal": true } } }
+        },
       {
         "name": "denyAllElse-test",
         "resource": {"elements":{"database":"denyAllElse", "table":"table-1", "column": "column-1" }},

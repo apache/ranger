@@ -267,7 +267,11 @@ public class TestPolicyACLs {
 				} else if (!(MapUtils.isEmpty(acls.getRoleACLs()) && MapUtils.isEmpty(oneTest.rolePermissions))) {
 					roleACLsMatched = false;
 				}
-				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name, userACLsMatched && groupACLsMatched && roleACLsMatched && rowFiltersMatched && dataMaskingMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - userACLsMatched", userACLsMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - groupACLsMatched", groupACLsMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - roleACLsMatched", roleACLsMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - rowFiltersMatched", rowFiltersMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - dataMaskingMatched", dataMaskingMatched);
 			}
 		}
 	}

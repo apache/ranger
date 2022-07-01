@@ -101,6 +101,10 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
     public int getPolicyType() { return policyType; }
 
+    public RangerServiceDefHelper getServiceDefHelper() {
+        return serviceDefHelper;
+    }
+
     @Override
     public RangerServiceDef getServiceDef() {
         return serviceDef;

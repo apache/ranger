@@ -25,18 +25,24 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
+import org.apache.ranger.plugin.policyengine.PolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
+import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
+import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.apache.ranger.plugin.util.StringTokenReplacer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicLong;
@@ -46,6 +52,18 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractPolicyEvaluator.class);
 
 	private static final AtomicLong NEXT_RESOURCE_EVALUATOR_ID = new AtomicLong(1);
+
+	private final static Map<String, Object> WILDCARD_EVAL_CONTEXT = new HashMap<String, Object>() {
+		@Override
+		public boolean containsKey(Object key) { return true; }
+
+		@Override
+		public Object get(Object key) { return RangerAbstractResourceMatcher.WILDCARD_ASTERISK; }
+	};
+
+	static {
+		WILDCARD_EVAL_CONTEXT.put(RangerAbstractResourceMatcher.WILDCARD_ASTERISK, RangerAbstractResourceMatcher.WILDCARD_ASTERISK);
+	}
 
 	private   RangerPolicy                        policy;
 	private   RangerServiceDef                    serviceDef;
@@ -235,11 +253,61 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 		return sb;
 	}
 
+	private Map<String, RangerPolicyResource> getPolicyResourcesWithMacrosReplaced(Map<String, RangerPolicyResource> resources, PolicyEngine policyEngine) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAbstractPolicyEvaluator.getPolicyResourcesWithMacrosReplaced(" + resources + ")");
+		}
+
+		final Map<String, RangerPolicyResource> ret;
+		final Collection<String>                resourceKeys = resources == null ? null : resources.keySet();
+
+		if (CollectionUtils.isNotEmpty(resourceKeys)) {
+			ret = new HashMap<>();
+
+			for (String resourceName : resourceKeys) {
+				RangerPolicyResource resourceValues = resources.get(resourceName);
+				List<String>         values         = resourceValues == null ? null : resourceValues.getValues();
+
+				if (CollectionUtils.isNotEmpty(values)) {
+					StringTokenReplacer tokenReplacer = policyEngine.getStringTokenReplacer(resourceName);
+
+					List<String> modifiedValues = new ArrayList<>();
+
+					for (String value : values) {
+						RangerRequestExprResolver exprResolver  = new RangerRequestExprResolver(value, serviceDef.getName());
+						String                    modifiedValue = exprResolver.resolveExpressions(WILDCARD_EVAL_CONTEXT);
+
+						if (tokenReplacer != null) {
+							modifiedValue = tokenReplacer.replaceTokens(modifiedValue, WILDCARD_EVAL_CONTEXT);
+						}
+
+						modifiedValues.add(modifiedValue);
+					}
+
+					RangerPolicyResource modifiedPolicyResource = new RangerPolicyResource(modifiedValues, resourceValues.getIsExcludes(), resourceValues.getIsRecursive());
+
+					ret.put(resourceName, modifiedPolicyResource);
+				} else {
+					ret.put(resourceName, resourceValues);
+				}
+			}
+		} else {
+			ret = resources;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAbstractPolicyEvaluator.getPolicyResourcesWithMacrosReplaced(" + resources  + "): " + ret);
+		}
+
+		return ret;
+	}
+
 	public class RangerDefaultPolicyResourceEvaluator implements RangerPolicyResourceEvaluator {
-		private final long                               id;
-		private final Map<String, RangerPolicyResource>  resource;
-		private final RangerDefaultPolicyResourceMatcher resourceMatcher;
-		private final RangerResourceDef                  leafResourceDef;
+		private final    long                               id;
+		private final    Map<String, RangerPolicyResource>  resource;
+		private final    RangerDefaultPolicyResourceMatcher resourceMatcher;
+		private final    RangerResourceDef                  leafResourceDef;
+		private volatile RangerDefaultPolicyResourceMatcher macrosReplacedWithWildcardMatcher;
 
 		public RangerDefaultPolicyResourceEvaluator(long id, Map<String, RangerPolicyResource> resource, int policyType, RangerServiceDef serviceDef, RangerServiceDefHelper serviceDefHelper) {
 			this.id              = id;
@@ -266,6 +334,36 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 		@Override
 		public RangerPolicyResourceMatcher getPolicyResourceMatcher() {
 			return resourceMatcher;
+		}
+
+		@Override
+		public RangerPolicyResourceMatcher getMacrosReplaceWithWildcardMatcher(PolicyEngine policyEngine) {
+			RangerDefaultPolicyResourceMatcher ret = this.macrosReplacedWithWildcardMatcher;
+
+			if (ret == null) {
+				synchronized (this) {
+					ret = this.macrosReplacedWithWildcardMatcher;
+
+					if (ret == null) {
+						if (resourceMatcher.getNeedsDynamicEval()) {
+							Map<String, RangerPolicyResource> updatedResource = getPolicyResourcesWithMacrosReplaced(resource, policyEngine);
+
+							ret = new RangerDefaultPolicyResourceMatcher();
+
+							ret.setPolicyResources(updatedResource, resourceMatcher.getPolicyType());
+							ret.setServiceDef(serviceDef);
+							ret.setServiceDefHelper(resourceMatcher.getServiceDefHelper());
+							ret.init();
+						} else {
+							ret = resourceMatcher;
+						}
+
+						this.macrosReplacedWithWildcardMatcher = ret;
+					}
+				}
+			}
+
+			return ret;
 		}
 
 		@Override
