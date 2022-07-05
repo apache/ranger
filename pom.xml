@@ -193,7 +193,7 @@
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.32</slf4j-api.version>
         <slf4j.version>1.7.32</slf4j.version>
-        <solr.version>8.6.3</solr.version>
+        <solr.version>8.11.2</solr.version>
         <spring-ldap-core.version>2.3.8.RELEASE</spring-ldap-core.version>
         <springframework.security.version>5.6.5</springframework.security.version>
         <springframework.test.version>5.3.20</springframework.test.version>
