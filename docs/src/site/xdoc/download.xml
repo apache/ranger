@@ -31,7 +31,17 @@ LICENSE.txt and NOTICE.txt files contained in each release artifact.
 <ul>
 <li>
 <p>
-Current Stable release is Apache Ranger 2.2.0:
+Current Stable release is Apache Ranger 2.3.0:
+</p>
+<p>
+<a href="https://dlcdn.apache.org/ranger/2.3.0/apache-ranger-2.3.0.tar.gz">apache-ranger-2.3.0.tar.gz</a>
+(<a href="https://www.apache.org/dist/ranger/2.3.0/apache-ranger-2.3.0.tar.gz.asc">PGP</a>)
+(<a href="https://www.apache.org/dist/ranger/2.3.0/apache-ranger-2.3.0.tar.gz.sha512">Digest</a>)
+</p>
+</li>
+<li>
+<p>
+An older branch release is Apache Ranger 2.2.0:
 </p>
 <p>
 <a href="https://dlcdn.apache.org/ranger/2.2.0/apache-ranger-2.2.0.tar.gz">apache-ranger-2.2.0.tar.gz</a>
