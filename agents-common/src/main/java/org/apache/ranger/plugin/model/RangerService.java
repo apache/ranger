@@ -40,6 +40,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class RangerService extends RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
+	private static final String PASSWORD="password";
 
 	private String              type;
 	private String              name;
@@ -266,7 +267,12 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		sb.append("configs={");
 		if(configs != null) {
 			for(Map.Entry<String, String> e : configs.entrySet()) {
-				sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
+				if(e.getKey().equals(PASSWORD)){
+					sb.append(e.getKey()).append("={").append("*******").append("} ");
+				}else{
+					sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
+				}
+
 			}
 		}
 		sb.append("} ");
