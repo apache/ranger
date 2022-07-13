@@ -151,7 +151,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 		void sendError(int code, String message) throws IOException;
 	}	
 	
-	public void handleHttpInteraction(HttpInteraction httpInteraction)
+	public void handleHttpInteraction(HttpInteraction httpInteraction, boolean spnegoEnabled, boolean trustedProxyEnabled)
 			throws IOException, ServletException {
 
 		HttpSession session   = ((ServletFilterHttpInteraction) httpInteraction).getSession();
@@ -166,20 +166,30 @@ public class RangerCSRFPreventionFilter implements Filter {
 			}
 		}
 
-		if (clientCsrfToken != null && clientCsrfToken.equals(actualCsrfToken)
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("actualCsrfToken = " + actualCsrfToken + " clientCsrfToken = " + clientCsrfToken +
+					"trustedProxy = " + trustedProxyEnabled + " for " + ((ServletFilterHttpInteraction) httpInteraction).httpRequest.getRequestURI());
+		}
+		/* When the request is from Knox, then spnegoEnabled and trustedProxyEnabled are true.
+		 * In this case Knox inserts XSRF header with proper value for POST & PUT requests and hence proceed with authentication filter
+		 */
+		if ((spnegoEnabled && trustedProxyEnabled) || clientCsrfToken != null && clientCsrfToken.equals(actualCsrfToken)
 				|| !isBrowser(httpInteraction.getHeader(HEADER_USER_AGENT))
 				|| methodsToIgnore.contains(httpInteraction.getMethod())) {
 			httpInteraction.proceed();
 		}else {
+			LOG.error("Missing header or invalid Header value for CSRF Vulnerability Protection");
 			httpInteraction.sendError(HttpServletResponse.SC_BAD_REQUEST,"Missing header or invalid Header value for CSRF Vulnerability Protection");
 		}
 	}
-	
+
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		if (IS_CSRF_ENABLED) {
 			final HttpServletRequest httpRequest = (HttpServletRequest)request;
 		    final HttpServletResponse httpResponse = (HttpServletResponse)response;
-		    handleHttpInteraction(new ServletFilterHttpInteraction(httpRequest, httpResponse, chain));
+		    Boolean spnegoEnabled = httpRequest.getAttribute("spnegoEnabled") != null ? Boolean.valueOf(String.valueOf(httpRequest.getAttribute("spnegoEnabled"))) : false;
+		    Boolean trustedProxyEnabled = httpRequest.getAttribute("trustedProxyEnabled") != null ? Boolean.valueOf(String.valueOf(httpRequest.getAttribute("trustedProxyEnabled"))) : false;
+		    handleHttpInteraction(new ServletFilterHttpInteraction(httpRequest, httpResponse, chain), spnegoEnabled, trustedProxyEnabled);
 		}else{
 			chain.doFilter(request, response);
 		}
