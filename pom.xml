@@ -283,6 +283,7 @@
                 <module>security-admin</module>
                 <module>plugin-kafka</module>
                 <module>plugin-solr</module>
+                <module>plugin-nestedstructure</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
@@ -351,6 +352,7 @@
                 <module>security-admin</module>
                 <module>plugin-kafka</module>
                 <module>plugin-solr</module>
+                <module>plugin-nestedstructure</module>
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
@@ -636,6 +638,18 @@
                 <module>ranger-util</module>
                 <module>plugin-trino</module>
                 <module>ranger-trino-plugin-shim</module>
+            </modules>
+        </profile>
+        <profile>
+            <id>ranger-nestedstructure-plugin</id>
+            <modules>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>ranger-util</module>
+                <module>plugin-nestedstructure</module>
             </modules>
         </profile>
         <profile>
