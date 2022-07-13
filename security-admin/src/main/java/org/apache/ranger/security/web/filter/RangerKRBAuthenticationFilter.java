@@ -370,7 +370,13 @@ public class RangerKRBAuthenticationFilter extends RangerKrbFilter {
 
 			boolean allowTrustedProxy = PropertiesUtil.getBooleanProperty(ALLOW_TRUSTED_PROXY, false);
 
-			if (allowTrustedProxy && StringUtils.isNotEmpty(doAsUser) && existingAuth.isAuthenticated()
+			if(isSpnegoEnable(authtype) && allowTrustedProxy && StringUtils.isNotEmpty(doAsUser)
+					&& existingAuth != null && existingAuth.isAuthenticated()) {
+				request.setAttribute("spnegoEnabled", true);
+				request.setAttribute("trustedProxyEnabled", true);
+			}
+	
+			if (allowTrustedProxy && StringUtils.isNotEmpty(doAsUser) && existingAuth != null && existingAuth.isAuthenticated()
 					&& StringUtils.equals(action, RestUtil.TIMEOUT_ACTION)) {
 				HttpServletResponse httpResponse = (HttpServletResponse) response;
 				handleTimeoutRequest(httpRequest, httpResponse);
