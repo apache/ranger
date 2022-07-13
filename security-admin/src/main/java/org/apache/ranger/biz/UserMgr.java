@@ -1107,9 +1107,9 @@ public class UserMgr {
 			String sha256PasswordUpdateDisable = PropertiesUtil.getProperty("ranger.sha256Password.update.disable", "false");
 
 			if ("false".equalsIgnoreCase(sha256PasswordUpdateDisable)) {
-				saltEncodedpasswd = encodeString(password, loginId, "MD5");
-			} else {
 				saltEncodedpasswd = encodeString(password, loginId, "SHA-256");
+			} else {
+				saltEncodedpasswd = encodeString(password, loginId, "MD5");
 			}
 		}
 		
