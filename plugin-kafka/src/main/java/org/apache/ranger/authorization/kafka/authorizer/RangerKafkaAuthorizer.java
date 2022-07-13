@@ -42,6 +42,7 @@ import org.apache.kafka.common.network.ListenerName;
 import org.apache.kafka.common.resource.ResourceType;
 import org.apache.kafka.common.security.JaasContext;
 import org.apache.kafka.common.security.auth.SecurityProtocol;
+import org.apache.kafka.common.utils.SecurityUtils;
 import org.apache.kafka.server.authorizer.AclCreateResult;
 import org.apache.kafka.server.authorizer.AclDeleteResult;
 import org.apache.kafka.server.authorizer.Action;
@@ -326,6 +327,19 @@ public class RangerKafkaAuthorizer implements Authorizer {
           return completableFuture;
         })
         .collect(Collectors.toList());
+  }
+
+  // TODO: provide a real implementation (RANGER-3809)
+  // Currently we return a dummy implementation because KAFKA-13598 makes producers idempotent by default and this causes
+  // a failure in the InitProducerId API call on the broker side because of the missing acls() method implementation.
+  // Overriding this with a dummy impl will make Kafka return an authorization error instead of an exception if the
+  // IDEMPOTENT_WRITE permission wasn't set on the producer.
+  @Override
+  public AuthorizationResult authorizeByResourceType(AuthorizableRequestContext requestContext, AclOperation op, ResourceType resourceType) {
+    SecurityUtils.authorizeByResourceTypeCheckArgs(op, resourceType);
+
+    logger.debug("authorizeByResourceType call is not supported by Ranger for Kafka yet");
+    return AuthorizationResult.DENIED;
   }
 
   @Override

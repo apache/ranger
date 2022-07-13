@@ -17,25 +17,6 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
-import kafka.server.KafkaConfig;
-import kafka.server.KafkaServer;
-import org.apache.curator.test.InstanceSpec;
-import org.apache.curator.test.TestingServer;
-import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.admin.AdminClient;
-import org.apache.kafka.clients.admin.KafkaAdminClient;
-import org.apache.kafka.clients.admin.AdminClientConfig;
-import org.apache.kafka.clients.admin.CreateTopicsResult;
-import org.apache.kafka.clients.admin.NewTopic;
-import org.apache.kafka.common.KafkaFuture;
-import org.apache.kafka.common.utils.Time;
-import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
-import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import scala.Some;
-
 import java.io.File;
 import java.net.ServerSocket;
 import java.nio.charset.StandardCharsets;
@@ -46,6 +27,27 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+
+import org.apache.commons.io.FileUtils;
+import org.apache.curator.test.InstanceSpec;
+import org.apache.curator.test.TestingServer;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.AdminClientConfig;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.common.KafkaFuture;
+import org.apache.kafka.common.utils.Time;
+import org.apache.kerby.kerberos.kerb.server.SimpleKdcServer;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import kafka.server.KafkaConfig;
+import kafka.server.KafkaServer;
+import scala.Some;
 
 
 public class KafkaRangerTopicCreationTest {
@@ -171,23 +173,27 @@ public class KafkaRangerTopicCreationTest {
         if (kerbyServer != null) {
             kerbyServer.stop();
         }
+        if (tempDir != null) {
+            FileUtils.deleteDirectory(tempDir.toFile());
+        }
     }
 
     @Test
     public void testCreateTopic() throws Exception {
-            final String topic = "test";
-            Properties properties = new Properties();
-            properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
-            properties.put("client.id", "test-consumer-id");
-            properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
-            AdminClient client = KafkaAdminClient.create(properties);
+        final String topic = "test";
+        Properties properties = new Properties();
+        properties.put(AdminClientConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:" + port);
+        properties.put("client.id", "test-consumer-id");
+        properties.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
+        try (AdminClient client = KafkaAdminClient.create(properties)) {
             CreateTopicsResult result = client.createTopics(Arrays.asList(new NewTopic(topic, 1, (short) 1)));
             result.values().get(topic).get();
             for (Map.Entry<String, KafkaFuture<Void>> entry : result.values().entrySet()) {
                 System.out.println("Create Topic : " + entry.getKey() + " " +
-                        "isCancelled : " + entry.getValue().isCancelled() + " " +
-                        "isCompletedExceptionally : " + entry.getValue().isCompletedExceptionally() + " " +
-                        "isDone : " + entry.getValue().isDone());
+                    "isCancelled : " + entry.getValue().isCancelled() + " " +
+                    "isCompletedExceptionally : " + entry.getValue().isCompletedExceptionally() + " " +
+                    "isDone : " + entry.getValue().isDone());
             }
+        }
     }
 }
