@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +32,8 @@ import java.util.Properties;
 import java.util.concurrent.Future;
 
 import kafka.server.KafkaServer;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -197,6 +200,9 @@ public class KafkaRangerAuthorizerGSSTest {
         if (kerbyServer != null) {
             kerbyServer.stop();
         }
+        if (tempDir != null) {
+            FileUtils.deleteDirectory(tempDir.toFile());
+        }
     }
 
     // The "public" group can write to and read from "test"
@@ -211,8 +217,7 @@ public class KafkaRangerAuthorizerGSSTest {
         producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
         producerProps.put("sasl.mechanism", "GSSAPI");
         producerProps.put("sasl.kerberos.service.name", "kafka");
-
-        final Producer<String, String> producer = new KafkaProducer<>(producerProps);
+        producerProps.put("enable.idempotence", "false");
 
         // Create the Consumer
         Properties consumerProps = new Properties();
@@ -228,31 +233,31 @@ public class KafkaRangerAuthorizerGSSTest {
         consumerProps.put("sasl.mechanism", "GSSAPI");
         consumerProps.put("sasl.kerberos.service.name", "kafka");
 
-        final KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps);
-        checkTopicExists(consumer);
-        LOG.info("Subscribing to 'test'");
-        consumer.subscribe(Arrays.asList("test"));
+        try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps)) {
+            checkTopicExists(consumer);
+            LOG.info("Subscribing to 'test'");
+            consumer.subscribe(Arrays.asList("test"));
 
-        sendMessage(producer);
-
-        // Poll until we consume it
-        ConsumerRecord<String, String> record = null;
-        for (int i = 0; i < 1000; i++) {
-            LOG.info("Waiting for messages {}. try", i);
-            ConsumerRecords<String, String> records = consumer.poll(100);
-            if (records.count() > 0) {
-                LOG.info("Found {} messages", records.count());
-                record = records.iterator().next();
-                break;
+            try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+                sendMessage(producer);
             }
-            sleep();
+
+            // Poll until we consume it
+            ConsumerRecord<String, String> record = null;
+            for (int i = 0; i < 1000; i++) {
+                LOG.info("Waiting for messages {}. try", i);
+                ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                if (records.count() > 0) {
+                    LOG.info("Found {} messages", records.count());
+                    record = records.iterator().next();
+                    break;
+                }
+                sleep();
+            }
+
+            Assert.assertNotNull(record);
+            Assert.assertEquals("somevalue", record.value());
         }
-
-        Assert.assertNotNull(record);
-        Assert.assertEquals("somevalue", record.value());
-
-        producer.close();
-        consumer.close();
     }
 
     private void checkTopicExists(final KafkaConsumer<String, String> consumer) {
@@ -269,7 +274,7 @@ public class KafkaRangerAuthorizerGSSTest {
         // Send a message
         try {
             LOG.info("Send a message to 'test'");
-            producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
+            producer.send(new ProducerRecord<>("test", "somekey", "somevalue"));
             producer.flush();
         } catch (RuntimeException e) {
             LOG.error("Unable to send message to topic 'test' ", e);
@@ -296,20 +301,16 @@ public class KafkaRangerAuthorizerGSSTest {
         producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_PLAINTEXT");
         producerProps.put("sasl.mechanism", "GSSAPI");
         producerProps.put("sasl.kerberos.service.name", "kafka");
+        producerProps.put("enable.idempotence", "false");
 
-        final Producer<String, String> producer = new KafkaProducer<>(producerProps);
-
-        // Send a message
-        try {
-            Future<RecordMetadata> record =
-                producer.send(new ProducerRecord<String, String>("dev", "somekey", "somevalue"));
+        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+            // Send a message
+            Future<RecordMetadata> record = producer.send(new ProducerRecord<>("dev", "somekey", "somevalue"));
             producer.flush();
             record.get();
         } catch (Exception ex) {
             Assert.assertTrue(ex.getMessage().contains("Not authorized to access topics"));
         }
-
-        producer.close();
     }
 
 
@@ -326,11 +327,11 @@ public class KafkaRangerAuthorizerGSSTest {
         producerProps.put("sasl.kerberos.service.name", "kafka");
         producerProps.put("enable.idempotence", "true");
 
-        final Producer<String, String> producer = new KafkaProducer<>(producerProps);
-
-        // Send a message
-        producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
-        producer.flush();
-        producer.close();
+        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+            // Send a message
+            Future<RecordMetadata> record = producer.send(new ProducerRecord<>("test", "somekey", "somevalue"));
+            producer.flush();
+            record.get();
+        }
     }
 }

@@ -18,16 +18,17 @@
 package org.apache.ranger.authorization.kafka.authorizer;
 
 import java.io.File;
-import java.io.FileOutputStream;
 import java.io.OutputStream;
 import java.math.BigInteger;
 import java.net.ServerSocket;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyStore;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.Future;
 
-import kafka.server.KafkaServer;
 import org.apache.commons.io.FileUtils;
 import org.apache.curator.test.TestingServer;
 import org.apache.hadoop.security.UserGroupInformation;
@@ -46,6 +47,7 @@ import org.junit.Assert;
 import org.junit.Test;
 
 import kafka.server.KafkaConfig;
+import kafka.server.KafkaServer;
 import scala.Some;
 
 /**
@@ -64,14 +66,14 @@ import scala.Some;
  */
 @org.junit.Ignore("Causing JVM to abort on some platforms")
 public class KafkaRangerAuthorizerSASLSSLTest {
-    
     private static KafkaServer kafkaServer;
     private static TestingServer zkServer;
     private static int port;
     private static String serviceKeystorePath;
     private static String clientKeystorePath;
     private static String truststorePath;
-    
+    private static Path tempDir;
+
     @org.junit.BeforeClass
     public static void setup() throws Exception {
     	// JAAS Config file
@@ -99,7 +101,7 @@ public class KafkaRangerAuthorizerSASLSSLTest {
     					"cspass", "myclientkey", "ckpass", keystore);
     	
     	File truststoreFile = File.createTempFile("kafkatruststore", ".jks");
-    	try (OutputStream output = new FileOutputStream(truststoreFile)) {
+    	try (OutputStream output = Files.newOutputStream(truststoreFile.toPath())) {
     		keystore.store(output, "security".toCharArray());
     	}
     	truststorePath = truststoreFile.getPath();
@@ -110,12 +112,14 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         ServerSocket serverSocket = new ServerSocket(0);
         port = serverSocket.getLocalPort();
         serverSocket.close();
-        
+
+        tempDir = Files.createTempDirectory("kafka");
+
         final Properties props = new Properties();
         props.put("broker.id", 1);
         props.put("host.name", "localhost");
         props.put("port", port);
-        props.put("log.dir", "/tmp/kafka");
+        props.put("log.dir", tempDir.toString());
         props.put("zookeeper.connect", zkServer.getConnectString());
         props.put("replica.socket.timeout.ms", "1500");
         props.put("controlled.shutdown.enable", Boolean.TRUE.toString());
@@ -133,7 +137,8 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         props.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
         props.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
         props.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
-        
+        props.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
+
         // Plug in Apache Ranger authorizer
         props.put("authorizer.class.name", "org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer");
         
@@ -179,6 +184,9 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         if (truststoreFile.exists()) {
         	FileUtils.forceDelete(truststoreFile);
         }
+        if (tempDir != null) {
+            FileUtils.deleteDirectory(tempDir.toFile());
+        }
     }
     
     @Test
@@ -198,9 +206,8 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
         producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
         producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
-        
-        final Producer<String, String> producer = new KafkaProducer<>(producerProps);
-        
+        producerProps.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
+
         // Create the Consumer
         Properties consumerProps = new Properties();
         consumerProps.put("bootstrap.servers", "localhost:" + port);
@@ -213,38 +220,38 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         consumerProps.put("value.deserializer", "org.apache.kafka.common.serialization.StringDeserializer");
         consumerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
         consumerProps.put("sasl.mechanism", "PLAIN");
-        
+
         consumerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
         consumerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, clientKeystorePath);
         consumerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "cspass");
         consumerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "ckpass");
         consumerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
         consumerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
-        
-        final KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps);
-        consumer.subscribe(Arrays.asList("test"));
-        
-        // Send a message
-        producer.send(new ProducerRecord<String, String>("test", "somekey", "somevalue"));
-        producer.flush();
-        
-        // Poll until we consume it
-        
-        ConsumerRecord<String, String> record = null;
-        for (int i = 0; i < 1000; i++) {
-            ConsumerRecords<String, String> records = consumer.poll(100);
-            if (records.count() > 0) {
-                record = records.iterator().next();
-                break;
+        consumerProps.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
+
+        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+            try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProps)) {
+                consumer.subscribe(Arrays.asList("test"));
+
+                // Send a message
+                producer.send(new ProducerRecord<>("test", "somekey", "somevalue"));
+                producer.flush();
+
+                // Poll until we consume it
+                ConsumerRecord<String, String> record = null;
+                for (int i = 0; i < 1000; i++) {
+                    ConsumerRecords<String, String> records = consumer.poll(Duration.ofMillis(100));
+                    if (records.count() > 0) {
+                        record = records.iterator().next();
+                        break;
+                    }
+                    Thread.sleep(1000);
+                }
+
+                Assert.assertNotNull(record);
+                Assert.assertEquals("somevalue", record.value());
             }
-            Thread.sleep(1000);
         }
-
-        Assert.assertNotNull(record);
-        Assert.assertEquals("somevalue", record.value());
-
-        producer.close();
-        consumer.close();
     }
     
     @Test
@@ -257,23 +264,22 @@ public class KafkaRangerAuthorizerSASLSSLTest {
         producerProps.put("value.serializer", "org.apache.kafka.common.serialization.StringSerializer");
         producerProps.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
         producerProps.put("sasl.mechanism", "PLAIN");
-        
+        producerProps.put("enable.idempotence", "true");
+
         producerProps.put(SslConfigs.SSL_KEYSTORE_TYPE_CONFIG, "JKS");
         producerProps.put(SslConfigs.SSL_KEYSTORE_LOCATION_CONFIG, serviceKeystorePath);
         producerProps.put(SslConfigs.SSL_KEYSTORE_PASSWORD_CONFIG, "sspass");
         producerProps.put(SslConfigs.SSL_KEY_PASSWORD_CONFIG, "skpass");
         producerProps.put(SslConfigs.SSL_TRUSTSTORE_LOCATION_CONFIG, truststorePath);
         producerProps.put(SslConfigs.SSL_TRUSTSTORE_PASSWORD_CONFIG, "security");
-        
-        final Producer<String, String> producer = new KafkaProducer<>(producerProps);
-        
-        // Send a message
-        Future<RecordMetadata> record = 
-            producer.send(new ProducerRecord<String, String>("dev", "somekey", "somevalue"));
-        producer.flush();
-        record.get();
+        producerProps.put(SslConfigs.SSL_ENDPOINT_IDENTIFICATION_ALGORITHM_CONFIG, "");
 
-        producer.close();
+        try (Producer<String, String> producer = new KafkaProducer<>(producerProps)) {
+            // Send a message
+            Future<RecordMetadata> record = producer.send(new ProducerRecord<>("dev", "somekey", "somevalue"));
+            producer.flush();
+            record.get();
+        }
     }
     
 }
