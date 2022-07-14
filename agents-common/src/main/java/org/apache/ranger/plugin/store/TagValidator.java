@@ -150,6 +150,7 @@ public class TagValidator {
 		if (ret == null) {
 			RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
 			resource.setResourceSignature(serializer.getSignature());
+			ret = tagStore.getServiceResourceByServiceAndResourceSignature(resource.getServiceName(), resource.getResourceSignature());
 		}
 
 		return ret;
