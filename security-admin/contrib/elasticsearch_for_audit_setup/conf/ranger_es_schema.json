@@ -20,7 +20,7 @@
     "action": {
       "type": "keyword"
     },
-    "agent": {
+    "agentId": {
       "type": "keyword"
     },
     "agentHost": {
