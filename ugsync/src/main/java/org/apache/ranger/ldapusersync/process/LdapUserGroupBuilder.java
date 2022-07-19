@@ -150,7 +150,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		ugsyncAuditInfo = new UgsyncAuditInfo();
 		ldapSyncSourceInfo = new LdapSyncSourceInfo();
 		ldapSyncSourceInfo.setLdapUrl(ldapUrl);
-		ldapSyncSourceInfo.setIncrementalSycn("True");
+		ldapSyncSourceInfo.setIncrementalSycn(Boolean.toString(config.isDeltaSyncEnabled()));
 		ldapSyncSourceInfo.setUserSearchEnabled(Boolean.toString(userSearchEnabled));
 		ldapSyncSourceInfo.setGroupSearchEnabled(Boolean.toString(groupSearchEnabled));
 		ldapSyncSourceInfo.setGroupSearchFirstEnabled(Boolean.toString(groupSearchFirstEnabled));
