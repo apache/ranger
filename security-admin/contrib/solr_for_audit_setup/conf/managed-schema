@@ -61,7 +61,7 @@
   <field name="_version_" type="long" indexed="false" stored="true"/>
   <field name="access" type="key_lower_case" multiValued="false"/>
   <field name="action" type="key_lower_case" multiValued="false"/>
-  <field name="agent" type="key_lower_case" multiValued="false"/>
+  <field name="agentId" type="key_lower_case" multiValued="false"/>
   <field name="agentHost" type="key_lower_case" multiValued="false"/>
   <field name="cliIP" type="key_lower_case" multiValued="false"/>
   <field name="cliType" type="key_lower_case" multiValued="false"/>
