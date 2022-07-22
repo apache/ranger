@@ -74,7 +74,9 @@ public class RoleRefUpdater {
 
 	@Autowired
 	RangerBizUtil xaBizUtil;
-
+	public RangerDaoManager getRangerDaoManager() {
+		return daoMgr;
+	}
 	public void createNewRoleMappingForRefTable(RangerRole rangerRole, Boolean createNonExistUserGroup) {
 		if (rangerRole == null) {
 			return;
