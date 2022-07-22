@@ -19,24 +19,20 @@
 
 package org.apache.ranger.authorization.kafka.authorizer;
 
+import org.apache.kafka.common.Endpoint;
+import org.apache.kafka.common.acl.AclBinding;
+import org.apache.kafka.common.acl.AclBindingFilter;
+import org.apache.kafka.common.acl.AclOperation;
+import org.apache.kafka.common.resource.ResourceType;
+import org.apache.kafka.server.authorizer.*;
+import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletionStage;
-
-import org.apache.kafka.common.Endpoint;
-import org.apache.kafka.common.acl.AclBinding;
-import org.apache.kafka.common.acl.AclBindingFilter;
-import org.apache.kafka.server.authorizer.AclCreateResult;
-import org.apache.kafka.server.authorizer.AclDeleteResult;
-import org.apache.kafka.server.authorizer.Action;
-import org.apache.kafka.server.authorizer.AuthorizableRequestContext;
-import org.apache.kafka.server.authorizer.AuthorizationResult;
-import org.apache.kafka.server.authorizer.Authorizer;
-import org.apache.kafka.server.authorizer.AuthorizerServerInfo;
-import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public class RangerKafkaAuthorizer implements Authorizer {
   private static final Logger logger = LoggerFactory.getLogger(RangerKafkaAuthorizer.class);
@@ -187,6 +183,30 @@ public class RangerKafkaAuthorizer implements Authorizer {
       deactivatePluginClassLoader();
       logger.debug("<== RangerKafkaAuthorizer.acls(AclBindingFilter)");
     }
+  }
+
+  @Override
+  public AuthorizationResult authorizeByResourceType(AuthorizableRequestContext requestContext, AclOperation op, ResourceType resourceType) {
+    if (logger.isDebugEnabled()) {
+      logger.debug("==> RangerKafkaAuthorizer.authorizeByResourceType(AuthorizableRequestContext={}, AclOperation={}, ResourceType={})",
+          toString(requestContext), op, resourceType);
+    }
+
+    AuthorizationResult ret;
+
+    try {
+      activatePluginClassLoader();
+
+      ret = rangerKafkaAuthorizerImpl.authorizeByResourceType(requestContext, op, resourceType);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+
+    if (logger.isDebugEnabled()) {
+      logger.debug("<== RangerKafkaAuthorizer.authorizeByResourceType: {}", ret);
+    }
+
+    return ret;
   }
 
   private void activatePluginClassLoader() {
