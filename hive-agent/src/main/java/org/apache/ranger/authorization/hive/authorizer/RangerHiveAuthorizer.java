@@ -186,7 +186,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		if (hivePlugin == null) {
 			throw new HiveAuthzPluginException();
 		}
-		RangerHivePolicyProvider policyProvider = new RangerHivePolicyProvider(hivePlugin);
+		RangerHivePolicyProvider policyProvider = new RangerHivePolicyProvider(hivePlugin, this);
 
 		return policyProvider;
 	}
@@ -1465,7 +1465,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		switch(objectType) {
 			case DATABASE:
 			case TABLE_OR_VIEW:
-				resource = createHiveResource(privilegeObject, getMetaStoreClient());
+				resource = createHiveResource(privilegeObject);
 				break;
 			default:
 				LOG.warn("RangerHiveAuthorizer.createHiveResourceForFiltering: unexpected objectType:" + objectType);
@@ -1474,9 +1474,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		return resource;
 	}
 
-	static RangerHiveResource createHiveResource(HivePrivilegeObject privilegeObject, IMetaStoreClient metaStoreClient) {
+	RangerHiveResource createHiveResource(HivePrivilegeObject privilegeObject) {
 		RangerHiveResource resource = null;
-
 		HivePrivilegeObjectType objectType = privilegeObject.getType();
 		String objectName = privilegeObject.getObjectName();
 		String dbName = privilegeObject.getDbname();
@@ -1487,14 +1486,12 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				break;
 			case TABLE_OR_VIEW:
 				resource = new RangerHiveResource(HiveObjectType.TABLE, dbName, objectName);
-				setOwnerUser(resource, privilegeObject, metaStoreClient);
 				break;
 			case COLUMN:
 				List<String> columns = privilegeObject.getColumns();
 				int numOfColumns = columns == null ? 0 : columns.size();
 				if (numOfColumns == 1) {
 					resource = new RangerHiveResource(HiveObjectType.COLUMN, dbName, objectName, columns.get(0));
-					setOwnerUser(resource, privilegeObject, metaStoreClient);
 				} else {
 					LOG.warn("RangerHiveAuthorizer.getHiveResource: unexpected number of columns requested:" + numOfColumns + ", objectType:" + objectType);
 				}
@@ -1504,6 +1501,8 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 		}
 
 		if (resource != null) {
+			setOwnerUser(resource, privilegeObject, getMetaStoreClient());
+
 			resource.setServiceDef(hivePlugin == null ? null : hivePlugin.getServiceDef());
 		}
 
@@ -2689,7 +2688,7 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 			LOG.debug("==> RangerHivePolicyProvider.getRangerResourceACLs:[" + hiveObject + "]");
 		}
 
-		RangerHiveResource hiveResource = createHiveResource(hiveObject, getMetaStoreClient());
+		RangerHiveResource hiveResource = createHiveResource(hiveObject);
 		RangerAccessRequestImpl request = new RangerAccessRequestImpl(hiveResource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
 
 		ret = hivePlugin.getResourceACLs(request);

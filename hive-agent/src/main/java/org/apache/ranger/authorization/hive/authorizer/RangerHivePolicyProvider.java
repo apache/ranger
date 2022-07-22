@@ -51,8 +51,9 @@ public class RangerHivePolicyProvider implements HivePolicyProvider {
 	private final Set<String> hivePrivileges;
 
 	private final RangerBasePlugin  rangerPlugin;
+	private final RangerHiveAuthorizer authorizer;
 
-	public RangerHivePolicyProvider(@NotNull RangerBasePlugin hivePlugin) {
+	public RangerHivePolicyProvider(@NotNull RangerBasePlugin hivePlugin, @NotNull RangerHiveAuthorizer authorizer) {
 
 		Set<String> privileges = new HashSet<>();
 		for (HiveResourceACLs.Privilege privilege : HiveResourceACLs.Privilege.values()) {
@@ -61,6 +62,7 @@ public class RangerHivePolicyProvider implements HivePolicyProvider {
 
 		this.hivePrivileges = new HashSet<>(privileges);
 		this.rangerPlugin   = hivePlugin;
+		this.authorizer     = authorizer;
 	}
 
 	@Override
@@ -74,7 +76,7 @@ public class RangerHivePolicyProvider implements HivePolicyProvider {
 		    perf = RangerPerfTracer.getPerfTracer(PERF_HIVEACLPROVIDER_REQUEST_LOG, "RangerHivePolicyProvider.getResourceACLS()");
 	    }
 	    // Extract and build RangerHiveResource from inputObject
-	    RangerHiveResource hiveResource = RangerHiveAuthorizer.createHiveResource(hiveObject, null);
+	    RangerHiveResource hiveResource = authorizer.createHiveResource(hiveObject);
 	    ret = getResourceACLs(hiveResource);
 	    RangerPerfTracer.log(perf);
 		return ret;
