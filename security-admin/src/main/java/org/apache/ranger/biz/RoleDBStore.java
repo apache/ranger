@@ -391,13 +391,13 @@ public class RoleDBStore implements RoleStore {
     public Set<RangerRole> getRoleNames(String userName, Set<String> userGroups) throws Exception{
         Set<RangerRole> ret = new HashSet<>();
         if (StringUtils.isNotEmpty(userName)) {
-            List<XXRoleRefUser> xxRoleRefUsers = roleRefUpdater.daoMgr.getXXRoleRefUser().findByUserName(userName);
+            List<XXRoleRefUser> xxRoleRefUsers = roleRefUpdater.getRangerDaoManager().getXXRoleRefUser().findByUserName(userName);
             for (XXRoleRefUser xxRoleRefUser : xxRoleRefUsers) {
                 ret.add(getRole(xxRoleRefUser.getRoleId()));
             }
         }
         for(String userGroup : userGroups) {
-            List<XXRoleRefGroup> xxRoleRefGroups = roleRefUpdater.daoMgr.getXXRoleRefGroup().findByGroupName(userGroup);
+            List<XXRoleRefGroup> xxRoleRefGroups = roleRefUpdater.getRangerDaoManager().getXXRoleRefGroup().findByGroupName(userGroup);
             for (XXRoleRefGroup xxRoleRefGroup : xxRoleRefGroups) {
                 ret.add(getRole(xxRoleRefGroup.getRoleId()));
             }
