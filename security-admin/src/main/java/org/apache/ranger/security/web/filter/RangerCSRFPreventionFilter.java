@@ -187,8 +187,8 @@ public class RangerCSRFPreventionFilter implements Filter {
 		if (IS_CSRF_ENABLED) {
 			final HttpServletRequest httpRequest = (HttpServletRequest)request;
 		    final HttpServletResponse httpResponse = (HttpServletResponse)response;
-		    Boolean spnegoEnabled = httpRequest.getAttribute("spnegoEnabled") != null ? Boolean.valueOf(String.valueOf(httpRequest.getAttribute("spnegoEnabled"))) : false;
-		    Boolean trustedProxyEnabled = httpRequest.getAttribute("trustedProxyEnabled") != null ? Boolean.valueOf(String.valueOf(httpRequest.getAttribute("trustedProxyEnabled"))) : false;
+		    Boolean spnegoEnabled = httpRequest.getAttribute("spnegoEnabled") != null && Boolean.valueOf(String.valueOf(httpRequest.getAttribute("spnegoEnabled")));
+		    Boolean trustedProxyEnabled = httpRequest.getAttribute("trustedProxyEnabled") != null && Boolean.valueOf(String.valueOf(httpRequest.getAttribute("trustedProxyEnabled")));
 		    handleHttpInteraction(new ServletFilterHttpInteraction(httpRequest, httpResponse, chain), spnegoEnabled, trustedProxyEnabled);
 		}else{
 			chain.doFilter(request, response);
