@@ -110,6 +110,7 @@
         <commons.pool.version>1.6</commons.pool.version>
         <curator.test.version>2.12.0</curator.test.version>
         <derby.version>10.11.1.1</derby.version>
+        <dnsjava.version>2.1.7</dnsjava.version>
         <eclipse.jpa.version>2.5.2</eclipse.jpa.version>
         <elasticsearch.version>7.6.0</elasticsearch.version>
         <enunciate.version>2.11.1</enunciate.version>
@@ -161,6 +162,7 @@
         <kylin.version>2.6.4</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
+        <logback.version>1.2.10</logback.version>
         <log4j.version>1.2.17</log4j.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.pmd.plugin.version>3.7</maven.pmd.plugin.version>
@@ -174,6 +176,7 @@
         <owasp-java-html-sanitizer.version>r239</owasp-java-html-sanitizer.version>
         <paranamer.version>2.3</paranamer.version>
         <presto.version>333</presto.version>
+        <trino.version>377</trino.version>
         <poi.version>4.1.2</poi.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <protobuf-java.version>2.5.0</protobuf-java.version>
@@ -183,6 +186,7 @@
         <security-agent-install-dir>hadoop-security/plugins</security-agent-install-dir>
         <servlet.api.version>2.5</servlet.api.version>
         <slf4j-api.version>1.7.30</slf4j-api.version>
+        <slf4j.version>1.7.32</slf4j.version>
         <solr.version>7.7.1</solr.version>
         <spring-ldap-core.version>2.3.3.RELEASE</spring-ldap-core.version>
         <springframework.security.version>5.5.0</springframework.security.version>
@@ -209,6 +213,14 @@
         <presto.guava.version>26.0-jre</presto.guava.version>
         <presto.validation-api.version>2.0.1.Final</presto.validation-api.version>
         <presto.re2j.version>1.1</presto.re2j.version>
+
+        <!-- trino plugin deps -->
+        <trino.airlift.version>0.192</trino.airlift.version>
+        <trino.bval-jsr.version>2.0.0</trino.bval-jsr.version>
+        <trino.guice.version>4.2.2</trino.guice.version>
+        <trino.guava.version>26.0-jre</trino.guava.version>
+        <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
+        <trino.re2j.version>1.1</trino.re2j.version>
 
     <!-- Azure Key Vault dependencies -->
         <com.microsoft.azure.version>1.22.0</com.microsoft.azure.version>
@@ -255,6 +267,7 @@
                 <module>plugin-nifi</module>
                 <module>plugin-nifi-registry</module>
                 <module>plugin-presto</module>
+                <module>plugin-trino</module>
                 <module>plugin-kudu</module>
                 <module>ugsync-util</module>
                 <module>ugsync</module>
@@ -277,6 +290,7 @@
                 <module>ranger-atlas-plugin-shim</module>
                 <module>ranger-kms-plugin-shim</module>
                 <module>ranger-presto-plugin-shim</module>
+                <module>ranger-trino-plugin-shim</module>
                 <module>ranger-examples</module>
                 <module>ranger-tools</module>
                 <module>plugin-atlas</module>
@@ -522,6 +536,20 @@
             </modules>
         </profile>
         <profile>
+            <id>ranger-trino-plugin</id>
+            <modules>
+                <module>agents-audit</module>
+                <module>agents-common</module>
+                <module>agents-cred</module>
+                <module>agents-installer</module>
+                <module>credentialbuilder</module>
+                <module>ranger-plugin-classloader</module>
+                <module>ranger-util</module>
+                <module>plugin-trino</module>
+                <module>ranger-trino-plugin-shim</module>
+            </modules>
+        </profile>
+        <profile>
             <id>linux</id>
             <activation>
                 <os>
@@ -582,6 +610,8 @@
                 <module>ranger-kylin-plugin-shim</module>
                 <module>plugin-presto</module>
                 <module>ranger-presto-plugin-shim</module>
+                <module>plugin-trino</module>
+                <module>ranger-trino-plugin-shim</module>
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <!--

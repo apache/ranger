@@ -218,6 +218,12 @@ elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
         echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
         mkdir -p ${HCOMPONENT_LIB_DIR}
     fi
+elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugin/ranger
+    if [ ! -d "${HCOMPONENT_LIB_DIR}" ]; then
+        echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
+        mkdir -p ${HCOMPONENT_LIB_DIR}
+    fi
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
@@ -247,6 +253,8 @@ elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
 	chown $CFG_OWNER_INF $HCOMPONENT_CONF_DIR
     fi
 elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
+    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
+elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
 fi
 
