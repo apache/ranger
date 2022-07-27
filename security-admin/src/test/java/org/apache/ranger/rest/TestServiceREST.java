@@ -60,20 +60,12 @@ import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
 import org.apache.ranger.db.XXSecurityZoneRefTagServiceDao;
 import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceDefDao;
-import org.apache.ranger.entity.XXPortalUser;
-import org.apache.ranger.entity.XXSecurityZone;
-import org.apache.ranger.entity.XXSecurityZoneRefService;
-import org.apache.ranger.entity.XXSecurityZoneRefTagService;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceDef;
-import org.apache.ranger.plugin.model.RangerPluginInfo;
-import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
-import org.apache.ranger.plugin.model.RangerService;
-import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerEnumDef;
@@ -102,14 +94,7 @@ import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XUserService;
-import org.apache.ranger.view.RangerExportPolicyList;
-import org.apache.ranger.view.RangerPluginInfoList;
-import org.apache.ranger.view.RangerPolicyList;
-import org.apache.ranger.view.RangerServiceDefList;
-import org.apache.ranger.view.RangerServiceList;
-import org.apache.ranger.view.VXResponse;
-import org.apache.ranger.view.VXString;
-import org.apache.ranger.view.VXUser;
+import org.apache.ranger.view.*;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
 import org.junit.Rule;
@@ -117,12 +102,17 @@ import org.junit.Test;
 import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
+import org.mockito.Answers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
 
 import com.sun.jersey.core.header.FormDataContentDisposition;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
+import static org.mockito.ArgumentMatchers.eq;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -138,7 +128,7 @@ public class TestServiceREST {
 	@Mock
 	RangerValidatorFactory validatorFactory;
 
-	@Mock
+	@Mock(answer = Answers.RETURNS_DEEP_STUBS)
 	RangerDaoManager daoManager;
 
 	@Mock
@@ -242,12 +232,19 @@ public class TestServiceREST {
 
 	private String capabilityVector;
 
+	private final String grantor = "test-grantor-1";
+
+	private final String owner_user = "test-owner-user-1";
+
+	private final String zone_name = "test-zone-1";
+
 	public void setup() {
 		RangerSecurityContext context = new RangerSecurityContext();
 		context.setUserSession(new UserSessionBase());
 		RangerContextHolder.setSecurityContext(context);
 		UserSessionBase currentUserSession = ContextUtil
 				.getCurrentUserSession();
+		currentUserSession.setXXPortalUser(new XXPortalUser());
 		currentUserSession.setUserAdmin(true);
 		capabilityVector = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 	}
@@ -395,6 +392,59 @@ public class TestServiceREST {
 		sp.setServiceName("serviceName");
 		sp.setServiceId(1l);
 		return sp;
+	}
+	private List<Long> createLongList(){
+		List<Long> list = new ArrayList<Long>();
+		list.add(1L);
+		list.add(2L);
+		list.add(3L);
+		return list;
+	}
+	private ArrayList<String> createUserList() {
+		ArrayList<String> userList = new ArrayList<String>();
+		userList.add("test-user-1");
+		return userList;
+	}
+	private ArrayList<String> createGroupList() {
+		ArrayList<String> groupList = new ArrayList<String>();
+		groupList.add("test-group-1");
+		return groupList;
+	}
+	private ArrayList<String> createRoleList() {
+		ArrayList<String> roleList = new ArrayList<String>();
+		roleList.add("test-role-1");
+		return roleList;
+	}
+	private ArrayList<String> createGrantorGroupList() {
+		ArrayList<String> grantorGroupList = new ArrayList<String>();
+		grantorGroupList.add("test-grantor-group-1");
+		return grantorGroupList;
+	}
+
+	private HashMap<String,String> createResourceMap() {
+		HashMap<String,String> resourceMap = new HashMap<String,String>();
+		resourceMap.put("test-resource-1", "test-resource-value-1");
+		return resourceMap;
+	}
+
+	private ArrayList<String> createAccessTypeList() {
+		ArrayList<String> accessTypeList = new ArrayList<String>();
+		accessTypeList.add("test-access-type-1");
+		return accessTypeList;
+	}
+	private GrantRevokeRequest createValidGrantRevokeRequest() {
+		GrantRevokeRequest grantRevokeRequest = new GrantRevokeRequest();
+		grantRevokeRequest.setUsers(new HashSet<>(createUserList()));
+		grantRevokeRequest.setGroups(new HashSet<>(createGroupList()));
+		grantRevokeRequest.setRoles(new HashSet<>(createRoleList()));
+		grantRevokeRequest.setGrantor(grantor);
+		grantRevokeRequest.setGrantorGroups(new HashSet<>(createGrantorGroupList()));
+		grantRevokeRequest.setOwnerUser(owner_user);
+		grantRevokeRequest.setResource(createResourceMap());
+		grantRevokeRequest.setAccessTypes(new HashSet<>(createAccessTypeList()));
+		grantRevokeRequest.setZoneName(zone_name);
+		grantRevokeRequest.setIsRecursive(true);
+		return grantRevokeRequest;
 	}
 
 	@Test
@@ -662,7 +712,6 @@ public class TestServiceREST {
 
 	@Test
 	public void test9deleteService() throws Exception {
-
 		RangerService rangerService = rangerService();
 		XXServiceDef xServiceDef = serviceDef();
 		XXService xService = xService();
@@ -2153,6 +2202,180 @@ public class TestServiceREST {
 		
 	}
 
+	public void mockValidateGrantRevokeRequest(){
+		Mockito.when(userMgr.getXUserByUserName(Mockito.anyString())).thenReturn(Mockito.mock(VXUser.class));
+		Mockito.when(userMgr.getGroupByGroupName(Mockito.anyString())).thenReturn(Mockito.mock(VXGroup.class));
+		Mockito.when(daoManager.getXXRole().findByRoleName(Mockito.anyString())).thenReturn(Mockito.mock(XXRole.class));
+	}
+	@Test
+	public void test14bGrantAccess() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		String serviceName = "HDFS_1";
+		GrantRevokeRequest grantRequestObj = createValidGrantRevokeRequest();
+		Mockito.when(serviceUtil.isValidateHttpsAuthentication(serviceName, request))
+				.thenReturn(true);
+		Mockito.doNothing().when(bizUtil).failUnauthenticatedIfNotAllowed();
+		mockValidateGrantRevokeRequest();
+		Mockito.when(xUserService.getXUserByUserName(Mockito.anyString())).thenReturn(Mockito.mock(VXUser.class));
+		Mockito.when(svcStore.getServiceByName(Mockito.anyString())).thenReturn(Mockito.mock(RangerService.class));
+		Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
+		RESTResponse restResponse = serviceREST.grantAccess(serviceName,
+				grantRequestObj, request);
+		Mockito.verify(svcStore, Mockito.times(1)).createPolicy(Mockito.any(RangerPolicy.class));
+		assert restResponse != null;
+		assert restResponse.getStatusCode() == RESTResponse.STATUS_SUCCESS;
+	}
+	@Test
+	public void test64SecureGrantAccess(){
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		String serviceName = "HDFS_1";
+		GrantRevokeRequest grantRequestObj = createValidGrantRevokeRequest();
+		Mockito.when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+		Mockito.when(daoManager.getXXService().findByName(Mockito.anyString())).thenReturn(Mockito.mock(XXService.class));
+		Mockito.when(daoManager.getXXServiceDef().getById(Mockito.anyLong())).thenReturn(Mockito.mock(XXServiceDef.class));
+		try {
+			Mockito.when(svcStore.getServiceByName(Mockito.anyString())).thenReturn(Mockito.mock(RangerService.class));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		mockValidateGrantRevokeRequest();
+		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+		Mockito.when(bizUtil.isUserServiceAdmin(Mockito.any(RangerService.class), Mockito.anyString())).thenReturn(true);
+		RESTResponse restResponse;
+		try {
+			restResponse = serviceREST.secureGrantAccess(serviceName, grantRequestObj, request);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		try {
+			Mockito.verify(svcStore, Mockito.times(1)).createPolicy(Mockito.any(RangerPolicy.class));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		assert restResponse != null;
+		assert restResponse.getStatusCode() == RESTResponse.STATUS_SUCCESS;
+	}
+	@Test
+	public void test15bRevokeAccess() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		String serviceName = "HDFS_1";
+		GrantRevokeRequest revokeRequest = createValidGrantRevokeRequest();
+		Mockito.when(serviceUtil.isValidateHttpsAuthentication(serviceName, request))
+				.thenReturn(true);
+		Mockito.doNothing().when(bizUtil).failUnauthenticatedIfNotAllowed();
+		mockValidateGrantRevokeRequest();
+		Mockito.when(xUserService.getXUserByUserName(Mockito.anyString())).thenReturn(Mockito.mock(VXUser.class));
+		Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
+		RESTResponse restResponse = serviceREST.revokeAccess(serviceName,
+				revokeRequest, request);
+		assert restResponse != null;
+		assert restResponse.getStatusCode() == RESTResponse.STATUS_SUCCESS;
+	}
+	@Test
+	public void test65SecureRevokeAccess(){
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		String serviceName = "HDFS_1";
+		GrantRevokeRequest revokeRequest = createValidGrantRevokeRequest();
+		Mockito.when(serviceUtil.isValidService(serviceName, request)).thenReturn(true);
+		Mockito.when(daoManager.getXXService().findByName(Mockito.anyString())).thenReturn(Mockito.mock(XXService.class));
+		Mockito.when(daoManager.getXXServiceDef().getById(Mockito.anyLong())).thenReturn(Mockito.mock(XXServiceDef.class));
+		try {
+			Mockito.when(svcStore.getServiceByName(Mockito.anyString())).thenReturn(Mockito.mock(RangerService.class));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		mockValidateGrantRevokeRequest();
+		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+		Mockito.when(bizUtil.isUserRangerAdmin(Mockito.anyString())).thenReturn(true);
+		RESTResponse restResponse = null;
+		try {
+			restResponse = serviceREST.secureRevokeAccess(serviceName,
+					revokeRequest, request);
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		assert restResponse != null;
+		assert restResponse.getStatusCode() == RESTResponse.STATUS_SUCCESS;
+	}
 
+	@Test
+	public void test66ApplyPolicy(){
+		ServiceREST serviceRESTSpy = Mockito.spy(serviceREST);
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RangerPolicy policy = rangerPolicy();
+		Mockito.doReturn(policy).when(serviceRESTSpy).createPolicy(Mockito.any(RangerPolicy.class), eq(null));
+		RangerPolicy returnedPolicy = serviceRESTSpy.applyPolicy(policy, request);
+		assert returnedPolicy != null;
+		assert returnedPolicy.getId().equals(policy.getId());
+		assert returnedPolicy.getName().equals(policy.getName());
+	}
 
+	@Test
+	public void test67ResetPolicyCache(){
+		boolean res = true;
+		String serviceName = "HDFS_1";
+		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+		Mockito.when(svcStore.resetPolicyCache(serviceName)).thenReturn(res);
+		boolean isReset = serviceREST.resetPolicyCache(serviceName);
+		assert isReset == res;
+	}
+
+	@Test
+	public void test68ResetPolicyCacheAll(){
+		boolean res = true;
+		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+		Mockito.when(svcStore.resetPolicyCache(null)).thenReturn(res);
+		boolean isReset = serviceREST.resetPolicyCacheAll();
+		assert isReset == res;
+	}
+
+	@Test
+	public void test69DeletePolicyDeltas() {
+		int val = 1;
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		serviceREST.deletePolicyDeltas(val, request);
+		Mockito.verify(svcStore).resetPolicyUpdateLog(Mockito.anyInt(), Mockito.anyInt());
+	}
+
+	@Test
+	public void test70PurgeEmptyPolicies() {
+		ServiceREST serviceRESTSpy = Mockito.spy(serviceREST);
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		String serviceName = "HDFS_1";
+		try {
+			Mockito.when(svcStore.getServiceByName(Mockito.anyString())).thenReturn(Mockito.mock(RangerService.class));
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		try {
+			Mockito.when(svcStore.getServicePolicies(Mockito.anyString(), Mockito.anyLong())).thenReturn(servicePolicies());
+		} catch (Exception e) {
+			throw new RuntimeException(e);
+		}
+		serviceRESTSpy.purgeEmptyPolicies(serviceName, request);
+		Mockito.verify(serviceRESTSpy, Mockito.never()).deletePolicy(Mockito.anyLong());
+	}
+
+	@Test
+	public void test71DeleteClusterServices(){
+		String clusterName = "cluster1";
+		List<Long> idsToDelete = createLongList();
+		Mockito.when(daoManager.getXXServiceConfigMap().findServiceIdsByClusterName(Mockito.anyString())).
+				thenReturn(idsToDelete);
+		XXServiceDef xServiceDef = serviceDef();
+		XXService xService = xService();
+		XXServiceDefDao xServiceDefDao = Mockito.mock(XXServiceDefDao.class);
+		Mockito.when(validatorFactory.getServiceValidator(svcStore))
+				.thenReturn(serviceValidator);
+		Mockito.when(daoManager.getXXService().getById(Mockito.anyLong())).thenReturn(xService);
+		Mockito.when(daoManager.getXXServiceDef()).thenReturn(xServiceDefDao);
+		Mockito.when(xServiceDefDao.getById(xService.getType())).thenReturn(
+				xServiceDef);
+		ResponseEntity<List<ServiceDeleteResponse>> deletedResponse = serviceREST.deleteClusterServices(clusterName);
+		assert deletedResponse.getStatusCode() == HttpStatus.OK;
+		assert deletedResponse.getBody() != null;
+		for (ServiceDeleteResponse response : deletedResponse.getBody()) {
+			assert response.getIsDeleted();
+		}
+	}
 }
