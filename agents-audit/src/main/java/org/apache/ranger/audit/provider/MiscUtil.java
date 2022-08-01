@@ -931,14 +931,17 @@ public class MiscUtil {
 		if (value instanceof Date) {
 			return (Date) value;
 		}
-		try {
-			// TODO: Do proper parsing based on Solr response value
+    	try {
+			if (value.toString().matches("\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d(?:\\.\\d+)?Z?")) {
+				LocalDateTime localDateTime = LocalDateTime.parse(value.toString(), DateTimeFormatter.ISO_DATE_TIME);
+        		return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+			}
 			return new Date(value.toString());
-		} catch (Throwable t) {
-			logger.error("Error converting value to date. Value = " + value, t);
-		}
-		return null;
-	}
+    	} catch (Throwable t) {
+        	logger.error("Error converting value to date. Value = " + value, t);
+    	}
+    	return null;
+    }
 
 	public static Date toLocalDate(Object value) {
 		if (value == null) {
