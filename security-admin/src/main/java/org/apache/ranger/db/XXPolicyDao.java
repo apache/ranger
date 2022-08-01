@@ -18,7 +18,9 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.NoResultException;
 
@@ -355,5 +357,35 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		} catch (NoResultException excp) {
 		}
 		return ret;
+	}
+
+	public Map<String, Long> findDuplicatePoliciesByServiceAndResourceSignature() {
+		Map<String, Long> policies = new HashMap<String, Long>();
+		try {
+			List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXPolicy.findDuplicatePoliciesByServiceAndResourceSignature").getResultList();
+			if (rows != null) {
+				for (Object[] row : rows) {
+					policies.put((String) row[0], (Long) row[1]);
+				}
+			}
+		} catch (NoResultException e) {
+			return null;
+		} catch (Exception ex) {
+		}
+		return policies;
+	}
+
+	public List<XXPolicy> findByServiceIdAndResourceSignature(Long serviceId, String policySignature) {
+		if (policySignature == null || serviceId == null) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicy.findByServiceIdAndResourceSignature", tClass)
+					.setParameter("serviceId", serviceId)
+					.setParameter("resSignature", policySignature)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
 	}
 }

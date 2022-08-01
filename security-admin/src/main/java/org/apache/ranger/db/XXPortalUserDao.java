@@ -128,4 +128,25 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 			return null;
 		}
 	}
+
+	public XXPortalUser findById(Long id) {
+		XXPortalUser xXPortalUser = null;
+		if (id == null) {
+			return xXPortalUser;
+		}
+		try {
+			xXPortalUser = new XXPortalUser();
+			Object[] row = (Object[]) getEntityManager().createNamedQuery("XXPortalUser.findById").setParameter("id", id).getSingleResult();
+			if (row != null) {
+				xXPortalUser.setFirstName((String) row[0]);
+				xXPortalUser.setLastName((String) row[1]);
+				xXPortalUser.setPublicScreenName((String) row[2]);
+				xXPortalUser.setLoginId((String) row[3]);
+				return xXPortalUser;
+			}
+		} catch (NoResultException e) {
+			return null;
+		}
+		return xXPortalUser;
+	}
 }

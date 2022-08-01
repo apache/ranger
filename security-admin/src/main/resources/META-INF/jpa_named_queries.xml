@@ -418,6 +418,14 @@
 		<query>select obj from XXPolicy obj, XXService svc, XXSecurityZone zone where obj.guid = :guid and obj.service = svc.id and svc.name = :serviceName and obj.zoneId = zone.id and zone.name = :zoneName</query>
 	</named-query>
 
+	<named-query name="XXPolicy.findDuplicatePoliciesByServiceAndResourceSignature">
+		<query>select obj.resourceSignature, obj.service from XXPolicy obj GROUP BY obj.resourceSignature, obj.service HAVING COUNT(obj.resourceSignature) > 1</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findByServiceIdAndResourceSignature">
+		<query>select obj from XXPolicy obj where obj.service = :serviceId and obj.resourceSignature = :resSignature</query>
+	</named-query>
+
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>
@@ -1190,6 +1198,10 @@
 
 	<named-query name="XXPortalUser.findByUserSourceAndStatus">
 		<query>SELECT obj FROM XXPortalUser obj WHERE obj.userSource=:userSource and obj.status=:status</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.findById">
+		<query>SELECT obj.firstName, obj.lastName, obj.publicScreenName, obj.loginId FROM XXPortalUser obj WHERE obj.id=:id</query>
 	</named-query>
 
 	<!-- VXModuleDef -->

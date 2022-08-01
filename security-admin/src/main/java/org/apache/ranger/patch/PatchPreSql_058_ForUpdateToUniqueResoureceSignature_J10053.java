@@ -17,14 +17,18 @@
 
 package org.apache.ranger.patch;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.RangerFactory;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXPolicyLabelMapDao;
 import org.apache.ranger.entity.XXPolicy;
+import org.apache.ranger.entity.XXPolicyLabelMap;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.util.CLIUtil;
@@ -89,6 +93,7 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
 
 		try {
 			updateDisabledPolicyResourceSignature();
+			removeDuplicateResourceSignaturesPolicies();
 		} catch (Exception e) {
 			logger.error("Error while PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053()", e);
 			System.exit(1);
@@ -128,4 +133,49 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
 		}
 	}
 
+	private void removeDuplicateResourceSignaturesPolicies() throws Exception {
+		logger.info("==> removeDuplicateResourceSignaturesPolicies() ");
+		Map<String, Long> duplicateEntries = daoMgr.getXXPolicy().findDuplicatePoliciesByServiceAndResourceSignature();
+		if (duplicateEntries != null && duplicateEntries.size() > 0) {
+			logger.info("Total number of possible duplicate policies:" + duplicateEntries.size());
+			for (Map.Entry<String, Long> entry : duplicateEntries.entrySet()) {
+				logger.info("Duplicate policy Entry - {ResourceSignature:" + entry.getKey() + ", ServiceId:" + entry.getValue() + "}");
+				List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().findByServiceIdAndResourceSignature(entry.getValue(), entry.getKey());
+				if (CollectionUtils.isNotEmpty(xxPolicyList) && xxPolicyList.size() > 1) {
+					Iterator<XXPolicy> duplicatePolicies = xxPolicyList.iterator();
+					duplicatePolicies.next();
+					while (duplicatePolicies.hasNext()) {
+						XXPolicy xxPolicy = duplicatePolicies.next();
+						if (xxPolicy != null) {
+							logger.info("Attempting to Remove duplicate policy:{" + xxPolicy.getId() + ":" + xxPolicy.getName() + "}");
+							if (cleanupRefTables(xxPolicy.getId())) {
+								daoMgr.getXXPolicy().remove(xxPolicy.getId());
+							}
+						}
+					}
+				}
+			}
+		} else {
+			logger.info("no duplicate Policy found");
+		}
+	}
+
+	private Boolean cleanupRefTables(Long policyId) {
+		if (policyId == null) {
+			return false;
+		}
+		daoMgr.getXXPolicyRefResource().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefRole().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefGroup().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefUser().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefAccessType().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefCondition().deleteByPolicyId(policyId);
+		daoMgr.getXXPolicyRefDataMaskType().deleteByPolicyId(policyId);
+		XXPolicyLabelMapDao policyLabelMapDao = daoMgr.getXXPolicyLabelMap();
+		List<XXPolicyLabelMap> xxPolicyLabelMaps = policyLabelMapDao.findByPolicyId(policyId);
+		for (XXPolicyLabelMap xxPolicyLabelMap : xxPolicyLabelMaps) {
+			policyLabelMapDao.remove(xxPolicyLabelMap);
+		}
+		return true;
+	}
 }
