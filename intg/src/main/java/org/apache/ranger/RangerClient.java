@@ -19,6 +19,8 @@
 package org.apache.ranger;
 
 import com.sun.jersey.api.client.GenericType;
+import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,14 +30,11 @@ import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.apache.hadoop.security.SecureClientLogin;
 
-import javax.security.auth.Subject;
 import java.security.PrivilegedAction;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import java.io.IOException;
 import java.net.URI;
 import java.util.*;
 
@@ -143,19 +142,15 @@ public class RangerClient {
 
 
     private final RangerRESTClient restClient;
-    private boolean isSecureMode = false;
-    private Subject sub = null;
+    private boolean isSecureMode     = false;
+    private UserGroupInformation ugi = null;
 
     private void authInit(String authType, String username, String password) {
         if (AUTH_KERBEROS.equalsIgnoreCase(authType)) {
-            if (SecureClientLogin.isKerberosCredentialExists(username, password)) {
-                isSecureMode = true;
-                try {
-                    sub = SecureClientLogin.loginUserFromKeytab(username, password);
-                } catch (IOException e) {
-                    LOG.error(e.getMessage());
-                }
-            } else LOG.error("Authentication credentials missing/invalid");
+            isSecureMode = true;
+            MiscUtil.loginWithKeyTab(password, username, null);
+            ugi = MiscUtil.getUGILoginUser();
+            LOG.info("RangerClient.authInit() UGI user: " + ugi.getUserName() + " principal: " + username);
         } else {
             restClient.setBasicAuthInfo(username, password);
         }
@@ -464,7 +459,8 @@ public class RangerClient {
         }
 
         if (isSecureMode) {
-            clientResponse = Subject.doAs(sub, (PrivilegedAction<ClientResponse>) () -> {
+            ugi = MiscUtil.getUGILoginUser();
+            clientResponse = ugi.doAs((PrivilegedAction<ClientResponse>) () -> {
                 try {
                     return invokeREST(api,params,request);
                 } catch (RangerServiceException e) {

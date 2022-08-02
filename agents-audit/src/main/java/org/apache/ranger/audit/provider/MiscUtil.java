@@ -786,6 +786,45 @@ public class MiscUtil {
 
 	}
 
+	public static void loginWithKeyTab(String keytab, String principal, String nameRules) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> MiscUtil.loginWithKeyTab() keytab= " + keytab + "principal= " + principal + "nameRules= " + nameRules);
+		}
+
+		if (keytab == null || principal == null) {
+			logger.error("Failed to login as keytab or principal is null!");
+			return;
+		}
+
+		String[]             spnegoPrincipals;
+		UserGroupInformation ugi;
+
+		try {
+			if (principal.equals("*")) {
+				spnegoPrincipals = KerberosUtil.getPrincipalNames(keytab, Pattern.compile("HTTP/.*"));
+				if (spnegoPrincipals.length == 0) {
+					logger.error("No principals found in keytab= " + keytab);
+				}
+			} else {
+				spnegoPrincipals = new String[] { principal };
+			}
+
+			if (nameRules != null) {
+				KerberosName.setRules(nameRules);
+			}
+
+			logger.info("Creating UGI from keytab directly. keytab= " + keytab + ", principal= " + spnegoPrincipals[0]);
+			ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(spnegoPrincipals[0], keytab);
+			MiscUtil.setUGILoginUser(ugi, null);
+		} catch (Exception e) {
+			logger.error("Failed to login with given keytab= " + keytab + "principal= " + principal + "nameRules= " + nameRules, e);
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== MiscUtil.loginWithKeyTab()");
+		}
+	}
+
 	static class LogHistory {
 		long lastLogTime = 0;
 		int counter = 0;
