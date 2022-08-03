@@ -537,11 +537,12 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 							if (timeStampAttr != null) {
 								String timeStampVal = (String) timeStampAttr.get();
 								Date parseDate = dateFormat.parse(timeStampVal);
+								String timeStampValFormat = dateFormat.format(parseDate);
 								long currentDeltaSyncTime = parseDate.getTime();
 								LOG.info("timeStampVal = " + timeStampVal + "and currentDeltaSyncTime = " + currentDeltaSyncTime);
 								if (currentDeltaSyncTime > highestdeltaSyncUserTime) {
 									highestdeltaSyncUserTime = currentDeltaSyncTime;
-									deltaSyncUserTimeStamp = timeStampVal;
+									deltaSyncUserTimeStamp = timeStampValFormat;
 								}
 							}
 						}
@@ -764,11 +765,12 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 								if (timeStampAttr != null) {
 									String timeStampVal = (String) timeStampAttr.get();
 									Date parseDate = dateFormat.parse(timeStampVal);
+									String timeStampValFormat = dateFormat.format(parseDate);
 									long currentDeltaSyncTime = parseDate.getTime();
 									LOG.info("timeStampVal = " + timeStampVal + "and currentDeltaSyncTime = " + currentDeltaSyncTime);
 									if (currentDeltaSyncTime > highestdeltaSyncGroupTime) {
 										highestdeltaSyncGroupTime = currentDeltaSyncTime;
-										deltaSyncGroupTimeStamp = timeStampVal;
+										deltaSyncGroupTimeStamp = timeStampValFormat;
 									}
 								}
 							}
