@@ -123,9 +123,9 @@ public class RangerAtlasAuthorizerUtil {
         accessorsEnd1.getRoles().retainAll(accessorsEnd2.getRoles());
         accessorsEnd1.getGroups().retainAll(accessorsEnd2.getGroups());
 
-        accessorsEnd1.getDenyUsers().retainAll(accessorsEnd2.getDenyUsers());
-        accessorsEnd1.getDenyRoles().retainAll(accessorsEnd2.getDenyRoles());
-        accessorsEnd1.getDenyGroups().retainAll(accessorsEnd2.getDenyGroups());
+        accessorsEnd1.getDenyUsers().addAll(accessorsEnd2.getDenyUsers());
+        accessorsEnd1.getDenyRoles().addAll(accessorsEnd2.getDenyRoles());
+        accessorsEnd1.getDenyGroups().addAll(accessorsEnd2.getDenyGroups());
 
         // add accessors to the response
         accessorResponse.getUsers().addAll(accessorsEnd1.getUsers());
