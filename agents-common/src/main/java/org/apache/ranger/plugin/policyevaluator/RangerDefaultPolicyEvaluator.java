@@ -1300,7 +1300,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
                     if (!request.isAccessorsRequested()) {
                     	break;
                     }
-                    result.addMatchedItem(evaluator);
+                    result.addMatchedItemEvaluator(evaluator);
                 }
             }
         }

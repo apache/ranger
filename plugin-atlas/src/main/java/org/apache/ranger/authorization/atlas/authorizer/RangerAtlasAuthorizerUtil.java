@@ -30,8 +30,6 @@ import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import static org.apache.ranger.authorization.atlas.authorizer.RangerAtlasAuthorizer.CLASSIFICATION_PRIVILEGES;
@@ -76,9 +74,9 @@ public class RangerAtlasAuthorizerUtil {
     }
 
     static void collectAccessors(RangerAccessResult result, AtlasAccessorResponse response) {
-        if (result != null && CollectionUtils.isNotEmpty(result.getMatchedItems())) {
+        if (result != null && CollectionUtils.isNotEmpty(result.getMatchedItemEvaluators())) {
 
-            result.getMatchedItems().forEach(x -> {
+            result.getMatchedItemEvaluators().forEach(x -> {
                 collectSubjects(response, x);
             });
         }
@@ -102,7 +100,7 @@ public class RangerAtlasAuthorizerUtil {
 
     static void collectAccessors(RangerAccessResult resultEnd1, RangerAccessResult resultEnd2, AtlasAccessorResponse accessorResponse) {
 
-        if (resultEnd2 == null || CollectionUtils.isEmpty(resultEnd2.getMatchedItems()))  {
+        if (resultEnd2 == null || CollectionUtils.isEmpty(resultEnd2.getMatchedItemEvaluators()))  {
             return;
         }
 
@@ -110,11 +108,11 @@ public class RangerAtlasAuthorizerUtil {
         final AtlasAccessorResponse accessorsEnd2 = new AtlasAccessorResponse();
 
         // Collect lists of accessors for both results
-        resultEnd1.getMatchedItems().forEach(x -> {
+        resultEnd1.getMatchedItemEvaluators().forEach(x -> {
             collectSubjects(accessorsEnd1, x);
         });
 
-        resultEnd2.getMatchedItems().forEach(x -> {
+        resultEnd2.getMatchedItemEvaluators().forEach(x -> {
             collectSubjects(accessorsEnd2, x);
         });
 
@@ -142,7 +140,7 @@ public class RangerAtlasAuthorizerUtil {
             return false;
         }
 
-        for (RangerPolicyItemEvaluator itemEvaluator : result.getMatchedItems()) {
+        for (RangerPolicyItemEvaluator itemEvaluator : result.getMatchedItemEvaluators()) {
             RangerPolicy.RangerPolicyItem item = itemEvaluator.getPolicyItem();
             if (CollectionUtils.isNotEmpty(item.getUsers()) || CollectionUtils.isNotEmpty(item.getRoles()) && CollectionUtils.isNotEmpty(item.getGroups())) {
                 return true;

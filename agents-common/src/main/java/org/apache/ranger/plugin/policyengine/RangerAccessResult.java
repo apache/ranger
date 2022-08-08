@@ -55,7 +55,7 @@ public class RangerAccessResult {
 	private long     evaluatedPoliciesCount;
 	private String   reason;
 	private Map<String, Object> additionalInfo;
-	private List<RangerPolicyItemEvaluator> matchedItems = new ArrayList<>();
+	private List<RangerPolicyItemEvaluator> matchedItemEvaluators = new ArrayList<>();
 
 	public RangerAccessResult(final int policyType, final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
 		this.serviceName = serviceName;
@@ -85,7 +85,7 @@ public class RangerAccessResult {
 		this.evaluatedPoliciesCount = other.evaluatedPoliciesCount;
 		this.reason      = other.getReason();
 		this.additionalInfo = other.additionalInfo == null ? new HashMap<String, Object>() : new HashMap<>(other.additionalInfo);
-		this.matchedItems = new ArrayList<>(other.matchedItems);
+		this.matchedItemEvaluators = new ArrayList<>(other.matchedItemEvaluators);
 	}
 
 	public void setAuditResultFrom(final RangerAccessResult other) {
@@ -257,16 +257,16 @@ public class RangerAccessResult {
 		}
 	}
 
-	public List<RangerPolicyItemEvaluator> getMatchedItems() {
-		return matchedItems;
+	public List<RangerPolicyItemEvaluator> getMatchedItemEvaluators() {
+		return matchedItemEvaluators;
 	}
 
-	public void setMatchedItems(List<RangerPolicyItemEvaluator> matchedItems) {
-		this.matchedItems = matchedItems;
+	public void setMatchedItemEvaluators(List<RangerPolicyItemEvaluator> matchedItemEvaluators) {
+		this.matchedItemEvaluators = matchedItemEvaluators;
 	}
 
-	public void addMatchedItem(RangerPolicyItemEvaluator matchedItem) {
-		this.matchedItems.add(matchedItem);
+	public void addMatchedItemEvaluator(RangerPolicyItemEvaluator matchItemEvaluator) {
+		this.matchedItemEvaluators.add(matchItemEvaluator);
 	}
 
 	/**
