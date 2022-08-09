@@ -28,7 +28,13 @@ import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionCallback;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.util.List;
 import java.util.Map;
@@ -38,6 +44,10 @@ public class PatchForSyncSourceUpdate_J10054 extends BaseLoader{
 
     @Autowired
     RangerDaoManager daoManager;
+
+    @Autowired
+    @Qualifier(value = "transactionManager")
+    PlatformTransactionManager txManager;
 
     private static final Logger logger = LoggerFactory.getLogger(PatchForSyncSourceUpdate_J10054.class);
 
@@ -87,23 +97,39 @@ public class PatchForSyncSourceUpdate_J10054 extends BaseLoader{
             if (StringUtils.isNotEmpty(otherAttributes) && StringUtils.isEmpty(syncSource)){
                 syncSource = (String) gson.fromJson(otherAttributes, Map.class).get(UgsyncCommonConstants.SYNC_SOURCE);
                 xUser.setSyncSource(syncSource);
-                if (StringUtils.isNotEmpty(syncSource)) {
-                    XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(xUser.getName());
-                    if (xXPortalUser != null && xXPortalUser.getUserSource() == 0){
-                        /* updating the user source to external for users which had some sync source prior to upgrade
-                           but the user source was marked internal to due bugs which were fixed later.
-                           See RANGER-3297 for more info
-                        */
-                        xXPortalUser.setUserSource(1);
-                        daoManager.getXXPortalUser().update(xXPortalUser);
-                        if (logger.isDebugEnabled()) {
-                            logger.debug("USER: Name: " + xUser.getName() + " userSource changed to External");
+
+                TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+                txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+
+                String finalSyncSource = syncSource;
+                try {
+                    txTemplate.execute(new TransactionCallback<Object>() {
+                        @Override
+                        public Object doInTransaction(TransactionStatus status) {
+                            if (StringUtils.isNotEmpty(finalSyncSource)) {
+                                XXPortalUser xXPortalUser = daoManager.getXXPortalUser().findByLoginId(xUser.getName());
+                                if (xXPortalUser != null && xXPortalUser.getUserSource() == 0){
+                                /* updating the user source to external for users which had some sync source prior to upgrade
+                                   but the user source was marked internal to due bugs which were fixed later.
+                                   See RANGER-3297 for more info
+                                */
+                                    xXPortalUser.setUserSource(1);
+                                    daoManager.getXXPortalUser().update(xXPortalUser);
+                                    if (logger.isDebugEnabled()) {
+                                        logger.debug("USER: Name: " + xUser.getName() + " userSource changed to External");
+                                    }
+                                }
+                            }
+                            daoManager.getXXUser().update(xUser);
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("USER: Name: " + xUser.getName() + " syncSource updated to " + finalSyncSource);
+                            }
+                            return null;
                         }
-                    }
-                }
-                daoManager.getXXUser().update(xUser);
-                if (logger.isDebugEnabled()) {
-                    logger.debug("USER: Name: " + xUser.getName() + " syncSource updated to " + syncSource);
+                    });
+                } catch (Throwable ex) {
+                    logger.error("updateSyncSourceForUsers(): Failed to update DB for user: " + xUser.getName() + " ", ex);
+                    throw new RuntimeException(ex);
                 }
             } else if (logger.isDebugEnabled()) {
                 logger.debug("Skipping syncSource update for user: " + xUser.getName() );
@@ -130,7 +156,21 @@ public class PatchForSyncSourceUpdate_J10054 extends BaseLoader{
                 if (logger.isDebugEnabled()) {
                     logger.debug("GROUP: Name: " + xGroup.getName() + " syncSource updated to " + syncSource);
                 }
-                daoManager.getXXGroup().update(xGroup);
+
+                TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+                txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+                try {
+                    txTemplate.execute(new TransactionCallback<Object>() {
+                        @Override
+                        public Object doInTransaction(TransactionStatus status) {
+                            daoManager.getXXGroup().update(xGroup);
+                            return null;
+                        }
+                    });
+                } catch (Throwable ex) {
+                    logger.error("updateSyncSourceForGroups(): Failed to update DB for group: " + xGroup.getName() + " ", ex);
+                    throw new RuntimeException(ex);
+                }
             } else if (logger.isDebugEnabled()) {
                 logger.debug("Skipping syncSource update for group: " + xGroup.getName() );
             }
