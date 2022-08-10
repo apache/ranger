@@ -437,12 +437,9 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
             setClassificationsToRequestContext(classificationsWithSuperTypesEnd1, rangerRequest);
             RangerAccessResult resultEnd1 = getAccessors(rangerRequest); // tag-based accessors with end1 classification
 
-            if (hasAccessors(resultEnd1)) {
-                // end1 has accessors with tag based policy/policies
-                setClassificationsToRequestContext(classificationsWithSuperTypesEnd2, rangerRequest);
-                RangerAccessResult resultEnd2 = getAccessors(rangerRequest); // tag-based accessors with end2 classification
-                collectAccessors(resultEnd1, resultEnd2, ret);
-            }
+            setClassificationsToRequestContext(classificationsWithSuperTypesEnd2, rangerRequest);
+            RangerAccessResult resultEnd2 = getAccessors(rangerRequest); // tag-based accessors with end2 classification
+            collectAccessors(resultEnd1, resultEnd2, ret);
         } finally {
             RangerPerfTracer.log(perf);
         }

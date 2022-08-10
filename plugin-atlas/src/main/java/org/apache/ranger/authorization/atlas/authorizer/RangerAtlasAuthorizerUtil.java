@@ -28,9 +28,8 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 
 import static org.apache.ranger.authorization.atlas.authorizer.RangerAtlasAuthorizer.CLASSIFICATION_PRIVILEGES;
@@ -75,52 +74,65 @@ public class RangerAtlasAuthorizerUtil {
     }
 
     static void collectAccessors(RangerAccessResult result, AtlasAccessorResponse response) {
-        if (result != null && CollectionUtils.isNotEmpty(result.getMatchedItems())) {
+        if (result != null && CollectionUtils.isNotEmpty(result.getMatchedItemEvaluators())) {
 
-            result.getMatchedItems().forEach(x -> {
-                response.getUsers().addAll(x.getUsers());
-                response.getRoles().addAll(x.getRoles());
-                response.getGroups().addAll(x.getGroups());
+            result.getMatchedItemEvaluators().forEach(x -> {
+                collectSubjects(response, x);
             });
+        }
+    }
+
+    static private void collectSubjects(AtlasAccessorResponse response, RangerPolicyItemEvaluator evaluator) {
+
+        RangerPolicy.RangerPolicyItem policyItem = evaluator.getPolicyItem();
+
+        if (evaluator.getPolicyItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ALLOW) {
+            response.getUsers().addAll(policyItem.getUsers());
+            response.getRoles().addAll(policyItem.getRoles());
+            response.getGroups().addAll(policyItem.getGroups());
+
+        } else if (evaluator.getPolicyItemType() == RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DENY) {
+            response.getDenyUsers().addAll(policyItem.getUsers());
+            response.getDenyRoles().addAll(policyItem.getRoles());
+            response.getDenyGroups().addAll(policyItem.getGroups());
         }
     }
 
     static void collectAccessors(RangerAccessResult resultEnd1, RangerAccessResult resultEnd2, AtlasAccessorResponse accessorResponse) {
 
-        if (resultEnd2 == null || CollectionUtils.isEmpty(resultEnd2.getMatchedItems()))  {
+        if (resultEnd2 == null || CollectionUtils.isEmpty(resultEnd2.getMatchedItemEvaluators()))  {
             return;
         }
 
-        final List<String> usersEnd1 = new ArrayList<>();
-        final List<String> rolesEnd1 = new ArrayList<>();
-        final List<String> groupsEnd1 = new ArrayList<>();
-
-        final List<String> usersEnd2 = new ArrayList<>();
-        final List<String> rolesEnd2 = new ArrayList<>();
-        final List<String> groupsEnd2 = new ArrayList<>();
+        final AtlasAccessorResponse accessorsEnd1 = new AtlasAccessorResponse();
+        final AtlasAccessorResponse accessorsEnd2 = new AtlasAccessorResponse();
 
         // Collect lists of accessors for both results
-        resultEnd1.getMatchedItems().forEach(x -> {
-            usersEnd1.addAll(x.getUsers());
-            rolesEnd1.addAll(x.getRoles());
-            groupsEnd1.addAll(x.getGroups());
+        resultEnd1.getMatchedItemEvaluators().forEach(x -> {
+            collectSubjects(accessorsEnd1, x);
         });
 
-        resultEnd2.getMatchedItems().forEach(x -> {
-            usersEnd2.addAll(x.getUsers());
-            rolesEnd2.addAll(x.getRoles());
-            groupsEnd2.addAll(x.getGroups());
+        resultEnd2.getMatchedItemEvaluators().forEach(x -> {
+            collectSubjects(accessorsEnd2, x);
         });
 
         // Retain only common accessors
-        usersEnd1.retainAll(usersEnd2);
-        rolesEnd1.retainAll(rolesEnd2);
-        groupsEnd1.retainAll(groupsEnd2);
+        accessorsEnd1.getUsers().retainAll(accessorsEnd2.getUsers());
+        accessorsEnd1.getRoles().retainAll(accessorsEnd2.getRoles());
+        accessorsEnd1.getGroups().retainAll(accessorsEnd2.getGroups());
+
+        accessorsEnd1.getDenyUsers().addAll(accessorsEnd2.getDenyUsers());
+        accessorsEnd1.getDenyRoles().addAll(accessorsEnd2.getDenyRoles());
+        accessorsEnd1.getDenyGroups().addAll(accessorsEnd2.getDenyGroups());
 
         // add accessors to the response
-        accessorResponse.getUsers().addAll(usersEnd1);
-        accessorResponse.getRoles().addAll(rolesEnd1);
-        accessorResponse.getGroups().addAll(groupsEnd1);
+        accessorResponse.getUsers().addAll(accessorsEnd1.getUsers());
+        accessorResponse.getRoles().addAll(accessorsEnd1.getRoles());
+        accessorResponse.getGroups().addAll(accessorsEnd1.getGroups());
+
+        accessorResponse.getDenyUsers().addAll(accessorsEnd1.getDenyUsers());
+        accessorResponse.getDenyRoles().addAll(accessorsEnd1.getDenyRoles());
+        accessorResponse.getDenyGroups().addAll(accessorsEnd1.getDenyGroups());
     }
 
     static boolean hasAccessors(RangerAccessResult result) {
@@ -128,7 +140,8 @@ public class RangerAtlasAuthorizerUtil {
             return false;
         }
 
-        for (RangerPolicy.RangerPolicyItem item : result.getMatchedItems()) {
+        for (RangerPolicyItemEvaluator itemEvaluator : result.getMatchedItemEvaluators()) {
+            RangerPolicy.RangerPolicyItem item = itemEvaluator.getPolicyItem();
             if (CollectionUtils.isNotEmpty(item.getUsers()) || CollectionUtils.isNotEmpty(item.getRoles()) && CollectionUtils.isNotEmpty(item.getGroups())) {
                 return true;
             }

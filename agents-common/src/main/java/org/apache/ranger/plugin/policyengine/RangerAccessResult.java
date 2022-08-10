@@ -22,6 +22,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 import java.util.ArrayList;
@@ -54,7 +55,7 @@ public class RangerAccessResult {
 	private long     evaluatedPoliciesCount;
 	private String   reason;
 	private Map<String, Object> additionalInfo;
-	private List<RangerPolicy.RangerPolicyItem> matchedItems = new ArrayList<>();
+	private List<RangerPolicyItemEvaluator> matchedItemEvaluators = new ArrayList<>();
 
 	public RangerAccessResult(final int policyType, final String serviceName, final RangerServiceDef serviceDef, final RangerAccessRequest request) {
 		this.serviceName = serviceName;
@@ -84,7 +85,7 @@ public class RangerAccessResult {
 		this.evaluatedPoliciesCount = other.evaluatedPoliciesCount;
 		this.reason      = other.getReason();
 		this.additionalInfo = other.additionalInfo == null ? new HashMap<String, Object>() : new HashMap<>(other.additionalInfo);
-		this.matchedItems = new ArrayList<>(other.matchedItems);
+		this.matchedItemEvaluators = new ArrayList<>(other.matchedItemEvaluators);
 	}
 
 	public void setAuditResultFrom(final RangerAccessResult other) {
@@ -256,16 +257,16 @@ public class RangerAccessResult {
 		}
 	}
 
-	public List<RangerPolicy.RangerPolicyItem> getMatchedItems() {
-		return matchedItems;
+	public List<RangerPolicyItemEvaluator> getMatchedItemEvaluators() {
+		return matchedItemEvaluators;
 	}
 
-	public void setMatchedItems(List<RangerPolicy.RangerPolicyItem> matchedItems) {
-		this.matchedItems = matchedItems;
+	public void setMatchedItemEvaluators(List<RangerPolicyItemEvaluator> matchedItemEvaluators) {
+		this.matchedItemEvaluators = matchedItemEvaluators;
 	}
 
-	public void addMatchedItem(RangerPolicy.RangerPolicyItem matchedItem) {
-		this.matchedItems.add(matchedItem);
+	public void addMatchedItemEvaluator(RangerPolicyItemEvaluator matchItemEvaluator) {
+		this.matchedItemEvaluators.add(matchItemEvaluator);
 	}
 
 	/**
