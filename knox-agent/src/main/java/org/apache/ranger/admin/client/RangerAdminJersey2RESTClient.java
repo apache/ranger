@@ -289,7 +289,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 
 		final RangerUserStore      ret;
 		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
-		final boolean              isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final boolean              isSecureMode = isKerberosEnabled(user);
 		final Response             response;
 
 		Map<String, String> queryParams = new HashMap<String, String>();
@@ -538,7 +538,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		final ServicePolicies ret;
 
 		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
-		final boolean              isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final boolean              isSecureMode = isKerberosEnabled(user);
 		final Response             response     = getRangerAdminPolicyDownloadResponse(lastKnownVersion, lastActivationTimeInMillis, user, isSecureMode);
 
 		int httpResponseCode = response == null ? -1 : response.getStatus();
@@ -604,7 +604,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		final ServicePolicies ret;
 
 		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
-		final boolean              isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final boolean              isSecureMode = isKerberosEnabled(user);
 		final Response 	           response     = getRangerAdminPolicyDownloadResponse(lastKnownVersion, lastActivationTimeInMillis, user, isSecureMode);
 
 		int httpResponseCode = response == null ? -1 : response.getStatus();
@@ -754,7 +754,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		final ServiceTags ret;
 
 		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
-		final boolean              isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final boolean              isSecureMode = isKerberosEnabled(user);
 		final Response             response     = getTagsDownloadResponse(lastKnownVersion, lastActivationTimeInMillis, user, isSecureMode);
 
 		int httpResponseCode = response == null ? -1 : response.getStatus();
@@ -820,7 +820,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		final ServiceTags ret;
 
 		final UserGroupInformation user = MiscUtil.getUGILoginUser();
-		final boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final boolean isSecureMode = isKerberosEnabled(user);
 		final Response response = getTagsDownloadResponse(lastKnownVersion, lastActivationTimeInMillis, user, isSecureMode);
 
 		int httpResponseCode = response == null ? -1 : response.getStatus();
@@ -968,7 +968,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		final RangerRoles ret;
 
 		final UserGroupInformation user         = MiscUtil.getUGILoginUser();
-		final boolean              isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final boolean              isSecureMode = isKerberosEnabled(user);
 		final Response             response     = getRoleDownloadResponse(lastKnownRoleVersion, lastActivationTimeInMillis, user, isSecureMode);
 
 		int httpResponseCode = response == null ? -1 : response.getStatus();
@@ -1034,7 +1034,7 @@ public class RangerAdminJersey2RESTClient extends AbstractRangerAdminClient {
 		final RangerRoles ret;
 
 		final UserGroupInformation user = MiscUtil.getUGILoginUser();
-		final boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		final boolean isSecureMode = isKerberosEnabled(user);
 		final Response response = getRoleDownloadResponse(lastKnownRoleVersion, lastActivationTimeInMillis, user, isSecureMode);
 
 		int httpResponseCode = response == null ? -1 : response.getStatus();
