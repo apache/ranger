@@ -53,6 +53,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 	private String clusterName;
 	private RangerRESTClient restClient;
 	private RangerRESTUtils restUtils   = new RangerRESTUtils();
+	private boolean forceNonKerberos = false;
 
 	public static <T> GenericType<List<T>> getGenericType(final T clazz) {
 
@@ -84,6 +85,8 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		clusterName       				= RangerConfiguration.getInstance().get(propertyPrefix + ".ambari.cluster.name", "");
 		int	 restClientConnTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		int	 restClientReadTimeOutMs	= RangerConfiguration.getInstance().getInt(propertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
+		this.forceNonKerberos 			= RangerConfiguration.getInstance().getBoolean(propertyPrefix + ".forceNonKerberos", false);
+
         if (!StringUtil.isEmpty(tmpUrl)) {
             url = tmpUrl.trim();
         }
@@ -102,7 +105,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		ServicePolicies ret = null;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		boolean isSecureMode = isKerberosEnabled(user);
 		ClientResponse response = null;
 		if (isSecureMode) {
 			if (LOG.isDebugEnabled()) {
@@ -174,7 +177,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		ClientResponse response = null;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		boolean isSecureMode = isKerberosEnabled(user);
 
 		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
@@ -219,7 +222,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		ClientResponse response = null;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		boolean isSecureMode = isKerberosEnabled(user);
 
 		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
@@ -287,7 +290,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		ClientResponse response = null;
 		WebResource webResource = null;
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		boolean isSecureMode = isKerberosEnabled(user);
 
 		if (isSecureMode) {
 			PrivilegedAction<ClientResponse> action = new PrivilegedAction<ClientResponse>() {
@@ -358,7 +361,7 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 		List<String> ret = null;
 		String emptyString = "";
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		boolean isSecureMode = isKerberosEnabled(user);
 
 		final WebResource webResource = createWebResource(RangerRESTUtils.REST_URL_LOOKUP_TAG_NAMES)
 				.queryParam(RangerRESTUtils.SERVICE_NAME_PARAM, serviceName)
@@ -395,5 +398,17 @@ public class RangerAdminRESTClient implements RangerAdminClient {
 
 		return ret;
 	}
+
+	public boolean isKerberosEnabled(UserGroupInformation user) {
+        final boolean ret;
+
+        if (forceNonKerberos) {
+            ret = false;
+        } else {
+            ret = user != null && UserGroupInformation.isSecurityEnabled() && user.hasKerberosCredentials();
+        }
+
+        return ret;
+    }
 
 }

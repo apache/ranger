@@ -66,6 +66,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 	String _pluginId = null;
 	int	   _restClientConnTimeOutMs;
 	int	   _restClientReadTimeOutMs;
+	boolean forceNonKerberos = false;
 
 	@Override
 	public void init(String serviceName, String appId, String configPropertyPrefix) {
@@ -81,6 +82,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		_restClientConnTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.connection.timeoutMs", 120 * 1000);
 		_restClientReadTimeOutMs = RangerConfiguration.getInstance().getInt(configPropertyPrefix + ".policy.rest.client.read.timeoutMs", 30 * 1000);
 		_clusterName = RangerConfiguration.getInstance().get(configPropertyPrefix + ".ambari.cluster.name", "");
+		forceNonKerberos = RangerConfiguration.getInstance().getBoolean(configPropertyPrefix + ".forceNonKerberos", false);
 
 		LOG.info("Init params: " + String.format("Base URL[%s], SSL Congig filename[%s], ServiceName=[%s]", _baseUrl, _sslConfigFileName, _serviceName));
 		
@@ -100,7 +102,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		}
 
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		boolean isSecureMode = isKerberosEnabled(user);
 
 		String url = null;
 		ServicePolicies servicePolicies = null;
@@ -261,7 +263,7 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		}
 
 		UserGroupInformation user = MiscUtil.getUGILoginUser();
-		boolean isSecureMode = user != null && UserGroupInformation.isSecurityEnabled();
+		boolean isSecureMode = isKerberosEnabled(user);
 
 		String url = null;
 		ServiceTags serviceTags = null;
@@ -405,4 +407,16 @@ public class RangerAdminJersey2RESTClient implements RangerAdminClient {
 		
 		return _client;
 	}
+
+	public boolean isKerberosEnabled(UserGroupInformation user) {
+        final boolean ret;
+
+        if (forceNonKerberos) {
+            ret = false;
+        } else {
+            ret = user != null && UserGroupInformation.isSecurityEnabled() && user.hasKerberosCredentials();
+        }
+
+        return ret;
+    }
 }
