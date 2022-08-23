@@ -97,7 +97,7 @@ public class PolicyRefUpdater {
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
-	public void createNewPolMappingForRefTable(RangerPolicy policy, XXPolicy xPolicy, XXServiceDef xServiceDef) throws Exception {
+	public void createNewPolMappingForRefTable(RangerPolicy policy, XXPolicy xPolicy, XXServiceDef xServiceDef, boolean isDefaultPolicy) throws Exception {
 		if(policy == null) {
 			return;
 		}
@@ -168,7 +168,7 @@ public class PolicyRefUpdater {
 		}
 		daoMgr.getXXPolicyRefResource().batchCreate(xPolResources);
 
-		final boolean isAdmin = rangerBizUtil.checkAdminAccess();
+		final boolean isAdmin = rangerBizUtil.checkAdminAccess() || isDefaultPolicy;
 
 		List<XXPolicyRefRole> xPolRoles = new ArrayList<>();
 		for (String role : roleNames) {
@@ -397,7 +397,7 @@ public class PolicyRefUpdater {
 							ret = xUser.getId();
 						}
 					} else {
-						LOG.error("serviceConfigUser:[" + name + "] creation failed");
+						LOG.warn("serviceConfigUser:[" + name + "] creation failed. This may be a transient/spurious condition that may correct itself when transaction is committed");
 					}
 				}
 				break;

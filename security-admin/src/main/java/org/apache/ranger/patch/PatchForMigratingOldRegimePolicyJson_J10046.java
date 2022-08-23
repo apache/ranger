@@ -68,6 +68,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -338,7 +339,19 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
 
 				if (userObject == null) {
 					logger.info(user +" user is not found, adding user: "+user);
-					xUserMgr.createServiceConfigUser(user);
+					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+					txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+					try {
+						txTemplate.execute(new TransactionCallback<Object>() {
+							@Override
+							public Object doInTransaction(TransactionStatus status) {
+								xUserMgr.createServiceConfigUserSynchronously(user);
+								return null;
+							}
+						});
+					} catch(Exception exception) {
+						logger.error("Cannot create ServiceConfigUser(" + user + ")", exception);
+					}
 					userObject = userDao.findByUserName(user);
 					if (userObject == null) {
 						throw new Exception(user + ": unknown user in policy [id=" + policyId + "]");
@@ -346,6 +359,7 @@ public class PatchForMigratingOldRegimePolicyJson_J10046 extends BaseLoader {
 				}
 
 				userId = userObject.getId();
+				logger.info("userId:"+userId);
 
 				userIdMap.put(user, userId);
 			}

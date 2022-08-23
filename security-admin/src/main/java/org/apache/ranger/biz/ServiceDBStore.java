@@ -266,19 +266,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
-	
+
 	@Autowired
 	RangerServiceService svcService;
-	
+
 	@Autowired
 	StringUtil stringUtil;
-	
+
 	@Autowired
 	RangerAuditFields<?> rangerAuditFields;
-	
+
 	@Autowired
 	RangerPolicyService policyService;
-	
+
 	@Autowired
         RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
 
@@ -1510,7 +1510,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service = svcService.create(service);
 		}
 		XXService xCreatedService = daoMgr.getXXService().getById(service.getId());
-		VXUser vXUser = null;
 
 		XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
 		for (Entry<String, String> configMap : validConfigs.entrySet()) {
@@ -1521,14 +1520,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 				String userName = stringUtil.getValidUserName(configValue);
 				XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
 				if (xxUser != null) {
-					vXUser = xUserService.populateViewBean(xxUser);
+					VXUser vXUser = xUserService.populateViewBean(xxUser);
 				} else {
 					UserSessionBase usb = ContextUtil.getCurrentUserSession();
 					if (usb != null && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-					vXUser = xUserMgr.createServiceConfigUser(userName);
+					xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 
@@ -1557,9 +1556,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMap = xConfMapDao.create(xConfMap);
 		}
 		updateTabPermissions(service.getType(), validConfigs);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("vXUser:[" + vXUser + "]");
-		}
+
 		RangerService createdService = svcService.getPopulatedViewObject(xCreatedService);
 
 		if (createdService == null) {
@@ -1684,7 +1681,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service = svcService.update(service);
 
 			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
-				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null, false);
+				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null,false);
 			}
 		}
 
@@ -1699,7 +1696,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			daoMgr.getXXServiceConfigMap().remove(dbConfigMap);
 		}
 
-		VXUser vXUser = null;
 		XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
 		for (Entry<String, String> configMap : validConfigs.entrySet()) {
 			String configKey = configMap.getKey();
@@ -1709,14 +1705,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 				String userName = stringUtil.getValidUserName(configValue);
 				XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
 				if (xxUser != null) {
-					vXUser = xUserService.populateViewBean(xxUser);
+					VXUser vXUser = xUserService.populateViewBean(xxUser);
 				} else {
 					UserSessionBase usb = ContextUtil.getCurrentUserSession();
 					if (usb != null && !usb.isUserAdmin()) {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-					vXUser = xUserMgr.createServiceConfigUser(userName);
+					xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 
@@ -1758,9 +1754,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMapDao.create(xConfMap);
 		}
 		updateTabPermissions(service.getType(), validConfigs);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("vXUser:[" + vXUser + "]");
-		}
+
 		RangerService updService = svcService.getPopulatedViewObject(xUpdService);
 		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
 		bizUtil.createTrxLog(trxLogList);
@@ -1994,6 +1988,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Override
 	public RangerPolicy createPolicy(RangerPolicy policy) throws Exception {
+		return createPolicy(policy, false);
+	}
+
+	@Override
+	public RangerPolicy createDefaultPolicy(RangerPolicy policy) throws Exception {
+		return createPolicy(policy, true);
+	}
+
+	public RangerPolicy createPolicy(RangerPolicy policy, boolean isDefaultPolicy) throws Exception {
 
 		RangerService service = getServiceByName(policy.getService());
 
@@ -2042,7 +2045,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
-		policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef);
+		policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef, isDefaultPolicy);
 		createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 
@@ -2215,7 +2218,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policyRefUpdater.cleanupRefTables(policy);
 		deleteExistingPolicyLabel(policy);
 
-		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef);
+		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef, false);
 		createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
 
@@ -3277,7 +3280,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (CollectionUtils.isNotEmpty(defaultPolicies)) {
 
 			for (RangerPolicy defaultPolicy : defaultPolicies) {
-				createPolicy(defaultPolicy);
+				createDefaultPolicy(defaultPolicy);
 			}
 		}
 
@@ -3302,7 +3305,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 							defaultPolicy.setZoneName(zoneName);
 
-							createPolicy(defaultPolicy);
+							createDefaultPolicy(defaultPolicy);
 						}
 					}
 				}
@@ -3350,17 +3353,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                         if(serviceCheckUsers != null){
                                 for (String userName : serviceCheckUsers) {
                                         if(!StringUtils.isEmpty(userName)){
-                                                VXUser vXUser = null;
                                                 XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
                                                 if (xxUser != null) {
-                                                        vXUser = xUserService.populateViewBean(xxUser);
+                                                        VXUser vXUser = xUserService.populateViewBean(xxUser);
                                                 } else {
-                                                        vXUser = xUserMgr.createServiceConfigUser(userName);
-                                                        LOG.info("Creating Ambari Service Check User : "+vXUser.getName());
+                                                        xUserMgr.createServiceConfigUser(userName);
+                                                        LOG.info("Creating Ambari Service Check User : "+ userName);
                                                 }
-                                                if(vXUser != null){
-                                                        users.add(vXUser.getName());
-                                                }
+												users.add(userName);
                                         }
                                 }
                         }
@@ -3454,7 +3454,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ policyUser + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-                                        xUserMgr.createServiceConfigUser(userName);
+					xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 		}

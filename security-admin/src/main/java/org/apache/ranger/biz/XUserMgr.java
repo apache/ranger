@@ -2492,7 +2492,6 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
 	public VXUser createServiceConfigUser(String userName){
 		if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
 			logger.error("User Name: "+userName);
@@ -2506,6 +2505,27 @@ public class XUserMgr extends XUserMgrBase {
 
 		xxUser = daoManager.getXXUser().findByUserName(userName);
 		VXUser vXUser = null;
+		if (xxUser != null) {
+			vXUser = xUserService.populateViewBean(xxUser);
+		}
+		return vXUser;
+	}
+
+	public VXUser createServiceConfigUserSynchronously(String userName){
+		if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
+			logger.error("User Name: "+userName);
+			throw restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA);
+		}
+
+		VXUser vXUser = null;
+
+		XXUser xxUser = daoManager.getXXUser().findByUserName(userName);
+		if (xxUser == null) {
+			ExternalUserCreator externalUserCreator = new ExternalUserCreator(userName);
+			externalUserCreator.run();
+			xxUser = daoManager.getXXUser().findByUserName(userName);
+		}
+
 		if (xxUser != null) {
 			vXUser = xUserService.populateViewBean(xxUser);
 		}

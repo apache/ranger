@@ -296,7 +296,7 @@ public class RoleRefUpdater {
 							ret = xUser.getId();
 						}
 					} else {
-						LOG.error("serviceConfigUser:[" + name + "] creation failed");
+						LOG.warn("serviceConfigUser:[" + name + "] creation failed. This may be a transient/spurious condition that may correct itself when transaction is committed");
 					}
 				}
 				break;

@@ -1706,7 +1706,7 @@ public class TestServiceDBStore {
 
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
 		Mockito.when(xPolicyDao.getById(Id)).thenReturn(xPolicy);
-		Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(rangerPolicy, xPolicy, xServiceDef);
+		Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(rangerPolicy, xPolicy, xServiceDef, false);
 		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
