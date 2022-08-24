@@ -350,6 +350,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hiveMaskingWithReqExpressions() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_hive_mask_filter_with_req_expressions.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hiveTagMasking() {
 		String[] resourceFiles = {"/policyengine/test_policyengine_tag_hive_mask.json"};
 
@@ -680,18 +687,18 @@ public class TestPolicyEngine {
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
+			if (MapUtils.isNotEmpty(test.userAttributes) || MapUtils.isNotEmpty(test.groupAttributes)) {
+				RangerUserStore userStore = new RangerUserStore();
+
+				userStore.setUserAttrMapping(test.userAttributes);
+				userStore.setGroupAttrMapping(test.groupAttributes);
+
+				RangerAccessRequestUtil.setRequestUserStoreInContext(request.getContext(), userStore);
+			}
+
 			if(test.result != null) {
                 RangerAccessResult expected = test.result;
                 RangerAccessResult result;
-
-                if (MapUtils.isNotEmpty(test.userAttributes) || MapUtils.isNotEmpty(test.groupAttributes)) {
-                    RangerUserStore userStore = new RangerUserStore();
-
-                    userStore.setUserAttrMapping(test.userAttributes);
-                    userStore.setGroupAttrMapping(test.groupAttributes);
-
-                    RangerAccessRequestUtil.setRequestUserStoreInContext(request.getContext(), userStore);
-                }
 
 				result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
