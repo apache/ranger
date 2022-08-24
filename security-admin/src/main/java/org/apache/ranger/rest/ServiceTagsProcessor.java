@@ -396,6 +396,11 @@ public class ServiceTagsProcessor {
 					}
 					tagStore.refreshServiceResource(resourceInStore.getId());
 					RangerPerfTracer.logAlways(perf);
+				} else {
+					if (CollectionUtils.isEmpty(tagIds)) {
+						// No tags associated with the resource - delete the resource too
+						tagStore.deleteServiceResource(resourceInStore.getId());
+					}
 				}
 			}
 		}
