@@ -774,7 +774,6 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 									}
 								}
 							}
-
 							Attribute groupMemberAttr = attributes.get(groupMemberAttributeName);
 							int userCount = 0;
 							if (groupMemberAttr == null || groupMemberAttr.size() <= 0) {
