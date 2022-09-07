@@ -59,9 +59,9 @@
             <version>P20140317-1600</version>
         </dependency>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
+            <version>${reload4j.version}</version>
         </dependency>
         <dependency>
             <groupId>com.nimbusds</groupId>

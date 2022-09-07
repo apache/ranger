@@ -30,9 +30,9 @@
     <description>User Group Synchronizer Util</description>
     <dependencies>
         <dependency>
-            <groupId>log4j</groupId>
-            <artifactId>log4j</artifactId>
-            <version>${log4j.version}</version>
+            <groupId>ch.qos.reload4j</groupId>
+            <artifactId>reload4j</artifactId>
+            <version>${reload4j.version}</version>
         </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>

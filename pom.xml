@@ -162,7 +162,8 @@
         <kylin.version>2.6.4</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
         <local.lib.dir>${project.basedir}/../lib/local</local.lib.dir>
-        <log4j.version>1.2.17</log4j.version>
+<!--        <log4j.version>1.2.17</log4j.version>-->
+        <reload4j.version>1.2.19</reload4j.version>
         <maven.exec.plugin.version>1.6.0</maven.exec.plugin.version>
         <maven.pmd.plugin.version>3.7</maven.pmd.plugin.version>
         <metrics.core.version>3.0.2</metrics.core.version>

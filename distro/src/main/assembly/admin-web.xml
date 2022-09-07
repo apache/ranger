@@ -226,7 +226,7 @@
           <include>org.apache.tomcat.embed:tomcat-embed*</include>
           <include>org.apache.tomcat:tomcat-annotations-api*</include>
           <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
-          <include>log4j:log4j</include>
+          <include>ch.qos.reload4j:reload4j</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.ranger:ranger-plugins-common</include>
           <include>org.slf4j:slf4j-api</include>
