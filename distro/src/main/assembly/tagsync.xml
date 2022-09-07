@@ -82,7 +82,8 @@
 							<include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
 							<include>javax.inject:javax.inject:jar:${javax-inject.version}</include>
 							<include>joda-time:joda-time:jar:${joda-time.version}</include>
-							<include>log4j:log4j:jar:${log4j.version}</include>
+<!--							<include>log4j:log4j:jar:${log4j.version}</include>-->
+							<include>ch.qos.reload4j:reload4j:jar:${reload4j.version}</include>
 							<include>org.codehaus.woodstox:stax2-api</include>
 							<include>com.fasterxml.woodstox:woodstox-core</include>
 							<include>org.apache.htrace:htrace-core4</include>
