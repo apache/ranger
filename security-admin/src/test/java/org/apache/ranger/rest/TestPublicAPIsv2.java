@@ -81,6 +81,9 @@ public class TestPublicAPIsv2 {
 	ServiceREST serviceREST;
 
 	@Mock
+	RoleREST roleREST;
+
+	@Mock
 	RangerSearchUtil searchUtil;
 
 	@Mock
@@ -240,6 +243,29 @@ public class TestPublicAPIsv2 {
 		policy.setService("HDFS_2");
 
 		return policy;
+	}
+
+	private RangerRole rangerRole() {
+		Map<String, Object> options = new HashMap<>();
+		List<RangerRole.RoleMember> users = new ArrayList<RangerRole.RoleMember>();
+		List<RangerRole.RoleMember> groups = new ArrayList<RangerRole.RoleMember>();
+		List<RangerRole.RoleMember> roles = new ArrayList<RangerRole.RoleMember>();
+		RangerRole role = new RangerRole("test","",options,users,groups,roles);
+		role.setCreatedByUser("Admin");
+
+		return role;
+	}
+
+	private RangerRole rangerRole1() {
+		Map<String, Object> options = new HashMap<>();
+		List<RangerRole.RoleMember> users = new ArrayList<RangerRole.RoleMember>();
+		users.add(new RangerRole.RoleMember("servicemgr",false));
+		List<RangerRole.RoleMember> groups = new ArrayList<RangerRole.RoleMember>();
+		List<RangerRole.RoleMember> roles = new ArrayList<RangerRole.RoleMember>();
+		RangerRole role = new RangerRole("test","",options,users,groups,roles);
+		role.setCreatedByUser("Admin");
+
+		return role;
 	}
 
 	@Test
@@ -614,7 +640,51 @@ public class TestPublicAPIsv2 {
 		Mockito.verify(serviceREST).getPolicies(request);
 	}
 
-    @Test
+	@Test
+	public void test27addUsersAndGroups() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RangerRole rangerRole = rangerRole();
+		RangerService rangerService = rangerService();
+		String roleName = rangerRole.getName();
+		String serviceName = rangerService.getName();
+		List<String> users = new ArrayList<String>();
+		users.add("servicemgr");
+		List<String> groups = new ArrayList<String>();
+		boolean isAdmin = false;
+		Mockito.when(roleREST.addUsersAndGroups(roleName,serviceName,"Admin",users,groups,isAdmin)).thenReturn(rangerRole);
+		RangerRole dbRangerRole = publicAPIsv2.addUsersAndGroups(roleName,serviceName,"Admin",users,groups,isAdmin,request);
+		Assert.assertNotNull(dbRangerRole);
+		Assert.assertEquals(dbRangerRole, rangerRole);
+		Assert.assertEquals(dbRangerRole.getId(),
+				rangerRole.getId());
+		Assert.assertEquals(dbRangerRole.getName(),
+				rangerRole.getName());
+		Mockito.verify(roleREST).addUsersAndGroups(roleName,serviceName,"Admin",users,groups,isAdmin);
+	}
+
+	@Test
+	public void test28removeUsersAndGroups() throws Exception {
+		HttpServletRequest request = Mockito.mock(HttpServletRequest.class);
+		RangerRole rangerRole = rangerRole1();
+		RangerService rangerService = rangerService();
+		String roleName = rangerRole.getName();
+		String serviceName = rangerService.getName();
+		List<String> users = new ArrayList<String>();
+		users.add("servicemgr");
+		List<String> groups = new ArrayList<String>();
+		Mockito.when(roleREST.removeUsersAndGroups(roleName,serviceName,"Admin",users,groups)).thenReturn(rangerRole);
+		RangerRole dbRangerRole = publicAPIsv2.removeUsersAndGroups(roleName,serviceName,"Admin",users,groups,request);
+		Assert.assertNotNull(dbRangerRole);
+		Assert.assertEquals(dbRangerRole, rangerRole);
+		Assert.assertEquals(dbRangerRole.getId(),
+				rangerRole.getId());
+		Assert.assertEquals(dbRangerRole.getName(),
+				rangerRole.getName());
+		Mockito.verify(roleREST).removeUsersAndGroups(roleName,serviceName,"Admin",users,groups);
+	}
+
+
+	@Test
     public void testGetAllZoneNames() throws Exception {
         List<RangerSecurityZoneHeaderInfo> zoneHeaderInfoList = new ArrayList<>();
         zoneHeaderInfoList.add(new RangerSecurityZoneHeaderInfo(2L, "zone-1"));

@@ -793,18 +793,20 @@ public class PublicAPIsv2 {
     	This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics
  	 */
 	@PUT
-	@Path("/api/roles/{id}/addUsersAndGroups")
-	public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin, @Context HttpServletRequest request) {
-		return roleREST.addUsersAndGroups(roleId, users, groups, isAdmin);
+	@Path("/api/roles/name/{name}/addUsersAndGroups")
+	public RangerRole addUsersAndGroups(@PathParam("name") String roleName,@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @QueryParam("isAdmin") Boolean isAdmin, @Context HttpServletRequest request) {
+		return roleREST.addUsersAndGroups(roleName, serviceName, userName, users, groups,
+						isAdmin);
 	}
 
 	/*
         This API is used to remove users and groups, without regard to their GRANT privilege, from this Role.
      */
 	@PUT
-	@Path("/api/roles/{id}/removeUsersAndGroups")
-	public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
-		return roleREST.removeUsersAndGroups(roleId, users, groups);
+	@Path("/api/roles/name/{name}/removeUsersAndGroups")
+	public RangerRole removeUsersAndGroups(@PathParam("name") String roleName,@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
+		return roleREST.removeUsersAndGroups(roleName, serviceName, userName, users, groups);
+
 	}
 
 	/*
