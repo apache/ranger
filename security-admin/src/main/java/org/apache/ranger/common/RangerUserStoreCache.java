@@ -67,10 +67,8 @@ public class RangerUserStoreCache {
 
 		if (lastKnownUserStoreVersion == null || !lastKnownUserStoreVersion.equals(rangerUserStoreVersionInDB)) {
 			ret = getLatestRangerUserStore(xUserMgr, lastKnownUserStoreVersion, rangerUserStoreVersionInDB);
-		} else if (lastKnownUserStoreVersion.equals(rangerUserStoreVersionInDB)) {
-			ret = null;
 		} else {
-			ret = getRangerUserStore();
+			ret = null;
 		}
 
 		return ret;
