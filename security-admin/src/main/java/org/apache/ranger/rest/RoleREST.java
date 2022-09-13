@@ -413,7 +413,7 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/addUsersAndGroups")
-    public RangerRole addUsersAndGroups(Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> addUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ", isAdmin=" + isAdmin + ")");
         }
@@ -478,7 +478,7 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/removeUsersAndGroups")
-    public RangerRole removeUsersAndGroups(Long roleId, List<String> users, List<String> groups) {
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> removeUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
         }
@@ -531,7 +531,7 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/removeAdminFromUsersAndGroups")
-    public RangerRole removeAdminFromUsersAndGroups(Long roleId, List<String> users, List<String> groups) {
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> removeAdminFromUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
         }
