@@ -1142,7 +1142,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if(policyItem != null && CollectionUtils.isNotEmpty(policyItem.getAccesses())) {
 			for(RangerPolicyItemAccess itemAccess : policyItem.getAccesses()) {
-				if(StringUtils.equalsIgnoreCase(itemAccess.getType(), accessType)) {
+				if (itemAccess != null && StringUtils.equalsIgnoreCase(itemAccess.getType(), accessType)) {
 					ret = itemAccess;
 
 					break;

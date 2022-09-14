@@ -1381,7 +1381,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 * @param type the type to set
 		 */
 		public void setType(String type) {
-			this.type = type;
+			this.type = type == null ? "" : type;
 		}
 
 		/**
