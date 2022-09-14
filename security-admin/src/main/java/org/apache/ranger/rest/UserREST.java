@@ -32,7 +32,6 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
 import org.apache.ranger.biz.UserMgr;
@@ -292,14 +291,6 @@ public class UserREST {
 					"getUserProfile() no user session. error=" + t.toString(),
 					t);
 		}
-		return null;
-	}
-
-	@GET
-	@Path("/firstnames")
-	@Produces({ "application/json", "application/xml" })
-	public String suggestUserFirstName(@QueryParam("letters") String letters,
-			@Context HttpServletRequest req) {
 		return null;
 	}
 
