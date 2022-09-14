@@ -1774,7 +1774,7 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.updatePolicy(policyId=" + policy.getId() + ")");
 			}
 			RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin());
+			validator.validate(policy, Action.UPDATE, bizUtil.isAdmin() || isServiceAdmin(policy.getService()) || isZoneAdmin(policy.getZoneName()));
 
 			ensureAdminAccess(policy);
                         bizUtil.blockAuditorRoleUser();
@@ -4398,7 +4398,7 @@ public class ServiceREST {
 			}
 		}
 		RangerPolicyValidator validator = validatorFactory.getPolicyValidator(svcStore);
-		validator.validate(policy, Action.CREATE, bizUtil.isAdmin());
+		validator.validate(policy, Action.CREATE, bizUtil.isAdmin() || isServiceAdmin(policy.getService()) || isZoneAdmin(policy.getZoneName()));
 
 		ensureAdminAccess(policy);
 		bizUtil.blockAuditorRoleUser();
@@ -4526,6 +4526,26 @@ public class ServiceREST {
 			LOG.debug("<== ServiceREST.deleteServiceById() - deletedServiceName="+deletedServiceName);
 		}
 		return deletedServiceName;
+	}
+
+	private boolean isServiceAdmin(String serviceName) {
+		boolean ret = bizUtil.isAdmin();
+
+		if (!ret && StringUtils.isNotEmpty(serviceName)) {
+			ret = svcStore.isServiceAdminUser(serviceName, bizUtil.getCurrentUserLoginId());
+		}
+
+		return ret;
+	}
+
+	private boolean isZoneAdmin(String zoneName) {
+		boolean ret = bizUtil.isAdmin();
+
+		if (!ret && StringUtils.isNotEmpty(zoneName)) {
+			ret = serviceMgr.isZoneAdmin(zoneName);
+		}
+
+		return ret;
 	}
 }
 
