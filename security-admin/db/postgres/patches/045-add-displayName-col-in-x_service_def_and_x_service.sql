@@ -49,19 +49,19 @@ DECLARE
 BEGIN
  select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_portal_user') and attname='other_attributes';
  IF v_column_exists = 0 THEN
-  ALTER TABLE x_portal_user ADD COLUMN other_attributes VARCHAR(4000) DEFAULT NULL NULL;
+  ALTER TABLE x_portal_user ADD COLUMN other_attributes TEXT DEFAULT NULL NULL;
  END IF;
 
  v_column_exists:=0;
  select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_user') and attname='other_attributes';
  IF v_column_exists = 0 THEN
-  ALTER TABLE x_user ADD COLUMN other_attributes VARCHAR(4000) DEFAULT NULL NULL;
+  ALTER TABLE x_user ADD COLUMN other_attributes TEXT DEFAULT NULL NULL;
  END IF;
 
  v_column_exists:=0;
  select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_group') and attname='other_attributes';
  IF v_column_exists = 0 THEN
-  ALTER TABLE x_group ADD COLUMN other_attributes VARCHAR(4000) DEFAULT NULL NULL;
+  ALTER TABLE x_group ADD COLUMN other_attributes TEXT DEFAULT NULL NULL;
  END IF;
 
 END;
