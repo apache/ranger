@@ -34,19 +34,19 @@ BEGIN
         v_count:=0;
         select count(*) into v_count from user_tab_cols where table_name='X_PORTAL_USER' and column_name='OTHER_ATTRIBUTES';
         if (v_count = 0) then
-                execute immediate 'ALTER TABLE x_portal_user ADD other_attributes VARCHAR(4000) DEFAULT NULL NULL';
+                execute immediate 'ALTER TABLE x_portal_user ADD other_attributes CLOB DEFAULT NULL NULL';
         end if;
 
         v_count:=0;
         select count(*) into v_count from user_tab_cols where table_name='X_USER' and column_name='OTHER_ATTRIBUTES';
         if (v_count = 0) then
-                execute immediate 'ALTER TABLE x_user ADD other_attributes VARCHAR(4000) DEFAULT NULL NULL';
+                execute immediate 'ALTER TABLE x_user ADD other_attributes CLOB DEFAULT NULL NULL';
         end if;
 
         v_count:=0;
         select count(*) into v_count from user_tab_cols where table_name='X_GROUP' and column_name='OTHER_ATTRIBUTES';
         if (v_count = 0) then
-                execute immediate 'ALTER TABLE X_GROUP ADD other_attributes VARCHAR(4000) DEFAULT NULL NULL';
+                execute immediate 'ALTER TABLE X_GROUP ADD other_attributes CLOB DEFAULT NULL NULL';
         end if;
         commit;
 END;/
