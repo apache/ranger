@@ -83,11 +83,13 @@ public class RangerAuthenticationEntryPoint extends
 			logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 		}
 
-		String requestURL = (request.getRequestURL() != null) ? request
-				.getRequestURL().toString() : "";
+		String requestURI = (request.getRequestURI() != null) ? request
+				.getRequestURI() : "";
 		String servletPath = PropertiesUtil.getProperty(
 				"ranger.servlet.mapping.url.pattern", "service");
-
+		if (logger.isDebugEnabled()) {
+			logger.debug("===> RangerAuthenticationEntryPoint.commence() servletPath["+servletPath+"] requestURI ["+requestURI+"]");
+		}
 		if ("XMLHttpRequest".equals(ajaxRequestHeader)) {
 			try {
 
@@ -126,8 +128,8 @@ public class RangerAuthenticationEntryPoint extends
 						+ ajaxReturnCode + ". URL=" + request.getRequestURI());
 			}
 			response.sendError(ajaxReturnCode, "");
-		} else if (!(requestURL.contains(servletPath))) {
-			if(requestURL.contains(RestUtil.LOCAL_LOGIN_URL)){
+		} else if (!(requestURI.contains(servletPath))) {
+			if(requestURI.contains(RestUtil.LOCAL_LOGIN_URL)){
 				if (request.getSession() != null){
 					request.getSession().setAttribute("locallogin","true");
 					request.getServletContext().setAttribute(request.getSession().getId(), "locallogin");
