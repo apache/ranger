@@ -98,7 +98,7 @@
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.21</commons.compress.version>
         <commons.configuration1.version>1.10</commons.configuration1.version>
-        <commons.configuration.version>2.1.1</commons.configuration.version>
+        <commons.configuration.version>2.8.0</commons.configuration.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
         <commons.digester.version>2.1</commons.digester.version>
         <commons.io.version>2.11.0</commons.io.version>
