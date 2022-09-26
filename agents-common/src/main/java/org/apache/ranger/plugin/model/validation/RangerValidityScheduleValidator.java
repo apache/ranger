@@ -49,7 +49,9 @@ public class RangerValidityScheduleValidator {
     private static final ThreadLocal<DateFormat> DATE_FORMATTER = new ThreadLocal<DateFormat>() {
         @Override
         protected DateFormat initialValue() {
-            return new SimpleDateFormat(RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION);
+            SimpleDateFormat sd = new SimpleDateFormat(RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION);
+            sd.setLenient(false);
+            return sd;
         }
     };
 
@@ -183,7 +185,8 @@ public class RangerValidityScheduleValidator {
 
             if (validityInterval.getDays() < 0
                         || (validityInterval.getHours() < 0 || validityInterval.getHours() > 23)
-                        || (validityInterval.getMinutes() < 0 || validityInterval.getMinutes() > 59)) {
+                        || (validityInterval.getMinutes() < 0 || validityInterval.getMinutes() > 59)
+                        || (validityInterval.getDays() == 0 && validityInterval.getHours() == 0 && validityInterval.getMinutes() == 0 )) {
                 validationFailures.add(new ValidationFailureDetails(0, "interval", "", false, true, false, "invalid interval"));
                 ret = false;
             }
@@ -224,6 +227,15 @@ public class RangerValidityScheduleValidator {
             // Internally we use Calendar values for validation and evaluation
             int minimum = field == RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.month ? field.minimum + 1 : field.minimum;
             int maximum = field == RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.month ? field.maximum + 1 : field.maximum;
+            ret = validateRanges(recurrence, field, minimum, maximum, validationFailures);
+        }
+
+        if(ret) {
+            SimpleDateFormat formatter = new SimpleDateFormat("yyyy");
+            String startYear = formatter.format(startTime);
+            String endYear = formatter.format(endTime);
+            int minimum = field == RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.year ? Integer.valueOf(startYear) : field.minimum;            
+            int maximum = field == RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.year ? Integer.valueOf(endYear) : field.maximum;
             ret = validateRanges(recurrence, field, minimum, maximum, validationFailures);
         }
         return ret;
@@ -360,7 +372,7 @@ public class RangerValidityScheduleValidator {
                         }
                         if (!StringUtils.equals(ranges[1], RangerValidityRecurrence.RecurrenceSchedule.WILDCARD)) {
                             val2 = Integer.valueOf(ranges[1]);
-                            if (val1 < minValidValue || val2 > maxValidValue) {
+                            if (val2 < minValidValue || val2 > maxValidValue) {
                                 validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect upper range value"));
                                 ret = false;
                             }
@@ -414,7 +426,7 @@ public class RangerValidityScheduleValidator {
                 int upper = range.upper;
                 for (int j = i+1; j < rangeOfValues.size(); j++) {
                     Range r = rangeOfValues.get(j);
-                    if (upper < r.upper) {
+                    if (upper > r.lower) {
                         validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "overlapping range value"));
                         ret = false;
                     }
