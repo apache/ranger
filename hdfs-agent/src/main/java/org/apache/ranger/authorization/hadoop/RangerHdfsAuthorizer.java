@@ -27,6 +27,7 @@ import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConst
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.WRITE_EXECUTE_PERM;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.READ_WRITE_PERM;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.ALL_PERM;
+import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.ACCESS_TYPE_MONITOR_HEALTH;
 
 import java.net.InetAddress;
 import java.security.SecureRandom;
@@ -1108,8 +1109,11 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 		if(isAuditEnabled && auditEvent != null && !StringUtils.isEmpty(auditEvent.getAccessType())) {
 			String username = auditEvent.getUser();
+			String accessType = auditEvent.getAccessType();
 
-			boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username)) || (auditOnlyIfDenied && auditEvent.getAccessResult() != 0);
+			boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username))
+								|| (auditOnlyIfDenied && auditEvent.getAccessResult() != 0)
+								|| (ACCESS_TYPE_MONITOR_HEALTH.equals(accessType));
 
 			if (! skipLog) {
 				super.logAuthzAudit(auditEvent);
