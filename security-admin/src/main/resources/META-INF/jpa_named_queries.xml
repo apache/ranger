@@ -583,6 +583,10 @@
 	</named-query>
 
 	<!-- XXService -->
+	<named-query name="XXService.findIdByName">
+		<query>select obj.id from XXService obj where obj.name = :name</query>
+	</named-query>
+
 	<named-query name="XXService.findByName">
 		<query>select obj from XXService obj where obj.name = :name</query>
 	</named-query>
@@ -1295,15 +1299,15 @@
 	</named-query>
 
 	<named-query name="XXTagResourceMap.findByResourceId">
-		<query>select obj from XXTagResourceMap obj where obj.resourceId = :resourceId</query>
+		<query>select obj.id, obj.guid, obj.tagId, obj.resourceId from XXTagResourceMap obj where obj.resourceId = :resourceId</query>
 	</named-query>
 
 	<named-query name="XXTagResourceMap.findByResourceGuid">
-		<query>select obj from XXTagResourceMap obj, XXServiceResource res where res.guid = :resourceGuid and obj.resourceId = res.id</query>
+		<query>select obj.id, obj.guid, obj.tagId, obj.resourceId from XXTagResourceMap obj, XXServiceResource res where res.guid = :resourceGuid and obj.resourceId = res.id</query>
 	</named-query>
 	
 	<named-query name="XXTagResourceMap.findByTagId">
-		<query>select obj from XXTagResourceMap obj where obj.tagId = :tagId</query>
+		<query>select obj.id, obj.guid, obj.tagId, obj.resourceId from XXTagResourceMap obj where obj.tagId = :tagId</query>
 	</named-query>
 
 	<named-query name="XXTagResourceMap.findByTagGuid">

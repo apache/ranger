@@ -38,6 +38,7 @@ import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.TagStore;
 import org.apache.ranger.plugin.store.TagValidator;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -72,8 +73,9 @@ import java.util.List;
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class TagREST {
+    private static final Logger LOG      = LoggerFactory.getLogger(TagREST.class);
+    private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("rest.TagREST");
 
-    private static final Logger LOG = LoggerFactory.getLogger(TagREST.class);
     public static final String Allowed_User_List_For_Tag_Download = "tag.download.auth.users";
 
 	@Autowired
@@ -1083,17 +1085,23 @@ public class TagREST {
             LOG.debug("==> TagREST.importServiceTags()");
         }
 
-        try {
+        RangerPerfTracer perf = null;
 
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "TagREST.importServiceTags(service=" + (serviceTags != null ? serviceTags.getServiceName() : null) + ")");
+        }
+
+        try {
             ServiceTagsProcessor serviceTagsProcessor = new ServiceTagsProcessor(tagStore);
             serviceTagsProcessor.process(serviceTags);
-
         } catch (Exception excp) {
             LOG.error("importServiceTags() failed", excp);
 
             throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, excp.getMessage(), true);
-
+        } finally {
+            RangerPerfTracer.log(perf);
         }
+
         if(LOG.isDebugEnabled()) {
             LOG.debug("<== TagREST.importServiceTags()");
         }
@@ -1112,6 +1120,12 @@ public class TagREST {
                                                @Context HttpServletRequest request) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + supportsTagDeltas + ")");
+        }
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "TagREST.getServiceTagsIfUpdated(service=" + serviceName + ", lastKnownVersion=" + lastKnownVersion + ")");
         }
 
 		ServiceTags ret      = null;
@@ -1145,6 +1159,8 @@ public class TagREST {
 			logMsg   = excp.getMessage();
         } finally {
             assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
+
+            RangerPerfTracer.log(perf);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {
@@ -1171,6 +1187,12 @@ public class TagREST {
 
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.getSecureServiceTagsIfUpdated(" + serviceName + ", " + lastKnownVersion + ", " + lastActivationTime + ", " + pluginId + ", " + supportsTagDeltas + ")");
+        }
+
+        RangerPerfTracer perf = null;
+
+        if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+            perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "TagREST.getSecureServiceTagsIfUpdated(service=" + serviceName + ", lastKnownVersion=" + lastKnownVersion + ")");
         }
 
 		ServiceTags ret      = null;
@@ -1233,6 +1255,8 @@ public class TagREST {
 			logMsg   = excp.getMessage();
         }  finally {
             assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_TAGS, downloadedVersion, lastKnownVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
+
+            RangerPerfTracer.log(perf);
         }
 
         if(httpCode != HttpServletResponse.SC_OK) {
