@@ -403,4 +403,17 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 			return new ArrayList<XXPolicy>();
 		}
 	}
+
+	public List<XXPolicy> findByZoneId(Long zoneId) {
+		if (zoneId == null) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicy.findByZoneId", tClass)
+					.setParameter("zoneId", zoneId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
+	}
 }
