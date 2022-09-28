@@ -28,6 +28,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 
 /**
@@ -88,6 +89,28 @@ public class RangerTagDef extends RangerBaseModelObject {
         this.attributeDefs = attributeDefs == null ? new ArrayList<RangerTagAttributeDef>() :  attributeDefs;
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, source, attributeDefs);
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        } else if (getClass() != obj.getClass()) {
+            return false;
+        }
+
+        RangerTagDef other = (RangerTagDef) obj;
+
+        return Objects.equals(name, other.name) &&
+               Objects.equals(source, other.source) &&
+               Objects.equals(attributeDefs, other.attributeDefs);
+    }
+
     /**
      * Represents one attribute for a TAG. TAG-Attribute consists of a name and type.
      * name provides a handle for possible specification of additional information
@@ -129,6 +152,27 @@ public class RangerTagDef extends RangerBaseModelObject {
         }
         public void setType(String type) {
             this.type = type == null ? "" : type;
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(name, type);
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj) {
+                return true;
+            } else if (obj == null) {
+                return false;
+            } else if (getClass() != obj.getClass()) {
+                return false;
+            }
+
+            RangerTagAttributeDef other = (RangerTagAttributeDef) obj;
+
+            return Objects.equals(name, other.name) &&
+                   Objects.equals(type, other.type);
         }
     }
 }
