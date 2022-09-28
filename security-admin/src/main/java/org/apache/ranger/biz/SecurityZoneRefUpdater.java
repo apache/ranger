@@ -23,7 +23,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
@@ -36,6 +35,7 @@ import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
 import org.apache.ranger.db.XXSecurityZoneRefTagServiceDao;
 import org.apache.ranger.db.XXSecurityZoneRefUserDao;
 import org.apache.ranger.entity.XXGroup;
+import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXResourceDef;
 import org.apache.ranger.entity.XXSecurityZoneRefGroup;
 import org.apache.ranger.entity.XXSecurityZoneRefResource;
@@ -44,17 +44,23 @@ import org.apache.ranger.entity.XXSecurityZoneRefTagService;
 import org.apache.ranger.entity.XXSecurityZoneRefUser;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.entity.XXUser;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZone.RangerSecurityZoneService;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.service.RangerAuditFields;
+import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SecurityZoneRefUpdater {
+	private static final Logger LOG = LoggerFactory.getLogger(SecurityZoneRefUpdater.class);
 
 	@Autowired
 	RangerDaoManager daoMgr;
@@ -67,6 +73,15 @@ public class SecurityZoneRefUpdater {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
+
+	@Autowired
+	ServiceDBStore svcStore;
+
+	@Autowired
+	RangerPolicyService policyService;
+
+	@Autowired
+	RangerBizUtil bizUtil;
 
 	public void createNewZoneMappingForRefTable(RangerSecurityZone rangerSecurityZone) throws Exception {
 
@@ -288,5 +303,22 @@ public class SecurityZoneRefUpdater {
 		}
 
 		return true;
+	}
+
+
+	public void updateResourceSignatureWithZoneName(RangerSecurityZone updatedSecurityZone) {
+		List<XXPolicy> policyList = daoMgr.getXXPolicy().findByZoneId(updatedSecurityZone.getId());
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> SecurityZoneRefUpdater.updateResourceSignatureWithZoneName() Count of policies with zone id : " +updatedSecurityZone.getId()+ " are : "+ policyList.size());
+		}
+
+		for (XXPolicy policy : policyList) {
+			RangerPolicy policyToUpdate = policyService.getPopulatedViewObject(policy);
+			svcStore.updatePolicySignature(policyToUpdate);
+			policyService.update(policyToUpdate);
+			List<XXTrxLog> trxLogList = policyService.getTransactionLog(policyToUpdate, policy, policyToUpdate,
+					RangerPolicyService.OPERATION_UPDATE_CONTEXT);
+			bizUtil.createTrxLog(trxLogList);
+		}
 	}
 }

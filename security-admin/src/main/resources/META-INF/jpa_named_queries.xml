@@ -1982,4 +1982,8 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXPolicy.findByZoneId">
+		<query>select obj from XXPolicy obj where obj.zoneId = :zoneId</query>
+	</named-query>
+
 </entity-mappings>
