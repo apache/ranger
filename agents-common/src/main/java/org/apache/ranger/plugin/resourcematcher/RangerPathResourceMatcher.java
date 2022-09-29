@@ -142,7 +142,7 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		return ret;
 	}
 
-	static boolean isRecursiveWildCardMatch(String pathToCheck, String wildcardPath, Character pathSeparatorChar, IOCase caseSensitivity) {
+	static boolean isRecursiveWildCardMatch(String pathToCheck, String wildcardPath, Character pathSeparatorChar, IOCase caseSensitivity, String[] wildcardPathElements) {
 
 		boolean ret = false;
 
@@ -156,16 +156,42 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 					sb.append(pathSeparatorChar); // preserve the initial pathSeparatorChar
 				}
 
-				for(String p : pathElements) {
+				int      pathElementIndex     = 0;
+				boolean  useStringMatching    = true;
+
+				for (String p : pathElements) {
 					sb.append(p);
 
-					ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity);
+					if (useStringMatching) {
+						if (wildcardPathElements.length > pathElementIndex) {
+							String wp = wildcardPathElements[pathElementIndex];
 
-					if (ret) {
-						break;
+							if (!(StringUtils.contains(wp, '*') || StringUtils.contains(wp, '?'))) {
+								boolean isMatch = caseSensitivity.isCaseSensitive() ? StringUtils.equals(p, wp) : StringUtils.equalsIgnoreCase(p, wp);
+								if (!isMatch) {
+									useStringMatching = false;
+									break;
+								}
+							} else {
+								useStringMatching = false;
+							}
+						} else {
+							useStringMatching = false;
+						}
+					}
+
+					if (!useStringMatching) {
+						ret = FilenameUtils.wildcardMatch(sb.toString(), wildcardPath, caseSensitivity);
+						if (ret) {
+							break;
+						}
 					}
 
 					sb.append(pathSeparatorChar);
+					pathElementIndex++;
+				}
+				if (useStringMatching && pathElements.length == wildcardPathElements.length) { // Loop finished normally and all sub-paths string-matched..
+					ret = true;
 				}
 
 				sb = null;
@@ -261,6 +287,10 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		R apply(T t, U u, V v, W w);
 	}
 
+	interface QuintFunction<T, U, V, W, R, X> {
+		R apply(T t, U u, V v, W w, X x);
+	}
+
 	static abstract class PathResourceMatcher extends ResourceMatcher {
 		final char    pathSeparatorChar;
 		final int     priority;
@@ -346,21 +376,32 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 	}
 
 	static class RecursiveWildcardResourceMatcher extends PathResourceMatcher {
-		final QuadFunction<String, String, Character, IOCase, Boolean> function;
+		final QuintFunction<String, String, Character, IOCase, Boolean, String[]> function;
 		final IOCase ioCase;
+		String[] wildcardPathElements;
 
-		RecursiveWildcardResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, QuadFunction<String, String, Character, IOCase, Boolean> function, int priority) {
+		RecursiveWildcardResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, QuintFunction<String, String, Character, IOCase, Boolean, String[]> function, int priority) {
 			super(value, options, pathSeparatorChar, priority);
 			this.function = function;
 			this.ioCase   = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
+			if (!getNeedsDynamicEval()) {
+				wildcardPathElements = StringUtils.split(value, pathSeparatorChar);
+			}
 		}
 		@Override
 		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> RecursiveWildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
 			}
-			String expandedValue = getExpandedValue(evalContext);
-			boolean ret = function.apply(resourceValue, expandedValue, pathSeparatorChar, ioCase);
+			String expandedValue;
+			if (getNeedsDynamicEval()) {
+				expandedValue = getExpandedValue(evalContext);
+				wildcardPathElements = StringUtils.split(expandedValue, pathSeparatorChar);
+			} else {
+				expandedValue = value;
+			}
+
+			boolean ret = function.apply(resourceValue, expandedValue, pathSeparatorChar, ioCase, wildcardPathElements);
 			if (!ret) {
 				RangerAccessRequest.ResourceMatchingScope scope = MapUtils.isNotEmpty(evalContext) ? (RangerAccessRequest.ResourceMatchingScope) evalContext.get(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING) : null;
 				if (scope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD) {
@@ -370,7 +411,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 						if (resourceValue.charAt(resourceValue.length()-1) == pathSeparatorChar) {
 							resourceValue = resourceValue.substring(0, resourceValue.length()-1);
 						}
-						ret = function.apply(resourceValue, shorterExpandedValue, pathSeparatorChar, ioCase);
+						String[] shorterWildCardPathElements = StringUtils.split(shorterExpandedValue, pathSeparatorChar);
+						ret = function.apply(resourceValue, shorterExpandedValue, pathSeparatorChar, ioCase, shorterWildCardPathElements);
 					}
 				}
 			}
