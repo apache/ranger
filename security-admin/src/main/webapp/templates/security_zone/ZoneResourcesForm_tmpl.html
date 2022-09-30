@@ -12,6 +12,10 @@ KIND, either express or implied. See the License for the specific
 language governing permissions and limitations under the License. --}}
 <form class="form-horizontal">
     <fieldset>
-        <b data-fieldsets class="zoneResources-form"></b>
+        {{#if isPolicyResource}}
+        <div data-fieldsets class="form-resources policy-resources"></div>
+        {{else}}
+        <div data-fieldsets class="form-resources zoneResources-form"></div>
+        {{/if}}
     </fieldset>
 </form>

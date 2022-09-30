@@ -619,6 +619,9 @@
             }
             return '<div class="margin-bottom-5 display-block"><label><span>'+obj.label+' : </span></label><input type="input" data-id="inputField" name="'+obj.name+'" ></div>'
     });
+ 	Handlebars.registerHelper("inc", function(value, options) {
+		 return parseInt(value) + 1;
+ 	});
 
 	return HHelpers;
 });

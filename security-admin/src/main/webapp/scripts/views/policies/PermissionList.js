@@ -105,8 +105,7 @@ define(function(require) {
 //				if(XAUtil.isMaskingPolicy(this.rangerPolicyType)) this.renderMaskingTypesForTagBasedPolicies();
 			} else {
 //				To handle scenario : Access permission doesnt changes if we change resource before adding new policy item.
-				this.renderPerms(this.storeResourceRef.changeType, this.storeResourceRef.value,
-						this.storeResourceRef.resourceName, this.storeResourceRef.e );
+				this.renderPerms({ action : "permissionItemAdd" });
 				if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
 					this.renderMaskingType();
 				}
@@ -279,16 +278,35 @@ define(function(require) {
 				}
 			}).on('select2-focus', XAUtil.select2Focus);
 		},
-		renderPerms :function(changeType, value, resourceName, e){
+		renderPerms :function({changeType, value, resourceName, event, resourceItemIndex, action}){
 	        var that = this , accessTypeByResource = this.accessTypes;
-	        this.storeResourceRef.changeType = changeType;
-	        this.storeResourceRef.value = value;
-	        this.storeResourceRef.resourceName = resourceName;
-	        this.storeResourceRef.e = e;
+			if(action === 'removed'){
+				var removedItemIndex = _.findIndex(this.storeResourceRef, function(a){ return a.resourceItemIndex == resourceItemIndex;});
+				if(removedItemIndex >= 0){
+					this.storeResourceRef.splice(this.storeResourceRef.findIndex(item => item.resourceItemIndex === resourceItemIndex), 1);
+					_.each(this.storeResourceRef, (obj, index) => {
+						if(index >= removedItemIndex){
+							obj.resourceItemIndex = obj.resourceItemIndex - 1;
+						}
+					});
+				}
+			} else if (changeType || action== 'added') {
+				var resourceChangeObj = { resourceItemIndex, changeType, value, resourceName, event };
+				var found = _.findWhere(this.storeResourceRef, { resourceItemIndex: resourceItemIndex });
+				if(found && changeType){
+					_.extend(_.findWhere(this.storeResourceRef, { resourceItemIndex: resourceItemIndex }), resourceChangeObj );
+				} else {
+					this.storeResourceRef.push(resourceChangeObj)
+				}
+			}
 	        //get permissions by resource only for access policy
-	        accessTypeByResource = this.getAccessPermissionForSelectedResource(changeType, value, resourceName, e);
+			accessTypeByResource = (this.storeResourceRef.length && (changeType || action === 'removed' || action === 'permissionItemAdd'))
+				? [] : accessTypeByResource;
+			_.each(this.storeResourceRef, (obj) => {
+				accessTypeByResource = _.union(accessTypeByResource, this.getAccessPermissionForSelectedResource(obj.changeType, obj.value, obj.resourceName, obj.event));
+			});
 	        //reset permissions on resource change
-	        if(this.permsIds.length > 0 && !_.isUndefined(changeType) && !_.isUndefined(resourceName)){
+	        if(this.permsIds.length > 0 && ( !_.isUndefined(changeType) && !_.isUndefined(resourceName) || action === 'removed') ){
 	                this.permsIds = [];
 	        }
 	        this.perms =  _.map(accessTypeByResource , function(m){return {text : m.label, value : m.name};});
@@ -297,9 +315,9 @@ define(function(require) {
 			}
 			//if policy items not present. its skip that items and move forward
 			if(_.isObject(this.ui.addPerms)){
-                                if(changeType){
-                                    this.ui.addPerms.editable("destroy");
-                                }
+				if(changeType || action === 'removed' || action== 'added'){
+					this.ui.addPerms.editable("destroy");
+				}
 				//create x-editable for permissions
 				this.ui.addPerms.editable({
 					emptytext : 'Add Permissions',
@@ -1009,7 +1027,31 @@ define(function(require) {
 			if(this.collection.length == 0){
 				this.collection.add(new Backbone.Model())
 			}
-			this.storeResourceRef = {};
+			this.storeResourceRef = [];
+			var resourceDefByPolicyType = this.getResourceDefByPolicyType();
+			if(!this.model.isNew()){
+				_.each(_.union([this.model.get('resources')], this.model.get('additionalResources')), function(obj, index){
+					var resourceNames = Object.keys(obj);
+					var resourceName = resourceNames[0];
+					if(resourceName.length > 1){
+						var resourceByDef = resourceDefByPolicyType.filter((resource) => resourceNames.includes(resource.name) );
+						var maxLevel = Math.max(...resourceByDef.map(function(o) { return o.level; }));
+						var resource = resourceByDef.find(function(o) { return o.level == maxLevel; });
+						resourceName = resource.name;
+					}
+					this.storeResourceRef.push({'changeType': 'resourceType','resourceName': resourceName, value: resourceName, resourceItemIndex: index });
+				}, this);
+			} else {
+				let getChildResource = (resource) => {
+					var childResource = _.findWhere(resourceDefByPolicyType, {parent : resource.name  });
+					if(childResource){
+						return getChildResource(childResource);
+					}
+					return resource.name;
+				}
+				var resourceName = getChildResource(resourceDefByPolicyType[0])
+				this.storeResourceRef.push({'changeType': 'resourceType','resourceName': resourceName, value: resourceName, resourceItemIndex: 0 });
+			}
 		},
 		onRender : function(){
 			this.makePolicyItemSortable();
@@ -1075,6 +1117,20 @@ define(function(require) {
 					that.$el.find(ui.item[0]).addClass("dirtyField");
 				},
 			});
+		},
+		getResourceDefByPolicyType : function () {
+			var resourceDefList =   this.rangerServiceDefModel.get('resources');
+			if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
+				if(!_.isEmpty(this.rangerServiceDefModel.get('dataMaskDef').resources)){
+					resourceDefList = this.rangerServiceDefModel.get('dataMaskDef').resources;
+				}
+			}
+			if(XAUtil.isRowFilterPolicy(this.model.get('policyType'))){
+				if(!_.isEmpty(this.rangerServiceDefModel.get('rowFilterDef').resources)){
+					resourceDefList = this.rangerServiceDefModel.get('rowFilterDef').resources;
+				}
+			}
+			return resourceDefList
 		}
 	});
 

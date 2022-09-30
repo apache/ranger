@@ -42,18 +42,17 @@ define(function(require) {
              * @constructs
              */
 
-            templateData: function() {
-                var policyType = XAUtil.enumElementByValue(XAEnums.RangerPolicyType, this.model.get('policyType'));
+            template: require('hbs!tmpl/security_zone/ZoneResourcesForm_tmpl'),
+            templateData : function(){
                 return {
-                    'id': this.model.id,
-                    'policyType': policyType.label,
-                    'policyTimeBtnLabel': (this.model.has('validitySchedules') && this.model.get('validitySchedules').length > 0) ? localization.tt('lbl.editValidityPeriod') : localization.tt('lbl.addValidityPeriod')
-                };
+                    isPolicyResource : this.isPolicyResource
+                }
             },
 
             initialize: function(options) {
                 console.log("initialized a RangerZoneResourceForm Form View");
-                _.extend(this, _.pick(options, 'rangerServiceDefModel', 'rangerService'));
+                _.extend(this, _.pick(options, 'rangerServiceDefModel', 'rangerService', 'isPolicyResource'));
+                this.isPolicyResource = this.isPolicyResource ? this.isPolicyResource : false;
                 this.setupForm();
                 Backbone.Form.prototype.initialize.call(this, options);
                 this.bindEvents();
@@ -79,11 +78,14 @@ define(function(require) {
                 var attrs = {},
                     that = this;
                 var formDataType = new BackboneFormDataType();
-                _.each(this.rangerServiceDefModel.get('resources'), function(m) {
-                    if (_.has(m, 'parent')) {
-                        m.mandatory = false;
-                    }
-                })
+                if(!this.isPolicyResource){
+                    _.each(this.rangerServiceDefModel.get('resources'), function(m) {
+                        if (_.has(m, 'parent')) {
+                            m.mandatory = false;
+                        }
+                    })
+                }
+
                 attrs = formDataType.getFormElements(this.rangerServiceDefModel.get('resources'), this.rangerServiceDefModel.get('enums'), attrs, this, true);
                 return attrs;
             },
@@ -150,7 +152,7 @@ define(function(require) {
 
             /** all custom field rendering */
             renderParentChildHideShow: function(onChangeOfSameLevelType, val, e) {
-                var formDiv = this.$el.find('.zoneResources-form');
+                var formDiv = this.$el.find('.form-resources');
                 if (!this.model.isNew() && !onChangeOfSameLevelType) {
                     _.each(this.selectedResourceTypes, function(val, sameLevelName) {
                         if (formDiv.find('.field-' + sameLevelName).length > 0) {
@@ -342,8 +344,8 @@ define(function(require) {
                             //to set single select value
                             if (!_.isUndefined(options.singleValueInput) && options.singleValueInput) {
                                 callback({
-                                    id: element.val(),
-                                    text: element.val()
+                                    id: JSON.parse(element.val())[0],
+                                    text: JSON.parse(element.val())[0]
                                 });
                                 return;
                             }
