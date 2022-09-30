@@ -144,7 +144,7 @@ define(function(require) {
 
             /** all custom field rendering */
             renderParentChildHideShow: function(onChangeOfSameLevelType, val, e) {
-                var formDiv = this.$el.find('.zoneResources-form');
+                var formDiv = this.$el.find('.form-resources');
                 if (!this.model.isNew() && !onChangeOfSameLevelType) {
                     _.each(this.selectedResourceTypes, function(val, sameLevelName) {
                         if (formDiv.find('.field-' + sameLevelName).length > 0) {

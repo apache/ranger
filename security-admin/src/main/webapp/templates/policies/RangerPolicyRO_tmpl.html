@@ -83,20 +83,6 @@
                         {{/ifCond}}
                     </td>
                 </tr>
-                {{#each PolicyDetails.resources}}
-                    <tr>
-                        <td>
-                            {{this.label}}
-                        </td>
-                        <td>
-                            {{#each this.values}}
-                                <span class="badge badge-info">{{this}}</span>
-                            {{/each}}
-                            <span class="badge badge-dark pull-right m-l-sm">{{this.Rec_Recursive}}</span>
-                            <span class="badge badge-dark pull-right">{{this.Rec_Exc}}</span>
-                        </td>
-                    </tr>
-                {{/each}}
                 <tr>
                     <td>
                         {{tt 'lbl.description'}}
@@ -134,6 +120,34 @@
             </tbody>
         </table>
     </div>
+</div>
+<div class="">
+    <p class="formHeader">Policy Resource :</p>
+        {{#each PolicyDetails.resources}}
+            <div class="table-responsive">
+                <table class="table table-bordered table-condensed backgrid">
+                    <thead><th colspan="2" class="text-left">#{{inc @index}}</th></thead>
+                    <tbody>
+                    {{#each this}}
+                        <tr>
+                            <td>
+                                {{this.label}}
+                            </td>
+                            <td>
+                                {{#each this.values}}
+                                <span class="badge badge-info">{{this}}</span>
+                                {{/each}}
+                                <span class="badge badge-dark pull-right m-l-sm">{{this.Rec_Recursive}}</span>
+                                <span class="badge badge-dark pull-right">{{this.Rec_Exc}}</span>
+                            </td>
+                        </tr>
+                    {{/each}}
+                    </tbody>
+                </table>
+            </div>
+            <br/>
+        {{/each}}
+
 </div>
 {{#if PolicyDetails.validitySchedules}}
     <div id="policyItems" class="">

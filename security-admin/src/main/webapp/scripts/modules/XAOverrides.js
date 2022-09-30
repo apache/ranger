@@ -487,6 +487,9 @@
 		  events: {
 			  'click':  function(event) {
 			  },
+			  'change':  function(event) {
+				  this.trigger('change', this);
+			  },
 		  },
 		  initialize: function(options) {
 		    Form.editors.Base.prototype.initialize.call(this, options);
@@ -691,7 +694,8 @@
                             that.renderResource(def);
                         }
                         //trigger resource event for showing respective access permissions
-                        Vent.trigger('resourceType:change', changeType = 'resourceType', e.currentTarget.value, e.currentTarget.value, e);
+                        var resourceItemIndex = that.form.model && that.form.model.collection.indexOf(that.form.model);
+						Vent.trigger('resourceType:change', { changeType : 'resourceType', value : e.currentTarget.value, resourceName: e.currentTarget.value, event:e, resourceItemIndex : resourceItemIndex });
 					});
 			  	}
 		  },

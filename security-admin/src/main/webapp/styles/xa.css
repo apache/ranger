@@ -1782,7 +1782,7 @@ margin-bottom: 5px;
 }
 .include-toggle{
 	margin-left: 360px;
-	margin-top: -29px;
+	margin-top: -35px;
 	width:80px;
   position: relative;
   top: 7px;
@@ -2248,7 +2248,7 @@ input.textFiledInputPadding ~ span {
 }
 .include-toggle-1{
   margin-left: 23vw;
-  margin-top: -29px;
+  margin-top: -4px;
 }
 .expanded-contant .include-toggle-1{
   margin-left: 18.4vw;
@@ -4093,7 +4093,7 @@ button.btn.btn-secondary.dropdown-toggle {
 */
 .ranger-policy .form-group.field-isEnabled .policy-enable-disable{
     margin-left: 38vw;
-    margin-top: -75px;
+    margin-top: -69px;
     width: 100px
 }
 
@@ -4103,7 +4103,7 @@ button.btn.btn-secondary.dropdown-toggle {
 
 .ranger-policy .form-group.field-policyPriority .policy-priority{
     margin-left: 45vw;
-    margin-top: -80px;
+    margin-top: -73px;
     width: 100px
 }
 .expanded-contant .form-group.field-policyPriority .policy-priority {
@@ -4428,10 +4428,6 @@ ul.tagit input[type="text"]{
   top: -30px;
 }
 
-.form-group.field-policyLabels {
-    margin-bottom: 40px;
-}
-
 .ranger-policy .form-group.field-isEnabled > label,
 .ranger-policy .form-group.field-policyPriority > label {
   display: none;
@@ -4717,4 +4713,24 @@ input.textFiledInputPadding:disabled {
   background: #eeeeee;
   width: 100%;
   display: inline-block;
+}
+
+.js-formInput .policy-resources .select2-container {
+  width: 274px !important;
+}
+.form-resources.policy-resources .form-control.rosource-boder {
+  padding: 0px !important;
+}
+.form-resources.policy-resources .sameLevelDropdown {
+  margin-right: 31px !important;
+  margin-left: -150px !important;
+}
+.show-all-resource {
+  margin-top: -50px;
+}
+.policy-resources .form-group[fieldclass="resorces-css"] {
+  margin-bottom: 0px !important;
+}
+.wrap.position-relative.additional-resource{
+  padding: 20px 20px 0px 20px !important;
 }
