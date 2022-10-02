@@ -59,6 +59,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 	JSONUtil jsonUtil;
 	
 	public static final String POLICY_RESOURCE_CLASS_FIELD_NAME                   = "resources";
+	public static final String POLICY_ADDITIONAL_RESOURCES_CLASS_FIELD_NAME       = "additionalResources";
 	public static final String POLICY_ITEM_CLASS_FIELD_NAME                       = "policyItems";
 	public static final String POLICY_NAME_CLASS_FIELD_NAME                       = "name";
 	public static final String POLICY_DESCRIPTION_CLASS_FIELD_NAME                = "description";
@@ -88,6 +89,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 		trxLogAttrs.put("description",     		new VTrxLogAttr("description", "Policy Description", false));
 		trxLogAttrs.put("isEnabled",       		new VTrxLogAttr("isEnabled", "Policy Status", false));
 		trxLogAttrs.put("resources",       		new VTrxLogAttr("resources", "Policy Resources", false));
+		trxLogAttrs.put("additionalResources",	new VTrxLogAttr("additionalResources", "Policy Additional Resources", false));
 		trxLogAttrs.put("conditions",      		new VTrxLogAttr("conditions", "Policy Conditions", false));
 		trxLogAttrs.put("policyItems",     		new VTrxLogAttr("policyItems", "Policy Items", false));
 		trxLogAttrs.put("denyPolicyItems", 		new VTrxLogAttr("denyPolicyItems", "DenyPolicy Items", false));
@@ -225,8 +227,10 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			if (!isEnum) {
 			    if (POLICY_RESOURCE_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
     				value = processPolicyResourcesForTrxLog(field.get(vObj));
-				} else if (POLICY_CONDITION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
-					value = processPolicyItemsForTrxLog(field.get(vObj));
+    			} else if (POLICY_ADDITIONAL_RESOURCES_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPolicyAdditionalResourcesForTrxLog(field.get(vObj));
+    			} else if (POLICY_CONDITION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
+    				value = processPolicyConditionsForTrxLog(field.get(vObj));
     			} else if (POLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
     				value = processPolicyItemsForTrxLog(field.get(vObj));
     			} else if (DENYPOLICY_ITEM_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
@@ -384,7 +388,7 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 					oldValue = processPriorityClassFieldNameForTrxLog(oldPolicy.getPolicyPriority());
 				} else if (POLICY_CONDITION_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					if (oldPolicy != null) {
-						oldValue = processPolicyItemsForTrxLog(oldPolicy.getConditions());
+						oldValue = processPolicyConditionsForTrxLog(oldPolicy.getConditions());
 					}
 				} else if (POLICY_ZONE_NAME_CLASS_FIELD_NAME.equalsIgnoreCase(fieldName)) {
 					oldValue = oldPolicy != null ? processPolicyNameForTrxLog(oldPolicy.getZoneName()) : "";
@@ -640,6 +644,32 @@ public class RangerPolicyService extends RangerPolicyServiceBase<XXPolicy, Range
 			return "";
 		}
 		return ret;
+	}
+
+	@SuppressWarnings("unchecked")
+	private String processPolicyAdditionalResourcesForTrxLog(Object value) {
+		String ret = null;
+
+		if (value != null) {
+			List<Map<String, RangerPolicyResource>> additionalResources = (List<Map<String, RangerPolicyResource>>) value;
+
+			ret = jsonUtil.readListToString(additionalResources);
+		}
+
+		return ret == null ? "" : ret;
+	}
+
+	@SuppressWarnings("unchecked")
+	private String processPolicyConditionsForTrxLog(Object value) {
+		String ret = null;
+
+		if (value != null) {
+			List<RangerPolicy.RangerPolicyItemCondition> policyConditions = (List<RangerPolicy.RangerPolicyItemCondition>) value;
+
+			ret = jsonUtil.readListToString(policyConditions);
+		}
+
+		return ret == null ? "" : ret;
 	}
 
 	private boolean compareTwoPolicyName(String value, String oldValue) {
