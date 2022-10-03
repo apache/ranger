@@ -278,20 +278,26 @@ define(function(require) {
 				}
 			}).on('select2-focus', XAUtil.select2Focus);
 		},
-		renderPerms :function({changeType, value, resourceName, event, resourceItemIndex, action}){
+		renderPerms :function(options){
+			var changeType = options.changeType, value = options.value, resourceName = options.resourceName, event = options.event,
+				resourceItemIndex = options.resourceItemIndex, action = options.action;
 	        var that = this , accessTypeByResource = this.accessTypes;
 			if(action === 'removed'){
 				var removedItemIndex = _.findIndex(this.storeResourceRef, function(a){ return a.resourceItemIndex == resourceItemIndex;});
 				if(removedItemIndex >= 0){
-					this.storeResourceRef.splice(this.storeResourceRef.findIndex(item => item.resourceItemIndex === resourceItemIndex), 1);
-					_.each(this.storeResourceRef, (obj, index) => {
+					this.storeResourceRef.splice(this.storeResourceRef.findIndex(function (item) {
+						return item.resourceItemIndex === resourceItemIndex;
+					}) , 1);
+					_.each(this.storeResourceRef, function (obj, index) {
 						if(index >= removedItemIndex){
 							obj.resourceItemIndex = obj.resourceItemIndex - 1;
 						}
 					});
 				}
 			} else if (changeType || action== 'added') {
-				var resourceChangeObj = { resourceItemIndex, changeType, value, resourceName, event };
+				var resourceChangeObj = {
+					resourceItemIndex : resourceItemIndex, changeType : changeType, value : value, resourceName : resourceName, event :event
+				};
 				var found = _.findWhere(this.storeResourceRef, { resourceItemIndex: resourceItemIndex });
 				if(found && changeType){
 					_.extend(_.findWhere(this.storeResourceRef, { resourceItemIndex: resourceItemIndex }), resourceChangeObj );
@@ -302,9 +308,9 @@ define(function(require) {
 	        //get permissions by resource only for access policy
 			accessTypeByResource = (this.storeResourceRef.length && (changeType || action === 'removed' || action === 'permissionItemAdd'))
 				? [] : accessTypeByResource;
-			_.each(this.storeResourceRef, (obj) => {
+			_.each(this.storeResourceRef, function (obj) {
 				accessTypeByResource = _.union(accessTypeByResource, this.getAccessPermissionForSelectedResource(obj.changeType, obj.value, obj.resourceName, obj.event));
-			});
+			}, this);
 	        //reset permissions on resource change
 			this.permsIds = _.pluck(this.model.get('accesses'), 'type');
 	        if(this.permsIds.length > 0 && ( !_.isUndefined(changeType) && !_.isUndefined(resourceName) || action === 'removed') ){
@@ -1035,7 +1041,7 @@ define(function(require) {
 					var resourceNames = Object.keys(obj);
 					var resourceName = resourceNames[0];
 					if(resourceName.length > 1){
-						var resourceByDef = resourceDefByPolicyType.filter((resource) => resourceNames.includes(resource.name) );
+						var resourceByDef = resourceDefByPolicyType.filter(function (resource) { return resourceNames.includes(resource.name) });
 						var maxLevel = Math.max.apply(null, resourceByDef.map(function(o) { return o.level; }));
 						var resource = resourceByDef.find(function(o) { return o.level == maxLevel; });
 						resourceName = resource.name;
@@ -1043,7 +1049,7 @@ define(function(require) {
 					this.storeResourceRef.push({'changeType': 'resourceType','resourceName': resourceName, value: resourceName, resourceItemIndex: index });
 				}, this);
 			} else {
-				let getChildResource = (resource) => {
+				var getChildResource = function (resource) {
 					var childResource = _.findWhere(resourceDefByPolicyType, {parent : resource.name  });
 					if(childResource){
 						return getChildResource(childResource);
