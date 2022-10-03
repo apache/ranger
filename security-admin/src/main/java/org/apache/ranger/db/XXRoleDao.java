@@ -111,5 +111,20 @@ public class XXRoleDao extends BaseDao<XXRole> {
 		}
 		return ret;
 	}
+
+    @SuppressWarnings("unchecked")
+    public List<XXRole> findByGroupId(Long groupId) {
+        if (groupId == null) {
+            return null;
+        }
+        List<XXRole> ret;
+        try {
+            ret = getEntityManager().createNamedQuery("XXRole.findByGroupId", tClass).setParameter("groupId", groupId)
+                    .getResultList();
+        } catch (NoResultException e) {
+            ret = ListUtils.EMPTY_LIST;
+        }
+        return ret;
+    }
 }
 

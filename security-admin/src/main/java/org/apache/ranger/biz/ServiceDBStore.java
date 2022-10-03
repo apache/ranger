@@ -132,6 +132,7 @@ import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -4870,6 +4871,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		RangerPolicyList retList = new RangerPolicyList();
 		Map<Long,RangerPolicy> policyMap=new HashMap<Long,RangerPolicy>();
 		Set<Long> processedServices=new HashSet<Long>();
+		Set<Long> processedSvcIdsForRole = new HashSet<>();
 		Set<Long> processedPolicies=new HashSet<Long>();
 		Comparator<RangerPolicy> comparator = new Comparator<RangerPolicy>() {
 			public int compare(RangerPolicy c1, RangerPolicy c2) {
@@ -4943,7 +4945,109 @@ public class ServiceDBStore extends AbstractServiceStore {
 						}
 					}
 				}
+
+			// fetch policies maintained for the roles belonging to the user
+			searchFilter.removeParam("group");
+			XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+			if (xxUser != null) {
+				Set<Long> allContainedRoles = new HashSet<>();
+				List<XXRole> xxRoles = daoMgr.getXXRole().findByUserId(xxUser.getId());
+				for(XXRole xxRole: xxRoles) {
+					getContainingRoles(xxRole.getId(), allContainedRoles);
+				}
+				Set<String> roleNames = getRoleNames(allContainedRoles);
+				Set<String> processedRoleName = new HashSet<>();
+				List<XXPolicy> xPolList3;
+				for (String roleName : roleNames) {
+					searchFilter.setParam("role", roleName);
+					xPolList3 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+					if (!CollectionUtils.isEmpty(xPolList3)) {
+						for (XXPolicy xPol3 : xPolList3) {
+							if (xPol3 != null) {
+								if (!processedPolicies.contains(xPol3.getId())) {
+									if (!processedSvcIdsForRole.contains(xPol3.getService())
+											|| !processedRoleName.contains(roleName)) {
+										loadRangerPolicies(xPol3.getService(), processedSvcIdsForRole, policyMap, searchFilter);
+										processedRoleName.add(roleName);
+									}
+									if (policyMap.containsKey(xPol3.getId())) {
+										policyList.add(policyMap.get(xPol3.getId()));
+										processedPolicies.add(xPol3.getId());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
+
+		// fetch policies maintained for the roles and groups belonging to the group
+		String groupName = searchFilter.getParam("group");
+		if (!StringUtils.isEmpty(groupName)) {
+			Set<String> groupNames = daoMgr.getXXGroupGroup().findGroupNamesByGroupName(groupName);
+			groupNames.add(RangerConstants.GROUP_PUBLIC);
+			groupNames.add(groupName);
+			Set<Long> processedSvcIdsForGroup = new HashSet<Long>();
+			Set<String> processedGroupsName = new HashSet<String>();
+			List<XXPolicy> xPolList2;
+			for (String grpName : groupNames) {
+				searchFilter.setParam("group", grpName);
+				xPolList2 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+				if (!CollectionUtils.isEmpty(xPolList2)) {
+					for (XXPolicy xPol2 : xPolList2) {
+						if(xPol2!=null){
+							if (!processedPolicies.contains(xPol2.getId())) {
+								if (!processedSvcIdsForGroup.contains(xPol2.getService())
+										|| !processedGroupsName.contains(groupName)) {
+									loadRangerPolicies(xPol2.getService(), processedSvcIdsForGroup, policyMap, searchFilter);
+									processedGroupsName.add(groupName);
+								}
+								if (policyMap.containsKey(xPol2.getId())) {
+									policyList.add(policyMap.get(xPol2.getId()));
+									processedPolicies.add(xPol2.getId());
+								}
+							}
+						}
+					}
+				}
+			}
+
+			searchFilter.removeParam("group");
+			XXGroup xxGroup = daoMgr.getXXGroup().findByGroupName(groupName);
+			if (xxGroup != null) {
+				Set<Long> allContainedRoles = new HashSet<>();
+				List<XXRole> xxRoles = daoMgr.getXXRole().findByGroupId(xxGroup.getId());
+				for (XXRole xxRole : xxRoles) {
+					getContainingRoles(xxRole.getId(), allContainedRoles);
+				}
+				Set<String> roleNames = getRoleNames(allContainedRoles);
+				Set<String> processedRoleName = new HashSet<>();
+				List<XXPolicy> xPolList3;
+				for (String roleName : roleNames) {
+					searchFilter.setParam("role", roleName);
+					xPolList3 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+					if (!CollectionUtils.isEmpty(xPolList3)) {
+						for (XXPolicy xPol3 : xPolList3) {
+							if (xPol3 != null) {
+								if (!processedPolicies.contains(xPol3.getId())) {
+									if (!processedSvcIdsForRole.contains(xPol3.getService())
+											|| !processedRoleName.contains(roleName)) {
+										loadRangerPolicies(xPol3.getService(), processedSvcIdsForRole, policyMap, searchFilter);
+										processedRoleName.add(roleName);
+									}
+									if (policyMap.containsKey(xPol3.getId())) {
+										policyList.add(policyMap.get(xPol3.getId()));
+										processedPolicies.add(xPol3.getId());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
 		if (!CollectionUtils.isEmpty(xPolList)) {
 			if (isSearchQuerybyResource(searchFilter)) {
 				if (MapUtils.isNotEmpty(policyMap)) {
@@ -6128,5 +6232,31 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<=== ServiceDBStore.removeUserGroupRoleReferences( user : "+ user + " group : "+ group + " role : " + role + " auditFilters : " + auditFilters +")");
 		}
+	}
+
+	private void getContainingRoles(Long roleId, Set<Long> allRoles) {
+		if (!allRoles.contains(roleId)) {
+			allRoles.add(roleId);
+			Set<Long> roles = daoMgr.getXXRoleRefRole().getContainingRoles(roleId);
+			for (Long role : roles) {
+				getContainingRoles(role, allRoles);
+			}
+		}
+	}
+
+	private Set<String> getRoleNames(Set<Long> roles) {
+		Set<String> roleNames = new HashSet<>();
+		if (CollectionUtils.isNotEmpty(roles)) {
+			List<XXRole> xxRoles = daoMgr.getXXRole().getAll();
+			for (Long role : roles) {
+				for (XXRole xxRole : xxRoles) {
+					if (xxRole.getId() == role) {
+						roleNames.add(xxRole.getName());
+						break;
+					}
+				}
+			}
+		}
+		return roleNames;
 	}
 }
