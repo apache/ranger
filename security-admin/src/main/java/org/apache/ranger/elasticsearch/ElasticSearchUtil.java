@@ -174,7 +174,7 @@ public class ElasticSearchUtil {
         }
         MultiGetRequest multiGetRequest = new MultiGetRequest();
         for (SearchHit hit : hits) {
-            MultiGetRequest.Item item = new MultiGetRequest.Item(index, null, hit.getId());
+            MultiGetRequest.Item item = new MultiGetRequest.Item(hit.getIndex(), null, hit.getId());
             item.fetchSourceContext(FetchSourceContext.FETCH_SOURCE);
             multiGetRequest.add(item);
         }
