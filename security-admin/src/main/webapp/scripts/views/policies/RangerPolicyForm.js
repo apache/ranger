@@ -406,7 +406,7 @@ define(function(require){
 			var additionResources = [];
 			//set sameLevel fieldAttr value with resource name
 			this.formInputResourceList.each(function(model) {
-				let resource = {}
+				var resource = {}
 				_.each(model.attributes, function(val, key) {
 					var isSameLevelResource = key.indexOf("sameLevel") >= 0, isResource = !['policyType', 'resourceForm', 'none', 'resources','id'].includes(key);
 					if ((isSameLevelResource || isResource) && !_.isNull(val)) {
@@ -414,7 +414,7 @@ define(function(require){
 						if(resourceName && resourceName != 'none'){
 							model.set(resourceName, val);
 							resource[resourceName] = {
-								values: _.isObject(val.resource[0]) ? _.pluck(val.resource, 'text') : val.resource
+								values: val.resource && val.resource.length && _.isObject(val.resource[0]) ? _.pluck(val.resource, 'text') : val.resource
 							};
 							if(!_.isUndefined(val.isRecursive)){
 								resource[resourceName]['isRecursive'] = val.isRecursive;
@@ -629,6 +629,7 @@ define(function(require){
 		validatePolicyResource : function (){
 			var errors = null;
 			_.some(this.formInputResourceList.models, function(model) {
+				model.attributes = Object.assign({}, _.pick(model.attributes, 'id','resourceForm', 'policyType'));
 				errors = model.get('resourceForm').commit({validate : false});
 				return ! _.isEmpty(errors);
 			});
