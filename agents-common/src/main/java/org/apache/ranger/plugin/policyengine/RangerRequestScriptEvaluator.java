@@ -191,10 +191,12 @@ public final class RangerRequestScriptEvaluator {
 	}
 
 	private Object evaluateScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
-		Object              ret        = null;
-		Bindings            bindings   = scriptEngine.createBindings();
-		RangerTagForEval    currentTag = this.getCurrentTag();
-		Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+		Object              ret           = null;
+		Bindings            bindings      = scriptEngine.createBindings();
+		RangerTagForEval    currentTag    = this.getCurrentTag();
+		Map<String, String> tagAttribs    = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+		boolean             hasIncludes   = StringUtils.contains(script, ".includes(");
+		boolean             hasIntersects = StringUtils.contains(script, ".intersects(");
 
 		bindings.put(SCRIPT_VAR_ctx, this);
 		bindings.put(SCRIPT_VAR_tag, currentTag);
@@ -204,6 +206,14 @@ public final class RangerRequestScriptEvaluator {
 			bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
 
 			script = SCRIPT_PREEXEC + script;
+		}
+
+		if (hasIncludes) {
+			script = SCRIPT_POLYFILL_INCLUDES + script;
+		}
+
+		if (hasIntersects) {
+			script = SCRIPT_POLYFILL_INTERSECTS + script;
 		}
 
 		if (LOG.isDebugEnabled()) {
