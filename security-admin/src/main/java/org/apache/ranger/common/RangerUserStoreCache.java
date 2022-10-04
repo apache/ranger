@@ -62,56 +62,56 @@ public class RangerUserStoreCache {
 		return this.rangerUserStore;
 	}
 
-	public RangerUserStore getLatestRangerUserStoreOrCached(XUserMgr xUserMgr, Long lastKnownUserStoreVersion, Long rangerUserStoreVersionInDB) throws Exception {
-		RangerUserStore ret = null;
-
-		if (lastKnownUserStoreVersion == null || !lastKnownUserStoreVersion.equals(rangerUserStoreVersionInDB)) {
-			ret = getLatestRangerUserStore(xUserMgr, lastKnownUserStoreVersion, rangerUserStoreVersionInDB);
-		} else {
-			ret = null;
-		}
-
-		return ret;
-	}
-
-	public RangerUserStore getLatestRangerUserStore(XUserMgr xUserMgr, Long lastKnownUserStoreVersion, Long rangerUserStoreVersionInDB) throws Exception {
-		RangerUserStore ret	 = null;
-		boolean         lockResult   = false;
+	public RangerUserStore getLatestRangerUserStoreOrCached(XUserMgr xUserMgr) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> RangerUserStoreCache.getLatestRangerUserStore(lastKnownUserStoreVersion= " + lastKnownUserStoreVersion + " rangerUserStoreVersionInDB= " + rangerUserStoreVersionInDB + ")");
+			LOG.debug("==> RangerUserStoreCache.getLatestRangerUserStoreOrCached()");
 		}
+
+		RangerUserStore ret        = null;
+		boolean         lockResult = false;
 
 		try {
 			lockResult = lock.tryLock(waitTimeInSeconds, TimeUnit.SECONDS);
 
 			if (lockResult) {
-				final Set<UserInfo> rangerUsersInDB = xUserMgr.getUsers();
-				final Set<GroupInfo> rangerGroupsInDB = xUserMgr.getGroups();
-				final Map<String, Set<String>> userGroups = xUserMgr.getUserGroups();
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("No. of users from DB = " + rangerUsersInDB.size() + " and no. of groups from DB = " + rangerGroupsInDB.size());
-					LOG.debug("No. of userGroupMappings = " + userGroups.size());
-				}
+				Long cachedUserStoreVersion = rangerUserStore.getUserStoreVersion();
+				Long dbUserStoreVersion     = xUserMgr.getUserStoreVersion();
 
-				ret = new RangerUserStore(rangerUserStoreVersionInDB, rangerUsersInDB, rangerGroupsInDB, userGroups);
-				rangerUserStore = ret;
+				if (!Objects.equals(cachedUserStoreVersion, dbUserStoreVersion)) {
+					LOG.info("RangerUserStoreCache refreshing from version " + cachedUserStoreVersion + " to " + dbUserStoreVersion);
+
+					final Set<UserInfo>            rangerUsersInDB  = xUserMgr.getUsers();
+					final Set<GroupInfo>           rangerGroupsInDB = xUserMgr.getGroups();
+					final Map<String, Set<String>> userGroups       = xUserMgr.getUserGroups();
+
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("No. of users from DB = " + rangerUsersInDB.size() + " and no. of groups from DB = " + rangerGroupsInDB.size());
+						LOG.debug("No. of userGroupMappings = " + userGroups.size());
+					}
+
+					rangerUserStore = new RangerUserStore(dbUserStoreVersion, rangerUsersInDB, rangerGroupsInDB, userGroups);
+
+					LOG.info("RangerUserStoreCache refreshed from version " + cachedUserStoreVersion + " to " + dbUserStoreVersion + ": users=" + rangerUsersInDB.size() + ", groups=" + rangerGroupsInDB.size() + ", userGroupMappings=" + userGroups.size());
+				}
 			} else {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached RangerUserStore");
 				}
-				ret = getRangerUserStore();
 			}
 		} catch (InterruptedException exception) {
-			LOG.error("RangerUserStoreCache.getLatestRangerUserStore:lock got interrupted..", exception);
+			LOG.error("RangerUserStoreCache.getLatestRangerUserStoreOrCached:lock got interrupted..", exception);
 		} finally {
+			ret = rangerUserStore;
+
 			if (lockResult) {
 				lock.unlock();
 			}
 		}
 
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== RangerUserStoreCache.getLatestRangerUserStore(lastKnownUserStoreVersion= " + lastKnownUserStoreVersion + " rangerUserStoreVersionInDB= " + rangerUserStoreVersionInDB + " RangerUserStore= " + ret + ")");
+			LOG.debug("<== RangerUserStoreCache.getLatestRangerUserStoreOrCached(): ret=" + ret);
 		}
+
 		return ret;
 	}
 }

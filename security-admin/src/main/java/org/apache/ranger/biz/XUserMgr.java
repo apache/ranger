@@ -271,6 +271,8 @@ public class XUserMgr extends XUserMgrBase {
 			assignPermissionToUser(vXPortalUser, true);
 		}
 
+		updateUserStoreVersion("createXUser(" + vXUser.getName() + ")");
+
 		return createdXUser;
 	}
 
@@ -504,6 +506,8 @@ public class XUserMgr extends XUserMgrBase {
 		trxLogList.addAll(createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove));
 		xaBizUtil.createTrxLog(trxLogList);
 
+		updateUserStoreVersion("updateXUser(" + vXUser.getName() + ")");
+
 		return vXUser;
 	}
 	private List<XXTrxLog> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
@@ -605,11 +609,9 @@ public class XUserMgr extends XUserMgrBase {
 			assignPermissionToUser(vXPortalUser, true);
 		}
 		vxUGInfo.setXgroupInfo(vxg);
-		try {
-			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
-		} catch (Exception excp) {
-			logger.error("createXUserGroupFromMap(" + vXUser.getName() + ") failed", excp);
-		}
+
+		updateUserStoreVersion("createXUserGroupFromMap(" + vXUser.getName() + ")");
+
 		return vxUGInfo;
 	}
 
@@ -667,11 +669,7 @@ public class XUserMgr extends XUserMgrBase {
 
 		vxGUInfo.setXuserInfo(vxu);
 
-		try {
-			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
-		} catch (Exception excp) {
-			logger.error("createXGroupUserFromMap(" + vXGroup.getName() + ") failed", excp);
-		}
+		updateUserStoreVersion("createXGroupUserFromMap(" + vXGroup.getName() + ")");
 
 		return vxGUInfo;
 	}
@@ -725,7 +723,11 @@ public class XUserMgr extends XUserMgrBase {
 		checkAdminAccess();
 		xaBizUtil.blockAuditorRoleUser();
 		validatePassword(vXUser);
-		return xUserService.createXUserWithOutLogin(vXUser);
+		VXUser ret = xUserService.createXUserWithOutLogin(vXUser);
+
+		updateUserStoreVersion("createXUserWithOutLogin(" + vXUser.getName() + ")");
+
+		return ret;
 	}
 
 	public VXUser createExternalUser(String userName) {
@@ -745,13 +747,21 @@ public class XUserMgr extends XUserMgrBase {
 		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
 				"create");
 		xaBizUtil.createTrxLog(trxLogList);
+
+		updateUserStoreVersion("createXGroup(" + vXGroup.getName() + ")");
+
 		return vXGroup;
 	}
 
 	public VXGroup createXGroupWithoutLogin(VXGroup vXGroup) {
 		checkAdminAccess();
 		xaBizUtil.blockAuditorRoleUser();
-		return xGroupService.createXGroupWithOutLogin(vXGroup);
+
+		VXGroup ret = xGroupService.createXGroupWithOutLogin(vXGroup);
+
+		updateUserStoreVersion("createXGroupWithoutLogin(" + vXGroup.getName() + ")");
+
+		return ret;
 	}
 
 	public VXGroupUser createXGroupUser(VXGroupUser vXGroupUser) {
@@ -2584,20 +2594,19 @@ public class XUserMgr extends XUserMgrBase {
 		return daoManager.getXXUser().findGroupsByUserIds();
 	}
 
-	public RangerUserStore getRangerUserStore(Long lastKnownUserStoreVersion) throws Exception {
-		RangerUserStore ret                   = null;
-		Long        rangerUserStoreVersionInDB = getUserStoreVersion();
-
+	public RangerUserStore getRangerUserStoreIfUpdated(Long lastKnownUserStoreVersion) throws Exception {
 		if (logger.isDebugEnabled()) {
-			logger.debug("==> XUserMgr.getRangerUserStore() lastKnownUserStoreVersion= " + lastKnownUserStoreVersion + " rangerUserStoreVersionInDB= " + rangerUserStoreVersionInDB);
+			logger.debug("==> XUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion=" + lastKnownUserStoreVersion + ")");
 		}
 
-		if (rangerUserStoreVersionInDB != null) {
-			ret = RangerUserStoreCache.getInstance().getLatestRangerUserStoreOrCached(this, lastKnownUserStoreVersion, rangerUserStoreVersionInDB);
+		RangerUserStore ret = RangerUserStoreCache.getInstance().getLatestRangerUserStoreOrCached(this);
+
+		if (ret != null && Objects.equals(ret.getUserStoreVersion(), lastKnownUserStoreVersion)) {
+			ret = null;
 		}
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("<= XUserMgr.getRangerUserStore() lastKnownUserStoreVersion= " + lastKnownUserStoreVersion + " rangerUserStoreVersionInDB= " + rangerUserStoreVersionInDB + " RangerRoles= " + ret);
+			logger.debug("<== XUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion=" + lastKnownUserStoreVersion + "): ret=" + ret);
 		}
 
 		return ret;
@@ -2775,11 +2784,9 @@ public class XUserMgr extends XUserMgrBase {
             }
 			createXGroupWithoutLogin(vXGroup);
 		}
-		try {
-			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
-		} catch (Exception excp) {
-			logger.error("createOrUpdateXGroups() failed", excp);
-		}
+
+		updateUserStoreVersion("createOrUpdateXGroups(groupsCount=" + groups.getListSize() + ")");
+
 		return groups.getListSize();
 	}
 
@@ -3264,6 +3271,14 @@ public class XUserMgr extends XUserMgrBase {
 			if (logger.isDebugEnabled()) {
 				logger.debug("<== ExternalUserCreator.createExternalUser(username=" + userName);
 			}
+		}
+	}
+
+	private void updateUserStoreVersion(String label) {
+		try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error(label + ": userStore version update failed", excp);
 		}
 	}
 }

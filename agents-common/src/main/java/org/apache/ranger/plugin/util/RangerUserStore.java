@@ -131,20 +131,40 @@ public class RangerUserStore implements Serializable {
         sb.append("RangerUserStore={")
                 .append("userStoreVersion=").append(userStoreVersion).append(", ")
                 .append("userStoreUpdateTime=").append(userStoreUpdateTime).append(", ");
+
         sb.append("users={");
         if(MapUtils.isNotEmpty(userAttrMapping)) {
             for(String user : userAttrMapping.keySet()) {
-                sb.append(user);
+                sb.append(user).append(" ");
             }
         }
         sb.append("}, ");
+
         sb.append("groups={");
         if(MapUtils.isNotEmpty(groupAttrMapping)) {
             for(String group : groupAttrMapping.keySet()) {
-                sb.append(group);
+                sb.append(group).append(" ");
             }
         }
         sb.append("}");
+
+        sb.append(", userGroupMapping={");
+        if(MapUtils.isNotEmpty(userGroupMapping)) {
+            for(Map.Entry<String, Set<String>> entry : userGroupMapping.entrySet()) {
+                String      user       = entry.getKey();
+                Set<String> userGroups = entry.getValue();
+
+                sb.append(user).append("[");
+                if (CollectionUtils.isNotEmpty(userGroups)) {
+                    for (String userGroup : userGroups) {
+                        sb.append(userGroup).append(" ");
+                    }
+                }
+                sb.append("] ");
+            }
+        }
+        sb.append("}");
+
         sb.append("}");
 
         return sb;

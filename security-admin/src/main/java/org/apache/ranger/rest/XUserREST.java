@@ -1333,7 +1333,7 @@ public class XUserREST {
 
                 if (xService != null) {
 
-                    RangerUserStore rangerUserStore = xUserMgr.getRangerUserStore(lastKnownUserStoreVersion);
+                    RangerUserStore rangerUserStore = xUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion);
 
                     if (rangerUserStore == null) {
                         downloadedVersion = lastKnownUserStoreVersion;
@@ -1416,7 +1416,7 @@ public class XUserREST {
 				}
 
 				if (isAllowed) {
-					RangerUserStore rangerUserStore = xUserMgr.getRangerUserStore(lastKnownUserStoreVersion);
+					RangerUserStore rangerUserStore = xUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion);
 					if (rangerUserStore == null) {
 						downloadedVersion = lastKnownUserStoreVersion;
 						httpCode = HttpServletResponse.SC_NOT_MODIFIED;
