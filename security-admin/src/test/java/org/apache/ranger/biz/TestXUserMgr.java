@@ -4137,7 +4137,7 @@ public class TestXUserMgr {
 		XXGlobalStateDao xxGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
 		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xxGlobalStateDao);
 		Mockito.when(xxGlobalStateDao.getAppDataVersion(RANGER_USER_GROUP_GLOBAL_STATE_NAME)).thenReturn(lastKnownUserStoreVersion);
-		xUserMgr.getRangerUserStore(lastKnownUserStoreVersion);
+		xUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion);
 	}
 
 	@Test
