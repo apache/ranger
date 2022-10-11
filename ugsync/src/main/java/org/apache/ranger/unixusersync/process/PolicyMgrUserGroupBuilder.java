@@ -83,8 +83,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 	public static final String PM_UPDATE_USERS_ROLES_URI  = "/service/xusers/users/roleassignments";	// PUT
 
-	private static final String PM_UPDATE_DELETED_GROUPS_URI = "/service/xusers/ugsync/groups/visibility";	// POST
-
 	private static final String PM_UPDATE_DELETED_USERS_URI = "/service/xusers/ugsync/users/visibility";	// POST
 	private static final Pattern USER_OR_GROUP_NAME_VALIDATION_REGEX =
 			Pattern.compile("^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s,._\\-+/@= ]|[\u00C0-\u017F])+$", Pattern.CASE_INSENSITIVE);
@@ -441,7 +439,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int totalCount = 100;
 		int retrievedCount = 0;
-		String relativeUrl = PM_GROUP_LIST_URI;
 
 		while (retrievedCount < totalCount) {
 			String response = null;
@@ -453,10 +450,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 			Gson gson = new GsonBuilder().create();
 			if (isRangerCookieEnabled) {
-				response = cookieBasedGetEntity(relativeUrl, retrievedCount);
+				response = cookieBasedGetEntity(PM_GROUP_LIST_URI, retrievedCount);
 			} else {
 				try {
-					clientResp = ldapUgSyncClient.get(relativeUrl, queryParams);
+					clientResp = ldapUgSyncClient.get(PM_GROUP_LIST_URI, queryParams);
 					if (clientResp != null) {
 						response = clientResp.getEntity(String.class);
 					}
@@ -496,7 +493,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int totalCount = 100;
 		int retrievedCount = 0;
-		String relativeUrl = PM_USER_LIST_URI;
 
 		while (retrievedCount < totalCount) {
 			String response = null;
@@ -508,10 +504,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 			Gson gson = new GsonBuilder().create();
 			if (isRangerCookieEnabled) {
-				response = cookieBasedGetEntity(relativeUrl, retrievedCount);
+				response = cookieBasedGetEntity(PM_USER_LIST_URI, retrievedCount);
 			} else {
 				try {
-					clientResp = ldapUgSyncClient.get(relativeUrl, queryParams);
+					clientResp = ldapUgSyncClient.get(PM_USER_LIST_URI, queryParams);
 					if (clientResp != null) {
 						response = clientResp.getEntity(String.class);
 					}
@@ -548,17 +544,16 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupUserLinkList()");
 		}
-		String relativeUrl = PM_GET_ALL_GROUP_USER_MAP_LIST_URI;
 
 		String response = null;
 		ClientResponse clientResp = null;
 
 		Gson gson = new GsonBuilder().create();
 		if (isRangerCookieEnabled) {
-			response = cookieBasedGetEntity(relativeUrl, 0);
+			response = cookieBasedGetEntity(PM_GET_ALL_GROUP_USER_MAP_LIST_URI, 0);
 		} else {
 			try {
-				clientResp = ldapUgSyncClient.get(relativeUrl, null);
+				clientResp = ldapUgSyncClient.get(PM_GET_ALL_GROUP_USER_MAP_LIST_URI, null);
 				if (clientResp != null) {
 					response = clientResp.getEntity(String.class);
 				}
@@ -966,15 +961,14 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int ret = 0;
 		int totalCount = xUserList.getTotalCount();
-		int uploadedCount = -1;
+		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
 			String response = null;
 			ClientResponse clientRes = null;
-			String relativeUrl = PM_ADD_USERS_URI;
 			GetXUserListResponse pagedXUserList = new GetXUserListResponse();
 			int pagedXUserListLen = uploadedCount+pageSize;
-			pagedXUserList.setXuserInfoList(xUserList.getXuserInfoList().subList(uploadedCount+1,
+			pagedXUserList.setXuserInfoList(xUserList.getXuserInfoList().subList(uploadedCount,
 					pagedXUserListLen>totalCount?totalCount:pagedXUserListLen));
 			pagedXUserList.setTotalCount(pageSize);
 			if (pagedXUserList.getXuserInfoList().size() == 0) {
@@ -983,10 +977,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			}
 
 			if (isRangerCookieEnabled) {
-				response = cookieBasedUploadEntity(pagedXUserList, relativeUrl);
+				response = cookieBasedUploadEntity(pagedXUserList, PM_ADD_USERS_URI);
 			} else {
 				try {
-					clientRes = ldapUgSyncClient.post(relativeUrl, null, pagedXUserList);
+					clientRes = ldapUgSyncClient.post(PM_ADD_USERS_URI, null, pagedXUserList);
 					if (clientRes != null) {
 						response = clientRes.getEntity(String.class);
 					}
@@ -1068,23 +1062,22 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int ret = 0;
 		int totalCount = xGroupList.getTotalCount();
-		int uploadedCount = -1;
+		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
 			String response = null;
 			ClientResponse clientRes = null;
-			String relativeUrl = PM_ADD_GROUPS_URI;
 			GetXGroupListResponse pagedXGroupList = new GetXGroupListResponse();
 			int pagedXGroupListLen = uploadedCount+pageSize;
-			pagedXGroupList.setXgroupInfoList(xGroupList.getXgroupInfoList().subList(uploadedCount+1,
+			pagedXGroupList.setXgroupInfoList(xGroupList.getXgroupInfoList().subList(uploadedCount,
 					pagedXGroupListLen>totalCount?totalCount:pagedXGroupListLen));
 			pagedXGroupList.setTotalCount(pageSize);
 
 			if (isRangerCookieEnabled) {
-				response = cookieBasedUploadEntity(pagedXGroupList, relativeUrl);
+				response = cookieBasedUploadEntity(pagedXGroupList, PM_ADD_GROUPS_URI);
 			} else {
 				try {
-					clientRes = ldapUgSyncClient.post(relativeUrl, null, pagedXGroupList);
+					clientRes = ldapUgSyncClient.post(PM_ADD_GROUPS_URI, null, pagedXGroupList);
 					if (clientRes != null) {
 						response = clientRes.getEntity(String.class);
 					}
@@ -1162,22 +1155,21 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int ret = 0;
 		int totalCount = groupUserInfoList.size();
-		int uploadedCount = -1;
+		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
 			String response = null;
 			ClientResponse clientRes = null;
-			String relativeUrl = PM_ADD_GROUP_USER_LIST_URI;
 
 			int pagedGroupUserInfoListLen = uploadedCount+pageSize;
-			List<GroupUserInfo> pagedGroupUserInfoList = groupUserInfoList.subList(uploadedCount+1,
+			List<GroupUserInfo> pagedGroupUserInfoList = groupUserInfoList.subList(uploadedCount,
 					pagedGroupUserInfoListLen>totalCount?totalCount:pagedGroupUserInfoListLen);
 
 			if (isRangerCookieEnabled) {
-				response = cookieBasedUploadEntity(pagedGroupUserInfoList, relativeUrl);
+				response = cookieBasedUploadEntity(pagedGroupUserInfoList, PM_ADD_GROUP_USER_LIST_URI);
 			} else {
 				try {
-					clientRes = ldapUgSyncClient.post(relativeUrl, null, pagedGroupUserInfoList);
+					clientRes = ldapUgSyncClient.post(PM_ADD_GROUP_USER_LIST_URI, null, pagedGroupUserInfoList);
 					if (clientRes != null) {
 						response = clientRes.getEntity(String.class);
 					}
@@ -1248,12 +1240,12 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		List<String> ret = null;
 		try {
 			int totalCount = ugRoleAssignments.getUsers().size();
-			int uploadedCount = -1;
+			int uploadedCount = 0;
 			int pageSize = Integer.valueOf(recordsToPullPerCall);
 			while (uploadedCount < totalCount) {
 				int pagedUgRoleAssignmentsListLen = uploadedCount + pageSize;
 				UsersGroupRoleAssignments pagedUgRoleAssignmentsList = new UsersGroupRoleAssignments();
-				pagedUgRoleAssignmentsList.setUsers(ugRoleAssignments.getUsers().subList(uploadedCount + 1,
+				pagedUgRoleAssignmentsList.setUsers(ugRoleAssignments.getUsers().subList(uploadedCount,
 						pagedUgRoleAssignmentsListLen > totalCount ? totalCount : pagedUgRoleAssignmentsListLen));
 				pagedUgRoleAssignmentsList.setGroupRoleAssignments(ugRoleAssignments.getGroupRoleAssignments());
 				pagedUgRoleAssignmentsList.setUserRoleAssignments(ugRoleAssignments.getUserRoleAssignments());
@@ -1344,14 +1336,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		String response = null;
 		ClientResponse clientRes = null;
 		Gson gson = new GsonBuilder().create();
-		String relativeUrl = PM_AUDIT_INFO_URI;
 
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(userInfo, relativeUrl);
+			response = cookieBasedUploadEntity(userInfo, PM_AUDIT_INFO_URI);
 		}
 		else {
 			try {
-				clientRes = ldapUgSyncClient.post(relativeUrl, null, userInfo);
+				clientRes = ldapUgSyncClient.post(PM_AUDIT_INFO_URI, null, userInfo);
 				if (clientRes != null) {
 					response = clientRes.getEntity(String.class);
 				}
@@ -1810,14 +1801,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		int ret = 0;
 		String response = null;
 		ClientResponse clientRes = null;
-		String relativeUrl = PM_UPDATE_DELETED_GROUPS_URI;
 
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(deletedGroups.keySet(), relativeUrl);
+			response = cookieBasedUploadEntity(deletedGroups.keySet(), PM_AUDIT_INFO_URI);
 		}
 		else {
 			try {
-				clientRes = ldapUgSyncClient.post(relativeUrl, null, deletedGroups.keySet());
+				clientRes = ldapUgSyncClient.post(PM_AUDIT_INFO_URI, null, deletedGroups.keySet());
 				if (clientRes != null) {
 					response = clientRes.getEntity(String.class);
 				}
@@ -1931,14 +1921,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		int ret = 0;
 		String response = null;
 		ClientResponse clientRes = null;
-		String relativeUrl = PM_UPDATE_DELETED_USERS_URI;
 
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(deletedUsers.keySet(), relativeUrl);
+			response = cookieBasedUploadEntity(deletedUsers.keySet(), PM_UPDATE_DELETED_USERS_URI);
 		}
 		else {
 			try {
-				clientRes = ldapUgSyncClient.post(relativeUrl, null, deletedUsers.keySet());
+				clientRes = ldapUgSyncClient.post(PM_UPDATE_DELETED_USERS_URI, null, deletedUsers.keySet());
 				if (clientRes != null) {
 					response = clientRes.getEntity(String.class);
 				}
