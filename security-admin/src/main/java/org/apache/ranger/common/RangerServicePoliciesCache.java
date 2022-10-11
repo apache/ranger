@@ -313,9 +313,8 @@ public class RangerServicePoliciesCache {
 				}
 
 				final long            startTimeMs           = System.currentTimeMillis();
+				final ServicePolicies servicePoliciesFromDb = serviceStore.getServicePolicyDeltasOrPolicies(serviceName, cachedServicePoliciesVersion);
 				final long            dbLoadTime            = System.currentTimeMillis() - startTimeMs;
-
-				ServicePolicies       servicePoliciesFromDb = serviceStore.getServicePolicyDeltasOrPolicies(serviceName, cachedServicePoliciesVersion);
 
 				if (dbLoadTime > longestDbLoadTimeInMs) {
 					longestDbLoadTimeInMs = dbLoadTime;
