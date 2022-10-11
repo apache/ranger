@@ -125,8 +125,6 @@ public class XXPolicyRefUserDao extends BaseDao<XXPolicyRefUser>{
 			return;
 		}
 
-		getEntityManager()
-				.createNamedQuery("XXPolicyRefUser.deleteByIds", tClass)
-				.setParameter("ids", ids).executeUpdate();
+		batchDeleteByIds("XXPolicyRefUser.deleteByIds", ids, "ids");
 	}
 }

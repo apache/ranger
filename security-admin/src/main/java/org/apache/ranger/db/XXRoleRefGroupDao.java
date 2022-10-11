@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXRoleRefGroup;
 import org.springframework.stereotype.Service;
@@ -61,6 +62,22 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup>{
         }
     }
 
+    public List<Long> findIdsByRoleId(Long roleId) {
+        List<Long> ret = Collections.EMPTY_LIST;
+
+        if (roleId != null) {
+            try {
+                ret = getEntityManager()
+                        .createNamedQuery("XXRoleRefGroup.findIdsByRoleId", Long.class)
+                        .setParameter("roleId", roleId).getResultList();
+            } catch (NoResultException e) {
+                ret = Collections.EMPTY_LIST;
+            }
+        }
+
+        return ret;
+    }
+
     public List<XXRoleRefGroup> findByGroupName(String groupName) {
         if (groupName == null) {
             return Collections.EMPTY_LIST;
@@ -72,4 +89,11 @@ public class XXRoleRefGroupDao extends BaseDao<XXRoleRefGroup>{
             return Collections.EMPTY_LIST;
         }
     }
+
+    public void deleteRoleRefGroupByIds(List<Long> ids) {
+        if (CollectionUtils.isNotEmpty(ids)) {
+            batchDeleteByIds("XXRoleRefGroup.deleteRoleRefGroupByIds", ids, "ids");
+        }
+    }
+
 }

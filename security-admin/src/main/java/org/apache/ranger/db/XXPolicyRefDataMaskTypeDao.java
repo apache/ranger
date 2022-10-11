@@ -101,8 +101,6 @@ public class XXPolicyRefDataMaskTypeDao extends BaseDao<XXPolicyRefDataMaskType>
 			return;
 		}
 
-		getEntityManager()
-				.createNamedQuery("XXPolicyRefDataMaskType.deleteByIds", tClass)
-				.setParameter("ids", ids).executeUpdate();
+		batchDeleteByIds("XXPolicyRefDataMaskType.deleteByIds", ids, "ids");
 	}
 }

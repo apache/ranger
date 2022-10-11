@@ -165,17 +165,15 @@ public class RoleRefUpdater {
 		XXRoleRefGroupDao xRoleGroupDao = daoMgr.getXXRoleRefGroup();
 		XXRoleRefRoleDao xRoleRoleDao = daoMgr.getXXRoleRefRole();
 
-		for (XXRoleRefUser xxRoleRefUser : xRoleUserDao.findByRoleId(roleId)) {
-			xRoleUserDao.remove(xxRoleRefUser);
-		}
+		List<Long> xxRoleRefUserIds = xRoleUserDao.findIdsByRoleId(roleId);
+		xRoleUserDao.deleteRoleRefUserByIds(xxRoleRefUserIds);
 
-		for (XXRoleRefGroup xxRoleRefGroup : xRoleGroupDao.findByRoleId(roleId)) {
-			xRoleGroupDao.remove(xxRoleRefGroup);
-		}
+		List<Long> xxRoleRefGroupByIds = xRoleGroupDao.findIdsByRoleId(roleId);
+		xRoleGroupDao.deleteRoleRefGroupByIds(xxRoleRefGroupByIds);
 
-		for (XXRoleRefRole xxRoleRefRole : xRoleRoleDao.findByRoleId(roleId)) {
-			xRoleRoleDao.remove(xxRoleRefRole);
-		}
+		List<Long> xxRoleRefRoleIds = xRoleRoleDao.findIdsByRoleId(roleId);
+		xRoleRoleDao.deleteRoleRefRoleByIds(xxRoleRefRoleIds);
+
 		return true;
 	}
 
