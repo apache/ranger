@@ -125,8 +125,6 @@ public class XXPolicyRefConditionDao extends BaseDao<XXPolicyRefCondition>  {
 			return;
 		}
 
-		getEntityManager()
-				.createNamedQuery("XXPolicyRefCondition.deleteByIds", tClass)
-				.setParameter("ids", ids).executeUpdate();
+		batchDeleteByIds("XXPolicyRefCondition.deleteByIds", ids, "ids");
 	}
 }

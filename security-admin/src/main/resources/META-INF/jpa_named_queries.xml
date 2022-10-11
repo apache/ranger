@@ -1767,6 +1767,10 @@
         <query>select obj from XXRoleRefUser obj  where obj.roleId = :roleId</query>
     </named-query>
 
+		<named-query name="XXRoleRefUser.findIdsByRoleId">
+				<query>select obj.id from XXRoleRefUser obj  where obj.roleId = :roleId</query>
+		</named-query>
+
     <named-query name="XXRoleRefUser.findByUserId">
         <query>select obj from XXRoleRefUser obj where obj.userId = :userId</query>
     </named-query>
@@ -1778,6 +1782,10 @@
     <named-query name="XXRoleRefGroup.findByRoleId">
         <query>select obj from XXRoleRefGroup obj  where obj.roleId = :roleId</query>
     </named-query>
+
+		<named-query name="XXRoleRefGroup.findIdsByRoleId">
+			<query>select obj.id from XXRoleRefGroup obj  where obj.roleId = :roleId</query>
+		</named-query>
 
     <named-query name="XXRoleRefGroup.findByGroupId">
         <query>select obj from XXRoleRefGroup obj  where obj.groupId = :groupId</query>
@@ -1791,6 +1799,10 @@
         <query>select obj from XXRoleRefRole obj  where obj.roleId = :roleId</query>
     </named-query>
 
+		<named-query name="XXRoleRefRole.findIdsByRoleId">
+				<query>select obj.id from XXRoleRefRole obj  where obj.roleId = :roleId</query>
+		</named-query>
+
     <named-query name="XXRoleRefRole.findBySubRoleId">
         <query>select obj from XXRoleRefRole obj  where obj.subRoleId = :subRoleId</query>
     </named-query>
@@ -1802,6 +1814,16 @@
 	<named-query name="XXRoleRefRole.findRoleRefRoleCount">
         <query>select count(obj.roleId) from XXRoleRefRole obj where obj.subRoleName = :subRoleName </query>
     </named-query>
+
+	<named-query name="XXRoleRefGroup.deleteRoleRefGroupByIds">
+				<query>DELETE FROM XXRoleRefGroup obj WHERE obj.id IN :ids </query>
+	</named-query>
+	<named-query name="XXRoleRefRole.deleteRoleRefRoleByIds">
+				<query>DELETE FROM XXRoleRefRole obj WHERE obj.id IN :ids </query>
+	</named-query>
+	<named-query name="XXRoleRefUser.deleteRoleRefUserByIds">
+				<query>DELETE FROM XXRoleRefUser obj WHERE obj.id IN :ids </query>
+	</named-query>
 
 
 	<!-- XXPolicyRefRole -->
