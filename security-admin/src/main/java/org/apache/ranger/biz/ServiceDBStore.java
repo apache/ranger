@@ -2591,13 +2591,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		final List<RangerPolicy> policies = servicePolicies != null ? servicePolicies.getPolicies() : null;
 
 		if(policies != null && filter != null && MapUtils.isNotEmpty(filter.getParams())) {
-			Map<String, String> filterResources = filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
-			String resourceMatchScope = filter.getParam(SearchFilter.RESOURCE_MATCH_SCOPE);
-
-			boolean useLegacyResourceSearch = true;
-
-			Map<String, String> paramsCopy  = new HashMap<>(filter.getParams());
-			SearchFilter       searchFilter = new SearchFilter(paramsCopy);
+			Map<String, String> filterResources         = filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
+			String              resourceMatchScope      = filter.getParam(SearchFilter.RESOURCE_MATCH_SCOPE);
+			boolean             useLegacyResourceSearch = true;
+			SearchFilter        searchFilter            = new SearchFilter(filter);
 
 			if (MapUtils.isNotEmpty(filterResources) && resourceMatchScope != null) {
 				useLegacyResourceSearch = false;

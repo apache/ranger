@@ -60,8 +60,10 @@ public class AbstractPredicateUtil {
 
 		Comparator<RangerBaseModelObject> sorter = getSorter(filter);
 
-		if(sorter != null) {
-			Collections.sort(objList, sorter);
+		if (sorter != null) {
+			boolean isDesc = "desc".equalsIgnoreCase(filter.getSortType());
+
+			Collections.sort(objList, isDesc ? new ReverseComparator(sorter) : sorter);
 		}
 	}
 
@@ -232,7 +234,6 @@ public class AbstractPredicateUtil {
 		sorterMap.put(SearchFilter.SERVICE_TYPE, serviceDefNameComparator);
 		sorterMap.put(SearchFilter.SERVICE_TYPE_ID, idComparator);
 		sorterMap.put(SearchFilter.SERVICE_NAME, serviceNameComparator);
-		sorterMap.put(SearchFilter.SERVICE_TYPE_ID, idComparator);
 		sorterMap.put(SearchFilter.POLICY_NAME, policyNameComparator);
 		sorterMap.put(SearchFilter.POLICY_ID, idComparator);
 		sorterMap.put(SearchFilter.CREATE_TIME, createTimeComparator);
@@ -1050,4 +1051,17 @@ public class AbstractPredicateUtil {
 
         return ret;
     }
+
+	private static class ReverseComparator implements Comparator<RangerBaseModelObject> {
+		private final Comparator<RangerBaseModelObject> comparator;
+
+		ReverseComparator(Comparator<RangerBaseModelObject> comparator) {
+			this.comparator = comparator;
+		}
+
+		@Override
+		public int compare(RangerBaseModelObject o1, RangerBaseModelObject o2) {
+			return comparator.compare(o2, o1);
+		}
+	}
 }

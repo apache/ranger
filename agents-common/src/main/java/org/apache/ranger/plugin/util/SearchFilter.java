@@ -103,7 +103,20 @@ public class SearchFilter {
 	private String              sortType;
 
 	public SearchFilter() {
-		this(null);
+		this((Map<String, String>) null);
+	}
+
+	public SearchFilter(SearchFilter other) {
+		if (other != null) {
+			setParams(other.params != null ? new HashMap<>(other.params) : null);
+			setStartIndex(other.startIndex);
+			setMaxRows(other.maxRows);
+			setGetCount(other.getCount);
+			setSortBy(other.sortBy);
+			setSortType(other.sortType);
+		} else {
+			setParams(null);
+		}
 	}
 
 	public SearchFilter(String name, String value) {
