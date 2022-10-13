@@ -71,20 +71,18 @@ jobs:
         timeout_minutes: 10
         max_attempts: 5
         command: |
-                aws ecr describe-repositories --repository-names atlanhq/${{ github.event.repository.name }} || aws ecr create-repository --repository-name atlanhq/${{ github.event.repository.name }} --image-tag-mutability IMMUTABLE
-                while ! $(aws ecr get-repository-policy --repository-name atlanhq/${{ github.event.repository.name }})
-                do
-                  aws ecr set-repository-policy --repository-name atlanhq/${{ github.event.repository.name }} --policy-text file://ecrorgcrossaccountpolicy.json
-                  aws ecr get-repository-policy --repository-name atlanhq/${{ github.event.repository.name }} > temppolicyresponse.json
-                  registryIdfrompolicy=$(jq -r '.registryId' temppolicyresponse.json)
-                  aws ecr describe-repositories --repository-names atlanhq/${{ github.event.repository.name }} > ecrresponse.json
-                  registryIdfrompolicyfromecr=$(jq -r '.repositories[0].registryId' ecrresponse.json)
-                  echo "registryIdfrompolicy : $registryIdfrompolicy and registryIdfrompolicyfromecr : $registryIdfrompolicyfromecr" 
-                    if [ $registryIdfrompolicy == $registryIdfrompolicyfromecr ]
-                    then
-                        break
-                    fi
-                done
+              aws ecr describe-repositories --repository-names atlanhq/${{ github.event.repository.name }} || aws ecr create-repository --repository-name atlanhq/${{ github.event.repository.name }} --image-tag-mutability IMMUTABLE
+              while ! $(aws ecr get-repository-policy --repository-name atlanhq/${{ github.event.repository.name }})
+              do
+                aws ecr set-repository-policy --repository-name atlanhq/${{ github.event.repository.name }} --policy-text file://ecrorgcrossaccountpolicy.json
+                registryIdfrompolicy=$(aws ecr get-repository-policy --repository-name atlanhq/${{ github.event.repository.name }} | jq -r '.registryId')
+                registryIdfromfromecrrepo=$(aws ecr describe-repositories --repository-names atlanhq/${{ github.event.repository.name }} | jq -r '.repositories[0].registryId')
+                echo "registryIdfrompolicy : $registryIdfrompolicy and registryIdfromfromecrrepo : $registryIdfromfromecrrepo" 
+                  if [ $registryIdfrompolicy == $registryIdfromfromecrrepo ]
+                  then
+                      break
+                  fi
+              done
 
     - name: Get Semantic Version tag
       id: semver_tag
