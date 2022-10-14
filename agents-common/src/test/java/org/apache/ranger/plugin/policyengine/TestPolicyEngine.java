@@ -905,9 +905,9 @@ public class TestPolicyEngine {
                     }
                 }
 
-                assertTrue(testCase.name, isValid == testCase.result.isValid);
-                assertTrue(testCase.name, isApplicable == testCase.result.isApplicable);
-                assertTrue(testCase.name + ", [" + validationFailures +"]", validationFailures.size() == testCase.result.validationFailureCount);
+                assertEquals(testCase.name + " - isValid (validationFailures: " + validationFailures + ")", testCase.result.isValid, isValid);
+				assertEquals(testCase.name + " - isApplicable (validationFailures: " + validationFailures + ")", testCase.result.isApplicable, isApplicable);
+                assertEquals(testCase.name + " - validationFailureCount (validationFailures: " + validationFailures +")", testCase.result.validationFailureCount, validationFailures.size());
             }
         }
         TimeZone.setDefault(defaultTZ);
