@@ -26,11 +26,10 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.HashMap;
 import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -92,7 +91,7 @@ public class RangerServiceResource extends RangerBaseModelObject {
 	}
 
 	public void setResourceElements(Map<String, RangerPolicy.RangerPolicyResource> resource) {
-		this.resourceElements = resource == null ? new HashMap<String, RangerPolicy.RangerPolicyResource>() : resource;
+		this.resourceElements = resource;
 	}
 
 	public void setResourceSignature(String resourceSignature) {

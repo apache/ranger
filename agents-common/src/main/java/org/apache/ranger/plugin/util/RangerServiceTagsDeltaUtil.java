@@ -54,6 +54,7 @@ public class RangerServiceTagsDeltaUtil {
             LOG.debug("==> RangerServiceTagsDeltaUtil.applyDelta()");
         }
 
+        ServiceTags      ret  = serviceTags;
         RangerPerfTracer perf = null;
 
         if(RangerPerfTracer.isPerfTraceEnabled(PERF_TAGS_DELTA_LOG)) {
@@ -61,13 +62,15 @@ public class RangerServiceTagsDeltaUtil {
         }
 
         if (serviceTags != null && !serviceTags.getIsDelta() && delta != null && delta.getIsDelta()) {
-            serviceTags.setServiceName(delta.getServiceName());
-            serviceTags.setTagVersion(delta.getTagVersion());
+            ret = new ServiceTags(serviceTags);
+
+            ret.setServiceName(delta.getServiceName());
+            ret.setTagVersion(delta.getTagVersion());
 
             int tagDefsAdded = 0, tagDefsUpdated = 0, tagDefsRemoved = 0;
             int tagsAdded    = 0, tagsUpdated    = 0, tagsRemoved    = 0;
 
-            Map<Long, RangerTagDef> tagDefs = serviceTags.getTagDefinitions();
+            Map<Long, RangerTagDef> tagDefs = ret.getTagDefinitions();
 
             for (Iterator<Map.Entry<Long, RangerTagDef>> deltaTagDefIter = delta.getTagDefinitions().entrySet().iterator(); deltaTagDefIter.hasNext(); ) {
                 Map.Entry<Long, RangerTagDef> entry         = deltaTagDefIter.next();
@@ -91,7 +94,7 @@ public class RangerServiceTagsDeltaUtil {
                 }
             }
 
-            Map<Long, RangerTag> tags           = serviceTags.getTags();
+            Map<Long, RangerTag> tags           = ret.getTags();
             Map<Long, Long>      replacedTagIds = new HashMap<>();
 
             for (Iterator<Map.Entry<Long, RangerTag>> deltaTagIter = delta.getTags().entrySet().iterator(); deltaTagIter.hasNext(); ) {
@@ -106,15 +109,15 @@ public class RangerServiceTagsDeltaUtil {
                         tagsRemoved++;
 
                         if (isSupportsTagsDedup()) {
-                            serviceTags.cachedTags.remove(removedTag);
+                            ret.cachedTags.remove(removedTag);
                         }
                     }
                 } else {
                     if (isSupportsTagsDedup()) {
-                        Long cachedTagId = serviceTags.cachedTags.get(deltaTag);
+                        Long cachedTagId = ret.cachedTags.get(deltaTag);
 
                         if (cachedTagId == null) {
-                            serviceTags.cachedTags.put(deltaTag, deltaTagId);
+                            ret.cachedTags.put(deltaTag, deltaTagId);
                             tags.put(deltaTagId, deltaTag);
                         } else {
                             replacedTagIds.put(deltaTagId, cachedTagId);
@@ -132,8 +135,8 @@ public class RangerServiceTagsDeltaUtil {
                 }
             }
 
-            List<RangerServiceResource>      serviceResources  = serviceTags.getServiceResources();
-            Map<Long, List<Long>>            resourceToTagIds  = serviceTags.getResourceToTagIds();
+            List<RangerServiceResource>      serviceResources  = ret.getServiceResources();
+            Map<Long, List<Long>>            resourceToTagIds  = ret.getResourceToTagIds();
             Map<Long, RangerServiceResource> idResourceMap     = serviceResources.stream().collect(Collectors.toMap(RangerServiceResource::getId, Function.identity()));
             Map<Long, RangerServiceResource> resourcesToRemove = new HashMap<>();
             Map<Long, RangerServiceResource> resourcesToAdd    = new HashMap<>();
@@ -237,7 +240,7 @@ public class RangerServiceTagsDeltaUtil {
 
         RangerPerfTracer.log(perf);
 
-        return serviceTags;
+        return ret;
     }
 
     public static void pruneUnusedAttributes(ServiceTags serviceTags) {
@@ -245,30 +248,67 @@ public class RangerServiceTagsDeltaUtil {
             serviceTags.setTagUpdateTime(null);
 
             for (Map.Entry<Long, RangerTagDef> entry : serviceTags.getTagDefinitions().entrySet()) {
-                RangerTagDef tagDef = entry.getValue();
-                tagDef.setCreatedBy(null);
-                tagDef.setCreateTime(null);
-                tagDef.setUpdatedBy(null);
-                tagDef.setUpdateTime(null);
-                tagDef.setGuid(null);
+                pruneUnusedAttributes(entry.getValue());
             }
 
             for (Map.Entry<Long, RangerTag> entry : serviceTags.getTags().entrySet()) {
-                RangerTag tag = entry.getValue();
-                tag.setCreatedBy(null);
-                tag.setCreateTime(null);
-                tag.setUpdatedBy(null);
-                tag.setUpdateTime(null);
-                tag.setGuid(null);
+                pruneUnusedAttributes(entry.getValue());
             }
 
             for (RangerServiceResource serviceResource : serviceTags.getServiceResources()) {
-                serviceResource.setCreatedBy(null);
-                serviceResource.setCreateTime(null);
-                serviceResource.setUpdatedBy(null);
-                serviceResource.setUpdateTime(null);
-                serviceResource.setGuid(null);
+                pruneUnusedAttributes(serviceResource);
             }
+        }
+    }
+
+    public static void pruneUnusedAttributes(RangerTagDef tagDef) {
+        tagDef.setCreatedBy(null);
+        tagDef.setCreateTime(null);
+        tagDef.setUpdatedBy(null);
+        tagDef.setUpdateTime(null);
+        tagDef.setGuid(null);
+        tagDef.setVersion(null);
+
+        if (tagDef.getAttributeDefs() != null && tagDef.getAttributeDefs().isEmpty()) {
+            tagDef.setAttributeDefs(null);
+        }
+    }
+
+    public static void pruneUnusedAttributes(RangerTag tag) {
+        tag.setCreatedBy(null);
+        tag.setCreateTime(null);
+        tag.setUpdatedBy(null);
+        tag.setUpdateTime(null);
+        tag.setGuid(null);
+        tag.setVersion(null);
+
+        if (tag.getOwner() != null && tag.getOwner().shortValue() == RangerTag.OWNER_SERVICERESOURCE) {
+            tag.setOwner(null);
+        }
+
+        if (tag.getAttributes() != null && tag.getAttributes().isEmpty()) {
+            tag.setAttributes(null);
+        }
+
+        if (tag.getOptions() != null && tag.getOptions().isEmpty()) {
+            tag.setOptions(null);
+        }
+
+        if (tag.getValidityPeriods() != null && tag.getValidityPeriods().isEmpty()) {
+            tag.setValidityPeriods(null);
+        }
+    }
+
+    public static void pruneUnusedAttributes(RangerServiceResource serviceResource) {
+        serviceResource.setCreatedBy(null);
+        serviceResource.setCreateTime(null);
+        serviceResource.setUpdatedBy(null);
+        serviceResource.setUpdateTime(null);
+        serviceResource.setGuid(null);
+        serviceResource.setVersion(null);
+
+        if (serviceResource.getAdditionalInfo() != null && serviceResource.getAdditionalInfo().isEmpty()) {
+            serviceResource.setAdditionalInfo(null);
         }
     }
 

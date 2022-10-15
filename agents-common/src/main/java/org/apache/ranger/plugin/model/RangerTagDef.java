@@ -26,7 +26,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
@@ -37,7 +36,7 @@ import java.util.Objects;
  *
  */
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -86,7 +85,7 @@ public class RangerTagDef extends RangerBaseModelObject {
     }
 
     public void setAttributeDefs(List<RangerTagAttributeDef> attributeDefs) {
-        this.attributeDefs = attributeDefs == null ? new ArrayList<RangerTagAttributeDef>() :  attributeDefs;
+        this.attributeDefs = attributeDefs;
     }
 
     @Override
@@ -119,7 +118,7 @@ public class RangerTagDef extends RangerBaseModelObject {
      */
 
     @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)

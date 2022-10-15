@@ -358,7 +358,7 @@ public class RangerServiceTagsCache {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Retrieved tag-deltas from database. These will be applied on top of ServiceTags version:[" + cachedServiceTagsVersion + "], tag-deltas:[" + serviceTagsFromDb.getTagVersion() + "]");
 						}
-						RangerServiceTagsDeltaUtil.applyDelta(serviceTags, serviceTagsFromDb);
+						this.serviceTags = RangerServiceTagsDeltaUtil.applyDelta(serviceTags, serviceTagsFromDb);
 						this.deltaCache = new ServiceTagsDeltasCache(cachedServiceTagsVersion, serviceTagsFromDb);
 					}
 				} else {

@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -437,7 +438,7 @@ public class ServiceTagsProcessor {
 		return ret;
 	}
 	private boolean isResourcePrivateTag(RangerTag tag) {
-		return tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE;
+		return tag.getOwner() == null || tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE;
 	}
 
 	private RangerTag findMatchingTag(RangerTag incomingTag, List<RangerTag> existingTags) throws Exception {
@@ -473,8 +474,8 @@ public class ServiceTagsProcessor {
 			if (StringUtils.equals(incomingTag.getType(), existingTag.getType())) {
 
 				// Check attribute values
-				Map<String, String> incomingTagAttributes = incomingTag.getAttributes();
-				Map<String, String> existingTagAttributes = existingTag.getAttributes();
+				Map<String, String> incomingTagAttributes = incomingTag.getAttributes() != null ? incomingTag.getAttributes() : Collections.emptyMap();
+				Map<String, String> existingTagAttributes = existingTag.getAttributes() != null ? existingTag.getAttributes() : Collections.emptyMap();
 
 				if (CollectionUtils.isEqualCollection(incomingTagAttributes.keySet(), existingTagAttributes.keySet())) {
 
