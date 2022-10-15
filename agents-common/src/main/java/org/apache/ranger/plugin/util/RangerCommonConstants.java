@@ -50,7 +50,7 @@ public class RangerCommonConstants {
 	public static final boolean RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT     = false;
 	public static final boolean PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT    = false;
 
-	public static final boolean RANGER_ADMIN_SUPPORTS_TAGS_DEDUP_DEFAULT             = false;
+	public static final boolean RANGER_ADMIN_SUPPORTS_TAGS_DEDUP_DEFAULT             = true;
 
 	public static final boolean POLICY_REST_CLIENT_SESSION_COOKIE_ENABLED            = true;
 

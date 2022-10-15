@@ -744,7 +744,7 @@ public class TagDBStore extends AbstractTagStore {
 
 		rangerTagResourceMapService.delete(tagResourceMap);
 
-		if (tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
+		if (tag.getOwner() == null || tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
 			deleteTag(tagId);
 		}
 		// We also need to update tags stored with the resource
@@ -1259,6 +1259,8 @@ public class TagDBStore extends AbstractTagStore {
 						}
 					}
 
+					RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+
 					ret.getTags().put(tag.getId(), tag);
 				}
 
@@ -1270,6 +1272,8 @@ public class TagDBStore extends AbstractTagStore {
 						RangerTagDef tagDef  = xTagDef != null ? rangerTagDefService.getPopulatedViewObject(xTagDef) : null;
 
 						if (tagDef != null) {
+							RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tagDef);
+
 							ret.getTagDefinitions().put(tagDef.getId(), tagDef);
 						} else {
 							if (LOG.isDebugEnabled()) {
@@ -1309,6 +1313,8 @@ public class TagDBStore extends AbstractTagStore {
 								List<Long> resourceTagIds = new ArrayList<>(tags.size());
 
 								for (RangerTag tag : tags) {
+									RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+
 									if (!ret.getTags().containsKey(tag.getId())) {
 										ret.getTags().put(tag.getId(), tag);
 									}
@@ -1321,13 +1327,13 @@ public class TagDBStore extends AbstractTagStore {
 						}
 					}
 
+					RangerServiceTagsDeltaUtil.pruneUnusedAttributes(serviceResource);
+
 					ret.getServiceResources().add(serviceResource);
 					tagsChangeExtent = ServiceTags.TagsChangeExtent.SERVICE_RESOURCE;
 				}
 
 				ret.setTagsChangeExtent(tagsChangeExtent);
-
-				RangerServiceTagsDeltaUtil.pruneUnusedAttributes(ret);
 			}
 		} else {
 			if (LOG.isDebugEnabled()) {

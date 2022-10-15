@@ -91,6 +91,22 @@ public class ServiceTags implements java.io.Serializable {
 		setIsDelta(isDelta);
 		setTagsChangeExtent(tagsChangeExtent);
 	}
+
+	public ServiceTags(ServiceTags other) {
+		setOp(other.getOp());
+		setServiceName(other.getServiceName());
+		setTagVersion(other.getTagVersion());
+		setTagUpdateTime(other.getTagUpdateTime());
+		setTagDefinitions(other.getTagDefinitions() != null ? new HashMap<>(other.getTagDefinitions()) : null);
+		setTags(other.getTags() != null ? new HashMap<>(other.getTags()) : null);
+		setServiceResources(other.getServiceResources() != null ? new ArrayList<>(other.getServiceResources()) : null);
+		setResourceToTagIds(other.getResourceToTagIds() != null ? new HashMap<>(other.getResourceToTagIds()) : null);
+		setIsDelta(other.getIsDelta());
+		setTagsChangeExtent(other.getTagsChangeExtent());
+
+		this.cachedTags = new HashMap<>(other.cachedTags);
+	}
+
 	/**
 	 * @return the op
 	 */
@@ -217,14 +233,11 @@ public class ServiceTags implements java.io.Serializable {
 	}
 
 	public int dedupTags() {
-		final int ret;
+		final int             ret;
+		final Map<Long, Long> replacedIds      = new HashMap<>();
+		final int             initialTagsCount = tags.size();
 
-		Map<Long, Long>                      replacedIds = new HashMap<>();
-		Iterator<Map.Entry<Long, RangerTag>> iter        = tags.entrySet().iterator();
-
-		final int initialTagsCount = tags.size();
-
-		while (iter.hasNext()) {
+		for (Iterator<Map.Entry<Long, RangerTag>> iter = tags.entrySet().iterator(); iter.hasNext(); ) {
 			Map.Entry<Long, RangerTag> entry       = iter.next();
 			Long                       tagId       = entry.getKey();
 			RangerTag                  tag         = entry.getValue();
@@ -241,9 +254,7 @@ public class ServiceTags implements java.io.Serializable {
 		final int finalTagsCount = tags.size();
 
 		for (Map.Entry<Long, List<Long>> resourceEntry : resourceToTagIds.entrySet()) {
-			ListIterator<Long> listIter = resourceEntry.getValue().listIterator();
-
-			while (iter.hasNext()) {
+			for (ListIterator<Long> listIter = resourceEntry.getValue().listIterator(); listIter.hasNext(); ) {
 				Long tagId         = listIter.next();
 				Long replacerTagId = replacedIds.get(tagId);
 
