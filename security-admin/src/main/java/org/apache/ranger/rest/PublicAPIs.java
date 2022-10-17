@@ -81,7 +81,7 @@ public class PublicAPIs {
 	
 	@GET
 	@Path("/api/repository/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXRepository getRepository(@PathParam("id") Long id) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.getRepository(" + id + ")");
@@ -100,7 +100,8 @@ public class PublicAPIs {
 	
 	@POST
 	@Path("/api/repository/")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXRepository createRepository(VXRepository vXRepository) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.createRepository(" + vXRepository + ")");
@@ -126,7 +127,8 @@ public class PublicAPIs {
 	
 	@PUT
 	@Path("/api/repository/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXRepository updateRepository(VXRepository vXRepository,
 			@PathParam("id") Long id) {
 		
@@ -180,7 +182,7 @@ public class PublicAPIs {
 	
 	@GET
 	@Path("/api/repository/")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXRepositoryList searchRepositories(
 			@Context HttpServletRequest request) {
 	
@@ -208,7 +210,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/repository/count")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXLong countRepositories(@Context HttpServletRequest request) {
 
 		if(logger.isDebugEnabled()) {
@@ -231,7 +233,7 @@ public class PublicAPIs {
 	
 	@GET
 	@Path("/api/policy/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXPolicy getPolicy(@PathParam("id") Long id) {
 		
 		if(logger.isDebugEnabled()) {
@@ -259,7 +261,8 @@ public class PublicAPIs {
 
 	@POST
 	@Path("/api/policy")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXPolicy createPolicy(VXPolicy vXPolicy) {
 		
 		if(logger.isDebugEnabled()) {
@@ -292,7 +295,8 @@ public class PublicAPIs {
 
 	@PUT
 	@Path("/api/policy/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXPolicy updatePolicy(VXPolicy vXPolicy, @PathParam("id") Long id) {
 		
 		if(logger.isDebugEnabled()) {
@@ -349,7 +353,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/policy")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXPolicyList searchPolicies(@Context HttpServletRequest request) {
 		
 		if(logger.isDebugEnabled()) {
@@ -381,7 +385,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/policy/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXLong countPolicies(@Context HttpServletRequest request) {
 		
 		if(logger.isDebugEnabled()) {

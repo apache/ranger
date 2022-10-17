@@ -19,6 +19,7 @@
 
 package org.apache.ranger.rest;
 
+import javax.ws.rs.Consumes;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.biz.AssetMgr;
@@ -116,7 +117,8 @@ public class TagREST {
 
     @POST
     @Path(TagRESTConstants.TAGDEFS_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagDef createTagDef(RangerTagDef tagDef, @DefaultValue("true") @QueryParam("updateIfExists") boolean updateIfExists) {
         if(LOG.isDebugEnabled()) {
@@ -150,7 +152,8 @@ public class TagREST {
 
     @PUT
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagDef updateTagDef(@PathParam("id") Long id, RangerTagDef tagDef) {
 
@@ -180,7 +183,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagDef(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
@@ -202,7 +204,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagDefByGuid(@PathParam("guid") String guid) {
         if(LOG.isDebugEnabled()) {
@@ -227,7 +228,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagDef getTagDef(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
@@ -257,7 +258,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagDef getTagDefByGuid(@PathParam("guid") String guid) {
         if(LOG.isDebugEnabled()) {
@@ -287,7 +288,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGDEF_RESOURCE + "name/{name}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagDef getTagDefByName(@PathParam("name") String name) {
         if(LOG.isDebugEnabled()) {
@@ -317,7 +318,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGDEFS_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerTagDef> getAllTagDefs() {
         if(LOG.isDebugEnabled()) {
@@ -347,7 +348,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGTYPES_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<String> getTagTypes() {
         if(LOG.isDebugEnabled()) {
@@ -374,7 +375,8 @@ public class TagREST {
 
     @POST
     @Path(TagRESTConstants.TAGS_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTag createTag(RangerTag tag, @DefaultValue("true") @QueryParam("updateIfExists") boolean updateIfExists) {
         if(LOG.isDebugEnabled()) {
@@ -407,7 +409,8 @@ public class TagREST {
 
     @PUT
     @Path(TagRESTConstants.TAG_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTag updateTag(@PathParam("id") Long id, RangerTag tag) {
 
@@ -429,7 +432,8 @@ public class TagREST {
 
     @PUT
     @Path(TagRESTConstants.TAG_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTag updateTagByGuid(@PathParam("guid") String guid, RangerTag tag) {
 
@@ -455,7 +459,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAG_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTag(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
@@ -477,7 +480,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAG_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagByGuid(@PathParam("guid") String guid) {
         if(LOG.isDebugEnabled()) {
@@ -500,7 +502,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAG_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTag getTag(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
@@ -525,7 +527,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAG_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTag getTagByGuid(@PathParam("guid") String guid) {
         if(LOG.isDebugEnabled()) {
@@ -550,7 +552,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGS_RESOURCE + "type/{type}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerTag> getTagsByType(@PathParam("type") String type) {
         if(LOG.isDebugEnabled()) {
@@ -575,7 +577,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGS_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerTag> getAllTags() {
         if(LOG.isDebugEnabled()) {
@@ -611,7 +613,7 @@ public class TagREST {
      */
     @GET
     @Path(TagRESTConstants.TAGS_RESOURCE + "cache/reset")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public boolean resetTagCache(@QueryParam("serviceName") String serviceName) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.resetTagCache({})", serviceName);
@@ -653,7 +655,7 @@ public class TagREST {
      */
     @GET
     @Path(TagRESTConstants.TAGS_RESOURCE + "cache/reset-all")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public boolean resetTagCacheAll() {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.resetTagCacheAll()");
@@ -675,7 +677,8 @@ public class TagREST {
 
     @POST
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource createServiceResource(RangerServiceResource resource, @DefaultValue("true") @QueryParam("updateIfExists") boolean updateIfExists) {
         if(LOG.isDebugEnabled()) {
@@ -708,7 +711,8 @@ public class TagREST {
 
     @PUT
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource updateServiceResource(@PathParam("id") Long id, RangerServiceResource resource) {
         if(LOG.isDebugEnabled()) {
@@ -733,7 +737,8 @@ public class TagREST {
 
     @PUT
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource updateServiceResourceByGuid(@PathParam("guid") String guid, RangerServiceResource resource) {
         if(LOG.isDebugEnabled()) {
@@ -756,7 +761,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteServiceResource(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
@@ -778,7 +782,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteServiceResourceByGuid(@PathParam("guid") String guid, @DefaultValue("false") @QueryParam("deleteReferences") boolean deleteReferences) {
         if(LOG.isDebugEnabled()) {
@@ -809,7 +812,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource getServiceResource(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
@@ -831,7 +834,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource getServiceResourceByGuid(@PathParam("guid") String guid) {
         if(LOG.isDebugEnabled()) {
@@ -853,7 +856,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.RESOURCES_RESOURCE + "service/{serviceName}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerServiceResource> getServiceResourcesByService(@PathParam("serviceName") String serviceName) {
         if(LOG.isDebugEnabled()) {
@@ -884,7 +887,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.RESOURCE_RESOURCE + "service/{serviceName}/signature/{resourceSignature}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerServiceResource getServiceResourceByServiceAndResourceSignature(@PathParam("serviceName") String serviceName,
                                                                        @PathParam("resourceSignature") String resourceSignature) {
@@ -911,7 +914,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.RESOURCES_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerServiceResource> getAllServiceResources() {
         if(LOG.isDebugEnabled()) {
@@ -937,7 +940,8 @@ public class TagREST {
 
     @POST
     @Path(TagRESTConstants.TAGRESOURCEMAPS_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagResourceMap createTagResourceMap(@QueryParam("tag-guid") String tagGuid, @QueryParam("resource-guid") String resourceGuid,
                                                      @DefaultValue("false") @QueryParam("lenient") boolean lenient) {
@@ -971,7 +975,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAGRESOURCEMAP_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagResourceMap(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
@@ -993,7 +996,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAGRESOURCEMAP_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagResourceMapByGuid(@PathParam("guid") String guid) {
         if(LOG.isDebugEnabled()) {
@@ -1016,7 +1018,6 @@ public class TagREST {
 
     @DELETE
     @Path(TagRESTConstants.TAGRESOURCEMAPS_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void deleteTagResourceMap(@QueryParam("tag-guid") String tagGuid, @QueryParam("resource-guid") String resourceGuid) {
         if(LOG.isDebugEnabled()) {
@@ -1039,7 +1040,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGRESOURCEMAP_RESOURCE + "{id}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagResourceMap getTagResourceMap(@PathParam("id") Long id) {
         if(LOG.isDebugEnabled()) {
@@ -1064,7 +1065,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGRESOURCEMAP_RESOURCE + "guid/{guid}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagResourceMap getTagResourceMapByGuid(@PathParam("guid") String guid) {
         if(LOG.isDebugEnabled()) {
@@ -1089,7 +1090,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGRESOURCEMAP_RESOURCE + "tag-resource-guid")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public RangerTagResourceMap getTagResourceMap(@QueryParam("tagGuid") String tagGuid, @QueryParam("resourceGuid") String resourceGuid) {
         if(LOG.isDebugEnabled()) {
@@ -1115,7 +1116,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGRESOURCEMAPS_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public List<RangerTagResourceMap> getAllTagResourceMaps() {
         if(LOG.isDebugEnabled()) {
@@ -1148,7 +1149,8 @@ public class TagREST {
 
     @PUT
     @Path(TagRESTConstants.IMPORT_SERVICETAGS_RESOURCE)
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
     public void importServiceTags(ServiceTags serviceTags) {
         if(LOG.isDebugEnabled()) {
@@ -1181,7 +1183,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGS_DOWNLOAD + "{serviceName}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public ServiceTags getServiceTagsIfUpdated(@PathParam("serviceName") String serviceName,
                                                    @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion,
                                                @DefaultValue("0") @QueryParam(TagRESTConstants.LAST_ACTIVATION_TIME) Long lastActivationTime, @QueryParam("pluginId") String pluginId,
@@ -1247,7 +1249,7 @@ public class TagREST {
 
     @GET
     @Path(TagRESTConstants.TAGS_SECURE_DOWNLOAD + "{serviceName}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public ServiceTags getSecureServiceTagsIfUpdated(@PathParam("serviceName") String serviceName,
                                                    @QueryParam(TagRESTConstants.LAST_KNOWN_TAG_VERSION_PARAM) Long lastKnownVersion,
                                                      @DefaultValue("0") @QueryParam(TagRESTConstants.LAST_ACTIVATION_TIME) Long lastActivationTime, @QueryParam("pluginId") String pluginId,

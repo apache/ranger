@@ -114,7 +114,7 @@ public class UserREST {
 	 * @return
 	 */
 	@GET
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_USERS + "\")")
 	public VXPortalUserList searchUsers(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -161,7 +161,7 @@ public class UserREST {
 	 */
 	@GET
 	@Path("{userId}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_PROFILE_FOR_USER + "\")")
 	public VXPortalUser getUserProfileForUser(@PathParam("userId") Long userId) {
 		try {
@@ -182,8 +182,8 @@ public class UserREST {
 	}
 
 	@POST
-	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE + "\")")
 	public VXPortalUser create(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
@@ -195,8 +195,8 @@ public class UserREST {
 	// API to add user with default account
 	@POST
 	@Path("/default")
-	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER + "\")")
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
@@ -211,8 +211,8 @@ public class UserREST {
 
 
 	@PUT
-	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@RangerAnnotationRestAPI(updates_classes = "VUserProfile")
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE + "\")")
 	public VXPortalUser update(VXPortalUser userProfile,
@@ -235,7 +235,8 @@ public class UserREST {
 
 	@PUT
 	@Path("/{userId}/roles")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES + "\")")
 	public VXResponse setUserRoles(@PathParam("userId") Long userId,
 			VXStringList roleList) {
@@ -254,7 +255,8 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/deactivate")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DEACTIVATE_USER + "\")")
 	@RangerAnnotationClassName(class_name = VXPortalUser.class)
 	public VXPortalUser deactivateUser(@PathParam("userId") Long userId) {
@@ -275,7 +277,7 @@ public class UserREST {
 	 */
 	@GET
 	@Path("/profile")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXPortalUser getUserProfile(@Context HttpServletRequest request) {
 		try {
 			logger.debug("getUserProfile(). httpSessionId="
@@ -301,7 +303,8 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/passwordchange")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXResponse changePassword(@PathParam("userId") Long userId,
 			VXPasswordChange changePassword) {
 		if(changePassword==null || stringUtil.isEmpty(changePassword.getLoginId())){
@@ -329,7 +332,8 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/emailchange")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXPortalUser changeEmailAddress(@PathParam("userId") Long userId,
 			VXPasswordChange changeEmail) {
 		if(changeEmail==null || stringUtil.isEmpty(changeEmail.getLoginId())){
