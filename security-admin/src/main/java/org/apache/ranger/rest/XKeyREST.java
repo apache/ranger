@@ -19,6 +19,7 @@
 package org.apache.ranger.rest;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -78,7 +79,7 @@ public class XKeyREST {
 	 */
 	@GET
 	@Path("/keys")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_KEYS + "\")")
 	public VXKmsKeyList searchKeys(@Context HttpServletRequest request, @QueryParam("provider") String provider) {
 		VXKmsKeyList vxKmsKeyList = new VXKmsKeyList();
@@ -97,7 +98,8 @@ public class XKeyREST {
 	 */
 	@PUT
 	@Path("/key")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ROLLOVER_KEYS + "\")")
 	public VXKmsKey rolloverKey(@QueryParam("provider") String provider, VXKmsKey vXKey) {
 		VXKmsKey vxKmsKey = new VXKmsKey();
@@ -124,7 +126,6 @@ public class XKeyREST {
 	 */
 	@DELETE
 	@Path("/key/{alias}")
-	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_KEY + "\")")
 	public void deleteKey(@PathParam("alias") String name, @QueryParam("provider") String provider, @Context HttpServletRequest request) {
 		try{
@@ -145,7 +146,8 @@ public class XKeyREST {
 	 */
 	@POST
 	@Path("/key")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_KEY + "\")")
 	public VXKmsKey createKey(@QueryParam("provider") String provider, VXKmsKey vXKey) {
 		VXKmsKey vxKmsKey = new VXKmsKey();
@@ -173,7 +175,7 @@ public class XKeyREST {
 	 */
 	@GET
 	@Path("/key/{alias}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_KEY + "\")")
 	public VXKmsKey getKey(@PathParam("alias") String name,@QueryParam("provider") String provider){
 		VXKmsKey vxKmsKey = new VXKmsKey();

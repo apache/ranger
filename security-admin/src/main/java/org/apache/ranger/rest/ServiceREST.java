@@ -272,7 +272,8 @@ public class ServiceREST {
 
 	@POST
 	@Path("/definitions")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_SERVICE_DEF + "\")")
 	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
@@ -319,7 +320,8 @@ public class ServiceREST {
 
 	@PUT
 	@Path("/definitions/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE_DEF + "\")")
 	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) {
 		if(LOG.isDebugEnabled()) {
@@ -374,7 +376,6 @@ public class ServiceREST {
 
 	@DELETE
 	@Path("/definitions/{id}")
-	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_SERVICE_DEF + "\")")
 	public void deleteServiceDef(@PathParam("id") Long id, @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
@@ -422,7 +423,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/definitions/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_DEF + "\")")
 	public RangerServiceDef getServiceDef(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
@@ -472,7 +473,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/definitions/name/{name}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_DEF_BY_NAME + "\")")
 	public RangerServiceDef getServiceDefByName(@PathParam("name") String name) {
 		if(LOG.isDebugEnabled()) {
@@ -524,7 +525,7 @@ public class ServiceREST {
 	
 	@GET
 	@Path("/definitions")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_DEFS + "\")")
 	public RangerServiceDefList getServiceDefs(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
@@ -581,7 +582,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies/{serviceDefName}/for-resource")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<RangerPolicy> getPoliciesForResource(@PathParam("serviceDefName") String serviceDefName,
 												  @DefaultValue("") @QueryParam("serviceName") String serviceName,
 												  @Context HttpServletRequest request) {
@@ -704,7 +705,8 @@ public class ServiceREST {
 
 	@POST
 	@Path("/services")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_SERVICE + "\")")
 	public RangerService createService(RangerService service) {
 		if(LOG.isDebugEnabled()) {
@@ -788,7 +790,8 @@ public class ServiceREST {
 
 	@PUT
 	@Path("/services/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE + "\")")
 	public RangerService updateService(RangerService service,
                                        @Context HttpServletRequest request) {
@@ -860,7 +863,6 @@ public class ServiceREST {
 
 	@DELETE
 	@Path("/services/{id}")
-	@Produces({ "application/json", "application/xml" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_SERVICE + "\")")
 	public void deleteService(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
@@ -876,7 +878,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/services/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE + "\")")
 	public RangerService getService(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
@@ -931,7 +933,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/services/name/{name}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICE_BY_NAME + "\")")
 	public RangerService getServiceByName(@PathParam("name") String name) {
 		if(LOG.isDebugEnabled()) {
@@ -987,7 +989,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/services")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_SERVICES + "\")")
 	public RangerServiceList getServices(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
@@ -1094,7 +1096,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/services/count")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_SERVICES + "\")")
 	public Long countServices(@Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
@@ -1130,7 +1132,7 @@ public class ServiceREST {
 
 	@POST
 	@Path("/services/validateConfig")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.VALIDATE_CONFIG + "\")")
 	public VXResponse validateConfig(RangerService service) {
 		if(LOG.isDebugEnabled()) {
@@ -1164,7 +1166,8 @@ public class ServiceREST {
 	
 	@POST
 	@Path("/services/lookupResource/{serviceName}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.LOOKUP_RESOURCE + "\")")
 	public List<String> lookupResource(@PathParam("serviceName") String serviceName, ResourceLookupContext context) {
 		if(LOG.isDebugEnabled()) {
@@ -1198,7 +1201,8 @@ public class ServiceREST {
 
 	@POST
 	@Path("/services/grant/{serviceName}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RESTResponse grantAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest grantRequest, @Context HttpServletRequest request) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.grantAccess(" + serviceName + ", " + grantRequest + ")");
@@ -1316,7 +1320,8 @@ public class ServiceREST {
 	
 	@POST
 	@Path("/secure/services/grant/{serviceName}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RESTResponse secureGrantAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest grantRequest, @Context HttpServletRequest request) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.secureGrantAccess(" + serviceName + ", " + grantRequest + ")");
@@ -1435,7 +1440,8 @@ public class ServiceREST {
 
 	@POST
 	@Path("/services/revoke/{serviceName}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RESTResponse revokeAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest revokeRequest, @Context HttpServletRequest request) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.revokeAccess(" + serviceName + ", " + revokeRequest + ")");
@@ -1516,7 +1522,8 @@ public class ServiceREST {
 
 	@POST
 	@Path("/secure/services/revoke/{serviceName}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RESTResponse secureRevokeAccess(@PathParam("serviceName") String serviceName, GrantRevokeRequest revokeRequest, @Context HttpServletRequest request) throws Exception {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.secureRevokeAccess(" + serviceName + ", " + revokeRequest + ")");
@@ -1600,7 +1607,8 @@ public class ServiceREST {
 
 	@POST
 	@Path("/policies")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerPolicy createPolicy(RangerPolicy policy, @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.createPolicy(" + policy + ")");
@@ -1681,7 +1689,8 @@ public class ServiceREST {
 
 	@POST
 	@Path("/policies/apply")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerPolicy applyPolicy(RangerPolicy policy, @Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.applyPolicy(" + policy + ")");
@@ -1761,7 +1770,8 @@ public class ServiceREST {
 
 	@PUT
 	@Path("/policies/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerPolicy updatePolicy(RangerPolicy policy) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updatePolicy(" + policy + ")");
@@ -1798,7 +1808,6 @@ public class ServiceREST {
 
 	@DELETE
 	@Path("/policies/{id}")
-	@Produces({ "application/json", "application/xml" })
 	public void deletePolicy(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.deletePolicy(" + id + ")");
@@ -1835,7 +1844,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicy getPolicy(@PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPolicy(" + id + ")");
@@ -1876,7 +1885,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policyLabels")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<String> getPolicyLabels(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPolicyLabels()");
@@ -1910,7 +1919,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicyList getPolicies(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.getPolicies()");
@@ -1964,7 +1973,7 @@ public class ServiceREST {
      */
     @GET
     @Path("/policies/cache/reset")
-    @Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
     public boolean resetPolicyCache(@QueryParam("serviceName") String serviceName) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> ServiceREST.resetPolicyCache(" + serviceName + ")");
@@ -2006,7 +2015,7 @@ public class ServiceREST {
      */
     @GET
     @Path("/policies/cache/reset-all")
-    @Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
     public boolean resetPolicyCacheAll() {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> ServiceREST.resetPolicyCacheAll()");
@@ -2205,7 +2214,7 @@ public class ServiceREST {
 	@POST
 	@Path("/policies/importPoliciesFromFile")
 	@Consumes({MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_JSON})
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAdminOrKeyAdminRole()")
 	public void importPoliciesFromFile(
 			@Context HttpServletRequest request,
@@ -2903,7 +2912,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies/count")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public Long countPolicies( @Context HttpServletRequest request) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.countPolicies():");
@@ -2940,7 +2949,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies/service/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicyList getServicePolicies(@PathParam("id") Long serviceId,
 			@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
@@ -2996,7 +3005,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies/service/name/{name}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicyList getServicePoliciesByName(@PathParam("name") String serviceName,
 			@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
@@ -3055,7 +3064,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies/download/{serviceName}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public ServicePolicies getServicePoliciesIfUpdated(
 			@PathParam("serviceName") String serviceName,
 			@DefaultValue("-1") @QueryParam("lastKnownVersion") Long lastKnownVersion,
@@ -3134,7 +3143,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/secure/policies/download/{serviceName}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public ServicePolicies getSecureServicePoliciesIfUpdated(
 			@PathParam("serviceName") String serviceName,
 			@DefaultValue("-1") @QueryParam("lastKnownVersion") Long lastKnownVersion,
@@ -3383,7 +3392,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies/eventTime")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_POLICY_FROM_EVENT_TIME + "\")")
 	public RangerPolicy getPolicyFromEventTime(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
@@ -3449,6 +3458,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policy/{policyId}/versionList")
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_POLICY_VERSION_LIST + "\")")
 	public VXString getPolicyVersionList(@PathParam("policyId") Long policyId) {
 
@@ -3459,7 +3469,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policy/{policyId}/version/{versionNo}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_POLICY_FOR_VERSION_NO + "\")")
 	public RangerPolicy getPolicyForVersionNumber(@PathParam("policyId") Long policyId,
 			@PathParam("versionNo") int versionNo) {
@@ -3468,7 +3478,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/plugins/info")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_PLUGINS_INFO + "\")")
 	public RangerPluginInfoList getPluginsInfo(@Context HttpServletRequest request) {
 		if (LOG.isDebugEnabled()) {
@@ -3728,7 +3738,7 @@ public class ServiceREST {
 
     @GET
     @Path("/metrics/type/{type}")
-    @Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
     @PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_METRICS_BY_TYPE + "\")")
     public String getMetricByType(@PathParam("type") String type) {
         if (LOG.isDebugEnabled()) {
@@ -3770,7 +3780,7 @@ public class ServiceREST {
 	 */
 	@DELETE
 	@Path("/cluster-services/{clusterName}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_CLUSTER_SERVICES + "\")")
 	public ResponseEntity<List<ServiceDeleteResponse>> deleteClusterServices(@PathParam("clusterName") String clusterName) {
 		if(LOG.isDebugEnabled()) {
@@ -3825,7 +3835,7 @@ public class ServiceREST {
 
 	@GET
 	@Path("/policies/guid/{guid}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicy getPolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid, 
                                                                  @DefaultValue("") @QueryParam("serviceName") String serviceName,
                                                                  @DefaultValue("") @QueryParam("zoneName") String zoneName) {
@@ -3861,7 +3871,6 @@ public class ServiceREST {
 
 	@DELETE
 	@Path("/policies/guid/{guid}")
-	@Produces({ "application/json", "application/xml" })
 	public void deletePolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
                                                             @DefaultValue("") @QueryParam("serviceName") String serviceName,
                                                             @DefaultValue("") @QueryParam("zoneName") String zoneName) {

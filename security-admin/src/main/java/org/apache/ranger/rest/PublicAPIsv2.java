@@ -94,6 +94,8 @@ public class PublicAPIsv2 {
 	 */
 	@POST
 	@Path("/api/zones")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerSecurityZone createSecurityZone(RangerSecurityZone securityZone) {
 		return securityZoneRest.createSecurityZone(securityZone);
 	}
@@ -103,6 +105,8 @@ public class PublicAPIsv2 {
 	 */
 	@PUT
 	@Path("/api/zones/{id}")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerSecurityZone updateSecurityZone(@PathParam("id") Long zoneId, RangerSecurityZone securityZone) {
 		return securityZoneRest.updateSecurityZone(zoneId, securityZone);
 	}
@@ -124,18 +128,21 @@ public class PublicAPIsv2 {
 	 */
 	@GET
 	@Path("/api/zones/name/{name}")
+	@Produces({ "application/json" })
 	public RangerSecurityZone getSecurityZone(@PathParam("name") String zoneName) {
 		return securityZoneRest.getSecurityZone(zoneName);
 	}
 
 	@GET
 	@Path("/api/zones/{id}")
+	@Produces({ "application/json"})
 	public RangerSecurityZone getSecurityZone(@PathParam("id") Long id) {
 		return securityZoneRest.getSecurityZone(id);
 	}
 
 	@GET
     @Path("/api/zones")
+	@Produces({ "application/json"})
     public List<RangerSecurityZone> getAllZones(@Context HttpServletRequest request){
 		return securityZoneRest.getAllZones(request).getSecurityZones();
 	}
@@ -147,6 +154,7 @@ public class PublicAPIsv2 {
      */
     @GET
     @Path("/api/zone-headers")
+	@Produces({ "application/json" })
     public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList() {
         if (logger.isDebugEnabled()) {
             logger.debug("==> PublicAPIsv2.getSecurityZoneHeaderInfoList()");
@@ -176,6 +184,7 @@ public class PublicAPIsv2 {
      */
     @GET
     @Path("/api/zones/{zoneId}/service-headers")
+	@Produces({ "application/json" })
     public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(@PathParam("zoneId") Long zoneId) {
         if (logger.isDebugEnabled()) {
             logger.debug("==> PublicAPIsv2.getServiceHeaderInfoListByZoneId({})" + zoneId);
@@ -203,21 +212,21 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/servicedef/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerServiceDef getServiceDef(@PathParam("id") Long id) {
 		return serviceREST.getServiceDef(id);
 	}
 
 	@GET
 	@Path("/api/servicedef/name/{name}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerServiceDef getServiceDefByName(@PathParam("name") String name) {
 		return serviceREST.getServiceDefByName(name);
 	}
 
 	@GET
 	@Path("/api/servicedef/")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<RangerServiceDef> searchServiceDefs(@Context HttpServletRequest request) {
 		return serviceREST.getServiceDefs(request).getServiceDefs();
 	}
@@ -225,7 +234,8 @@ public class PublicAPIsv2 {
 	@POST
 	@Path("/api/servicedef/")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerServiceDef createServiceDef(RangerServiceDef serviceDef) {
 		return serviceREST.createServiceDef(serviceDef);
 	}
@@ -233,7 +243,8 @@ public class PublicAPIsv2 {
 	@PUT
 	@Path("/api/servicedef/{id}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef, @PathParam("id") Long id) {
 		// if serviceDef.id is specified, it should be same as param 'id'
 		if(serviceDef.getId() == null) {
@@ -249,7 +260,8 @@ public class PublicAPIsv2 {
 	@PUT
 	@Path("/api/servicedef/name/{name}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerServiceDef updateServiceDefByName(RangerServiceDef serviceDef,
 	                                     @PathParam("name") String name) {
 		// serviceDef.name is immutable
@@ -275,7 +287,7 @@ public class PublicAPIsv2 {
 	@PUT
 	@Path("/api/servicedef/guid/{guid}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerServiceDef updateServiceDefByGuid(RangerServiceDef serviceDef,
 	                                               @PathParam("guid") String guid) {
 		// ignore serviceDef.id - if specified. Retrieve using the given guid and use id from the retrieved object
@@ -311,7 +323,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/service/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public RangerService getService(@PathParam("id") Long id) {
 		return serviceREST.getService(id);
@@ -319,7 +331,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/service/name/{name}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public RangerService getServiceByName(@PathParam("name") String name) {
 		return serviceREST.getServiceByName(name);
@@ -327,7 +339,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/service/")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
 	public List<RangerService> searchServices(@Context HttpServletRequest request) {
 		return serviceREST.getServices(request).getServices();
@@ -336,7 +348,8 @@ public class PublicAPIsv2 {
 	@POST
 	@Path("/api/service/")
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerService createService(RangerService service) {
 		return serviceREST.createService(service);
 	}
@@ -344,7 +357,8 @@ public class PublicAPIsv2 {
 	@PUT
 	@Path("/api/service/{id}")
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerService updateService(RangerService service, @PathParam("id") Long id,
                                        @Context HttpServletRequest request) {
 		// if service.id is specified, it should be same as the param 'id'
@@ -361,7 +375,8 @@ public class PublicAPIsv2 {
 	@PUT
 	@Path("/api/service/name/{name}")
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerService updateServiceByName(RangerService service,
                                              @PathParam("name") String name,
                                              @Context HttpServletRequest request) {
@@ -383,7 +398,7 @@ public class PublicAPIsv2 {
 	@PUT
 	@Path("/api/service/guid/{guid}")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerService updateServiceByGuid(RangerService service,
 	                                               @PathParam("guid") String guid) {
 		// ignore service.id - if specified. Retrieve using the given guid and use id from the retrieved object
@@ -418,14 +433,14 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/policy/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicy getPolicy(@PathParam("id") Long id) {
 		return serviceREST.getPolicy(id);
 	}
 
 	@GET
 	@Path("/api/policy/")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<RangerPolicy> getPolicies(@Context HttpServletRequest request) {
 
 		List<RangerPolicy> ret  = new ArrayList<RangerPolicy>();
@@ -445,7 +460,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/service/{servicename}/policy/{policyname}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicy getPolicyByName(@PathParam("servicename") String serviceName,
 	                                    @PathParam("policyname") String policyName,
 	                                    @Context HttpServletRequest request) {
@@ -471,7 +486,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/service/{servicename}/policy/")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<RangerPolicy> searchPolicies(@PathParam("servicename") String serviceName,
 	                                         @Context HttpServletRequest request) {
 		return serviceREST.getServicePoliciesByName(serviceName, request).getPolicies();
@@ -479,7 +494,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/policies/{serviceDefName}/for-resource/")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<RangerPolicy> getPoliciesForResource(@PathParam("serviceDefName") String serviceDefName,
 													 @DefaultValue("") @QueryParam("serviceName") String serviceName,
 													 @Context HttpServletRequest request) {
@@ -488,7 +503,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/policy/guid/{guid}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicy getPolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
 																 @DefaultValue("") @QueryParam("serviceName") String serviceName,
 																 @DefaultValue("") @QueryParam("ZoneName") String zoneName) {
@@ -497,21 +512,24 @@ public class PublicAPIsv2 {
 
 	@POST
 	@Path("/api/policy/")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerPolicy createPolicy(RangerPolicy policy , @Context HttpServletRequest request) {
 		return serviceREST.createPolicy(policy, request);
 	}
 
 	@POST
 	@Path("/api/policy/apply/")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json"})
+	@Produces({ "application/json"})
 	public RangerPolicy applyPolicy(RangerPolicy policy, @Context HttpServletRequest request) { // new API
 		return serviceREST.applyPolicy(policy, request);
 	}
 
 	@PUT
 	@Path("/api/policy/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerPolicy updatePolicy(RangerPolicy policy, @PathParam("id") Long id) {
 		// if policy.id is specified, it should be same as the param 'id'
 		if(policy.getId() == null) {
@@ -525,7 +543,8 @@ public class PublicAPIsv2 {
 
 	@PUT
 	@Path("/api/service/{servicename}/policy/{policyname}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerPolicy updatePolicyByName(RangerPolicy policy,
 	                                               @PathParam("servicename") String serviceName,
 	                                               @PathParam("policyname") String policyName,
@@ -551,7 +570,7 @@ public class PublicAPIsv2 {
 	/* Should add this back when guid is used for search and delete operations as well
 	@PUT
 	@Path("/api/policy/guid/{guid}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerPolicy updatePolicyByGuid(RangerPolicy policy,
 	                                               @PathParam("guid") String guid) {
 		// ignore policy.guid - if specified. Retrieve using the given guid and use id from the retrieved object
@@ -593,7 +612,6 @@ public class PublicAPIsv2 {
 
 	@DELETE
 	@Path("/api/policy/guid/{guid}")
-	@Produces({ "application/json", "application/xml" })
 	public void deletePolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
 												 @DefaultValue("") @QueryParam("serviceName") String serviceName,
 												 @DefaultValue("") @QueryParam("zoneName") String zoneName) {
@@ -602,7 +620,8 @@ public class PublicAPIsv2 {
 
 	@PUT
 	@Path("/api/service/{serviceName}/tags")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public void importServiceTags(@PathParam("serviceName") String serviceName, RangerServiceTags svcTags) {
 		if (logger.isDebugEnabled()) {
@@ -623,7 +642,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/service/{serviceName}/tags")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public RangerServiceTags getServiceTags(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
 		if (logger.isDebugEnabled()) {
@@ -648,6 +667,7 @@ public class PublicAPIsv2 {
 
 	@GET
 	@Path("/api/plugins/info")
+	@Produces({ "application/json" })
 	public List<RangerPluginInfo> getPluginsInfo(@Context HttpServletRequest request) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIsv2.getPluginsInfo()");
@@ -716,7 +736,8 @@ public class PublicAPIsv2 {
 
 	@POST
 	@Path("/api/roles")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerRole createRole(@QueryParam("serviceName") String serviceName, RangerRole role
 			, @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
 			, @Context HttpServletRequest request) {
@@ -732,7 +753,8 @@ public class PublicAPIsv2 {
 	 */
 	@PUT
 	@Path("/api/roles/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerRole updateRole(@PathParam("id") Long roleId, RangerRole role
 			, @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
 			, @Context HttpServletRequest request) {
@@ -756,35 +778,35 @@ public class PublicAPIsv2 {
 	 */
 	@GET
 	@Path("/api/roles/name/{name}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerRole getRole(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @PathParam("name") String roleName, @Context HttpServletRequest request) {
 		return roleREST.getRole(serviceName, userName, roleName);
 	}
 
 	@GET
 	@Path("/api/roles/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public RangerRole getRole(@PathParam("id") Long id, @Context HttpServletRequest request) {
 		return roleREST.getRole(id);
 	}
 
 	@GET
 	@Path("/api/roles")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<RangerRole> getAllRoles(@Context HttpServletRequest request) {
 		return roleREST.getAllRoles(request).getSecurityRoles();
 	}
 
 	@GET
 	@Path("/api/roles/names")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<String> getAllRoleNames(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @Context HttpServletRequest request){
 		return roleREST.getAllRoleNames(serviceName, userName, request);
 	}
 
 	@GET
 	@Path("/api/roles/user/{user}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public List<String> getUserRoles(@PathParam("user") String userName, @Context HttpServletRequest request){
 		return roleREST.getUserRoles(userName, request);
 	}
@@ -794,6 +816,8 @@ public class PublicAPIsv2 {
  	 */
 	@PUT
 	@Path("/api/roles/{id}/addUsersAndGroups")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin, @Context HttpServletRequest request) {
 		return roleREST.addUsersAndGroups(roleId, users, groups, isAdmin);
 	}
@@ -803,6 +827,8 @@ public class PublicAPIsv2 {
      */
 	@PUT
 	@Path("/api/roles/{id}/removeUsersAndGroups")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
 		return roleREST.removeUsersAndGroups(roleId, users, groups);
 	}
@@ -812,6 +838,8 @@ public class PublicAPIsv2 {
      */
 	@PUT
 	@Path("/api/roles/{id}/removeAdminFromUsersAndGroups")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
 		return roleREST.removeAdminFromUsersAndGroups(roleId, users, groups);
 	}
@@ -821,8 +849,8 @@ public class PublicAPIsv2 {
  	 */
 	@PUT
 	@Path("/api/roles/grant/{serviceName}")
-	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RESTResponse grantRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest grantRoleRequest, @Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIsv2.grantRoleUsersAndRoles(" + grantRoleRequest.toString() + ")");
@@ -835,8 +863,8 @@ public class PublicAPIsv2 {
      */
 	@PUT
 	@Path("/api/roles/revoke/{serviceName}")
-	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public RESTResponse revokeRoleUsersAndRoles(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest revokeRoleRequest, @Context HttpServletRequest request) {
 		return roleREST.revokeRole(serviceName, revokeRoleRequest, request);
 	}
