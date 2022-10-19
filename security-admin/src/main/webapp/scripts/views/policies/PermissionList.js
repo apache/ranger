@@ -703,7 +703,7 @@ define(function(require) {
 		renderPolicyCondtion : function() {
 			var that = this;
 			
-			if(this.policyConditions.length > 0){
+			if(!_.isEmpty(this.policyConditions)){
 				var tmpl = _.map(this.policyConditions,function(obj){
 					if(!_.isUndefined(obj.evaluatorOptions) && !_.isUndefined(obj.evaluatorOptions['ui.isMultiline']) && Boolean(obj.evaluatorOptions['ui.isMultiline'])){
 						return '<div class="editable-address margin-bottom-5">\
@@ -721,7 +721,7 @@ define(function(require) {
 						
 				});
 				//to show only mutiline line policy codition 
-				this.multiLinecond = _.filter(that.policyConditions, function(m){ return (!_.isUndefined(m.evaluatorOptions['ui.isMultiline']) && m.evaluatorOptions['ui.isMultiline']) });
+				this.multiLinecond = _.filter(that.policyConditions, function(m){ return (!_.isUndefined(m.evaluatorOptions) && !_.isUndefined(m.evaluatorOptions['ui.isMultiline']) && m.evaluatorOptions['ui.isMultiline']) });
 				this.multiLinecond = _.isArray(this.multiLinecond) ? this.multiLinecond : [this.multiLinecond];
 				//get the select input size(for bootstrap x-editable) of policy conditions
 				var selectSizeList = [];
