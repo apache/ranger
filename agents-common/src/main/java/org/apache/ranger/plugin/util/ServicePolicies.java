@@ -45,7 +45,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -191,7 +191,7 @@ public class ServicePolicies implements java.io.Serializable {
 	public void setPolicyDeltas(List<RangerPolicyDelta> policyDeltas) { this.policyDeltas = policyDeltas; }
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -311,7 +311,7 @@ public class ServicePolicies implements java.io.Serializable {
 	}
 
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)

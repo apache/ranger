@@ -244,7 +244,7 @@ public class RangerResourceACLs {
 	}
 
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -315,7 +315,7 @@ public class RangerResourceACLs {
 	}
 
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -432,7 +432,7 @@ public class RangerResourceACLs {
 	}
 
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)

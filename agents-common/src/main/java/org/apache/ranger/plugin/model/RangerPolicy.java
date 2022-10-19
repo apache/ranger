@@ -36,7 +36,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -712,7 +712,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -880,7 +880,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1173,7 +1173,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1260,7 +1260,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1347,7 +1347,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1451,7 +1451,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1569,7 +1569,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1678,7 +1678,7 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
