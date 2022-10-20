@@ -150,14 +150,21 @@ public class StringUtil implements Serializable {
 	}
 
 	public boolean regExPatternMatch(String expression, String inputStr) {
-		Pattern pattern = compiledRegEx.get(expression);
-		if (pattern == null) {
-			pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
-			compiledRegEx.put(expression, pattern);
+		boolean ret = false;
+
+		if (expression != null && inputStr != null) {
+			Pattern pattern = compiledRegEx.get(expression);
+
+			if (pattern == null) {
+				pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
+				compiledRegEx.put(expression, pattern);
+			}
+
+			Matcher matcher = pattern.matcher(inputStr);
+			ret = matcher.matches();
 		}
 
-		Matcher matcher = pattern.matcher(inputStr);
-		return matcher.matches();
+		return ret;
 	}
 
 	public boolean validateString(String regExStr, String str) {
@@ -205,7 +212,7 @@ public class StringUtil implements Serializable {
 	}
 
 	/**
-	 * @param firstName
+	 * @param name
 	 * @return
 	 */
 	public boolean isValidName(String name) {
