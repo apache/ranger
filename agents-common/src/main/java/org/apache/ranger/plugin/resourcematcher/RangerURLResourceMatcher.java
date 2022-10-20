@@ -209,14 +209,19 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
     }
 
     static boolean isPathURLType(String url) {
+        boolean ret = false;
 
-        Pattern p1 = Pattern.compile(":/{2}");
-        Matcher m1 = p1.matcher(url);
+        if (url != null) {
+            Pattern p1 = Pattern.compile(":/{2}");
+            Matcher m1 = p1.matcher(url);
 
-        Pattern p2 = Pattern.compile(":/{3,}");
-        Matcher m2 = p2.matcher(url);
+            Pattern p2 = Pattern.compile(":/{3,}");
+            Matcher m2 = p2.matcher(url);
 
-        return (m1.find() && !(m2.find()));
+            ret = (m1.find() && !(m2.find()));
+        }
+
+        return ret;
     }
 
 

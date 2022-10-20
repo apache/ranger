@@ -117,25 +117,37 @@ public final class RangerRequestScriptEvaluator {
 
 
 	public static boolean needsJsonCtxEnabled(String script) {
-		Matcher matcher = JSON_VAR_NAMES_PATTERN.matcher(script);
+		boolean ret = false;
 
-		boolean ret = matcher.find();
+		if (script != null) {
+			Matcher matcher = JSON_VAR_NAMES_PATTERN.matcher(script);
+
+			ret = matcher.find();
+		}
 
 		return ret;
 	}
 
 	public static boolean hasUserAttributeReference(String script) {
-		Matcher matcher = USER_ATTRIBUTES_PATTERN.matcher(script);
+		boolean ret = false;
 
-		boolean ret = matcher.find();
+		if (script != null) {
+			Matcher matcher = USER_ATTRIBUTES_PATTERN.matcher(script);
+
+			ret = matcher.find();
+		}
 
 		return ret;
 	}
 
 	public static boolean hasGroupAttributeReference(String script) {
-		Matcher matcher = GROUP_ATTRIBUTES_PATTERN.matcher(script);
+		boolean ret = false;
 
-		boolean ret = matcher.find();
+		if (script != null) {
+			Matcher matcher = GROUP_ATTRIBUTES_PATTERN.matcher(script);
+
+			ret = matcher.find();
+		}
 
 		return ret;
 	}
