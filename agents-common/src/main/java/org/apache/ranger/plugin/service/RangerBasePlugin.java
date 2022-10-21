@@ -71,6 +71,7 @@ public class RangerBasePlugin {
 	private       RangerRoles                 roles;
 	private final List<RangerChainedPlugin>   chainedPlugins;
 	private final boolean                     enableImplicitUserStoreEnricher;
+	private final boolean                     dedupStrings;
 	private       boolean                     isUserStoreEnricherAddedImplcitly = false;
 
 
@@ -101,6 +102,7 @@ public class RangerBasePlugin {
 		RangerRequestScriptEvaluator.init(pluginConfig);
 
 		this.enableImplicitUserStoreEnricher = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".enable.implicit.userstore.enricher", false);
+		this.dedupStrings                    = pluginConfig.getBoolean(pluginConfig.getPropertyPrefix() + ".dedup.strings", true);
 
 		this.chainedPlugins = initChainedPlugins();
 	}
@@ -308,6 +310,10 @@ public class RangerBasePlugin {
 					isNewEngineNeeded = false;
 				}
 			} else {
+				if (dedupStrings) {
+					policies.dedupStrings();
+				}
+
 				Boolean hasPolicyDeltas = RangerPolicyDeltaUtil.hasPolicyDeltas(policies);
 
 				if (hasPolicyDeltas == null) {

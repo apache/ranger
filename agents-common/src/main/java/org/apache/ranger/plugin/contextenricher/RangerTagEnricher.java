@@ -85,6 +85,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private boolean                            disableTrieLookupPrefilter;
 	private EnrichedServiceTags                enrichedServiceTags;
 	private boolean                            disableCacheIfServiceNotFound = true;
+	private boolean                            dedupStrings                  = true;
 
 	private final BlockingQueue<DownloadTrigger> tagDownloadQueue = new LinkedBlockingQueue<>();
 	private Timer                              tagDownloadTimer;
@@ -100,13 +101,13 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		super.init();
 
+		String propertyPrefix        = "ranger.plugin." + serviceDef.getName();
 		String tagRetrieverClassName = getOption(TAG_RETRIEVER_CLASSNAME_OPTION);
+		long   pollingIntervalMs     = getLongOption(TAG_REFRESHER_POLLINGINTERVAL_OPTION, 60 * 1000);
 
-		long pollingIntervalMs = getLongOption(TAG_REFRESHER_POLLINGINTERVAL_OPTION, 60 * 1000);
-
+		dedupStrings               = getBooleanConfig(propertyPrefix + ".dedup.strings", true);
 		disableTrieLookupPrefilter = getBooleanOption(TAG_DISABLE_TRIE_PREFILTER_OPTION, false);
-
-		serviceDefHelper = new RangerServiceDefHelper(serviceDef, false);
+		serviceDefHelper           = new RangerServiceDefHelper(serviceDef, false);
 
 		if (StringUtils.isNotBlank(tagRetrieverClassName)) {
 
@@ -127,7 +128,6 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			}
 
 			if (tagRetriever != null) {
-				String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
 				disableCacheIfServiceNotFound = getBooleanConfig(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 				String cacheDir      = getConfig(propertyPrefix + ".policy.cache.dir", null);
 				String cacheFilename = String.format("%s_%s_tag.json", appId, serviceName);
@@ -303,6 +303,10 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				LOG.info("ServiceTags is null for service " + serviceName);
 				enrichedServiceTags = null;
 			} else {
+				if (dedupStrings) {
+					serviceTags.dedupStrings();
+				}
+
 				if (!serviceTags.getIsDelta()) {
 					processServiceTags(serviceTags);
 				} else {

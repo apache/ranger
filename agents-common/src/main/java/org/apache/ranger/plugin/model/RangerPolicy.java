@@ -29,6 +29,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -549,6 +551,71 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		this.isDenyAllElse = isDenyAllElse == null ? Boolean.FALSE : isDenyAllElse;
 	}
 
+	public void dedupStrings(Map<String, String> strTbl) {
+		super.dedupStrings(strTbl);
+
+		service      = StringUtil.dedupString(service, strTbl);
+		serviceType  = StringUtil.dedupString(serviceType, strTbl);
+		zoneName     = StringUtil.dedupString(zoneName, strTbl);
+		name         = StringUtil.dedupString(name, strTbl);
+		description  = StringUtil.dedupString(description, strTbl);
+		policyLabels = StringUtil.dedupStringsList(policyLabels, strTbl);
+		resources    = StringUtil.dedupStringsMapOfPolicyResource(resources, strTbl);
+		options      = StringUtil.dedupStringsMapOfObject(options, strTbl);
+
+		if (CollectionUtils.isNotEmpty(additionalResources)) {
+			List<Map<String, RangerPolicyResource>> updated = new ArrayList<>(additionalResources.size());
+
+			for (Map<String, RangerPolicyResource> additionalResource : additionalResources) {
+				updated.add(StringUtil.dedupStringsMapOfPolicyResource(additionalResource, strTbl));
+			}
+
+			additionalResources = updated;
+		}
+
+		if (CollectionUtils.isNotEmpty(conditions)) {
+			for (RangerPolicyItemCondition condition : conditions) {
+				condition.dedupStrings(strTbl);
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(policyItems)) {
+			for (RangerPolicyItem policyItem : policyItems) {
+				policyItem.dedupStrings(strTbl);
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(denyPolicyItems)) {
+			for (RangerPolicyItem policyItem : denyPolicyItems) {
+				policyItem.dedupStrings(strTbl);
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(allowExceptions)) {
+			for (RangerPolicyItem policyItem : allowExceptions) {
+				policyItem.dedupStrings(strTbl);
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(denyExceptions)) {
+			for (RangerPolicyItem policyItem : denyExceptions) {
+				policyItem.dedupStrings(strTbl);
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(dataMaskPolicyItems)) {
+			for (RangerPolicyItem policyItem : dataMaskPolicyItems) {
+				policyItem.dedupStrings(strTbl);
+			}
+		}
+
+		if (CollectionUtils.isNotEmpty(rowFilterPolicyItems)) {
+			for (RangerPolicyItem policyItem : rowFilterPolicyItems) {
+				policyItem.dedupStrings(strTbl);
+			}
+		}
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -812,6 +879,10 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.isRecursive = isRecursive == null ? Boolean.FALSE : isRecursive;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			values = StringUtil.dedupStringsList(values, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -1040,6 +1111,24 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 		 */
 		public void setDelegateAdmin(Boolean delegateAdmin) {
 			this.delegateAdmin = delegateAdmin == null ? Boolean.FALSE : delegateAdmin;
+		}
+
+		public void dedupStrings(Map<String, String> strTbl) {
+			if (accesses != null) {
+				for (RangerPolicyItemAccess access : accesses) {
+					access.dedupStrings(strTbl);
+				}
+			}
+
+			users  = StringUtil.dedupStringsList(users, strTbl);
+			groups = StringUtil.dedupStringsList(groups, strTbl);
+			roles  = StringUtil.dedupStringsList(roles, strTbl);
+
+			if (conditions != null) {
+				for (RangerPolicyItemCondition condition : conditions) {
+					condition.dedupStrings(strTbl);
+				}
+			}
 		}
 
 		@Override
@@ -1398,6 +1487,10 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			this.isAllowed = isAllowed == null ? Boolean.TRUE : isAllowed;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			type = StringUtil.dedupString(type, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -1508,6 +1601,11 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 			if(values != null) {
 				this.values.addAll(values);
 			}
+		}
+
+		public void dedupStrings(Map<String, String> strTbl) {
+			type   = StringUtil.dedupString(type, strTbl);
+			values = StringUtil.dedupStringsList(values, strTbl);
 		}
 
 		@Override
