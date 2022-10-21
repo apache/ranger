@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.model;
 
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -106,6 +107,12 @@ public class RangerTag extends RangerBaseModelObject {
 
 	public void setValidityPeriods(List<RangerValiditySchedule> validityPeriods) {
 		this.validityPeriods = validityPeriods;
+	}
+
+	public void dedupStrings(Map<String, String> strTbl) {
+		type       = StringUtil.dedupString(type, strTbl);
+		attributes = StringUtil.dedupStringsMap(attributes, strTbl);
+		options    = StringUtil.dedupStringsMapOfObject(options, strTbl);
 	}
 
 	@Override

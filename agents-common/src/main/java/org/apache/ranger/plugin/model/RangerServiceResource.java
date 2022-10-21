@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.model;
 
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -104,6 +105,15 @@ public class RangerServiceResource extends RangerBaseModelObject {
 
 	public void setAdditionalInfo(Map<String, String> additionalInfo) {
 		this.additionalInfo = additionalInfo;
+	}
+
+	public void dedupStrings(Map<String, String> strTbl) {
+		super.dedupStrings(strTbl);
+
+		serviceName      = StringUtil.dedupString(serviceName, strTbl);
+		resourceElements = StringUtil.dedupStringsMapOfPolicyResource(resourceElements, strTbl);
+		ownerUser        = StringUtil.dedupString(ownerUser, strTbl);
+		additionalInfo   = StringUtil.dedupStringsMap(additionalInfo, strTbl);
 	}
 
 	@Override

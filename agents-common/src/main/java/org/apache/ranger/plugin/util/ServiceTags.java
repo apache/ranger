@@ -32,6 +32,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
@@ -267,5 +268,30 @@ public class ServiceTags implements java.io.Serializable {
 		ret = initialTagsCount - finalTagsCount;
 
 		return ret;
+	}
+
+	public void dedupStrings() {
+		Map<String, String> strTbl = new HashMap<>();
+
+		op          = StringUtil.dedupString(op, strTbl);
+		serviceName = StringUtil.dedupString(serviceName, strTbl);
+
+		if (tagDefinitions != null) {
+			for (RangerTagDef tagDef : tagDefinitions.values()) {
+				tagDef.dedupStrings(strTbl);
+			}
+		}
+
+		if (tags != null) {
+			for (RangerTag tag : tags.values()) {
+				tag.dedupStrings(strTbl);
+			}
+		}
+
+		if (serviceResources != null) {
+			for (RangerServiceResource resource : serviceResources) {
+				resource.dedupStrings(strTbl);
+			}
+		}
 	}
 }

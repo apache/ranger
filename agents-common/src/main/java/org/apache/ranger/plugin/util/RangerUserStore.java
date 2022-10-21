@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -116,6 +117,16 @@ public class RangerUserStore implements Serializable {
 
     public void setGroupCloudIdMapping(Map<String, String> groupCloudIdMapping) {
         this.groupCloudIdMapping = groupCloudIdMapping;
+    }
+
+    public void dedupStrings() {
+        Map<String, String> strTbl = new HashMap<>();
+
+        userAttrMapping     = StringUtil.dedupStringsMapOfMap(userAttrMapping, strTbl);
+        groupAttrMapping    = StringUtil.dedupStringsMapOfMap(groupAttrMapping, strTbl);
+        userGroupMapping    = StringUtil.dedupStringsMapOfSet(userGroupMapping, strTbl);
+        userCloudIdMapping  = StringUtil.dedupStringsMap(userCloudIdMapping, strTbl);
+        groupCloudIdMapping = StringUtil.dedupStringsMap(groupCloudIdMapping, strTbl);
     }
 
     @Override

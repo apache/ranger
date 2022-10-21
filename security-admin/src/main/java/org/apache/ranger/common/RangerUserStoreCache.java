@@ -37,9 +37,11 @@ public class RangerUserStoreCache {
 	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
 	public static volatile RangerUserStoreCache 	sInstance = null;
-	private final int 								waitTimeInSeconds;
-	private final ReentrantLock 					lock = new ReentrantLock();
-	private RangerUserStore 						rangerUserStore;
+
+	private final int             waitTimeInSeconds;
+	private final boolean         dedupStrings;
+	private final ReentrantLock   lock = new ReentrantLock();
+	private       RangerUserStore rangerUserStore;
 
 	public static RangerUserStoreCache getInstance() {
 		if (sInstance == null) {
@@ -54,8 +56,10 @@ public class RangerUserStoreCache {
 
 	private RangerUserStoreCache() {
 		RangerAdminConfig config = RangerAdminConfig.getInstance();
-		waitTimeInSeconds = config.getInt("ranger.admin.userstore.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
-		this.rangerUserStore = new RangerUserStore();
+
+		this.waitTimeInSeconds = config.getInt("ranger.admin.userstore.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+		this.dedupStrings      = config.getBoolean("ranger.admin.userstore.dedup.strings", Boolean.TRUE);
+		this.rangerUserStore   = new RangerUserStore();
 	}
 
 	public RangerUserStore getRangerUserStore() {
@@ -89,7 +93,13 @@ public class RangerUserStoreCache {
 						LOG.debug("No. of userGroupMappings = " + userGroups.size());
 					}
 
-					rangerUserStore = new RangerUserStore(dbUserStoreVersion, rangerUsersInDB, rangerGroupsInDB, userGroups);
+					RangerUserStore rangerUserStore = new RangerUserStore(dbUserStoreVersion, rangerUsersInDB, rangerGroupsInDB, userGroups);
+
+					if (dedupStrings) {
+						rangerUserStore.dedupStrings();
+					}
+
+					this.rangerUserStore = rangerUserStore;
 
 					LOG.info("RangerUserStoreCache refreshed from version " + cachedUserStoreVersion + " to " + dbUserStoreVersion + ": users=" + rangerUsersInDB.size() + ", groups=" + rangerGroupsInDB.size() + ", userGroupMappings=" + userGroups.size());
 				}
