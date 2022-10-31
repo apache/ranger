@@ -77,6 +77,18 @@
             <version>${hadoop.version}</version>
             <exclusions>
                 <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-handler</artifactId>
+                </exclusion>
+                <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-transport-native-epoll</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-text</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -85,6 +97,11 @@
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.hadoop</groupId>

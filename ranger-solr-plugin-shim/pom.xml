@@ -60,10 +60,51 @@
                     <artifactId>jdk.tools</artifactId>
                 </exclusion>
                 <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-resolver</artifactId>
+               </exclusion>
+               <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-transport-native-unix-common</artifactId>
+               </exclusion>
+               <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-transport-native-epoll</artifactId>
+               </exclusion>
+               <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-handler</artifactId>
+               </exclusion>
+               <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-buffer</artifactId>
+               </exclusion>
+               <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-codec</artifactId>
+               </exclusion>
+               <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-transport</artifactId>
+               </exclusion>
+               <exclusion>
+                   <groupId>io.netty</groupId>
+                   <artifactId>netty-common</artifactId>
+               </exclusion>
+                <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-text</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>org.slf4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
             </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-text</artifactId>
+            <version>${commons.text.version}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.ranger</groupId>
