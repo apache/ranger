@@ -20,69 +20,99 @@
 package org.apache.ranger.plugin.util;
 
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
-import javax.script.ScriptEngineManager;
-import java.util.List;
+import jdk.nashorn.api.scripting.ClassFilter;
+import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 
 public class ScriptEngineUtil {
     private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
 
+    private static final String[] SCRIPT_ENGINE_ARGS = new String[0];
 
+    // for backward compatibility with any plugin that might use this API
     public static ScriptEngine createScriptEngine(String engineName, String serviceType) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + ")");
-        }
-        ScriptEngine ret = null;
-
-        try {
-            ScriptEngineManager manager = new ScriptEngineManager();
-
-            if (LOG.isDebugEnabled()) {
-                List<ScriptEngineFactory> factories = manager.getEngineFactories();
-
-                if (CollectionUtils.isEmpty(factories)) {
-                    LOG.debug("List of scriptEngineFactories is empty!!");
-                } else {
-                    for (ScriptEngineFactory factory : factories) {
-                        LOG.debug("engineName=" + factory.getEngineName() + ", language=" + factory.getLanguageName());
-                    }
-                }
-            }
-
-            ret = manager.getEngineByName(engineName);
-        } catch (Throwable exp) {
-            LOG.error("RangerScriptConditionEvaluator.init() failed", exp);
+            LOG.debug("ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + "): engineName ignored");
         }
 
-        LOG.debug((ret == null ? " Failed to create " : " Created ") + "Script Engine '" + engineName + "' in a default manner.");
+        return createScriptEngine(serviceType);
+    }
 
-        if (ret == null) {
-            LOG.warn("Will try to get script-engine from plugin-class-loader for service-type:[" + serviceType + "]");
+    public static ScriptEngine createScriptEngine(String serviceType) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ScriptEngineUtil.createScriptEngine(serviceType=" + serviceType + ")");
+        }
 
-            RangerPluginClassLoader pluginClassLoader;
+        ScriptEngine ret = getScriptEngine(null);
+
+        if (ret != null) {
+            LOG.debug("Created script-engine in current class-loader");
+        } else {
+            LOG.warn("Failed to create script-engine in current class-loader. Will try plugin-class-loader for service-type:[" + serviceType + "]");
+
+            ClassLoader prevActiveClassLoader = null;
 
             try {
-                pluginClassLoader = RangerPluginClassLoader.getInstance(serviceType, null);
+                RangerPluginClassLoader pluginClassLoader = RangerPluginClassLoader.getInstance(serviceType, null);
 
                 if (pluginClassLoader != null) {
-                    ret = pluginClassLoader.getScriptEngine(engineName);
+                    prevActiveClassLoader = pluginClassLoader.getPrevActiveClassLoader();
                 } else {
-                    LOG.error("Cannot get script-engine from null pluginClassLoader");
+                    LOG.error("Cannot get script-engine from null plugin-class-loader");
                 }
             } catch (Throwable exp) {
                 LOG.error("RangerScriptConditionEvaluator.init() failed", exp);
             }
+
+            if (prevActiveClassLoader != null) {
+                ret = getScriptEngine(prevActiveClassLoader);
+            }
         }
+
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + ") : ret=" + ret);
+            LOG.debug("<== ScriptEngineUtil.createScriptEngine(serviceType=" + serviceType + ") : ret=" + ret);
         }
         return ret;
+    }
+
+    private static ScriptEngine getScriptEngine(ClassLoader clsLoader) {
+        ScriptEngine ret;
+
+        try {
+            final NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
+
+            if (clsLoader != null) {
+                ret = factory.getScriptEngine(SCRIPT_ENGINE_ARGS, clsLoader, RangerClassFilter.INSTANCE);
+            } else {
+                ret = factory.getScriptEngine(RangerClassFilter.INSTANCE);
+            }
+        } catch (Throwable t) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("ScriptEngineUtil.getScriptEngine(clsLoader={}): failed", clsLoader, t);
+            }
+
+            ret = null;
+        }
+
+        return ret;
+    }
+
+    private static class RangerClassFilter implements ClassFilter {
+        static final RangerClassFilter INSTANCE = new RangerClassFilter();
+
+        private RangerClassFilter() {
+        }
+
+        @Override
+        public boolean exposeToScripts(String className) {
+            LOG.warn("script blocked: attempt to use Java class {}", className);
+
+            return false;
+        }
     }
 }
