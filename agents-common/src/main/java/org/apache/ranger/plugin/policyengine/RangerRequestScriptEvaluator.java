@@ -259,6 +259,8 @@ public final class RangerRequestScriptEvaluator {
 		} catch (ScriptException exception) {
 			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script," +
 					" exception=" + exception);
+		} catch (Throwable t) {
+			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script", t);
 		} finally {
 			RangerPerfTracer.log(perf);
 		}

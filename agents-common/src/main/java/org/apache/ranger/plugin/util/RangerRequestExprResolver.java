@@ -36,7 +36,6 @@ public class RangerRequestExprResolver {
     private static final Logger LOG = LoggerFactory.getLogger(RangerRequestExprResolver.class);
 
     private static final String  REGEX_GROUP_EXPR   = "expr";
-    private static final String  SCRIPT_ENGINE_NAME = "JavaScript";
     private static final Pattern PATTERN            = Pattern.compile("\\$\\{\\{(?<" + REGEX_GROUP_EXPR + ">.*?)\\}\\}");
     public  static final String  EXPRESSION_START   = "${{";
 
@@ -100,7 +99,7 @@ public class RangerRequestExprResolver {
 
         if (hasTokens) {
             RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request);
-            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(SCRIPT_ENGINE_NAME, serviceType);
+            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(serviceType);
             StringBuffer                 sb              = new StringBuffer();
             Matcher                      matcher         = PATTERN.matcher(str);
 

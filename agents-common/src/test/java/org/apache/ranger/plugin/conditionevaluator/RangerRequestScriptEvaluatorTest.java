@@ -28,11 +28,11 @@ import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerUserStore;
+import org.apache.ranger.plugin.util.ScriptEngineUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineManager;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -45,9 +45,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class RangerRequestScriptEvaluatorTest {
-    final String              engineName   = "JavaScript";
-    final ScriptEngineManager manager      = new ScriptEngineManager();
-    final ScriptEngine        scriptEngine = manager.getEngineByName(engineName);
+    final ScriptEngine scriptEngine = ScriptEngineUtil.createScriptEngine(null);
 
     @Test
     public void testRequestAttributes() {
@@ -210,6 +208,15 @@ public class RangerRequestScriptEvaluatorTest {
          USER.dept        = null
          */
         Assert.assertFalse("test: TAGS.DEPTS.names.split(',').includes(USER.dept)", (Boolean) evaluator.evaluateScript(scriptEngine, "TAGS.DEPTS.names.split(',').includes(USER.dept)"));
+    }
+
+    @Test
+    public void testBlockJavaClassReferences() {
+        RangerAccessRequest          request   = createRequest("test-user", Collections.EMPTY_SET, Collections.EMPTY_SET, Collections.EMPTY_LIST);
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request);
+
+        Assert.assertNull("test: java.lang.System.out.println(\"test\");", evaluator.evaluateScript(scriptEngine, "java.lang.System.out.println(\"test\");"));
+        Assert.assertNull("test: java.lang.Runtime.getRuntime().exec(\"bash\");", evaluator.evaluateScript(scriptEngine, "java.lang.Runtime.getRuntime().exec(\"bash\");"));
     }
 
 
