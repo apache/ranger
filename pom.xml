@@ -194,9 +194,9 @@
         <slf4j.version>1.7.32</slf4j.version>
         <solr.version>8.11.2</solr.version>
         <spring-ldap-core.version>2.3.8.RELEASE</spring-ldap-core.version>
-        <springframework.security.version>5.7.2</springframework.security.version>
-        <springframework.test.version>5.3.21</springframework.test.version>
-        <springframework.version>5.3.21</springframework.version>
+        <springframework.security.version>5.7.5</springframework.security.version>
+        <springframework.test.version>5.3.23</springframework.test.version>
+        <springframework.version>5.3.23</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
