@@ -32,7 +32,7 @@ import jdk.nashorn.api.scripting.NashornScriptEngineFactory;
 public class ScriptEngineUtil {
     private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
 
-    private static final String[] SCRIPT_ENGINE_ARGS = new String[0];
+    private static final String[] SCRIPT_ENGINE_ARGS = new String[] { "--no-java", "--no-syntax-extensions" };
 
     // for backward compatibility with any plugin that might use this API
     public static ScriptEngine createScriptEngine(String engineName, String serviceType) {
@@ -86,11 +86,11 @@ public class ScriptEngineUtil {
         try {
             final NashornScriptEngineFactory factory = new NashornScriptEngineFactory();
 
-            if (clsLoader != null) {
-                ret = factory.getScriptEngine(SCRIPT_ENGINE_ARGS, clsLoader, RangerClassFilter.INSTANCE);
-            } else {
-                ret = factory.getScriptEngine(RangerClassFilter.INSTANCE);
+            if (clsLoader == null) {
+                clsLoader = Thread.currentThread().getContextClassLoader();
             }
+
+            ret = factory.getScriptEngine(SCRIPT_ENGINE_ARGS, clsLoader, RangerClassFilter.INSTANCE);
         } catch (Throwable t) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("ScriptEngineUtil.getScriptEngine(clsLoader={}): failed", clsLoader, t);
