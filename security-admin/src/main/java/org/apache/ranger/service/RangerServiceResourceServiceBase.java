@@ -68,6 +68,7 @@ public abstract class RangerServiceResourceServiceBase<T extends XXServiceResour
 		vObj.setVersion(xObj.getVersion());
 		vObj.setIsEnabled(xObj.getIsEnabled());
 		vObj.setResourceSignature(xObj.getResourceSignature());
+		vObj.setServiceId(xObj.getServiceId());
 
 		XXService xService = daoMgr.getXXService().getById(xObj.getServiceId());
 

@@ -55,7 +55,7 @@ public class ServiceTags implements java.io.Serializable {
 	public static final String OP_REPLACE       = "replace";
 
 	public enum TagsChangeExtent { NONE, TAGS, SERVICE_RESOURCE, ALL }
-	public enum TagsChangeType { NONE, SERVICE_RESOURCE_UPDATE, TAG_UPDATE, TAG_RESOURCE_MAP_UPDATE, RANGER_ADMIN_START, INVALIDATE_TAG_DELTAS, ALL }
+	public enum TagsChangeType { NONE, SERVICE_RESOURCE_UPDATE, TAG_UPDATE, TAG_RESOURCE_MAP_UPDATE, RANGER_ADMIN_START, INVALIDATE_TAG_DELTAS, ALL , TAG_RESOURCE_MAP_CREATE , TAG_RESOURCE_MAP_DELETE , SERVICE_RESOURCE_CREATE , SERVICE_RESOURCE_DELETE }
 
 	private String                      op = OP_ADD_OR_UPDATE;
 	private String                      serviceName;
