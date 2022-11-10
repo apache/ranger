@@ -19,13 +19,7 @@
 
 package org.apache.ranger.biz;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.google.common.collect.Lists;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
@@ -37,29 +31,18 @@ import org.apache.ranger.common.RangerServiceTagsCache;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXTagDao;
 import org.apache.ranger.db.XXTagDefDao;
-import org.apache.ranger.entity.XXService;
-import org.apache.ranger.entity.XXServiceResource;
-import org.apache.ranger.entity.XXServiceVersionInfo;
-import org.apache.ranger.entity.XXTag;
-import org.apache.ranger.entity.XXTagChangeLog;
-import org.apache.ranger.entity.XXTagDef;
-import org.apache.ranger.entity.XXTagResourceMap;
+import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
-import org.apache.ranger.plugin.util.RangerCommonConstants;
-import org.apache.ranger.plugin.util.RangerPerfTracer;
-import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
-import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
-import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.plugin.util.ServiceTags;
+import org.apache.ranger.plugin.util.*;
+import org.apache.ranger.service.RangerServiceResourceService;
 import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
-import org.apache.ranger.service.RangerServiceResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +52,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
+import java.util.*;
 
 @Component
 public class TagDBStore extends AbstractTagStore {
@@ -317,7 +301,7 @@ public class TagDBStore extends AbstractTagStore {
 
 		return ret;
 	}
-	
+
 	@Override
 	public RangerTag updateTag(RangerTag tag) throws Exception {
 		if (LOG.isDebugEnabled()) {
@@ -510,6 +494,12 @@ public class TagDBStore extends AbstractTagStore {
 
 		ret = rangerServiceResourceService.read(ret.getId());
 
+		if(isSupportsTagDeltas()){
+			handleUpdateTagChangeLog(daoManager, ret.getServiceId(), ServiceDBStore.VERSION_TYPE.TAG_VERSION,
+					ServiceTags.TagsChangeType.SERVICE_RESOURCE_CREATE, ret.getId(), null);
+		}
+
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.createServiceResource(" + resource + ")");
 		}
@@ -544,6 +534,11 @@ public class TagDBStore extends AbstractTagStore {
 
 		RangerServiceResource ret = rangerServiceResourceService.read(existing.getId());
 
+		if(isSupportsTagDeltas()){
+			handleUpdateTagChangeLog(daoManager, ret.getServiceId(), ServiceDBStore.VERSION_TYPE.TAG_VERSION,
+					ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE, ret.getId(), null);
+		}
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.updateResource(" + resource + ") : " + ret);
 		}
@@ -577,9 +572,7 @@ public class TagDBStore extends AbstractTagStore {
 
 		RangerServiceResource resource = getServiceResource(id);
 
-		if(resource != null) {
-			rangerServiceResourceService.delete(resource);
-		}
+        deleteRangerServiceResource(resource);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.deleteServiceResource(" + id + ")");
@@ -594,12 +587,21 @@ public class TagDBStore extends AbstractTagStore {
 
 		RangerServiceResource resource = getServiceResourceByGuid(guid);
 
-		if(resource != null) {
-			rangerServiceResourceService.delete(resource);
-		}
+        deleteRangerServiceResource(resource);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.deleteServiceResourceByGuid(" + guid + ")");
+		}
+	}
+
+	private void deleteRangerServiceResource(RangerServiceResource resource){
+		if(resource != null) {
+			rangerServiceResourceService.delete(resource);
+			if(isSupportsTagDeltas()) {
+				handleUpdateTagChangeLog(daoManager, resource.getServiceId(),
+						ServiceDBStore.VERSION_TYPE.TAG_VERSION,
+						ServiceTags.TagsChangeType.SERVICE_RESOURCE_DELETE, resource.getId(), null);
+			}
 		}
 	}
 
@@ -738,6 +740,13 @@ public class TagDBStore extends AbstractTagStore {
 		// We also need to update tags stored with the resource
 		refreshServiceResource(tagResourceMap.getResourceId());
 
+		RangerServiceResource resource = getServiceResource(ret.getResourceId());
+        if(isSupportsTagDeltas() && Objects.nonNull(resource)) {
+          handleUpdateTagChangeLog(daoManager, resource.getServiceId(),
+              ServiceDBStore.VERSION_TYPE.TAG_VERSION,
+              ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_CREATE, ret.getId(), ret.getTagId());
+        }
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.createTagResourceMap(" + tagResourceMap + "): " + ret);
 		}
@@ -762,6 +771,14 @@ public class TagDBStore extends AbstractTagStore {
 		}
 		// We also need to update tags stored with the resource
 		refreshServiceResource(tagResourceMap.getResourceId());
+
+        RangerServiceResource resource = getServiceResource(tagResourceMap.getResourceId());
+        if (isSupportsTagDeltas() && Objects.nonNull(resource)) {
+          handleUpdateTagChangeLog(daoManager, resource.getServiceId(),
+              ServiceDBStore.VERSION_TYPE.TAG_VERSION,
+              ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_DELETE, tagResourceMap.getId(),
+              tagResourceMap.getTagId());
+        }
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== TagDBStore.deleteTagResourceMap(" + id + ")");
@@ -1224,12 +1241,16 @@ public class TagDBStore extends AbstractTagStore {
 			for (XXTagChangeLog record : changeLogs) {
 				if (record.getChangeType().equals(ServiceTags.TagsChangeType.TAG_UPDATE.ordinal())) {
 					tagIds.add(record.getTagId());
-				} else if (record.getChangeType().equals(ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE.ordinal())) {
-					serviceResourceIds.add(record.getServiceResourceId());
-				} else if (record.getChangeType().equals(ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE.ordinal())) {
+				} else if (Lists.newArrayList(ServiceTags.TagsChangeType.SERVICE_RESOURCE_CREATE.ordinal(),
+                    ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE.ordinal(),
+                    ServiceTags.TagsChangeType.SERVICE_RESOURCE_DELETE.ordinal()).contains(record.getChangeType())) {
+                    serviceResourceIds.add(record.getServiceResourceId());
+                } else if (Lists.newArrayList(ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_CREATE.ordinal(),
+                    ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE.ordinal(),
+                    ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_DELETE.ordinal()).contains(record.getChangeType())) {
 					tagIds.add(record.getTagId());
 					serviceResourceIds.add(record.getServiceResourceId());
-				} else {
+				}  else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Unknown changeType in tag-change-log record: [" + record + "]");
 						LOG.debug("Returning without further processing");
@@ -1378,5 +1399,12 @@ public class TagDBStore extends AbstractTagStore {
 	public boolean isInPlaceTagUpdateSupported() {
 		initStatics();
 		return SUPPORTS_IN_PLACE_TAG_UPDATES;
+	}
+
+	public void  handleUpdateTagChangeLog(RangerDaoManager daoManager , Long serviceId , ServiceDBStore.VERSION_TYPE versionType ,
+										  ServiceTags.TagsChangeType tagsChangeType  , Long resourceId , Long tagId){
+        final Runnable serviceVersionUpdater = new ServiceDBStore.ServiceVersionUpdater(daoManager,serviceId,
+				versionType,tagsChangeType,resourceId,tagId);
+        daoManager.getRangerTransactionSynchronizationAdapter().executeOnTransactionCommit(serviceVersionUpdater);
 	}
 }
