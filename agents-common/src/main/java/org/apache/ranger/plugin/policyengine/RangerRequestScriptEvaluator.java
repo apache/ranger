@@ -388,7 +388,9 @@ public final class RangerRequestScriptEvaluator {
 
 	public Set<String> getUserGroups() { return accessRequest.getUserGroups(); }
 
-	public Set<String> getUserRoles() { return accessRequest.getUserRoles(); }
+	public Set<String> getUserRoles() {
+		return RangerAccessRequestUtil.getUserRoles(accessRequest);
+	}
 
 	public Date getAccessTime() { return accessRequest.getAccessTime() != null ? accessRequest.getAccessTime() : new Date(); }
 
