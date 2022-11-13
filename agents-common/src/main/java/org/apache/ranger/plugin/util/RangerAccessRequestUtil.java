@@ -165,6 +165,20 @@ public class RangerAccessRequestUtil {
 		return ret != null ? (Set<String>) ret : Collections.EMPTY_SET;
 	}
 
+	public static Set<String> getUserRoles(RangerAccessRequest request) {
+		Set<String> ret = Collections.EMPTY_SET;
+
+		if (request != null) {
+			ret = request.getUserRoles();
+
+			if (CollectionUtils.isEmpty(ret)) {
+				ret = RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext());
+			}
+		}
+
+		return ret;
+	}
+
 	public static void setRequestUserStoreInContext(Map<String, Object> context, RangerUserStore rangerUserStore) {
 		context.put(KEY_CONTEXT_USERSTORE, rangerUserStore);
 	}
