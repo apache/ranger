@@ -44,7 +44,7 @@ public class RangerRolesUtil {
     public RangerRolesUtil(RangerRoles roles) {
         if (roles != null) {
             this.roles  = roles;
-            roleVersion = roles.getRoleVersion();
+            roleVersion = roles.getRoleVersion() != null ? roles.getRoleVersion() : -1;
 
             if (CollectionUtils.isNotEmpty(roles.getRangerRoles())) {
                 for (RangerRole role : roles.getRangerRoles()) {
