@@ -120,6 +120,7 @@
         <google.guava.version>27.0-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
         <gson.version>2.2.4</gson.version>
+        <graalvm.version>22.3.0</graalvm.version>
         <guice.version>4.0</guice.version>
         <hadoop.version>3.3.0</hadoop.version>
         <ozone.version>1.0.0</ozone.version>
