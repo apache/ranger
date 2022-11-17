@@ -118,6 +118,7 @@
         <spotbugs.plugin.version>4.5.0.0</spotbugs.plugin.version>
         <google.guava.version>27.0-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
+        <graalvm.version>22.3.0</graalvm.version>
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop.version>3.3.0</hadoop.version>
