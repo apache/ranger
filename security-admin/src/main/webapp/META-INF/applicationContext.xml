@@ -168,6 +168,12 @@ http://www.springframework.org/schema/util/spring-util.xsd">
 		<property name="statementCacheNumDeferredCloseThreads">
 			<value>1</value>
 		</property>
+		<property name="connectTimeout">
+			<value>300000</value>
+		</property>
+		<property name="socketTimeout">
+			<value>300000</value>
+		</property>
 	</bean>
 
 	<bean id="loggingDataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
