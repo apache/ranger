@@ -901,7 +901,7 @@ public class AuditFileSpool implements Runnable {
 		} catch (Throwable t) {
 			logger.error("Error while sending logs to consumer. provider="
 					+ queueProvider.getName() + ", consumer="
-					+ consumerProvider.getName() + ", log=" + lines, t);
+					+ consumerProvider.getName() + ", logEventCount=" + lines.size(), t);
 		}
 
 		return ret;
