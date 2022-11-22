@@ -150,7 +150,7 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 		ugsyncAuditInfo = new UgsyncAuditInfo();
 		ldapSyncSourceInfo = new LdapSyncSourceInfo();
 		ldapSyncSourceInfo.setLdapUrl(ldapUrl);
-		ldapSyncSourceInfo.setIncrementalSycn("True");
+		ldapSyncSourceInfo.setIncrementalSycn(Boolean.toString(config.isDeltaSyncEnabled()));
 		ldapSyncSourceInfo.setUserSearchEnabled(Boolean.toString(userSearchEnabled));
 		ldapSyncSourceInfo.setGroupSearchEnabled(Boolean.toString(groupSearchEnabled));
 		ldapSyncSourceInfo.setGroupSearchFirstEnabled(Boolean.toString(groupSearchFirstEnabled));
@@ -465,7 +465,13 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 				deltaSyncUserTimeStamp = dateFormat.format(new Date(0));
 			}
 
-			extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")(|(uSNChanged>=" + deltaSyncUserTime + ")(modifyTimestamp>=" + deltaSyncUserTimeStamp + "Z))";
+			// Fix RANGER-1957: Perform full sync when incremental sync is not enabled
+			// Fix RANGER-3973: remove uSNChanged and modifyTimestamp from filter when delta sync is disabled
+			if (!config.isDeltaSyncEnabled()) {
+				extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")";
+			} else {
+				extendedUserSearchFilter = "(objectclass=" + userObjectClass + ")(|(uSNChanged>=" + deltaSyncUserTime + ")(modifyTimestamp>=" + deltaSyncUserTimeStamp + "Z))";
+			}
 
 			if (userSearchFilter != null && !userSearchFilter.trim().isEmpty()) {
 				String customFilter = userSearchFilter.trim();
@@ -702,12 +708,17 @@ public class LdapUserGroupBuilder implements UserGroupSource {
 			}
 
 			if (!config.isDeltaSyncEnabled() || (computeDeletes)) {
-				// Perform full sync when incremental sync is not enabled
 				deltaSyncGroupTime = 0;
 				deltaSyncGroupTimeStamp = dateFormat.format(new Date(0));
 			}
-
-			extendedAllGroupsSearchFilter = "(&"  + extendedGroupSearchFilter + "(|(uSNChanged>=" + deltaSyncGroupTime + ")(modifyTimestamp>=" + deltaSyncGroupTimeStamp + "Z)))";
+			
+			// Perform delta sync when incremental sync is enabled
+			// Fix RANGER-3973: remove uSNChanged and modifyTimestamp from filter when delta sync is disabled
+			if (config.isDeltaSyncEnabled()) {
+				extendedAllGroupsSearchFilter = "(&"  + extendedGroupSearchFilter + "(|(uSNChanged>=" + deltaSyncGroupTime + ")(modifyTimestamp>=" + deltaSyncGroupTimeStamp + "Z)))";
+			} else {
+				extendedAllGroupsSearchFilter = "(&"  + extendedGroupSearchFilter + ")";
+			}
 
 			LOG.info("extendedAllGroupsSearchFilter = " + extendedAllGroupsSearchFilter);
 			for (int ou=0; ou<groupSearchBase.length; ou++) {
