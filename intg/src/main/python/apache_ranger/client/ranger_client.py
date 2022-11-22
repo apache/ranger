@@ -19,7 +19,6 @@
 
 import json
 import logging
-import os
 from apache_ranger.exceptions                 import RangerServiceException
 from apache_ranger.model.ranger_base          import RangerBase
 from apache_ranger.model.ranger_policy        import RangerPolicy
@@ -31,6 +30,7 @@ from apache_ranger.model.ranger_service_tags  import RangerServiceTags
 from apache_ranger.utils                      import *
 from requests                                 import Session
 from requests                                 import Response
+from urllib.parse                             import urljoin
 
 LOG = logging.getLogger(__name__)
 
@@ -402,7 +402,7 @@ class RESTResponse(RangerBase):
 
 class RangerClientHttp:
     def __init__(self, url, auth):
-        self.url          = url
+        self.url          = url.rstrip('/')
         self.session      = Session()
         self.session.auth = auth
 
@@ -417,7 +417,7 @@ class RangerClientHttp:
         if request_data:
             params['data'] = json.dumps(request_data)
 
-        path = os.path.join(self.url, api.path)
+        path = urljoin(self.url, api.path.lstrip('/'))
 
         if LOG.isEnabledFor(logging.DEBUG):
             LOG.debug("------------------------------------------------------")
