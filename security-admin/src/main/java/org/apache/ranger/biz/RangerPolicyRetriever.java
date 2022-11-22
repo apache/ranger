@@ -30,6 +30,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyLabel;
@@ -63,6 +64,8 @@ public class RangerPolicyRetriever {
 
 	private final PlatformTransactionManager  txManager;
 	private final TransactionTemplate         txTemplate;
+
+	public static  final Integer POLICY_TRX_TIMEOUT= PropertiesUtil.getIntProperty("ranger.policy.retriever.transaction.timeout",-1);
 
 	public RangerPolicyRetriever(RangerDaoManager daoMgr, PlatformTransactionManager txManager) {
 		this.daoMgr     = daoMgr;
@@ -133,6 +136,7 @@ public class RangerPolicyRetriever {
 		public void run() {
 			try {
 				txTemplate.setReadOnly(true);
+				txTemplate.setTimeout(POLICY_TRX_TIMEOUT);
 				policies = txTemplate.execute(new TransactionCallback<List<RangerPolicy>>() {
 					@Override
 					public List<RangerPolicy> doInTransaction(TransactionStatus status) {

@@ -681,4 +681,8 @@
 		<name>ranger.allow.kerberos.auth.login.browser</name>
 		<value>false</value>
 	</property>
+	<property>
+		<name>ranger.policy.retriever.transaction.timeout</name>
+		<value>30</value>
+	</property>
 </configuration>
