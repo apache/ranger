@@ -210,8 +210,8 @@
         <zookeeper.version>3.4.14</zookeeper.version>
         <codehaus.woodstox.stax2api.version>3.1.4</codehaus.woodstox.stax2api.version>
         <fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>
-        <fasterxml.jackson.version>2.13.2</fasterxml.jackson.version>
-        <fasterxml.jackson.databind.version>2.13.2.2</fasterxml.jackson.databind.version>
+        <fasterxml.jackson.version>2.14.0</fasterxml.jackson.version>
+        <fasterxml.jackson.databind.version>2.14.0</fasterxml.jackson.databind.version>
         <kstruct.gethostname4j.version>1.0.0</kstruct.gethostname4j.version>
         <jna.version>5.7.0</jna.version>
         <jna-platform.version>5.7.0</jna-platform.version>
