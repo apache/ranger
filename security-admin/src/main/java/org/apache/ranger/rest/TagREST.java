@@ -934,7 +934,7 @@ public class TagREST {
 
         try {
             RangerTagResourceMap exist = validator.preDeleteTagResourceMapByGuid(guid);
-            tagStore.deleteServiceResource(exist.getId());
+            tagStore.deleteTagResourceMap(exist.getId());
         } catch(Exception excp) {
             LOG.error("deleteTagResourceMapByGuid(" + guid + ") failed", excp);
 

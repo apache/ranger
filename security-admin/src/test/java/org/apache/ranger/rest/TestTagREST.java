@@ -1184,7 +1184,7 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 		try {
-			Mockito.doNothing().when(tagStore).deleteServiceResource(oldTagResourceMap.getId());
+			Mockito.doNothing().when(tagStore).deleteTagResourceMap(oldTagResourceMap.getId());
 		} catch (Exception e) {
 		}
 		
@@ -1197,7 +1197,7 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 		try {
-			Mockito.verify(tagStore).deleteServiceResource(oldTagResourceMap.getId());
+			Mockito.verify(tagStore).deleteTagResourceMap(oldTagResourceMap.getId());
 		} catch (Exception e) {
 		}
 	}
