@@ -101,6 +101,7 @@
             <include>org.apache.hbase:hbase-protocol:jar:${hbase.version}</include>
             <include>org.apache.hbase:hbase-server:jar:${hbase.version}</include>
             <include>org.apache.hbase:hbase-protocol-shaded:jar:${hbase.version}</include>
+            <include>org.apache.hbase:hbase-shaded-client:jar:${hbase.version}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-protobuf:jar:${hbase-shaded-protobuf}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-netty:jar:${hbase-shaded-netty}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-miscellaneous:jar:${hbase-shaded-miscellaneous}</include>
