@@ -94,7 +94,7 @@
         <codehaus.jackson.version>1.9.13</codehaus.jackson.version>
         <commons.beanutils.version>1.9.4</commons.beanutils.version>
         <commons.cli.version>1.2</commons.cli.version>
-        <commons.codec.version>1.12</commons.codec.version>
+        <commons.codec.version>1.15</commons.codec.version>
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.21</commons.compress.version>
         <commons.configuration1.version>1.10</commons.configuration1.version>
@@ -108,6 +108,7 @@
         <commons.math.version>2.2</commons.math.version>
         <commons.net.version>3.6</commons.net.version>
         <commons.pool.version>1.6</commons.pool.version>
+        <commons.text.version>1.10.0</commons.text.version>
         <curator.test.version>2.12.0</curator.test.version>
         <derby.version>10.11.1.1</derby.version>
         <dnsjava.version>2.1.7</dnsjava.version>
@@ -117,6 +118,7 @@
         <spotbugs.plugin.version>4.5.0.0</spotbugs.plugin.version>
         <google.guava.version>27.0-jre</google.guava.version>
         <googlecode.log4jdbc.version>1.2</googlecode.log4jdbc.version>
+        <graalvm.version>22.3.0</graalvm.version>
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop.version>3.3.0</hadoop.version>
@@ -148,7 +150,7 @@
         <jersey-server.version>1.19.3</jersey-server.version>
         <jersey-spring.version>1.19.3</jersey-spring.version>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
-        <jettison.version>1.1</jettison.version>
+        <jettison.version>1.5.2</jettison.version>
         <jetty-client.version>9.4.44.v20210927</jetty-client.version>
         <jline.version>0.9.94</jline.version>
         <jopt-simple.version>3.2</jopt-simple.version>
@@ -173,7 +175,7 @@
         <mockito.version>3.0.0</mockito.version>
         <mockito.all.version>1.10.19</mockito.all.version>
         <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
-        <netty-all.version>4.1.78.Final</netty-all.version>
+        <netty-all.version>4.1.85.Final</netty-all.version>
         <noggit.version>0.8</noggit.version>
         <orc.core.version>1.6.7</orc.core.version>
         <owasp-java-html-sanitizer.version>20211018.2</owasp-java-html-sanitizer.version>
@@ -195,9 +197,9 @@
         <slf4j.version>1.7.32</slf4j.version>
         <solr.version>8.11.2</solr.version>
         <spring-ldap-core.version>2.3.8.RELEASE</spring-ldap-core.version>
-        <springframework.security.version>5.7.2</springframework.security.version>
-        <springframework.test.version>5.3.21</springframework.test.version>
-        <springframework.version>5.3.21</springframework.version>
+        <springframework.security.version>5.7.5</springframework.security.version>
+        <springframework.test.version>5.3.23</springframework.test.version>
+        <springframework.version>5.3.23</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
@@ -207,8 +209,8 @@
         <zookeeper.version>3.4.14</zookeeper.version>
         <codehaus.woodstox.stax2api.version>3.1.4</codehaus.woodstox.stax2api.version>
         <fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>
-        <fasterxml.jackson.version>2.13.2</fasterxml.jackson.version>
-        <fasterxml.jackson.databind.version>2.13.2.2</fasterxml.jackson.databind.version>
+        <fasterxml.jackson.version>2.14.0</fasterxml.jackson.version>
+        <fasterxml.jackson.databind.version>2.14.0</fasterxml.jackson.databind.version>
         <kstruct.gethostname4j.version>1.0.0</kstruct.gethostname4j.version>
         <jna.version>5.7.0</jna.version>
         <jna-platform.version>5.7.0</jna-platform.version>
@@ -1178,6 +1180,10 @@
                         <exclude>**/package-lock.json</exclude>
                         <exclude>**/ranger_es_schema.json</exclude>
                         <exclude>**/venv/**</exclude>
+                        <exclude>**/requirements.txt</exclude>
+                        <exclude>**/__init__.py</exclude>
+                        <exclude>**/default_primary_config.json</exclude>
+                        <exclude>**/default_secondary_config.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>

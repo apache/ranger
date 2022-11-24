@@ -31,6 +31,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -38,7 +39,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -427,6 +428,60 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		this.displayName = displayName;
 	}
 
+	public void dedupStrings(Map<String, String> strTbl) {
+		name        = StringUtil.dedupString(name, strTbl);
+		displayName = StringUtil.dedupString(displayName, strTbl);
+		implClass   = StringUtil.dedupString(implClass, strTbl);
+		label       = StringUtil.dedupString(label, strTbl);
+		description = StringUtil.dedupString(description, strTbl);
+		rbKeyLabel  = StringUtil.dedupString(rbKeyLabel, strTbl);
+		options     = StringUtil.dedupStringsMap(options, strTbl);
+
+		if (configs != null) {
+			for (RangerServiceConfigDef config : configs) {
+				config.dedupStrings(strTbl);
+			}
+		}
+
+		if (resources != null) {
+			for (RangerResourceDef resource : resources) {
+				resource.dedupStrings(strTbl);
+			}
+		}
+
+		if (accessTypes != null) {
+			for (RangerAccessTypeDef accessType : accessTypes) {
+				accessType.dedupStrings(strTbl);
+			}
+		}
+
+		if (policyConditions != null) {
+			for (RangerPolicyConditionDef policyCondition : policyConditions) {
+				policyCondition.dedupStrings(strTbl);
+			}
+		}
+
+		if (contextEnrichers != null) {
+			for (RangerContextEnricherDef contextEnricher : contextEnrichers) {
+				contextEnricher.dedupStrings(strTbl);
+			}
+		}
+
+		if (enums != null) {
+			for (RangerEnumDef enu : enums) {
+				enu.dedupStrings(strTbl);
+			}
+		}
+
+		if (dataMaskDef != null) {
+			dataMaskDef.dedupStrings(strTbl);
+		}
+
+		if (rowFilterDef != null) {
+			rowFilterDef.dedupStrings(strTbl);
+		}
+	}
+
 	@Override
 	public String toString( ) {
 		StringBuilder sb = new StringBuilder();
@@ -536,7 +591,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -627,6 +682,14 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.defaultIndex = (defaultIndex != null && this.elements.size() > defaultIndex) ? defaultIndex : 0;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			name = StringUtil.dedupString(name, strTbl);
+
+			for (RangerEnumElementDef element : elements) {
+				element.dedupStrings(strTbl);
+			}
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -704,7 +767,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -783,6 +846,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.rbKeyLabel = rbKeyLabel;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			name       = StringUtil.dedupString(name, strTbl);
+			label      = StringUtil.dedupString(label, strTbl);
+			rbKeyLabel = StringUtil.dedupString(rbKeyLabel, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -853,7 +922,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1092,6 +1161,21 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.rbKeyValidationMessage = rbKeyValidationMessage;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			name                   = StringUtil.dedupString(name, strTbl);
+			type                   = StringUtil.dedupString(type, strTbl);
+			subType                = StringUtil.dedupString(subType, strTbl);
+			defaultValue           = StringUtil.dedupString(defaultValue, strTbl);
+			validationRegEx        = StringUtil.dedupString(validationRegEx, strTbl);
+			validationMessage      = StringUtil.dedupString(validationMessage, strTbl);
+			uiHint                 = StringUtil.dedupString(uiHint, strTbl);
+			label                  = StringUtil.dedupString(label, strTbl);
+			description            = StringUtil.dedupString(description, strTbl);
+			rbKeyLabel             = StringUtil.dedupString(rbKeyLabel, strTbl);
+			rbKeyDescription       = StringUtil.dedupString(rbKeyDescription, strTbl);
+			rbKeyValidationMessage = StringUtil.dedupString(rbKeyValidationMessage, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -1241,7 +1325,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1602,6 +1686,23 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 		    this.isValidLeaf = isValidLeaf;
         }
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			name                   = StringUtil.dedupString(name, strTbl);
+			type                   = StringUtil.dedupString(type, strTbl);
+			parent                 = StringUtil.dedupString(parent, strTbl);
+			matcher                = StringUtil.dedupString(matcher, strTbl);
+			matcherOptions         = StringUtil.dedupStringsMap(matcherOptions, strTbl);
+			validationRegEx        = StringUtil.dedupString(validationRegEx, strTbl);
+			validationMessage      = StringUtil.dedupString(validationMessage, strTbl);
+			uiHint                 = StringUtil.dedupString(uiHint, strTbl);
+			label                  = StringUtil.dedupString(label, strTbl);
+			description            = StringUtil.dedupString(description, strTbl);
+			rbKeyLabel             = StringUtil.dedupString(rbKeyLabel, strTbl);
+			rbKeyDescription       = StringUtil.dedupString(rbKeyDescription, strTbl);
+			rbKeyValidationMessage = StringUtil.dedupString(rbKeyValidationMessage, strTbl);
+			accessTypeRestrictions = StringUtil.dedupStringsSet(accessTypeRestrictions, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -1816,7 +1917,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -1931,6 +2032,13 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			}
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			name          = StringUtil.dedupString(name, strTbl);
+			label         = StringUtil.dedupString(label, strTbl);
+			rbKeyLabel    = StringUtil.dedupString(rbKeyLabel, strTbl);
+			impliedGrants = StringUtil.dedupStringsCollection(impliedGrants, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -2018,7 +2126,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -2229,6 +2337,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.rbKeyValidationMessage = rbKeyValidationMessage;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			name                   = StringUtil.dedupString(name, strTbl);
+			evaluator              = StringUtil.dedupString(evaluator, strTbl);
+			evaluatorOptions       = StringUtil.dedupStringsMap(evaluatorOptions, strTbl);
+			validationRegEx        = StringUtil.dedupString(validationRegEx, strTbl);
+			validationMessage      = StringUtil.dedupString(validationMessage, strTbl);
+			uiHint                 = StringUtil.dedupString(uiHint, strTbl);
+			label                  = StringUtil.dedupString(label, strTbl);
+			description            = StringUtil.dedupString(description, strTbl);
+			rbKeyLabel             = StringUtil.dedupString(rbKeyLabel, strTbl);
+			rbKeyDescription       = StringUtil.dedupString(rbKeyDescription, strTbl);
+			rbKeyValidationMessage = StringUtil.dedupString(rbKeyValidationMessage, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -2373,7 +2495,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -2452,6 +2574,12 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.enricherOptions = enricherOptions == null ? new HashMap<String, String>() : enricherOptions;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			name            = StringUtil.dedupString(name, strTbl);
+			enricher        = StringUtil.dedupString(enricher, strTbl);
+			enricherOptions = StringUtil.dedupStringsMap(enricherOptions, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -2524,7 +2652,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -2611,6 +2739,26 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			if(resources != null) {
 				this.resources.addAll(resources);
+			}
+		}
+
+		public void dedupStrings(Map<String, String> strTbl) {
+			if (maskTypes != null) {
+				for (RangerDataMaskTypeDef maskType : maskTypes) {
+					maskType.dedupStrings(strTbl);
+				}
+			}
+
+			if (accessTypes != null) {
+				for (RangerAccessTypeDef accessType : accessTypes) {
+					accessType.dedupStrings(strTbl);
+				}
+			}
+
+			if (resources != null) {
+				for (RangerResourceDef resource : resources) {
+					resource.dedupStrings(strTbl);
+				}
 			}
 		}
 
@@ -2701,7 +2849,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -2855,6 +3003,16 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 			this.rbKeyDescription = rbKeyDescription;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			name             = StringUtil.dedupString(name, strTbl);
+			label            = StringUtil.dedupString(label, strTbl);
+			description      = StringUtil.dedupString(description, strTbl);
+			transformer      = StringUtil.dedupString(transformer, strTbl);
+			dataMaskOptions  = StringUtil.dedupStringsMap(dataMaskOptions, strTbl);
+			rbKeyLabel       = StringUtil.dedupString(rbKeyLabel, strTbl);
+			rbKeyDescription = StringUtil.dedupString(rbKeyDescription, strTbl);
+		}
+
 		@Override
 		public String toString( ) {
 			StringBuilder sb = new StringBuilder();
@@ -2952,7 +3110,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	}
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -3015,6 +3173,20 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 
 			if(resources != null) {
 				this.resources.addAll(resources);
+			}
+		}
+
+		public void dedupStrings(Map<String, String> strTbl) {
+			if (accessTypes != null) {
+				for (RangerAccessTypeDef accessType : accessTypes) {
+					accessType.dedupStrings(strTbl);
+				}
+			}
+
+			if (resources != null) {
+				for (RangerResourceDef resource : resources) {
+					resource.dedupStrings(strTbl);
+				}
 			}
 		}
 

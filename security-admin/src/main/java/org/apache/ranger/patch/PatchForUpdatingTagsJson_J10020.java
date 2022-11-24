@@ -828,6 +828,10 @@ public class PatchForUpdatingTagsJson_J10020 extends BaseLoader {
                         String attributeName = xTagAttribute.getName();
                         String attributeValue = xTagAttribute.getValue();
 
+                        if (tag.getAttributes() == null) {
+                            tag.setAttributes(new HashMap<>());
+                        }
+
                         tag.getAttributes().put(attributeName, attributeValue);
                     } else if (xTagAttribute.getTagId().compareTo(tag.getId()) > 0) {
                         if (iterTagAttribute.hasPrevious()) {

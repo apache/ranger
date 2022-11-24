@@ -165,17 +165,15 @@ public class RoleRefUpdater {
 		XXRoleRefGroupDao xRoleGroupDao = daoMgr.getXXRoleRefGroup();
 		XXRoleRefRoleDao xRoleRoleDao = daoMgr.getXXRoleRefRole();
 
-		for (XXRoleRefUser xxRoleRefUser : xRoleUserDao.findByRoleId(roleId)) {
-			xRoleUserDao.remove(xxRoleRefUser);
-		}
+		List<Long> xxRoleRefUserIds = xRoleUserDao.findIdsByRoleId(roleId);
+		xRoleUserDao.deleteRoleRefUserByIds(xxRoleRefUserIds);
 
-		for (XXRoleRefGroup xxRoleRefGroup : xRoleGroupDao.findByRoleId(roleId)) {
-			xRoleGroupDao.remove(xxRoleRefGroup);
-		}
+		List<Long> xxRoleRefGroupByIds = xRoleGroupDao.findIdsByRoleId(roleId);
+		xRoleGroupDao.deleteRoleRefGroupByIds(xxRoleRefGroupByIds);
 
-		for (XXRoleRefRole xxRoleRefRole : xRoleRoleDao.findByRoleId(roleId)) {
-			xRoleRoleDao.remove(xxRoleRefRole);
-		}
+		List<Long> xxRoleRefRoleIds = xRoleRoleDao.findIdsByRoleId(roleId);
+		xRoleRoleDao.deleteRoleRefRoleByIds(xxRoleRefRoleIds);
+
 		return true;
 	}
 
@@ -296,7 +294,7 @@ public class RoleRefUpdater {
 							ret = xUser.getId();
 						}
 					} else {
-						LOG.error("serviceConfigUser:[" + name + "] creation failed");
+						LOG.warn("serviceConfigUser:[" + name + "] creation failed. This may be a transient/spurious condition that may correct itself when transaction is committed");
 					}
 				}
 				break;

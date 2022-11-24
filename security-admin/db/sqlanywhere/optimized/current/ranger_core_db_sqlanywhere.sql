@@ -215,9 +215,9 @@ create table dbo.x_portal_user(
 	email varchar(512) DEFAULT NULL NULL,
 	status int DEFAULT 0 NOT NULL,
 	user_src int DEFAULT 0 NOT NULL,
-	notes varchar(4000) DEFAULT NULL NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
-	sync_source varchar(4000) DEFAULT NULL NULL,
+	notes text DEFAULT NULL NULL,
+	other_attributes text DEFAULT NULL NULL,
+	sync_source text DEFAULT NULL NULL,
 	old_passwords text DEFAULT NULL,
 	password_updated_time datetime DEFAULT NULL,
 	CONSTRAINT x_portal_user_PK_id PRIMARY KEY CLUSTERED(id),
@@ -327,14 +327,14 @@ create table dbo.x_group(
 	added_by_id bigint DEFAULT NULL NULL,
 	upd_by_id bigint DEFAULT NULL NULL,
 	group_name varchar(767) NOT NULL,
-	descr varchar(4000) NOT NULL,
+	descr text DEFAULT NULL NULL,
 	status int DEFAULT 0 NOT NULL,
 	group_type int DEFAULT 0 NOT NULL,
 	cred_store_id bigint DEFAULT NULL NULL,
 	group_src int DEFAULT 0 NOT NULL,
 	is_visible int DEFAULT 1 NOT NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
-	sync_source varchar(4000) DEFAULT NULL NULL,
+	other_attributes text DEFAULT NULL NULL,
+	sync_source text DEFAULT NULL NULL,
 	CONSTRAINT x_group_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_group_UK_group_name UNIQUE NONCLUSTERED (group_name)
 )
@@ -358,12 +358,12 @@ create table dbo.x_user(
 	added_by_id bigint DEFAULT NULL NULL,
 	upd_by_id bigint DEFAULT NULL NULL,
 	user_name varchar(767) NOT NULL,
-	descr varchar(4000) NOT NULL,
+	descr text DEFAULT NULL NULL,
 	status int DEFAULT 0 NOT NULL,
 	cred_store_id bigint DEFAULT NULL NULL,
 	is_visible int DEFAULT 1 NOT NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
-	sync_source varchar(4000) DEFAULT NULL NULL,
+	other_attributes text DEFAULT NULL NULL,
+	sync_source text DEFAULT NULL NULL,
 	CONSTRAINT x_user_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_user_UK_user_name UNIQUE NONCLUSTERED (user_name)
 )
@@ -2264,6 +2264,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

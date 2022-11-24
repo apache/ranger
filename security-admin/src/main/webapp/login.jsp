@@ -56,7 +56,7 @@
             response.setHeader("X-Content-Type-Options", "nosniff");
             response.setHeader("X-XSS-Protection", "1; mode=block");
             response.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline';font-src 'self'");
-            response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+            response.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
             // Delete browser cache in firefox environment
             response.setHeader("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate"); // HTTP 1.1.
             response.setHeader("Pragma", "no-cache");

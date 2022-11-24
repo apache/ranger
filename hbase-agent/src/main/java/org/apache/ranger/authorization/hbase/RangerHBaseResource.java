@@ -57,10 +57,13 @@ public class RangerHBaseResource extends RangerAccessResourceImpl {
                 String tableName = (String) value;
 
                 if (!tableName.contains(NAMESPACE_SEPARATOR)) {
-                    List<String> tableNames = new ArrayList<>(2);
+                    List<String> tableNames = new ArrayList<>(3);
 
                     tableNames.add(tableName);
                     tableNames.add(DEFAULT_NAMESPACE + tableName);
+
+                    // special hanlding for table resource as Namespace in RANGER-3918
+                    tableNames.add(tableName + NAMESPACE_SEPARATOR);
 
                     value = tableNames;
                 } else if (StringUtils.startsWith(tableName, DEFAULT_NAMESPACE)) {

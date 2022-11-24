@@ -38,6 +38,22 @@ public class XXServiceDao extends BaseDao<XXService> {
 		super(daoManager);
 	}
 
+	public Long findIdByName(String name) {
+		Long ret = null;
+
+		if (name != null) {
+			try {
+				ret = getEntityManager()
+						.createNamedQuery("XXService.findIdByName", Long.class)
+						.setParameter("name", name).getSingleResult();
+			} catch (NoResultException e) {
+				// ignore
+			}
+		}
+
+		return ret;
+	}
+
 	public XXService findByName(String name) {
 		if (name == null) {
 			return null;

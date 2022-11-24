@@ -155,7 +155,7 @@ public class PatchForAtlasServiceDefUpdate_J10013 extends BaseLoader {
 				String serviceName = service.getName();
 				String serviceNewName = serviceName + suffix;
 				LOG.info("Renaming service " + serviceName + " as " + serviceNewName);
-				if (serviceDao.findByName(serviceNewName) != null) {
+				if (serviceDao.findIdByName(serviceNewName) != null) {
 					LOG.warn("Another service named " + serviceNewName + " already exists. Not renaming " + serviceName);
 					continue;
 				}

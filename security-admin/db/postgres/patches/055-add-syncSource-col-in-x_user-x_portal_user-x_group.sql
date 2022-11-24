@@ -21,17 +21,17 @@ DECLARE
 BEGIN
  select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_portal_user') and attname='sync_source';
  IF v_column_exists = 0 THEN
-  ALTER TABLE x_portal_user ADD COLUMN sync_source VARCHAR(4000) DEFAULT NULL NULL;
+  ALTER TABLE x_portal_user ADD COLUMN sync_source TEXT DEFAULT NULL NULL;
  END IF;
 
  select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_user') and attname='sync_source';
  IF v_column_exists = 0 THEN
-  ALTER TABLE x_user ADD COLUMN sync_source VARCHAR(4000) DEFAULT NULL NULL;
+  ALTER TABLE x_user ADD COLUMN sync_source TEXT DEFAULT NULL NULL;
  END IF;
 
  select count(*) into v_column_exists from pg_attribute where attrelid in(select oid from pg_class where relname='x_group') and attname='sync_source';
  IF v_column_exists = 0 THEN
-  ALTER TABLE x_group ADD COLUMN sync_source VARCHAR(4000) DEFAULT NULL NULL;
+  ALTER TABLE x_group ADD COLUMN sync_source TEXT DEFAULT NULL NULL;
  END IF;
 
 END;

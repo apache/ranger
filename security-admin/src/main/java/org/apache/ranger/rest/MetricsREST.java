@@ -55,7 +55,7 @@ public class MetricsREST {
 
     @GET
     @Path("/status")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public RangerMetrics getStatus() {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> MetricsREST.getStatus()");

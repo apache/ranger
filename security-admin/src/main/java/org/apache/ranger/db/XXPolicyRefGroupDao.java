@@ -113,8 +113,6 @@ public class XXPolicyRefGroupDao extends BaseDao<XXPolicyRefGroup>{
 			return;
 		}
 
-		getEntityManager()
-				.createNamedQuery("XXPolicyRefGroup.deleteByIds", tClass)
-				.setParameter("ids", ids).executeUpdate();
+		batchDeleteByIds("XXPolicyRefGroup.deleteByIds", ids, "ids");
 	}
 }

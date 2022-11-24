@@ -178,8 +178,9 @@ define(function(require){
 			if(! _.isEmpty(errors)){
 				return;
 			}
-			
-			
+			if(this.form.validatePolicyResource()){
+				return;
+			}
 			//validate policyItems in the policy
 			var validateObj1 = this.form.formValidation(this.form.formInputList);
 			if(!this.validatePolicyItem(validateObj1)) return;

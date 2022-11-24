@@ -88,4 +88,5 @@ public class RangerHadoopConstants {
 	public static final String AUDITLOG_IS_ENABLED_PROP 			    = "xasecure.audit.is.enabled";
 	
 	public static final String KEYMGR_URL_PROP = "hdfs.keymanager.url";
+	public static final String ACCESS_TYPE_MONITOR_HEALTH               = "monitorHealth";
 }

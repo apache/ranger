@@ -300,7 +300,7 @@ public class RangerPolicyRepository {
             auditFilterResourceTrie = null;
         } else {
             policyResourceTrie      = createResourceTrieMap(policyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
-            dataMaskResourceTrie    = createResourceTrieMap(dataMaskPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTagTrieForSpace);
+            dataMaskResourceTrie    = createResourceTrieMap(dataMaskPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
             rowFilterResourceTrie   = createResourceTrieMap(rowFilterPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
             auditFilterResourceTrie = createResourceTrieMap(auditPolicyEvaluators, options.optimizeTrieForRetrieval, options.optimizeTrieForSpace);
         }

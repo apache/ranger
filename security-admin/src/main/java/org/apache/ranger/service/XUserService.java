@@ -160,7 +160,7 @@ public class XUserService extends XUserServiceBase<XXUser, VXUser> {
 			throw restErrorUtil.createRESTException(userName + " is Not Found",
 					MessageEnums.DATA_NOT_FOUND);
 		}
-		return super.populateViewBean(xxUser);
+		return populateViewBean(xxUser);
 
 	}
 

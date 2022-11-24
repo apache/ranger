@@ -46,7 +46,9 @@ public class RangerServicePoliciesCache {
 	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
 	public static volatile RangerServicePoliciesCache sInstance = null;
-	private final int waitTimeInSeconds;
+
+	private final int     waitTimeInSeconds;
+	private final boolean dedupStrings;
 
 	private final Map<String, ServicePoliciesWrapper> servicePoliciesMap = new HashMap<>();
 
@@ -65,6 +67,7 @@ public class RangerServicePoliciesCache {
 		RangerAdminConfig config = RangerAdminConfig.getInstance();
 
 		waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+		dedupStrings      = config.getBoolean("ranger.admin.policy.dedup.strings", Boolean.TRUE);
 	}
 
 	public void dump() {
@@ -313,9 +316,8 @@ public class RangerServicePoliciesCache {
 				}
 
 				final long            startTimeMs           = System.currentTimeMillis();
+				final ServicePolicies servicePoliciesFromDb = serviceStore.getServicePolicyDeltasOrPolicies(serviceName, cachedServicePoliciesVersion);
 				final long            dbLoadTime            = System.currentTimeMillis() - startTimeMs;
-
-				ServicePolicies       servicePoliciesFromDb = serviceStore.getServicePolicyDeltasOrPolicies(serviceName, cachedServicePoliciesVersion);
 
 				if (dbLoadTime > longestDbLoadTimeInMs) {
 					longestDbLoadTimeInMs = dbLoadTime;
@@ -323,6 +325,10 @@ public class RangerServicePoliciesCache {
 				updateTime = new Date();
 
 				if (servicePoliciesFromDb != null) {
+					if (dedupStrings) {
+						servicePoliciesFromDb.dedupStrings();
+					}
+
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Successfully loaded ServicePolicies from database: ServicePolicies:[" + servicePoliciesFromDb + "]");
 					}

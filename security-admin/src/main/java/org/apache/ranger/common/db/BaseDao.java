@@ -34,6 +34,7 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.db.RangerDaoManager;
@@ -43,6 +44,24 @@ import org.slf4j.LoggerFactory;
 
 public abstract class BaseDao<T> {
 	private static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
+	private static final String PROP_BATCH_DELETE_BATCH_SIZE    = "ranger.admin.dao.batch.delete.batch.size";
+	private static final int    DEFAULT_BATCH_DELETE_BATCH_SIZE = 1000;
+	private static       int    BATCH_DELETE_BATCH_SIZE;
+
+	static {
+		try {
+			BATCH_DELETE_BATCH_SIZE = RangerAdminConfig.getInstance().getInt(PROP_BATCH_DELETE_BATCH_SIZE, DEFAULT_BATCH_DELETE_BATCH_SIZE);
+
+			if (BATCH_DELETE_BATCH_SIZE > DEFAULT_BATCH_DELETE_BATCH_SIZE) {
+				logger.warn("Configuration {}={}, which is larger than default value {}", PROP_BATCH_DELETE_BATCH_SIZE, BATCH_DELETE_BATCH_SIZE, DEFAULT_BATCH_DELETE_BATCH_SIZE);
+			}
+		} catch(Exception e) {
+			// When we get the Number format exception due to the invalid value entered into the config file.
+			BATCH_DELETE_BATCH_SIZE = DEFAULT_BATCH_DELETE_BATCH_SIZE;
+		}
+
+		logger.info(PROP_BATCH_DELETE_BATCH_SIZE + "=" + BATCH_DELETE_BATCH_SIZE);
+	}
 
 	protected RangerDaoManager daoManager;
 
@@ -109,6 +128,32 @@ public abstract class BaseDao<T> {
 
 		ret = obj;
 		return ret;
+	}
+
+	public void batchDeleteByIds(String namedQuery, List<Long> ids, String paramName) {
+		if (BATCH_DELETE_BATCH_SIZE <= 0) {
+			getEntityManager()
+				.createNamedQuery(namedQuery, tClass)
+				.setParameter(paramName, ids).executeUpdate();
+		} else {
+			for (int fromIndex = 0; fromIndex < ids.size(); fromIndex += BATCH_DELETE_BATCH_SIZE) {
+				int toIndex = fromIndex + BATCH_DELETE_BATCH_SIZE;
+
+				if (toIndex > ids.size()) {
+					toIndex = ids.size();
+				}
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("batchDeleteByIds({}, idCount={}): deleting fromIndex={}, toIndex={}", namedQuery, ids.size(), fromIndex, toIndex);
+				}
+
+				List<Long> subList = ids.subList(fromIndex, toIndex);
+
+				getEntityManager()
+						.createNamedQuery(namedQuery, tClass)
+						.setParameter(paramName, subList).executeUpdate();
+			}
+		}
 	}
 
 	public T update(T obj) {

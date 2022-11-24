@@ -169,7 +169,7 @@ public class RangerDefaultPolicyItemEvaluator extends RangerAbstractPolicyItemEv
 		if (!ret) {
 			Set<String> roles = null;
 			if (CollectionUtils.isNotEmpty(policyItem.getRoles())) {
-				roles = RangerAccessRequestUtil.getCurrentUserRolesFromContext(request.getContext());
+				roles = RangerAccessRequestUtil.getUserRoles(request);
 			}
 			ret = matchUserGroupAndOwner(user, userGroups, roles, resourceOwner);
 		}

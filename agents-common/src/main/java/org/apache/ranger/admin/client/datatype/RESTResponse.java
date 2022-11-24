@@ -33,7 +33,7 @@ import com.sun.jersey.api.client.ClientResponse;
 
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RESTResponse implements java.io.Serializable {
 	private static final Logger LOG = LoggerFactory.getLogger(RESTResponse.class);
@@ -140,7 +140,7 @@ public class RESTResponse implements java.io.Serializable {
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Message implements java.io.Serializable {
 		private String name;

@@ -380,12 +380,6 @@ public class TestUserREST {
 	}
 
 	@Test
-	public void test15SuggestUserFirstName() {
-		String op = userREST.suggestUserFirstName(firstName, request);
-		Assert.assertNull(op);
-	}
-
-	@Test
 	public void test16ChangePassword() {
 		XXPortalUser xxPUser = new XXPortalUser();
 		VXResponse vxResponseExp = new VXResponse();

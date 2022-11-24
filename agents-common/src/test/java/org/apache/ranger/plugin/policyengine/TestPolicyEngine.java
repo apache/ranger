@@ -350,6 +350,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hiveMaskingWithReqExpressions() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_hive_mask_filter_with_req_expressions.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hiveTagMasking() {
 		String[] resourceFiles = {"/policyengine/test_policyengine_tag_hive_mask.json"};
 
@@ -680,18 +687,18 @@ public class TestPolicyEngine {
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
+			if (MapUtils.isNotEmpty(test.userAttributes) || MapUtils.isNotEmpty(test.groupAttributes)) {
+				RangerUserStore userStore = new RangerUserStore();
+
+				userStore.setUserAttrMapping(test.userAttributes);
+				userStore.setGroupAttrMapping(test.groupAttributes);
+
+				RangerAccessRequestUtil.setRequestUserStoreInContext(request.getContext(), userStore);
+			}
+
 			if(test.result != null) {
                 RangerAccessResult expected = test.result;
                 RangerAccessResult result;
-
-                if (MapUtils.isNotEmpty(test.userAttributes) || MapUtils.isNotEmpty(test.groupAttributes)) {
-                    RangerUserStore userStore = new RangerUserStore();
-
-                    userStore.setUserAttrMapping(test.userAttributes);
-                    userStore.setGroupAttrMapping(test.groupAttributes);
-
-                    RangerAccessRequestUtil.setRequestUserStoreInContext(request.getContext(), userStore);
-                }
 
 				result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
@@ -898,9 +905,9 @@ public class TestPolicyEngine {
                     }
                 }
 
-                assertTrue(testCase.name, isValid == testCase.result.isValid);
-                assertTrue(testCase.name, isApplicable == testCase.result.isApplicable);
-                assertTrue(testCase.name + ", [" + validationFailures +"]", validationFailures.size() == testCase.result.validationFailureCount);
+                assertEquals(testCase.name + " - isValid (validationFailures: " + validationFailures + ")", testCase.result.isValid, isValid);
+				assertEquals(testCase.name + " - isApplicable (validationFailures: " + validationFailures + ")", testCase.result.isApplicable, isApplicable);
+                assertEquals(testCase.name + " - validationFailureCount (validationFailures: " + validationFailures +")", testCase.result.validationFailureCount, validationFailures.size());
             }
         }
         TimeZone.setDefault(defaultTZ);

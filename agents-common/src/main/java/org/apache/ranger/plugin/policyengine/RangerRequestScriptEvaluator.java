@@ -55,6 +55,7 @@ public final class RangerRequestScriptEvaluator {
 	private static final String DEFAULT_RANGER_TAG_ATTRIBUTE_DATE_FORMAT    = "yyyy/MM/dd";
 	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT_NAME = "ATLAS_DATE_FORMAT";
 	private static final String DEFAULT_ATLAS_TAG_ATTRIBUTE_DATE_FORMAT     = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
+	private static final String SCRIPT_SAFE_PREEXEC                         = "exit=null;quit=null;";
 	private static final String SCRIPT_PREEXEC                              = SCRIPT_VAR__CTX + "=JSON.parse(" + SCRIPT_VAR__CTX_JSON + "); J=JSON.stringify;" +
                                                                                  SCRIPT_VAR_REQ + "=" + SCRIPT_VAR__CTX + "." + SCRIPT_FIELD_REQUEST + ";" +
                                                                                  SCRIPT_VAR_RES + "=" + SCRIPT_VAR_REQ + "." + SCRIPT_FIELD_RESOURCE + ";" +
@@ -117,25 +118,37 @@ public final class RangerRequestScriptEvaluator {
 
 
 	public static boolean needsJsonCtxEnabled(String script) {
-		Matcher matcher = JSON_VAR_NAMES_PATTERN.matcher(script);
+		boolean ret = false;
 
-		boolean ret = matcher.find();
+		if (script != null) {
+			Matcher matcher = JSON_VAR_NAMES_PATTERN.matcher(script);
+
+			ret = matcher.find();
+		}
 
 		return ret;
 	}
 
 	public static boolean hasUserAttributeReference(String script) {
-		Matcher matcher = USER_ATTRIBUTES_PATTERN.matcher(script);
+		boolean ret = false;
 
-		boolean ret = matcher.find();
+		if (script != null) {
+			Matcher matcher = USER_ATTRIBUTES_PATTERN.matcher(script);
+
+			ret = matcher.find();
+		}
 
 		return ret;
 	}
 
 	public static boolean hasGroupAttributeReference(String script) {
-		Matcher matcher = GROUP_ATTRIBUTES_PATTERN.matcher(script);
+		boolean ret = false;
 
-		boolean ret = matcher.find();
+		if (script != null) {
+			Matcher matcher = GROUP_ATTRIBUTES_PATTERN.matcher(script);
+
+			ret = matcher.find();
+		}
 
 		return ret;
 	}
@@ -191,19 +204,31 @@ public final class RangerRequestScriptEvaluator {
 	}
 
 	private Object evaluateScript(ScriptEngine scriptEngine, String script, boolean enableJsonCtx) {
-		Object              ret        = null;
-		Bindings            bindings   = scriptEngine.createBindings();
-		RangerTagForEval    currentTag = this.getCurrentTag();
-		Map<String, String> tagAttribs = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+		Object              ret           = null;
+		Bindings            bindings      = scriptEngine.createBindings();
+		RangerTagForEval    currentTag    = this.getCurrentTag();
+		Map<String, String> tagAttribs    = currentTag != null ? currentTag.getAttributes() : Collections.emptyMap();
+		boolean             hasIncludes   = StringUtils.contains(script, ".includes(");
+		boolean             hasIntersects = StringUtils.contains(script, ".intersects(");
 
 		bindings.put(SCRIPT_VAR_ctx, this);
 		bindings.put(SCRIPT_VAR_tag, currentTag);
 		bindings.put(SCRIPT_VAR_tagAttr, tagAttribs);
 
+		script = SCRIPT_SAFE_PREEXEC + script;
+
 		if (enableJsonCtx) {
 			bindings.put(SCRIPT_VAR__CTX_JSON, this.toJson());
 
 			script = SCRIPT_PREEXEC + script;
+		}
+
+		if (hasIncludes) {
+			script = SCRIPT_POLYFILL_INCLUDES + script;
+		}
+
+		if (hasIntersects) {
+			script = SCRIPT_POLYFILL_INTERSECTS + script;
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -226,6 +251,8 @@ public final class RangerRequestScriptEvaluator {
 		} catch (ScriptException exception) {
 			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script," +
 					" exception=" + exception);
+		} catch (Throwable t) {
+			LOG.error("RangerRequestScriptEvaluator.evaluateScript(): failed to evaluate script", t);
 		} finally {
 			RangerPerfTracer.log(perf);
 		}
@@ -350,7 +377,9 @@ public final class RangerRequestScriptEvaluator {
 
 	public Set<String> getUserGroups() { return accessRequest.getUserGroups(); }
 
-	public Set<String> getUserRoles() { return accessRequest.getUserRoles(); }
+	public Set<String> getUserRoles() {
+		return RangerAccessRequestUtil.getUserRoles(accessRequest);
+	}
 
 	public Date getAccessTime() { return accessRequest.getAccessTime() != null ? accessRequest.getAccessTime() : new Date(); }
 

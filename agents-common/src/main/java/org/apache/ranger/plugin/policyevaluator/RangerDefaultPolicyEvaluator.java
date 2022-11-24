@@ -794,7 +794,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Using ACL Summary for access evaluation. PolicyId=[" + getPolicyId() + "]");
 			}
-			Integer accessResult = lookupPolicyACLSummary(request.getUser(), request.getUserGroups(), request.getUserRoles(), request.isAccessTypeAny() || Boolean.TRUE.equals(RangerAccessRequestUtil.getIsAnyAccessInContext(request.getContext())) ? RangerPolicyEngine.ANY_ACCESS : request.getAccessType());
+			Integer accessResult = lookupPolicyACLSummary(request.getUser(), request.getUserGroups(), RangerAccessRequestUtil.getUserRoles(request), request.isAccessTypeAny() || Boolean.TRUE.equals(RangerAccessRequestUtil.getIsAnyAccessInContext(request.getContext())) ? RangerPolicyEngine.ANY_ACCESS : request.getAccessType());
 			if (accessResult != null) {
 				updateAccessResult(result, matchType, accessResult.equals(RangerPolicyEvaluator.ACCESS_ALLOWED), null);
 			} else if (getPolicy().getIsDenyAllElse()) {
@@ -1142,7 +1142,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		if(policyItem != null && CollectionUtils.isNotEmpty(policyItem.getAccesses())) {
 			for(RangerPolicyItemAccess itemAccess : policyItem.getAccesses()) {
-				if(StringUtils.equalsIgnoreCase(itemAccess.getType(), accessType)) {
+				if (itemAccess != null && StringUtils.equalsIgnoreCase(itemAccess.getType(), accessType)) {
 					ret = itemAccess;
 
 					break;

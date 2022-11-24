@@ -102,7 +102,6 @@ public class RangerAPIList {
 	public static final String SET_USER_ROLES = "UserREST.setUserRoles";
 	public static final String DEACTIVATE_USER = "UserREST.deactivateUser";
 	public static final String GET_USER_PROFILE = "UserREST.getUserProfile";
-	public static final String SUGGEST_USER_FIRST_NAME = "UserREST.suggestUserFirstName";
 	public static final String CHANGE_PASSWORD = "UserREST.changePassword";
 	public static final String CHANGE_EMAIL_ADDRESS = "UserREST.changeEmailAddress";
 

@@ -69,7 +69,7 @@ public class RangerScriptConditionEvaluator extends RangerAbstractConditionEvalu
 			LOG.debug("RangerScriptConditionEvaluator.init() - engineName=" + engineName);
 		}
 
-		scriptEngine = ScriptEngineUtil.createScriptEngine(engineName, serviceDef.getName());
+		scriptEngine = ScriptEngineUtil.createScriptEngine(serviceDef.getName());
 
 		if (scriptEngine == null) {
 			String conditionType = condition != null ? condition.getType() : null;

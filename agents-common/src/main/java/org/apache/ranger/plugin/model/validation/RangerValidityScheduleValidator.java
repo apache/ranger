@@ -49,7 +49,9 @@ public class RangerValidityScheduleValidator {
     private static final ThreadLocal<DateFormat> DATE_FORMATTER = new ThreadLocal<DateFormat>() {
         @Override
         protected DateFormat initialValue() {
-            return new SimpleDateFormat(RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION);
+            SimpleDateFormat sd = new SimpleDateFormat(RangerValiditySchedule.VALIDITY_SCHEDULE_DATE_STRING_SPECIFICATION);
+            sd.setLenient(false);
+            return sd;
         }
     };
 
@@ -183,7 +185,8 @@ public class RangerValidityScheduleValidator {
 
             if (validityInterval.getDays() < 0
                         || (validityInterval.getHours() < 0 || validityInterval.getHours() > 23)
-                        || (validityInterval.getMinutes() < 0 || validityInterval.getMinutes() > 59)) {
+                        || (validityInterval.getMinutes() < 0 || validityInterval.getMinutes() > 59)
+                        || (validityInterval.getDays() == 0 && validityInterval.getHours() == 0 && validityInterval.getMinutes() == 0 )) {
                 validationFailures.add(new ValidationFailureDetails(0, "interval", "", false, true, false, "invalid interval"));
                 ret = false;
             }
@@ -224,6 +227,26 @@ public class RangerValidityScheduleValidator {
             // Internally we use Calendar values for validation and evaluation
             int minimum = field == RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.month ? field.minimum + 1 : field.minimum;
             int maximum = field == RangerValidityRecurrence.RecurrenceSchedule.ScheduleFieldSpec.month ? field.maximum + 1 : field.maximum;
+            ret = validateRanges(recurrence, field, minimum, maximum, validationFailures);
+        }
+
+        if(ret) {
+            final int minimum;
+            final int maximum;
+
+            if (field == RecurrenceSchedule.ScheduleFieldSpec.year) {
+                SimpleDateFormat formatter = new SimpleDateFormat("yyyy");
+
+                minimum = Integer.valueOf(formatter.format(startTime));
+                maximum = Integer.valueOf(formatter.format(endTime));
+            } else if (field == RecurrenceSchedule.ScheduleFieldSpec.month) {
+                minimum = field.minimum + 1;
+                maximum = field.maximum + 1;
+            } else {
+                minimum = field.minimum;
+                maximum = field.maximum;
+            }
+
             ret = validateRanges(recurrence, field, minimum, maximum, validationFailures);
         }
         return ret;
@@ -340,36 +363,47 @@ public class RangerValidityScheduleValidator {
             if (StringUtils.isNotEmpty(spec)) {
                 // Range
                 if (spec.startsWith("-") || spec.endsWith("-")) {
-                    validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect range spec"));
+                    validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect range spec: " + spec));
                     ret = false;
                 } else {
                     String[] ranges = StringUtils.split(spec, "-");
                     if (ranges.length > 2) {
-                        validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect range spec"));
+                        validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect range spec: " + spec));
                         ret = false;
                     } else if (ranges.length == 2) {
                         int val1 = minValidValue, val2 = maxValidValue;
                         if (!StringUtils.equals(ranges[0], RangerValidityRecurrence.RecurrenceSchedule.WILDCARD)) {
                             val1 = Integer.valueOf(ranges[0]);
-                            if (val1 < minValidValue || val1 > maxValidValue) {
-                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect lower range value"));
-                                ret = false;
-                            }
                         } else {
                             value = RangerValidityRecurrence.RecurrenceSchedule.WILDCARD;
                         }
+
                         if (!StringUtils.equals(ranges[1], RangerValidityRecurrence.RecurrenceSchedule.WILDCARD)) {
                             val2 = Integer.valueOf(ranges[1]);
-                            if (val1 < minValidValue || val2 > maxValidValue) {
-                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect upper range value"));
-                                ret = false;
-                            }
                         } else {
                             value = RangerValidityRecurrence.RecurrenceSchedule.WILDCARD;
                         }
+
+                        if (field == RecurrenceSchedule.ScheduleFieldSpec.year) { // for year, one bound (lower or upper) can be outside the range
+                            if (val1 < minValidValue && val2 > maxValidValue) {
+                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect range: (" + val1 + ", " + val2 + "). valid range: (" + minValidValue + ", " + maxValidValue + ")"));
+                                ret = false;
+                            }
+                        } else { // for month/dayOfMonth/dayOfWeek/hour/minute both bounds (lower and upper) must be within range
+                            if (val1 < minValidValue || val1 > maxValidValue) {
+                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect lower range: " + val1 + ". valid range: (" + minValidValue + ", " + maxValidValue + ")"));
+                                ret = false;
+                            }
+
+                            if (val2 < minValidValue || val2 > maxValidValue) {
+                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect upper range: " + val2 + ". valid range: (" + minValidValue + ", " + maxValidValue + ")"));
+                                ret = false;
+                            }
+                        }
+
                         if (ret) {
                             if (val1 >= val2) {
-                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect range"));
+                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect range: min=" + val1 + ", max=" + val2));
                                 ret = false;
                             } else {
                                 value = RangerValidityRecurrence.RecurrenceSchedule.WILDCARD;
@@ -389,7 +423,7 @@ public class RangerValidityScheduleValidator {
                         if (!StringUtils.equals(ranges[0], RangerValidityRecurrence.RecurrenceSchedule.WILDCARD)) {
                             int val = Integer.valueOf(ranges[0]);
                             if (val < minValidValue || val > maxValidValue) {
-                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect value"));
+                                validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "incorrect value: " + val + ". Valid range: (" + minValidValue + "-" + maxValidValue + ")"));
                                 ret = false;
                             } else {
                                 if (!StringUtils.equals(value, RangerValidityRecurrence.RecurrenceSchedule.WILDCARD)) {
@@ -414,7 +448,7 @@ public class RangerValidityScheduleValidator {
                 int upper = range.upper;
                 for (int j = i+1; j < rangeOfValues.size(); j++) {
                     Range r = rangeOfValues.get(j);
-                    if (upper < r.upper) {
+                    if (upper > r.lower) {
                         validationFailures.add(new ValidationFailureDetails(0, fieldName, "", false, true, false, "overlapping range value"));
                         ret = false;
                     }

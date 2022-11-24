@@ -36,7 +36,6 @@ public class RangerRequestExprResolver {
     private static final Logger LOG = LoggerFactory.getLogger(RangerRequestExprResolver.class);
 
     private static final String  REGEX_GROUP_EXPR   = "expr";
-    private static final String  SCRIPT_ENGINE_NAME = "JavaScript";
     private static final Pattern PATTERN            = Pattern.compile("\\$\\{\\{(?<" + REGEX_GROUP_EXPR + ">.*?)\\}\\}");
     public  static final String  EXPRESSION_START   = "${{";
 
@@ -100,7 +99,7 @@ public class RangerRequestExprResolver {
 
         if (hasTokens) {
             RangerRequestScriptEvaluator scriptEvaluator = new RangerRequestScriptEvaluator(request);
-            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(SCRIPT_ENGINE_NAME, serviceType);
+            ScriptEngine                 scriptEngine    = ScriptEngineUtil.createScriptEngine(serviceType);
             StringBuffer                 sb              = new StringBuffer();
             Matcher                      matcher         = PATTERN.matcher(str);
 
@@ -124,22 +123,31 @@ public class RangerRequestExprResolver {
     }
 
     public static boolean hasExpressions(String str) {
-        Matcher matcher = PATTERN.matcher(str);
+        boolean ret = false;
 
-        return matcher.find();
+        if (str != null) {
+            Matcher matcher = PATTERN.matcher(str);
+
+            ret = matcher.find();
+        }
+
+        return ret;
     }
 
     public static boolean hasUserAttributeInExpression(String str) {
         boolean ret = false;
-        Matcher matcher = PATTERN.matcher(str);
 
-        while (matcher.find()) {
-            String expr = matcher.group(REGEX_GROUP_EXPR);
+        if (str != null) {
+            Matcher matcher = PATTERN.matcher(str);
 
-            if (RangerRequestScriptEvaluator.hasUserAttributeReference(expr)) {
-                ret = true;
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
 
-                break;
+                if (RangerRequestScriptEvaluator.hasUserAttributeReference(expr)) {
+                    ret = true;
+
+                    break;
+                }
             }
         }
 
@@ -147,16 +155,19 @@ public class RangerRequestExprResolver {
     }
 
     public static boolean hasGroupAttributeInExpression(String str) {
-        boolean ret     = false;
-        Matcher matcher = PATTERN.matcher(str);
+        boolean ret = false;
 
-        while (matcher.find()) {
-            String expr = matcher.group(REGEX_GROUP_EXPR);
+        if (str != null) {
+            Matcher matcher = PATTERN.matcher(str);
 
-            if (RangerRequestScriptEvaluator.hasGroupAttributeReference(expr)) {
-                ret = true;
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
 
-                break;
+                if (RangerRequestScriptEvaluator.hasGroupAttributeReference(expr)) {
+                    ret = true;
+
+                    break;
+                }
             }
         }
 
@@ -164,16 +175,19 @@ public class RangerRequestExprResolver {
     }
 
     public static boolean hasUserGroupAttributeInExpression(String str) {
-        boolean ret     = false;
-        Matcher matcher = PATTERN.matcher(str);
+        boolean ret = false;
 
-        while (matcher.find()) {
-            String expr = matcher.group(REGEX_GROUP_EXPR);
+        if (str != null) {
+            Matcher matcher = PATTERN.matcher(str);
 
-            if (RangerRequestScriptEvaluator.hasUserGroupAttributeReference(expr)) {
-                ret = true;
+            while (matcher.find()) {
+                String expr = matcher.group(REGEX_GROUP_EXPR);
 
-                break;
+                if (RangerRequestScriptEvaluator.hasUserGroupAttributeReference(expr)) {
+                    ret = true;
+
+                    break;
+                }
             }
         }
 

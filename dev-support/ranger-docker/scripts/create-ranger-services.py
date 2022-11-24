@@ -7,7 +7,9 @@ ranger_client = RangerClient('http://ranger:6080', ('admin', 'rangerR0cks!'))
 
 def service_not_exists(service):
     try:
-        ranger_client.get_service(service.name)
+        res = ranger_client.get_service(service.name)
+        if res is None:
+            return 1
     except JSONDecodeError:
         return 1
     return 0
