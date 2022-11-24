@@ -30,9 +30,13 @@ from apache_ranger.model.ranger_service_tags  import RangerServiceTags
 from apache_ranger.utils                      import *
 from requests                                 import Session
 from requests                                 import Response
+from requests.auth                            import AuthBase
+from urllib.parse                             import urlencode
 from urllib.parse                             import urljoin
 
 LOG = logging.getLogger(__name__)
+
+QUERY_PARAM_USER_DOT_NAME = 'user.name'.encode("utf-8")
 
 
 class RangerClient:
@@ -368,6 +372,21 @@ class RangerClient:
     DELETE_POLICY_DELTAS      = API(URI_POLICY_DELTAS, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
 
 
+
+class HadoopSimpleAuth(AuthBase):
+  def __init__(self, user_name):
+    self.user_name = user_name.encode("utf-8")
+
+  def __call__(self, req):
+    sep_char = '?'
+
+    if req.url.find('?') != -1:
+      sep_char = '&'
+
+    req.url = req.url + sep_char + urlencode({ QUERY_PARAM_USER_DOT_NAME: self.user_name })
+
+    return req
+
 class Message(RangerBase):
     def __init__(self, attrs=None):
         if attrs is None:
@@ -449,9 +468,13 @@ class RangerClientHttp:
                     if LOG.isEnabledFor(logging.DEBUG):
                         LOG.debug("<== __call_api(%s, %s, %s), result=%s", vars(api), params, request_data, response)
 
-                        LOG.debug(response.json())
+                        LOG.debug(response.content)
 
-                    ret = response.json()
+                    if response.content:
+                      try:
+                        ret = response.json()
+                      except Exception:
+                        ret = response.content
             except Exception as e:
                 print(e)
 
@@ -459,7 +482,7 @@ class RangerClientHttp:
 
                 raise RangerServiceException(api, response)
         elif response.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
-            LOG.error("Ranger admin unavailable. HTTP Status: %s", HTTPStatus.SERVICE_UNAVAILABLE)
+            LOG.error("Ranger server at %s unavailable. HTTP Status: %s", self.url, HTTPStatus.SERVICE_UNAVAILABLE)
 
             ret = None
         elif response.status_code == HTTPStatus.NOT_FOUND:
