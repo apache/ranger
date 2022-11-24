@@ -74,7 +74,7 @@
                     <include>org.apache.httpcomponents:httpcore</include>
                     <include>javax.xml.bind:jaxb-api</include>
                     <include>com.sun.xml.bind:jaxb-impl</include>
-                    <include>org.codehaus.jettison:jettison</include>
+                    <include>org.codehaus.jettison:jettison:jar:${jettison.version}</include>
                     <include>jline:jline</include>
                     <include>com.jcraft:jsch</include>
                     <include>com.google.code.findbugs:jsr305</include>
