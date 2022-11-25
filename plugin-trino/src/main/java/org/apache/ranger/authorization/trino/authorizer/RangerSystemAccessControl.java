@@ -397,12 +397,9 @@ public class RangerSystemAccessControl
     }
   }
 
-  /**
-   * Create table is verified on schema level
-   */
   @Override
   public void checkCanCreateTable(SystemSecurityContext context, CatalogSchemaTableName table, Map<String, Object> properties) {
-    if (!hasPermission(createResource(table.getCatalogName(), table.getSchemaTableName().getSchemaName()), context, TrinoAccessType.CREATE)) {
+    if (!hasPermission(createResource(table), context, TrinoAccessType.CREATE)) {
       LOG.debug("RangerSystemAccessControl.checkCanCreateTable(" + table.getSchemaTableName().getTableName() + ") denied");
       AccessDeniedException.denyCreateTable(table.getSchemaTableName().getTableName());
     }
@@ -488,12 +485,9 @@ public class RangerSystemAccessControl
     }
   }
 
-  /**
-   * Create view is verified on schema level
-   */
   @Override
   public void checkCanCreateView(SystemSecurityContext context, CatalogSchemaTableName view) {
-    if (!hasPermission(createResource(view.getCatalogName(), view.getSchemaTableName().getSchemaName()), context, TrinoAccessType.CREATE)) {
+    if (!hasPermission(createResource(view), context, TrinoAccessType.CREATE)) {
       LOG.debug("RangerSystemAccessControl.checkCanCreateView(" + view.getSchemaTableName().getTableName() + ") denied");
       AccessDeniedException.denyCreateView(view.getSchemaTableName().getTableName());
     }

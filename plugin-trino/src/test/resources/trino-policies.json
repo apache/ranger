@@ -293,6 +293,10 @@
         {
           "accesses": [
             {
+              "type": "create",
+              "isAllowed": true
+            },
+            {
               "type": "select",
               "isAllowed": true
             },
@@ -444,6 +448,10 @@
           "accesses": [
             {
               "type": "select",
+              "isAllowed": true
+            },
+            {
+              "type": "create",
               "isAllowed": true
             },
             {
