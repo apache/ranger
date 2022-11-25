@@ -74,13 +74,14 @@ public class RangerMasterKey implements RangerKMSMKI {
     public static Integer ITERATION_COUNT = 0;
     public static String paddingString;
 
-    private DaoManager daoManager;
+    private final RangerMasterKeyDao masterKeyDao;
 
     public RangerMasterKey() {
+        this.masterKeyDao = null;
     }
 
     public RangerMasterKey(DaoManager daoManager) {
-        this.daoManager = daoManager;
+        this.masterKeyDao = daoManager != null ? daoManager.getRangerMasterKeyDao() : null;
     }
 
     protected static String getConfig(String key, String defaultValue) {
@@ -192,6 +193,12 @@ public class RangerMasterKey implements RangerKMSMKI {
                 ITERATION_COUNT, SALT);
     }
 
+    /**
+     * Generate the master key, encrypt it and save it in the database
+     *
+     * @return true if the master key was successfully created false if master
+     * key generation was unsuccessful or the master key already exists
+     */
     @Override
     public boolean generateMasterKey(String password) throws Throwable {
         if (logger.isDebugEnabled()) {
@@ -200,7 +207,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         logger.info("Generating Master Key...");
         init();
         String encryptedMasterKey = encryptMasterKey(password);
-        String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey, daoManager);
+        String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey);
         if (savedKey != null && !savedKey.trim().equals("")) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Master Key Created with id = " + savedKey);
@@ -220,7 +227,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         }
         init();
         String encryptedMasterKey = encryptMasterKey(password, key);
-        String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey, daoManager);
+        String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey);
         if (savedKey != null && !savedKey.trim().equals("")) {
             if (logger.isDebugEnabled()) {
                 logger.debug("Master Key Created with id = " + savedKey);
@@ -285,14 +292,13 @@ public class RangerMasterKey implements RangerKMSMKI {
                 if (logger.isDebugEnabled()) {
             logger.debug("==> RangerMasterKey.generateMKFromKeySecureMK()");
         }
-                init();
-                String encryptedMasterKey = encryptMasterKey(password, key);
-                String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey, daoManager);
-                if (savedKey != null && !savedKey.trim().equals("")) {
-                        logger.debug("Master Key Created with id = " + savedKey);
-                        return true;
-                }
-                if (logger.isDebugEnabled()) {
+        init();
+        String encryptedMasterKey = encryptMasterKey(password, key);
+        String savedKey = saveEncryptedMK(paddingString + "," + encryptedMasterKey);
+        if (savedKey != null && !savedKey.trim().equals("")) {
+            logger.debug("Master Key Created with id = " + savedKey);
+        }
+        if (logger.isDebugEnabled()) {
             logger.debug("<== RangerMasterKey.generateMKFromKeySecureMK()");
         }
                 return false;
@@ -319,16 +325,15 @@ public class RangerMasterKey implements RangerKMSMKI {
             logger.debug("==> RangerMasterKey.getEncryptedMK()");
         }
         try {
-            if (daoManager != null) {
+            if (masterKeyDao != null) {
                 ArrayList ret = new ArrayList<>();
-                RangerMasterKeyDao rangerKMSDao = new RangerMasterKeyDao(daoManager);
-                List<XXRangerMasterKey> lstRangerMasterKey = rangerKMSDao.getAll();
+                List<XXRangerMasterKey> lstRangerMasterKey = masterKeyDao.getAll();
                 if (lstRangerMasterKey.size() < 1) {
                     throw new Exception("No Master Key exists");
                 } else if (lstRangerMasterKey.size() > 1) {
                     throw new Exception("More than one Master Key exists");
                 } else {
-                    XXRangerMasterKey rangerMasterKey = rangerKMSDao.getById(lstRangerMasterKey.get(0).getId());
+                    XXRangerMasterKey rangerMasterKey = masterKeyDao.getById(lstRangerMasterKey.get(0).getId());
                     String masterKeyStr = rangerMasterKey.getMasterKey();
                     if (masterKeyStr.contains(",")) {
                         getPasswordParam(masterKeyStr);
@@ -356,7 +361,7 @@ public class RangerMasterKey implements RangerKMSMKI {
         return null;
     }
 
-    private String saveEncryptedMK(String encryptedMasterKey, DaoManager daoManager) {
+    private String saveEncryptedMK(String encryptedMasterKey) {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerMasterKey.saveEncryptedMK()");
         }
@@ -365,11 +370,9 @@ public class RangerMasterKey implements RangerKMSMKI {
         xxRangerMasterKey.setBitLength(MK_KeySize);
         xxRangerMasterKey.setMasterKey(encryptedMasterKey);
         try {
-            if (daoManager != null) {
-                RangerMasterKeyDao rangerKMSDao = new RangerMasterKeyDao(daoManager);
-                Long l = rangerKMSDao.getAllCount();
-                if (l < 1) {
-                    XXRangerMasterKey rangerMasterKey = rangerKMSDao.create(xxRangerMasterKey);
+            if (masterKeyDao != null) {
+                if (masterKeyDao.getAllCount() < 1) {
+                    XXRangerMasterKey rangerMasterKey = masterKeyDao.create(xxRangerMasterKey);
                     if (logger.isDebugEnabled()) {
                         logger.debug("<== RangerMasterKey.saveEncryptedMK()");
                     }
