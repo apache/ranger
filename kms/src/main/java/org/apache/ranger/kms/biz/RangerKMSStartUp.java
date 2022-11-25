@@ -29,24 +29,27 @@ import org.springframework.stereotype.Component;
 
 @SuppressWarnings("serial")
 @Component
-public class RangerKMSStartUp extends HttpServlet
-{	
-	public static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
+public class RangerKMSStartUp extends HttpServlet {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerKMSStartUp.class);
-	
+
+	public  static final String ENCRYPTION_KEY = "ranger.db.encrypt.key.password";
+
 	@PostConstruct
 	public void initRangerMasterKey() {
 		LOG.info("Ranger KMSStartUp");
+
 		RangerMasterKey rangerMasterKey = new RangerMasterKey();
+
 		try {
-				Configuration conf = RangerKeyStoreProvider.getDBKSConf();
-				String password = conf.get(ENCRYPTION_KEY);
-				boolean check = rangerMasterKey.generateMasterKey(password);
-				if(check){
+				Configuration conf     = RangerKeyStoreProvider.getDBKSConf();
+				String        password = conf.get(ENCRYPTION_KEY);
+				boolean       check    = rangerMasterKey.generateMasterKey(password);
+
+				if (check) {
 					LOG.info("MasterKey Generated..");
 				}
 		} catch (Throwable e) {
-			e.printStackTrace();
-		}				
+			LOG.error("initRangerMasterKey() failed", e);
+		}
 	}	
 }
