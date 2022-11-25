@@ -190,7 +190,7 @@ public class RangerSystemAccessControlTest {
     ret = accessControlManager.getRowFilter(context(alice), aliceTable);
     retArray = accessControlManager.getRowFilters(context(alice), aliceTable);
     assertFalse(ret.isPresent());
-    assertEquals(1, retArray.size());
+    assertTrue(retArray.isEmpty());
 
     accessControlManager.checkCanExecuteFunction(context(alice), functionName);
     accessControlManager.checkCanGrantExecuteFunctionPrivilege(context(alice), functionName, new TrinoPrincipal(USER, "grantee"), true);
