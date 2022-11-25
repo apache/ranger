@@ -211,9 +211,9 @@
         <fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>
         <fasterxml.jackson.version>2.14.0</fasterxml.jackson.version>
         <fasterxml.jackson.databind.version>2.14.0</fasterxml.jackson.databind.version>
-        <kstruct.gethostname4j.version>1.0.0</kstruct.gethostname4j.version>
-        <jna.version>5.7.0</jna.version>
-        <jna-platform.version>5.7.0</jna-platform.version>
+        <kstruct.gethostname4j.version>0.0.2</kstruct.gethostname4j.version>
+        <jna.version>5.2.0</jna.version>
+        <jna-platform.version>5.2.0</jna-platform.version>
         <!-- presto plugin deps -->
         <presto.airlift.version>0.192</presto.airlift.version>
         <presto.bval-jsr.version>2.0.0</presto.bval-jsr.version>
