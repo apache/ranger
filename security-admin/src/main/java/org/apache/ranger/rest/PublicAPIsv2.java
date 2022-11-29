@@ -253,7 +253,7 @@ public class PublicAPIsv2 {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "serviceDef id mismatch", true);
 		}
 
-		return serviceREST.updateServiceDef(serviceDef);
+		return serviceREST.updateServiceDef(serviceDef, serviceDef.getId());
 	}
 
 
@@ -279,7 +279,7 @@ public class PublicAPIsv2 {
 			serviceDef.setGuid(existingServiceDef.getGuid());
 		}
 
-		return serviceREST.updateServiceDef(serviceDef);
+		return serviceREST.updateServiceDef(serviceDef, null);
 	}
 
 	/*
@@ -538,7 +538,7 @@ public class PublicAPIsv2 {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "policyID mismatch", true);
 		}
 
-		return serviceREST.updatePolicy(policy);
+		return serviceREST.updatePolicy(policy, id);
 	}
 
 	@PUT
@@ -563,7 +563,7 @@ public class PublicAPIsv2 {
 			policy.setName(StringUtils.trim(oldPolicy.getName()));
 		}
 
-		return serviceREST.updatePolicy(policy);
+		return serviceREST.updatePolicy(policy, policy.getId());
 	}
 
 
