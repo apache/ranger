@@ -293,7 +293,7 @@ public class RangerPluginClassLoader extends URLClassLoader {
        if (classLoader != null) {
            Thread.currentThread().setContextClassLoader(classLoader);
        } else {
-           LOG.warn("RangerPluginClassLoader.deactivate() was not successful. Couldn't not get the saved classLoader...");
+           LOG.warn("RangerPluginClassLoader.deactivate() was not successful. Couldn't get the saved classLoader...");
        }
 
        if (LOG.isDebugEnabled()) {
