@@ -323,9 +323,17 @@ public class ServiceREST {
 	@Consumes({ "application/json" })
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE_DEF + "\")")
-	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) {
+	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef,  @PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updateServiceDef(serviceDefName=" + serviceDef.getName() + ")");
+		}
+
+		// if serviceDef.id and param 'id' are specified, serviceDef.id should be same as the param 'id'
+		// if serviceDef.id is null, then set param 'id' into serviceDef Object
+		if (serviceDef.getId() == null) {
+			serviceDef.setId(id);
+		} else if(!serviceDef.getId().equals(id)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "serviceDef Id mismatch", true);
 		}
 
 		RangerServiceDef ret  = null;
@@ -1650,7 +1658,7 @@ public class ServiceREST {
 				    RangerPolicy existingPolicy = getPolicyMatchByName(policy, request);
 				    if (existingPolicy != null) {
 				       policy.setId(existingPolicy.getId());
-				       ret = updatePolicy(policy);
+				       ret = updatePolicy(policy, null);
 				    } else {
 				       ret = createPolicyUnconditionally(policy);
 				    }
@@ -1749,7 +1757,7 @@ public class ServiceREST {
 					} else {
 						policy.setId(existingPolicy.getId());
 					}
-					ret = updatePolicy(policy);
+					ret = updatePolicy(policy, null);
 				}
 			} catch(WebApplicationException excp) {
 				throw excp;
@@ -1772,10 +1780,19 @@ public class ServiceREST {
 	@Path("/policies/{id}")
 	@Consumes({ "application/json" })
 	@Produces({ "application/json" })
-	public RangerPolicy updatePolicy(RangerPolicy policy) {
+	public RangerPolicy updatePolicy(RangerPolicy policy, @PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updatePolicy(" + policy + ")");
 		}
+
+		// if policy.id and param 'id' are specified, policy.id should be same as the param 'id'
+		// if policy.id is null, then set param 'id' into policy Object
+		if (policy.getId() == null) {
+			policy.setId(id);
+		} else if(!policy.getId().equals(id)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "policyID mismatch", true);
+		}
+
 		RangerPolicy ret  = null;
 		RangerPerfTracer perf = null;
 
@@ -2471,7 +2488,7 @@ public class ServiceREST {
 												createPolicy(policy, request);
 											} else {
 												ServiceRESTUtil.mergeExactMatchPolicyForResource(existingPolicy, policy);
-												updatePolicy(existingPolicy);
+												updatePolicy(existingPolicy, null);
 											}
 										} else {
 											createPolicy(policy, request);
@@ -2507,7 +2524,7 @@ public class ServiceREST {
 									createPolicy(policy, request);
 								} else {
 									ServiceRESTUtil.mergeExactMatchPolicyForResource(existingPolicy, policy);
-									updatePolicy(existingPolicy);
+									updatePolicy(existingPolicy, null);
 								}
 							} else {
 								createPolicy(policy, request);

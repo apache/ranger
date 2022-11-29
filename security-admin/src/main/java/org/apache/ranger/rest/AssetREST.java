@@ -341,15 +341,22 @@ public class AssetREST {
 	@Path("/resources/{id}")
 	@Consumes({ "application/json" })
 	@Produces({ "application/json" })
-	public VXResource updateXResource(VXResource vXResource) {
+	public VXResource updateXResource(VXResource vXResource , @PathParam("id") Long id) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.updateXResource(" + vXResource + ")");
+		}
+
+		// if vXResource.id is specified, it should be same as the param 'id'
+		if (vXResource.getId() == null) {
+			vXResource.setId(id);
+		} else if(!vXResource.getId().equals(id)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "resource Id mismatch", true);
 		}
 
 		RangerService service = serviceREST.getService(vXResource.getAssetId());
 		RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXResource, service);
 
-		RangerPolicy updatedPolicy = serviceREST.updatePolicy(policy);
+		RangerPolicy updatedPolicy = serviceREST.updatePolicy(policy, policy.getId());
 		
 		VXResource ret = serviceUtil.toVXResource(updatedPolicy, service);
 
