@@ -223,7 +223,7 @@
         <!-- trino plugin deps -->
         <trino.airlift.version>0.192</trino.airlift.version>
         <trino.bval-jsr.version>2.0.0</trino.bval-jsr.version>
-        <trino.guice.version>4.2.2</trino.guice.version>
+        <trino.guice.version>5.1.0</trino.guice.version>
         <trino.guava.version>26.0-jre</trino.guava.version>
         <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
         <trino.re2j.version>1.1</trino.re2j.version>
