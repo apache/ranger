@@ -66,7 +66,7 @@
        {"accesses":[{"type":"read","isAllowed":true}],"users":[],"groups":["finance"],"delegateAdmin":false,
          "conditions":[{
            "type":"ScriptConditionEvaluator",
-           "values":["var country_code_format_long = ctx.getRequestContextAttribute('LOCATION_FORMAT_LONG_COUNTRY_CODE'); var country_code_format_dot = ctx.getRequestContextAttribute('LOCATION_FORMAT_DOT_COUNTRY_CODE');ctx.result = (!!country_code_format_long && !!country_code_format_dot && (country_code_format_long == country_code_format_dot));"]
+           "values":["var country_code_format_long = ctx.getRequestContextAttribute('LOCATION_FORMAT_LONG_COUNTRY_CODE'); var country_code_format_dot = ctx.getRequestContextAttribute('LOCATION_FORMAT_DOT_COUNTRY_CODE');ctx.result = (country_code_format_long != null && country_code_format_dot != null && (country_code_format_long == country_code_format_dot));"]
          }]}
      ]
     }
