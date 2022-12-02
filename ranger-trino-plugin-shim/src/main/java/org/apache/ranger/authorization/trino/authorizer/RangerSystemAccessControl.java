@@ -28,6 +28,7 @@ import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import javax.inject.Inject;
 import java.security.Principal;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -529,6 +530,18 @@ public class RangerSystemAccessControl
   }
 
   @Override
+  public List<ViewExpression> getRowFilters(SystemSecurityContext context, CatalogSchemaTableName tableName) {
+    List<ViewExpression> viewExpressionList;
+    try {
+      activatePluginClassLoader();
+      viewExpressionList = systemAccessControlImpl.getRowFilters(context, tableName);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+    return viewExpressionList;
+  }
+
+  @Override
   public Optional<ViewExpression> getColumnMask(SystemSecurityContext context, CatalogSchemaTableName tableName, String columnName, Type type) {
     Optional<ViewExpression> viewExpression;
     try {
@@ -538,6 +551,18 @@ public class RangerSystemAccessControl
       deactivatePluginClassLoader();
     }
     return viewExpression;
+  }
+
+  @Override
+  public List<ViewExpression> getColumnMasks(SystemSecurityContext context, CatalogSchemaTableName tableName, String columnName, Type type) {
+    List<ViewExpression> viewExpressionList;
+    try {
+      activatePluginClassLoader();
+      viewExpressionList = systemAccessControlImpl.getColumnMasks(context, tableName, columnName, type);
+    } finally {
+      deactivatePluginClassLoader();
+    }
+    return viewExpressionList;
   }
 
   @Override
