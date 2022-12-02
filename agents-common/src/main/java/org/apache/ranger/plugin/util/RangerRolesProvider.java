@@ -139,7 +139,7 @@ public class RangerRolesProvider {
 				plugIn.setRoles(roles);
 				rangerUserGroupRolesSetInPlugin = true;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
-				lastKnownRoleVersion = roles.getRoleVersion();
+				lastKnownRoleVersion = roles.getRoleVersion() != null ? roles.getRoleVersion() : -1;;
 			} else {
 				if (!rangerUserGroupRolesSetInPlugin && !serviceDefSetInPlugin) {
 					plugIn.setRoles(null);

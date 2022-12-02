@@ -47,6 +47,10 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
                                    'hbase.zookeeper.quorum': 'ranger-hbase',
                                    'zookeeper.znode.parent': '/hbase'}})
 
+kms = RangerService({'name': 'dev_kms', 'type': 'kms',
+                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
+                                  'provider': 'http://ranger-kms:9292'}})
+
 if service_not_exists(hdfs):
     ranger_client.create_service(hdfs)
     print('HDFS service created!')
@@ -65,3 +69,6 @@ if service_not_exists(kafka):
 if service_not_exists(knox):
     ranger_client.create_service(knox)
     print('Knox service created!')
+if service_not_exists(kms):
+    ranger_client.create_service(kms)
+    print('KMS service created!')

@@ -472,9 +472,12 @@ public class UserMgr {
 		} else {
 			String encryptedOldPwd = encrypt(gjUser.getLoginId(), changeEmail.getOldPassword());
 			if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
-				logger.info("changeEmailAddress(). Invalid  password. changeEmail=" + changeEmail);
-				throw restErrorUtil.createRESTException("serverMsg.userMgrWrongPassword",
-						MessageEnums.OPER_NO_PERMISSION, null, null, "" + changeEmail);
+				encryptedOldPwd = encryptWithOlderAlgo(gjUser.getLoginId(), changeEmail.getOldPassword());
+				if (!stringUtil.equals(encryptedOldPwd, gjUser.getPassword())) {
+					logger.info("changeEmailAddress(). Invalid  password. changeEmail=" + changeEmail);
+					throw restErrorUtil.createRESTException("serverMsg.userMgrWrongPassword",
+							MessageEnums.OPER_NO_PERMISSION, null, null, "" + changeEmail);
+				}
 			}
 		}
 

@@ -124,13 +124,13 @@
         <hadoop.version>3.3.0</hadoop.version>
         <ozone.version>1.0.0</ozone.version>
         <hamcrest.version>2.2</hamcrest.version>
-        <hbase.version>2.2.6</hbase.version>
+        <hbase.version>2.4.6</hbase.version>
         <hive.version>3.1.2</hive.version>
         <hive.storage-api.version>2.7.2</hive.storage-api.version>
         <orc.version>1.5.8</orc.version>
-        <hbase-shaded-protobuf>3.3.0</hbase-shaded-protobuf>
-        <hbase-shaded-netty>3.3.0</hbase-shaded-netty>
-        <hbase-shaded-miscellaneous>3.3.0</hbase-shaded-miscellaneous>
+        <hbase-shaded-protobuf>3.5.1</hbase-shaded-protobuf>
+        <hbase-shaded-netty>3.5.1</hbase-shaded-netty>
+        <hbase-shaded-miscellaneous>3.5.1</hbase-shaded-miscellaneous>
         <libfb303.version>0.9.3</libfb303.version>
         <libthrift.version>0.13.0</libthrift.version>
         <htrace-core.version>4.1.0-incubating</htrace-core.version>
@@ -151,7 +151,7 @@
         <jersey-spring.version>1.19.3</jersey-spring.version>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
         <jettison.version>1.5.2</jettison.version>
-        <jetty-client.version>9.4.44.v20210927</jetty-client.version>
+        <jetty-client.version>9.4.49.v20220914</jetty-client.version>
         <jline.version>0.9.94</jline.version>
         <jopt-simple.version>3.2</jopt-simple.version>
         <json4s.version>3.2.11</json4s.version>
@@ -203,7 +203,7 @@
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
-        <tomcat.embed.version>8.5.79</tomcat.embed.version>
+        <tomcat.embed.version>8.5.83</tomcat.embed.version>
         <testng.version>6.9.4</testng.version>
         <velocity.version>2.3</velocity.version>
         <zookeeper.version>3.4.14</zookeeper.version>
