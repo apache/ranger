@@ -20,6 +20,7 @@ services:
     environment:
       - BRANCH
       - BUILD_HOST_SRC
+      - PROFILE
       - GIT_URL
       - RANGER_VERSION
       - SKIPTESTS
