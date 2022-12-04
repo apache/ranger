@@ -24,7 +24,7 @@ hdfs = RangerService({'name': 'dev_hdfs', 'type': 'hdfs',
 hive = RangerService({'name': 'dev_hive', 'type': 'hive',
                       'configs': {'username': 'hive', 'password': 'hive',
                                   'jdbc.driverClassName': 'org.apache.hive.jdbc.HiveDriver',
-                                  'jdbc.url': 'jdfb:hive2://ranger-hadoop:10000',
+                                  'jdbc.url': 'jdbc:hive2://ranger-hive:10000',
                                   'hadoop.security.authorization': 'true'}})
 
 kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
@@ -32,7 +32,7 @@ kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
                                    'zookeeper.connect': 'ranger-zk.example.com:2181'}})
 
 knox = RangerService({'name': 'dev_knox', 'type': 'knox',
-                      'configs': {'username': 'knox', 'password': 'knox', 'knox.url': 'http://ranger-hadoop:8088'}})
+                      'configs': {'username': 'knox', 'password': 'knox', 'knox.url': 'https://ranger-knox:8443'}})
 
 yarn = RangerService({'name': 'dev_yarn', 'type': 'yarn',
                       'configs': {'username': 'yarn', 'password': 'yarn',
@@ -43,8 +43,8 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
                                    'hadoop.security.authentication': 'simple',
                                    'hbase.security.authentication': 'simple',
                                    'hadoop.security.authorization': 'true',
-                                   'hbase.zookeeper.property.clientPort': '16181',
-                                   'hbase.zookeeper.quorum': 'ranger-hbase',
+                                   'hbase.zookeeper.property.clientPort': '2181',
+                                   'hbase.zookeeper.quorum': 'ranger-zk',
                                    'zookeeper.znode.parent': '/hbase'}})
 
 kms = RangerService({'name': 'dev_kms', 'type': 'kms',
