@@ -99,6 +99,25 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_FIELD_UGA                     = "uga";
 	public static final String SCRIPT_FIELD_USER_ROLES              = "userRoles";
 
+	public static final String SCRIPT_MACRO_GET_TAG_NAMES         = "GET_TAG_NAMES";
+	public static final String SCRIPT_MACRO_GET_TAG_NAMES_Q       = "GET_TAG_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_TAG_ATTR_NAMES    = "GET_TAG_ATTR_NAMES";
+	public static final String SCRIPT_MACRO_GET_TAG_ATTR_NAMES_Q  = "GET_TAG_ATTR_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_TAG_ATTR          = "GET_TAG_ATTR";
+	public static final String SCRIPT_MACRO_GET_TAG_ATTR_Q        = "GET_TAG_ATTR_Q";
+	public static final String SCRIPT_MACRO_GET_UG_NAMES          = "GET_UG_NAMES";
+	public static final String SCRIPT_MACRO_GET_UG_NAMES_Q        = "GET_UG_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_UG_ATTR_NAMES     = "GET_UG_ATTR_NAMES";
+	public static final String SCRIPT_MACRO_GET_UG_ATTR_NAMES_Q   = "GET_UG_ATTR_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_UG_ATTR           = "GET_UG_ATTR";
+	public static final String SCRIPT_MACRO_GET_UG_ATTR_Q         = "GET_UG_ATTR_Q";
+	public static final String SCRIPT_MACRO_GET_UR_NAMES          = "GET_UR_NAMES";
+	public static final String SCRIPT_MACRO_GET_UR_NAMES_Q        = "GET_UR_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_USER_ATTR_NAMES   = "GET_USER_ATTR_NAMES";
+	public static final String SCRIPT_MACRO_GET_USER_ATTR_NAMES_Q = "GET_USER_ATTR_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_USER_ATTR         = "GET_USER_ATTR";
+	public static final String SCRIPT_MACRO_GET_USER_ATTR_Q       = "GET_USER_ATTR_Q";
+
 	public static final String SCRIPT_MACRO_GET_TAG_ATTR_CSV      = "GET_TAG_ATTR_CSV";
 	public static final String SCRIPT_MACRO_GET_TAG_ATTR_Q_CSV    = "GET_TAG_ATTR_Q_CSV";
 	public static final String SCRIPT_MACRO_GET_UG_ATTR_CSV       = "GET_UG_ATTR_CSV";
@@ -115,6 +134,7 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_MACRO_UR_NAMES_Q_CSV        = "UR_NAMES_Q_CSV";
 	public static final String SCRIPT_MACRO_USER_ATTR_NAMES_CSV   = "USER_ATTR_NAMES_CSV";
 	public static final String SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV = "USER_ATTR_NAMES_Q_CSV";
+
 	public static final String SCRIPT_MACRO_HAS_TAG               = "HAS_TAG";
 	public static final String SCRIPT_MACRO_HAS_ANY_TAG           = "HAS_ANY_TAG";
 	public static final String SCRIPT_MACRO_HAS_NO_TAG            = "HAS_NO_TAG";

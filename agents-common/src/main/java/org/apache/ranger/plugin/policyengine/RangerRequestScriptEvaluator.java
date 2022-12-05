@@ -81,8 +81,8 @@ public final class RangerRequestScriptEvaluator {
 	private static final Pattern JSON_VAR_NAMES_PATTERN   = Pattern.compile(getJsonVarNamesPattern());
 	private static final Pattern USER_ATTRIBUTES_PATTERN  = Pattern.compile(getUserAttributesPattern());
 	private static final Pattern GROUP_ATTRIBUTES_PATTERN = Pattern.compile(getGroupAttributesPattern());
-	private static final Character CHAR_QUOTE = '\'';
-	private static final Character CHAR_COMMA = ',';
+	private static final String  STR_QUOTE  = "'";
+	private static final String  STR_COMMA  = ",";
 
 	private static final MacroProcessor MACRO_PROCESSOR = new MacroProcessor(getMacrosMap());
 
@@ -644,98 +644,116 @@ public final class RangerRequestScriptEvaluator {
 		return ret;
 	}
 
-	public String ugNamesCsv() {
+	public String tagNames(Object... args) {
 		init();
 
-		return toCsv(userGroups);
+		return toCsv(tagNames, args);
 	}
 
-	public String ugNamesCsvQ() {
+	public String tagNamesQ(Object... args) {
 		init();
 
-		return toCsvQ(userGroups);
+		return toCsvQ(tagNames, args);
 	}
 
-	public String urNamesCsv() {
+	public String tagAttrNames(Object... args) {
 		init();
 
-		return toCsv(userRoles);
+		return toCsv(getTagAttrNames(), args);
 	}
 
-	public String urNamesCsvQ() {
+	public String tagAttrNamesQ(Object... args) {
 		init();
 
-		return toCsvQ(userRoles);
+		return toCsvQ(getTagAttrNames(), args);
 	}
 
-	public String tagNamesCsv() {
+	public String tagAttr(String attrName, Object... args) {
 		init();
 
-		return toCsv(tagNames);
+		return toCsv(getTagAttr(attrName), args);
 	}
 
-	public String tagNamesCsvQ() {
+	public String tagAttrQ(String attrName, Object... args) {
 		init();
 
-		return toCsvQ(tagNames);
+		return toCsvQ(getTagAttr(attrName), args);
 	}
 
-	public String userAttrNamesCsv() {
+	public String ugNames(Object... args) {
 		init();
 
-		return toCsv(getUserAttrNames());
+		return toCsv(userGroups, args);
 	}
 
-	public String userAttrNamesCsvQ() {
+	public String ugNamesQ(Object... args) {
 		init();
 
-		return toCsvQ(getUserAttrNames());
+		return toCsvQ(userGroups, args);
 	}
 
-	public String ugAttrNamesCsv() {
+	public String ugAttrNames(Object... args) {
 		init();
 
-		return toCsv(getUgAttrNames());
+		return toCsv(getUgAttrNames(), args);
 	}
 
-	public String ugAttrNamesCsvQ() {
-		return toCsvQ(getUgAttrNames());
-	}
-
-	public String tagAttrNamesCsv() {
+	public String ugAttrNamesQ(Object... args) {
 		init();
 
-		return toCsv(getTagAttrNames());
+		return toCsvQ(getUgAttrNames(), args);
 	}
 
-	public String tagAttrNamesCsvQ() {
+	public String ugAttr(String attrName, Object... args) {
 		init();
 
-		return toCsvQ(getTagAttrNames());
+		return toCsv(getUgAttr(attrName), args);
 	}
 
-	public String ugAttrCsv(String attrName) {
+	public String ugAttrQ(String attrName, Object... args) {
 		init();
 
-		return toCsv(getUgAttr(attrName));
+		return toCsvQ(getUgAttr(attrName), args);
 	}
 
-	public String ugAttrCsvQ(String attrName) {
+	public String urNames(Object... args) {
 		init();
 
-		return toCsvQ(getUgAttr(attrName));
+		return toCsv(userRoles, args);
 	}
 
-	public String tagAttrCsv(String attrName) {
+	public String urNamesQ(Object... args) {
 		init();
 
-		return toCsv(getTagAttr(attrName));
+		return toCsvQ(userRoles, args);
 	}
 
-	public String tagAttrCsvQ(String attrName) {
+	public String userAttrNames(Object... args) {
 		init();
 
-		return toCsvQ(getTagAttr(attrName));
+		return toCsv(getUserAttrNames(), args);
+	}
+
+	public String userAttrNamesQ(Object... args) {
+		init();
+
+		return toCsvQ(getUserAttrNames(), args);
+	}
+
+	public String userAttr(String attrName, Object... args) {
+		init();
+
+		String attrVal = userAttrs.get(attrName);
+
+		return toCsv(Collections.singletonList(attrVal), args);
+	}
+
+	public String userAttrQ(String attrName, Object... args) {
+		init();
+
+		String attrVal = userAttrs.get(attrName);
+
+		return toCsvQ(Collections.singletonList(attrVal), args);
 	}
 
 	public boolean hasTag(String tagName) {
@@ -813,6 +831,71 @@ public final class RangerRequestScriptEvaluator {
 		init();
 
 		return !userRoles.isEmpty();
+	}
+
+	// for backward compatibility
+	public String ugNamesCsv() {
+		return ugNames(null, STR_COMMA);
+	}
+
+	public String ugNamesCsvQ() {
+		return ugNamesQ(null, STR_COMMA, STR_QUOTE);
+	}
+
+	public String urNamesCsv() {
+		return urNames(null, STR_COMMA);
+	}
+
+	public String urNamesCsvQ() {
+		return urNamesQ(null, STR_COMMA, STR_QUOTE);
+	}
+
+	public String tagNamesCsv() {
+		return tagNames(null, STR_COMMA);
+	}
+
+	public String tagNamesCsvQ() {
+		return tagNamesQ(null, STR_COMMA, STR_QUOTE);
+	}
+
+	public String userAttrNamesCsv() {
+		return userAttrNames(null, STR_COMMA);
+	}
+
+	public String userAttrNamesCsvQ() {
+		return userAttrNamesQ(null, STR_COMMA, STR_QUOTE);
+	}
+
+	public String ugAttrNamesCsv() {
+		return ugAttrNames(null, STR_COMMA);
+	}
+
+	public String ugAttrNamesCsvQ() {
+		return ugAttrNamesQ(null, STR_COMMA, STR_QUOTE);
+	}
+
+	public String tagAttrNamesCsv() {
+		return tagAttrNames(null, STR_COMMA);
+	}
+
+	public String tagAttrNamesCsvQ() {
+		return tagAttrNamesQ(null, STR_COMMA, STR_QUOTE);
+	}
+
+	public String ugAttrCsv(String attrName) {
+		return ugAttr(attrName, null, STR_COMMA);
+	}
+
+	public String ugAttrCsvQ(String attrName) {
+		return ugAttrQ(attrName, null, STR_COMMA, STR_QUOTE);
+	}
+
+	public String tagAttrCsv(String attrName) {
+		return tagAttr(attrName, null, STR_COMMA);
+	}
+
+	public String tagAttrCsvQ(String attrName) {
+		return tagAttrQ(attrName, null, STR_COMMA, STR_QUOTE);
 	}
 
 	private void init() {
@@ -976,8 +1059,9 @@ public final class RangerRequestScriptEvaluator {
 		return getSorted(ret);
 	}
 
-	private String toCsv(Collection<? extends Object> values) {
-		StringBuilder sb = new StringBuilder();
+	private String toCsv(Collection<? extends Object> values, Object[] args) {
+		StringBuilder sb        = new StringBuilder();
+		String        separator = getSeparator(args);
 
 		for (Object value : values) {
 			if (value == null) {
@@ -985,17 +1069,28 @@ public final class RangerRequestScriptEvaluator {
 			}
 
 			if (sb.length() > 0) {
-				sb.append(CHAR_COMMA);
+				sb.append(separator);
 			}
 
 			sb.append(value);
 		}
 
+		if (sb.length() == 0) {
+			String defValue = getDefaultValue(args);
+
+			if (defValue != null) {
+				sb.append(getDefaultValue(args));
+			}
+		}
+
 		return sb.toString();
 	}
 
-	private String toCsvQ(Collection<? extends Object> values) {
-		StringBuilder sb = new StringBuilder();
+	private String toCsvQ(Collection<? extends Object> values, Object[] args) {
+		StringBuilder sb         = new StringBuilder();
+		String        openQuote  = getOpenQuote(args);
+		String        closeQuote = getCloseQuote(args, openQuote);
+		String        separator  = getSeparator(args);
 
 		for (Object value : values) {
 			if (value == null) {
@@ -1003,13 +1098,45 @@ public final class RangerRequestScriptEvaluator {
 			}
 
 			if (sb.length() > 0) {
-				sb.append(CHAR_COMMA);
+				sb.append(separator);
 			}
 
-			sb.append(CHAR_QUOTE).append(value).append(CHAR_QUOTE);
+			sb.append(openQuote).append(value).append(closeQuote);
+		}
+
+		if (sb.length() == 0) {
+			String defValue = getDefaultValue(args);
+
+			if (defValue != null) {
+				sb.append(openQuote).append(getDefaultValue(args)).append(closeQuote);
+			}
 		}
 
 		return sb.toString();
+	}
+
+	private String getDefaultValue(Object[] args) {
+		Object ret = (args != null && args.length > 0) ? args[0] : null;
+
+		return ret != null ? ret.toString() : null;
+	}
+
+	private String getSeparator(Object[] args) {
+		Object ret = (args != null && args.length > 1) ? args[1] : STR_COMMA;
+
+		return ret != null ? ret.toString() : "";
+	}
+
+	private String getOpenQuote(Object[] args) {
+		Object ret = (args != null && args.length > 2) ? args[2] : STR_QUOTE;
+
+		return ret != null ? ret.toString() : "";
+	}
+
+	private String getCloseQuote(Object[] args, String openQuote) {
+		Object ret = (args != null && args.length > 3) ? args[3] : null;
+
+		return ret != null ? ret.toString() : openQuote;
 	}
 
 	private static String getJsonVarNamesPattern() {
@@ -1041,10 +1168,21 @@ public final class RangerRequestScriptEvaluator {
 		List<String> varNames = new ArrayList<>();
 
 		varNames.add(SCRIPT_VAR_USER);
+
+		varNames.add(SCRIPT_MACRO_GET_USER_ATTR);
+		varNames.add(SCRIPT_MACRO_GET_USER_ATTR_Q);
+
+		varNames.add(SCRIPT_MACRO_GET_USER_ATTR_NAMES);
+		varNames.add(SCRIPT_MACRO_GET_USER_ATTR_NAMES_Q);
 		varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_CSV);
 		varNames.add(SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV);
+
 		varNames.add(SCRIPT_MACRO_HAS_USER_ATTR);
 
+		varNames.add("userAttr");
+		varNames.add("userAttrQ");
+		varNames.add("userAttrNames");
+		varNames.add("userAttrNamesQ");
 		varNames.add("userAttrNamesCsv");
 		varNames.add("userAttrNamesCsvQ");
 		varNames.add("hasUserAttr");
@@ -1058,16 +1196,28 @@ public final class RangerRequestScriptEvaluator {
 		varNames.add(SCRIPT_VAR_UG);
 		varNames.add(SCRIPT_VAR_UGA);
 
+		varNames.add(SCRIPT_MACRO_GET_UG_ATTR);
+		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_Q);
 		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_CSV);
 		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_Q_CSV);
+
+		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_NAMES);
+		varNames.add(SCRIPT_MACRO_GET_UG_ATTR_NAMES_Q);
 		varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_CSV);
 		varNames.add(SCRIPT_MACRO_UG_ATTR_NAMES_Q_CSV);
+
 		varNames.add(SCRIPT_MACRO_HAS_UG_ATTR);
 
+		varNames.add("ugAttr");
+		varNames.add("ugAttrQ");
 		varNames.add("ugAttrCsv");
 		varNames.add("ugAttrCsvQ");
+
+		varNames.add("ugAttrNames");
+		varNames.add("ugAttrNamesQ");
 		varNames.add("ugAttrNamesCsv");
 		varNames.add("ugAttrNamesCsvQ");
+
 		varNames.add("hasUgAttr");
 
 		return "\\b(" + StringUtils.join(varNames, '|') + ")\\b";
@@ -1075,6 +1225,25 @@ public final class RangerRequestScriptEvaluator {
 
 	private static Map<String, String> getMacrosMap() {
 		Map<String, String> ret = new HashMap<>();
+
+		ret.put(SCRIPT_MACRO_GET_TAG_NAMES,         "ctx.tagNames");
+		ret.put(SCRIPT_MACRO_GET_TAG_NAMES_Q,       "ctx.tagNamesQ");
+		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_NAMES,    "ctx.tagAttrNames");
+		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_NAMES_Q,  "ctx.tagAttrNamesQ");
+		ret.put(SCRIPT_MACRO_GET_TAG_ATTR,          "ctx.tagAttr");
+		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_Q,        "ctx.tagAttrQ");
+		ret.put(SCRIPT_MACRO_GET_UG_NAMES,          "ctx.ugNames");
+		ret.put(SCRIPT_MACRO_GET_UG_NAMES_Q,        "ctx.ugNamesQ");
+		ret.put(SCRIPT_MACRO_GET_UG_ATTR_NAMES,     "ctx.ugAttrNames");
+		ret.put(SCRIPT_MACRO_GET_UG_ATTR_NAMES_Q,   "ctx.ugAttrNamesQ");
+		ret.put(SCRIPT_MACRO_GET_UG_ATTR,           "ctx.ugAttr");
+		ret.put(SCRIPT_MACRO_GET_UG_ATTR_Q,         "ctx.ugAttrQ");
+		ret.put(SCRIPT_MACRO_GET_UR_NAMES,          "ctx.urNames");
+		ret.put(SCRIPT_MACRO_GET_UR_NAMES_Q,        "ctx.urNamesQ");
+		ret.put(SCRIPT_MACRO_GET_USER_ATTR_NAMES,   "ctx.userAttrNames");
+		ret.put(SCRIPT_MACRO_GET_USER_ATTR_NAMES_Q, "ctx.userAttrNamesQ");
+		ret.put(SCRIPT_MACRO_GET_USER_ATTR,         "ctx.userAttr");
+		ret.put(SCRIPT_MACRO_GET_USER_ATTR_Q,       "ctx.userAttrQ");
 
 		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_CSV,      "ctx.tagAttrCsv");
 		ret.put(SCRIPT_MACRO_GET_TAG_ATTR_Q_CSV,    "ctx.tagAttrCsvQ");
