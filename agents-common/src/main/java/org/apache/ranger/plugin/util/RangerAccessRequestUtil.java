@@ -199,7 +199,18 @@ public class RangerAccessRequestUtil {
 	}
 
 	public static Boolean getIsAnyAccessInContext(Map<String, Object> context) {
-		return (Boolean)context.get(KEY_CONTEXT_IS_ANY_ACCESS);
+		Boolean ret = (Boolean)context.get(KEY_CONTEXT_IS_ANY_ACCESS);
+		return ret == null ? Boolean.FALSE : ret;
+	}
+
+	public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes) {
+		context.put(KEY_CONTEXT_ACCESSTYPES, accessTypes);
+	}
+
+	public static Set<String> getAllRequestedAccessTypes(RangerAccessRequest request) {
+		Set<String> ret = (Set<String>) request.getContext().get(KEY_CONTEXT_ACCESSTYPES);
+
+		return ret != null ? ret : Collections.singleton(request.getAccessType());
 	}
 
 	public static void setRequestInContext(RangerAccessRequest request) {
