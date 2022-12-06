@@ -1752,6 +1752,10 @@ public class ServiceREST {
 					}
 
 					if(mergeIfExists) {
+						if (!existingPolicy.getIsDenyAllElse() && policy.getIsDenyAllElse()) {
+							LOG.error("Attempt to change the isDenyAllElse flag from false to true! Not supported!!");
+							throw new Exception("Merging existing policy(isDenyAllElse=false) with another policy(isDenyAllElse=true) is not allowed!");
+						}
 						ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
 						policy = existingPolicy;
 					} else {
