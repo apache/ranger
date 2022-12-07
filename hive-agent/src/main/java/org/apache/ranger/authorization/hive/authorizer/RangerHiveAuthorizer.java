@@ -1722,7 +1722,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
 					}
 				break;
-
+				case ALTERVIEW_AS:
+					if (hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
+						accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.ALTER;
+					} else if (hiveObj.getType() == HivePrivilegeObjectType.DATABASE) {
+						accessType = HiveAccessType.SELECT;
+					}
+				break;
 				case ALTERDATABASE:
 				case ALTERDATABASE_LOCATION:
 				case ALTERDATABASE_OWNER:
@@ -1763,7 +1769,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERTABLE_UPDATETABLESTATS:
 				case ALTERTABLE_UPDATECOLUMNS:
 				case ALTERTBLPART_SKEWED_LOCATION:
-				case ALTERVIEW_AS:
 				case ALTERVIEW_PROPERTIES:
 				case ALTERVIEW_RENAME:
 				case ALTER_MATERIALIZED_VIEW_REWRITE:
