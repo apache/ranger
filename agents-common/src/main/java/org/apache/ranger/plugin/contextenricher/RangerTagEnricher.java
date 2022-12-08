@@ -62,6 +62,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
@@ -418,44 +419,39 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			LOG.debug("Processing all service-tags");
 		}
 
-		boolean isInError = false;
-
 		if (CollectionUtils.isEmpty(serviceTags.getServiceResources())) {
 			LOG.info("There are no tagged resources for service " + serviceName);
 			enrichedServiceTags = null;
 		} else {
-
-			ResourceHierarchies    hierarchies      = new ResourceHierarchies();
-
+			ResourceHierarchies                hierarchies      = new ResourceHierarchies();
 			List<RangerServiceResourceMatcher> resourceMatchers = new ArrayList<>();
 			List<RangerServiceResource>        serviceResources = serviceTags.getServiceResources();
 
-			for (RangerServiceResource serviceResource : serviceResources) {
+			for (ListIterator<RangerServiceResource> iter = serviceResources.listIterator(); iter.hasNext(); ) {
+				RangerServiceResource        serviceResource        = iter.next();
 				RangerServiceResourceMatcher serviceResourceMatcher = createRangerServiceResourceMatcher(serviceResource, serviceDefHelper, hierarchies);
+
 				if (serviceResourceMatcher != null) {
 					resourceMatchers.add(serviceResourceMatcher);
 				} else {
-					LOG.error("Could not create service-resource-matcher for service-resource:[" + serviceResource + "]");
-					isInError = true;
-					break;
+					iter.remove();
+
+					List<Long> tags = serviceTags.getResourceToTagIds().remove(serviceResource.getId());
+
+					LOG.warn("Invalid resource [" + serviceResource + "]: failed to create resource-matcher. Ignoring " + (tags != null ? tags.size() : 0) + " tags associated with the resource");
 				}
 			}
 
-			if (isInError) {
-				serviceTags.setTagVersion(-1L);
-				LOG.error("Error in processing tag-deltas. Will continue to use old tags");
-			} else {
-				Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = null;
+			Map<String, RangerResourceTrie<RangerServiceResourceMatcher>> serviceResourceTrie = null;
 
-				if (!disableTrieLookupPrefilter) {
-					serviceResourceTrie = new HashMap<>();
+			if (!disableTrieLookupPrefilter) {
+				serviceResourceTrie = new HashMap<>();
 
-					for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-						serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, resourceMatchers, getPolicyEngineOptions().optimizeTagTrieForRetrieval, getPolicyEngineOptions().optimizeTagTrieForSpace, null));
-					}
+				for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
+					serviceResourceTrie.put(resourceDef.getName(), new RangerResourceTrie(resourceDef, resourceMatchers, getPolicyEngineOptions().optimizeTagTrieForRetrieval, getPolicyEngineOptions().optimizeTagTrieForSpace, null));
 				}
-				enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie);
 			}
+			enrichedServiceTags = new EnrichedServiceTags(serviceTags, resourceMatchers, serviceResourceTrie);
 		}
 	}
 
