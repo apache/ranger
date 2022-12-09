@@ -17,6 +17,8 @@
 
 package org.apache.ranger.biz;
 
+import static org.mockito.ArgumentMatchers.anyString;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -153,6 +155,10 @@ public class TestServiceDBStore {
 
 	@Mock
 	GUIDUtil guidUtil;
+
+	@Mock
+	TagDBStore tagStore;
+
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -1402,8 +1408,11 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXRMSServiceResource()).thenReturn(xRMSServiceResourceDao);
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-        serviceDBStore.deleteService(Id);
+		Mockito.when(tagStore.resetTagCache(rangerService.getName())).thenReturn(true);
+
+		serviceDBStore.deleteService(Id);
 		Mockito.verify(svcService).delete(rangerService);
+		Mockito.verify(tagStore).resetTagCache(rangerService.getName());
 	}
 
 	@Test
@@ -2323,7 +2332,7 @@ public void test42getMetricByTypeaudits() throws Exception {
     Date date = new Date();
     date.setYear(2018);
 
-    Mockito.when(restErrorUtil.parseDate(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(date);
+    Mockito.when(restErrorUtil.parseDate(anyString(), anyString(), Mockito.any(), Mockito.any(), anyString(), anyString())).thenReturn(date);
     RangerServiceDefList svcDefList = new RangerServiceDefList();
     svcDefList.setTotalCount(10l);
     Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);

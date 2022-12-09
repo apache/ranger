@@ -336,6 +336,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 	RoleDBStore roleStore;
 
 	@Autowired
+	TagDBStore tagStore;
+
+	@Autowired
 	RangerRoleService roleService;
 
 	@Autowired
@@ -1817,6 +1820,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
 		bizUtil.createTrxLog(trxLogList);
+		//During the servie deletion ,we need to clear the RangerServicePoliciesCache,RangerServiceTagsCache for the given serviceName.
+		resetPolicyCache(service.getName());
+		tagStore.resetTagCache(service.getName());
+
 	}
 
 	private void updateTabPermissions(String svcType, Map<String, String> svcConfig) {
