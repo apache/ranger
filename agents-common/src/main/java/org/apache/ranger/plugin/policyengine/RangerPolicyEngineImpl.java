@@ -599,8 +599,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	PolicyEngine getPolicyEngine() {
+	public PolicyEngine getPolicyEngine() {
 		return policyEngine;
+	}
+
+	public RangerAccessRequestProcessor getRequestProcessor() {
+		return requestProcessor;
 	}
 
 	private RangerPolicyEngineImpl(final PolicyEngine policyEngine, RangerPolicyEngineImpl other) {

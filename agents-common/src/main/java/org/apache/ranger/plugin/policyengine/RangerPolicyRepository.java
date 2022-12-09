@@ -566,6 +566,22 @@ public class RangerPolicyRepository {
         return policyEvaluators;
     }
 
+    public int getPolicyEvaluatorCount() {
+        return policyEvaluators.size();
+    }
+
+    public int getDataMaskPolicyEvaluatorCount() {
+        return dataMaskPolicyEvaluators.size();
+    }
+
+    public int getRowFilterPolicyEvaluatorCount() {
+        return rowFilterPolicyEvaluators.size();
+    }
+
+    public int getAuditPolicyEvaluatorCount() {
+        return auditPolicyEvaluators.size();
+    }
+
     List<RangerPolicyEvaluator> getDataMaskPolicyEvaluators() {
         return dataMaskPolicyEvaluators;
     }
