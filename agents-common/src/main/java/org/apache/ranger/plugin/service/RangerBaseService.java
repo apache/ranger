@@ -59,6 +59,8 @@ public abstract class RangerBaseService {
 
 	protected static final String KERBEROS_TYPE        = "kerberos";
 
+	protected static final String CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY = "create.default.policy.per.hierarchy";
+
 	private static final String PROP_DEFAULT_POLICY_PREFIX      = "default-policy.";
 	private static final String PROP_DEFAULT_POLICY_NAME_SUFFIX = "name";
 
@@ -140,17 +142,19 @@ public abstract class RangerBaseService {
 
 		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 
-		try {
-			// we need to create one policy for each resource hierarchy
-			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-			for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.filterHierarchies_containsOnlyMandatoryResources(RangerPolicy.POLICY_TYPE_ACCESS)) {
-				RangerPolicy policy = getDefaultPolicy(aHierarchy);
-				if (policy != null) {
-					ret.add(policy);
+		if (createDefaultPolicyPerHierarchy()) {
+			try {
+				// we need to create one policy for each resource hierarchy
+				RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+				for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.filterHierarchies_containsOnlyMandatoryResources(RangerPolicy.POLICY_TYPE_ACCESS)) {
+					RangerPolicy policy = getDefaultPolicy(aHierarchy);
+					if (policy != null) {
+						ret.add(policy);
+					}
 				}
+			} catch (Exception e) {
+				LOG.error("Error getting default polcies for Service: " + service.getName(), e);
 			}
-		} catch (Exception e) {
-			LOG.error("Error getting default polcies for Service: " + service.getName(), e);
 		}
 
 		final Boolean additionalDefaultPolicySetup = Boolean.valueOf(configs.get("setup.additional.default.policies"));
@@ -447,6 +451,32 @@ public abstract class RangerBaseService {
 		ret.addAll(uniqueGroups);
 
 		return ret;
+	}
+
+	protected boolean createDefaultPolicyPerHierarchy() {
+		String ret = configs.get(CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY);
+
+		if (ret == null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("{} is not defined in service(name={}) config", CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY, getServiceName());
+			}
+
+			ret = serviceDef.getOptions().get(CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY);
+
+			if (ret == null) {
+				ret = Boolean.TRUE.toString();
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("{} is not defined in service-def(name={}) options as well. Using default value: {}", CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY, getServiceType(), ret);
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("createDefaultPolicyPerHierarchy(serviceName={}, serviceType={}): ret={}", getServiceName(), getServiceType(), ret);
+		}
+
+		return Boolean.parseBoolean(ret);
 	}
 
 	protected String getLookupUser(String authType, String lookupPrincipal, String lookupKeytab) {
