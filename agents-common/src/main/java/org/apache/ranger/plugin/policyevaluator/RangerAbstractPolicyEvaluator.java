@@ -348,7 +348,7 @@ public abstract class RangerAbstractPolicyEvaluator implements RangerPolicyEvalu
 						if (resourceMatcher.getNeedsDynamicEval()) {
 							Map<String, RangerPolicyResource> updatedResource = getPolicyResourcesWithMacrosReplaced(resource, policyEngine);
 
-							ret = new RangerDefaultPolicyResourceMatcher();
+							ret = new RangerDefaultPolicyResourceMatcher(true);
 
 							ret.setPolicyResources(updatedResource, resourceMatcher.getPolicyType());
 							ret.setServiceDef(serviceDef);

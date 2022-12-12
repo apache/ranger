@@ -64,6 +64,18 @@
                 "description": "Randomly shuffle the contents"
               },
               {
+                "itemId": 3,
+                "name": "MASH_HASH",
+                "label": "Hash",
+                "description": "Hash value of the contents"
+              },
+              {
+                "itemId": 4,
+                "name": "MASH_NONE",
+                "label": "No masking",
+                "description": "Unmasked value of the contents"
+              },
+              {
                 "itemId": 10,
                 "name": "NULL",
                 "label": "NULL",
@@ -139,6 +151,20 @@
               }
             ]
           },
+          { "id": 104, "name": "db=test_db, table=dept_${{USER.dept}}, column=col1: unmasked for users in the department",
+            "isEnabled": true, "isAuditEnabled": true, "policyPriority": 1, "policyType": 1,
+            "resources": { "database": { "values": [ "test_db" ] }, "table": { "values": [ "dept_${{USER.dept}}" ] }, "column": { "values": [ "col1" ] } },
+            "dataMaskPolicyItems": [
+              { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "{USER}" ], "groups": [], "delegateAdmin": false, "dataMaskInfo": { "dataMaskType": "MASK_NONE" } }
+            ]
+          },
+          { "id": 105, "name": "db=test_db, table=dept_hr, column=col1: mask hash for all users",
+            "isEnabled": true, "isAuditEnabled": true, "policyPriority": 0, "policyType": 1,
+            "resources": { "database": { "values": [ "test_db" ] }, "table": { "values": [ "dept_hr" ] }, "column": { "values": [ "col1" ] } },
+            "dataMaskPolicyItems": [
+              { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [], "groups": [ "public" ], "delegateAdmin": false, "dataMaskInfo": { "dataMaskType": "MASK_HASH" } }
+            ]
+          },
           {"id":201,"name":"db=employee, table=personal: row-filter","isEnabled":true,"isAuditEnabled":true,"policyType":2,
             "resources":{"database":{"values":["employee"]},"table":{"values":["personal"]}},
             "rowFilterPolicyItems":[
@@ -174,6 +200,20 @@
               {"accesses":[{"type":"select","isAllowed":true}],"users":["user2"],"groups":[],"delegateAdmin":false,
                 "rowFilterInfo": {"filterExpr":"dept='purchase'"}
               }
+            ]
+          },
+          { "id": 204, "name": "db=test_db, table=dept_${{USER.dept}}: no filter for users in the department",
+            "isEnabled": true, "isAuditEnabled": true, "policyPriority": 1, "policyType": 2,
+            "resources": { "database": { "values": [ "test_db" ] }, "table": { "values": [ "dept_${{USER.dept}}" ] } },
+            "rowFilterPolicyItems": [
+              { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [ "{USER}" ], "groups": [], "delegateAdmin": false, "rowFilterInfo": { "filterExpr": "1 = 1" } }
+            ]
+          },
+          { "id": 205, "name": "db=test_db, table=dept_hr: row-filter",
+            "isEnabled": true, "isAuditEnabled": true, "policyPriority": 0, "policyType": 2,
+            "resources": { "database": { "values": [ "test_db" ] }, "table": { "values": [ "dept_hr" ] } },
+            "rowFilterPolicyItems": [
+              { "accesses": [ { "type": "select", "isAllowed": true } ], "users": [], "groups": [ "public" ], "delegateAdmin": false, "rowFilterInfo": { "filterExpr": "dept != 'hr'" } }
             ]
           }
         ],
@@ -331,6 +371,13 @@
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "maskInfo":{"dataMaskType":"HASH"}, "isConditional": true}
           ]
         },
+        { "name": "mask: test_db.dept_hr.col1: conditional",
+          "resource": { "elements": { "database": "test_db", "table":"dept_hr", "column":"col1" } },
+          "dataMasks": [
+            { "users": [ ], "groups": [ "public" ], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_NONE" }, "isConditional": true },
+            { "users": [ ], "groups": [ "public" ], "roles": [], "accessTypes": [ "select" ], "maskInfo": { "dataMaskType": "MASK_HASH" }, "isConditional": false }
+          ]
+        },
         {"name":"row-filter: employee.personal",
           "resource":{"elements":{"database":"employee", "table":"personal"}},
           "rowFilters":[
@@ -351,6 +398,13 @@
           "rowFilters":[
             {"users":["user1"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"dept='production'"}, "isConditional": true},
             {"users":["user2"], "groups":[], "roles":[], "accessTypes":["select"], "filterInfo":{"filterExpr":"dept='purchase'"}, "isConditional": true}
+          ]
+        },
+        { "name": "row-filter: test_db.dept_hr: conditional",
+          "resource": { "elements": { "database": "test_db", "table":"dept_hr" } },
+          "rowFilters": [
+            { "users": [], "groups": [ "public" ], "roles": [], "accessTypes": [ "select" ], "filterInfo": { "filterExpr": "1 = 1" },        "isConditional": true },
+            { "users": [], "groups": [ "public" ], "roles": [], "accessTypes": [ "select" ], "filterInfo": { "filterExpr": "dept != 'hr'" }, "isConditional": false }
           ]
         }
       ]

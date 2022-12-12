@@ -307,12 +307,17 @@ public class RangerServiceDefHelper {
 		return ret;
 	}
 
+	public RangerResourceDef getWildcardEnabledResourceDef(String resourceName, Integer policyType) {
+		return _delegate.getWildcardEnabledResourceDef(resourceName, policyType);
+	}
+
 	/**
 	 * Not designed for public access.  Package level only for testability.
 	 */
 	static class Delegate {
 		final RangerServiceDef _serviceDef;
 		final Map<Integer, Set<List<RangerResourceDef>>> _hierarchies = new HashMap<>();
+		final Map<Integer, Map<String, RangerResourceDef>> _wildcardEnabledResourceDefs = new HashMap<>();
 		final Date _serviceDefFreshnessDate;
 		final String _serviceName;
 		final boolean _checkForCycles;
@@ -427,6 +432,44 @@ public class RangerServiceDefHelper {
 				LOG.debug("Created graph for resources: " + graph);
 			}
 			return graph;
+		}
+
+		RangerResourceDef getWildcardEnabledResourceDef(String resourceName, Integer policyType) {
+			if (policyType == null) {
+				policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+			}
+
+			Map<String, RangerResourceDef> wResourceDefs = _wildcardEnabledResourceDefs.get(policyType);
+
+			if (wResourceDefs == null) {
+				wResourceDefs = new HashMap<>();
+
+				_wildcardEnabledResourceDefs.put(policyType, wResourceDefs);
+			}
+
+			RangerResourceDef ret = null;
+
+			if (!wResourceDefs.containsKey(resourceName)) {
+				List<RangerResourceDef> resourceDefs = getResourceDefs(_serviceDef, policyType);
+
+				if (resourceDefs != null) {
+					for (RangerResourceDef resourceDef : resourceDefs) {
+						if (StringUtils.equals(resourceName, resourceDef.getName())) {
+							ret = new RangerResourceDef(resourceDef);
+
+							ret.getMatcherOptions().put(RangerAbstractResourceMatcher.OPTION_WILD_CARD, Boolean.TRUE.toString());
+
+							break;
+						}
+					}
+				}
+
+				wResourceDefs.put(resourceName, ret);
+			} else {
+				ret = wResourceDefs.get(resourceName);
+			}
+
+			return ret;
 		}
 
 		List<RangerResourceDef> getResourceDefs(RangerServiceDef serviceDef, Integer policyType) {
