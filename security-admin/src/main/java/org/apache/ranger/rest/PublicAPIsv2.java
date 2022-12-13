@@ -653,19 +653,72 @@ public class PublicAPIsv2 {
     	This API is used to add users and groups with/without GRANT privileges to this Role. It follows add-or-update semantics
  	 */
 	@PUT
-	@Path("/api/roles/name/{name}/addUsersAndGroups")
-	public RangerRole addUsersAndGroups(@PathParam("name") String roleName,@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @QueryParam("isAdmin") Boolean isAdmin, @Context HttpServletRequest request) {
-		return roleREST.addUsersAndGroups(roleName, serviceName, userName, users, groups,
-						isAdmin);
+	@Path("/api/roles/{id}/addUsersAndGroups")
+	public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @DefaultValue("false") @QueryParam("isAdmin") Boolean isAdmin, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.addUsersAndGroups(" + roleId + ")");
+		}
+		RangerRole role = roleREST.addUsersAndGroupsByRoleId(roleId, users, groups, isAdmin);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.addUsersAndGroups(" + roleId + ")");
+		}
+		return role;
 	}
+
+	/*
+    	This API is used to add users and groups with/without GRANT privileges to this Role by role name. It follows add-or-update semantics
+ 	 */
+	@PUT
+	@Path("/api/roles/name/{name}/addUsersAndGroups")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerRole addUsersAndGroups(@PathParam("name") String roleName,@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @DefaultValue("false") @QueryParam("isAdmin") Boolean isAdmin, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.addUsersAndGroups(" + roleName + ")");
+		}
+		RangerRole role = roleREST.addUsersAndGroupsByRoleName(roleName, serviceName, userName, users, groups, isAdmin);
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.addUsersAndGroups(" + roleName + ")");
+		}
+		return role;
+	}
+
 	/*
         This API is used to remove users and groups, without regard to their GRANT privilege, from this Role.
      */
 	@PUT
-	@Path("/api/roles/name/{name}/removeUsersAndGroups")
-	public RangerRole removeUsersAndGroups(@PathParam("name") String roleName,@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
-		return roleREST.removeUsersAndGroups(roleName, serviceName, userName, users, groups);
+	@Path("/api/roles/{id}/removeUsersAndGroups")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.removeUsersAndGroups(" + roleId + ")");
+		}
+		RangerRole role = roleREST.removeUsersAndGroupsByRoleId(roleId, users, groups);
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.removeUsersAndGroups(" + roleId + ")");
+		}
+		return role;
+	}
 
+	/*
+        This API is used to remove users and groups, without regard to their GRANT privilege, from this Role by role name.
+     */
+
+	@PUT
+	@Path("/api/roles/name/{name}/removeUsersAndGroups")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerRole removeUsersAndGroups(@PathParam("name") String roleName,@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.removeUsersAndGroups(" + roleName + ")");
+		}
+		RangerRole role = roleREST.removeUsersAndGroupsByRoleName(roleName, serviceName, userName, users, groups);
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.removeUsersAndGroups(" + roleName + ")");
+		}
+		return role;
 	}
 
 	/*
@@ -673,8 +726,35 @@ public class PublicAPIsv2 {
      */
 	@PUT
 	@Path("/api/roles/{id}/removeAdminFromUsersAndGroups")
-	public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, @Context HttpServletRequest request) {
-		return roleREST.removeAdminFromUsersAndGroups(roleId, users, groups);
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, @QueryParam("users") List<String> users, @QueryParam("groups") List<String> groups, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.removeAdminFromUsersAndGroups(" + roleId + ")");
+		}
+		RangerRole role = roleREST.removeAdminFromUsersAndGroupsByRoleId(roleId, users, groups);
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.removeAdminFromUsersAndGroups(" + roleId + ")");
+		}
+		return role;
+	}
+
+	/*
+        This API is used to remove GRANT privilege from listed users and groups by role name.
+     */
+	@PUT
+	@Path("/api/roles/name/{name}/removeAdminFromUsersAndGroups")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public RangerRole removeAdminFromUsersAndGroups(@PathParam("name") String roleName,@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @QueryParam("users") List<String> users, @QueryParam("groups")  List<String> groups, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.removeAdminFromUsersAndGroups(" + roleName + ")");
+		}
+		RangerRole role = roleREST.removeAdminFromUsersAndGroupsByRoleName(roleName, serviceName, userName, users, groups);
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.removeAdminFromUsersAndGroups(" + roleName + ")");
+		}
+		return role;
 	}
 
 	/*
