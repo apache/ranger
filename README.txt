@@ -22,8 +22,35 @@ Apache Ranger is currently NOT setup to use pull requests to take in the changes
 Please use the apache review board to submit your code changes for review and commit. https://reviews.apache.org
 Also create a jira to go along with the review and mention it in the review board review. https://issues.apache.org/jira/browse/RANGER
 
-Build Process
-=============
+
+===============================================================================================
+Running the entire Apache Ranger (and its related technology stack) in Docker (SANDBOX INSTALL)
+===============================================================================================
+
+1. Check out the code from GIT repository (for Apache Ranger) [https://github.com/apache/ranger.git]
+
+2. Ensure that docker & docker-compose is installed and running on your system.
+
+3. Ensure that JDK 1.8+ is installed on your system.
+
+4. Ensure that Apache Maven is installed on your system.
+
+5. Run the following command to build & run Apache RANGER from Docker
+
+	$ ./ranger_in_docker up
+
+6. After successful completion of the above command, you should be able to view Ranger Admin Console by using URL:
+	
+	http://<hostname-of-system>:6080/
+
+	UserName: admin
+	Password: rangerR0cks!
+
+===============================================================================================
+
+
+Regular Build Process
+=======================
 
 1. Check out the code from GIT repository
 
