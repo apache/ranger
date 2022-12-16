@@ -76,7 +76,7 @@ public class RangerTencentKMSProvider implements RangerKMSMKI {
 			desckey_req.setKeyId(masterKeyId);
 			DescribeKeyResponse desckey_resp = keyVaultClient.DescribeKey(desckey_req);
 			if (desckey_resp == null || !desckey_resp.getKeyMetadata().getKeyId().equals(masterKeyId)) {
-				throw new Exception("KetMetadata is invalid");
+				throw new Exception("KeyMetadata is invalid");
 			}
 			masterKeyMetadata = desckey_resp.getKeyMetadata();
 		} catch (TencentCloudSDKException ex) {

@@ -178,8 +178,12 @@
                     <include>io.grpc:grpc-xds</include>
                     <include>io.grpc:grpc-services</include>
                     <include>io.opencensus:opencensus-proto</include>
+                    <!-- AWS KMS -->
+                    <include>com.amazonaws:aws-java-sdk-core</include>
+                    <include>com.amazonaws:aws-java-sdk-kms</include>
                     <!-- TencentKMS -->
-                    <include>com.tencentcloudapi:tencentcloud-sdk-java</include>
+                    <include>com.tencentcloudapi:tencentcloud-sdk-java-kms</include>
+                    <include>com.tencentcloudapi:tencentcloud-sdk-java-common</include>
                     <include>com.squareup.okhttp:logging-interceptor</include>
                     <include>com.squareup.okhttp:okhttp</include>
                     <!-- ranger common metrics module-->
