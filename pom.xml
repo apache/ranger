@@ -241,7 +241,8 @@
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
         <org.bouncycastle.bcprov-jdk15on>1.68</org.bouncycastle.bcprov-jdk15on>
         <org.bouncycastle.bcpkix-jdk15on>1.59</org.bouncycastle.bcpkix-jdk15on>
-        <lucene.version>8.4.0</lucene.version>
+        <lucene.version>8.11.2</lucene.version>
+        <lucene.spatial.version>8.4.1</lucene.spatial.version>
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
         <nimbus-jose-jwt.version>8.22.1</nimbus-jose-jwt.version>
