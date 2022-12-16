@@ -15,7 +15,7 @@
 # limitations under the License.
 
 FROM ubuntu:20.04
-
+ARG TARGETARCH
 
 # Install tzdata, Python, Java, python-requests
 RUN apt-get update && \
@@ -25,7 +25,7 @@ RUN apt-get update && \
     pip3 install requests
 
 # Set environment variables
-ENV JAVA_HOME      /usr/lib/jvm/java-8-openjdk-amd64
+ENV JAVA_HOME      /usr/lib/jvm/java-8-openjdk-${TARGETARCH}
 ENV RANGER_DIST    /home/ranger/dist
 ENV RANGER_SCRIPTS /home/ranger/scripts
 ENV RANGER_HOME    /opt/ranger

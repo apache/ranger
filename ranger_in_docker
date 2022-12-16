@@ -35,6 +35,15 @@
 # Also, you can force rebuild of ranger image by setting RANGER_REBUILD=1
 # By default, the script will check if a ranger image does not exists and will do ranger build and docker image build.
 #
+# Also, you can force rebuild of ranger using local maven and java based build 
+# instead of building it using Docker based buid by setting DOCKER_MAVEN_BUILD=1.
+# 
+
+#
+# This is needed to build ranger-base build based on architecture
+#
+DOCKER_BUILDKIT=1
+export DOCKER_BUILDKIT
 
 if [ $# -eq 1 ]
 then
@@ -66,12 +75,9 @@ then
 	exit 1
 fi
 
-mvn --version > /dev/null 2>&1
-
-if [ $? -ne 0 ]
+if [ -z "${DOCKER_MAVEN_BUILD}" ]
 then
-	echo "ERROR: You must have MAVEN tool installed on your system to do a ranger build. (error running mvn command)"
-	exit 1
+	DOCKER_MAVEN_BUILD=0
 fi
 
 if [ -z "${RANGER_HOME}" ]
@@ -126,18 +132,6 @@ then
 		build_ranger=1
 	fi
 	
-	if [ ${build_ranger} -eq 1 ]
-	then
-		cd ${RANGER_HOME} 
-		mvn clean package -DskipTests
-		if [ $? -ne 0 ]
-		then
-			echo "ERROR: Unable to complete RANGER build. Exiting ...."
-			exit 1
-		fi
-		cp target/ranger-* ${RD_HOME}/dist
-		cp target/version ${RD_HOME}/dist 
-	fi
 	
 	cd ${RD_HOME}
 	
@@ -155,7 +149,39 @@ then
 		echo "+ docker-compose -f docker-compose.ranger-base.yml build --no-cache"
 		docker-compose -f docker-compose.ranger-base.yml build --no-cache
 	fi
+
+	if [ ${build_ranger} -eq 1 ]
+	then
+		if [ ${DOCKER_MAVEN_BUILD} -eq 0 ]
+		then
+			cd ${RD_HOME}
+
+			echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans"
+			docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans
+
+			echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up"
+			docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
+			if [ $? -ne 0 ]
+			then
+				echo "ERROR: Unable to complete RANGER build using DOCKER. Exiting ...."
+				exit 1
+			fi
+		else
+			cd ${RANGER_HOME} 
+			mvn clean package -DskipTests
+			if [ $? -ne 0 ]
+			then
+				echo "ERROR: Unable to complete RANGER build. Exiting ...."
+				exit 1
+			fi
+			cp target/ranger-* ${RD_HOME}/dist
+			cp target/version ${RD_HOME}/dist 
+		fi
+
+	fi
 fi
+
+cd ${RD_HOME}
 
 export RANGER_DB_TYPE=postgres
 
@@ -168,7 +194,9 @@ docker-compose -f docker-compose.ranger-base.yml \
 				-f docker-compose.ranger-hbase.yml \
 				-f docker-compose.ranger-kafka.yml \
 				-f docker-compose.ranger-hive.yml \
-				-f docker-compose.ranger-knox.yml ${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
+				-f docker-compose.ranger-knox.yml \
+				-f docker-compose.ranger-kms.yml \
+					${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
 
 echo
 echo "################### LIST OF DOCKER PROCESSES EXPOSING PORTS #####################"
