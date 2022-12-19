@@ -31,6 +31,9 @@ http://www.springframework.org/schema/security/oauth2
 http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 
 	<security:http pattern="/login.jsp" security="none" />
+	<security:http pattern="/dist/**" security="none" />
+	<security:http pattern="/favicon.ico" security="none"/>
+	<security:http pattern="/images/**" security="none" />
 	<security:http pattern="/styles/**" security="none" />
 	<security:http pattern="/fonts/**" security="none" />
 	<security:http pattern="/scripts/prelogin/XAPrelogin.js" security="none" />
