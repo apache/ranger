@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-Check Apache Ranger Wiki for up to date instruction: 
+Check Apache Ranger Wiki for up to date instruction:
 https://cwiki.apache.org/confluence/display/RANGER/Index
 
 NOTE about using sending pull request on github:
@@ -37,14 +37,14 @@ Running the entire Apache Ranger (and its related technology stack) in Docker (S
 
 5. Run the following command to build & run Apache RANGER from Docker
 
-	$ ./ranger_in_docker up
+    $ ./ranger_in_docker up
 
 6. After successful completion of the above command, you should be able to view Ranger Admin Console by using URL:
-	
-	http://<hostname-of-system>:6080/
 
-	UserName: admin
-	Password: rangerR0cks!
+    http://<hostname-of-system>:6080/
+
+    UserName: admin
+    Password: rangerR0cks!
 
 ===============================================================================================
 
@@ -130,9 +130,9 @@ Installation Process
 
 4. Modify the install.properties file with appropriate variables
 
-5. If the module has setup.sh, 
+5. If the module has setup.sh,
        Execute ./setup.sh
 
-   If the install.sh file does not exists, 
+   If the install.sh file does not exists,
        Execute ./enable-<component>-plugin.sh
 
