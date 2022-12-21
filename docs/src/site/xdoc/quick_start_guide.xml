@@ -26,6 +26,11 @@
     <body>
         <!-- The body of the document contains a number of sections -->
         <section name="Quick Start Guide">
+            <subsection name = "Bring up Apache Ranger in minutes using Docker ... ">
+				<p>
+					Please follow the instruction provided at <a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=235837576">Wiki Page for Running Apache Ranger</a>
+				</p>
+			</subsection>
             <subsection name = "Build Process">
             <!-- Within sections, any XHTML can be used -->
             <p>
