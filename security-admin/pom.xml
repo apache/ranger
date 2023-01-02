@@ -1171,6 +1171,22 @@
                         <executions>
                             <!-- react-webapp copy-resources execution start -->
                             <execution>
+                                <id>copy-resources-react-webapp</id>
+                                <phase>generate-sources</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${project.build.directory}/react-webapp</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.basedir}/src/main/webapp/react-webapp/</directory>
+                                            <filtering>false</filtering>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                            <execution>
                                 <id>copy-resources-react-webapp-dist</id>
                                 <phase>process-resources</phase>
                                 <goals>
@@ -1180,7 +1196,7 @@
                                     <outputDirectory>${project.build.directory}/${project.build.finalName}</outputDirectory>
                                     <resources>
                                         <resource>
-                                            <directory>${project.basedir}/src/main/webapp/react-webapp/dist/</directory>
+                                            <directory>${project.build.directory}/react-webapp/dist/</directory>
                                             <filtering>false</filtering>
                                         </resource>
                                     </resources>
@@ -1340,7 +1356,7 @@
                         <artifactId>frontend-maven-plugin</artifactId>
                         <version>1.12.1</version>
                         <configuration>
-                            <workingDirectory>${project.basedir}/src/main/webapp/react-webapp</workingDirectory>
+                            <workingDirectory>${project.build.directory}/react-webapp</workingDirectory>
                             <installDirectory>${project.build.directory}/react-build</installDirectory>
                         </configuration>
                         <executions>
@@ -1350,6 +1366,7 @@
                                 <goals>
                                     <goal>install-node-and-npm</goal>
                                 </goals>
+                                <phase>generate-resources</phase>
                                 <configuration>
                                     <nodeVersion>v16.0.0</nodeVersion>
                                     <npmVersion>7.10.0</npmVersion>
