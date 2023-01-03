@@ -24,6 +24,9 @@ import { Field } from "react-final-form";
 import Select from "react-select";
 import Datetime from "react-datetime";
 import { getAllTimeZoneList } from "Utils/XAUtils";
+import { isEmpty } from "lodash";
+import moment from "moment-timezone";
+import { CustomTooltip } from "../../components/CommonComponents";
 
 export default function PolicyValidityPeriodComp(props) {
   const { addPolicyItem } = props;
@@ -56,18 +59,19 @@ export default function PolicyValidityPeriodComp(props) {
   };
 
   const calEndDate = (sDate, currentDate) => {
-    if (sDate && sDate.endTime) {
+    if (sDate && sDate?.endTime) {
       return currentDate.isBefore(sDate.endTime);
     } else {
-      return !sDate;
+      return true;
     }
   };
 
   const calStartDate = (sDate, currentDate) => {
-    if (sDate && sDate.startTime) {
+    if (sDate && sDate?.startTime) {
       return currentDate.isAfter(sDate.startTime);
     } else {
-      return !sDate;
+      let yesterday = moment().subtract(1, "day");
+      return currentDate.isAfter(yesterday);
     }
   };
 
@@ -93,7 +97,20 @@ export default function PolicyValidityPeriodComp(props) {
               <tr>
                 <th>Start Date</th>
                 <th>End Date</th>
-                <th>Time Zone</th>
+                <th>
+                  Time Zone{" "}
+                  <span>
+                    <CustomTooltip
+                      placement="right"
+                      content={
+                        <p className="pd-10" style={{ fontSize: "small" }}>
+                          Please Select StartDate or EndDate to enable Time Zone
+                        </p>
+                      }
+                      icon="fa-fw fa fa-info-circle"
+                    />
+                  </span>
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -164,6 +181,12 @@ export default function PolicyValidityPeriodComp(props) {
                                 getOptionLabel={(obj) => obj.text}
                                 getOptionValue={(obj) => obj.id}
                                 isClearable={true}
+                                isDisabled={
+                                  isEmpty(fields?.value?.[index]?.startTime) &&
+                                  isEmpty(fields?.value?.[index]?.endTime)
+                                    ? true
+                                    : false
+                                }
                               />
                               {meta.touched && meta.error && (
                                 <span>{meta.error}</span>
