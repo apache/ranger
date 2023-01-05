@@ -1185,6 +1185,7 @@
                         <exclude>**/__init__.py</exclude>
                         <exclude>**/default_primary_config.json</exclude>
                         <exclude>**/default_secondary_config.json</exclude>
+                        <exclude>**/babel.config.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>
