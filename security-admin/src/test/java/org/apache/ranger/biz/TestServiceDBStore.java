@@ -2576,4 +2576,70 @@ public void test47getMetricByTypeDenyconditions() throws Exception {
 		xConfMap = xConfMapList.remove(index - 1);
 		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
 	}
+
+	@Test
+	public void test51GetPolicyByGUID() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, null)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), null, null);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, null);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test52GetPolicyByGUIDAndServiceName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService rangerService = rangerService();
+		String serviceName = rangerService.getName();
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, null)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), serviceName, null);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, null);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test53GetPolicyByGUIDAndServiceNameAndZoneName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService rangerService = rangerService();
+		String serviceName = rangerService.getName();
+		String zoneName = "zone-1";
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, zoneName)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), serviceName, zoneName);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, zoneName);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test53GetPolicyByGUIDAndZoneName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		String zoneName = "zone-1";
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, zoneName)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), null, zoneName);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, zoneName);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
 }

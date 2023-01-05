@@ -507,7 +507,14 @@ public class PublicAPIsv2 {
 	public RangerPolicy getPolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
 																 @DefaultValue("") @QueryParam("serviceName") String serviceName,
 																 @DefaultValue("") @QueryParam("ZoneName") String zoneName) {
-		return serviceREST.getPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.getPolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName  + "," + zoneName + ")");
+		}
+		RangerPolicy rangerPolicy = serviceREST.getPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.getPolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName  + "," + zoneName + ")");
+		}
+		return rangerPolicy;
 	}
 
 	@POST
@@ -615,7 +622,13 @@ public class PublicAPIsv2 {
 	public void deletePolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
 												 @DefaultValue("") @QueryParam("serviceName") String serviceName,
 												 @DefaultValue("") @QueryParam("zoneName") String zoneName) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.deletePolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName  + "," + zoneName + ")");
+		}
 		serviceREST.deletePolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.deletePolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName  + "," + zoneName + ")");
+		}
 	}
 
 	@PUT
