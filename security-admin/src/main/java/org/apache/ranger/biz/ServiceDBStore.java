@@ -2345,7 +2345,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	public RangerPolicy getPolicy(String guid, String serviceName, String zoneName) throws Exception {
 		RangerPolicy ret = null;
-		if (StringUtils.isNotBlank(guid) && StringUtils.isNotBlank(serviceName)) {
+		if (StringUtils.isNotBlank(guid)) {
 			XXPolicy xPolicy = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
 			if (xPolicy != null) {
 				ret = policyService.getPopulatedViewObject(xPolicy);

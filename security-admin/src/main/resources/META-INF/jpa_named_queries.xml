@@ -417,6 +417,14 @@
 		<query>select obj from XXPolicy obj where obj.id in (select item.policyId from XXPolicyItem item) </query>
 	</named-query>
 
+	<named-query name="XXPolicy.findPolicyByPolicyGUID">
+		<query>select obj from XXPolicy obj where obj.guid = :guid and obj.zoneId = :zoneId</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findPolicyByPolicyGUIDAndZoneName">
+		<query>select obj from XXPolicy obj, XXSecurityZone zone where obj.guid = :guid and obj.zoneId = zone.id and zone.name = :zoneName</query>
+	</named-query>
+
 	<named-query name="XXPolicy.findPolicyByPolicyGUIDAndServiceName">
 		<query>select obj from XXPolicy obj, XXService svc where obj.guid = :guid and obj.service = svc.id and svc.name = :serviceName and obj.zoneId = :zoneId</query>
 	</named-query>

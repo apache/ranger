@@ -1846,7 +1846,7 @@ public class ServiceREST {
 			RangerPolicy policy = svcStore.getPolicy(id);
 
 			ensureAdminAccess(policy);
-                        bizUtil.blockAuditorRoleUser();
+			bizUtil.blockAuditorRoleUser();
 			svcStore.deletePolicy(policy);
 		} catch(WebApplicationException excp) {
 			throw excp;
