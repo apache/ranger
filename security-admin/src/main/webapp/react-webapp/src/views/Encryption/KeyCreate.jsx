@@ -24,9 +24,13 @@ import { toast } from "react-toastify";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
 import { fetchApi } from "Utils/fetchAPI";
-import { Loader, scrollToError } from "../../components/CommonComponents";
+import {
+  BlockUi,
+  Loader,
+  scrollToError
+} from "../../components/CommonComponents";
 import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
-import { isUndefined, has, values } from "lodash";
+import { isUndefined, values } from "lodash";
 import withRouter from "Hooks/withRouter";
 import { useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
@@ -67,6 +71,7 @@ function KeyCreate(props) {
   const { state } = useLocation();
   const navigate = useNavigate();
   const [preventUnBlock, setPreventUnblock] = useState(false);
+  const [blockUI, setBlockUI] = useState(false);
 
   useEffect(() => {
     fetchInitialData();
@@ -93,6 +98,7 @@ function KeyCreate(props) {
       }
     setPreventUnblock(true);
     try {
+      setBlockUI(true);
       await fetchApi({
         url: "keys/key",
         method: "post",
@@ -101,6 +107,7 @@ function KeyCreate(props) {
         },
         data: serviceJson
       });
+      setBlockUI(false);
       toast.success(`Success! Key created succesfully`);
       navigate(`/kms/keys/edit/manage/${state.detail}`, {
         state: {
@@ -108,6 +115,7 @@ function KeyCreate(props) {
         }
       });
     } catch (error) {
+      setBlockUI(false);
       serverError(error);
       console.error(`Error occurred while creating key! ${error}`);
     }
@@ -402,6 +410,7 @@ function KeyCreate(props) {
           </div>
         )}
       />
+      <BlockUi isUiBlock={blockUI} />
     </div>
   );
 }

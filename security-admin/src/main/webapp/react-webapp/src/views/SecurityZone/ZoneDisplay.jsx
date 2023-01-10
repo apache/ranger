@@ -64,6 +64,11 @@ class ZoneDisplay extends Component {
     this.setState({ showDeleteModal: null });
   };
 
+  deleteZone = (id) => {
+    this.setState({ showDeleteModal: null });
+    this.props.deleteZone(id);
+  };
+
   fetchServices = async () => {
     var servicesResp;
     try {
@@ -152,16 +157,21 @@ class ZoneDisplay extends Component {
                     closeButton
                   >{`Are you sure you want to delete ?`}</Modal.Header>
                   <Modal.Footer>
-                    <Button variant="secondary" onClick={this.closeZoneModal}>
-                      Close
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={this.closeZoneModal}
+                    >
+                      Cancel
                     </Button>
                     <Button
                       variant="primary"
+                      size="sm"
                       onClick={() => {
-                        this.props.deleteZone(this.props.zone.id);
+                        this.deleteZone(this.props.zone.id);
                       }}
                     >
-                      OK
+                      Yes
                     </Button>
                   </Modal.Footer>
                 </Modal>

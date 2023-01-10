@@ -51,12 +51,13 @@ import {
   isSystemAdmin,
   isKeyAdmin,
   isAuditor,
-  isKMSAuditor
+  isKMSAuditor,
+  serverError
 } from "Utils/XAUtils";
-import { find, isEmpty, isUndefined, map, sortBy, has } from "lodash";
+import { find, isEmpty, isUndefined, map, sortBy } from "lodash";
 import { getUserAccessRoleList } from "Utils/XAUtils";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
-import { ContentLoader } from "../../../components/CommonComponents";
+import { BlockUi, Loader } from "../../../components/CommonComponents";
 
 function Users() {
   const navigate = useNavigate();
@@ -94,6 +95,7 @@ function Users() {
   );
 
   const [pageLoader, setPageLoader] = useState(true);
+  const [blockUI, setBlockUI] = useState(false);
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -188,13 +190,8 @@ function Users() {
           totalCount = userResp.data.totalCount;
           totalPageCount = Math.ceil(totalCount / pageSize);
         } catch (error) {
+          serverError(error);
           console.error(`Error occurred while fetching User list! ${error}`);
-          if (
-            error.response !== undefined &&
-            has(error.response, "data.msgDesc")
-          ) {
-            toast.error(error.response.data.msgDesc);
-          }
         }
         if (state) {
           state["showLastPage"] = false;
@@ -254,13 +251,8 @@ function Users() {
             toast.success("Sucessfully updated Users visibility!!");
             setUpdateTable(moment.now());
           } catch (error) {
-            if (error) {
-              if (error && error.response) {
-                toast.error(error.response);
-              } else {
-                toast.error("Error occurred during set Users visibility");
-              }
-            }
+            serverError(error);
+            console.log(`Error occurred during set Users visibility! ${error}`);
           }
         }
       }
@@ -273,8 +265,10 @@ function Users() {
     const selectedData = selectedRows.current;
     let errorMsg = "";
     if (selectedData.length > 0) {
+      toggleConfirmModal();
       for (const { original } of selectedData) {
         try {
+          setBlockUI(true);
           await fetchApi({
             url: `xusers/secure/users/id/${original.id}`,
             method: "DELETE",
@@ -282,14 +276,16 @@ function Users() {
               forceDelete: true
             }
           });
+          setBlockUI(false);
         } catch (error) {
-          console.log(error.response);
+          setBlockUI(false);
           if (error.response.data.msgDesc) {
             errorMsg += error.response.data.msgDesc + "\n";
           } else {
             errorMsg +=
               `Error occurred during deleting Users: ${original.name}` + "\n";
           }
+          console.log(errorMsg);
         }
       }
       if (errorMsg) {
@@ -306,7 +302,6 @@ function Users() {
           setUpdateTable(moment.now());
         }
       }
-      toggleConfirmModal();
     }
   };
 
@@ -613,9 +608,10 @@ function Users() {
     <div className="wrap">
       <h4 className="wrap-header font-weight-bold">User List</h4>
       {pageLoader ? (
-        <ContentLoader size="50px" />
+        <Loader />
       ) : (
         <React.Fragment>
+          <BlockUi isUiBlock={blockUI} />
           <Row className="mb-4">
             <Col sm={8} className="usr-grp-role-search-width">
               <StructuredFilter

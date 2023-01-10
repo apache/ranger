@@ -35,6 +35,7 @@ import { commonBreadcrumb } from "../../utils/XAUtils";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import AsyncSelect from "react-select/async";
 import { isKeyAdmin } from "../../utils/XAUtils";
+import { BlockUi } from "../../components/CommonComponents";
 
 function init(props) {
   return {
@@ -152,6 +153,7 @@ const KeyManager = (props) => {
   );
 
   const [totalCount, setTotalCount] = useState(0);
+  const [blockUI, setBlockUI] = useState(false);
 
   const {
     loader,
@@ -293,18 +295,21 @@ const KeyManager = (props) => {
     let keyEdit = {};
     keyEdit.name = filterdata ? filterdata : "";
     try {
+      setBlockUI(true);
       await fetchApi({
         url: `/keys/key`,
         method: "PUT",
         params: { provider: onchangeval ? onchangeval.label : "" },
         data: keyEdit
       });
+      setBlockUI(false);
       toast.success(`Success! Key rollover successfully`);
       dispatch({
         type: "SET_UPDATE_TABLE",
         updatetable: moment.now()
       });
     } catch (error) {
+      setBlockUI(false);
       let errorMsg = `Error occurred during editing Key` + "\n";
       if (error?.response?.data?.msgDesc) {
         errorMsg = "Error! " + error.response.data.msgDesc + "\n";
@@ -316,12 +321,13 @@ const KeyManager = (props) => {
 
   const handleDeleteClick = useCallback(async () => {
     try {
+      setBlockUI(true);
       await fetchApi({
         url: `/keys/key/${filterdata}`,
         method: "DELETE",
         params: { provider: onchangeval ? onchangeval.label : "" }
       });
-
+      setBlockUI(false);
       toast.success(`Success! Key deleted succesfully`);
       if (keydata.length == 1 && currentPageIndex > 1) {
         let page = currentPageIndex - currentPageIndex;
@@ -333,12 +339,14 @@ const KeyManager = (props) => {
         });
       }
     } catch (error) {
+      setBlockUI(false);
       let errorMsg = "";
       if (error.response.data.msgDesc) {
         errorMsg = toast.error("Error! " + error.response.data.msgDesc + "\n");
       } else {
         errorMsg = `Error occurred during deleting Key` + "\n";
       }
+      console.log(errorMsg);
     }
   }, [filterdata]);
 
@@ -572,6 +580,7 @@ const KeyManager = (props) => {
       <h6 className="font-weight-bold">Key Management</h6>
 
       <div className="wrap">
+        <BlockUi isUiBlock={blockUI} />
         <Row>
           <Col sm={12}>
             <div className="formHeader pb-3 mb-3">

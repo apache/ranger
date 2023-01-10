@@ -32,9 +32,9 @@ import {
   isKMSAuditor
 } from "Utils/XAUtils";
 import {
-  ContentLoader,
   CustomPopover,
-  CustomTooltip
+  CustomTooltip,
+  Loader
 } from "../../components/CommonComponents";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
@@ -615,39 +615,37 @@ function Plugin_Status() {
     }
   ];
 
-  return (
+  return contentLoader ? (
+    <Loader />
+  ) : (
     <div className="wrap">
-      {contentLoader ? (
-        <ContentLoader size="50px" />
-      ) : (
-        <React.Fragment>
-          <Row className="mb-2">
-            <Col sm={12}>
-              <div className="searchbox-border">
-                <StructuredFilter
-                  key="plugin-status-log-search-filter"
-                  placeholder="Search for your plugin status..."
-                  options={sortBy(searchFilterOptions, ["label"])}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
-                  defaultSelected={defaultSearchFilterParams}
-                />
-              </div>
-            </Col>
-          </Row>
-          <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
-          <XATableLayout
-            data={pluginStatusListingData}
-            columns={columns}
-            loading={loader}
-            totalCount={entries && entries.totalCount}
-            fetchData={fetchPluginStatusInfo}
-            pageCount={pageCount}
-            columnSort={true}
-            clientSideSorting={true}
-          />
-        </React.Fragment>
-      )}
+      <React.Fragment>
+        <Row className="mb-2">
+          <Col sm={12}>
+            <div className="searchbox-border">
+              <StructuredFilter
+                key="plugin-status-log-search-filter"
+                placeholder="Search for your plugin status..."
+                options={sortBy(searchFilterOptions, ["label"])}
+                onTokenAdd={updateSearchFilter}
+                onTokenRemove={updateSearchFilter}
+                defaultSelected={defaultSearchFilterParams}
+              />
+            </div>
+          </Col>
+        </Row>
+        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+        <XATableLayout
+          data={pluginStatusListingData}
+          columns={columns}
+          loading={loader}
+          totalCount={entries && entries.totalCount}
+          fetchData={fetchPluginStatusInfo}
+          pageCount={pageCount}
+          columnSort={true}
+          clientSideSorting={true}
+        />
+      </React.Fragment>
     </div>
   );
 }

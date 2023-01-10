@@ -27,7 +27,7 @@ import { isEmpty, reject, find, isUndefined, map, sortBy } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import { commonBreadcrumb } from "../../utils/XAUtils";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
-import { ContentLoader } from "../../components/CommonComponents";
+import { Loader } from "../../components/CommonComponents";
 
 function Permissions() {
   const [permissionslistData, setPermissions] = useState([]);
@@ -255,7 +255,7 @@ function Permissions() {
       <h3 className="wrap-header bold">Permissions</h3>
       <div className="wrap">
         {pageLoader ? (
-          <ContentLoader size="50px" />
+          <Loader />
         ) : (
           <React.Fragment>
             <Row className="mb-4">

@@ -33,7 +33,7 @@ import { isEmpty, find } from "lodash";
 import { MoreLess } from "Components/CommonComponents";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
-import { ContentLoader } from "../../components/CommonComponents";
+import { Loader } from "../../components/CommonComponents";
 
 function SearchPolicyTable(props) {
   const [searchPoliciesData, setSearchPolicies] = useState([]);
@@ -255,7 +255,7 @@ function SearchPolicyTable(props) {
             </Accordion.Toggle>
             <Accordion.Collapse eventKey="0">
               {props.contentLoader ? (
-                <ContentLoader size="50px" />
+                <Loader />
               ) : (
                 <Card.Body>
                   <XATableLayout

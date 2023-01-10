@@ -31,9 +31,10 @@ import arrayMutators from "final-form-arrays";
 import ModalResourceComp from "../Resources/ModalResourceComp";
 import { RegexValidation } from "Utils/XAEnums";
 import { toast } from "react-toastify";
-import { commonBreadcrumb } from "../../utils/XAUtils";
+import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
 import {
-  ContentLoader,
+  BlockUi,
+  Loader,
   scrollToError,
   selectCustomStyles
 } from "../../components/CommonComponents";
@@ -67,6 +68,7 @@ const SecurityZoneForm = (props) => {
     index: 0
   });
   const [preventUnBlock, setPreventUnblock] = useState(false);
+  const [blockUI, setBlockUI] = useState(false);
 
   useEffect(() => {
     fetchInitalData();
@@ -250,7 +252,6 @@ const SecurityZoneForm = (props) => {
 
   const handleSubmit = async (values) => {
     let zoneId;
-
     let apiMethod;
     let apiUrl;
     let apiSuccess;
@@ -351,18 +352,19 @@ const SecurityZoneForm = (props) => {
 
     setPreventUnblock(true);
     try {
+      setBlockUI(true);
       zoneResp = await fetchApi({
         url: apiUrl,
         method: apiMethod,
         data: zoneData
       });
+      setBlockUI(false);
       toast.success(`Success! Service zone ${apiSuccess} succesfully`);
       navigate(`/zones/zone/${zoneResp.data.id}`);
     } catch (error) {
+      setBlockUI(false);
+      serverError(error);
       console.error(`Error occurred while ${apiError} Zone`);
-      if (error.response !== undefined && has(error.response, "data.msgDesc")) {
-        toast.error(error.response.data.msgDesc);
-      }
     }
   };
   const EditFormData = () => {
@@ -620,10 +622,10 @@ const SecurityZoneForm = (props) => {
           {params.zoneId !== undefined ? `Edit` : `Create`} Zone
         </h4>
       </div>
-      <div className="wrap">
-        {loader ? (
-          <ContentLoader size="50px" />
-        ) : (
+      {loader ? (
+        <Loader />
+      ) : (
+        <div className="wrap">
           <Form
             onSubmit={handleSubmit}
             keepDirtyOnReinitialize={true}
@@ -1118,7 +1120,6 @@ const SecurityZoneForm = (props) => {
                       </Col>
                     </Row>
                   </form>
-
                   <ModalResourceComp
                     serviceDetails={resourceService}
                     serviceCompDetails={resourceServiceDef}
@@ -1133,8 +1134,9 @@ const SecurityZoneForm = (props) => {
               </Row>
             )}
           />
-        )}
-      </div>
+          <BlockUi isUiBlock={blockUI} />
+        </div>
+      )}
     </React.Fragment>
   );
 };

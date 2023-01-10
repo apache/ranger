@@ -22,14 +22,20 @@ import { Button, Nav, Tab, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import { toast } from "react-toastify";
 import { getUserProfile, setUserProfile } from "Utils/appState";
-import { commonBreadcrumb } from "../utils/XAUtils";
-import { scrollToError } from "../components/CommonComponents";
+import { commonBreadcrumb, InfoIcon } from "../utils/XAUtils";
+import { BlockUi, scrollToError } from "../components/CommonComponents";
 import withRouter from "Hooks/withRouter";
 import { UserTypes, RegexValidation } from "Utils/XAEnums";
 import { has, isEmpty, isUndefined } from "lodash";
-import { InfoIcon } from "../utils/XAUtils";
 import { RegexMessage } from "../utils/XAMessages";
+import { fetchApi } from "Utils/fetchAPI";
 class UserProfile extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      blockUI: false
+    };
+  }
   updateUserInfo = async (values) => {
     const userProps = getUserProfile();
 
@@ -38,22 +44,24 @@ class UserProfile extends Component {
     userProps.lastName = values.lastName;
 
     try {
-      const { fetchApi } = await import("Utils/fetchAPI");
+      this.setState({ blockUI: true });
       const profResp = await fetchApi({
         url: "users",
         method: "put",
         data: userProps
       });
+      this.setState({ blockUI: false });
       setUserProfile(profResp.data);
-      toast.success("Successfully updated user profile");
       this.props.navigate("/");
+      toast.success("Successfully updated user profile");
     } catch (error) {
+      this.setState({ blockUI: false });
       if (
-        error.response !== undefined &&
-        _.has(error.response, "data.msgDesc")
+        error?.response !== undefined &&
+        has(error?.response, "data.msgDesc")
       ) {
         toast.error(
-          `Error occurred while updating user profile! ${error.response.data.msgDesc}`
+          `Error occurred while updating user profile! ${error?.response?.data?.msgDesc}`
         );
       }
       console.error(`Error occurred while updating user profile! ${error}`);
@@ -70,23 +78,25 @@ class UserProfile extends Component {
     jsonData["updPassword"] = values.newPassword;
 
     try {
-      const { fetchApi } = await import("Utils/fetchAPI");
+      this.setState({ blockUI: true });
       const passwdResp = await fetchApi({
         url: "users/" + userProps.id + "/passwordchange",
         method: "post",
         data: jsonData
       });
+      this.setState({ blockUI: false });
       toast.success("Successfully updated user password");
       this.props.navigate("/");
     } catch (error) {
-      console.error(`Error occurred while updating user password! ${error}`);
+      this.setState({ blockUI: false });
       if (
-        (has(error.response, "data.msgDesc") &&
-          error.response.data.msgDesc == "serverMsg.userMgrOldPassword") ||
+        (has(error?.response, "data.msgDesc") &&
+          error?.response?.data?.msgDesc == "serverMsg.userMgrOldPassword") ||
         "serverMsg.userMgrNewPassword"
       ) {
         toast.error("You can not use old password.");
       }
+      console.error(`Error occurred while updating user password! ${error}`);
     }
   };
 
@@ -137,6 +147,7 @@ class UserProfile extends Component {
         {commonBreadcrumb(["UserProfile"])}
         <h4 className="wrap-header bold">User Profile</h4>
         <div className="wrap">
+          <BlockUi isUiBlock={this.state.blockUI} />
           <Tab.Container transition={false} defaultActiveKey="edit-basic-info">
             {userProps.userSource == UserTypes.USER_INTERNAL.value && (
               <Nav variant="tabs">

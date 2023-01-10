@@ -56,10 +56,7 @@ import {
   serverError,
   fetchSearchFilterParams
 } from "../../utils/XAUtils";
-import {
-  ContentLoader,
-  CustomTooltip
-} from "../../components/CommonComponents";
+import { CustomTooltip, Loader } from "../../components/CommonComponents";
 import { ServiceType } from "../../utils/XAEnums";
 
 function Access() {
@@ -914,184 +911,178 @@ function Access() {
     }
   ];
 
-  return (
+  return contentLoader ? (
+    <Loader />
+  ) : (
     <div className="wrap">
-      {contentLoader ? (
-        <ContentLoader size="50px" />
-      ) : (
-        <React.Fragment>
-          <Row className="mb-2">
-            <Col sm={12}>
-              <div className="searchbox-border">
-                <StructuredFilter
-                  key="access-log-search-filter"
-                  placeholder="Search for your access audits..."
-                  options={sortBy(searchFilterOptions, ["label"])}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
-                  defaultSelected={defaultSearchFilterParams}
-                />
+      <React.Fragment>
+        <Row className="mb-2">
+          <Col sm={12}>
+            <div className="searchbox-border">
+              <StructuredFilter
+                key="access-log-search-filter"
+                placeholder="Search for your access audits..."
+                options={sortBy(searchFilterOptions, ["label"])}
+                onTokenAdd={updateSearchFilter}
+                onTokenRemove={updateSearchFilter}
+                defaultSelected={defaultSearchFilterParams}
+              />
 
-                <span className="info-icon">
-                  <CustomTooltip
-                    placement="left"
-                    content={
-                      <p className="pd-10" style={{ fontSize: "small" }}>
-                        Wildcard searches( for example using * or ? ) are not
-                        currently supported.
-                        <br /> <b>Access Enforcer :</b> Search by access
-                        enforcer name.
-                        <br />
-                        <b> Access Type :</b> Search by access Type like
-                        READ_EXECUTE, WRITE_EXECUTE.
-                        <br />
-                        <b>Client IP :</b> Search by IP address from where
-                        resource was accessed.
-                        <br />
-                        <b>Cluster Name : </b> Name of cluster <br />
-                        <b>Zone Name :</b> Name of Zone. <br />
-                        <b>End Date :</b> Set end date. <br />
-                        <b>Resource Name :</b> Resource name.
-                        <br /> <b>Resource Type :</b> Search by resource type
-                        based on component. eg. path in HDFS, database ,table in
-                        Hive.
-                        <br />
-                        <b> Result :</b> Search by access result i.e
-                        Allowed/Denied logs.
-                        <br /> <b> Service Name :</b> Name of service.
-                        <br /> <b> Service Type :</b> Select type of service.
-                        <br /> <b> Start Date :</b> Set start date.
-                        <br /> <b> User :</b> Name of User.
-                        <br /> <b> Exclude User :</b> Name of User.
-                        <br /> <b> Application :</b> Application.
-                        <br /> <b> Tags :</b> Tag Name.
-                        <br /> <b> Permission :</b> Permission
-                      </p>
-                    }
-                    icon="fa-fw fa fa-info-circle"
-                  />
-                </span>
-              </div>
-            </Col>
-          </Row>
-          <Row className="mb-2">
-            <Col sm={2}>
-              <span>Exclude Service Users: </span>
-              <input
-                type="checkbox"
-                className="align-middle"
-                defaultChecked={checked}
-                onChange={() => {
-                  toggleChange();
-                }}
-                data-id="serviceUsersExclude"
-                data-cy="serviceUsersExclude"
-              />
-            </Col>
-            <Col sm={9}>
-              <AuditFilterEntries
-                entries={entries}
-                refreshTable={refreshTable}
-              />
-            </Col>
-          </Row>
-          <XATableLayout
-            data={accessListingData}
-            columns={columns}
-            fetchData={fetchAccessLogsInfo}
-            totalCount={entries && entries.totalCount}
-            loading={loader}
-            pageCount={pageCount}
-            getRowProps={(row) => ({
-              onClick: (e) => {
-                e.stopPropagation();
-                rowModal(row);
-              }
-            })}
-            columnHide={true}
-            columnResizable={true}
-            columnSort={true}
-            defaultSort={getDefaultSort}
-          />
-          <Modal show={showrowmodal} size="lg" onHide={handleClose}>
-            <Modal.Header closeButton>
-              <Modal.Title>
-                <h4>
-                  Audit Access Log Detail
-                  <Link
-                    className="text-info"
-                    target="_blank"
-                    title="Show log details in next tab"
-                    to={{
-                      pathname: `/reports/audit/eventlog/${rowdata.eventId}`
-                    }}
-                  >
-                    <i className="fa-fw fa fa-external-link pull-right text-info"></i>
-                  </Link>
-                </h4>
-              </Modal.Title>
-            </Modal.Header>
-            <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 mr-md-3">
-              <AccessLogsTable data={rowdata}></AccessLogsTable>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button variant="primary" onClick={handleClose}>
-                OK
-              </Button>
-            </Modal.Footer>
-          </Modal>
-          <Modal show={policyviewmodal} onHide={handleClosePolicyId} size="xl">
-            <Modal.Header closeButton>
-              <Modal.Title>Policy Details</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <PolicyViewDetails
-                paramsData={policyParamsData}
-                serviceDefs={serviceDefs}
-                policyView={false}
-              />
-            </Modal.Body>
-            <Modal.Footer>
-              <div className="policy-version pull-left">
-                <i
-                  className={
-                    policyParamsData && policyParamsData.policyVersion > 1
-                      ? "fa-fw fa fa-chevron-left active"
-                      : "fa-fw fa fa-chevron-left"
+              <span className="info-icon">
+                <CustomTooltip
+                  placement="left"
+                  content={
+                    <p className="pd-10" style={{ fontSize: "small" }}>
+                      Wildcard searches( for example using * or ? ) are not
+                      currently supported.
+                      <br /> <b>Access Enforcer :</b> Search by access enforcer
+                      name.
+                      <br />
+                      <b> Access Type :</b> Search by access Type like
+                      READ_EXECUTE, WRITE_EXECUTE.
+                      <br />
+                      <b>Client IP :</b> Search by IP address from where
+                      resource was accessed.
+                      <br />
+                      <b>Cluster Name : </b> Name of cluster <br />
+                      <b>Zone Name :</b> Name of Zone. <br />
+                      <b>End Date :</b> Set end date. <br />
+                      <b>Resource Name :</b> Resource name.
+                      <br /> <b>Resource Type :</b> Search by resource type
+                      based on component. eg. path in HDFS, database ,table in
+                      Hive.
+                      <br />
+                      <b> Result :</b> Search by access result i.e
+                      Allowed/Denied logs.
+                      <br /> <b> Service Name :</b> Name of service.
+                      <br /> <b> Service Type :</b> Select type of service.
+                      <br /> <b> Start Date :</b> Set start date.
+                      <br /> <b> User :</b> Name of User.
+                      <br /> <b> Exclude User :</b> Name of User.
+                      <br /> <b> Application :</b> Application.
+                      <br /> <b> Tags :</b> Tag Name.
+                      <br /> <b> Permission :</b> Permission
+                    </p>
                   }
-                  onClick={(e) =>
-                    e.currentTarget.classList.contains("active") &&
-                    previousVer(e)
-                  }
-                ></i>
-                <span>{`Version ${
-                  policyParamsData && policyParamsData.policyVersion
-                }`}</span>
-                <i
-                  className={
-                    !isUndefined(
-                      currentPage[
-                        indexOf(
-                          currentPage,
-                          policyParamsData && policyParamsData.policyVersion
-                        ) + 1
-                      ]
-                    )
-                      ? "fa-fw fa fa-chevron-right active"
-                      : "fa-fw fa fa-chevron-right"
-                  }
-                  onClick={(e) =>
-                    e.currentTarget.classList.contains("active") && nextVer(e)
-                  }
-                ></i>
-              </div>
-              <Button variant="primary" onClick={handleClosePolicyId}>
-                OK
-              </Button>
-            </Modal.Footer>
-          </Modal>
-        </React.Fragment>
-      )}
+                  icon="fa-fw fa fa-info-circle"
+                />
+              </span>
+            </div>
+          </Col>
+        </Row>
+        <Row className="mb-2">
+          <Col sm={2}>
+            <span>Exclude Service Users: </span>
+            <input
+              type="checkbox"
+              className="align-middle"
+              defaultChecked={checked}
+              onChange={() => {
+                toggleChange();
+              }}
+              data-id="serviceUsersExclude"
+              data-cy="serviceUsersExclude"
+            />
+          </Col>
+          <Col sm={9}>
+            <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+          </Col>
+        </Row>
+        <XATableLayout
+          data={accessListingData}
+          columns={columns}
+          fetchData={fetchAccessLogsInfo}
+          totalCount={entries && entries.totalCount}
+          loading={loader}
+          pageCount={pageCount}
+          getRowProps={(row) => ({
+            onClick: (e) => {
+              e.stopPropagation();
+              rowModal(row);
+            }
+          })}
+          columnHide={true}
+          columnResizable={true}
+          columnSort={true}
+          defaultSort={getDefaultSort}
+        />
+        <Modal show={showrowmodal} size="lg" onHide={handleClose}>
+          <Modal.Header closeButton>
+            <Modal.Title>
+              <h4>
+                Audit Access Log Detail
+                <Link
+                  className="text-info"
+                  target="_blank"
+                  title="Show log details in next tab"
+                  to={{
+                    pathname: `/reports/audit/eventlog/${rowdata.eventId}`
+                  }}
+                >
+                  <i className="fa-fw fa fa-external-link pull-right text-info"></i>
+                </Link>
+              </h4>
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 mr-md-3">
+            <AccessLogsTable data={rowdata}></AccessLogsTable>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button variant="primary" onClick={handleClose}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
+        <Modal show={policyviewmodal} onHide={handleClosePolicyId} size="xl">
+          <Modal.Header closeButton>
+            <Modal.Title>Policy Details</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <PolicyViewDetails
+              paramsData={policyParamsData}
+              serviceDefs={serviceDefs}
+              policyView={false}
+            />
+          </Modal.Body>
+          <Modal.Footer>
+            <div className="policy-version pull-left">
+              <i
+                className={
+                  policyParamsData && policyParamsData.policyVersion > 1
+                    ? "fa-fw fa fa-chevron-left active"
+                    : "fa-fw fa fa-chevron-left"
+                }
+                onClick={(e) =>
+                  e.currentTarget.classList.contains("active") && previousVer(e)
+                }
+              ></i>
+              <span>{`Version ${
+                policyParamsData && policyParamsData.policyVersion
+              }`}</span>
+              <i
+                className={
+                  !isUndefined(
+                    currentPage[
+                      indexOf(
+                        currentPage,
+                        policyParamsData && policyParamsData.policyVersion
+                      ) + 1
+                    ]
+                  )
+                    ? "fa-fw fa fa-chevron-right active"
+                    : "fa-fw fa fa-chevron-right"
+                }
+                onClick={(e) =>
+                  e.currentTarget.classList.contains("active") && nextVer(e)
+                }
+              ></i>
+            </div>
+            <Button variant="primary" onClick={handleClosePolicyId}>
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </React.Fragment>
     </div>
   );
 }

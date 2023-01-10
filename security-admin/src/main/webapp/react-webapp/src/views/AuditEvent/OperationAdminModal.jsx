@@ -29,7 +29,7 @@ import ServiceLogs from "./AdminLogs/ServiceLogs";
 import PolicyLogs from "./AdminLogs/PolicyLogs";
 import PasswordLogs from "./AdminLogs/PasswordLogs";
 import UserprofileLogs from "./AdminLogs/UserprofileLogs";
-import { ContentLoader } from "../../components/CommonComponents";
+import { ModalLoader } from "../../components/CommonComponents";
 
 export const OperationAdminModal = ({ onHide, show, data = {} }) => {
   const [reportdata, setReportData] = useState([]);
@@ -61,66 +61,62 @@ export const OperationAdminModal = ({ onHide, show, data = {} }) => {
       <Modal.Header closeButton>
         <Modal.Title>Operation :{action || ""}</Modal.Title>
       </Modal.Header>
-      {loader ? (
-        <>
-          <br />
-          <ContentLoader size="50px" />
-          <br />
-        </>
-      ) : (
-        <>
-          <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 mr-md-3">
-            <div>
-              {/* SERVICE */}
 
-              {objectClassType ==
-                ClassTypes.CLASS_TYPE_RANGER_SERVICE.value && (
-                <ServiceLogs reportdata={reportdata} data={data} />
-              )}
+      <Modal.Body className="overflow-auto p-3 mb-3 mb-md-0 mr-md-3">
+        {loader ? (
+          <>
+            <ModalLoader />
+          </>
+        ) : (
+          <div>
+            {/* SERVICE */}
 
-              {/* POLICY */}
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_SERVICE.value && (
+              <ServiceLogs reportdata={reportdata} data={data} />
+            )}
 
-              {objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
-                <PolicyLogs reportdata={reportdata} data={data} />
-              )}
+            {/* POLICY */}
 
-              {objectClassType == ClassTypes.CLASS_TYPE_USER_PROFILE.value && (
-                <UserprofileLogs reportdata={reportdata} data={data} />
-              )}
-              {/* SECURITY ZONE */}
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
+              <PolicyLogs reportdata={reportdata} data={data} />
+            )}
 
-              {objectClassType ==
-                ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value && (
-                <SecurityZonelogs reportdata={reportdata} data={data} />
-              )}
+            {objectClassType == ClassTypes.CLASS_TYPE_USER_PROFILE.value && (
+              <UserprofileLogs reportdata={reportdata} data={data} />
+            )}
+            {/* SECURITY ZONE */}
 
-              {/* USER */}
+            {objectClassType ==
+              ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value && (
+              <SecurityZonelogs reportdata={reportdata} data={data} />
+            )}
 
-              {objectClassType == ClassTypes.CLASS_TYPE_XA_USER.value && (
-                <UserLogs reportdata={reportdata} data={data} />
-              )}
+            {/* USER */}
 
-              {/* GROUP */}
+            {objectClassType == ClassTypes.CLASS_TYPE_XA_USER.value && (
+              <UserLogs reportdata={reportdata} data={data} />
+            )}
 
-              {objectClassType == ClassTypes.CLASS_TYPE_XA_GROUP.value && (
-                <GroupLogs reportdata={reportdata} data={data} />
-              )}
-              {/* ROLE */}
+            {/* GROUP */}
 
-              {objectClassType == ClassTypes.CLASS_TYPE_RANGER_ROLE.value && (
-                <RoleLogs reportdata={reportdata} data={data} />
-              )}
+            {objectClassType == ClassTypes.CLASS_TYPE_XA_GROUP.value && (
+              <GroupLogs reportdata={reportdata} data={data} />
+            )}
+            {/* ROLE */}
 
-              {/* PASSWORD CHANGE */}
+            {objectClassType == ClassTypes.CLASS_TYPE_RANGER_ROLE.value && (
+              <RoleLogs reportdata={reportdata} data={data} />
+            )}
 
-              {objectClassType ==
-                ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value && (
-                <PasswordLogs reportdata={reportdata} data={data} />
-              )}
-            </div>
-          </Modal.Body>
-        </>
-      )}
+            {/* PASSWORD CHANGE */}
+
+            {objectClassType == ClassTypes.CLASS_TYPE_PASSWORD_CHANGE.value && (
+              <PasswordLogs reportdata={reportdata} data={data} />
+            )}
+          </div>
+        )}
+      </Modal.Body>
+
       <Modal.Footer>
         <Button variant="primary" className="btn-mini" onClick={onHide}>
           OK

@@ -35,13 +35,15 @@ import { getUserAccessRoleList, serverError } from "Utils/XAUtils";
 import { getUserProfile } from "Utils/appState";
 import _, { isEmpty, isUndefined } from "lodash";
 import { SyncSourceDetails } from "../SyncSourceDetails";
+import { BlockUi } from "../../../components/CommonComponents";
 import { InfoIcon } from "../../../utils/XAUtils";
 import { RegexMessage, roleChngWarning } from "../../../utils/XAMessages";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
 
 const initialState = {
-  loader: true
+  loader: true,
+  blockUI: false
 };
 
 const PromtDialog = (props) => {
@@ -57,6 +59,11 @@ function reducer(state, action) {
         ...state,
         loader: action.loader
       };
+    case "SET_BLOCK_UI":
+      return {
+        ...state,
+        blockUI: action.blockUI
+      };
     default:
       throw new Error();
   }
@@ -67,7 +74,7 @@ function UserFormComp(props) {
   const { state } = useLocation();
   const navigate = useNavigate();
   const [userFormState, dispatch] = useReducer(reducer, initialState);
-  const { loader } = userFormState;
+  const { loader, blockUI } = userFormState;
   const { isEditView, userInfo } = props;
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const toastId = React.useRef(null);
@@ -111,6 +118,10 @@ function UserFormComp(props) {
     setPreventUnblock(true);
     if (isEditView) {
       try {
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: true
+        });
         const userEdit = await fetchApi({
           url: `xusers/secure/users/${userInfo.id}`,
           method: "put",
@@ -118,12 +129,24 @@ function UserFormComp(props) {
         });
         toast.success("User updated successfully!!");
         navigate("/users/usertab");
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
       } catch (error) {
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
         serverError(error);
         console.error(`Error occurred while creating user`);
       }
     } else {
       try {
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: true
+        });
         const userCreate = await fetchApi({
           url: "xusers/secure/users",
           method: "post",
@@ -136,7 +159,15 @@ function UserFormComp(props) {
             addPageData: tblpageData
           }
         });
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
       } catch (error) {
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
         serverError(error);
         console.error(`Error occurred while creating user`);
       }
@@ -354,6 +385,7 @@ function UserFormComp(props) {
   return (
     <>
       <h4 className="wrap-header bold">User Detail</h4>
+
       <Form
         onSubmit={handleSubmit}
         keepDirtyOnReinitialize={true}
@@ -733,6 +765,7 @@ function UserFormComp(props) {
           </div>
         )}
       />
+      <BlockUi isUiBlock={blockUI} />
     </>
   );
 }

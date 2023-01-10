@@ -29,7 +29,7 @@ import { Row, Col, Collapse, Breadcrumb } from "react-bootstrap";
 import { sortBy } from "lodash";
 import { commonBreadcrumb } from "../../utils/XAUtils";
 import withRouter from "Hooks/withRouter";
-import { ContentLoader } from "../../components/CommonComponents";
+import { BlockUi, Loader } from "../../components/CommonComponents";
 
 class ZoneListing extends Component {
   constructor(props) {
@@ -40,7 +40,8 @@ class ZoneListing extends Component {
       isCollapse: true,
       loader: true,
       filterZone: [],
-      isAdminRole: isSystemAdmin() || isKeyAdmin()
+      isAdminRole: isSystemAdmin() || isKeyAdmin(),
+      blockUI: false
     };
     this.onChangeSearch = this.onChangeSearch.bind(this);
   }
@@ -99,6 +100,7 @@ class ZoneListing extends Component {
     let getSelectedZone = [];
 
     try {
+      this.setState({ blockUI: true });
       await fetchApi({
         url: `zones/zones/${zoneId}`,
         method: "delete"
@@ -111,7 +113,8 @@ class ZoneListing extends Component {
       this.setState({
         selectedZone: getSelectedZone,
         filterZone: availableZone,
-        zones: availableZone
+        zones: availableZone,
+        blockUI: false
       });
 
       if (getSelectedZone && getSelectedZone !== undefined) {
@@ -123,9 +126,13 @@ class ZoneListing extends Component {
       }
       toast.success("Successfully deleted the zone");
     } catch (error) {
-      console.error(
-        `Error occurred while deleting Zone id - ${zoneId}!  ${error}`
-      );
+      this.setState({ blockUI: false });
+      let errorMsg = `Error occurred while deleting Zone id - ${zoneId}!  ${error}`;
+      if (error?.response?.data?.msgDesc) {
+        errorMsg = `Error! ${error.response.data.msgDesc}`;
+      }
+      toast.error(errorMsg);
+      console.error(errorMsg);
     }
   };
 
@@ -137,132 +144,131 @@ class ZoneListing extends Component {
 
   render() {
     return (
-      <>
-        {commonBreadcrumb(["SecurityZone"])}
-        <div className="wrap mt-1">
-          <Row>
-            <Collapse in={this.state.isCollapse} data-id="panel">
-              <Col sm={3} className="border-right border-grey">
-                <Row>
-                  <Col>
-                    <h5 className="text-muted wrap-header bold pull-left">
-                      Security Zones
-                    </h5>
-                  </Col>
-                  {this.state.isAdminRole && (
-                    <Col>
-                      <Link
-                        to={{
-                          pathname: "/zones/create",
-                          state: {
-                            detail: this.state.filterZone[0]
-                          }
-                        }}
-                        className="btn btn-outline-secondary btn-sm pull-right"
-                        title="Create zone"
-                      >
-                        <i className="fa-fw fa fa-plus"></i>
-                      </Link>
-                    </Col>
-                  )}
-                </Row>
-                <Row>
-                  <Col>
-                    <input
-                      className="form-control mt-2"
-                      type="text"
-                      onChange={this.onChangeSearch}
-                      placeholder="Search"
-                      data-id="zoneSearch"
-                      data-cy="zoneSearch"
-                    ></input>
-                  </Col>
-                </Row>
-                <Row className="mt-2">
-                  {this.state.loader ? (
-                    <Col className="text-center">
-                      <ContentLoader size="20px" />
-                    </Col>
-                  ) : (
-                    <Col>
-                      {this.state.filterZone.length !== 0 ? (
-                        <ul className="zone-listing">
-                          {this.state.filterZone.map((zone) => (
-                            <li
-                              className="trim-containt"
-                              key={zone.id}
-                              onClick={() => {
-                                this.clickBtn(zone.id);
-                              }}
-                              data-id={zone.name}
-                              data-cy={zone.name}
-                              title={zone.name}
-                            >
-                              <a
-                                className={
-                                  this.state.selectedZone != null &&
-                                  this.state.selectedZone.id === zone.id
-                                    ? `selected`
-                                    : ``
-                                }
-                              >
-                                {zone.name}
-                              </a>
-                            </li>
-                          ))}
-                        </ul>
-                      ) : (
-                        <h6 className="text-muted large mt-3 bold">
-                          No Zone Found !
-                        </h6>
-                      )}
-                    </Col>
-                  )}
-                </Row>
-              </Col>
-            </Collapse>
-            <Col>
-              {this.state.loader ? (
-                <ContentLoader size="50px" />
-              ) : this.state.selectedZone === null ? (
-                <Row className="justify-content-md-center">
-                  <Col md="auto">
-                    <div className="pt-5 pr-5">
-                      <img
-                        alt="Avatar"
-                        className="w-50 p-3 d-block mx-auto"
-                        src={noZoneImage}
-                      />
+      <React.Fragment>
+        {this.state.loader ? (
+          <Loader />
+        ) : (
+          <React.Fragment>
+            {commonBreadcrumb(["SecurityZone"])}
+            <div className="wrap mt-1">
+              <Row>
+                <BlockUi isUiBlock={this.state.blockUI} />
+                <Collapse in={this.state.isCollapse} data-id="panel">
+                  <Col sm={3} className="border-right border-grey">
+                    <Row>
+                      <Col>
+                        <h5 className="text-muted wrap-header bold pull-left">
+                          Security Zones
+                        </h5>
+                      </Col>
                       {this.state.isAdminRole && (
-                        <Link
-                          to={{
-                            pathname: "/zones/create",
-                            state: {
-                              detail: this.state.filterZone[0]
-                            }
-                          }}
-                          className="btn-add-security2 btn-lg"
-                        >
-                          <i className="fa-fw fa fa-plus"></i>Click here to
-                          Create new Zone
-                        </Link>
+                        <Col>
+                          <Link
+                            to={{
+                              pathname: "/zones/create",
+                              state: {
+                                detail: this.state.filterZone[0]
+                              }
+                            }}
+                            className="btn btn-outline-secondary btn-sm pull-right"
+                            title="Create zone"
+                          >
+                            <i className="fa-fw fa fa-plus"></i>
+                          </Link>
+                        </Col>
                       )}
-                    </div>
+                    </Row>
+                    <Row>
+                      <Col>
+                        <input
+                          className="form-control mt-2"
+                          type="text"
+                          onChange={this.onChangeSearch}
+                          placeholder="Search"
+                          data-id="zoneSearch"
+                          data-cy="zoneSearch"
+                        ></input>
+                      </Col>
+                    </Row>
+                    <Row className="mt-2">
+                      <Col>
+                        {this.state.filterZone.length !== 0 ? (
+                          <ul className="zone-listing">
+                            {this.state.filterZone.map((zone) => (
+                              <li
+                                className="trim-containt"
+                                key={zone.id}
+                                onClick={() => {
+                                  this.clickBtn(zone.id);
+                                }}
+                                data-id={zone.name}
+                                data-cy={zone.name}
+                                title={zone.name}
+                              >
+                                <a
+                                  className={
+                                    this.state.selectedZone != null &&
+                                    this.state.selectedZone.id === zone.id
+                                      ? `selected`
+                                      : ``
+                                  }
+                                >
+                                  {zone.name}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <h6 className="text-muted large mt-3 bold">
+                            No Zone Found !
+                          </h6>
+                        )}
+                      </Col>
+                    </Row>
                   </Col>
-                </Row>
-              ) : (
-                <ZoneDisplay
-                  history={this.props.navigate}
-                  zone={this.state.selectedZone}
-                  deleteZone={this.deleteZone}
-                  expandBtn={this.expandBtn}
-                  isCollapse={this.state.isCollapse}
-                />
-              )}
-            </Col>
-          </Row>
-        </div>
-      </>
+                </Collapse>
+                <Col>
+                  {this.state.selectedZone === null ? (
+                    <Row className="justify-content-md-center">
+                      <Col md="auto">
+                        <div className="pt-5 pr-5">
+                          <img
+                            alt="Avatar"
+                            className="w-50 p-3 d-block mx-auto"
+                            src={noZoneImage}
+                          />
+                          {this.state.isAdminRole && (
+                            <Link
+                              to={{
+                                pathname: "/zones/create",
+                                state: {
+                                  detail: this.state.filterZone[0]
+                                }
+                              }}
+                              className="btn-add-security2 btn-lg"
+                            >
+                              <i className="fa-fw fa fa-plus"></i>Click here to
+                              Create new Zone
+                            </Link>
+                          )}
+                        </div>
+                      </Col>
+                    </Row>
+                  ) : (
+                    <ZoneDisplay
+                      history={this.props.navigate}
+                      zone={this.state.selectedZone}
+                      deleteZone={this.deleteZone}
+                      expandBtn={this.expandBtn}
+                      isCollapse={this.state.isCollapse}
+                    />
+                  )}
+                </Col>
+              </Row>
+            </div>
+          </React.Fragment>
+        )}
+      </React.Fragment>
     );
   }
 }

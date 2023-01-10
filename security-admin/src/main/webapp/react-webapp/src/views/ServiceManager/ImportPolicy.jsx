@@ -35,6 +35,7 @@ import {
   uniq
 } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
+import { serverError } from "../../utils/XAUtils";
 
 class ImportPolicy extends Component {
   constructor(props) {
@@ -145,6 +146,7 @@ class ImportPolicy extends Component {
 
   importJsonFile = async (values) => {
     let serviceTypeList;
+    let importDataResp;
     let servicesMapJson = {};
     let zoneMapJson = {};
     let importData = new FormData();
@@ -180,7 +182,9 @@ class ImportPolicy extends Component {
     }
 
     try {
-      await fetchApi({
+      this.props.onHide();
+      this.props.showBlockUI(true);
+      importDataResp = await fetchApi({
         url: "/plugins/policies/importPoliciesFromFile",
         params: {
           serviceType: serviceTypeList,
@@ -189,11 +193,11 @@ class ImportPolicy extends Component {
         method: "post",
         data: importData
       });
-      this.props.onHide();
+      this.props.showBlockUI(false);
       toast.success("Successfully imported the file");
     } catch (error) {
-      this.props.onHide();
-      toast.error(error.response.data.msgDesc);
+      this.props.showBlockUI(false);
+      serverError(error);
       console.error(`Error occurred while importing policies! ${error}`);
     }
   };
@@ -250,6 +254,7 @@ class ImportPolicy extends Component {
         });
       }
     } catch (error) {
+      serverError(error);
       console.error(
         `Error occurred while fetching Service Definitions or CSRF headers! ${error}`
       );
@@ -575,7 +580,7 @@ class ImportPolicy extends Component {
                     <>
                       <Button
                         variant="secondary"
-                        className="btn-mini"
+                        size="sm"
                         onClick={this.props.onHide}
                       >
                         Cancel
@@ -583,7 +588,7 @@ class ImportPolicy extends Component {
                       <Button
                         variant="primary"
                         type="submit"
-                        className="btn-mini"
+                        size="sm"
                         disabled={isEmpty(this.state.sourceServicesMap)}
                       >
                         Import

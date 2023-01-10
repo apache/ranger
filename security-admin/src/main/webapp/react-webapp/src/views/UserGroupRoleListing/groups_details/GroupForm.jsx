@@ -32,12 +32,14 @@ import { useParams, useLocation, useNavigate } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
 import { fetchApi } from "Utils/fetchAPI";
 import { RegexValidation, GroupSource } from "../../../utils/XAEnums";
+import { BlockUi } from "../../../components/CommonComponents";
 
 const initialState = {
   groupInfo: {},
   groupType: {},
   loader: true,
-  preventUnBlock: false
+  preventUnBlock: false,
+  blockUI: false
 };
 
 const PromtDialog = (props) => {
@@ -65,6 +67,11 @@ const groupFormReducer = (state, action) => {
         ...state,
         preventUnBlock: action.preventUnBlock
       };
+    case "SET_BLOCK_UI":
+      return {
+        ...state,
+        blockUI: action.blockUI
+      };
     default:
       throw new Error();
   }
@@ -73,7 +80,8 @@ const groupFormReducer = (state, action) => {
 function GroupForm(props) {
   const params = useParams();
   const [groupDetails, dispatch] = useReducer(groupFormReducer, initialState);
-  const { groupType, groupInfo, loader, preventUnBlock } = groupDetails;
+  const { groupType, groupInfo, loader, preventUnBlock, blockUI } =
+    groupDetails;
   const { state } = useLocation();
   const navigate = useNavigate();
 
@@ -91,7 +99,6 @@ function GroupForm(props) {
   const fetchGroupData = async (groupID) => {
     let groupRespData;
     try {
-      const { fetchApi, fetchCSRFConf } = await import("Utils/fetchAPI");
       groupRespData = await fetchApi({
         url: "xusers/secure/groups/" + groupID
       });
@@ -133,24 +140,43 @@ function GroupForm(props) {
     });
     if (params?.groupID) {
       try {
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: true
+        });
         const userEdit = await fetchApi({
           url: `xusers/secure/groups/${params.groupID}`,
           method: "put",
           data: groupFormData
         });
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
         toast.success("Group updated successfully!!");
-        self.location.hash = "#/users/grouptab"; // change to navigate
+        self.location.hash = "#/users/grouptab";
       } catch (error) {
-        console.error(`Error occurred while fetching User list! ${error}`);
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
         serverError(error);
-        console.error(`Error occurred while creating proup`);
+        console.error(`Error occurred while updating group  ${error}`);
       }
     } else {
       try {
-        const passwdResp = await fetchApi({
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: true
+        });
+        const userAdd = await fetchApi({
           url: "xusers/secure/groups",
           method: "post",
           data: formData
+        });
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
         });
         toast.success("Group created successfully!!");
         navigate("/users/grouptab", {
@@ -160,8 +186,12 @@ function GroupForm(props) {
           }
         });
       } catch (error) {
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
         serverError(error);
-        console.error(`Error occurred while updating user password! ${error}`);
+        console.error(`Error occurred while creating group  ${error}`);
       }
     }
   };
@@ -198,186 +228,192 @@ function GroupForm(props) {
     return errors;
   };
 
-  return loader ? (
-    <Loader />
-  ) : (
+  return (
     <div>
       {commonBreadcrumb(
         ["Groups", params.groupID ? "GroupEdit" : "GroupCreate"],
         params.groupID
       )}
       <h4 className="wrap-header bold">Group Detail</h4>
-      <Form
-        onSubmit={handleSubmit}
-        validate={validateForm}
-        initialValues={setGroupFormData()}
-        render={({
-          handleSubmit,
-          form,
-          submitting,
-          invalid,
-          errors,
-          values,
-          pristine,
-          dirty
-        }) => (
-          <div className="wrap user-role-grp-form">
-            <PromtDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
-            <form
-              onSubmit={(event) => {
-                handleSubmit(event);
-              }}
-            >
-              <Field name="name">
-                {({ input, meta }) => (
-                  <Row className="form-group">
-                    <Col xs={3}>
-                      <label className="form-label pull-right">
-                        Group Name *
-                      </label>
-                    </Col>
-                    <Col xs={4}>
-                      <input
-                        {...input}
-                        type="text"
-                        name="name"
-                        onKeyDown={(e) => {
-                          e.key === "Enter" && e.preventDefault();
-                        }}
-                        placeholder="Group Name"
-                        id={meta.error && meta.touched ? "isError" : "name"}
-                        className={
-                          meta.error && meta.touched
-                            ? "form-control border-danger"
-                            : "form-control"
-                        }
-                        disabled={
-                          params.groupID &&
-                          groupInfo &&
-                          groupInfo.groupSource == GroupSource.XA_GROUP.value
-                            ? true
-                            : false
-                        }
-                        data-cy="name"
-                      />
-                      <span className="info-user-role-grp-icon">
-                        <CustomTooltip
-                          placement="right"
-                          content={
-                            <p className="pd-10" style={{ fontSize: "small" }}>
-                              1. User name should be start with alphabet /
-                              numeric / underscore / non-us characters.
-                              <br />
-                              2. Allowed special character ,._-+/@= and space.
-                              <br />
-                              3. Name length should be greater than one.
-                            </p>
+      {loader ? (
+        <Loader />
+      ) : (
+        <Form
+          onSubmit={handleSubmit}
+          validate={validateForm}
+          initialValues={setGroupFormData()}
+          render={({
+            handleSubmit,
+            form,
+            submitting,
+            invalid,
+            errors,
+            values,
+            pristine,
+            dirty
+          }) => (
+            <div className="wrap user-role-grp-form">
+              <PromtDialog isDirtyField={dirty} isUnblock={preventUnBlock} />
+              <form
+                onSubmit={(event) => {
+                  handleSubmit(event);
+                }}
+              >
+                <Field name="name">
+                  {({ input, meta }) => (
+                    <Row className="form-group">
+                      <Col xs={3}>
+                        <label className="form-label pull-right">
+                          Group Name *
+                        </label>
+                      </Col>
+                      <Col xs={4}>
+                        <input
+                          {...input}
+                          type="text"
+                          name="name"
+                          onKeyDown={(e) => {
+                            e.key === "Enter" && e.preventDefault();
+                          }}
+                          placeholder="Group Name"
+                          id={meta.error && meta.touched ? "isError" : "name"}
+                          className={
+                            meta.error && meta.touched
+                              ? "form-control border-danger"
+                              : "form-control"
                           }
-                          icon="fa-fw fa fa-info-circle"
+                          disabled={
+                            params.groupID &&
+                            groupInfo &&
+                            groupInfo.groupSource == GroupSource.XA_GROUP.value
+                              ? true
+                              : false
+                          }
+                          data-cy="name"
                         />
-                      </span>
-                      {meta.error && meta.touched && (
-                        <span className="invalid-field">{meta.error}</span>
-                      )}
-                    </Col>
-                  </Row>
-                )}
-              </Field>
-              <Field name="description">
-                {({ input }) => (
-                  <Row className="form-group">
-                    <Col xs={3}>
-                      <label className="form-label pull-right">
-                        Description
-                      </label>
-                    </Col>
-                    <Col xs={4}>
-                      <textarea
-                        {...input}
-                        placeholder="Description"
-                        className="form-control"
-                        disabled={
-                          params.groupID &&
-                          groupInfo &&
-                          groupInfo.groupSource == GroupSource.XA_GROUP.value
-                            ? true
-                            : false
+                        <span className="info-user-role-grp-icon">
+                          <CustomTooltip
+                            placement="right"
+                            content={
+                              <p
+                                className="pd-10"
+                                style={{ fontSize: "small" }}
+                              >
+                                1. User name should be start with alphabet /
+                                numeric / underscore / non-us characters.
+                                <br />
+                                2. Allowed special character ,._-+/@= and space.
+                                <br />
+                                3. Name length should be greater than one.
+                              </p>
+                            }
+                            icon="fa-fw fa fa-info-circle"
+                          />
+                        </span>
+                        {meta.error && meta.touched && (
+                          <span className="invalid-field">{meta.error}</span>
+                        )}
+                      </Col>
+                    </Row>
+                  )}
+                </Field>
+                <Field name="description">
+                  {({ input }) => (
+                    <Row className="form-group">
+                      <Col xs={3}>
+                        <label className="form-label pull-right">
+                          Description
+                        </label>
+                      </Col>
+                      <Col xs={4}>
+                        <textarea
+                          {...input}
+                          placeholder="Description"
+                          className="form-control"
+                          disabled={
+                            params.groupID &&
+                            groupInfo &&
+                            groupInfo.groupSource == GroupSource.XA_GROUP.value
+                              ? true
+                              : false
+                          }
+                          id="description"
+                          data-cy="description"
+                        />
+                      </Col>
+                    </Row>
+                  )}
+                </Field>
+                <div className="row">
+                  <div className="col-sm-12">
+                    <p className="form-header mg-0">Sync Details :</p>
+                    <div className="wrap">
+                      <SyncSourceDetails
+                        syncDetails={
+                          Object.keys(groupInfo).length > 0 &&
+                          groupInfo.otherAttributes
+                            ? JSON.parse(groupInfo.otherAttributes)
+                            : {}
                         }
-                        id="description"
-                        data-cy="description"
-                      />
-                    </Col>
-                  </Row>
-                )}
-              </Field>
-              <div className="row">
-                <div className="col-sm-12">
-                  <p className="form-header mg-0">Sync Details :</p>
-                  <div className="wrap">
-                    <SyncSourceDetails
-                      syncDetails={
-                        Object.keys(groupInfo).length > 0 &&
-                        groupInfo.otherAttributes
-                          ? JSON.parse(groupInfo.otherAttributes)
-                          : {}
-                      }
-                    ></SyncSourceDetails>
+                      ></SyncSourceDetails>
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              <div className="row form-actions">
-                <div className="col-md-9 offset-md-3">
-                  <Button
-                    variant="primary"
-                    onClick={() => {
-                      if (invalid) {
-                        let selector =
-                          document.getElementById("isError") ||
-                          document.getElementById(Object.keys(errors)[0]) ||
-                          document.querySelector(
-                            `input[name=${Object.keys(errors)[0]}]`
-                          ) ||
-                          document.querySelector(
-                            `input[id=${Object.keys(errors)[0]}]`
-                          ) ||
-                          document.querySelector(`span[class="invalid-field"]`);
-                        scrollToError(selector);
-                      }
-                      handleSubmit(values, invalid);
-                    }}
-                    className="btn-mini"
-                    size="sm"
-                    disabled={groupType === 1 ? true : submitting}
-                    data-id="save"
-                    data-cy="save"
-                  >
-                    Save
-                  </Button>
-                  <Button
-                    variant="secondary"
-                    type="button"
-                    className="btn-mini"
-                    size="sm"
-                    onClick={() => {
-                      form.reset;
-                      dispatch({
-                        type: "SET_PREVENT_ALERT",
-                        preventUnBlock: true
-                      });
-                      closeForm();
-                    }}
-                    data-id="cancel"
-                    data-cy="cancel"
-                  >
-                    Cancel
-                  </Button>
+                <div className="row form-actions">
+                  <div className="col-md-9 offset-md-3">
+                    <Button
+                      variant="primary"
+                      onClick={() => {
+                        if (invalid) {
+                          let selector =
+                            document.getElementById("isError") ||
+                            document.getElementById(Object.keys(errors)[0]) ||
+                            document.querySelector(
+                              `input[name=${Object.keys(errors)[0]}]`
+                            ) ||
+                            document.querySelector(
+                              `input[id=${Object.keys(errors)[0]}]`
+                            ) ||
+                            document.querySelector(
+                              `span[class="invalid-field"]`
+                            );
+                          scrollToError(selector);
+                        }
+                        handleSubmit(values, invalid);
+                      }}
+                      size="sm"
+                      disabled={groupType === 1 ? true : submitting}
+                      data-id="save"
+                      data-cy="save"
+                    >
+                      Save
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      type="button"
+                      size="sm"
+                      onClick={() => {
+                        form.reset;
+                        dispatch({
+                          type: "SET_PREVENT_ALERT",
+                          preventUnBlock: true
+                        });
+                        closeForm();
+                      }}
+                      data-id="cancel"
+                      data-cy="cancel"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            </form>
-          </div>
-        )}
-      />
+              </form>
+            </div>
+          )}
+        />
+      )}
+      <BlockUi isUiBlock={blockUI} />
     </div>
   );
 }

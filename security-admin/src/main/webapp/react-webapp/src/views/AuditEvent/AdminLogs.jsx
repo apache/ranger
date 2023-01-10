@@ -36,7 +36,7 @@ import {
   fetchSearchFilterParams,
   serverError
 } from "../../utils/XAUtils";
-import { ContentLoader } from "../../components/CommonComponents";
+import { Loader } from "../../components/CommonComponents";
 
 function Admin() {
   const [adminListingData, setAdminLogs] = useState([]);
@@ -443,57 +443,55 @@ function Admin() {
     }
   ];
 
-  return (
+  return contentLoader ? (
+    <Loader />
+  ) : (
     <div className="wrap">
-      {contentLoader ? (
-        <ContentLoader size="50px" />
-      ) : (
-        <React.Fragment>
-          <Row className="mb-2">
-            <Col sm={12}>
-              <div className="searchbox-border">
-                <StructuredFilter
-                  key="admin-log-search-filter"
-                  placeholder="Search for your access logs..."
-                  options={sortBy(searchFilterOptions, ["label"])}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
-                  defaultSelected={defaultSearchFilterParams}
-                />
-              </div>
-            </Col>
-          </Row>
+      <React.Fragment>
+        <Row className="mb-2">
+          <Col sm={12}>
+            <div className="searchbox-border">
+              <StructuredFilter
+                key="admin-log-search-filter"
+                placeholder="Search for your access logs..."
+                options={sortBy(searchFilterOptions, ["label"])}
+                onTokenAdd={updateSearchFilter}
+                onTokenRemove={updateSearchFilter}
+                defaultSelected={defaultSearchFilterParams}
+              />
+            </div>
+          </Col>
+        </Row>
 
-          <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
 
-          <XATableLayout
-            data={adminListingData}
-            columns={columns}
-            fetchData={fetchAdminLogsInfo}
-            totalCount={entries && entries.totalCount}
-            pageCount={pageCount}
-            loading={loader}
-            columnSort={true}
-            defaultSort={getDefaultSort}
-            getRowProps={(row) => ({
-              onClick: () => rowModal(row)
-            })}
-          />
+        <XATableLayout
+          data={adminListingData}
+          columns={columns}
+          fetchData={fetchAdminLogsInfo}
+          totalCount={entries && entries.totalCount}
+          pageCount={pageCount}
+          loading={loader}
+          columnSort={true}
+          defaultSort={getDefaultSort}
+          getRowProps={(row) => ({
+            onClick: () => rowModal(row)
+          })}
+        />
 
-          <AdminModal
-            show={showmodal}
-            data={sessionId}
-            onHide={handleClose}
-            updateSessionId={updateSessionId}
-          ></AdminModal>
+        <AdminModal
+          show={showmodal}
+          data={sessionId}
+          onHide={handleClose}
+          updateSessionId={updateSessionId}
+        ></AdminModal>
 
-          <OperationAdminModal
-            show={showrowmodal}
-            data={rowdata}
-            onHide={handleClosed}
-          ></OperationAdminModal>
-        </React.Fragment>
-      )}
+        <OperationAdminModal
+          show={showrowmodal}
+          data={rowdata}
+          onHide={handleClosed}
+        ></OperationAdminModal>
+      </React.Fragment>
     </div>
   );
 }

@@ -35,7 +35,7 @@ import {
   isKeyAdmin,
   isKMSAuditor
 } from "../../utils/XAUtils";
-import { ContentLoader } from "../../components/CommonComponents";
+import { Loader } from "../../components/CommonComponents";
 
 function Plugins() {
   const [pluginsListingData, setPluginsLogs] = useState([]);
@@ -331,39 +331,37 @@ function Plugins() {
     }
   ];
 
-  return (
+  return contentLoader ? (
+    <Loader />
+  ) : (
     <div className="wrap">
-      {contentLoader ? (
-        <ContentLoader size="50px" />
-      ) : (
-        <React.Fragment>
-          <Row className="mb-2">
-            <Col sm={12}>
-              <div className="searchbox-border">
-                <StructuredFilter
-                  key="plugin-log-search-filter"
-                  placeholder="Search for your plugins..."
-                  options={sortBy(searchFilterOptions, ["label"])}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
-                  defaultSelected={defaultSearchFilterParams}
-                />
-              </div>
-            </Col>
-          </Row>
-          <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
-          <XATableLayout
-            data={pluginsListingData}
-            columns={columns}
-            loading={loader}
-            totalCount={entries && entries.totalCount}
-            fetchData={fetchPluginsInfo}
-            pageCount={pageCount}
-            columnSort={true}
-            defaultSort={getDefaultSort}
-          />
-        </React.Fragment>
-      )}
+      <React.Fragment>
+        <Row className="mb-2">
+          <Col sm={12}>
+            <div className="searchbox-border">
+              <StructuredFilter
+                key="plugin-log-search-filter"
+                placeholder="Search for your plugins..."
+                options={sortBy(searchFilterOptions, ["label"])}
+                onTokenAdd={updateSearchFilter}
+                onTokenRemove={updateSearchFilter}
+                defaultSelected={defaultSearchFilterParams}
+              />
+            </div>
+          </Col>
+        </Row>
+        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+        <XATableLayout
+          data={pluginsListingData}
+          columns={columns}
+          loading={loader}
+          totalCount={entries && entries.totalCount}
+          fetchData={fetchPluginsInfo}
+          pageCount={pageCount}
+          columnSort={true}
+          defaultSort={getDefaultSort}
+        />
+      </React.Fragment>
     </div>
   );
 }

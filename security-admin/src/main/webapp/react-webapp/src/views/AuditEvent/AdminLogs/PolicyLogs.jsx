@@ -21,7 +21,7 @@ import React from "react";
 import { Table, Badge, Row, Col } from "react-bootstrap";
 import dateFormat from "dateformat";
 import { ClassTypes } from "../../../utils/XAEnums";
-import _, {
+import {
   isEmpty,
   isEqual,
   isUndefined,

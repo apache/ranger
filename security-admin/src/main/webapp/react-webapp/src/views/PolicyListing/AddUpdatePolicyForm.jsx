@@ -68,6 +68,7 @@ import AccordionContext from "react-bootstrap/AccordionContext";
 import usePrompt from "Hooks/usePrompt";
 import { RegexMessage } from "../../utils/XAMessages";
 import { policyInfo } from "Utils/XAUtils";
+import { BlockUi } from "../../components/CommonComponents";
 
 const noneOptions = {
   label: "None",
@@ -125,6 +126,7 @@ export default function AddUpdatePolicyForm(props) {
   const [show, setShow] = useState(true);
   const [showPolicyExpire, setShowPolicyExpire] = useState(true);
   const [showDelete, setShowDelete] = useState(false);
+  const [blockUI, setBlockUI] = useState(false);
   // usePrompt("Leave screen?", true);
 
   useEffect(() => {
@@ -755,28 +757,34 @@ export default function AddUpdatePolicyForm(props) {
         ...data
       };
       try {
+        setBlockUI(true);
         const resp = await fetchApi({
           url: `plugins/policies/${policyId}`,
           method: "PUT",
           data: dataVal
         });
-        toast.success("Policy updated successfully!!");
+        setBlockUI(false);
         navigate(`/service/${serviceId}/policies/${policyData.policyType}`);
+        toast.success("Policy updated successfully!!");
       } catch (error) {
+        setBlockUI(false);
         let errorMsg = `Failed to save policy form`;
         if (error?.response?.data?.msgDesc) {
           errorMsg = `Error! ${error.response.data.msgDesc}`;
         }
         toast.error(errorMsg);
-        console.error(`Error while saving policy form!!! ${error}`);
+        console.error(`Error while saving policy form! ${error}`);
       }
     } else {
       try {
+        setBlockUI(true);
         const resp = await fetchApi({
           url: "plugins/policies",
           method: "POST",
           data
         });
+
+        setBlockUI(false);
         toast.success("Policy save successfully!!");
         navigate(`/service/${serviceId}/policies/${policyType}`, {
           state: {
@@ -785,34 +793,38 @@ export default function AddUpdatePolicyForm(props) {
           }
         });
       } catch (error) {
+        setBlockUI(false);
         let errorMsg = `Failed to save policy form`;
         if (error?.response?.data?.msgDesc) {
           errorMsg = `Error! ${error.response.data.msgDesc}`;
         }
         toast.error(errorMsg);
-        console.error(`Error while saving policy form!!! ${error}`);
+        console.error(`Error while saving policy form! ${error}`);
       }
     }
   };
 
   const handleDeleteClick = async (policyID, serviceId) => {
+    hideDeleteModal();
     let policyType = policyId ? policyData.policyType : policyType;
     try {
+      setBlockUI(true);
       await fetchApi({
         url: `plugins/policies/${policyID}`,
         method: "DELETE"
       });
+      setBlockUI(false);
       toast.success(" Success! Policy deleted successfully");
       navigate(`/service/${serviceId}/policies/${policyType}`);
     } catch (error) {
-      console.log(error.response);
+      setBlockUI(false);
       let errorMsg = `Error occurred during deleting policy`;
-      if (error.response.data.msgDesc) {
+      if (error?.response?.data?.msgDesc) {
         errorMsg = `Error! ${error.response.data.msgDesc}`;
       }
       toast.error(errorMsg);
+      console.log(error);
     }
-    hideDeleteModal();
   };
 
   const closeForm = () => {
@@ -822,13 +834,15 @@ export default function AddUpdatePolicyForm(props) {
   const policyBreadcrumb = () => {
     let policyDetails = {};
     policyDetails["serviceId"] = serviceId;
-    policyDetails["policyType"] = policyId ? policyData.policyType : policyType;
-    policyDetails["serviceName"] = serviceDetails.displayName;
+    policyDetails["policyType"] = policyId
+      ? policyData?.policyType
+      : policyType;
+    policyDetails["serviceName"] = serviceDetails?.displayName;
     policyDetails["selectedZone"] = JSON.parse(
       localStorage.getItem("zoneDetails")
     );
-    if (serviceCompDetails.name === "tag") {
-      if (policyDetails.selectedZone) {
+    if (serviceCompDetails?.name === "tag") {
+      if (policyDetails?.selectedZone) {
         return commonBreadcrumb(
           [
             "TagBasedServiceManager",
@@ -848,7 +862,7 @@ export default function AddUpdatePolicyForm(props) {
         );
       }
     } else {
-      if (policyDetails.selectedZone) {
+      if (policyDetails?.selectedZone) {
         return commonBreadcrumb(
           [
             "ServiceManager",
@@ -1595,7 +1609,7 @@ export default function AddUpdatePolicyForm(props) {
                       {policyId !== undefined && (
                         <Modal show={showDelete} onHide={hideDeleteModal}>
                           <Modal.Header closeButton>
-                            <h5> Are you sure want to delete ?</h5>
+                            {`Are you sure want to delete ?`}
                           </Modal.Header>
 
                           <Modal.Footer>
@@ -1625,6 +1639,7 @@ export default function AddUpdatePolicyForm(props) {
                 </>
               )}
             />
+            <BlockUi isUiBlock={blockUI} />
           </div>
         </div>
       )}

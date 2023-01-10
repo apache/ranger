@@ -34,7 +34,7 @@ import {
   fetchSearchFilterParams,
   serverError
 } from "../../utils/XAUtils";
-import { ContentLoader } from "../../components/CommonComponents";
+import { Loader } from "../../components/CommonComponents";
 
 function Login_Sessions() {
   const [loginSessionListingData, setLoginSessionLogs] = useState([]);
@@ -385,45 +385,43 @@ function Login_Sessions() {
     }
   ];
 
-  return (
+  return contentLoader ? (
+    <Loader />
+  ) : (
     <div className="wrap">
-      {contentLoader ? (
-        <ContentLoader size="50px" />
-      ) : (
-        <React.Fragment>
-          <Row className="mb-2">
-            <Col sm={12}>
-              <div className="searchbox-border">
-                <StructuredFilter
-                  key="login-session-search-filter"
-                  placeholder="Search for your login sessions..."
-                  options={sortBy(searchFilterOptions, ["label"])}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
-                  defaultSelected={defaultSearchFilterParams}
-                />
-              </div>
-            </Col>
-          </Row>
-          <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
-          <XATableLayout
-            data={loginSessionListingData}
-            columns={columns}
-            fetchData={fetchLoginSessionLogsInfo}
-            totalCount={entries && entries.totalCount}
-            loading={loader}
-            pageCount={pageCount}
-            columnSort={true}
-            defaultSort={getDefaultSort}
-          />
-          <AdminModal
-            show={showmodal}
-            data={sessionId}
-            onHide={handleClose}
-            updateSessionId={updateSessionId}
-          ></AdminModal>
-        </React.Fragment>
-      )}
+      <React.Fragment>
+        <Row className="mb-2">
+          <Col sm={12}>
+            <div className="searchbox-border">
+              <StructuredFilter
+                key="login-session-search-filter"
+                placeholder="Search for your login sessions..."
+                options={sortBy(searchFilterOptions, ["label"])}
+                onTokenAdd={updateSearchFilter}
+                onTokenRemove={updateSearchFilter}
+                defaultSelected={defaultSearchFilterParams}
+              />
+            </div>
+          </Col>
+        </Row>
+        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+        <XATableLayout
+          data={loginSessionListingData}
+          columns={columns}
+          fetchData={fetchLoginSessionLogsInfo}
+          totalCount={entries && entries.totalCount}
+          loading={loader}
+          pageCount={pageCount}
+          columnSort={true}
+          defaultSort={getDefaultSort}
+        />
+        <AdminModal
+          show={showmodal}
+          data={sessionId}
+          onHide={handleClose}
+          updateSessionId={updateSessionId}
+        ></AdminModal>
+      </React.Fragment>
     </div>
   );
 }

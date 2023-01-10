@@ -68,14 +68,14 @@ class PolicyListingTabView extends Component {
 
   policyBreadcrumb = () => {
     let policyDetails = {};
-    policyDetails["serviceId"] = this.props.params.serviceId;
-    policyDetails["policyType"] = this.props.params.policyType;
-    policyDetails["serviceName"] = this.state.serviceData.displayName;
+    policyDetails["serviceId"] = this.props.params?.serviceId;
+    policyDetails["policyType"] = this.props.params?.policyType;
+    policyDetails["serviceName"] = this.state.serviceData?.displayName;
     policyDetails["selectedZone"] = JSON.parse(
       localStorage.getItem("zoneDetails")
     );
-    if (this.state.serviceDefData.name === "tag") {
-      if (policyDetails.selectedZone != null) {
+    if (this.state?.serviceDefData?.name === "tag") {
+      if (policyDetails?.selectedZone != null) {
         return commonBreadcrumb(
           ["TagBasedServiceManager", "ManagePolicies"],
           policyDetails
@@ -87,7 +87,7 @@ class PolicyListingTabView extends Component {
         );
       }
     } else {
-      if (policyDetails.selectedZone != null) {
+      if (policyDetails?.selectedZone != null) {
         return commonBreadcrumb(
           ["ServiceManager", "ManagePolicies"],
           policyDetails

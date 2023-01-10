@@ -20,13 +20,12 @@
 import React, { useState, useEffect } from "react";
 import { fetchApi } from "Utils/fetchAPI";
 import { Table, Badge, Row, Col } from "react-bootstrap";
-import { Loader } from "Components/CommonComponents";
 import { RangerPolicyType, DefStatus } from "../../../utils/XAEnums";
 import dateFormat from "dateformat";
 import { toast } from "react-toastify";
 import { find, isEmpty, sortBy } from "lodash";
 import { serverError } from "../../../utils/XAUtils";
-import { ContentLoader } from "../../../components/CommonComponents";
+import { ModalLoader } from "../../../components/CommonComponents";
 
 export function PolicyViewDetails(props) {
   const [access, setAccess] = useState([]);
@@ -269,7 +268,7 @@ export function PolicyViewDetails(props) {
     };
 
     return loader ? (
-      <Loader />
+      <ModalLoader />
     ) : (
       <>
         <tr>
@@ -610,7 +609,7 @@ export function PolicyViewDetails(props) {
     );
   };
   return loader ? (
-    <ContentLoader size="50px" />
+    <ModalLoader />
   ) : (
     <>
       <div>
