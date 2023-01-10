@@ -34,8 +34,8 @@ import withRouter from "Hooks/withRouter";
 import ServiceDefinition from "./ServiceDefinition";
 import ExportPolicy from "./ExportPolicy";
 import ImportPolicy from "./ImportPolicy";
-import { commonBreadcrumb } from "../../utils/XAUtils";
-import { ContentLoader } from "../../components/CommonComponents";
+import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
+import { BlockUi, Loader } from "../../components/CommonComponents";
 
 class ServiceDefinitions extends Component {
   constructor(props) {
@@ -54,7 +54,8 @@ class ServiceDefinitions extends Component {
       isAuditorRole: isAuditor() || isKMSAuditor(),
       isUserRole: isUser(),
       isKMSRole: isKeyAdmin() || isKMSAuditor(),
-      loader: true
+      loader: true,
+      blockUI: false
     };
   }
 
@@ -82,6 +83,15 @@ class ServiceDefinitions extends Component {
 
   hideImportModal = () => {
     this.setState({ showImportModal: false });
+  };
+
+  showBlockUI = (blockingUI) => {
+    if (blockingUI == true) {
+      this.setState({ blockUI: blockingUI });
+    }
+    setTimeout(() => {
+      this.setState({ blockUI: false });
+    }, 1000);
   };
 
   fetchServiceDefs = async () => {
@@ -257,16 +267,20 @@ class ServiceDefinitions extends Component {
   deleteService = async (sid) => {
     console.log("Service Id to delete is ", sid);
     try {
+      this.setState({ blockUI: true });
       await fetchApi({
         url: `plugins/services/${sid}`,
         method: "delete"
       });
       this.setState({
         services: this.state.filterServices.filter((s) => s.id !== sid),
-        filterServices: this.state.filterServices.filter((s) => s.id !== sid)
+        filterServices: this.state.filterServices.filter((s) => s.id !== sid),
+        blockUI: false
       });
       toast.success("Successfully deleted the service");
     } catch (error) {
+      this.setState({ blockUI: false });
+      serverError(error);
       console.error(
         `Error occurred while deleting Service id - ${sid}!  ${error}`
       );
@@ -413,6 +427,7 @@ class ServiceDefinitions extends Component {
                 isParentImport={true}
                 show={showImportModal}
                 onHide={this.hideImportModal}
+                showBlockUI={this.showBlockUI}
               />
             )}
             {isAdminRole && (
@@ -436,14 +451,15 @@ class ServiceDefinitions extends Component {
                 isParentExport={true}
                 show={showExportModal}
                 onHide={this.hideExportModal}
+                showBlockUI={this.showBlockUI}
               />
             )}
           </Col>
         </Row>
-        <div className="wrap policy-manager mt-2">
-          {this.state.loader ? (
-            <ContentLoader size="50px" />
-          ) : (
+        {this.state.loader ? (
+          <Loader />
+        ) : (
+          <div className="wrap policy-manager mt-2">
             <Row>
               {filterServiceDefs.map((serviceDef) => (
                 <ServiceDefinition
@@ -457,11 +473,14 @@ class ServiceDefinitions extends Component {
                   zones={zones}
                   isAdminRole={isAdminRole}
                   isUserRole={isUserRole}
+                  showBlockUI={this.showBlockUI}
                 ></ServiceDefinition>
               ))}
             </Row>
-          )}
-        </div>
+
+            <BlockUi isUiBlock={this.state.blockUI} />
+          </div>
+        )}
       </React.Fragment>
     );
   }

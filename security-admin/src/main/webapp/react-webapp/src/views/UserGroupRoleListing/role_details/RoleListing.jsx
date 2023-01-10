@@ -35,11 +35,13 @@ import {
   isSystemAdmin,
   isKeyAdmin,
   isAuditor,
-  isKMSAuditor
+  isKMSAuditor,
+  serverError
 } from "Utils/XAUtils";
-import { isUndefined, map, has } from "lodash";
+import { isUndefined, map } from "lodash";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
-import { ContentLoader } from "../../../components/CommonComponents";
+import { Loader } from "../../../components/CommonComponents";
+import { BlockUi } from "../../../components/CommonComponents";
 
 function Roles() {
   const navigate = useNavigate();
@@ -73,6 +75,7 @@ function Roles() {
   const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
     []
   );
+  const [blockUI, setBlockUI] = useState(false);
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -156,13 +159,8 @@ function Roles() {
           totalCount = roleResp.data.totalCount;
           totalPageCount = Math.ceil(totalCount / pageSize);
         } catch (error) {
+          serverError(error);
           console.error(`Error occurred while fetching User list! ${error}`);
-          if (
-            error.response !== undefined &&
-            has(error.response, "data.msgDesc")
-          ) {
-            toast.error(error.response.data.msgDesc);
-          }
         }
         if (state) {
           state["showLastPage"] = false;
@@ -208,19 +206,24 @@ function Roles() {
     const selectedData = selectedRows.current;
     let errorMsg = "";
     if (selectedData.length > 0) {
+      toggleConfirmModal();
       for (const { original } of selectedData) {
         try {
+          setBlockUI(true);
           await fetchApi({
             url: `roles/roles/${original.id}`,
             method: "DELETE"
           });
+          setBlockUI(false);
         } catch (error) {
-          if (error.response.data.msgDesc) {
+          setBlockUI(false);
+          if (error?.response?.data?.msgDesc) {
             errorMsg += error.response.data.msgDesc + "\n";
           } else {
             errorMsg +=
               `Error occurred during deleting Role: ${original.name}` + "\n";
           }
+          console.log(errorMsg);
         }
       }
       if (errorMsg) {
@@ -237,8 +240,6 @@ function Roles() {
           setUpdateTable(moment.now());
         }
       }
-
-      toggleConfirmModal();
     }
   };
 
@@ -366,9 +367,10 @@ function Roles() {
     <div className="wrap">
       <h4 className="wrap-header font-weight-bold">Role List</h4>
       {pageLoader ? (
-        <ContentLoader size="50px" />
+        <Loader />
       ) : (
         <React.Fragment>
+          <BlockUi isUiBlock={blockUI} />
           <Row className="mb-4">
             <Col md={8} className="usr-grp-role-search-width">
               <StructuredFilter

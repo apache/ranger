@@ -21,7 +21,7 @@ import React, { useState, useCallback, useRef, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
 import { Badge, Modal, Button, Row, Col } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
-import { AuditFilterEntries } from "Components/CommonComponents";
+import { AuditFilterEntries, Loader } from "Components/CommonComponents";
 import { SyncSourceDetails } from "../UserGroupRoleListing/SyncSourceDetails";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
@@ -33,7 +33,6 @@ import {
   fetchSearchFilterParams,
   serverError
 } from "../../utils/XAUtils";
-import { ContentLoader } from "../../components/CommonComponents";
 
 function User_Sync() {
   const [userSyncListingData, setUserSyncLogs] = useState([]);
@@ -360,62 +359,60 @@ function User_Sync() {
     }
   ];
 
-  return (
+  return contentLoader ? (
+    <Loader />
+  ) : (
     <div className="wrap">
-      {contentLoader ? (
-        <ContentLoader size="50px" />
-      ) : (
-        <React.Fragment>
-          <Row className="mb-2">
-            <Col sm={12}>
-              <div className="searchbox-border">
-                <StructuredFilter
-                  key="usersync-audit-search-filter"
-                  placeholder="Search for your user sync audits..."
-                  options={sortBy(searchFilterOptions, ["label"])}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
-                  defaultSelected={defaultSearchFilterParams}
-                />
-              </div>
-            </Col>
-          </Row>
-          <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
-          <XATableLayout
-            data={userSyncListingData}
-            columns={columns}
-            loading={loader}
-            totalCount={entries && entries.totalCount}
-            fetchData={fetchUserSyncInfo}
-            pageCount={pageCount}
-            columnSort={true}
-            defaultSort={getDefaultSort}
-          />
-          <Modal
-            show={showTableSyncDetails && showTableSyncDetails.showSyncDetails}
-            onHide={toggleTableSyncModalClose}
-            size="xl"
-          >
-            <Modal.Header>
-              <Modal.Title>Sync Source Details</Modal.Title>
-            </Modal.Header>
-            <Modal.Body>
-              <SyncSourceDetails
-                syncDetails={showTableSyncDetails.syncDteails}
-              ></SyncSourceDetails>
-            </Modal.Body>
-            <Modal.Footer>
-              <Button
-                variant="primary"
-                size="sm"
-                onClick={toggleTableSyncModalClose}
-              >
-                OK
-              </Button>
-            </Modal.Footer>
-          </Modal>
-        </React.Fragment>
-      )}
+      <React.Fragment>
+        <Row className="mb-2">
+          <Col sm={12}>
+            <div className="searchbox-border">
+              <StructuredFilter
+                key="usersync-audit-search-filter"
+                placeholder="Search for your user sync audits..."
+                options={sortBy(searchFilterOptions, ["label"])}
+                onTokenAdd={updateSearchFilter}
+                onTokenRemove={updateSearchFilter}
+                defaultSelected={defaultSearchFilterParams}
+              />
+            </div>
+          </Col>
+        </Row>
+        <AuditFilterEntries entries={entries} refreshTable={refreshTable} />
+        <XATableLayout
+          data={userSyncListingData}
+          columns={columns}
+          loading={loader}
+          totalCount={entries && entries.totalCount}
+          fetchData={fetchUserSyncInfo}
+          pageCount={pageCount}
+          columnSort={true}
+          defaultSort={getDefaultSort}
+        />
+        <Modal
+          show={showTableSyncDetails && showTableSyncDetails.showSyncDetails}
+          onHide={toggleTableSyncModalClose}
+          size="xl"
+        >
+          <Modal.Header>
+            <Modal.Title>Sync Source Details</Modal.Title>
+          </Modal.Header>
+          <Modal.Body>
+            <SyncSourceDetails
+              syncDetails={showTableSyncDetails.syncDteails}
+            ></SyncSourceDetails>
+          </Modal.Body>
+          <Modal.Footer>
+            <Button
+              variant="primary"
+              size="sm"
+              onClick={toggleTableSyncModalClose}
+            >
+              OK
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      </React.Fragment>
     </div>
   );
 }

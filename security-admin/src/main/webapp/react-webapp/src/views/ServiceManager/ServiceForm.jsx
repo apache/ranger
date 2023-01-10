@@ -31,9 +31,10 @@ import ServiceAuditFilter from "./ServiceAuditFilter";
 import TestConnection from "./TestConnection";
 import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
 import {
+  BlockUi,
   Condition,
-  ContentLoader,
   CustomPopover,
+  Loader,
   scrollToError
 } from "../../components/CommonComponents";
 import {
@@ -72,7 +73,8 @@ class ServiceForm extends Component {
       groupsDataRef: null,
       rolesDataRef: null,
       showDelete: false,
-      loader: true
+      loader: true,
+      blockUI: false
     };
   }
 
@@ -113,11 +115,13 @@ class ServiceForm extends Component {
     }
 
     try {
+      this.setState({ blockUI: true });
       await fetchApi({
         url: apiUrl,
         method: apiMethod,
         data: this.getServiceConfigsToSave(values)
       });
+      this.setState({ blockUI: false });
       toast.success(`Successfully ${apiSuccess} the service`);
       this.props.navigate(
         this.state.serviceDef.name === "tag"
@@ -125,6 +129,7 @@ class ServiceForm extends Component {
           : "/policymanager/resource"
       );
     } catch (error) {
+      this.setState({ blockUI: false });
       serverError(error);
       console.log(apiError);
     }
@@ -439,14 +444,19 @@ class ServiceForm extends Component {
   };
 
   deleteService = async (serviceId) => {
+    this.hideDeleteModal();
     try {
+      this.setState({ blockUI: true });
       await fetchApi({
         url: `plugins/services/${serviceId}`,
         method: "delete"
       });
+      this.setState({ blockUI: false });
       toast.success("Successfully deleted the service");
       this.props.navigate("/policymanager/resource");
     } catch (error) {
+      this.setState({ blockUI: false });
+      serverError(error);
       console.error(
         `Error occurred while deleting Service id - ${serviceId}!  ${error}`
       );
@@ -976,10 +986,10 @@ class ServiceForm extends Component {
             Service
           </h4>
         </div>
-        <div className="wrap">
-          {this.state.loader ? (
-            <ContentLoader size="50px" />
-          ) : (
+        {this.state.loader ? (
+          <Loader />
+        ) : (
+          <div className="wrap">
             <div className="row">
               <div className="col-sm-12">
                 <Form
@@ -1372,11 +1382,8 @@ class ServiceForm extends Component {
                             onHide={this.hideDeleteModal}
                           >
                             <Modal.Header closeButton>
-                              <Modal.Title>Delete Service</Modal.Title>
+                              {`Are you sure want to delete ?`}
                             </Modal.Header>
-                            <Modal.Body>
-                              Are you sure want to delete ?
-                            </Modal.Body>
                             <Modal.Footer>
                               <Button
                                 variant="secondary"
@@ -1407,8 +1414,9 @@ class ServiceForm extends Component {
                 />
               </div>
             </div>
-          )}
-        </div>
+            <BlockUi isUiBlock={this.state.blockUI} />
+          </div>
+        )}
       </React.Fragment>
     );
   }

@@ -20,9 +20,9 @@
 import React, { useState, useEffect } from "react";
 import { fetchApi } from "Utils/fetchAPI";
 import { Button, Row, Col } from "react-bootstrap";
-import { isAuditor, isKMSAuditor } from "Utils/XAUtils";
+import { isAuditor, isKMSAuditor, serverError } from "Utils/XAUtils";
 import { toast } from "react-toastify";
-import { ContentLoader } from "../../components/CommonComponents";
+import { ModalLoader } from "../../components/CommonComponents";
 
 function GroupAssociateUserDetails(props) {
   const { groupID } = props;
@@ -45,6 +45,7 @@ function GroupAssociateUserDetails(props) {
         }
       });
     } catch (error) {
+      serverError(error);
       console.error(error);
     }
 
@@ -80,7 +81,7 @@ function GroupAssociateUserDetails(props) {
   };
 
   return loader ? (
-    <ContentLoader size="50px" />
+    <ModalLoader />
   ) : (
     <>
       {userListData && userListData.length > 0 ? (

@@ -31,6 +31,7 @@ import {
 } from "react-bootstrap";
 import { Field } from "react-final-form";
 import { useLocation } from "react-router-dom";
+import blockLoading from "Images/blockLoading.gif";
 
 const Loader = () => {
   return (
@@ -482,19 +483,29 @@ export const scrollToNewData = (usrData, resultSize) => {
   }
 };
 
-export const ContentLoader = (props) => {
-  const { size } = props;
+export const BlockUi = (props) => {
+  const { isUiBlock } = props;
+  return !isUiBlock ? (
+    ""
+  ) : (
+    <div className="block-ui-container">
+      <div className="block-ui-overlay" />
+      <div className="block-ui-message-container">
+        <div className="block-ui-img">
+          <img src={blockLoading} /> Please wait..
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const ModalLoader = () => {
   return (
-    <Row>
-      <Col sm={12}>
-        <center>
-          <i
-            className="fa fa-spinner fa-pulse fa-lg fa-fw"
-            style={{ fontSize: size, color: "#505054" }}
-          ></i>
-        </center>
-      </Col>
-    </Row>
+    <h4 style={{ opacity: "0.7" }}>
+      <center>
+        <i className="fa fa-spinner fa-pulse fa-lg fa-fw"></i>
+      </center>
+    </h4>
   );
 };
 

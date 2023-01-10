@@ -58,7 +58,7 @@ import {
   isUser
 } from "../../utils/XAUtils";
 import { alertMessage } from "../../utils/XAEnums";
-import { ContentLoader } from "../../components/CommonComponents";
+import { BlockUi, Loader } from "../../components/CommonComponents";
 
 function PolicyListing(props) {
   const { serviceDef } = props;
@@ -97,6 +97,7 @@ function PolicyListing(props) {
   const [pageLoader, setPageLoader] = useState(true);
   const [resetPage, setResetpage] = useState({ page: 0 });
   const [show, setShow] = useState(true);
+  const [blockUI, setBlockUI] = useState(false);
   let navigate = useNavigate();
   let { serviceId, policyType } = useParams();
 
@@ -280,19 +281,23 @@ function PolicyListing(props) {
   };
 
   const handleDeleteClick = async (policyID) => {
+    toggleClose();
     try {
+      setBlockUI(true);
       await fetchApi({
         url: `plugins/policies/${policyID}`,
         method: "DELETE"
       });
+      setBlockUI(false);
       toast.success(" Success! Policy deleted successfully");
     } catch (error) {
-      console.log(error.response);
-      if (error.response.data.msgDesc) {
-        errorMsg += error.response.data.msgDesc + "\n";
-      } else {
-        errorMsg += `Error occurred during deleting policy`;
+      setBlockUI(false);
+      let errorMsg = "Failed to delete policy : ";
+      if (error?.response?.data?.msgDesc) {
+        errorMsg += error.response.data.msgDesc;
       }
+      toast.error(errorMsg);
+      console.log("Error occurred during deleting policy : " + error);
     }
     if (policyListingData.length == 1 && currentpageIndex > 1) {
       let page = currentpageIndex - currentpageIndex;
@@ -300,7 +305,6 @@ function PolicyListing(props) {
     } else {
       setUpdateTable(moment.now());
     }
-    toggleClose();
   };
 
   const previousVersion = (e) => {
@@ -645,7 +649,7 @@ function PolicyListing(props) {
     if (currentServiceDef !== undefined) {
       let serviceDefResource = currentServiceDef.resources;
 
-      let serviceDefResourceOption = serviceDefResource.map((obj) => ({
+      let serviceDefResourceOption = serviceDefResource?.map((obj) => ({
         category: "resource:" + obj.name,
         label: obj.label,
         urlLabel: camelCase(obj.label),
@@ -712,9 +716,10 @@ function PolicyListing(props) {
           </Alert>
         )}
       {pageLoader ? (
-        <ContentLoader size="50px" />
+        <Loader />
       ) : (
         <React.Fragment>
+          <BlockUi isUiBlock={blockUI} />
           <div className="policy-listing">
             <Row className="mb-3">
               <Col sm={10}>

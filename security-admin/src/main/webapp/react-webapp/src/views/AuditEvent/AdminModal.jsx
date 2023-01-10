@@ -24,7 +24,7 @@ import { AuthStatus, AuthType } from "../../utils/XAEnums";
 import { Modal, Table, Button } from "react-bootstrap";
 import dateFormat from "dateformat";
 import { has } from "lodash";
-import { ContentLoader } from "../../components/CommonComponents";
+import { ModalLoader } from "../../components/CommonComponents";
 
 export const AdminModal = (props) => {
   const [authSession, setAuthSession] = useState([]);
@@ -68,7 +68,7 @@ export const AdminModal = (props) => {
       </Modal.Header>
       <Modal.Body>
         {loader ? (
-          <ContentLoader size="50px" />
+          <ModalLoader />
         ) : (
           <Table striped bordered hover>
             <tbody>

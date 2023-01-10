@@ -46,12 +46,14 @@ import {
   isSystemAdmin,
   isKeyAdmin,
   isAuditor,
-  isKMSAuditor
+  isKMSAuditor,
+  serverError
 } from "Utils/XAUtils";
-import { find, isUndefined, map, has } from "lodash";
+import { find, isUndefined, map } from "lodash";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import {
-  ContentLoader,
+  BlockUi,
+  Loader,
   scrollToNewData
 } from "../../../components/CommonComponents";
 
@@ -91,6 +93,7 @@ function Groups() {
     []
   );
   const [pageLoader, setPageLoader] = useState(true);
+  const [blockUI, setBlockUI] = useState(false);
 
   useEffect(() => {
     let searchFilterParam = {};
@@ -175,13 +178,8 @@ function Groups() {
           totalCount = groupResp.data.totalCount;
           totalPageCount = Math.ceil(totalCount / pageSize);
         } catch (error) {
+          serverError(error);
           console.error(`Error occurred while fetching User list! ${error}`);
-          if (
-            error.response !== undefined &&
-            has(error.response, "data.msgDesc")
-          ) {
-            toast.error(error.response.data.msgDesc);
-          }
         }
         if (state) {
           state["showLastPage"] = false;
@@ -230,8 +228,10 @@ function Groups() {
     const selectedData = selectedRows.current;
     let errorMsg = "";
     if (selectedData.length > 0) {
+      toggleConfirmModal();
       for (const { original } of selectedData) {
         try {
+          setBlockUI(true);
           await fetchApi({
             url: `xusers/secure/groups/id/${original.id}`,
             method: "DELETE",
@@ -239,13 +239,16 @@ function Groups() {
               forceDelete: true
             }
           });
+          setBlockUI(false);
         } catch (error) {
-          if (error.response.data.msgDesc) {
+          setBlockUI(false);
+          if (error?.response?.data?.msgDesc) {
             errorMsg += error.response.data.msgDesc + "\n";
           } else {
             errorMsg +=
               `Error occurred during deleting Groups: ${original.name}` + "\n";
           }
+          console.log(errorMsg);
         }
       }
       if (errorMsg) {
@@ -262,8 +265,6 @@ function Groups() {
           setUpdateTable(moment.now());
         }
       }
-
-      toggleConfirmModal();
     }
   };
 
@@ -289,13 +290,8 @@ function Groups() {
             toast.success("Sucessfully updated Group visibility!!");
             setUpdateTable(moment.now());
           } catch (error) {
-            if (error) {
-              if (error && error.response) {
-                toast.error(error.response);
-              } else {
-                toast.error("Error occurred during set Group visibility");
-              }
-            }
+            serverError(error);
+            console.log(`Error occurred during set Group visibility! ${error}`);
           }
         }
       }
@@ -559,9 +555,10 @@ function Groups() {
     <div className="wrap">
       <h4 className="wrap-header font-weight-bold">Group List</h4>
       {pageLoader ? (
-        <ContentLoader size="50px" />
+        <Loader />
       ) : (
         <React.Fragment>
+          <BlockUi isUiBlock={blockUI} />
           <Row className="mb-4">
             <Col md={8} className="usr-grp-role-search-width">
               <StructuredFilter

@@ -74,11 +74,11 @@ export default function ModalResourceComp(props) {
                 </Field>
               </Modal.Body>
               <Modal.Footer>
-                <Button variant="secondary" onClick={handleClose}>
+                <Button variant="secondary" size="sm" onClick={handleClose}>
                   Close
                 </Button>
 
-                <Button title="Save" type="submit">
+                <Button title="Save" size="sm" type="submit">
                   Save
                 </Button>
               </Modal.Footer>

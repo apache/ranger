@@ -70,6 +70,15 @@ class ServiceDefinition extends Component {
     this.setState({ showView: null });
   };
 
+  showBlockUI = (blockUI) => {
+    this.props.showBlockUI(blockUI);
+  };
+
+  deleteService = (id) => {
+    this.setState({ showDelete: null });
+    this.props.deleteService(id);
+  };
+
   getServiceConfigs = (serviceDef, serviceConfigs) => {
     let tableRow = [];
     let configs = {};
@@ -318,7 +327,7 @@ class ServiceDefinition extends Component {
                           </a>
                         )}
                         <a
-                          className="text-decoration"
+                          className="text-decoration cursor-pointer"
                           onClick={this.showImportModal}
                           title="Import"
                           data-id="uploadBtnOnServices"
@@ -327,7 +336,7 @@ class ServiceDefinition extends Component {
                           <i className="fa-fw fa fa-rotate-180 fa-external-link-square"></i>
                         </a>
                         <a
-                          className="text-decoration"
+                          className="text-decoration cursor-pointer"
                           onClick={this.showExportModal}
                           title="Export"
                           data-id="downloadBtnOnService"
@@ -344,6 +353,7 @@ class ServiceDefinition extends Component {
                             selectedZone={this.props.selectedZone}
                             show={showImportModal}
                             onHide={this.hideImportModal}
+                            showBlockUI={this.showBlockUI}
                           />
                         )}
                         {[serviceDef].length > 0 && showExportModal && (
@@ -354,6 +364,7 @@ class ServiceDefinition extends Component {
                             isParentExport={false}
                             show={showExportModal}
                             onHide={this.hideExportModal}
+                            showBlockUI={this.showBlockUI}
                           />
                         )}
                       </span>
@@ -497,7 +508,7 @@ class ServiceDefinition extends Component {
                           <Modal.Footer>
                             <Button
                               variant="primary"
-                              className="btn-sm btn-mini"
+                              size="sm"
                               onClick={this.hideViewModal}
                             >
                               OK
@@ -531,11 +542,8 @@ class ServiceDefinition extends Component {
                               onHide={this.hideDeleteModal}
                             >
                               <Modal.Header closeButton>
-                                <Modal.Title>Delete Service</Modal.Title>
+                                {`Are you sure want to delete ?`}
                               </Modal.Header>
-                              <Modal.Body>
-                                Are you sure want to delete ?
-                              </Modal.Body>
                               <Modal.Footer>
                                 <Button
                                   variant="secondary"
@@ -549,7 +557,7 @@ class ServiceDefinition extends Component {
                                   variant="primary"
                                   size="sm"
                                   title="Yes"
-                                  onClick={() => this.props.deleteService(s.id)}
+                                  onClick={() => this.deleteService(s.id)}
                                 >
                                   Yes
                                 </Button>

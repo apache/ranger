@@ -20,10 +20,10 @@
 import React, { Component } from "react";
 import { Modal, Button } from "react-bootstrap";
 import Select from "react-select";
-import { has, map, toString, isEmpty } from "lodash";
+import { map, toString, isEmpty } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import { toast } from "react-toastify";
-import { getBaseUrl } from "../../utils/XAUtils";
+import { getBaseUrl, serverError } from "../../utils/XAUtils";
 
 class ExportPolicy extends Component {
   constructor(props) {
@@ -118,12 +118,17 @@ class ExportPolicy extends Component {
     let exportResp;
     let serviceNameList = toString(map(this.state.selectedServices, "value"));
     let exportParams = {};
+
     exportParams["serviceName"] = serviceNameList;
     exportParams["checkPoliciesExists"] = true;
+
     if (this.props.zone) {
       exportParams["zoneName"] = this.props.zone;
     }
+
     try {
+      this.props.onHide();
+      this.props.showBlockUI(true);
       exportResp = await fetchApi({
         url: "/plugins/policies/exportJson",
         params: { ...exportParams }
@@ -136,12 +141,10 @@ class ExportPolicy extends Component {
       } else {
         toast.warning("No policies found to export");
       }
-      this.props.onHide();
+      this.props.showBlockUI(false);
     } catch (error) {
-      this.props.onHide();
-      if (error.response !== undefined && has(error.response, "data.msgDesc")) {
-        toast.error(error.response.data.msgDesc);
-      }
+      this.props.showBlockUI(false);
+      serverError(error);
       console.error(`Error occurred while exporting policies ${error}`);
     }
   };
