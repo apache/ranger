@@ -117,6 +117,13 @@
                 </exclusion>
             </exclusions>
         </dependency>
+        <!-- HBase compat dependency -->
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-hbase-compat-${hbase.compat.version}</artifactId>
+            <version>${project.version}</version>
+            <optional>false</optional>
+        </dependency>
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>

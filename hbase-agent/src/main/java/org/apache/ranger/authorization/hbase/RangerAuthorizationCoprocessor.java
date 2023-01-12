@@ -83,7 +83,7 @@ import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
-public class RangerAuthorizationCoprocessor implements AccessControlService.Interface, RegionCoprocessor, MasterCoprocessor, RegionServerCoprocessor, MasterObserver, RegionObserver, RegionServerObserver, EndpointObserver, BulkLoadObserver, Coprocessor {
+public class RangerAuthorizationCoprocessor extends CompatMasterObserver implements AccessControlService.Interface, RegionCoprocessor, MasterCoprocessor, RegionServerCoprocessor, MasterObserver, RegionObserver, RegionServerObserver, EndpointObserver, BulkLoadObserver, Coprocessor{
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAuthorizationCoprocessor.class.getName());
 	private static final Logger PERF_HBASEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hbaseauth.request");
 	private static boolean UpdateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
@@ -834,10 +834,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	public void preAssign(ObserverContext<MasterCoprocessorEnvironment> c, RegionInfo regionInfo) throws IOException {
 		requirePermission(c, "assign", regionInfo.getTable().getName(), null, null, Action.ADMIN);
 	}
-	@Override
-	public void preBalance(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
-		requirePermission(c,"balance", Permission.Action.ADMIN);
-	}
+
 	@Override
 	public void preBalanceSwitch(ObserverContext<MasterCoprocessorEnvironment> c, boolean newValue) throws IOException {
 		requirePermission(c, "balanceSwitch", Permission.Action.ADMIN);
@@ -1859,6 +1856,12 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	}
 
 	enum PredicateType {STARTROW, STOPROW, FILTER, COLUMNS, ROW};
+
+	@Override
+	public void preBalanceHookAction(ObserverContext<MasterCoprocessorEnvironment> ctx, String request, Action action, Object balanceRequest)
+			throws AccessDeniedException {
+		requirePermission(ctx, request, action);
+	}
 }
 
 

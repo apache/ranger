@@ -258,6 +258,10 @@
 
         <!-- Tencent KMS depencies -->
         <com.tencentcloudapi.sdk.version>3.1.322</com.tencentcloudapi.sdk.version>
+        <!-- Setting default hbase compat version -->
+        <hbase.compat.version>2.4</hbase.compat.version>
+        <hbase-2.4.runtime.version>2.4.15</hbase-2.4.runtime.version>
+        <hbase-2.5.runtime.version>2.5.2-hadoop3</hbase-2.5.runtime.version>
     </properties>
     <profiles>
         <profile>
@@ -276,6 +280,8 @@
                 <module>embeddedwebserver</module>
                 <module>kms</module>
                 <module>hbase-agent</module>
+                <module>hbase-compat-2.4</module>
+                <module>hbase-compat-2.5</module>
                 <module>hdfs-agent</module>
                 <module>hive-agent</module>
                 <module>knox-agent</module>
@@ -345,6 +351,8 @@
                 <module>embeddedwebserver</module>
                 <module>kms</module>
                 <module>hbase-agent</module>
+                <module>hbase-compat-2.4</module>
+                <module>hbase-compat-2.5</module>
                 <module>hdfs-agent</module>
                 <module>hive-agent</module>
                 <module>knox-agent</module>
@@ -457,6 +465,8 @@
                 <module>ranger-plugin-classloader</module>
                 <module>ranger-util</module>
                 <module>hbase-agent</module>
+                <module>hbase-compat-2.4</module>
+                <module>hbase-compat-2.5</module>
                 <module>ranger-hbase-plugin-shim</module>
             </modules>
         </profile>
@@ -672,6 +682,8 @@
                 <module>embeddedwebserver</module>
                 <module>kms</module>
                 <module>hbase-agent</module>
+                <module>hbase-compat-2.4</module>
+                <module>hbase-compat-2.5</module>
                 <module>hdfs-agent</module>
                 <module>hive-agent</module>
                 <module>knox-agent</module>
@@ -758,6 +770,8 @@
                 <module>embeddedwebserver</module>
                 <module>kms</module>
                 <module>hbase-agent</module>
+                <module>hbase-compat-2.4</module>
+                <module>hbase-compat-2.5</module>
                 <module>hdfs-agent</module>
                 <module>hive-agent</module>
                 <module>knox-agent</module>
@@ -840,6 +854,25 @@
                     </plugin>
                 </plugins>
             </build>
+        </profile>
+        <profile>
+            <id>ranger-hbase-compat-2.4-default</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <hbase.profile>2.4</hbase.profile>
+                <hbase.compat.version>2.4</hbase.compat.version>
+                <hbase.version>${hbase-2.4.runtime.version}</hbase.version>
+            </properties>
+        </profile>
+        <profile>
+            <id>ranger-hbase-compat-2.5</id>
+            <properties>
+                <hbase.profile>2.5</hbase.profile>
+                <hbase.compat.version>2.5</hbase.compat.version>
+                <hbase.version>${hbase-2.5.runtime.version}</hbase.version>
+            </properties>
         </profile>
     </profiles>
     <distributionManagement>
@@ -955,6 +988,16 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>${jacoco.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.ranger</groupId>
+                <artifactId>ranger-hbase-compat-2.4</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.ranger</groupId>
+                <artifactId>ranger-hbase-compat-2.5</artifactId>
+                <version>${project.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

@@ -19,6 +19,8 @@
 package org.apache.ranger.authorization.hbase;
 
 import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.*;
 
 import com.google.protobuf.Service;
@@ -49,6 +51,8 @@ import org.apache.hadoop.hbase.regionserver.compactions.CompactionRequest;
 import org.apache.hadoop.hbase.regionserver.querymatcher.DeleteTracker;
 import org.apache.hadoop.hbase.regionserver.Region.Operation;
 import org.apache.hadoop.hbase.replication.ReplicationEndpoint;
+import org.apache.hadoop.hbase.security.AccessDeniedException;
+import org.apache.hadoop.hbase.security.access.Permission;
 import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.wal.WALEdit;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
@@ -57,7 +61,7 @@ import org.slf4j.LoggerFactory;
 import com.google.protobuf.RpcCallback;
 import com.google.protobuf.RpcController;
 
-public class RangerAuthorizationCoprocessor implements RegionCoprocessor, MasterCoprocessor, RegionServerCoprocessor, MasterObserver, RegionObserver, RegionServerObserver, EndpointObserver, BulkLoadObserver, AccessControlProtos.AccessControlService.Interface {
+public class RangerAuthorizationCoprocessor extends CompatMasterObserver implements RegionCoprocessor, MasterCoprocessor, RegionServerCoprocessor, MasterObserver, RegionObserver, RegionServerObserver, EndpointObserver, BulkLoadObserver, AccessControlProtos.AccessControlService.Interface {
 
 	public static final Logger LOG = LoggerFactory.getLogger(RangerAuthorizationCoprocessor.class);
 	private static final String   RANGER_PLUGIN_TYPE                      = "hbase";
@@ -278,14 +282,27 @@ public class RangerAuthorizationCoprocessor implements RegionCoprocessor, Master
 	}
 
 	@Override
-	public void preBalance(ObserverContext<MasterCoprocessorEnvironment> c)	throws IOException {
+	public void preBalanceHookAction(ObserverContext<MasterCoprocessorEnvironment> ctx, String request, Permission.Action action, Object balanceRequest)
+			throws AccessDeniedException {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerAuthorizationCoprocessor.preBalance()");
 		}
 
 		try {
 			activatePluginClassLoader();
-			implMasterObserver.preBalance(c);
+			Method preBalance = null;
+			if (balanceRequest == null) {
+				preBalance = implMasterObserver.getClass().getMethod("preBalance", ctx.getClass());
+			} else {
+				preBalance = implMasterObserver.getClass().getMethod("preBalance", ctx.getClass(), balanceRequest.getClass());
+			}
+			if(balanceRequest == null) {
+				preBalance.invoke(ctx);
+			} else {
+				preBalance.invoke(ctx, balanceRequest);
+			}
+		} catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
+			throw new RuntimeException(e);
 		} finally {
 			deactivatePluginClassLoader();
 		}
