@@ -1,11 +1,9 @@
-name: Build and Push Ranger Policy docker image to ECR
+name: Build and Push Ranger Policy docker image to ECR(deprecated as of Jan 11, 2023)
 
 on:
   push:
     branches:
-      - beta
-      - master
-      - build2.2
+      - xoxo/deprecating-ecr/xoxo
       
 permissions:
   id-token: write
