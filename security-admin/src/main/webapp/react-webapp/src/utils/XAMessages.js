@@ -82,15 +82,15 @@ export const RegexMessage = {
 
 /* External User Edit Role Change */
 
-export const roleChngWarning = {
-  roleChng: (
+export const roleChngWarning = (user) => {
+  return (
     <>
-      <b>Warning !! </b> : Please make sure that accumulo user's role change
-      performed here is consistent with ranger.usersync.
+      <strong>Warning !! </strong> : Please make sure that {`${user}`} user's
+      role change performed here is consistent with ranger.usersync.
       group.based.role.assignment.rules property in ranger usersync
       configuration.
     </>
-  )
+  );
 };
 
 /* policyInfo Message */
