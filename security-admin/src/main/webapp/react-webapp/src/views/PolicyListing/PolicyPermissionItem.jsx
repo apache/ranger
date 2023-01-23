@@ -17,13 +17,13 @@
  * under the License.
  */
 
-import React, { useMemo } from "react";
+import React, { useMemo, useRef } from "react";
 import { Table, Button, Badge, Form } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import { Col } from "react-bootstrap";
-import { Field } from "react-final-form";
+import { Field, useFormState } from "react-final-form";
 import AsyncSelect from "react-select/async";
-import { find, groupBy, isEmpty, isArray } from "lodash";
+import { find, groupBy, isEmpty, isArray, has } from "lodash";
 import { toast } from "react-toastify";
 
 import Editable from "Components/Editable";
@@ -43,8 +43,12 @@ export default function PolicyPermissionItem(props) {
     fetchUsersData,
     fetchGroupsData,
     fetchRolesData,
-    formValues
+    formValues,
+    form
   } = props;
+  const dragItem = useRef();
+  const dragOverItem = useRef();
+  let { values, errors, change, error, ...args } = useFormState();
 
   const permList = ["Select Roles", "Select Groups", "Select Users"];
   if (serviceCompDetails?.policyConditions?.length > 0) {
@@ -155,7 +159,7 @@ export default function PolicyPermissionItem(props) {
       }
     }
   };
-
+  const required = (value) => (value ? undefined : "Required");
   const requiredForPermission = (fieldVals, index) => {
     if (fieldVals && !isEmpty(fieldVals[index])) {
       let error, accTypes;
@@ -198,19 +202,20 @@ export default function PolicyPermissionItem(props) {
   };
   const requiredForDeleGateAdmin = (fieldVals, index) => {
     if (
-      !_.isEmpty(fieldVals[index]) &&
-      _.has(fieldVals[index], "delegateAdmin")
+      !isEmpty(fieldVals?.[index]) &&
+      has(fieldVals?.[index], "delegateAdmin")
     ) {
-      let error;
+      let delError;
       let users = (fieldVals[index]?.users || []).length > 0;
       let grps = (fieldVals[index]?.groups || []).length > 0;
       let roles = (fieldVals[index]?.roles || []).length > 0;
       let delegateAdmin = fieldVals[index]?.delegateAdmin;
 
       if (delegateAdmin && !users && !grps && !roles) {
-        error = "Please select user/group/role for the selected permission(s)";
+        delError =
+          "Please select user/group/role for the selected delegate Admin";
       }
-      return error;
+      return delError;
     }
   };
 
@@ -226,7 +231,6 @@ export default function PolicyPermissionItem(props) {
     });
   };
 
-  const required = (value) => (value ? undefined : "Required");
   const customStyles = {
     control: (provided) => ({
       ...provided,
@@ -238,11 +242,44 @@ export default function PolicyPermissionItem(props) {
       textOverflow: "ellipsis"
     })
   };
+
+  const dragStart = (e, position) => {
+    e.target.style.opacity = 0.4;
+    e.target.style.backgroundColor = "#fdf1a6";
+    e.stopPropagation();
+    dragItem.current = position;
+  };
+
+  const dragEnter = (e, position) => {
+    dragOverItem.current = position;
+  };
+
+  const dragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const drop = (e, fields) => {
+    e.target.style.opacity = 1;
+    e.target.style.backgroundColor = "white";
+    if (dragItem.current == dragOverItem.current) {
+      return;
+    }
+
+    fields.move(dragItem.current, dragOverItem.current);
+
+    dragItem.current = null;
+    dragOverItem.current = null;
+  };
+
   return (
     <div>
       <Col sm="12">
         <div className="table-responsive">
-          <Table bordered className="policy-permission-table">
+          <Table
+            bordered
+            className="policy-permission-table"
+            id={`${attrName}-table`}
+          >
             <thead className="thead-light">
               <tr>
                 {tableHeader()}
@@ -253,7 +290,15 @@ export default function PolicyPermissionItem(props) {
               <FieldArray name={attrName}>
                 {({ fields }) =>
                   fields.map((name, index) => (
-                    <tr key={name}>
+                    <tr
+                      key={name}
+                      onDragStart={(e) => dragStart(e, index)}
+                      onDragEnter={(e) => dragEnter(e, index)}
+                      onDragEnd={(e) => drop(e, fields)}
+                      onDragOver={(e) => dragOver(e)}
+                      draggable
+                      id={index}
+                    >
                       {permList.map((colName) => {
                         if (colName == "Select Roles") {
                           return (
@@ -262,7 +307,8 @@ export default function PolicyPermissionItem(props) {
                                 className="form-control"
                                 name={`${name}.roles`}
                                 render={({ input, meta }) => (
-                                  <div>
+                                  <div className="d-flex">
+                                    <span className="row-reorder-policyitems" />
                                     <AsyncSelect
                                       {...input}
                                       menuPortalTarget={document.body}
@@ -272,9 +318,6 @@ export default function PolicyPermissionItem(props) {
                                       cacheOptions
                                       isMulti
                                     />
-                                    {meta.touched && meta.error && (
-                                      <span>{meta.error}</span>
-                                    )}
                                   </div>
                                 )}
                               />
@@ -298,9 +341,6 @@ export default function PolicyPermissionItem(props) {
                                       cacheOptions
                                       isMulti
                                     />
-                                    {meta.touched && meta.error && (
-                                      <span>{meta.error}</span>
-                                    )}
                                   </div>
                                 )}
                               />
@@ -324,9 +364,6 @@ export default function PolicyPermissionItem(props) {
                                       cacheOptions
                                       isMulti
                                     />
-                                    {meta.touched && meta.error && (
-                                      <span>{meta.error}</span>
-                                    )}
                                   </div>
                                 )}
                               />
@@ -352,11 +389,6 @@ export default function PolicyPermissionItem(props) {
                                       servicedefName={serviceCompDetails.name}
                                       selectProps={{ isMulti: true }}
                                     />
-                                    {meta.error && (
-                                      <span className="invalid-field">
-                                        <p> {meta.error}</p>
-                                      </span>
-                                    )}
                                   </div>
                                 )}
                               />
@@ -376,12 +408,6 @@ export default function PolicyPermissionItem(props) {
                                         serviceCompDetails.policyConditions
                                       }
                                     />
-
-                                    {meta.error && (
-                                      <span className="invalid-field">
-                                        <p> {meta.error}</p>
-                                      </span>
-                                    )}
                                   </div>
                                 )}
                               />
@@ -423,14 +449,6 @@ export default function PolicyPermissionItem(props) {
                                         dataMaskIndex={index}
                                         serviceCompDetails={serviceCompDetails}
                                       />
-                                      {meta.error && (
-                                        <>
-                                          <br />
-                                          <span className="invalid-field">
-                                            {meta.error}
-                                          </span>
-                                        </>
-                                      )}
                                     </div>
                                   )}
                                 />
@@ -458,13 +476,6 @@ export default function PolicyPermissionItem(props) {
                                         showSelectAll={true}
                                         selectAllLabel="Select All"
                                       />
-                                      {meta.error && (
-                                        <>
-                                          <span className="invalid-field">
-                                            {meta.error}
-                                          </span>
-                                        </>
-                                      )}
                                     </div>
                                   )}
                                 />
@@ -512,7 +523,6 @@ export default function PolicyPermissionItem(props) {
                                                     type="text"
                                                     {...input}
                                                     placeholder="Enter masked value or expression..."
-                                                    // width="80%"
                                                   />
                                                   {meta.error && (
                                                     <span className="invalid-field">
@@ -623,35 +633,31 @@ export default function PolicyPermissionItem(props) {
                           serviceCompDetails?.name !== "tag"
                         ) {
                           return (
-                            <td className="text-center align-middle">
-                              <Field
-                                className="form-control"
-                                name={`${name}.delegateAdmin`}
-                                validate={(value, formValues) =>
-                                  requiredForDeleGateAdmin(
-                                    formValues[attrName],
-                                    index
-                                  )
-                                }
-                                data-js="delegatedAdmin"
-                                data-cy="delegatedAdmin"
-                                type="checkbox"
-                              >
-                                {({ input, meta }) => (
-                                  <div>
-                                    <input {...input} type="checkbox" />
-
-                                    {meta.error && (
-                                      <>
-                                        <br />
-                                        <span className="invalid-field">
-                                          {meta.error}
-                                        </span>
-                                      </>
-                                    )}
-                                  </div>
-                                )}
-                              </Field>
+                            <td
+                              key={`${name}-${index}`}
+                              className="text-center align-middle"
+                            >
+                              <div key={`${name}-${index}`}>
+                                <Field
+                                  className="form-control"
+                                  name={`${name}.delegateAdmin`}
+                                  validate={(value, formValues) =>
+                                    requiredForDeleGateAdmin(
+                                      formValues[attrName],
+                                      index
+                                    )
+                                  }
+                                  data-js="delegatedAdmin"
+                                  data-cy="delegatedAdmin"
+                                  type="checkbox"
+                                >
+                                  {({ input, meta }) => (
+                                    <div>
+                                      <input {...input} type="checkbox" />
+                                    </div>
+                                  )}
+                                </Field>
+                              </div>
                             </td>
                           );
                         }

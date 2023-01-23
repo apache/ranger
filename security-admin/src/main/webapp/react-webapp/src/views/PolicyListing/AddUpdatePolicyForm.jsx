@@ -45,7 +45,9 @@ import _, {
   pick,
   isObject,
   isArray,
-  isEqual
+  isEqual,
+  forIn,
+  has
 } from "lodash";
 import { toast } from "react-toastify";
 import { Loader, scrollToError } from "Components/CommonComponents";
@@ -127,6 +129,7 @@ export default function AddUpdatePolicyForm(props) {
   const [showPolicyExpire, setShowPolicyExpire] = useState(true);
   const [showDelete, setShowDelete] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
+  const toastId = React.useRef(null);
   // usePrompt("Leave screen?", true);
 
   useEffect(() => {
@@ -310,7 +313,7 @@ export default function AddUpdatePolicyForm(props) {
 
   const generateFormData = (policyData, serviceCompData) => {
     let data = {};
-    data.policyType = policyId ? policyData.policyType : policyType;
+    data.policyType = policyId ? policyData?.policyType : policyType;
     data.policyItems =
       policyId && policyData?.policyItems?.length > 0
         ? setPolicyItemVal(
@@ -524,14 +527,14 @@ export default function AddUpdatePolicyForm(props) {
         }
         if (
           !isEmpty(obj) &&
-          !_.isEmpty(obj?.delegateAdmin) &&
+          !isEmpty(obj?.delegateAdmin) &&
           Object.keys(obj)?.length > 1
         ) {
           policyResourceItem.push(obj);
         }
         if (
-          !_.isEmpty(obj) &&
-          _.isEmpty(obj?.delegateAdmin) &&
+          !isEmpty(obj) &&
+          isEmpty(obj?.delegateAdmin) &&
           Object.keys(obj)?.length > 1
         ) {
           policyResourceItem.push(obj);
@@ -764,8 +767,9 @@ export default function AddUpdatePolicyForm(props) {
           data: dataVal
         });
         setBlockUI(false);
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success("Policy updated successfully!!");
         navigate(`/service/${serviceId}/policies/${policyData.policyType}`);
-        toast.success("Policy updated successfully!!");
       } catch (error) {
         setBlockUI(false);
         let errorMsg = `Failed to save policy form`;
@@ -785,7 +789,8 @@ export default function AddUpdatePolicyForm(props) {
         });
 
         setBlockUI(false);
-        toast.success("Policy save successfully!!");
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success("Policy save successfully!!");
         navigate(`/service/${serviceId}/policies/${policyType}`, {
           state: {
             showLastPage: true,
@@ -814,7 +819,8 @@ export default function AddUpdatePolicyForm(props) {
         method: "DELETE"
       });
       setBlockUI(false);
-      toast.success(" Success! Policy deleted successfully");
+      toast.dismiss(toastId.current);
+      toastId.current = toast.success(" Success! Policy deleted successfully");
       navigate(`/service/${serviceId}/policies/${policyType}`);
     } catch (error) {
       setBlockUI(false);
@@ -908,6 +914,44 @@ export default function AddUpdatePolicyForm(props) {
     );
   };
 
+  const getValidatePolicyItems = (errors) => {
+    let errorField;
+    errors?.find((value) => {
+      if (value !== undefined) {
+        return (errorField = value);
+      }
+    });
+
+    return errorField !== undefined && errorField?.accesses
+      ? toast.error(errorField?.accesses, { toastId: "error1" })
+      : toast.error(errorField?.delegateAdmin, { toastId: "error1" });
+  };
+  const resourceErrorCheck = (errors, values) => {
+    let serviceCompResourcesDetails;
+    if (
+      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == values.policyType
+    ) {
+      serviceCompResourcesDetails = serviceCompDetails.dataMaskDef.resources;
+    } else if (
+      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == values.policyType
+    ) {
+      serviceCompResourcesDetails = serviceCompDetails.rowFilterDef.resources;
+    } else {
+      serviceCompResourcesDetails = serviceCompDetails.resources;
+    }
+
+    const grpResources = groupBy(serviceCompResourcesDetails || [], "level");
+    let grpResourcesKeys = [];
+    for (const resourceKey in grpResources) {
+      grpResourcesKeys.push(+resourceKey);
+    }
+    grpResourcesKeys = grpResourcesKeys.sort();
+    for (const key of grpResourcesKeys) {
+      if (errors[`value-${key}`] !== undefined) {
+        return true;
+      }
+    }
+  };
   return (
     <>
       {loader ? (
@@ -931,6 +975,7 @@ export default function AddUpdatePolicyForm(props) {
                     text: "Required"
                   };
                 }
+
                 return errors;
               }}
               render={({
@@ -941,7 +986,7 @@ export default function AddUpdatePolicyForm(props) {
                 errors,
                 dirty,
                 form: {
-                  mutators: { push: addPolicyItem, pop: removePolicyItem }
+                  mutators: { push: addPolicyItem, pop: removePolicyItem, move }
                 },
                 form,
                 dirtyFields,
@@ -965,17 +1010,24 @@ export default function AddUpdatePolicyForm(props) {
                   <form
                     onSubmit={(event) => {
                       if (invalid) {
-                        let selector =
-                          document.getElementById("isError") ||
-                          document.getElementById(Object.keys(errors)[0]) ||
-                          document.querySelector(
-                            `input[name=${Object.keys(errors)[0]}]`
-                          ) ||
-                          document.querySelector(
-                            `input[id=${Object.keys(errors)[0]}]`
-                          ) ||
-                          document.querySelector(`span[class="invalid-field"]`);
-                        scrollToError(selector);
+                        forIn(errors, function (value, key) {
+                          if (
+                            has(errors, "policyName") ||
+                            resourceErrorCheck(errors, values)
+                          ) {
+                            let selector =
+                              document.getElementById("isError") ||
+                              document.getElementById(key) ||
+                              document.querySelector(`input[name=${key}]`) ||
+                              document.querySelector(`input[id=${key}]`) ||
+                              document.querySelector(
+                                `span[class="invalid-field"]`
+                              );
+                            scrollToError(selector);
+                          } else {
+                            getValidatePolicyItems(errors?.[key]);
+                          }
+                        });
                       }
                       handleSubmit(event);
                     }}
@@ -1552,25 +1604,32 @@ export default function AddUpdatePolicyForm(props) {
                     <div className="row form-actions">
                       <div className="col-md-9 offset-md-3">
                         <Button
-                          onClick={() => {
+                          onClick={(event) => {
                             if (invalid) {
-                              let selector =
-                                document.getElementById("isError") ||
-                                document.getElementById(
-                                  Object.keys(errors)[0]
-                                ) ||
-                                document.querySelector(
-                                  `input[name=${Object.keys(errors)[0]}]`
-                                ) ||
-                                document.querySelector(
-                                  `input[id=${Object.keys(errors)[0]}]`
-                                ) ||
-                                document.querySelector(
-                                  `span[class="invalid-field"]`
-                                );
-                              scrollToError(selector);
+                              forIn(errors, function (value, key) {
+                                if (
+                                  has(errors, "policyName") ||
+                                  resourceErrorCheck(errors, values)
+                                ) {
+                                  let selector =
+                                    document.getElementById("isError") ||
+                                    document.getElementById(key) ||
+                                    document.querySelector(
+                                      `input[name=${key}]`
+                                    ) ||
+                                    document.querySelector(
+                                      `input[id=${key}]`
+                                    ) ||
+                                    document.querySelector(
+                                      `span[class="invalid-field"]`
+                                    );
+                                  scrollToError(selector);
+                                } else {
+                                  getValidatePolicyItems(errors?.[key]);
+                                }
+                              });
                             }
-                            handleSubmit(values, invalid);
+                            handleSubmit(event);
                           }}
                           variant="primary"
                           size="sm"

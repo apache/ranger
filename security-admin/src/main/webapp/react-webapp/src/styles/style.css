@@ -1873,3 +1873,15 @@ header {
   position: absolute;
   width: 130px;
 }
+
+.error-highlighting {
+  border: 3px solid rgb(255, 0, 0, 0.6);
+  padding: 2px 3px;
+}
+
+.row-reorder-policyitems {
+  border: 2px dotted rgba(0, 0, 0, 0.3);
+  margin-right: 6px;
+  cursor: move;
+  width: 6px;
+}

@@ -298,7 +298,7 @@ function UserFormComp(props) {
       e.label != input.value.label
     ) {
       toast.dismiss(toastId.current);
-      toastId.current = toast.warning(roleChngWarning.roleChng);
+      toastId.current = toast.warning(roleChngWarning(userInfo?.name));
     }
 
     input.onChange(e);

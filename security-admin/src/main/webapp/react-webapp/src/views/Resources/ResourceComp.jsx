@@ -197,7 +197,7 @@ export default function ResourceComp(props) {
       "denyExceptions"
     ]) {
       for (const policyObj of formValues[name]) {
-        if (policyObj.accesses) {
+        if (policyObj?.accesses) {
           policyObj.accesses = [];
         }
       }
