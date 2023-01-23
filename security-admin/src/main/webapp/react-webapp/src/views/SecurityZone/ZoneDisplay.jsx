@@ -208,7 +208,7 @@ class ZoneDisplay extends Component {
                         <Form.Label className="text-right" column sm="3">
                           Admin Users
                         </Form.Label>
-                        <Col sm="9">
+                        <Col sm="9" className="pt-2">
                           {this.props?.zone?.adminUsers?.length > 0 ? (
                             this.props?.zone.adminUsers?.map((obj) => {
                               return (
@@ -231,7 +231,7 @@ class ZoneDisplay extends Component {
                         <Form.Label className="text-right" column sm="3">
                           Admin Usergroups
                         </Form.Label>
-                        <Col sm="9">
+                        <Col sm="9" className="pt-2">
                           {this.props?.zone?.adminUserGroups?.length > 0 ? (
                             this.props?.zone?.adminUserGroups?.map(
                               (obj, index) => {
@@ -256,7 +256,7 @@ class ZoneDisplay extends Component {
                         <Form.Label className="text-right" column sm="3">
                           Auditor Users
                         </Form.Label>
-                        <Col sm="9">
+                        <Col sm="9" className="pt-2">
                           {this.props?.zone.auditUsers?.length > 0 ? (
                             this.props?.zone?.auditUsers?.map((obj) => {
                               return (
@@ -279,7 +279,7 @@ class ZoneDisplay extends Component {
                         <Form.Label className="text-right" column sm="3">
                           Auditor Usergroups
                         </Form.Label>
-                        <Col sm="9">
+                        <Col sm="9" className="pt-2">
                           {this.props?.zone?.auditUserGroups?.length > 0 ? (
                             this.props?.zone?.auditUserGroups?.map(
                               (obj, index) => {

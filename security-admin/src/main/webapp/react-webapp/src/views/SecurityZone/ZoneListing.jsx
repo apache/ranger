@@ -108,6 +108,14 @@ class ZoneListing extends Component {
       let availableZone = this.state.filterZone.filter(
         (obj) => obj.id !== zoneId
       );
+      let localStorageZoneDetails = localStorage.getItem("zoneDetails");
+      if (
+        localStorageZoneDetails !== undefined &&
+        localStorageZoneDetails !== null
+      ) {
+        JSON.parse(localStorageZoneDetails).value == zoneId &&
+          localStorage.removeItem("zoneDetails");
+      }
       getSelectedZone = availableZone.length > 0 ? availableZone[0] : null;
 
       this.setState({
