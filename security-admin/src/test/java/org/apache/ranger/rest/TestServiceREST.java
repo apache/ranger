@@ -2311,13 +2311,22 @@ public class TestServiceREST {
 	}
 
 	@Test
-	public void test67ResetPolicyCache(){
+	public void test67ResetPolicyCacheForAdmin(){
 		boolean res = true;
 		String serviceName = "HDFS_1";
 		Mockito.when(bizUtil.isAdmin()).thenReturn(true);
+		RangerService rangerService = rangerService();
+		try {
+			Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(rangerService);
+		} catch (Exception e) {
+		}
 		Mockito.when(svcStore.resetPolicyCache(serviceName)).thenReturn(res);
 		boolean isReset = serviceREST.resetPolicyCache(serviceName);
 		assert isReset == res;
+		try {
+			Mockito.verify(svcStore).getServiceByName(serviceName);
+		} catch (Exception e) {
+		}
 	}
 
 	@Test
@@ -2619,5 +2628,51 @@ public class TestServiceREST {
 		serviceREST.deletePolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, null);
 		Mockito.verify(validatorFactory).getPolicyValidator(svcStore);
 		Mockito.verify(svcStore).getPolicy(rangerPolicy.getGuid(), null, null);
+	}
+
+	@Test
+	public void test78ResetPolicyCacheByServiceNameForServiceAdmin() {
+		boolean isAdmin = false;
+		boolean res = true;
+		RangerService rangerService = rangerService();
+		String serviceName = rangerService.getName();
+		Mockito.when(bizUtil.isAdmin()).thenReturn(isAdmin);
+		String userName = "admin";
+		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
+		try {
+			Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(rangerService);
+		} catch (Exception e) {
+		}
+		Mockito.when(bizUtil.isUserServiceAdmin(Mockito.any(RangerService.class), Mockito.anyString())).thenReturn(true);
+		try {
+			Mockito.when(svcStore.resetPolicyCache(serviceName)).thenReturn(true);
+		} catch (Exception e) {
+		}
+		boolean isReset =serviceREST.resetPolicyCache(serviceName);
+		assert isReset == res;
+		Mockito.verify(bizUtil).isAdmin();
+		Mockito.verify(bizUtil).isUserServiceAdmin(Mockito.any(RangerService.class),  Mockito.anyString());
+		try {
+			Mockito.verify(svcStore).getServiceByName(serviceName);
+		} catch (Exception e) {
+		}
+		try {
+			Mockito.verify(svcStore).resetPolicyCache(serviceName);
+		} catch (Exception e) {
+		}
+
+	}
+
+	@Test
+	public void test79ResetPolicyCacheWhenServiceNameIsInvalid(){
+		String serviceName = "HDFS_1";
+		try {
+			Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(null);
+		} catch (Exception e) {
+		}
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		serviceREST.resetPolicyCache(serviceName);
+		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean());
 	}
 }
