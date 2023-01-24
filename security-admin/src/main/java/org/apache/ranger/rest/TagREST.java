@@ -613,7 +613,7 @@ public class TagREST {
      */
     @GET
     @Path(TagRESTConstants.TAGS_RESOURCE + "cache/reset")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public boolean resetTagCache(@QueryParam("serviceName") String serviceName) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.resetTagCache({})", serviceName);
@@ -623,13 +623,23 @@ public class TagREST {
             throw restErrorUtil.createRESTException("Required parameter [serviceName] is missing.", MessageEnums.INVALID_INPUT_DATA);
         }
 
+        RangerService rangerService = null;
+        try {
+            rangerService = svcStore.getServiceByName(serviceName);
+        } catch (Exception e) {
+            LOG.error( HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName:" + serviceName );
+        }
+
+        if (rangerService == null) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Invalid service name", true);
+        }
+
         // check for ADMIN access
         if (!bizUtil.isAdmin()) {
             boolean isServiceAdmin = false;
             String  loggedInUser   = bizUtil.getCurrentUserLoginId();
 
             try {
-                RangerService rangerService = svcStore.getServiceByName(serviceName);
                 isServiceAdmin = bizUtil.isUserServiceAdmin(rangerService, loggedInUser);
             } catch (Exception e) {
                 LOG.warn("Failed to find if user [" + loggedInUser + "] has service admin privileges on service [" + serviceName + "]", e);
@@ -655,7 +665,7 @@ public class TagREST {
      */
     @GET
     @Path(TagRESTConstants.TAGS_RESOURCE + "cache/reset-all")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public boolean resetTagCacheAll() {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> TagREST.resetTagCacheAll()");
