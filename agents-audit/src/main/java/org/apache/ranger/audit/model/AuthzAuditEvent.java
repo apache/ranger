@@ -122,6 +122,9 @@ public class AuthzAuditEvent extends AuditEventBase {
 	@SerializedName("policy_version")
 	protected Long policyVersion;
 
+	@SerializedName("reqEntityGuid")
+	protected String entityGuid = null;
+
 	public AuthzAuditEvent() {
 		super();
 
@@ -145,7 +148,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 			String resultReason, String aclEnforcer, String sessionId,
 			String clientType, String clientIP, String requestData, String clusterName, String zoneName) {
 		this(repositoryType, repositoryName, user, eventTime, accessType, resourcePath, resourceType, action, accessResult, agentId,
-				policyId, resultReason, aclEnforcer, sessionId, clientType, clientIP, requestData, clusterName, zoneName, null);
+				policyId, resultReason, aclEnforcer, sessionId, clientType, clientIP, requestData, clusterName, zoneName, null, null);
 
 	}
 
@@ -154,7 +157,18 @@ public class AuthzAuditEvent extends AuditEventBase {
 						   String resourcePath, String resourceType, String action,
 						   short accessResult, String agentId, long policyId,
 						   String resultReason, String aclEnforcer, String sessionId,
-						   String clientType, String clientIP, String requestData, String clusterName, String zoneName, Long policyVersion) {
+						   String clientType, String clientIP, String requestData, String clusterName, String zoneName, String entityGuid) {
+		this(repositoryType, repositoryName, user, eventTime, accessType, resourcePath, resourceType, action, accessResult, agentId,
+				policyId, resultReason, aclEnforcer, sessionId, clientType, clientIP, requestData, clusterName, zoneName, null, entityGuid);
+
+	}
+
+	public AuthzAuditEvent(int repositoryType, String repositoryName,
+						   String user, Date eventTime, String accessType,
+						   String resourcePath, String resourceType, String action,
+						   short accessResult, String agentId, long policyId,
+						   String resultReason, String aclEnforcer, String sessionId,
+						   String clientType, String clientIP, String requestData, String clusterName, String zoneName, Long policyVersion, String entityGuid) {
 		this.repositoryType = repositoryType;
 		this.repositoryName = repositoryName;
 		this.user = user;
@@ -175,6 +189,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 		this.clusterName = clusterName;
 		this.zoneName = zoneName;
 		this.policyVersion = policyVersion;
+		this.entityGuid = entityGuid;
 	}
 
 	/**
@@ -428,6 +443,14 @@ public class AuthzAuditEvent extends AuditEventBase {
 		this.requestData = requestData;
 	}
 
+	public String getEntityGuid() {
+		return entityGuid;
+	}
+
+	public void setEntityGuid(String entityGuid) {
+		this.entityGuid = entityGuid;
+	}
+
 	public String getAgentHostname() {
 		return agentHostname;
 	}
@@ -535,7 +558,8 @@ public class AuthzAuditEvent extends AuditEventBase {
 		sb.append("repositoryType=").append(repositoryType)
 				.append(FIELD_SEPARATOR).append("repositoryName=")
 				.append(repositoryName).append(FIELD_SEPARATOR).append("user=")
-				.append(user).append(FIELD_SEPARATOR).append("eventTime=")
+				.append(user).append(FIELD_SEPARATOR).append("entityGuid=")
+				.append(entityGuid).append(FIELD_SEPARATOR).append("eventTime=")
 				.append(eventTime).append(FIELD_SEPARATOR)
 				.append("accessType=").append(accessType)
 				.append(FIELD_SEPARATOR).append("resourcePath=")
