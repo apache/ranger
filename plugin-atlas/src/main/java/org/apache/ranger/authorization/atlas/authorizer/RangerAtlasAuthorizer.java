@@ -843,7 +843,7 @@ public class RangerAtlasAuthorizer implements AtlasAuthorizer {
 
             auditEvents  = new HashMap<>();
             resourcePath = rangerResource.getAsString();
-            entityGuid = request.getEntityId();
+            entityGuid = request.getEntity() != null ? request.getEntity().getGuid() : null;
 
         }
 
