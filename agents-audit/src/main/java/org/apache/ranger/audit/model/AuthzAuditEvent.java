@@ -148,7 +148,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 			String resultReason, String aclEnforcer, String sessionId,
 			String clientType, String clientIP, String requestData, String clusterName, String zoneName) {
 		this(repositoryType, repositoryName, user, eventTime, accessType, resourcePath, resourceType, action, accessResult, agentId,
-				policyId, resultReason, aclEnforcer, sessionId, clientType, clientIP, requestData, clusterName, zoneName, null, null);
+				policyId, resultReason, aclEnforcer, sessionId, clientType, clientIP, requestData, clusterName, zoneName, null);
 
 	}
 
@@ -157,18 +157,7 @@ public class AuthzAuditEvent extends AuditEventBase {
 						   String resourcePath, String resourceType, String action,
 						   short accessResult, String agentId, long policyId,
 						   String resultReason, String aclEnforcer, String sessionId,
-						   String clientType, String clientIP, String requestData, String clusterName, String zoneName, String entityGuid) {
-		this(repositoryType, repositoryName, user, eventTime, accessType, resourcePath, resourceType, action, accessResult, agentId,
-				policyId, resultReason, aclEnforcer, sessionId, clientType, clientIP, requestData, clusterName, zoneName, null, entityGuid);
-
-	}
-
-	public AuthzAuditEvent(int repositoryType, String repositoryName,
-						   String user, Date eventTime, String accessType,
-						   String resourcePath, String resourceType, String action,
-						   short accessResult, String agentId, long policyId,
-						   String resultReason, String aclEnforcer, String sessionId,
-						   String clientType, String clientIP, String requestData, String clusterName, String zoneName, Long policyVersion, String entityGuid) {
+						   String clientType, String clientIP, String requestData, String clusterName, String zoneName, Long policyVersion) {
 		this.repositoryType = repositoryType;
 		this.repositoryName = repositoryName;
 		this.user = user;
@@ -189,7 +178,6 @@ public class AuthzAuditEvent extends AuditEventBase {
 		this.clusterName = clusterName;
 		this.zoneName = zoneName;
 		this.policyVersion = policyVersion;
-		this.entityGuid = entityGuid;
 	}
 
 	/**

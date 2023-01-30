@@ -306,6 +306,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
         doc.put("sess", auditEvent.getSessionId());
         doc.put("reqUser", auditEvent.getUser());
         doc.put("reqData", auditEvent.getRequestData());
+        doc.put("reqEntityGuid", auditEvent.getEntityGuid());
         doc.put("resource", auditEvent.getResourcePath());
         doc.put("cliIP", auditEvent.getClientIP());
         doc.put("logType", auditEvent.getLogType());
