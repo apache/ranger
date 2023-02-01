@@ -18,6 +18,7 @@
  */
 
 var React = window.React || require("react");
+var divInputRef = React.createRef();
 import TypeaheadSelector from "./selector";
 import KeyEvent from "../keyevent";
 import fuzzy from "fuzzy";
@@ -25,7 +26,7 @@ import DatePicker from "../../react-datepicker/datepicker.js";
 import createReactClass from "create-react-class";
 import PropTypes from "prop-types";
 import onClickOutside from "react-onclickoutside";
-import { find, isEmpty } from "lodash";
+import { find, isEmpty, trim } from "lodash";
 var classNames = require("classnames");
 
 /**
@@ -73,7 +74,7 @@ var Typeahead = onClickOutside(
         header: this.props.header,
         datatype: this.props.datatype,
 
-        focused: false,
+        focused: this.props.focus || false,
 
         // The currently visible set of options
         visible: this.getOptionsForValue(
@@ -87,6 +88,20 @@ var Typeahead = onClickOutside(
         // A valid typeahead value
         selection: null
       };
+    },
+
+    componentDidMount: function () {
+      this.setState({
+        tokenWidth: divInputRef.current?.clientWidth,
+        visible:
+          this.props.className == "typehead-edit-view" &&
+          this.state.datatype == "textoptions"
+            ? this.state.options
+            : []
+      });
+      this.props.className == "typehead-edit-view" &&
+        this.state.datatype !== "date" &&
+        this.refs.entry.focus();
     },
 
     componentWillReceiveProps: function (nextProps) {
@@ -194,10 +209,28 @@ var Typeahead = onClickOutside(
       if (this.refs.entry != null) {
         value = this.refs.entry.value;
       }
+
+      var calculateTokenWidth = divInputRef.current?.clientWidth;
+      if (
+        this.refs.input !== undefined &&
+        this.refs.input.childNodes.length >= 2
+      ) {
+        this.refs.input.childNodes[1].innerHTML = value.replace(/ /g, "\u00A0");
+
+        if (divInputRef.current?.clientWidth == 0) {
+          calculateTokenWidth = 3;
+        } else {
+          calculateTokenWidth = divInputRef.current?.clientWidth;
+        }
+      }
+
+      value = trim(value);
+
       this.setState({
         visible: this.getOptionsLabelForValue(value, this.state.options),
         selection: null,
-        entryValue: value
+        entryValue: value,
+        tokenWidth: calculateTokenWidth
       });
     },
 
@@ -305,6 +338,14 @@ var Typeahead = onClickOutside(
       }
     },
 
+    calculateWidth: function () {
+      if (this.state.tokenWidth !== undefined) {
+        return this.state.tokenWidth;
+      } else {
+        return divInputRef.current?.clientWidth;
+      }
+    },
+
     render: function () {
       var inputClasses = {};
       inputClasses[this.props.customClasses.input] =
@@ -324,13 +365,16 @@ var Typeahead = onClickOutside(
               ref="datepicker"
               onChange={this._handleDateChange}
               onKeyDown={this._onKeyDown}
+              value={this.state.entryValue}
+              allSelected={this.props.allSelected}
+              currentCategory={this.props.currentCategory}
             />
           </span>
         );
       }
 
       return (
-        <span ref="input" className={classList} onFocus={this._onFocus}>
+        <div ref="input" className={classList} onFocus={this._onFocus}>
           <input
             ref="entry"
             type="text"
@@ -339,9 +383,20 @@ var Typeahead = onClickOutside(
             defaultValue={this.state.entryValue}
             onChange={this._onTextEntryUpdated}
             onKeyDown={this._onKeyDown}
+            style={{
+              padding: 0,
+              marginTop: 1,
+              marginLeft: 2,
+              width:
+                this.props.className === "typehead-edit-view" &&
+                this.calculateWidth()
+            }}
           />
+          <div ref={divInputRef} className="typehead-input-value">
+            {this.state.entryValue.replace(/ /g, "\u00A0")}
+          </div>
           {this._renderIncrementalSearchResults()}
-        </span>
+        </div>
       );
     }
   })

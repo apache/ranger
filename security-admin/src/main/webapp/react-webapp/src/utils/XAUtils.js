@@ -1195,6 +1195,39 @@ export const fetchSearchFilterParams = (
   return finalSearchFilterData;
 };
 
+export const parseSearchFilter = (filter, searchFilterOptions) => {
+  let finalSearchFilter = {};
+  let searchFilterParam = {};
+  let searchParam = {};
+
+  map(filter, function (obj) {
+    let searchFilterObj = find(searchFilterOptions, {
+      category: obj.category
+    });
+
+    if (searchFilterObj !== undefined) {
+      searchFilterParam[obj.category] = obj.value;
+
+      let urlLabelParam = searchFilterObj.urlLabel;
+
+      if (searchFilterObj.type == "textoptions") {
+        let textOptionObj = find(searchFilterObj.options(), {
+          value: obj.value
+        });
+        searchParam[urlLabelParam] =
+          textOptionObj !== undefined ? textOptionObj.label : obj.value;
+      } else {
+        searchParam[urlLabelParam] = obj.value;
+      }
+    }
+  });
+
+  finalSearchFilter["searchParam"] = searchParam;
+  finalSearchFilter["searchFilterParam"] = searchFilterParam;
+
+  return finalSearchFilter;
+};
+
 export const serverError = (error) => {
   if (error.response !== undefined && has(error.response, "data.msgDesc")) {
     toast.error(error.response.data.msgDesc);
@@ -1203,7 +1236,7 @@ export const serverError = (error) => {
   }
 };
 
-/* policyInfo for masking and row filter */
+/* PolicyInfo for masking and row filter */
 
 export const policyInfo = (policyType, serviceType) => {
   if (

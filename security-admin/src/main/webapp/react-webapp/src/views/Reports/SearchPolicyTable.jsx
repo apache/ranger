@@ -201,7 +201,9 @@ function SearchPolicyTable(props) {
         accessor: "zoneName",
         Cell: (rawValue) => {
           return !isEmpty(rawValue.value) ? (
-            <Badge variant="dark text-truncate mw-100">{rawValue.value}</Badge>
+            <Badge variant="dark" className="text-truncate mw-100">
+              {rawValue.value}
+            </Badge>
           ) : (
             <div className="text-center">--</div>
           );

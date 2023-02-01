@@ -43,7 +43,6 @@ import {
   useSearchParams
 } from "react-router-dom";
 import qs from "qs";
-
 import { fetchApi } from "Utils/fetchAPI";
 import { toast } from "react-toastify";
 import { SyncSourceDetails } from "../SyncSourceDetails";
@@ -52,9 +51,10 @@ import {
   isKeyAdmin,
   isAuditor,
   isKMSAuditor,
-  serverError
+  serverError,
+  parseSearchFilter
 } from "Utils/XAUtils";
-import { find, isEmpty, isUndefined, map, sortBy } from "lodash";
+import { find, isEmpty, isUndefined, sortBy } from "lodash";
 import { getUserAccessRoleList } from "Utils/XAUtils";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import { BlockUi, Loader } from "../../../components/CommonComponents";
@@ -94,7 +94,7 @@ function Users() {
   const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
     []
   );
-
+  const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const [pageLoader, setPageLoader] = useState(true);
   const [blockUI, setBlockUI] = useState(false);
 
@@ -106,7 +106,7 @@ function Users() {
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
     for (const param in currentParams) {
-      let searchFilterObj = find(searchFilterOption, {
+      let searchFilterObj = find(searchFilterOptions, {
         urlLabel: param
       });
 
@@ -516,7 +516,7 @@ function Users() {
     handleDeleteClick();
   };
 
-  const searchFilterOption = [
+  const searchFilterOptions = [
     {
       category: "emailAddress",
       label: "Email Address",
@@ -529,11 +529,19 @@ function Users() {
       urlLabel: "role",
       type: "textoptions",
       options: () => {
-        return [
-          { value: "ROLE_USER", label: "User" },
-          { value: "ROLE_SYS_ADMIN", label: "Admin" },
-          { value: "ROLE_ADMIN_AUDITOR", label: "Auditor" }
-        ];
+        if (isKMSRole) {
+          return [
+            { value: "ROLE_USER", label: "User" },
+            { value: "ROLE_KEY_ADMIN", label: "KeyAdmin" },
+            { value: "ROLE_KEY_ADMIN_AUDITOR", label: "KMSAuditor" }
+          ];
+        } else {
+          return [
+            { value: "ROLE_USER", label: "User" },
+            { value: "ROLE_SYS_ADMIN", label: "Admin" },
+            { value: "ROLE_ADMIN_AUDITOR", label: "Auditor" }
+          ];
+        }
       }
     },
     {
@@ -594,25 +602,14 @@ function Users() {
   ];
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOption, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
+
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
+
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
@@ -631,9 +628,8 @@ function Users() {
               <StructuredFilter
                 key="user-listing-search-filter"
                 placeholder="Search for your users..."
-                options={sortBy(searchFilterOption, ["label"])}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                options={sortBy(searchFilterOptions, ["label"])}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </Col>

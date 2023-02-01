@@ -119,7 +119,7 @@ export const AccessLogsTable = ({ data = {} }) => {
                       className="pull-right link-tag query-icon btn btn-sm"
                       size="sm"
                       variant="link"
-                      title="Copied!"
+                      title="Copy"
                       onClick={() =>
                         navigator.clipboard.writeText(copyText(requestData))
                       }
