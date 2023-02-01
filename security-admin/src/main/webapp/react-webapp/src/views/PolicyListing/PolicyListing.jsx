@@ -56,7 +56,8 @@ import {
   isPolicyExpired,
   isSystemAdmin,
   isKeyAdmin,
-  isUser
+  isUser,
+  parseSearchFilter
 } from "../../utils/XAUtils";
 import {
   alertMessage,
@@ -119,7 +120,7 @@ function PolicyListing(props) {
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
     for (const param in currentParams) {
-      let searchFilterObj = find(getSearchFilterOption(), {
+      let searchFilterObj = find(getSearchFilterOptions(), {
         urlLabel: param
       });
 
@@ -599,7 +600,7 @@ function PolicyListing(props) {
     });
   };
 
-  const searchFilterOption = [
+  const searchFilterOptions = [
     {
       category: "group",
       label: "Group Name",
@@ -644,7 +645,7 @@ function PolicyListing(props) {
     }
   ];
 
-  const getSearchFilterOption = () => {
+  const getSearchFilterOptions = () => {
     let currentServiceDef = serviceDef;
 
     if (currentServiceDef !== undefined) {
@@ -657,12 +658,12 @@ function PolicyListing(props) {
         type: "text"
       }));
 
-      return sortBy(concat(searchFilterOption, serviceDefResourceOption), [
+      return sortBy(concat(searchFilterOptions, serviceDefResourceOption), [
         "label"
       ]);
     }
 
-    return sortBy(searchFilterOption, ["label"]);
+    return sortBy(searchFilterOptions, ["label"]);
   };
 
   const getSearchInfoContent = () => {
@@ -718,25 +719,14 @@ function PolicyListing(props) {
   };
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(getSearchFilterOption(), {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      getSearchFilterOptions()
+    );
+
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
+
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
@@ -772,25 +762,26 @@ function PolicyListing(props) {
           <div className="policy-listing">
             <Row className="mb-3">
               <Col sm={10}>
-                <StructuredFilter
-                  key="policy-listing-search-filter"
-                  placeholder="Search for your policy..."
-                  options={getSearchFilterOption()}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
-                  defaultSelected={defaultSearchFilterParams}
-                />
-                <CustomPopover
-                  icon="fa-fw fa fa-info-circle info-icon"
-                  title={
-                    <span style={{ fontSize: "14px" }}>
-                      Search Filter Hints
-                    </span>
-                  }
-                  content={getSearchInfoContent()}
-                  placement="bottom"
-                  trigger={["hover", "focus"]}
-                />
+                <div className="filter-icon-wrap">
+                  <StructuredFilter
+                    key="policy-listing-search-filter"
+                    placeholder="Search for your policy..."
+                    options={getSearchFilterOptions()}
+                    onChange={updateSearchFilter}
+                    defaultSelected={defaultSearchFilterParams}
+                  />
+                  <CustomPopover
+                    icon="fa-fw fa fa-info-circle info-icon"
+                    title={
+                      <span style={{ fontSize: "14px" }}>
+                        Search Filter Hints
+                      </span>
+                    }
+                    content={getSearchInfoContent()}
+                    placement="bottom"
+                    trigger={["hover", "focus"]}
+                  />
+                </div>
               </Col>
               <Col sm={2}>
                 <div className="pull-right mb-1">

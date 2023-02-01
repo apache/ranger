@@ -27,6 +27,7 @@ import dateFormat from "dateformat";
 import {
   setTimeStamp,
   fetchSearchFilterParams,
+  parseSearchFilter,
   serverError,
   isKeyAdmin,
   isKMSAuditor
@@ -38,7 +39,7 @@ import {
 } from "../../components/CommonComponents";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
-import { find, isEmpty, isUndefined, map, sortBy, toUpper, filter } from "lodash";
+import { isEmpty, isUndefined, map, sortBy, toUpper, filter } from "lodash";
 
 function Plugin_Status() {
   const [pluginStatusListingData, setPluginStatusLogs] = useState([]);
@@ -517,27 +518,16 @@ function Plugin_Status() {
   );
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOptions, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
+
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("pluginStatus", JSON.stringify(searchParam));
-    if(typeof resetPage?.page === "function"){
+
+    if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
   };
@@ -622,8 +612,7 @@ function Plugin_Status() {
                 key="plugin-status-log-search-filter"
                 placeholder="Search for your plugin status..."
                 options={sortBy(searchFilterOptions, ["label"])}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </div>

@@ -47,9 +47,10 @@ import {
   isKeyAdmin,
   isAuditor,
   isKMSAuditor,
-  serverError
+  serverError,
+  parseSearchFilter
 } from "Utils/XAUtils";
-import { find, isUndefined, map, isEmpty } from "lodash";
+import { find, isUndefined, isEmpty } from "lodash";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import {
   BlockUi,
@@ -104,7 +105,7 @@ function Groups() {
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
     for (const param in currentParams) {
-      let searchFilterObj = find(searchFilterOption, {
+      let searchFilterObj = find(searchFilterOptions, {
         urlLabel: param
       });
 
@@ -489,7 +490,7 @@ function Groups() {
     });
   };
 
-  const searchFilterOption = [
+  const searchFilterOptions = [
     {
       category: "name",
       label: "Group Name",
@@ -536,25 +537,14 @@ function Groups() {
   ];
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOption, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
+
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
+
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
@@ -573,9 +563,8 @@ function Groups() {
               <StructuredFilter
                 key="user-listing-search-filter"
                 placeholder="Search for your groups..."
-                options={searchFilterOption}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                options={searchFilterOptions}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </Col>

@@ -166,6 +166,9 @@ a:active {
   border: 1px solid #d6d6d6;
   padding: 20px;
   margin-bottom: 5px;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
 }
 
 /* Badge */
@@ -182,7 +185,6 @@ a:active {
 
 /*Icons*/
 .info-icon {
-  position: absolute;
   margin-left: 10px;
   font-size: larger;
 }
@@ -515,9 +517,6 @@ div#center div.letter_container_7 {
 .editable {
   display: inline-block;
   min-width: 30px;
-  /* border-color: #0b7fad;
-     border-bottom-style: dashed;
-     */
   cursor: pointer;
 }
 
@@ -1023,7 +1022,7 @@ header {
   text-align: center;
 }
 
-.item:not(:last-of-type)::after {
+.tag-item:not(:last-of-type)::after {
   content: ", ";
 }
 
@@ -1349,12 +1348,18 @@ header {
 }
 
 /* Search filter css */
+.filter-icon-wrap {
+  display: flex;
+  align-items: center;
+}
+
 .filter-tokenizer {
   width: 90%;
   border: 1px solid #ccc;
   border-radius: 20px;
-  padding: 10px;
-  display: inline-block;
+  padding: 15px;
+  display: flex;
+  align-items: center;
 }
 
 .filter-tokenizer:first-child {
@@ -1368,7 +1373,7 @@ header {
   border-radius: 20px;
   border-top-right-radius: 0;
   border-bottom-right-radius: 0;
-  display: table-cell;
+  display: inline-block;
   background: transparent;
 }
 
@@ -1386,35 +1391,44 @@ header {
 
 .input-group-addon,
 .input-group-btn {
-  width: 1%;
   white-space: nowrap;
   vertical-align: middle;
 }
 
 .filter-tokenizer .token-collection {
-  display: table-cell;
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  padding: 2px 0px;
 }
 
 .filter-tokenizer .typeahead {
-  overflow: auto;
+  overflow: hidden;
   display: block;
+  width: 100%;
+  height: 20px;
+  margin-top: 2px;
 }
 
 .filter-tokenizer .typeahead-token {
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
   float: left;
-  margin: 4px 3px 3px;
-  padding: 5px 5px 5px 7px;
+  margin: 4px;
+  padding: 4px 12px 2px 8px;
+  background: #dddddd;
+  border-radius: 15px;
+  height: 30px;
 }
 
 .filter-input-group {
   border: 0px;
   border-radius: 2px;
-  overflow: auto;
-  display: block;
-  margin: 3px;
+  display: flex;
+  margin: 2px 4px 0 4px;
   padding: 5px;
+  flex: 1;
 }
 
 .filter-input-group .filter-category,
@@ -1426,8 +1440,14 @@ header {
   font-weight: bold;
   margin-right: 5px;
   font-size: 10px;
-  margin-top: 4px;
+  margin-top: 5px;
   margin-left: 5px;
+  height: 20px;
+}
+
+.filter-input-group .filter-category {
+  white-space: nowrap;
+  overflow: initial;
 }
 
 .filter-tokenizer .typeahead input {
@@ -1486,18 +1506,23 @@ header {
   position: relative;
 }
 
-.token-clear-all .typeahead-token-icon-close {
-  right: 0;
-  top: 13px;
-}
-
 .typeahead-token-label {
   color: #808080;
   font-size: 10px;
+  line-height: 1.8;
+  float: left;
+  font-weight: bold;
+  white-space: nowrap;
 }
 
 .typeahead-token-value {
   font-size: 12px;
+  line-height: 1.3;
+}
+
+.typeahead.typehead-edit-view {
+  font-size: 12px;
+  line-height: 1.3;
 }
 
 .typeahead-token-icon-close {
@@ -1509,6 +1534,12 @@ header {
   vertical-align: middle;
   position: absolute;
   top: 10px;
+  left: 9px;
+}
+.token-clear-all span.typeahead-token-icon-close {
+  position: relative;
+  top: 0;
+  right: 0;
 }
 
 .typeahead-token-icon-close:hover {
@@ -1526,154 +1557,19 @@ header {
   box-shadow: 2px 2px 6px #888888;
 }
 
-.datepicker__triangle {
-  margin-top: -8px;
-  margin-left: -8px;
-}
-
-.datepicker__triangle,
-.datepicker__triangle:before {
-  box-sizing: content-box;
-  position: absolute;
-  border: 8px solid transparent;
-  height: 0;
-  width: 1px;
-  border-top: none;
-  border-bottom-color: #f0f0f0;
-}
-
-.datepicker__triangle:before {
-  content: "";
-  z-index: -1;
-  border-width: 8px;
-  top: -1px;
-  left: -8px;
-  border-bottom-color: #aeaeae;
-}
-
-.datepicker {
-  font-size: 11px;
-  background-color: #fff;
-  color: #000;
-  border: 1px solid #aeaeae;
-  border-radius: 4px;
+.filter-tokenizer .typehead-edit-view input {
+  width: inherit;
+  background: #dddddd;
   display: inline-block;
-  position: relative;
-  box-shadow: 5px 5px 5px #888888;
 }
 
-.datepicker__container {
-  position: absolute;
+.typehead-input-value {
   display: inline-block;
-  z-index: 2147483647;
-}
-
-.datepicker__triangle {
+  opacity: 0;
+  top: -9999px;
+  left: -9999px;
   position: absolute;
-  left: 50px;
-}
-
-.datepicker__header {
-  text-align: center;
-  background-color: #f0f0f0;
-  border-bottom: 1px solid #aeaeae;
-  border-top-left-radius: 4px;
-  border-top-right-radius: 4px;
-  padding-top: 8px;
-  position: relative;
-}
-
-.datepicker__current-month {
-  color: black;
-  font-weight: bold;
-  font-size: 13px;
-}
-
-.datepicker__navigation {
-  line-height: 24px;
-  text-align: center;
-  cursor: pointer;
-  position: absolute;
-  top: 10px;
-  width: 0;
-  border: 6px solid transparent;
-}
-
-.datepicker__navigation--previous {
-  left: 10px;
-  border-right-color: #ccc;
-}
-
-.datepicker__navigation--previous:hover {
-  border-right-color: #b3b3b3;
-}
-
-.datepicker__navigation--next {
-  right: 10px;
-  border-left-color: #ccc;
-}
-
-.datepicker__navigation--next:hover {
-  border-left-color: #b3b3b3;
-}
-
-.datepicker__week-day {
-  color: #ccc;
-  display: inline-block;
-  width: 28px;
-  line-height: 24px;
-}
-
-.datepicker__month {
-  margin: 5px;
-  text-align: center;
-}
-
-.datepicker__day {
-  color: #000;
-  display: inline-block;
-  width: 24px;
-  line-height: 24px;
-  text-align: center;
-  margin: 2px;
-  cursor: pointer;
-}
-
-.datepicker__day:hover {
-  border-radius: 4px;
-  background-color: #f0f0f0;
-}
-
-.datepicker__day--today {
-  font-weight: bold;
-}
-
-.datepicker__day--selected {
-  border-radius: 4px;
-  background-color: #216ba5;
-  color: #fff;
-}
-
-.datepicker__day--selected:hover {
-  background-color: #1d5d90;
-}
-
-.datepicker__day--disabled {
-  cursor: default;
-  color: #ccc;
-}
-
-.datepicker__day--disabled:hover {
-  background-color: transparent;
-}
-
-.datepicker__input {
-  position: relative;
-  line-height: 16px;
-}
-
-.datepicker__input:focus {
-  outline: none;
+  white-space: nowrap;
 }
 
 .resizer {
@@ -1743,7 +1639,6 @@ header {
   font-size: 13px;
 }
 
-
 .ranger-navbar .dropdown-item.active,
 .ranger-navbar .dropdown-item:active {
   background-color: #0b7fad;
@@ -1795,10 +1690,10 @@ header {
   color: #bd362f;
 }
 
-.policyview-permission-wrap{
-max-height: 200px;
-overflow-y: auto;
-overflow-x: hidden;
+.policyview-permission-wrap {
+  max-height: 200px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .time-clock {
@@ -1811,6 +1706,33 @@ overflow-x: hidden;
 
 .more-less-width {
   max-width: 200px;
+}
+
+.fixed-headertable thead tr {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.fixed-headertable tbody {
+  max-height: 350px;
+  overflow: overlay;
+  display: block;
+  width: 100%;
+}
+
+.fixed-headertable tbody tr {
+  display: table;
+  table-layout: fixed;
+  width: 100%;
+}
+
+.filter-input-group span.typeahead input[type="text"]::placeholder {
+  font-size: 12px !important;
+}
+
+.typeahead-token-close {
+  display: flex !important;
 }
 
 .zone-name {
@@ -1829,19 +1751,19 @@ overflow-x: hidden;
 }
 
 .table-service-scroll {
-    display: block;
-    overflow-y: auto;
-    overflow-x: hidden;
-    max-height: 250px;
-  }
-.pagination-error-field{
+  display: block;
+  overflow-y: auto;
+  overflow-x: hidden;
+  max-height: 250px;
+}
+.pagination-error-field {
   left: 0;
   top: 28px;
-  line-height:1.1
+  line-height: 1.1;
 }
 .table-service-scroll tr td:last-child {
-    border-bottom: 0;
-  }
+  border-bottom: 0;
+}
 
 .popover-maxHeight .popover-body {
   padding: 0.5rem 0.75rem;
@@ -1852,39 +1774,39 @@ overflow-x: hidden;
 
 .tags-set-height-groups {
   width: 100%;
-  height: 100px;
+  height: 85px;
   overflow-x: hidden;
-  min-height: 140px;
+  min-height: 95px;
 }
-tbody.drag-drop-wrap>tr>td:first-child {
-    position: relative;
-    padding-left: 20px;
-   }
-tbody.drag-drop-wrap>tr>td:first-child:after {
-  content: '';
+tbody.drag-drop-wrap > tr > td:first-child {
+  position: relative;
+  padding-left: 20px;
+}
+tbody.drag-drop-wrap > tr > td:first-child:after {
+  content: "";
   position: absolute;
-    box-sizing: border-box;
-    left: 5px;
-    top: 10%;
-    height: 80%;
-    width: 8px;
-    border: 3px dotted rgba(0, 0, 0, 0.25);
-    background: transparent;
-     cursor: move;
-     width: 6px;
-   }
-  
-  tbody.drag-drop-wrap>tr>td:hover:first-child:after {
-    border: 3px dotted rgba(0, 0, 0, 0.5);
-  }
-  
-  .header-dropdown:hover .dropdown-menu {
-    display: block;
-  }
-  
-  .header-dropdown .dropdown-toggle:after {
-    content: none
-  }
+  box-sizing: border-box;
+  left: 5px;
+  top: 10%;
+  height: 80%;
+  width: 8px;
+  border: 3px dotted rgba(0, 0, 0, 0.25);
+  background: transparent;
+  cursor: move;
+  width: 6px;
+}
+
+tbody.drag-drop-wrap > tr > td:hover:first-child:after {
+  border: 3px dotted rgba(0, 0, 0, 0.5);
+}
+
+.header-dropdown:hover .dropdown-menu {
+  display: block;
+}
+
+.header-dropdown .dropdown-toggle:after {
+  content: none;
+}
 .block-ui {
   position: relative;
   min-height: 3em;

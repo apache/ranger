@@ -28,6 +28,31 @@ var Calendar = onClickOutside(
       this.props.hideCalendar();
     },
 
+    isValidDate: function (allSelected, currentDate, currentCategory) {
+      let sDate = allSelected?.find((element) => {
+        return element.category == "startDate";
+      });
+      let eDate = allSelected?.find((element) => {
+        return element.category == "endDate";
+      });
+
+      if (sDate !== undefined && eDate !== undefined) {
+        if (currentCategory === "startDate") {
+          return currentDate.isBefore(eDate?.value);
+        }
+
+        if (currentCategory === "endDate") {
+          return currentDate.isAfter(sDate?.value);
+        }
+      } else if (sDate !== undefined && currentCategory === "endDate") {
+        return currentDate.isAfter(sDate?.value);
+      } else if (eDate !== undefined && currentCategory === "startDate") {
+        return currentDate.isBefore(eDate?.value);
+      } else {
+        return true;
+      }
+    },
+
     render: function () {
       return (
         <Datetime
@@ -37,7 +62,15 @@ var Calendar = onClickOutside(
           closeOnSelect
           input={false}
           className="typehead-token-datetime"
+          value={this.props.value}
           onChange={this.props.onSelect}
+          isValidDate={(currentDate) =>
+            this.isValidDate(
+              this.props.allSelected,
+              currentDate,
+              this.props.currentCategory
+            )
+          }
         />
       );
     }

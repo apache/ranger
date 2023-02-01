@@ -31,7 +31,6 @@ import {
 import moment from "moment-timezone";
 import AccessLogsTable from "./AccessLogsTable";
 import {
-  find,
   isEmpty,
   isUndefined,
   pick,
@@ -54,7 +53,8 @@ import {
   getTableSortBy,
   getTableSortType,
   serverError,
-  fetchSearchFilterParams
+  fetchSearchFilterParams,
+  parseSearchFilter
 } from "../../utils/XAUtils";
 import { CustomTooltip, Loader } from "../../components/CommonComponents";
 import { ServiceType } from "../../utils/XAEnums";
@@ -99,7 +99,10 @@ function Access() {
       let { searchFilterParam, defaultSearchFilterParam, searchParam } =
         fetchSearchFilterParams("bigData", searchParams, searchFilterOptions);
 
-      if (!has(searchFilterParam, "startDate")) {
+      if (
+        !has(searchFilterParam, "startDate") &&
+        !has(searchFilterParam, "endDate")
+      ) {
         searchParam["startDate"] = currentDate;
         searchFilterParam["startDate"] = currentDate;
         defaultSearchFilterParam.push({
@@ -293,7 +296,7 @@ function Access() {
             className="pull-right link-tag query-icon btn btn-sm"
             size="sm"
             variant="link"
-            title="Copied!"
+            title="Copy"
             onClick={(e) => {
               e.stopPropagation();
               navigator.clipboard.writeText(copyText(requestData));
@@ -581,7 +584,7 @@ function Access() {
               <Badge
                 variant="info"
                 title={rawValue.value}
-                className="text-truncate w-100"
+                className="text-truncate mw-100"
               >
                 {rawValue.value}
               </Badge>
@@ -660,7 +663,9 @@ function Access() {
           if (!isUndefined(rawValue.value) || !isEmpty(rawValue.value)) {
             return (
               <h6>
-                <Badge bg="dark">{rawValue.value}</Badge>
+                <Badge variant="dark" className="text-truncate mw-100">
+                  {rawValue.value}
+                </Badge>
               </h6>
             );
           } else return <div className="text-center">--</div>;
@@ -760,33 +765,17 @@ function Access() {
   };
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-
-      let searchFilterObj = find(searchFilterOptions, {
-        category: obj.category
-      });
-
-      let urlLabelParam = searchFilterObj.urlLabel;
-
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
 
     searchParam["excludeServiceUser"] = checked;
 
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("bigData", JSON.stringify(searchParam));
+
     if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
@@ -931,8 +920,7 @@ function Access() {
                 key="access-log-search-filter"
                 placeholder="Search for your access audits..."
                 options={sortBy(searchFilterOptions, ["label"])}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
 

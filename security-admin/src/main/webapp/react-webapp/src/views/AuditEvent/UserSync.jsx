@@ -26,11 +26,12 @@ import { SyncSourceDetails } from "../UserGroupRoleListing/SyncSourceDetails";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
-import { find, map, sortBy, has } from "lodash";
+import { sortBy, has } from "lodash";
 import {
   getTableSortBy,
   getTableSortType,
   fetchSearchFilterParams,
+  parseSearchFilter,
   serverError
 } from "../../utils/XAUtils";
 
@@ -58,7 +59,10 @@ function User_Sync() {
     let { searchFilterParam, defaultSearchFilterParam, searchParam } =
       fetchSearchFilterParams("userSync", searchParams, searchFilterOptions);
 
-    if (!has(searchFilterParam, "startDate")) {
+    if (
+      !has(searchFilterParam, "startDate") &&
+      !has(searchFilterParam, "endDate")
+    ) {
       searchParam["startDate"] = currentDate;
       searchFilterParam["startDate"] = currentDate;
       defaultSearchFilterParam.push({
@@ -295,27 +299,16 @@ function User_Sync() {
   );
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOptions, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
+
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("userSync", JSON.stringify(searchParam));
-    if(typeof resetPage?.page === "function"){
+
+    if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
   };
@@ -366,8 +359,7 @@ function User_Sync() {
                 key="usersync-audit-search-filter"
                 placeholder="Search for your user sync audits..."
                 options={sortBy(searchFilterOptions, ["label"])}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </div>
