@@ -42,7 +42,7 @@ QUERY_PARAM_USER_DOT_NAME = 'user.name'.encode("utf-8")
 class RangerClient:
     def __init__(self, url, auth):
         self.client_http = RangerClientHttp(url, auth)
-
+        self.session     = self.client_http.session
         logging.getLogger("requests").setLevel(logging.WARNING)
 
 
