@@ -193,11 +193,19 @@ public class XUserMgr extends XUserMgrBase {
 		xaBizUtil.blockAuditorRoleUser();
 		validatePassword(vXUser);
 		String userName = vXUser.getName();
+		String firstName = vXUser.getFirstName();
 		if (userName == null || "null".equalsIgnoreCase(userName)
 				|| userName.trim().isEmpty()) {
 			throw restErrorUtil.createRESTException(
 					"Please provide a valid username.",
 					MessageEnums.INVALID_INPUT_DATA);
+		}
+
+		if (firstName == null || "null".equalsIgnoreCase(firstName)
+			|| firstName.trim().isEmpty()) {
+			throw restErrorUtil.createRESTException(
+				"Please provide a valid first name.",
+				MessageEnums.INVALID_INPUT_DATA);
 		}
 
 		if (vXUser.getDescription() == null) {
@@ -386,6 +394,12 @@ public class XUserMgr extends XUserMgrBase {
 			throw restErrorUtil.createRESTException("Please provide a valid "
 					+ "username.", MessageEnums.INVALID_INPUT_DATA);
 		}
+		String firstName = vXUser.getFirstName();
+		if (firstName == null || "null".equalsIgnoreCase(firstName)
+				|| firstName.trim().isEmpty()) {
+			throw restErrorUtil.createRESTException("Please provide a valid first name.", MessageEnums.INVALID_INPUT_DATA);
+		}
+
 		checkAccess(vXUser.getName());
 		xaBizUtil.blockAuditorRoleUser();
 		VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser
@@ -2626,6 +2640,14 @@ public class XUserMgr extends XUserMgrBase {
 				logger.warn("Ignoring invalid username " + vXUser==null? null : vXUser.getName());
 				continue;
 			}
+
+			String firstName = vXUser.getFirstName();
+			if (firstName == null || "null".equalsIgnoreCase(firstName)
+					|| firstName.trim().isEmpty()) {
+				logger.warn("Ignoring invalid first name " + vXUser == null ? null : vXUser.getFirstName());
+				continue;
+			}
+
 			checkAccess(vXUser.getName());
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);

@@ -663,8 +663,7 @@ public class TestXUserMgr {
 		vxUser.setName(null);
 		Mockito.when(restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
-		VXUser vXUser=xUserMgr.createXUser(vxUser);
-		Assert.assertNull(vXUser);
+		xUserMgr.createXUser(vxUser);
 	}
 
 	@Test
@@ -682,7 +681,32 @@ public class TestXUserMgr {
 	}
 
 	@Test
+	public void testCreateXUser_WithBlankFirstName() {
+		destroySession();
+		setup();
+		VXUser vxUser = vxUser();
+		vxUser.setName("test");
+		vxUser.setFirstName(null);
+		Mockito.when(restErrorUtil.createRESTException("Please provide a valid first name.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.createXUser(vxUser);
+	}
+
+	@Test
 	public void test04CreateXUser_WithBlankValues() {
+		destroySession();
+		setup();
+		VXUser vxUser = vxUser();
+		vxUser.setDescription(null);
+		vxUser.setFirstName("test");
+		vxUser.setLastName("null");
+		Mockito.when(restErrorUtil.createRESTException("Please provide valid email address.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.createXUser(vxUser);
+	}
+
+	@Test
+	public void testUpdateXUser_WithBlankFirstName() {
 		setup();
 		VXUser vxUser = vxUser();
 		ArrayList<String> userRoleListVXPortaUser = getRoleList();
@@ -690,10 +714,23 @@ public class TestXUserMgr {
 		vXPortalUser.setUserRoleList(userRoleListVXPortaUser);
 		vxUser.setDescription(null);
 		vxUser.setFirstName("null");
-		vxUser.setLastName("null");
-		Mockito.when(restErrorUtil.createRESTException("Please provide valid email address.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException("Please provide a valid first name.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
-		xUserMgr.createXUser(vxUser);
+		xUserMgr.updateXUser(vxUser);
+	}
+
+	@Test
+	public void testUpdateXUser_WithBlankUserName() {
+		setup();
+		VXUser vxUser = vxUser();
+		ArrayList<String> userRoleListVXPortaUser = getRoleList();
+		VXPortalUser vXPortalUser = new VXPortalUser();
+		vXPortalUser.setUserRoleList(userRoleListVXPortaUser);
+		vxUser.setDescription(null);
+		vxUser.setName("null");
+		Mockito.when(restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.updateXUser(vxUser);
 	}
 
 	@Test
@@ -2582,7 +2619,7 @@ public class TestXUserMgr {
 		vxUser.setUserRoleList(reqRoleList);
 		vxUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 		vxUser.setGroupIdList(groupIdList);
-		vxUser.setFirstName("null");
+		vxUser.setFirstName("user1");
 		vxUser.setLastName("null");
 		vxUser.setPassword("*****");
 		Mockito.when(xUserService.updateResource(vxUser)).thenReturn(vxUser);
@@ -3759,6 +3796,9 @@ public class TestXUserMgr {
 		List<VXUser> vXUserList=new ArrayList<VXUser>();
 		VXUser vXUser = vxUser();
 		VXUser vXUser1 = vxUser();
+		VXUser vXUser2 = vxUser();
+		vXUser2.setFirstName("user12");
+		vXUser2.setEmailAddress(null);
 		vXUser.setFirstName("null");
 		vXUser.setLastName("null");
 		vXUser.setEmailAddress("");
@@ -3771,8 +3811,10 @@ public class TestXUserMgr {
 		userRoleList.add(RangerConstants.ROLE_ADMIN_AUDITOR);
 		vXUser.setUserRoleList(userRoleList);
 		vXUser1.setUserRoleList(userRoleList);
+		vXUser2.setUserRoleList(userRoleList);
 		vXUserList.add(vXUser);
 		vXUserList.add(vXUser1);
+		vXUserList.add(vXUser2);
 		VXUserList users = new VXUserList(vXUserList);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
@@ -3823,12 +3865,11 @@ public class TestXUserMgr {
 
 		Mockito.when(xUserPermissionService.createResource((VXUserPermission) Mockito.any())).thenReturn(userPermission);
 		Mockito.when(sessionMgr.getActiveUserSessionsForPortalUserId(userId)).thenReturn(userSessions);
-		xUserMgr.createOrUpdateXUsers(users);
-
 		Mockito.when(xUserPermissionDao.findByModuleIdAndPortalUserId(null, null)).thenReturn(xUserPermissionObj);
 		Mockito.when(xUserPermissionService.populateViewBean(xUserPermissionObj)).thenReturn(userPermission);
 		Mockito.when(xUserPermissionService.updateResource((VXUserPermission) Mockito.any())).thenReturn(userPermission);
-		xUserMgr.createOrUpdateXUsers(users);
+		int createdOrUpdatedUserCount = xUserMgr.createOrUpdateXUsers(users);
+		Assert.assertEquals(createdOrUpdatedUserCount, 1);
 	}
 
 	@Test
