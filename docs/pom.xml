@@ -88,6 +88,18 @@
             </organization>
         </developer>
         <developer>
+            <id>abhi</id>
+            <name>Abhishek Kumar</name>
+            <email>abhi@apache.org</email>
+            <timezone>PST</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Cloudera Inc
+            </organization>
+        </developer>
+        <developer>
             <id>alok</id>
             <name>Alok Lal</name>
             <email>alok@apache.org</email>
