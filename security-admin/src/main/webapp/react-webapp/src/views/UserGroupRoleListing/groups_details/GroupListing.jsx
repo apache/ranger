@@ -563,7 +563,7 @@ function Groups() {
             <Col md={8} className="usr-grp-role-search-width">
               <StructuredFilter
                 key="user-listing-search-filter"
-                placeholder="Search for your users..."
+                placeholder="Search for your groups..."
                 options={searchFilterOption}
                 onTokenAdd={updateSearchFilter}
                 onTokenRemove={updateSearchFilter}

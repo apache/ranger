@@ -448,9 +448,9 @@ export function PolicyViewDetails(props) {
                           : "--"}
                       </td>
                     )}
-                    <td className="text-center">
+
                       {!isEmpty(items.accesses)
-                        ? items.accesses.map((obj) => (
+                        ?<td className="text-center d-flex flex-wrap policyview-permission-wrap"> {items.accesses.map((obj) => (
                             <h6 className="d-inline mr-1">
                               <Badge
                                 variant="info"
@@ -460,9 +460,9 @@ export function PolicyViewDetails(props) {
                                 {obj.type}
                               </Badge>
                             </h6>
-                          ))
-                        : "--"}
-                    </td>
+                          ))}</td>
+                        : <td className="text-center">--</td>}
+
                     {policyType ==
                       RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
                       serviceType != "tag" && (

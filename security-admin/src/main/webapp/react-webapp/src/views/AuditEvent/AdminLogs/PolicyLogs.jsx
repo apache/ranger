@@ -1857,7 +1857,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
           <div>
             <div className="font-weight-bolder">
-              Policy ID :
+              Policy ID :{" "}
               <Badge className="d-inline-flex mr-1" variant="info">
                 {objectId}
               </Badge>
@@ -2499,11 +2499,9 @@ export const PolicyLogs = ({ data, reportdata }) => {
               <div className="col-md-6">
                 <div className="font-weight-bolder">
                   Policy ID :{" "}
-                  <h6 className="d-inline">
-                    <Badge className="d-inline-flex mr-1" variant="info">
-                      {objectId}
-                    </Badge>
-                  </h6>
+                  <Badge className="d-inline-flex mr-1" variant="info">
+                    {objectId}
+                  </Badge>
                 </div>
                 <div className="font-weight-bolder">
                   Policy Name: {objectName}
@@ -2850,7 +2848,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
           <div>
             <div className="font-weight-bolder">
-              Policy ID:{" "}
+              Policy ID :{" "}
               <Badge className="d-inline-flex mr-1" variant="info">
                 {objectId}
               </Badge>
@@ -3538,7 +3536,12 @@ export const PolicyLogs = ({ data, reportdata }) => {
       {action == "Import Delete" &&
         objectClassType == ClassTypes.CLASS_TYPE_RANGER_POLICY.value && (
           <div>
-            <div className="font-weight-bolder">Policy ID : </div>
+            <div className="font-weight-bolder">
+              Policy ID :{" "}
+              <Badge className="d-inline-flex mr-1" variant="info">
+                {objectId}
+              </Badge>
+            </div>
             <div className="font-weight-bolder">Policy Name: {objectName}</div>
             <div className="font-weight-bolder">
               Deleted Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}{" "}

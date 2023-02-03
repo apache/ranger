@@ -136,7 +136,7 @@ class ImportPolicy extends Component {
       this.setState({
         fileJsonData: jsonParseFileData,
         sourceServicesMap: servicesJsonParseFile,
-        destServices: this.props.services,
+        destServices:  this.props.isParentImport ? this.props.allServices : this.props.services,
         sourceZoneName: zoneNameJsonParseFile,
         initialFormFields: formFields,
         filterFormFields: formFields
@@ -183,7 +183,7 @@ class ImportPolicy extends Component {
 
     try {
       this.props.onHide();
-      this.props.showBlockUI(true);
+      this.props.showBlockUI(true, importDataResp);
       importDataResp = await fetchApi({
         url: "/plugins/policies/importPoliciesFromFile",
         params: {
@@ -193,10 +193,10 @@ class ImportPolicy extends Component {
         method: "post",
         data: importData
       });
-      this.props.showBlockUI(false);
+      this.props.showBlockUI(false, importDataResp);
       toast.success("Successfully imported the file");
     } catch (error) {
-      this.props.showBlockUI(false);
+      this.props.showBlockUI(false, error?.response);
       serverError(error);
       console.error(`Error occurred while importing policies! ${error}`);
     }
@@ -214,7 +214,7 @@ class ImportPolicy extends Component {
         let zoneServiceNames = map(zonesResp.data, "name");
 
         let zoneServices = zoneServiceNames.map((zoneService) => {
-          return this.props.services.filter((service) => {
+          return this.props.allServices.filter((service) => {
             return service.name === zoneService;
           });
         });
@@ -249,7 +249,7 @@ class ImportPolicy extends Component {
       } else {
         this.setState({
           destZoneName: "",
-          destServices: this.props.services,
+          destServices:  this.props.isParentImport ? this.props.allServices : this.props.services,
           filterFormFields: this.state.initialFormFields
         });
       }
@@ -291,8 +291,6 @@ class ImportPolicy extends Component {
     value ? undefined : "Please select/enter service name";
 
   requiredFieldArray = (value) => {
-    let errorMsg = "Required";
-
     if (value && value.length > 0) {
       value.map((v) => {
         return v.sourceServiceName !== v.destServiceName

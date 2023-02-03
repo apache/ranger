@@ -761,6 +761,9 @@ header {
   list-style: none;
   padding: 0;
   margin: 20px 0 0;
+  max-height: 355px;
+  overflow-y: auto;
+  overflow-x: hidden;
 }
 
 .zone-listing li {
@@ -1789,6 +1792,12 @@ header {
   color: #bd362f;
 }
 
+.policyview-permission-wrap{
+max-height: 200px;
+overflow-y: auto;
+overflow-x: hidden;
+}
+
 .time-clock {
   vertical-align: text-top;
 }
@@ -1815,6 +1824,17 @@ header {
   padding: 0.625rem 0.5rem;
   border-top: 1px solid #ddd;
 }
+
+.table-service-scroll {
+    display: block;
+    overflow-y: auto;
+    overflow-x: hidden;
+    max-height: 250px;
+  }
+
+.table-service-scroll tr td:last-child {
+    border-bottom: 0;
+  }
 
 .popover-maxHeight .popover-body {
   padding: 0.5rem 0.75rem;

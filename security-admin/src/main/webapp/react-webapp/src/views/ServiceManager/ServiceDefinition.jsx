@@ -70,8 +70,8 @@ class ServiceDefinition extends Component {
     this.setState({ showView: null });
   };
 
-  showBlockUI = (blockUI) => {
-    this.props.showBlockUI(blockUI);
+  showBlockUI = (blockUI, respData) => {
+    this.props.showBlockUI(blockUI, respData);
   };
 
   deleteService = (id) => {
@@ -354,6 +354,7 @@ class ServiceDefinition extends Component {
                             show={showImportModal}
                             onHide={this.hideImportModal}
                             showBlockUI={this.showBlockUI}
+                            allServices={this.props.allServices}
                           />
                         )}
                         {[serviceDef].length > 0 && showExportModal && (
@@ -373,9 +374,9 @@ class ServiceDefinition extends Component {
                 </th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="table-service-scroll">
               {this.props.servicesData.map((s) => (
-                <tr key={s.id}>
+                <tr key={s.id} className="d-table w-100">
                   <td>
                     <div className="clearfix">
                       <span className="float-left">
