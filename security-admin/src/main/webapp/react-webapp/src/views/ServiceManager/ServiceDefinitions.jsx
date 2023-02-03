@@ -45,6 +45,7 @@ class ServiceDefinitions extends Component {
       filterServiceDefs: [],
       services: [],
       filterServices: [],
+      allServices: [],
       selectedZone: JSON.parse(localStorage.getItem("zoneDetails")) || "",
       zones: [],
       isTagView: this.props.isTagView,
@@ -85,13 +86,13 @@ class ServiceDefinitions extends Component {
     this.setState({ showImportModal: false });
   };
 
-  showBlockUI = (blockingUI) => {
+  showBlockUI = (blockingUI, respData) => {
     if (blockingUI == true) {
       this.setState({ blockUI: blockingUI });
     }
-    setTimeout(() => {
+    if (respData?.status !== undefined && respData?.status !== null) {
       this.setState({ blockUI: false });
-    }, 1000);
+    }
   };
 
   fetchServiceDefs = async () => {
@@ -185,6 +186,7 @@ class ServiceDefinitions extends Component {
       );
     }
     this.setState({
+      allServices: servicesResp.data.services,
       services: this.state.isTagView ? tagServices : resourceServices,
       filterServices: this.state.isTagView ? tagServices : resourceServices,
       loader: false
@@ -428,6 +430,7 @@ class ServiceDefinitions extends Component {
                 show={showImportModal}
                 onHide={this.hideImportModal}
                 showBlockUI={this.showBlockUI}
+                allServices={this.state.allServices}
               />
             )}
             {isAdminRole && (
@@ -465,8 +468,11 @@ class ServiceDefinitions extends Component {
                 <ServiceDefinition
                   key={serviceDef && serviceDef.id}
                   serviceDefData={serviceDef}
-                  servicesData={filterServices.filter(
-                    (service) => service.type === serviceDef.name
+                  servicesData={sortBy(
+                    filterServices.filter(
+                      (service) => service.type === serviceDef.name
+                    ),
+                    "name"
                   )}
                   deleteService={this.deleteService}
                   selectedZone={selectedZone}
@@ -474,6 +480,7 @@ class ServiceDefinitions extends Component {
                   isAdminRole={isAdminRole}
                   isUserRole={isUserRole}
                   showBlockUI={this.showBlockUI}
+                  allServices={this.state.allServices}
                 ></ServiceDefinition>
               ))}
             </Row>

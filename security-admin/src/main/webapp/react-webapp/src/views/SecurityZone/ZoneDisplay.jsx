@@ -329,7 +329,7 @@ class ZoneDisplay extends Component {
                 </div>
                 <Accordion.Collapse eventKey="1">
                   <Card.Body>
-                    {this.props?.zone?.tagServices?.length !== 0 ? (
+                    {this.props?.zone?.tagServices?.length > 0 ? (
                       this?.props?.zone?.tagServices?.map((obj, index) => (
                         <h6 key={index} className="d-inline mr-1">
                           <Badge variant="info">{obj}</Badge>

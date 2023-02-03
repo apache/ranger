@@ -128,7 +128,7 @@ class ExportPolicy extends Component {
 
     try {
       this.props.onHide();
-      this.props.showBlockUI(true);
+      this.props.showBlockUI(true, exportResp);
       exportResp = await fetchApi({
         url: "/plugins/policies/exportJson",
         params: { ...exportParams }
@@ -141,9 +141,9 @@ class ExportPolicy extends Component {
       } else {
         toast.warning("No policies found to export");
       }
-      this.props.showBlockUI(false);
+      this.props.showBlockUI(false, exportResp);
     } catch (error) {
-      this.props.showBlockUI(false);
+      this.props.showBlockUI(false, error?.response);
       serverError(error);
       console.error(`Error occurred while exporting policies ${error}`);
     }
