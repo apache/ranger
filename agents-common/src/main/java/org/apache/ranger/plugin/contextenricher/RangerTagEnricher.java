@@ -76,6 +76,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Logger PERF_CONTEXTENRICHER_INIT_LOG = RangerPerfTracer.getPerfLogger("contextenricher.init");
 	private static final Logger PERF_TRIE_OP_LOG              = RangerPerfTracer.getPerfLogger("resourcetrie.retrieval");
 	private static final Logger PERF_SET_SERVICETAGS_LOG      = RangerPerfTracer.getPerfLogger("tagenricher.setservicetags");
+	private static final Logger PERF_SERVICETAGS_RETRIEVAL_LOG = RangerPerfTracer.getPerfLogger("tagenricher.tags.retrieval");
 
 
 	private static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
@@ -666,6 +667,12 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		RangerAccessResource resource = request.getResource();
 
+		RangerPerfTracer perf = null;
+
+		if (RangerPerfTracer.isPerfTraceEnabled(PERF_SERVICETAGS_RETRIEVAL_LOG)) {
+			perf = RangerPerfTracer.getPerfTracer(PERF_SERVICETAGS_RETRIEVAL_LOG, "RangerTagEnricher.findMatchingTags=" + resource.getAsString() + ")");
+		}
+
 		if ((resource == null || resource.getKeys() == null || resource.getKeys().isEmpty()) && request.isAccessTypeAny()) {
 			ret = enrichedServiceTags.getTagsForEmptyResourceAndAnyAccess();
 		} else {
@@ -698,6 +705,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				}
 			}
 		}
+
+		RangerPerfTracer.logAlways(perf);
 
 		if (CollectionUtils.isEmpty(ret)) {
 			if (LOG.isDebugEnabled()) {
