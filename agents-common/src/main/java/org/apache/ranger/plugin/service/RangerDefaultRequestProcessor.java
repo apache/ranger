@@ -48,6 +48,11 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
     @Override
     public void preProcess(RangerAccessRequest request) {
 
+        if (RangerAccessRequestUtil.getIsRequestPreprocessed(request.getContext())) {
+            return;
+        }
+        RangerAccessRequestUtil.setIsRequestPreprocessed(request.getContext(), Boolean.TRUE);
+
         setResourceServiceDef(request);
 
         RangerAccessRequestImpl reqImpl = null;
