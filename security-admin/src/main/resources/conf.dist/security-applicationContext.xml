@@ -106,6 +106,9 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<beans:bean id="CSRFPreventionFilter" class="org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter">
     </beans:bean>
 
+	<beans:bean id="mdcFilter" class="org.apache.ranger.security.web.filter.RangerMDCFilter">
+    </beans:bean>
+
     <beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">
     </beans:bean>
 	
