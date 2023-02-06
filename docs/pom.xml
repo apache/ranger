@@ -484,6 +484,18 @@
                 Freestone Infotech
             </organization>
         </developer>
+        <developer>
+            <id>dineshkumar</id>
+            <name>Dineshkumar Yadav</name>
+            <email>dineshkumar@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
     </developers>
     <contributors>
         <contributor>
