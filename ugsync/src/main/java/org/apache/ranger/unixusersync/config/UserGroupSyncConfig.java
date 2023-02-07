@@ -1342,7 +1342,7 @@ public class UserGroupSyncConfig  {
 			if (val.length() == 1) {
 				ret = val;
 			} else {
-				LOG.warn("More than one character found in RegEx Separator, using default RegEx Separator");
+				LOG.warn("More than one character found in RegEx Separator, using default RegEx Separator /");
 			}
 		}
 		LOG.info(String.format("Using %s as the RegEx Separator", ret));
