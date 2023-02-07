@@ -30,6 +30,7 @@ import org.junit.Test;
 public class TestRegEx {
 	protected String userNameBaseProperty = "ranger.usersync.mapping.username.regex";
     protected String groupNameBaseProperty = "ranger.usersync.mapping.groupname.regex";
+    protected String mappingSeparator = "/";
     protected RegEx userNameRegEx = null;
     protected RegEx groupNameRegEx = null;
     List<String> userRegexPatterns = null;
@@ -47,46 +48,57 @@ public class TestRegEx {
 
 	@Test
     public void testUserNameTransform() throws Throwable {
-            userRegexPatterns.add("s/\\s/_/");
-            userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns);
-            assertEquals("test_user", userNameRegEx.transform("test user"));
+        userRegexPatterns.add("s/\\s/_/");
+        userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
+        assertEquals("test_user", userNameRegEx.transform("test user"));
     }
 
     @Test
     public void testGroupNameTransform() throws Throwable {
-            groupRegexPatterns.add("s/\\s/_/g");
-            groupRegexPatterns.add("s/_/\\$/g");
-            groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns);
-            assertEquals("ldap$grp", groupNameRegEx.transform("ldap grp"));
+        groupRegexPatterns.add("s/\\s/_/g");
+        groupRegexPatterns.add("s/_/\\$/g");
+        groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns, mappingSeparator);
+        assertEquals("ldap$grp", groupNameRegEx.transform("ldap grp"));
     }
 
     @Test
     public void testEmptyTransform() {
-            assertEquals("test user", userNameRegEx.transform("test user"));
-            assertEquals("ldap grp", groupNameRegEx.transform("ldap grp"));
+        assertEquals("test user", userNameRegEx.transform("test user"));
+        assertEquals("ldap grp", groupNameRegEx.transform("ldap grp"));
     }
 
     @Test
     public void testTransform() throws Throwable {
-            userRegexPatterns.add("s/\\s/_/g");
-            groupRegexPatterns.add("s/\\s/_/g");
-            userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns);
-            groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns);
-            assertEquals("test_user", userNameRegEx.transform("test user"));
-            assertEquals("ldap_grp", groupNameRegEx.transform("ldap grp"));
+        userRegexPatterns.add("s/\\s/_/g");
+        groupRegexPatterns.add("s/\\s/_/g");
+        userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
+        groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns, mappingSeparator);
+        assertEquals("test_user", userNameRegEx.transform("test user"));
+        assertEquals("ldap_grp", groupNameRegEx.transform("ldap grp"));
     }
 
     @Test
     public void testTransform1() throws Throwable {
-            userRegexPatterns.add("s/\\\\/ /g");
-            userRegexPatterns.add("s//_/g");
-            userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns);
-            groupRegexPatterns.add("s/\\s/\\$/g");
-            groupRegexPatterns.add("s/\\s");
-            groupRegexPatterns.add("s/\\$//g");
-            groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns);
-            assertEquals("test user", userNameRegEx.transform("test\\user"));
-            assertEquals("ldapgrp", groupNameRegEx.transform("ldap grp"));
+        userRegexPatterns.add("s/\\\\/ /g");
+        userRegexPatterns.add("s//_/g");
+        userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, mappingSeparator);
+        groupRegexPatterns.add("s/\\s/\\$/g");
+        groupRegexPatterns.add("s/\\s");
+        groupRegexPatterns.add("s/\\$//g");
+        groupNameRegEx.populateReplacementPatterns(groupNameBaseProperty, groupRegexPatterns, mappingSeparator);
+        assertEquals("test user", userNameRegEx.transform("test\\user"));
+        assertEquals("ldapgrp", groupNameRegEx.transform("ldap grp"));
+    }
+
+    @Test
+    public void testTransformWithSeparators() throws Throwable {
+        String[] separators = {"%", "#", "&", "!", "@", "-", "~", "=", ",", " "};
+        for (String separator : separators) {
+            userRegexPatterns = new ArrayList<String>();
+            userRegexPatterns.add(String.format("s%sdark%sDE/dark%sg", separator, separator, separator));
+            userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, separator);
+            assertEquals("DE/dark_knight_admin", userNameRegEx.transform("dark_knight_admin"));
+        }
     }
 
 }
