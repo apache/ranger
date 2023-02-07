@@ -34,7 +34,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.model.RangerServiceTags;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -463,23 +462,20 @@ public class PublicAPIsv2 {
 	@Produces({ "application/json" })
 	public RangerPolicy getPolicyByName(@PathParam("servicename") String serviceName,
 	                                    @PathParam("policyname") String policyName,
+	                                    @QueryParam("zoneName") String zoneName,
 	                                    @Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
-			logger.debug("==> PublicAPIsv2.getPolicyByName(" + serviceName + "," + policyName + ")");
+			logger.debug("==> PublicAPIsv2.getPolicyByName(" + serviceName + "," + policyName + "," + zoneName + ")");
 		}
 
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		filter.setParam(SearchFilter.POLICY_NAME, policyName);
-		List<RangerPolicy> policies = serviceREST.getPolicies(filter);
+		RangerPolicy policy = serviceREST.getPolicyByName(serviceName, policyName, zoneName);
 
-		if (policies.size() != 1) {
+		if (policy == null) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
 		}
-		RangerPolicy policy = policies.get(0);
 
 		if(logger.isDebugEnabled()) {
-			logger.debug("<== PublicAPIsv2.getPolicyByName(" + serviceName + "," + policyName + ")" + policy);
+			logger.debug("<== PublicAPIsv2.getPolicyByName(" + serviceName + "," + policyName + "," + zoneName + ")" + policy);
 		}
 		return policy;
 	}
@@ -555,11 +551,12 @@ public class PublicAPIsv2 {
 	public RangerPolicy updatePolicyByName(RangerPolicy policy,
 	                                               @PathParam("servicename") String serviceName,
 	                                               @PathParam("policyname") String policyName,
+	                                               @QueryParam("zoneName") String zoneName,
 	                                               @Context HttpServletRequest request) {
 		if (policy.getService() == null || !policy.getService().equals(serviceName)) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "service name mismatch", true);
 		}
-		RangerPolicy oldPolicy = getPolicyByName(serviceName, policyName, request);
+		RangerPolicy oldPolicy = getPolicyByName(serviceName, policyName, zoneName, request);
 
 		// ignore policy.id - if specified. Retrieve using the given serviceName+policyName and use id from the retrieved object
 		policy.setId(oldPolicy.getId());
@@ -602,6 +599,7 @@ public class PublicAPIsv2 {
 	@Path("/api/policy")
 	public void deletePolicyByName(@QueryParam("servicename") String serviceName,
 	                               @QueryParam("policyname") String policyName,
+	                               @QueryParam("zoneName") String zoneName,
 	                               @Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIsv2.deletePolicyByName(" + serviceName + "," + policyName + ")");
@@ -610,7 +608,7 @@ public class PublicAPIsv2 {
 		if (serviceName == null || policyName == null) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Invalid service name or policy name", true);
 		}
-		RangerPolicy policy = getPolicyByName(serviceName, policyName, request);
+		RangerPolicy policy = getPolicyByName(serviceName, policyName, zoneName, request);
 		serviceREST.deletePolicy(policy.getId());
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.deletePolicyByName(" + serviceName + "," + policyName + ")");

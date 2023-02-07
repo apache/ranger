@@ -138,6 +138,11 @@ class RangerClient:
 
         return type_coerce(resp, RangerPolicy)
 
+    def get_policy_by_name_zone(self, serviceName, policyName, zoneName):
+        resp = self.client_http.call_api(RangerClient.GET_POLICY_BY_NAME.format_path({ 'serviceName': serviceName, 'policyName': policyName}), { 'zoneName': zoneName })
+
+        return type_coerce(resp, RangerPolicy)
+
     def get_policies_in_service(self, serviceName, params=None):
         resp = self.client_http.call_api(RangerClient.GET_POLICIES_IN_SERVICE.format_path({ 'serviceName': serviceName }), params)
 
@@ -153,6 +158,11 @@ class RangerClient:
 
         return type_coerce(resp, RangerPolicy)
 
+    def update_policy_by_name_zone(self, serviceName, policyName, zoneName, policy):
+        resp = self.client_http.call_api(RangerClient.UPDATE_POLICY_BY_NAME.format_path({ 'serviceName': serviceName, 'policyName': policyName}), { 'zoneName': zoneName },  request_data=policy)
+
+        return type_coerce(resp, RangerPolicy)
+
     def apply_policy(self, policy, params=None):
         resp = self.client_http.call_api(RangerClient.APPLY_POLICY, params, policy)
 
@@ -163,6 +173,9 @@ class RangerClient:
 
     def delete_policy(self, serviceName, policyName):
         self.client_http.call_api(RangerClient.DELETE_POLICY_BY_NAME, { 'servicename': serviceName, 'policyname': policyName })
+
+    def delete_policy_by_name_zone(self, serviceName, policyName, zoneName):
+        self.client_http.call_api(RangerClient.DELETE_POLICY_BY_NAME, { 'servicename': serviceName, 'policyname': policyName, 'zoneName': zoneName })
 
     def find_policies(self, filter=None):
         resp = self.client_http.call_api(RangerClient.FIND_POLICIES, filter)

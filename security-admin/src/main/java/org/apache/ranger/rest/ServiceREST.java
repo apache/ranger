@@ -4365,58 +4365,32 @@ public class ServiceREST {
 	}
 
 	/**
-	 * Returns {@link RangerPolicy} for non-empty serviceName and policyName, null otherwise.
+	 * Returns {@link RangerPolicy} for non-empty serviceName, policyName and zoneName null otherwise.
 	 * @param serviceName
 	 * @param policyName
+	 * @param zoneName
 	 * @return
 	 */
-    private RangerPolicy getPolicyByName(String serviceName, String policyName) {
 
+	public RangerPolicy getPolicyByName(String serviceName, String policyName, String zoneName) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")");
+            LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + "," + zoneName + ")");
         }
 
         RangerPolicy ret = null;
         if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(policyName)) {
-            SearchFilter filter = new SearchFilter();
+            XXPolicy dbPolicy = daoManager.getXXPolicy().findPolicy(policyName, serviceName, zoneName);
 
-            filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-            filter.setParam(SearchFilter.POLICY_NAME, policyName);
-
-            List<RangerPolicy> policies = getPolicies(filter);
-
-            if (CollectionUtils.isNotEmpty(policies)) {
-                ret = policies.get(0);
+            if (dbPolicy != null) {
+                ret = policyService.getPopulatedViewObject(dbPolicy);
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ") " + (ret != null ? ret : "ret is null"));
+            LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName  + "," + zoneName + ") " + (ret != null ? ret : "ret is null"));
         }
         return ret;
     }
-
-	private RangerPolicy getPolicyByNameAndZone(String serviceName, String policyName, String zoneName) {
-		RangerPolicy ret = null;
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
-		}
-
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		filter.setParam(SearchFilter.POLICY_NAME, policyName);
-		filter.setParam(SearchFilter.ZONE_NAME, zoneName);
-		List<RangerPolicy> policies = getPolicies(filter);
-
-		if (CollectionUtils.isNotEmpty(policies) && policies.size()==1) {
-			ret = policies.get(0);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
-		}
-		return ret;
-	}
 
 	private RangerPolicy createPolicyUnconditionally(RangerPolicy policy) throws Exception {
 		if(LOG.isDebugEnabled()) {
@@ -4479,11 +4453,7 @@ public class ServiceREST {
 			if (StringUtils.isNotBlank(zoneName)) {
 				policy.setZoneName(StringUtils.trim(zoneName));
 			}
-			if (StringUtils.isNotBlank(zoneName)) {
-				existingPolicy = getPolicyByNameAndZone(policy.getService(), policy.getName(), policy.getZoneName());
-			} else {
-				existingPolicy = getPolicyByName(policy.getService(), policy.getName());
-			}
+			existingPolicy = getPolicyByName(policy.getService(), policy.getName(), policy.getZoneName());
 		}
 
 		if(LOG.isDebugEnabled()) {
