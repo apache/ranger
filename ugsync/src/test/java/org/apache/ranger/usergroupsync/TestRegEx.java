@@ -22,6 +22,7 @@ package org.apache.ranger.usergroupsync;
 import static org.junit.Assert.*;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.junit.Before;
@@ -99,6 +100,28 @@ public class TestRegEx {
             userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, separator);
             assertEquals("DE/dark_knight_admin", userNameRegEx.transform("dark_knight_admin"));
         }
+    }
+
+    @Test
+    public void testUsernamePrefix() throws Throwable {
+        // appends PR/ to the beginning
+        String separator = "#";
+        userRegexPatterns = Collections.singletonList("s#^(.*)#PR/$1#g");
+        userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, separator);
+        assertEquals("PR/mew_two", userNameRegEx.transform("mew_two"));
+        assertEquals("PR/dragoon", userNameRegEx.transform("dragoon"));
+        assertEquals("PR/pikachu", userNameRegEx.transform("pikachu"));
+        assertEquals("PR/dialga", userNameRegEx.transform("dialga"));
+    }
+
+    @Test
+    public void testUsernameSuffix() throws Throwable {
+        // appends _ty to the end
+        String separator = "#";
+        userRegexPatterns = Collections.singletonList("s#^(.*)#$1_ty#g");
+        userNameRegEx.populateReplacementPatterns(userNameBaseProperty, userRegexPatterns, separator);
+        assertEquals("mew_ty", userNameRegEx.transform("mew"));
+        assertEquals("onix_ty", userNameRegEx.transform("onix"));
     }
 
 }

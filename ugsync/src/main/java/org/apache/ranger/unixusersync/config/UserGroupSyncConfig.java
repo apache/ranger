@@ -1335,16 +1335,18 @@ public class UserGroupSyncConfig  {
 		return isUserSyncNameValidationEnabled;
 	}
 
-	public String getRegexSeparator() throws RuntimeException {
+	public String getRegexSeparator() {
+		String ret = DEFAULT_MAPPING_SEPARATOR;
 		String val = prop.getProperty(SYNC_MAPPING_SEPARATOR);
 		if(StringUtils.isNotEmpty(val)) {
-			if (val.length() == 1)
-				return val;
-			else{
-				throw new RuntimeException("More than one character found in RegEx Separator");
+			if (val.length() == 1) {
+				ret = val;
+			} else {
+				LOG.warn("More than one character found in RegEx Separator, using default RegEx Separator");
 			}
 		}
-		return DEFAULT_MAPPING_SEPARATOR;
+		LOG.info(String.format("Using %s as the RegEx Separator", ret));
+		return ret;
 	}
 
 
