@@ -48,6 +48,8 @@ public class RangerClient {
     private static final String PARAM_EXEC_USER                     = "execUser";
     private static final String PARAM_POLICY_NAME                   = "policyname";
     private static final String PARAM_SERVICE_NAME                  = "serviceName";
+    private static final String PARAM_ZONE_NAME                     = "zoneName";
+
     private static final String PARAM_RELOAD_SERVICE_POLICIES_CACHE = "reloadServicePoliciesCache";
 
     // URIs
@@ -259,6 +261,14 @@ public class RangerClient {
         return callAPI(UPDATE_POLICY_BY_NAME.applyUrlFormat(serviceName, policyName), null, policy, RangerPolicy.class);
     }
 
+    public RangerPolicy updatePolicyByNameAndZone(String serviceName, String policyName, String zoneName, RangerPolicy policy) throws RangerServiceException {
+        Map<String,String> queryParams = new HashMap<>();
+
+        queryParams.put(PARAM_ZONE_NAME, zoneName);
+
+        return callAPI(UPDATE_POLICY_BY_NAME.applyUrlFormat(serviceName, policyName), queryParams, policy, RangerPolicy.class);
+    }
+
     public RangerPolicy applyPolicy(RangerPolicy policy) throws RangerServiceException {
         return callAPI(APPLY_POLICY, null, policy, RangerPolicy.class);
     }
@@ -276,6 +286,17 @@ public class RangerClient {
         callAPI(DELETE_POLICY_BY_NAME, queryParams);
     }
 
+
+    public void deletePolicyByNameAndZone(String serviceName, String policyName, String zoneName) throws RangerServiceException {
+        Map<String,String> queryParams = new HashMap<>();
+
+        queryParams.put(PARAM_POLICY_NAME, policyName);
+        queryParams.put(PARAM_SERVICE_NAME, serviceName);
+        queryParams.put(PARAM_ZONE_NAME, zoneName);
+
+        callAPI(DELETE_POLICY_BY_NAME, queryParams);
+    }
+
     public RangerPolicy getPolicy(long policyId) throws RangerServiceException {
         return callAPI(GET_POLICY_BY_ID.applyUrlFormat(policyId), null, null, RangerPolicy.class);
     }
@@ -284,6 +305,13 @@ public class RangerClient {
         return callAPI(GET_POLICY_BY_NAME.applyUrlFormat(serviceName, policyName), null, null, RangerPolicy.class);
     }
 
+    public RangerPolicy getPolicyByNameAndZone(String serviceName, String policyName, String zoneName) throws RangerServiceException {
+        Map<String,String> queryParams = new HashMap<>();
+
+        queryParams.put(PARAM_ZONE_NAME, zoneName);
+
+        return callAPI(GET_POLICY_BY_NAME.applyUrlFormat(serviceName, policyName), queryParams, null, RangerPolicy.class);
+    }
     public List<RangerPolicy> getPoliciesInService(String serviceName) throws RangerServiceException {
         return callAPI(GET_POLICIES_IN_SERVICE.applyUrlFormat(serviceName), null, null, new GenericType<List<RangerPolicy>>(){});
     }

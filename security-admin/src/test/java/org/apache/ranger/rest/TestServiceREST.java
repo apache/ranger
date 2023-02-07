@@ -55,6 +55,7 @@ import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.db.XXSecurityZoneDao;
 import org.apache.ranger.db.XXSecurityZoneRefServiceDao;
 import org.apache.ranger.db.XXSecurityZoneRefTagServiceDao;
@@ -445,6 +446,22 @@ public class TestServiceREST {
 		grantRevokeRequest.setZoneName(zone_name);
 		grantRevokeRequest.setIsRecursive(true);
 		return grantRevokeRequest;
+	}
+
+	private XXPolicy getXXPolicy() {
+		XXPolicy xxPolicy = new XXPolicy();
+		xxPolicy.setId(Id);
+		xxPolicy.setName("HDFS_1-1-20150316062453");
+		xxPolicy.setAddedByUserId(Id);
+		xxPolicy.setDescription("policy");
+		xxPolicy.setGuid("policyguid");
+		xxPolicy.setCreateTime(new Date());
+		xxPolicy.setIsAuditEnabled(true);
+		xxPolicy.setIsEnabled(true);
+		xxPolicy.setService(1L);
+		xxPolicy.setUpdatedByUserId(Id);
+		xxPolicy.setUpdateTime(new Date());
+		return xxPolicy;
 	}
 
 	@Test
@@ -2674,5 +2691,42 @@ public class TestServiceREST {
 		thrown.expect(WebApplicationException.class);
 		serviceREST.resetPolicyCache(serviceName);
 		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean());
+	}
+
+	@Test
+	public void test80GetPolicyByNameAndServiceNameWithZoneName() throws Exception {
+		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService rangerService = rangerService();
+		XXPolicy xxPolicy = new XXPolicy();
+		String serviceName = rangerService.getName();
+		String policyName = rangerPolicy.getName();
+		String zoneName = "zone-1";
+		XXPolicyDao xXPolicyDao = Mockito.mock(XXPolicyDao.class);
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xXPolicyDao);
+		Mockito.when(daoManager.getXXPolicy().findPolicy(policyName,serviceName,zoneName)).thenReturn(xxPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xxPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceREST.getPolicyByName(serviceName, policyName, zoneName);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(dbRangerPolicy, rangerPolicy);
+		Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
+		Assert.assertEquals(dbRangerPolicy.getName(), rangerPolicy.getName());
+	}
+
+	@Test
+	public void test81GetPolicyByNameAndServiceNameWithZoneNameIsNull() throws Exception {
+		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService rangerService = rangerService();
+		XXPolicy xxPolicy = new XXPolicy();
+		String serviceName = rangerService.getName();
+		String policyName = rangerPolicy.getName();
+		XXPolicyDao xXPolicyDao = Mockito.mock(XXPolicyDao.class);
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xXPolicyDao);
+		Mockito.when(daoManager.getXXPolicy().findPolicy(policyName,serviceName,null)).thenReturn(xxPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xxPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceREST.getPolicyByName(serviceName, policyName, null);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(dbRangerPolicy, rangerPolicy);
+		Assert.assertEquals(dbRangerPolicy.getId(), rangerPolicy.getId());
+		Assert.assertEquals(dbRangerPolicy.getName(), rangerPolicy.getName());
 	}
 }
