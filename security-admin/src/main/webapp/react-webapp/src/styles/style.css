@@ -1849,7 +1849,35 @@ overflow-x: hidden;
   overflow-x: hidden;
   min-height: 140px;
 }
-
+tbody.drag-drop-wrap>tr>td:first-child {
+    position: relative;
+    padding-left: 20px;
+   }
+tbody.drag-drop-wrap>tr>td:first-child:after {
+  content: '';
+  position: absolute;
+    box-sizing: border-box;
+    left: 5px;
+    top: 10%;
+    height: 80%;
+    width: 8px;
+    border: 3px dotted rgba(0, 0, 0, 0.25);
+    background: transparent;
+     cursor: move;
+     width: 6px;
+   }
+  
+  tbody.drag-drop-wrap>tr>td:hover:first-child:after {
+    border: 3px dotted rgba(0, 0, 0, 0.5);
+  }
+  
+  .header-dropdown:hover .dropdown-menu {
+    display: block;
+  }
+  
+  .header-dropdown .dropdown-toggle:after {
+    content: none
+  }
 .block-ui {
   position: relative;
   min-height: 3em;

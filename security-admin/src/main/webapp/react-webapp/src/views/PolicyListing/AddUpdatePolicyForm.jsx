@@ -631,19 +631,9 @@ export default function AddUpdatePolicyForm(props) {
     });
   };
 
-  const handleSubmit = async (values, invalid) => {
+  const handleSubmit = async (values) => {
     let data = {};
-    let tblpageData = {};
-    if (state && state != null && (!invalid?.getState()?.invalid || !invalid)) {
-      tblpageData = state.tblpageData;
-      if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-        tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
-      } else {
-        if (tblpageData !== undefined) {
-          tblpageData["totalPage"] = state.tblpageData.totalPage;
-        }
-      }
-    }
+
     data.allowExceptions = getPolicyItemsVal(values, "allowExceptions");
 
     data.policyItems = getPolicyItemsVal(values, "policyItems");
@@ -787,7 +777,17 @@ export default function AddUpdatePolicyForm(props) {
           method: "POST",
           data
         });
-
+        let tblpageData = {};
+        if (state && state != null) {
+          tblpageData = state.tblpageData;
+          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
+            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+          } else {
+            if (tblpageData !== undefined) {
+              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            }
+          }
+        }
         setBlockUI(false);
         toast.dismiss(toastId.current);
         toastId.current = toast.success("Policy save successfully!!");

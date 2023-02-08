@@ -163,10 +163,10 @@ const CreatableSelectNew = (props) => {
             valRef.current == ""
               ? null
               : !isArray(valRef.current)
-              ? valRef.current["ip-range"]
+                ? valRef.current["ip-range"]
                   .split(", ")
                   .map((obj) => ({ label: obj, value: obj }))
-              : valRef.current
+                : valRef.current
           }
           onChange={(e) => handleChange(e)}
           placeholder="enter expression"
@@ -342,10 +342,10 @@ const Editable = (props) => {
             servicedefName == "knox" && !isArray(selectVal)
               ? selectVal["ip-range"]
               : selectVal
-                  .map(function (m) {
-                    return m.value;
-                  })
-                  .join(", ");
+                .map(function (m) {
+                  return m.value;
+                })
+                .join(", ");
           val = (
             <h6 className="d-inline mr-1">
               <span
@@ -479,13 +479,11 @@ const Editable = (props) => {
           val = (
             <h6>
               <div className="badge badge-dark">
-                {`Accessed after expiry_date (yes/no) : ${
-                  selectVal?.["accessed-after-expiry"] || null
-                } `}
+                {`Accessed after expiry_date (yes/no) : ${selectVal?.["accessed-after-expiry"] || null
+                  } `}
               </div>
-              <div className="editable-label">{`Boolean expression : ${
-                selectVal?.expression || null
-              }`}</div>
+              <div className="editable-label">{`Boolean expression : ${selectVal?.expression || null
+                }`}</div>
               <Button
                 className="mg-10 btn-mini"
                 variant="outline-dark"
@@ -554,9 +552,8 @@ const Editable = (props) => {
   const popoverComp = (
     <Popover
       id="popover-basic"
-      className={`editable-popover ${
-        type === TYPE_CHECKBOX && "popover-maxHeight"
-      }`}
+      className={`editable-popover ${type === TYPE_CHECKBOX && "popover-maxHeight"
+        }`}
     >
       <Popover.Title>
         {type === TYPE_CHECKBOX ? "Select" : "Enter"}

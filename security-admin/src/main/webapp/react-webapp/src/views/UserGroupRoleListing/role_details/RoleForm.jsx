@@ -169,22 +169,12 @@ function RoleForm() {
     });
   };
 
-  const handleSubmit = async (formData, invalid) => {
+  const handleSubmit = async (formData) => {
     let roleFormData = {
       ...roleInfo,
       ...formData
     };
-    let tblpageData = {};
-    if (state && state != null && (!invalid?.getState()?.invalid || !invalid)) {
-      tblpageData = state.tblpageData;
-      if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-        tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
-      } else {
-        if (tblpageData !== undefined) {
-          tblpageData["totalPage"] = state.tblpageData.totalPage;
-        }
-      }
-    }
+
     if (
       !isEmpty(selectedUser) ||
       !isEmpty(selectedGroup) ||
@@ -194,6 +184,7 @@ function RoleForm() {
         `Please add selected user/group/roles to there respective table else user/group/roles will not be added.`
       );
     }
+
     dispatch({
       type: "SET_PREVENT_ALERT",
       preventUnBlock: true
@@ -235,6 +226,17 @@ function RoleForm() {
           method: "post",
           data: formData
         });
+        let tblpageData = {};
+        if (state && state != null) {
+          tblpageData = state.tblpageData;
+          if (state.tblpageData.pageRecords %  state.tblpageData.pageSize == 0) {
+            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+          } else {
+            if (tblpageData !== undefined) {
+              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            }
+          }
+        }
         dispatch({
           type: "SET_BLOCK_UI",
           blockUI: false
@@ -859,7 +861,7 @@ function RoleForm() {
                             );
                           scrollToError(selector);
                         }
-                        handleSubmit(values, invalid);
+                        handleSubmit(values);
                       }}
                       size="sm"
                       disabled={submitting}

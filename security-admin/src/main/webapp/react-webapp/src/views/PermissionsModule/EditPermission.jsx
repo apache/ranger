@@ -34,7 +34,8 @@ import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
 import { cloneDeep, find, findIndex, reverse } from "lodash";
 import { AccessResult } from "Utils/XAEnums";
-import { commonBreadcrumb, CustomInfinteScroll } from "../../utils/XAUtils";
+import { commonBreadcrumb, CustomInfinteScroll, serverError } from "../../utils/XAUtils";
+import { BlockUi } from "../../components/CommonComponents";
 
 const initialState = {
   loader: true,
@@ -42,7 +43,8 @@ const initialState = {
   selectedGrp: [],
   selectedUsr: [],
   usrloading: false,
-  grploading: false
+  grploading: false,
+  blockUI: false
 };
 
 function reducer(state, action) {
@@ -73,6 +75,11 @@ function reducer(state, action) {
     case "GRP_LOADING": {
       return { ...state, grploading: true };
     }
+    case "SET_BLOCK_UI":
+      return {
+        ...state,
+        blockUI: action.blockUI
+      };
     default:
       throw new Error();
   }
@@ -87,7 +94,8 @@ const EditPermission = (props) => {
     usrloading,
     grploading,
     selectedGrp,
-    selectedUsr
+    selectedUsr,
+    blockUI
   } = permissionState;
 
   useEffect(() => {
@@ -139,28 +147,28 @@ const EditPermission = (props) => {
     }
 
     try {
+      dispatch({
+        type: "SET_BLOCK_UI",
+        blockUI: true
+      });
       await fetchApi({
         url: `xusers/permission/${permissionId}`,
         method: "PUT",
         data: formData
       });
-
+      dispatch({
+        type: "SET_BLOCK_UI",
+        blockUI: false
+      });
       navigate("/permissions/models");
       toast.success("Success! Module Permissions updated successfully");
     } catch (error) {
+      dispatch({
+        type: "SET_BLOCK_UI",
+        blockUI: false
+      });
       console.error(`Error occurred while fetching Policies ! ${error}`);
-      if (error) {
-        if (
-          error &&
-          error.response &&
-          error.response.data &&
-          error.response.data.msgDesc
-        ) {
-          toast.error(error.response.data.msgDesc);
-        } else {
-          toast.error(`Error occurred while fetching Policies ! ${error}`);
-        }
-      }
+      serverError(error);
     }
   };
 
@@ -538,6 +546,7 @@ const EditPermission = (props) => {
             </form>
           )}
         />
+        <BlockUi isUiBlock={blockUI} />
       </div>
     </div>
   );

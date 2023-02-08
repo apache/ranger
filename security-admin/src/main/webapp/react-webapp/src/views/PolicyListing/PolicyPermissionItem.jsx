@@ -25,10 +25,10 @@ import { Field, useFormState } from "react-final-form";
 import AsyncSelect from "react-select/async";
 import { find, groupBy, isEmpty, isArray, has } from "lodash";
 import { toast } from "react-toastify";
-
 import Editable from "Components/Editable";
 import { RangerPolicyType } from "Utils/XAEnums";
 import TagBasePermissionItem from "./TagBasePermissionItem";
+import {dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
 
 const noneOptions = {
   label: "None",
@@ -243,34 +243,6 @@ export default function PolicyPermissionItem(props) {
     })
   };
 
-  const dragStart = (e, position) => {
-    e.target.style.opacity = 0.4;
-    e.target.style.backgroundColor = "#fdf1a6";
-    e.stopPropagation();
-    dragItem.current = position;
-  };
-
-  const dragEnter = (e, position) => {
-    dragOverItem.current = position;
-  };
-
-  const dragOver = (e) => {
-    e.preventDefault();
-  };
-
-  const drop = (e, fields) => {
-    e.target.style.opacity = 1;
-    e.target.style.backgroundColor = "white";
-    if (dragItem.current == dragOverItem.current) {
-      return;
-    }
-
-    fields.move(dragItem.current, dragOverItem.current);
-
-    dragItem.current = null;
-    dragOverItem.current = null;
-  };
-
   return (
     <div>
       <Col sm="12">
@@ -286,15 +258,15 @@ export default function PolicyPermissionItem(props) {
                 <th></th>
               </tr>
             </thead>
-            <tbody>
+            <tbody className="drag-drop-wrap">
               <FieldArray name={attrName}>
                 {({ fields }) =>
                   fields.map((name, index) => (
                     <tr
                       key={name}
-                      onDragStart={(e) => dragStart(e, index)}
-                      onDragEnter={(e) => dragEnter(e, index)}
-                      onDragEnd={(e) => drop(e, fields)}
+                      onDragStart={(e) => dragStart(e, index, dragItem)}
+                      onDragEnter={(e) => dragEnter(e, index, dragOverItem)}
+                      onDragEnd={(e) => drop(e, fields , dragItem, dragOverItem)}
                       onDragOver={(e) => dragOver(e)}
                       draggable
                       id={index}
@@ -302,13 +274,12 @@ export default function PolicyPermissionItem(props) {
                       {permList.map((colName) => {
                         if (colName == "Select Roles") {
                           return (
-                            <td key={colName}>
+                            <td key={colName} className="align-middle">
                               <Field
                                 className="form-control"
                                 name={`${name}.roles`}
                                 render={({ input, meta }) => (
                                   <div className="d-flex">
-                                    <span className="row-reorder-policyitems" />
                                     <AsyncSelect
                                       {...input}
                                       menuPortalTarget={document.body}
@@ -326,7 +297,7 @@ export default function PolicyPermissionItem(props) {
                         }
                         if (colName == "Select Groups") {
                           return (
-                            <td key={colName}>
+                            <td key={colName} className="align-middle">
                               <Field
                                 className="form-control"
                                 name={`${name}.groups`}
@@ -349,7 +320,7 @@ export default function PolicyPermissionItem(props) {
                         }
                         if (colName == "Select Users") {
                           return (
-                            <td key={colName}>
+                            <td key={colName} className="align-middle">
                               <Field
                                 className="form-control"
                                 name={`${name}.users`}
@@ -373,7 +344,7 @@ export default function PolicyPermissionItem(props) {
                         if (colName == "Policy Conditions") {
                           return serviceCompDetails?.policyConditions?.length ==
                             1 ? (
-                            <td key={colName}>
+                            <td key={colName} className="align-middle">
                               <Field
                                 className="form-control"
                                 name={`${name}.conditions`}
@@ -394,7 +365,7 @@ export default function PolicyPermissionItem(props) {
                               />
                             </td>
                           ) : (
-                            <td key={colName}>
+                            <td key={colName} className="align-middle">
                               <Field
                                 className="form-control"
                                 name={`${name}.conditions`}
@@ -417,7 +388,7 @@ export default function PolicyPermissionItem(props) {
                         if (colName == "Permissions") {
                           if (serviceCompDetails?.name == "tag") {
                             return (
-                              <td key={colName}>
+                              <td key={colName} className="align-middle">
                                 {!isEmpty(
                                   fields?.value[index]?.accesses?.tableList
                                 ) ? (
@@ -456,7 +427,7 @@ export default function PolicyPermissionItem(props) {
                             );
                           } else {
                             return (
-                              <td key={colName}>
+                              <td key={colName} className="align-middle">
                                 <Field
                                   className="form-control"
                                   name={`${name}.accesses`}
@@ -486,7 +457,7 @@ export default function PolicyPermissionItem(props) {
                         if (colName == "Select Masking Option") {
                           if (serviceCompDetails?.name == "tag") {
                             return (
-                              <td key={colName}>
+                              <td key={colName} className="align-middle">
                                 <Field
                                   className="form-control"
                                   name={`${name}.dataMaskInfo`}
@@ -561,7 +532,7 @@ export default function PolicyPermissionItem(props) {
                             );
                           } else {
                             return (
-                              <td key={colName}>
+                              <td key={colName} className="align-middle">
                                 <Field
                                   className="form-control"
                                   name={`${name}.dataMaskInfo`}
@@ -608,7 +579,7 @@ export default function PolicyPermissionItem(props) {
                         }
                         if (colName == "Row Level Filter") {
                           return (
-                            <td key={colName}>
+                            <td key={colName} className="align-middle">
                               <Field
                                 className="form-control"
                                 name={`${name}.rowFilterInfo`}
@@ -666,6 +637,7 @@ export default function PolicyPermissionItem(props) {
                       <td>
                         <Button
                           variant="danger"
+                          className="align-middle"
                           size="sm"
                           title="Remove"
                           onClick={() => fields.remove(index)}
