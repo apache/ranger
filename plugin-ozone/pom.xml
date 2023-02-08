@@ -91,7 +91,7 @@ limitations under the License.
         <dependency>
             <groupId>org.apache.ozone</groupId>
             <artifactId>ozone-common</artifactId>
-	        <version>${ozone.version}</version>
+	        <version>1.4.0-SNAPSHOT</version>
 	        <exclusions>
                  <exclusion>
                      <groupId>io.netty</groupId>

@@ -78,6 +78,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		UserGroupInformation ugi = context.getClientUgi();
 		ACLType operation = context.getAclRights();
 		String resource = ozoneObj.getPath();
+		String snapShotName = context.getSnapshotName();
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerOzoneAuthorizer.checkAccess with operation = " + operation + ", resource = " +
@@ -151,6 +152,14 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		}
 
 		try {
+			if (snapShotName != null) {
+				rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName() + "/.snapshot/" + snapShotName);
+				RangerAccessResult result = rangerPlugin
+						.isAccessAllowed(rangerRequest);
+				if (result.getEvaluatedPoliciesCount() > 0)
+					return result.getIsAllowed();
+				rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
+			}
 			RangerAccessResult result = rangerPlugin
 					.isAccessAllowed(rangerRequest);
 			if (result == null) {
