@@ -109,15 +109,15 @@ class ServiceDefinitions extends Component {
       });
 
       if (this.state.isTagView) {
-        tagServiceDef = filter(serviceDefsResp.data.serviceDefs, [
+        tagServiceDef = sortBy(filter(serviceDefsResp.data.serviceDefs, [
           "name",
           "tag"
-        ]);
+        ]),"id");
       } else {
-        resourceServiceDef = filter(
+        resourceServiceDef = sortBy(filter(
           serviceDefsResp.data.serviceDefs,
           (serviceDef) => serviceDef.name !== "tag"
-        );
+        ),"id");
       }
     } catch (error) {
       console.error(
@@ -233,11 +233,11 @@ class ServiceDefinitions extends Component {
         let zoneServiceDefTypes = uniq(map(zoneServices, "type"));
         let filterZoneServiceDef;
         if (!this.state.isTagView) {
-          filterZoneServiceDef = zoneServiceDefTypes.map((obj) => {
+          filterZoneServiceDef = sortBy(zoneServiceDefTypes.map((obj) => {
             return this.state.serviceDefs.find((serviceDef) => {
               return serviceDef.name == obj;
             });
-          });
+          }),"id");
         } else {
           filterZoneServiceDef = this.state.serviceDefs;
         }

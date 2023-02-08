@@ -79,23 +79,9 @@ function UserFormComp(props) {
   const [preventUnBlock, setPreventUnblock] = useState(false);
   const toastId = React.useRef(null);
 
-  const handleSubmit = async (formData, invalid) => {
+  const handleSubmit = async (formData) => {
     let userFormData = { ...formData };
-    let tblpageData = {};
-    if (
-      state &&
-      state !== null &&
-      (!invalid?.getState()?.invalid || !invalid)
-    ) {
-      tblpageData = state.tblpageData;
-      if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-        tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
-      } else {
-        if (state !== undefined) {
-          tblpageData["totalPage"] = state.tblpageData.totalPage;
-        }
-      }
-    }
+
     let userRoleListVal = [];
     if (userFormData.groupIdList) {
       userFormData.groupIdList = userFormData.groupIdList.map(
@@ -127,12 +113,12 @@ function UserFormComp(props) {
           method: "put",
           data: userFormData
         });
-        toast.success("User updated successfully!!");
-        navigate("/users/usertab");
         dispatch({
           type: "SET_BLOCK_UI",
           blockUI: false
         });
+        toast.success("User updated successfully!!");
+        navigate("/users/usertab");
       } catch (error) {
         dispatch({
           type: "SET_BLOCK_UI",
@@ -152,6 +138,25 @@ function UserFormComp(props) {
           method: "post",
           data: userFormData
         });
+        let tblpageData = {};
+        if (
+          state &&
+          state !== null
+
+        ) {
+          tblpageData = state.tblpageData;
+          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
+            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+          } else {
+            if (state !== undefined) {
+              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            }
+          }
+        }
+        dispatch({
+          type: "SET_BLOCK_UI",
+          blockUI: false
+        });
         toast.success("User created successfully!!");
         navigate("/users/usertab", {
           state: {
@@ -159,10 +164,7 @@ function UserFormComp(props) {
             addPageData: tblpageData
           }
         });
-        dispatch({
-          type: "SET_BLOCK_UI",
-          blockUI: false
-        });
+
       } catch (error) {
         dispatch({
           type: "SET_BLOCK_UI",
@@ -736,7 +738,7 @@ function UserFormComp(props) {
 
                         scrollToError(selector);
                       }
-                      handleSubmit(values, invalid);
+                      handleSubmit(values);
                     }}
                     size="sm"
                     disabled={submitting}

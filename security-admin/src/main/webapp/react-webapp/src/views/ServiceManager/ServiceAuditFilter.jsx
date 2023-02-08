@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Badge, Button, Table } from "react-bootstrap";
 import { Field } from "react-final-form";
 import { FieldArray } from "react-final-form-arrays";
@@ -28,6 +28,7 @@ import CreatableField from "Components/CreatableField";
 import ModalResourceComp from "../Resources/ModalResourceComp";
 import { uniq, map, join, isEmpty, find, toUpper } from "lodash";
 import TagBasePermissionItem from "../PolicyListing/TagBasePermissionItem";
+import {dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
 
 export default function ServiceAuditFilter(props) {
   const {
@@ -39,7 +40,8 @@ export default function ServiceAuditFilter(props) {
     addAuditFilter,
     formValues
   } = props;
-
+  const dragItem = useRef();
+  const dragOverItem = useRef();
   const [modelState, setModalstate] = useState({
     showModalResource: false,
     resourceInput: null,
@@ -196,7 +198,6 @@ export default function ServiceAuditFilter(props) {
   const handleSelectChange = (value, input) => {
     input.onChange(value);
   };
-
   return (
     <div className="table-responsive">
       <Table
@@ -207,7 +208,7 @@ export default function ServiceAuditFilter(props) {
         <thead>
           <tr>{tableHeader()}</tr>
         </thead>
-        <tbody>
+        <tbody className="drag-drop-wrap">
           {formValues.auditFilters !== undefined &&
             formValues.auditFilters.length === 0 && (
               <tr className="text-center">
@@ -221,12 +222,17 @@ export default function ServiceAuditFilter(props) {
           <FieldArray name="auditFilters">
             {({ fields }) =>
               fields.map((name, index) => (
-                <tr key={name}>
+                <tr key={name}  onDragStart={(e) => dragStart(e, index, dragItem)}
+                onDragEnter={(e) => dragEnter(e, index, dragOverItem)}
+                onDragEnd={(e) => drop(e, fields , dragItem, dragOverItem)}
+                onDragOver={(e) => dragOver(e)}
+                draggable id={index}>
                   {permList.map((colName) => {
                     if (colName == "Is Audited") {
                       return (
-                        <td key={`${name}.isAudited`}>
-                          <Field
+                        <td key={`${name}.isAudited`} className="align-middle">
+                        <div className="d-flex">
+                         <Field
                             className="form-control audit-filter-select"
                             name={`${name}.isAudited`}
                             component="select"
@@ -234,13 +240,13 @@ export default function ServiceAuditFilter(props) {
                           >
                             <option value="true">Yes</option>
                             <option value="false">No</option>
-                          </Field>
+                          </Field></div>
                         </td>
                       );
                     }
                     if (colName == "Access Result") {
                       return (
-                        <td key={colName}>
+                        <td key={colName} className="align-middle">
                           <Field
                             className="form-control"
                             name={`${name}.accessResult`}
@@ -270,7 +276,7 @@ export default function ServiceAuditFilter(props) {
                     }
                     if (colName == "Resources") {
                       return (
-                        <td key={`${name}.resources`}>
+                        <td key={`${name}.resources`} className="align-middle">
                           <Field
                             name={`${name}.resources`}
                             render={({ input }) => (
@@ -310,7 +316,7 @@ export default function ServiceAuditFilter(props) {
                     if (colName == "Operations") {
                       return (
                         <td
-                          className="mx-w-210"
+                          className="mx-w-210 align-middle"
                           key={`${name}.actions`}
                           width="210px"
                         >
@@ -319,7 +325,7 @@ export default function ServiceAuditFilter(props) {
                             name={`${name}.actions`}
                           >
                             {({ input, meta }) => (
-                              <CreatableField
+                             <CreatableField
                                 actionValues={input.value}
                                 creatableOnChange={(value) =>
                                   handleSelectChange(value, input)
@@ -333,7 +339,7 @@ export default function ServiceAuditFilter(props) {
                     if (colName == "Permissions") {
                       if (serviceDefDetails.name == "tag") {
                         return (
-                          <td key={`${name}.accessTypes`}>
+                          <td key={`${name}.accessTypes`} className="align-middle">
                             <Field
                               className="form-control"
                               name={`${name}.accessTypes`}
@@ -362,7 +368,7 @@ export default function ServiceAuditFilter(props) {
                         );
                       } else {
                         return (
-                          <td key={`${name}.accessTypes`}>
+                          <td key={`${name}.accessTypes`} className="align-middle">
                             <Field
                               className="form-control"
                               name={`${name}.accessTypes`}
@@ -385,7 +391,7 @@ export default function ServiceAuditFilter(props) {
                     }
                     if (colName == "Roles") {
                       return (
-                        <td key={`${name}.roles`}>
+                        <td key={`${name}.roles`} className="align-middle">
                           <Field
                             className="form-control"
                             name={`${name}.roles`}
@@ -417,7 +423,7 @@ export default function ServiceAuditFilter(props) {
                     }
                     if (colName == "Groups") {
                       return (
-                        <td key={`${name}.groups`}>
+                        <td key={`${name}.groups`} className="align-middle">
                           <Field
                             className="form-control"
                             name={`${name}.groups`}
@@ -449,7 +455,7 @@ export default function ServiceAuditFilter(props) {
                     }
                     if (colName == "Users") {
                       return (
-                        <td key={`${name}.users`}>
+                        <td key={`${name}.users`} className="align-middle">
                           <Field
                             className="form-control"
                             name={`${name}.users`}
@@ -480,7 +486,7 @@ export default function ServiceAuditFilter(props) {
                       );
                     }
                   })}
-                  <td key={`${index}.remove`}>
+                  <td key={`${index}.remove`} className="align-middle">
                     <Button
                       variant="danger"
                       size="sm"

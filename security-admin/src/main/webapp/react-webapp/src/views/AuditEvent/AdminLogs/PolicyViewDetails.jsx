@@ -528,13 +528,13 @@ export function PolicyViewDetails(props) {
       !isEmpty(conditions) && (
         <>
           <p className="form-header">Policy Conditions :</p>
-          <Table bordered size="sm" className="table-audit-filter-ready-only">
+          <div className="overflow-auto"><Table bordered size="sm" className="table-audit-filter-ready-only">
             <tbody>
               {serviceType == "tag" ? (
                 conditions.map((obj) => (
                   <tr key={obj.type} colSpan="2">
                     <td width="40%">{getConditionLabel(obj.type)}</td>
-                    <td width="60%">{obj.values}</td>
+                    <td width="60% text-truncate">{obj.values}</td>
                   </tr>
                 ))
               ) : (
@@ -548,7 +548,7 @@ export function PolicyViewDetails(props) {
                 </tr>
               )}
             </tbody>
-          </Table>
+            </Table></div>
         </>
       )
     );

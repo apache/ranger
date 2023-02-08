@@ -1274,3 +1274,33 @@ export const getBaseUrl = () => {
     )
   );
 };
+
+/* Drag and Drop Feature */
+
+export const dragStart = (e, position, dragItem) => {
+  e.target.style.opacity = 0.4;
+  e.target.style.backgroundColor = "#fdf1a6";
+  e.stopPropagation();
+  dragItem.current = position;
+};
+
+export const dragEnter = (e, position, dragOverItem) => {
+  dragOverItem.current = position;
+};
+
+export const dragOver = (e) => {
+  e.preventDefault();
+};
+
+export const drop = (e, fields, dragItem, dragOverItem) => {
+  e.target.style.opacity = 1;
+  e.target.style.backgroundColor = "white";
+  if (dragItem.current == dragOverItem.current) {
+    return;
+  }
+
+  fields.move(dragItem.current, dragOverItem.current);
+
+  dragItem.current = null;
+  dragOverItem.current = null;
+};

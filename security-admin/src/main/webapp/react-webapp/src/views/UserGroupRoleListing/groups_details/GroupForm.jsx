@@ -115,7 +115,7 @@ function GroupForm(props) {
     });
   };
 
-  const handleSubmit = async (values, invalid) => {
+  const handleSubmit = async (values) => {
     let formData = {};
     formData.name = values.name;
     formData.description = values.description || "";
@@ -123,17 +123,7 @@ function GroupForm(props) {
       ...groupInfo,
       ...formData
     };
-    let tblpageData = {};
-    if (state && state != null && (!invalid?.getState()?.invalid || !invalid)) {
-      tblpageData = state.tblpageData;
-      if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
-        tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
-      } else {
-        if (tblpageData !== undefined) {
-          tblpageData["totalPage"] = state.tblpageData.totalPage;
-        }
-      }
-    }
+
     dispatch({
       type: "SET_PREVENT_ALERT",
       preventUnBlock: true
@@ -174,6 +164,17 @@ function GroupForm(props) {
           method: "post",
           data: formData
         });
+        let tblpageData = {};
+        if (state && state != null) {
+          tblpageData = state.tblpageData;
+          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
+            tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
+          } else {
+            if (tblpageData !== undefined) {
+              tblpageData["totalPage"] = state.tblpageData.totalPage;
+            }
+          }
+        }
         dispatch({
           type: "SET_BLOCK_UI",
           blockUI: false
@@ -380,7 +381,7 @@ function GroupForm(props) {
                             );
                           scrollToError(selector);
                         }
-                        handleSubmit(values, invalid);
+                        handleSubmit(values);
                       }}
                       size="sm"
                       disabled={groupType === 1 ? true : submitting}

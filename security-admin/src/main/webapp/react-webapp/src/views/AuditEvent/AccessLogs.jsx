@@ -575,8 +575,8 @@ function Access() {
         accessor: "action",
         Cell: (rawValue) => {
           return (
-            <h6>
-              <Badge variant="info">{rawValue.value}</Badge>
+            <h6 >
+              <Badge variant="info" title={rawValue.value} className="text-truncate w-100">{rawValue.value}</Badge>
             </h6>
           );
         },
