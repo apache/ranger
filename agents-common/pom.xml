@@ -162,7 +162,6 @@
             <version>${project.version}</version>
             <scope>compile</scope>
         </dependency>
-        <!-- To be added for JDK15 and above
         <dependency>
             <groupId>org.graalvm.js</groupId>
             <artifactId>js</artifactId>
@@ -173,6 +172,5 @@
             <artifactId>js-scriptengine</artifactId>
             <version>${graalvm.version}</version>
         </dependency>
-        -->
     </dependencies>
 </project>
