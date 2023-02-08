@@ -327,7 +327,7 @@ public class RoleRefUpdater {
 			}
 			switch (type) {
 				case USER: {
-					XXRoleRefUser xRoleRefUser = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefUser());
+					XXRoleRefUser xRoleRefUser = new XXRoleRefUser();
 
 					xRoleRefUser.setRoleId(roleId);
 					xRoleRefUser.setUserId(id);
@@ -337,7 +337,7 @@ public class RoleRefUpdater {
 				}
 				break;
 				case GROUP: {
-					XXRoleRefGroup xRoleRefGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefGroup());
+					XXRoleRefGroup xRoleRefGroup = new XXRoleRefGroup();
 
 					xRoleRefGroup.setRoleId(roleId);
 					xRoleRefGroup.setGroupId(id);
@@ -347,7 +347,7 @@ public class RoleRefUpdater {
 				}
 				break;
 				case ROLE: {
-					XXRoleRefRole xRoleRefRole = rangerAuditFields.populateAuditFieldsForCreate(new XXRoleRefRole());
+					XXRoleRefRole xRoleRefRole = new XXRoleRefRole();
 
 					xRoleRefRole.setRoleId(roleId);
 					xRoleRefRole.setSubRoleId(id);

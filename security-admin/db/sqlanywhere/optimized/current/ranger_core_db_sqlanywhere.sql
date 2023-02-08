@@ -1080,11 +1080,6 @@ CREATE TABLE dbo.x_ugsync_audit_info(
 GO
 create table dbo.x_policy_ref_resource (
 	id bigint IDENTITY NOT NULL,
-	guid varchar(1024) DEFAULT NULL NULL,
-	create_time datetime DEFAULT NULL NULL,
-	update_time datetime DEFAULT NULL NULL,
-	added_by_id bigint DEFAULT NULL NULL,
-	upd_by_id bigint DEFAULT NULL NULL,
 	policy_id bigint NOT NULL,
 	resource_def_id bigint NOT NULL,
 	resource_name varchar(4000) DEFAULT NULL NULL,
@@ -1094,11 +1089,6 @@ create table dbo.x_policy_ref_resource (
 GO
 create table dbo.x_policy_ref_access_type (
 		id bigint IDENTITY NOT NULL,
-		guid varchar(1024) DEFAULT NULL NULL,
-		create_time datetime DEFAULT NULL NULL,
-		update_time datetime DEFAULT NULL NULL,
-		added_by_id bigint DEFAULT NULL NULL,
-		upd_by_id bigint DEFAULT NULL NULL,
 		policy_id bigint NOT NULL,
 		access_def_id bigint NOT NULL,
 		access_type_name varchar(4000) DEFAULT NULL NULL,
@@ -1108,11 +1098,6 @@ create table dbo.x_policy_ref_access_type (
 GO
 create table dbo.x_policy_ref_condition (
 		id bigint IDENTITY NOT NULL,
-		guid varchar(1024) DEFAULT NULL NULL,
-		create_time datetime DEFAULT NULL NULL,
-		update_time datetime DEFAULT NULL NULL,
-		added_by_id bigint DEFAULT NULL NULL,
-		upd_by_id bigint DEFAULT NULL NULL,
 		policy_id bigint NOT NULL,
 		condition_def_id bigint NOT NULL,
 		condition_name varchar(4000) DEFAULT NULL NULL,
@@ -1122,11 +1107,6 @@ create table dbo.x_policy_ref_condition (
 GO
 create table dbo.x_policy_ref_datamask_type (
 		id bigint IDENTITY NOT NULL,
-		guid varchar(1024) DEFAULT NULL NULL,
-		create_time datetime DEFAULT NULL NULL,
-		update_time datetime DEFAULT NULL NULL,
-		added_by_id bigint DEFAULT NULL NULL,
-		upd_by_id bigint DEFAULT NULL NULL,
 		policy_id bigint NOT NULL,
 		datamask_def_id bigint NOT NULL,
 		datamask_type_name varchar(4000) DEFAULT NULL NULL,
@@ -1136,11 +1116,6 @@ create table dbo.x_policy_ref_datamask_type (
 GO
 create table dbo.x_policy_ref_user (
 		id bigint IDENTITY NOT NULL,
-		guid varchar(1024) DEFAULT NULL NULL,
-		create_time datetime DEFAULT NULL NULL,
-		update_time datetime DEFAULT NULL NULL,
-		added_by_id bigint DEFAULT NULL NULL,
-		upd_by_id bigint DEFAULT NULL NULL,
 		policy_id bigint NOT NULL,
 		user_id bigint NOT NULL,
 		user_name varchar(4000) DEFAULT NULL NULL,
@@ -1150,11 +1125,6 @@ create table dbo.x_policy_ref_user (
 GO
 create table dbo.x_policy_ref_group (
 		id bigint IDENTITY NOT NULL,
-		guid varchar(1024) DEFAULT NULL NULL,
-		create_time datetime DEFAULT NULL NULL,
-		update_time datetime DEFAULT NULL NULL,
-		added_by_id bigint DEFAULT NULL NULL,
-		upd_by_id bigint DEFAULT NULL NULL,
 		policy_id bigint NOT NULL,
 		group_id bigint NOT NULL,
 		group_name varchar(4000) DEFAULT NULL NULL,
@@ -1164,10 +1134,6 @@ create table dbo.x_policy_ref_group (
 GO
 CREATE TABLE dbo.x_security_zone_ref_service(
         id bigint IDENTITY NOT NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
         zone_id bigint DEFAULT NULL NULL,
         service_id bigint DEFAULT NULL NULL,
         service_name varchar(255) DEFAULT NULL NULL,
@@ -1176,10 +1142,6 @@ CREATE TABLE dbo.x_security_zone_ref_service(
 GO
 CREATE TABLE dbo.x_security_zone_ref_tag_srvc(
         id bigint IDENTITY NOT NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
         zone_id bigint DEFAULT NULL NULL,
         tag_srvc_id bigint DEFAULT NULL NULL,
         tag_srvc_name varchar(255) DEFAULT NULL NULL,
@@ -1188,10 +1150,6 @@ CREATE TABLE dbo.x_security_zone_ref_tag_srvc(
 GO
 CREATE TABLE dbo.x_security_zone_ref_resource(
         id bigint IDENTITY NOT NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
         zone_id bigint DEFAULT NULL NULL,
         resource_def_id bigint DEFAULT NULL NULL,
         resource_name varchar(255) DEFAULT NULL NULL,
@@ -1200,10 +1158,6 @@ CREATE TABLE dbo.x_security_zone_ref_resource(
 GO
 CREATE TABLE dbo.x_security_zone_ref_user(
         id bigint IDENTITY NOT NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
         zone_id bigint DEFAULT NULL NULL,
         user_id bigint DEFAULT NULL NULL,
         user_name varchar(767) DEFAULT NULL NULL,
@@ -1213,10 +1167,6 @@ CREATE TABLE dbo.x_security_zone_ref_user(
 GO
 CREATE TABLE dbo.x_security_zone_ref_group(
         id bigint IDENTITY NOT NULL,
-        create_time datetime DEFAULT NULL NULL,
-        update_time datetime DEFAULT NULL NULL,
-        added_by_id bigint DEFAULT NULL NULL,
-        upd_by_id bigint DEFAULT NULL NULL,
         zone_id bigint DEFAULT NULL NULL,
         group_id bigint DEFAULT NULL NULL,
         group_name varchar(767) DEFAULT NULL NULL,
@@ -1269,10 +1219,6 @@ GO
 
 CREATE TABLE dbo.x_role_ref_user(
 id bigint IDENTITY NOT NULL,
-create_time datetime DEFAULT NULL NULL,
-update_time datetime DEFAULT NULL NULL,
-added_by_id bigint  DEFAULT NULL NULL,
-upd_by_id bigint DEFAULT NULL NULL,
 role_id bigint NOT NULL,
 user_id bigint DEFAULT NULL NULL,
 user_name varchar(767) DEFAULT NULL NULL,
@@ -1283,10 +1229,6 @@ GO
 
 CREATE TABLE dbo.x_role_ref_group(
 id bigint IDENTITY NOT NULL,
-create_time datetime DEFAULT NULL NULL,
-update_time datetime DEFAULT NULL NULL,
-added_by_id bigint DEFAULT NULL NULL,
-upd_by_id bigint DEFAULT NULL NULL,
 role_id bigint NOT NULL,
 group_id bigint DEFAULT NULL NULL,
 group_name varchar(767) DEFAULT NULL NULL,
@@ -1297,10 +1239,6 @@ GO
 
 CREATE TABLE dbo.x_policy_ref_role(
 id bigint IDENTITY NOT NULL,
-create_time datetime DEFAULT NULL NULL,
-update_time datetime DEFAULT NULL NULL,
-added_by_id bigint DEFAULT NULL NULL,
-upd_by_id bigint DEFAULT NULL NULL,
 policy_id bigint NOT NULL,
 role_id bigint NOT NULL,
 role_name varchar(255) DEFAULT NULL NULL,
@@ -1311,10 +1249,6 @@ GO
 
 CREATE TABLE dbo.x_role_ref_role(
 id bigint IDENTITY NOT NULL,
-create_time datetime DEFAULT NULL NULL,
-update_time datetime DEFAULT NULL NULL,
-added_by_id bigint DEFAULT NULL NULL,
-upd_by_id bigint DEFAULT NULL NULL,
 role_ref_id bigint DEFAULT NULL NULL,
 role_id bigint NOT NULL,
 role_name varchar(255) DEFAULT NULL NULL,
@@ -1609,49 +1543,25 @@ ALTER TABLE dbo.x_policy_ref_resource ADD CONSTRAINT x_policy_ref_resource_FK_po
 GO
 ALTER TABLE dbo.x_policy_ref_resource ADD CONSTRAINT x_policy_ref_resource_FK_resource_def_id FOREIGN KEY (resource_def_id) REFERENCES dbo.x_resource_def (id)
 GO
-ALTER TABLE dbo.x_policy_ref_resource ADD CONSTRAINT x_policy_ref_resource_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_policy_ref_resource ADD CONSTRAINT x_policy_ref_resource_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_policy_ref_access_type ADD CONSTRAINT x_policy_ref_access_type_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
 GO
 ALTER TABLE dbo.x_policy_ref_access_type ADD CONSTRAINT x_policy_ref_access_type_FK_access_def_id FOREIGN KEY (access_def_id) REFERENCES dbo.x_access_type_def (id)
-GO
-ALTER TABLE dbo.x_policy_ref_access_type ADD CONSTRAINT x_policy_ref_access_type_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_policy_ref_access_type ADD CONSTRAINT x_policy_ref_access_type_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
 GO
 ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_condition_def_id FOREIGN KEY (condition_def_id) REFERENCES dbo.x_policy_condition_def (id)
 GO
-ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_policy_ref_condition ADD CONSTRAINT x_policy_ref_condition_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
 GO
 ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_datamask_def_id FOREIGN KEY (datamask_def_id) REFERENCES dbo.x_datamask_type_def (id)
-GO
-ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_policy_ref_datamask_type ADD CONSTRAINT x_policy_ref_datamask_type_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_policy_ref_user ADD CONSTRAINT x_policy_ref_user_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
 GO
 ALTER TABLE dbo.x_policy_ref_user ADD CONSTRAINT x_policy_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES dbo.x_user (id)
 GO
-ALTER TABLE dbo.x_policy_ref_user ADD CONSTRAINT x_policy_ref_user_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_policy_ref_user ADD CONSTRAINT x_policy_ref_user_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
 GO
 ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_group_id FOREIGN KEY (group_id) REFERENCES dbo.x_group (id)
-GO
-ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_added_by FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_policy_ref_group ADD CONSTRAINT x_policy_ref_group_FK_upd_by FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_security_zone ADD CONSTRAINT x_security_zone_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
 GO
@@ -1663,19 +1573,11 @@ ALTER TABLE dbo.x_ranger_global_state ADD CONSTRAINT x_ranger_global_state_FK_up
 GO
 ALTER TABLE dbo.x_policy ADD CONSTRAINT x_policy_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
 GO
-ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
 GO
 ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_service_id FOREIGN KEY(service_id) REFERENCES dbo.x_service (id)
 GO
 ALTER TABLE dbo.x_security_zone_ref_service ADD CONSTRAINT x_sz_ref_service_FK_service_name FOREIGN KEY(service_name) REFERENCES dbo.x_service (name)
-GO
-ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
 GO
@@ -1683,17 +1585,9 @@ ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service
 GO
 ALTER TABLE dbo.x_security_zone_ref_tag_srvc ADD CONSTRAINT x_sz_ref_tag_service_FK_tag_service_name FOREIGN KEY(tag_service_name) REFERENCES dbo.x_service (name)
 GO
-ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
 GO
 ALTER TABLE dbo.x_security_zone_ref_resource ADD CONSTRAINT x_sz_ref_resource_FK_service_id FOREIGN KEY(resource_def_id) REFERENCES dbo.x_resource_def (id)
-GO
-ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
 GO
@@ -1701,40 +1595,20 @@ ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_user_id
 GO
 ALTER TABLE dbo.x_security_zone_ref_user ADD CONSTRAINT x_sz_ref_user_FK_user_name FOREIGN KEY(user_name) REFERENCES dbo.x_user (user_name)
 GO
-ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
 GO
 ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_group_id FOREIGN KEY(group_id) REFERENCES dbo.x_group (id)
 GO
 
-ALTER TABLE dbo.x_role_ref_role ADD CONSTRAINT x_role_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_role_ref_role ADD CONSTRAINT x_role_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_role_ref_role ADD CONSTRAINT x_role_ref_role_FK_role_ref_id FOREIGN KEY (role_ref_id) REFERENCES dbo.x_role (id)
-GO
-ALTER TABLE dbo.x_policy_ref_role ADD CONSTRAINT x_pol_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_policy_ref_role ADD CONSTRAINT x_pol_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_policy_ref_role ADD CONSTRAINT x_pol_ref_role_FK_policy_id FOREIGN KEY (policy_id) REFERENCES dbo.x_policy (id)
 GO
 ALTER TABLE dbo.x_policy_ref_role ADD CONSTRAINT x_pol_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES dbo.x_role (id)
 GO
-ALTER TABLE dbo.x_role_ref_group ADD CONSTRAINT x_role_ref_grp_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_role_ref_group ADD CONSTRAINT x_role_ref_grp_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
-GO
 ALTER TABLE dbo.x_role_ref_group ADD CONSTRAINT x_role_ref_grp_FK_role_id FOREIGN KEY (role_id) REFERENCES dbo.x_role (id)
 GO
 ALTER TABLE dbo.x_role_ref_group ADD CONSTRAINT x_role_ref_grp_FK_group_id FOREIGN KEY (group_id) REFERENCES dbo.x_group (id)
-GO
-ALTER TABLE dbo.x_role_ref_user ADD CONSTRAINT x_role_ref_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
-GO
-ALTER TABLE dbo.x_role_ref_user ADD CONSTRAINT x_role_ref_user_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_role_ref_user ADD CONSTRAINT x_role_ref_user_FK_role_id FOREIGN KEY (role_id) REFERENCES dbo.x_role (id)
 GO
@@ -2266,6 +2140,8 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('061',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

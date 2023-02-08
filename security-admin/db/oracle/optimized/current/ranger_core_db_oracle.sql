@@ -704,16 +704,10 @@ commit;
 
 CREATE TABLE x_security_zone_ref_service (
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 zone_id NUMBER(20)  DEFAULT NULL NULL,
 service_id NUMBER(20)  DEFAULT NULL NULL,
 service_name VARCHAR(255) DEFAULT NULL NULL,
 primary key (id),
-CONSTRAINT x_sz_ref_ser_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_ref_ser_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_ref_ser_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_ser_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id),
 CONSTRAINT x_sz_ref_ser_FK_service_name FOREIGN KEY (service_name) REFERENCES x_service (name)
@@ -722,16 +716,10 @@ commit;
 
 CREATE TABLE x_security_zone_ref_tag_srvc (
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 zone_id NUMBER(20)  DEFAULT NULL NULL,
 tag_srvc_id NUMBER(20)  DEFAULT NULL NULL,
 tag_srvc_name VARCHAR(255) DEFAULT NULL NULL,
 primary key (id),
-CONSTRAINT x_sz_refTagTser_FK_aded_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_refTagTser_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_refTagTser_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_refTagTser_FK_srvc_id FOREIGN KEY (tag_srvc_id) REFERENCES x_service (id),
 CONSTRAINT x_sz_refTagTser_FK_srvc_name FOREIGN KEY (tag_srvc_name) REFERENCES x_service (name)
@@ -740,17 +728,11 @@ commit;
 
 CREATE TABLE x_security_zone_ref_user (
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 zone_id NUMBER(20)  DEFAULT NULL NULL,
 user_id NUMBER(20)  DEFAULT NULL NULL,
 user_name varchar(255) DEFAULT NULL NULL,
 user_type NUMBER(3)  DEFAULT NULL NULL,
 primary key (id),
-CONSTRAINT x_sz_ref_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_ref_user_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_ref_user_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id),
 CONSTRAINT x_sz_ref_user_FK_user_name FOREIGN KEY (user_name) REFERENCES x_user (user_name)
@@ -759,17 +741,11 @@ commit;
 
 CREATE TABLE x_security_zone_ref_group (
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 zone_id NUMBER(20)  DEFAULT NULL NULL,
 group_id NUMBER(20)  DEFAULT NULL NULL,
 group_name varchar(255) DEFAULT NULL NULL,
 group_type NUMBER(3)  DEFAULT NULL NULL,
 primary key (id),
-CONSTRAINT x_sz_ref_group_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_ref_group_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_ref_group_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_group_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id)
 );
@@ -1395,110 +1371,68 @@ commit;
 
 CREATE TABLE x_policy_ref_resource (
 id NUMBER(20) NOT NULL,
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_id NUMBER(20) NOT NULL,
 resource_def_id NUMBER(20) NOT NULL,
 resource_name VARCHAR(4000) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_p_ref_res_UK_polId_resDefId UNIQUE (policy_id, resource_def_id),
 CONSTRAINT x_p_ref_res_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
-CONSTRAINT x_p_ref_res_FK_resource_def_id FOREIGN KEY (resource_def_id) REFERENCES x_resource_def (id),
-CONSTRAINT x_p_ref_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_p_ref_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+CONSTRAINT x_p_ref_res_FK_resource_def_id FOREIGN KEY (resource_def_id) REFERENCES x_resource_def (id)
 );
 commit;
 CREATE TABLE x_policy_ref_access_type (
 id NUMBER(20) NOT NULL,
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_id NUMBER(20) NOT NULL,
 access_def_id NUMBER(20) NOT NULL,
 access_type_name VARCHAR(4000) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_p_ref_acc_UK_polId_accDefId UNIQUE(policy_id, access_def_id),
 CONSTRAINT x_p_ref_acc_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
-CONSTRAINT x_p_ref_acc_FK_acc_def_id FOREIGN KEY (access_def_id) REFERENCES x_access_type_def (id),
-CONSTRAINT x_p_ref_acc_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_p_ref_acc_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+CONSTRAINT x_p_ref_acc_FK_acc_def_id FOREIGN KEY (access_def_id) REFERENCES x_access_type_def (id)
 );
 commit;
 CREATE TABLE x_policy_ref_condition (
 id NUMBER(20) NOT NULL,
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_id NUMBER(20) NOT NULL,
 condition_def_id NUMBER(20) NOT NULL,
 condition_name VARCHAR(4000) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_p_ref_cond_UK_polId_cDefId UNIQUE(policy_id, condition_def_id),
 CONSTRAINT x_p_ref_cond_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
-CONSTRAINT x_p_ref_cond_FK_cond_def_id FOREIGN KEY (condition_def_id) REFERENCES x_policy_condition_def (id),
-CONSTRAINT x_p_ref_cond_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_p_ref_cond_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+CONSTRAINT x_p_ref_cond_FK_cond_def_id FOREIGN KEY (condition_def_id) REFERENCES x_policy_condition_def (id)
 );
 commit;
 CREATE TABLE x_policy_ref_datamask_type (
 id NUMBER(20) NOT NULL,
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_id NUMBER(20) NOT NULL,
 datamask_def_id NUMBER(20) NOT NULL,
 datamask_type_name VARCHAR(4000) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_p_ref_dmsk_UK_polId_dDefId UNIQUE(policy_id, datamask_def_id),
 CONSTRAINT x_p_ref_dmsk_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
-CONSTRAINT x_p_ref_dmsk_FK_dmk_def_id FOREIGN KEY (datamask_def_id) REFERENCES x_datamask_type_def (id),
-CONSTRAINT x_p_ref_dmsk_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_p_ref_dmsk_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+CONSTRAINT x_p_ref_dmsk_FK_dmk_def_id FOREIGN KEY (datamask_def_id) REFERENCES x_datamask_type_def (id)
 );
 commit;
 CREATE TABLE x_policy_ref_user (
 id NUMBER(20) NOT NULL,
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_id NUMBER(20) NOT NULL,
 user_id NUMBER(20) NOT NULL,
 user_name VARCHAR(4000) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_p_ref_usr_UK_polId_userId UNIQUE(policy_id, user_id),
 CONSTRAINT x_p_ref_usr_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
-CONSTRAINT x_p_ref_usr_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id),
-CONSTRAINT x_p_ref_usr_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_p_ref_usr_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+CONSTRAINT x_p_ref_usr_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id)
 );
 commit;
 CREATE TABLE x_policy_ref_group (
 id NUMBER(20) NOT NULL,
-guid VARCHAR(1024) DEFAULT NULL NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_id NUMBER(20) NOT NULL,
 group_id NUMBER(20) NOT NULL,
 group_name VARCHAR(4000) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_p_ref_grp_UK_polId_grpId UNIQUE(policy_id, group_id),
 CONSTRAINT x_p_ref_grp_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
-CONSTRAINT x_p_ref_grp_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id),
-CONSTRAINT x_p_ref_grp_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_p_ref_grp_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id)
+CONSTRAINT x_p_ref_grp_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id)
 );
 commit;
 CREATE TABLE x_policy_change_log(
@@ -1554,17 +1488,11 @@ commit;
 
 CREATE TABLE x_role_ref_user(
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 role_id NUMBER(20) NOT NULL,
 user_id NUMBER(20) DEFAULT NULL NULL,
 user_name varchar(767) DEFAULT NULL NULL,
 priv_type NUMBER(10)  DEFAULT NULL NULL,
  PRIMARY KEY (id),
- CONSTRAINT x_role_ref_user_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
- CONSTRAINT x_role_ref_user_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
  CONSTRAINT x_role_ref_user_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id),
  CONSTRAINT x_role_ref_user_FK_user_id FOREIGN KEY (user_id) REFERENCES x_user (id)
 );
@@ -1572,17 +1500,11 @@ commit;
 
 CREATE TABLE x_role_ref_group(
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 role_id NUMBER(20) NOT NULL,
 group_id NUMBER(20) DEFAULT NULL NULL,
 group_name varchar(767) DEFAULT NULL NULL,
 priv_type NUMBER(10)  DEFAULT NULL NULL,
  PRIMARY KEY (id),
- CONSTRAINT x_role_ref_grp_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
- CONSTRAINT x_role_ref_grp_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
  CONSTRAINT x_role_ref_grp_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id),
  CONSTRAINT x_role_ref_grp_FK_group_id FOREIGN KEY (group_id) REFERENCES x_group (id)
 );
@@ -1591,17 +1513,11 @@ commit;
 
 CREATE TABLE x_policy_ref_role(
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 policy_id NUMBER(20) NOT NULL,
 role_id NUMBER(20) NOT NULL,
 role_name varchar(255) DEFAULT NULL NULL,
  PRIMARY KEY (id),
  CONSTRAINT x_pol_ref_role_UK_polId_roleId UNIQUE(policy_id,role_id),
- CONSTRAINT x_pol_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
- CONSTRAINT x_pol_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
  CONSTRAINT x_pol_ref_role_FK_policy_id FOREIGN KEY (policy_id) REFERENCES x_policy (id),
  CONSTRAINT x_pol_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id)
 );
@@ -1609,33 +1525,21 @@ commit;
 
 CREATE TABLE x_role_ref_role(
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 role_ref_id NUMBER(20) DEFAULT NULL NULL,
 role_id NUMBER(20) NOT NULL,
 role_name varchar(255) DEFAULT NULL NULL,
 priv_type NUMBER(10)  DEFAULT NULL NULL,
  PRIMARY KEY (id),
- CONSTRAINT x_role_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
- CONSTRAINT x_role_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
  CONSTRAINT x_role_ref_role_FK_role_ref_id FOREIGN KEY (role_ref_id) REFERENCES x_role (id)
 );
 commit;
 
 CREATE TABLE x_security_zone_ref_resource (
 id NUMBER(20) NOT NULL,
-create_time DATE DEFAULT NULL NULL,
-update_time DATE DEFAULT NULL NULL,
-added_by_id NUMBER(20) DEFAULT NULL NULL,
-upd_by_id NUMBER(20) DEFAULT NULL NULL,
 zone_id NUMBER(20)  DEFAULT NULL NULL,
 resource_def_id NUMBER(20)  DEFAULT NULL NULL,
 resource_name VARCHAR(255) DEFAULT NULL NULL,
 primary key (id),
-CONSTRAINT x_sz_ref_res_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
-CONSTRAINT x_sz_ref_res_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_sz_ref_res_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
 CONSTRAINT x_sz_ref_res_FK_res_def_id FOREIGN KEY (resource_def_id) REFERENCES x_resource_def (id)
 );
@@ -1973,6 +1877,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '058',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '059',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '060',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '061',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

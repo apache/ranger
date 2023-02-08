@@ -39,7 +39,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Cacheable
 @XmlRootElement
 @Table(name="x_role_ref_role")
-public class XXRoleRefRole extends XXDBBase implements Serializable {
+public class XXRoleRefRole implements Serializable {
 
     private static final long serialVersionUID = 1L;
 

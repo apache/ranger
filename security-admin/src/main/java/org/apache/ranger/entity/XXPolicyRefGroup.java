@@ -41,7 +41,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Cacheable
 @XmlRootElement
 @Table(name="x_policy_ref_group")
-public class XXPolicyRefGroup extends XXDBBase implements Serializable {
+public class XXPolicyRefGroup implements Serializable {
 
 	private static final long serialVersionUID = 1L;
 	/**

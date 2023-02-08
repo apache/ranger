@@ -34,7 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 @Cacheable
 @XmlRootElement
 @Table(name = "x_security_zone_ref_user")
-public class XXSecurityZoneRefUser extends XXDBBase implements java.io.Serializable{
+public class XXSecurityZoneRefUser implements java.io.Serializable{
 	private static final long serialVersionUID = 1L;
   	@Id
     @SequenceGenerator(name = "x_sec_zone_ref_user_SEQ", sequenceName = "x_sec_zone_ref_user_SEQ", allocationSize = 1)
@@ -86,12 +86,10 @@ public class XXSecurityZoneRefUser extends XXDBBase implements java.io.Serializa
 	 *            Value to set member attribute <b> id</b>
 	 */
 
-    @Override
     public void setId(Long id) {
         this.id = id;
     }
 
-    @Override
     public Long getId() {
         return id;
     }

@@ -117,7 +117,7 @@ public class SecurityZoneRefUpdater {
 			RangerService rService = svcService.getPopulatedViewObject(xService);
 			xServiceDef = daoMgr.getXXServiceDef().findByName(rService.getType());
 
-			XXSecurityZoneRefService xZoneService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefService());
+			XXSecurityZoneRefService xZoneService = new XXSecurityZoneRefService();
 
 			xZoneService.setZoneId(zoneId);
 			xZoneService.setServiceId(xService.getId());
@@ -134,7 +134,7 @@ public class SecurityZoneRefUpdater {
 
 					XXResourceDef xResourceDef = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resourceName, xServiceDef.getId());
 
-					XXSecurityZoneRefResource xZoneResource = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefResource());
+					XXSecurityZoneRefResource xZoneResource = new XXSecurityZoneRefResource();
 
 					xZoneResource.setZoneId(zoneId);
 					xZoneResource.setResourceDefId(xResourceDef.getId());
@@ -158,7 +158,7 @@ public class SecurityZoneRefUpdater {
                                                         MessageEnums.INVALID_INPUT_DATA);
                                 }
 
-                                XXSecurityZoneRefTagService xZoneTagService = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefTagService());
+                                XXSecurityZoneRefTagService xZoneTagService = new XXSecurityZoneRefTagService();
 
                                 xZoneTagService.setZoneId(zoneId);
                                 xZoneTagService.setTagServiceId(xService.getId());
@@ -182,7 +182,7 @@ public class SecurityZoneRefUpdater {
 							MessageEnums.INVALID_INPUT_DATA);
 				}
 
-				XXSecurityZoneRefUser xZoneAdminUser = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefUser());
+				XXSecurityZoneRefUser xZoneAdminUser = new XXSecurityZoneRefUser();
 
 				xZoneAdminUser.setZoneId(zoneId);
 				xZoneAdminUser.setUserId(xUser.getId());
@@ -207,7 +207,7 @@ public class SecurityZoneRefUpdater {
 							MessageEnums.INVALID_INPUT_DATA);
 				}
 
-				XXSecurityZoneRefGroup xZoneAdminGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefGroup());
+				XXSecurityZoneRefGroup xZoneAdminGroup = new XXSecurityZoneRefGroup();
 
 				xZoneAdminGroup.setZoneId(zoneId);
 				xZoneAdminGroup.setGroupId(xGroup.getId());
@@ -232,7 +232,7 @@ public class SecurityZoneRefUpdater {
 							MessageEnums.INVALID_INPUT_DATA);
 				}
 
-				XXSecurityZoneRefUser xZoneAuditUser = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefUser());
+				XXSecurityZoneRefUser xZoneAuditUser = new XXSecurityZoneRefUser();
 
 				xZoneAuditUser.setZoneId(zoneId);
 				xZoneAuditUser.setUserId(xUser.getId());
@@ -256,7 +256,7 @@ public class SecurityZoneRefUpdater {
 							MessageEnums.INVALID_INPUT_DATA);
 				}
 
-				XXSecurityZoneRefGroup xZoneAuditGroup = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefGroup());
+				XXSecurityZoneRefGroup xZoneAuditGroup = new XXSecurityZoneRefGroup();
 
 				xZoneAuditGroup.setZoneId(zoneId);
 				xZoneAuditGroup.setGroupId(xGroup.getId());
