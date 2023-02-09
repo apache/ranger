@@ -7,7 +7,7 @@ services:
       args:
         - HIVE_HADOOP_VERSION=${HIVE_HADOOP_VERSION}
         - HIVE_VERSION=${HIVE_VERSION}
-        - RANGER_VERSION=${RANGER_VERSION}
+        - HIVE_PLUGIN_VERSION=${HIVE_PLUGIN_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
     image: ranger-hive
     container_name: ranger-hive
@@ -28,7 +28,7 @@ services:
     environment:
       - HIVE_HADOOP_VERSION
       - HIVE_VERSION
-      - RANGER_VERSION
+      - HIVE_PLUGIN_VERSION
       - RANGER_DB_TYPE
 
 networks:
