@@ -40,8 +40,8 @@ QUERY_PARAM_USER_DOT_NAME = 'user.name'.encode("utf-8")
 
 
 class RangerClient:
-    def __init__(self, url, auth):
-        self.client_http = RangerClientHttp(url, auth)
+    def __init__(self, url, auth, query_params=None, headers=None):
+        self.client_http = RangerClientHttp(url, auth, query_params, headers)
         self.session     = self.client_http.session
         logging.getLogger("requests").setLevel(logging.WARNING)
 
@@ -433,8 +433,10 @@ class RESTResponse(RangerBase):
 
 
 class RangerClientHttp:
-    def __init__(self, url, auth):
-        self.url          = url.rstrip('/')
+    def __init__(self, url, auth, query_params=None, headers=None):
+        self.url          = url.rstrip('/') + '/' # ensure that self.url ends with a /
+        self.query_params = query_params
+        self.headers      = headers
         self.session      = Session()
         self.session.auth = auth
 
@@ -442,6 +444,20 @@ class RangerClientHttp:
     def call_api(self, api, query_params=None, request_data=None):
         ret    = None
         params = { 'headers': { 'Accept': api.consumes, 'Content-type': api.produces } }
+
+        if self.headers:
+          params['headers'].update(self.headers)
+
+        if self.query_params:
+          if query_params:
+              merged_query_params = {}
+
+              merged_query_params.update(self.query_params)
+              merged_query_params.update(query_params)
+
+              query_params = merged_query_params
+          else:
+              query_params = self.query_params
 
         if query_params:
             params['params'] = query_params
