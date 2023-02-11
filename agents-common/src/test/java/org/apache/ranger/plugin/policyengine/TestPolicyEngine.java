@@ -521,8 +521,9 @@ public class TestPolicyEngine {
 			servicePolicies.setTagPolicies(tagPolicies);
 		}
 
-		boolean useForwardedIPAddress = pluginContext.getConfig().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
-		String trustedProxyAddressString = pluginContext.getConfig().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
+		RangerPluginConfig config = pluginContext.getConfig();
+		boolean useForwardedIPAddress = config.getBoolean(config.getPropertyPrefix() + ".use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = config.get(config.getPropertyPrefix() + ".trusted.proxy.ipaddresses");
 		String[] trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, ';');
 		if (trustedProxyAddresses != null) {
 			for (int i = 0; i < trustedProxyAddresses.length; i++) {
@@ -579,18 +580,18 @@ public class TestPolicyEngine {
 
 		roles.setRangerRoles(rolesSet);
 
-        RangerPolicyEngineOptions policyEngineOptions = pluginContext.getConfig().getPolicyEngineOptions();
+        RangerPolicyEngineOptions policyEngineOptions = config.getPolicyEngineOptions();
 
         policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
 
-        setPluginConfig(pluginContext.getConfig(), ".super.users", testCase.superUsers);
-        setPluginConfig(pluginContext.getConfig(), ".super.groups", testCase.superGroups);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.users", testCase.auditExcludedUsers);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.groups", testCase.auditExcludedGroups);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.roles", testCase.auditExcludedRoles);
+        setPluginConfig(config, ".super.users", testCase.superUsers);
+        setPluginConfig(config, ".super.groups", testCase.superGroups);
+        setPluginConfig(config, ".audit.exclude.users", testCase.auditExcludedUsers);
+        setPluginConfig(config, ".audit.exclude.groups", testCase.auditExcludedGroups);
+        setPluginConfig(config, ".audit.exclude.roles", testCase.auditExcludedRoles);
 
         // so that setSuperUsersAndGroups(), setAuditExcludedUsersGroupsRoles() will be called on the pluginConfig
-        new RangerBasePlugin(pluginContext.getConfig());
+        new RangerBasePlugin(config);
 
         RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 
