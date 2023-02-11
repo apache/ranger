@@ -57,10 +57,11 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
 
         super.init();
 
+        String propertyPrefix              = getPropertyPrefix();
         String userStoreRetrieverClassName = getOption(USERSTORE_RETRIEVER_CLASSNAME_OPTION);
         long   pollingIntervalMs           = getLongOption(USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, 3600 * 1000);
 
-        dedupStrings = getBooleanConfig("ranger.plugin." + serviceDef.getName() + ".dedup.strings", true);
+        dedupStrings = getBooleanConfig(propertyPrefix + ".dedup.strings", true);
 
         if (StringUtils.isNotBlank(userStoreRetrieverClassName)) {
 
@@ -81,7 +82,6 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
             }
 
             if (userStoreRetriever != null) {
-                String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
                 disableCacheIfServiceNotFound = getBooleanConfig(propertyPrefix + ".disable.cache.if.servicenotfound", true);
                 String cacheDir      = getConfig(propertyPrefix + ".policy.cache.dir", null);
                 String cacheFilename = String.format("%s_%s_userstore.json", appId, serviceName);

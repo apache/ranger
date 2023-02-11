@@ -103,7 +103,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 
 		super.init();
 
-		String propertyPrefix        = "ranger.plugin." + serviceDef.getName();
+		String propertyPrefix        = getPropertyPrefix();
 		String tagRetrieverClassName = getOption(TAG_RETRIEVER_CLASSNAME_OPTION);
 		long   pollingIntervalMs     = getLongOption(TAG_REFRESHER_POLLINGINTERVAL_OPTION, 60 * 1000);
 
@@ -404,7 +404,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	}
 
 	protected RangerReadWriteLock createLock() {
-		String             propertyPrefix        = "ranger.plugin." + serviceDef.getName();
+		String             propertyPrefix        = getPropertyPrefix();
 		RangerPluginConfig config                = getPluginConfig();
 		boolean            deltasEnabled         = config != null && config.getBoolean(propertyPrefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_TAG_DELTA, RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_TAG_DELTA_DEFAULT);
 		boolean            inPlaceUpdatesEnabled = config != null && config.getBoolean(propertyPrefix + RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES, RangerCommonConstants.PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT);
