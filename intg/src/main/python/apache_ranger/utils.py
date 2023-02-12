@@ -30,7 +30,8 @@ def type_coerce(obj, objType):
     elif isinstance(obj, dict):
         ret = objType(obj)
 
-        ret.type_coerce_attrs()
+        if callable(getattr(ret, 'type_coerce_attrs', None)):
+            ret.type_coerce_attrs()
     else:
         ret = None
 
@@ -38,13 +39,8 @@ def type_coerce(obj, objType):
 
 def type_coerce_list(obj, objType):
     if isinstance(obj, list):
-        ret = []
-        for entry in obj:
-            ret.append(type_coerce(entry, objType))
-    else:
-        ret = None
-
-    return ret
+        return [ type_coerce(entry, objType) for entry in obj ]
+    return None
 
 def type_coerce_dict(obj, objType):
     if isinstance(obj, dict):
@@ -66,6 +62,10 @@ def type_coerce_dict_list(obj, objType):
 
     return ret
 
+def type_coerce_list_dict(obj, objType):
+    if isinstance(obj, list):
+        return [ type_coerce_dict(entry, objType) for entry in obj ]
+    return None
 
 class API:
     def __init__(self, path, method, expected_status, consumes=APPLICATION_JSON, produces=APPLICATION_JSON):

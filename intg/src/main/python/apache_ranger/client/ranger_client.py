@@ -23,8 +23,8 @@ from apache_ranger.exceptions                 import RangerServiceException
 from apache_ranger.model.ranger_base          import RangerBase
 from apache_ranger.model.ranger_policy        import RangerPolicy
 from apache_ranger.model.ranger_role          import RangerRole
-from apache_ranger.model.ranger_security_zone import RangerSecurityZone
-from apache_ranger.model.ranger_service       import RangerService
+from apache_ranger.model.ranger_security_zone import RangerSecurityZone, RangerSecurityZoneHeaderInfo
+from apache_ranger.model.ranger_service       import RangerService, RangerServiceHeaderInfo
 from apache_ranger.model.ranger_service_def   import RangerServiceDef
 from apache_ranger.model.ranger_service_tags  import RangerServiceTags
 from apache_ranger.utils                      import *
@@ -194,11 +194,6 @@ class RangerClient:
 
         return type_coerce(resp, RangerSecurityZone)
 
-    def update_security_zone(self, zoneName, securityZone):
-        resp = self.client_http.call_api(RangerClient.UPDATE_ZONE_BY_NAME.format_path({ 'name': zoneName }), request_data=securityZone)
-
-        return type_coerce(resp, RangerSecurityZone)
-
     def delete_security_zone_by_id(self, zoneId):
         self.client_http.call_api(RangerClient.DELETE_ZONE_BY_ID.format_path({ 'id': zoneId }))
 
@@ -214,6 +209,16 @@ class RangerClient:
         resp = self.client_http.call_api(RangerClient.GET_ZONE_BY_NAME.format_path({ 'name': zoneName }))
 
         return type_coerce(resp, RangerSecurityZone)
+
+    def get_security_zone_headers(self):
+      resp = self.client_http.call_api(RangerClient.GET_ZONE_HEADERS)
+
+      return type_coerce_list(resp, RangerSecurityZoneHeaderInfo)
+
+    def get_security_zone_service_headers(self, zoneId):
+      resp = self.client_http.call_api(RangerClient.GET_ZONE_SERVICE_HEADERS.format_path({ 'id': zoneId }))
+
+      return type_coerce_list(resp, RangerServiceHeaderInfo)
 
     def find_security_zones(self, filter=None):
         resp = self.client_http.call_api(RangerClient.FIND_ZONES, filter)
@@ -320,9 +325,11 @@ class RangerClient:
     URI_GRANT_ROLE          = URI_ROLE + "/grant/{name}"
     URI_REVOKE_ROLE         = URI_ROLE + "/revoke/{name}"
 
-    URI_ZONE                = URI_BASE + "/zones"
-    URI_ZONE_BY_ID          = URI_ZONE + "/{id}"
-    URI_ZONE_BY_NAME        = URI_ZONE + "/name/{name}"
+    URI_ZONE                 = URI_BASE + "/zones"
+    URI_ZONE_BY_ID           = URI_ZONE + "/{id}"
+    URI_ZONE_BY_NAME         = URI_ZONE + "/name/{name}"
+    URI_ZONE_HEADERS         = URI_BASE + "/zone-headers"
+    URI_ZONE_SERVICE_HEADERS = URI_ZONE + "/{id}/service-headers"
 
     URI_SERVICE_TAGS        = URI_SERVICE + "/{serviceName}/tags"
     URI_PLUGIN_INFO         = URI_BASE + "/plugins/info"
@@ -366,6 +373,8 @@ class RangerClient:
     GET_ZONE_BY_ID            = API(URI_ZONE_BY_ID, HttpMethod.GET, HTTPStatus.OK)
     GET_ZONE_BY_NAME          = API(URI_ZONE_BY_NAME, HttpMethod.GET, HTTPStatus.OK)
     FIND_ZONES                = API(URI_ZONE, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_HEADERS          = API(URI_ZONE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_SERVICE_HEADERS  = API(URI_ZONE_SERVICE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
 
     CREATE_ROLE               = API(URI_ROLE, HttpMethod.POST, HTTPStatus.OK)
     UPDATE_ROLE_BY_ID         = API(URI_ROLE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
