@@ -703,8 +703,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 				String requestedAccess = accessTypeDef.getName();
 				allRequestedAccesses.add(requestedAccess);
 			}
-			RangerAccessRequestUtil.setIsAnyAccessInContext(request.getContext(), Boolean.TRUE);
-			request.getContext().put(RangerAccessRequestUtil.KEY_CONTEXT_ACCESSTYPES, allRequestedAccesses);
+			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses, Boolean.TRUE);
 		}
 
 		ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);

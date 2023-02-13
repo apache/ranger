@@ -220,6 +220,11 @@ public class RangerAccessRequestUtil {
 		context.put(KEY_CONTEXT_ACCESSTYPES, accessTypes);
 	}
 
+        public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes, Boolean isAny) {
+                context.put(KEY_CONTEXT_ACCESSTYPES, accessTypes);
+                context.put(KEY_CONTEXT_IS_ANY_ACCESS, isAny);
+        }
+
 	public static Set<String> getAllRequestedAccessTypes(RangerAccessRequest request) {
 		Set<String> ret = (Set<String>) request.getContext().get(KEY_CONTEXT_ACCESSTYPES);
 
