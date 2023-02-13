@@ -16,7 +16,6 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-
 import axios from "axios";
 import history from "./history";
 import ErrorPage from "../views/ErrorPage";
@@ -32,8 +31,14 @@ let csrfEnabled = false;
 let restCsrfCustomHeader = null;
 let restCsrfIgnoreMethods = [];
 let csrfToken = " ";
+let isSessionActive = true;
 
 async function fetchApi(axiosConfig = {}, otherConf = {}) {
+  axiosConfig.headers = {
+    ...axiosConfig.headers,
+    ...{ "X-Requested-With": "XMLHttpRequest" }
+  };
+
   if (
     csrfEnabled &&
     restCsrfIgnoreMethods.indexOf(
@@ -72,13 +77,16 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
     config.cancelToken = source.token;
     otherConf.source = source;
   }
-
   try {
     const resp = await axios(config);
     return resp;
   } catch (error) {
-    if (error && error.response && error.response.status === 419) {
-      window.location.replace("login.jsp");
+    if (error?.response?.status === 419) {
+      if (isSessionActive) {
+        toast.warning("Session Time Out !!");
+        isSessionActive = false;
+        window.location.replace("login.jsp?sessionTimeout=true");
+      }
     }
     throw error;
   }
@@ -112,15 +120,6 @@ const fetchCSRFConf = async () => {
     respData && handleCSRFHeaders(respData);
   } catch (error) {
     throw Error(error);
-    if (error?.response?.status) {
-      if (error.response.status == "419") {
-        toast.warning("Session Time Out !!");
-        history.push("/login.jsp");
-      }
-      if (error.response.status == "204") {
-        return <ErrorPage errorCode="204" history={history}></ErrorPage>;
-      }
-    }
   }
   return respData;
 };

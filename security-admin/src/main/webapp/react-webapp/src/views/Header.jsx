@@ -79,7 +79,7 @@ class Header extends Component {
           "cache-control": "no-cache"
         }
       });
-      if (!isUndefined(checkKnoxSSOVal) || checkKnoxSSOVal !== null) {
+      if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
         if (checkKnoxSSOVal == false) {
           window.location.replace("locallogin");
           window.localStorage.clear();
