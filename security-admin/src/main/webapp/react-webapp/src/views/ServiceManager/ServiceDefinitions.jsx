@@ -100,8 +100,8 @@ class ServiceDefinitions extends Component {
       loader: true
     });
     let serviceDefsResp;
-    let resourceServiceDef;
-    let tagServiceDef;
+    let resourceServiceDef = [];
+    let tagServiceDef = [];
 
     try {
       serviceDefsResp = await fetchApi({
@@ -158,8 +158,8 @@ class ServiceDefinitions extends Component {
       loader: true
     });
     let servicesResp;
-    let resourceServices;
-    let tagServices;
+    let resourceServices = [];
+    let tagServices = [];
 
     try {
       servicesResp = await fetchApi({
