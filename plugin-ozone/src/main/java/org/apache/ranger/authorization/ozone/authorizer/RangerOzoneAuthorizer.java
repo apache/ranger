@@ -59,12 +59,16 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 	private static volatile RangerBasePlugin rangerPlugin = null;
 	RangerDefaultAuditHandler auditHandler = null;
 
-	public RangerOzoneAuthorizer() {
-		rangerPlugin = new RangerBasePlugin("ozone", "ozone");
+	public RangerOzoneAuthorizer(String serviceName) {
+		rangerPlugin = new RangerBasePlugin("ozone", serviceName, "ozone");
 
 		rangerPlugin.init(); // this will initialize policy engine and policy refresher
 		auditHandler = new RangerDefaultAuditHandler();
 		rangerPlugin.setResultProcessor(auditHandler);
+	}
+
+	public RangerOzoneAuthorizer() {
+		this(null);
 	}
 
 	@Override
@@ -72,6 +76,10 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		boolean returnValue = false;
 		if (ozoneObject == null) {
 			LOG.error("Ozone object is null!!");
+			return returnValue;
+		}
+		if (context == null) {
+			LOG.error("Context object is null!!");
 			return returnValue;
 		}
 		OzoneObj ozoneObj = (OzoneObj) ozoneObject;
@@ -156,7 +164,11 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 				rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName() + "/.snapshot/" + snapShotName);
 				RangerAccessResult result = rangerPlugin
 						.isAccessAllowed(rangerRequest);
-				if (result.getEvaluatedPoliciesCount() > 0)
+				if (result == null) {
+					LOG.error("Ranger Plugin returned null. Returning false");
+					return false;
+				}
+				if (result.getPolicyId() >= 0)
 					return result.getIsAllowed();
 				rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
 			}
