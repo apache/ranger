@@ -359,7 +359,7 @@ const SecurityZoneForm = (props) => {
         data: zoneData
       });
       setBlockUI(false);
-      toast.success(`Success! Service zone ${apiSuccess} succesfully`);
+      toast.success(`Success! Service zone ${apiSuccess} successfully`);
       navigate(`/zones/zone/${zoneResp.data.id}`);
     } catch (error) {
       setBlockUI(false);

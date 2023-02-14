@@ -75,7 +75,7 @@ function GroupAssociateUserDetails(props) {
     if (userCopytext.length == 0) {
       toast.warning("No user list find for copy");
     } else {
-      toast.success("User list copied succesfully!!");
+      toast.success("User list copied successfully!!");
     }
     return userCopytext;
   };

@@ -328,7 +328,7 @@ const KeyManager = (props) => {
         params: { provider: onchangeval ? onchangeval.label : "" }
       });
       setBlockUI(false);
-      toast.success(`Success! Key deleted succesfully`);
+      toast.success(`Success! Key deleted successfully`);
       if (keydata.length == 1 && currentPageIndex > 1) {
         let page = currentPageIndex - currentPageIndex;
         resetPage.page(page);

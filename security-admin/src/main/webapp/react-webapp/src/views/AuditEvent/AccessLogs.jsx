@@ -278,7 +278,7 @@ function Access() {
 
   const rsrcContent = (requestData) => {
     const copyText = (val) => {
-      !isEmpty(val) && toast.success("Copied succesfully!!");
+      !isEmpty(val) && toast.success("Copied successfully!!");
       return val;
     };
     return (
