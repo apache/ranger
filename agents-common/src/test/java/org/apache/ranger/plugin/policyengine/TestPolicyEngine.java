@@ -69,6 +69,7 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -922,6 +923,13 @@ public class TestPolicyEngine {
 			ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
 			if (ret.getAccessTime() == null) {
 				ret.setAccessTime(new Date());
+			}
+			Map<String, Object> reqContext = ret.getContext();
+			Object accessTypes = reqContext.get("ACCESSTYPES");
+			if (accessTypes != null) {
+				Collection<String> accessTypesCollection = (Collection<String>) accessTypes;
+				Set<String> requestedAccesses = new HashSet<>(accessTypesCollection);
+				ret.getContext().put("ACCESSTYPES", requestedAccesses);
 			}
 
 			return ret;

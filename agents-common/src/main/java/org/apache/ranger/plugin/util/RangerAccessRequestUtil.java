@@ -222,7 +222,7 @@ public class RangerAccessRequestUtil {
 
         public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes, Boolean isAny) {
                 context.put(KEY_CONTEXT_ACCESSTYPES, accessTypes);
-                context.put(KEY_CONTEXT_IS_ANY_ACCESS, isAny);
+				setIsAnyAccessInContext(context, isAny);
         }
 
 	public static Set<String> getAllRequestedAccessTypes(RangerAccessRequest request) {
