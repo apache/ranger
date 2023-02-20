@@ -71,20 +71,20 @@
 	"accessTypes":
 	[
 		{
-			"itemId": 8,
-			"name": "all",
-			"label": "All",
-			"impliedGrants":
-				[
-					"read",
-					"write",
-					"create",
-					"list",
-					"delete",
-					"read_acl",
-					"write_acl"
-				]
-			},
+                        "itemId": 8,
+                        "name": "all",
+                        "label": "All",
+                        "impliedGrants":
+                        [
+                                "read",
+                                "write",
+                                "create",
+                                "list",
+                                "delete",
+				"read_acl",
+				"write_acl"
+                        ]
+                },
 		{
 			"itemId": 1,
 			"name": "read",
