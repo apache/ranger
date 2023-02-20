@@ -19,7 +19,9 @@
 package org.apache.ranger;
 
 import com.sun.jersey.api.client.ClientResponse;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.junit.Assert;
 import org.junit.Test;
@@ -146,5 +148,29 @@ public class TestRangerClient {
         } catch(RangerServiceException exp){
             Assert.assertTrue(exp.getMessage().contains("IllegalFormatConversionException"));
         }
+    }
+
+    @Test
+    public void testGetSecurityZoneHeaders() throws RangerServiceException {
+        RangerClient        client = Mockito.mock(RangerClient.class);
+        Map<String, String> filter = Collections.emptyMap();
+
+        when(client.getSecurityZoneHeaders(filter)).thenReturn(Collections.emptyList());
+
+        List<RangerSecurityZoneHeaderInfo> zoneHeaders = client.getSecurityZoneHeaders(filter);
+
+        Assert.assertEquals(Collections.emptyList(), zoneHeaders);
+    }
+
+    @Test
+    public void testGetSecurityZoneServiceHeaders() throws RangerServiceException {
+        RangerClient        client = Mockito.mock(RangerClient.class);
+        Map<String, String> filter = Collections.emptyMap();
+
+        when(client.getSecurityZoneServiceHeaders(filter)).thenReturn(Collections.emptyList());
+
+        List<RangerServiceHeaderInfo> serviceHeaders = client.getSecurityZoneServiceHeaders(filter);
+
+        Assert.assertEquals(Collections.emptyList(), serviceHeaders);
     }
 }
