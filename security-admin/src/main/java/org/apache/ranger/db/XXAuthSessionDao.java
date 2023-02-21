@@ -23,6 +23,7 @@ import java.util.Date;
 import java.util.List;
 
 import javax.persistence.NoResultException;
+import javax.persistence.TemporalType;
 
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;
@@ -72,7 +73,7 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 		return getEntityManager()
 				.createNamedQuery("XXAuthSession.getRecentAuthFailureCountByLoginId", Long.class)
 				.setParameter("loginId", loginId)
-				.setParameter("authWindowStartTime", authWindowStartTime)
+				.setParameter("authWindowStartTime", authWindowStartTime, TemporalType.DATE)
 				.getSingleResult();
 	}
 
