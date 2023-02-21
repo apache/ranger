@@ -35,6 +35,7 @@ import com.google.gson.JsonParseException;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
 import org.apache.ranger.plugin.util.ServicePolicies;
@@ -118,11 +119,15 @@ public class TestPolicyACLs {
 					continue;
 				}
 				RangerAccessRequestImpl request = new RangerAccessRequestImpl(oneTest.resource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
+
+				request.setResourceMatchingScope(oneTest.resourceMatchingScope);
+
 				RangerResourceACLs acls = policyEngine.getResourceACLs(request);
 
 				boolean userACLsMatched = true, groupACLsMatched = true, roleACLsMatched = true, rowFiltersMatched = true, dataMaskingMatched = true;
 
 				if (MapUtils.isNotEmpty(acls.getUserACLs()) && MapUtils.isNotEmpty(oneTest.userPermissions)) {
+					assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - userACLsMatched", oneTest.userPermissions.size(), acls.getUserACLs().size());
 
 					for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
 							acls.getUserACLs().entrySet()) {
@@ -195,6 +200,8 @@ public class TestPolicyACLs {
 				}
 
 				if (MapUtils.isNotEmpty(acls.getGroupACLs()) && MapUtils.isNotEmpty(oneTest.groupPermissions)) {
+					assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - groupACLsMatched", oneTest.groupPermissions.size(), acls.getGroupACLs().size());
+
 					for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
 							acls.getGroupACLs().entrySet()) {
 						String groupName = entry.getKey();
@@ -232,6 +239,8 @@ public class TestPolicyACLs {
 				}
 
 				if (MapUtils.isNotEmpty(acls.getRoleACLs()) && MapUtils.isNotEmpty(oneTest.rolePermissions)) {
+					assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - roleACLsMatched", oneTest.rolePermissions.size(), acls.getRoleACLs().size());
+
 					for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
 							acls.getRoleACLs().entrySet()) {
 						String roleName = entry.getKey();
@@ -287,6 +296,7 @@ public class TestPolicyACLs {
 			class OneTest {
 				String               name;
 				RangerAccessResource resource;
+				ResourceMatchingScope resourceMatchingScope;
 				Map<String, Map<String, RangerResourceACLs.AccessResult>> userPermissions;
 				Map<String, Map<String, RangerResourceACLs.AccessResult>> groupPermissions;
 				Map<String, Map<String, RangerResourceACLs.AccessResult>> rolePermissions;
