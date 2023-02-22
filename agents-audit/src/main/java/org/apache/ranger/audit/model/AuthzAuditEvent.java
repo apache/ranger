@@ -122,6 +122,9 @@ public class AuthzAuditEvent extends AuditEventBase {
 	@SerializedName("policy_version")
 	protected Long policyVersion;
 
+	@SerializedName("reqEntityGuid")
+	protected String entityGuid = null;
+
 	public AuthzAuditEvent() {
 		super();
 
@@ -428,6 +431,14 @@ public class AuthzAuditEvent extends AuditEventBase {
 		this.requestData = requestData;
 	}
 
+	public String getEntityGuid() {
+		return entityGuid;
+	}
+
+	public void setEntityGuid(String entityGuid) {
+		this.entityGuid = entityGuid;
+	}
+
 	public String getAgentHostname() {
 		return agentHostname;
 	}
@@ -535,7 +546,8 @@ public class AuthzAuditEvent extends AuditEventBase {
 		sb.append("repositoryType=").append(repositoryType)
 				.append(FIELD_SEPARATOR).append("repositoryName=")
 				.append(repositoryName).append(FIELD_SEPARATOR).append("user=")
-				.append(user).append(FIELD_SEPARATOR).append("eventTime=")
+				.append(user).append(FIELD_SEPARATOR).append("entityGuid=")
+				.append(entityGuid).append(FIELD_SEPARATOR).append("eventTime=")
 				.append(eventTime).append(FIELD_SEPARATOR)
 				.append("accessType=").append(accessType)
 				.append(FIELD_SEPARATOR).append("resourcePath=")
