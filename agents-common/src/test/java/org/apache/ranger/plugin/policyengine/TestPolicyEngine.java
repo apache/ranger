@@ -995,13 +995,13 @@ public class TestPolicyEngine {
 	public static boolean compareTrie(final int policyType, RangerPolicyRepository me, RangerPolicyRepository other) {
 		boolean ret;
 
-		Map<String, RangerResourceTrie> myTrie    = me.getTrie(policyType);
-		Map<String, RangerResourceTrie> otherTrie = other.getTrie(policyType);
+		Map<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> myTrie    = me.getTrie(policyType);
+		Map<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> otherTrie = other.getTrie(policyType);
 
 		ret = myTrie.size() == otherTrie.size();
 
 		if (ret) {
-			for (Map.Entry<String, RangerResourceTrie> entry : myTrie.entrySet()) {
+			for (Map.Entry<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> entry : myTrie.entrySet()) {
 				RangerResourceTrie myResourceTrie    = entry.getValue();
 				RangerResourceTrie otherResourceTrie = otherTrie.get(entry.getKey());
 
