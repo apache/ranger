@@ -161,7 +161,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 
 		try {
 			if (snapShotName != null) {
-				rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName() + "/.snapshot/" + snapShotName);
+				rangerResource.setValue(KEY_RESOURCE_KEY,".snapshot/" + snapShotName + "/" + ozoneObj.getKeyName());
 				RangerAccessResult result = rangerPlugin
 						.isAccessAllowed(rangerRequest);
 				if (result == null) {
@@ -170,7 +170,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 				}
 				if (result.getPolicyId() >= 0)
 					return result.getIsAllowed();
-				rangerResource.setValue(KEY_RESOURCE_BUCKET, ozoneObj.getBucketName());
+				rangerResource.setValue(KEY_RESOURCE_KEY, ozoneObj.getKeyName());
 			}
 			RangerAccessResult result = rangerPlugin
 					.isAccessAllowed(rangerRequest);
