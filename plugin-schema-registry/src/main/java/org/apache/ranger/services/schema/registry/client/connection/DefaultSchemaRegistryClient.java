@@ -55,7 +55,7 @@ public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
     private static final String SCHEMA_REGISTRY_PATH = "/api/v1/schemaregistry";
     private static final String SCHEMAS_PATH = SCHEMA_REGISTRY_PATH + "/schemas/";
     private static final String SCHEMA_REGISTRY_VERSION_PATH = SCHEMA_REGISTRY_PATH + "/version";
-    private static final String SSL_ALGORITHM = "TLS";
+    private static final String SSL_ALGORITHM = "TLSv1.2";
     private final javax.ws.rs.client.Client client;
     private final Login login;
     private final UrlSelector urlSelector;
