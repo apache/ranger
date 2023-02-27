@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Arrays;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
@@ -106,14 +105,6 @@ public class XUserMgr extends XUserMgrBase {
 	private static final String USER = "User";
 	private static final String GROUP = "Group";
 	private static final int MAX_DB_TRANSACTION_RETRIES = 5;
-
-	private static final List<String> allowedRoles  = Arrays.asList(
-			RangerConstants.ROLE_USER,
-			RangerConstants.ROLE_SYS_ADMIN,
-			RangerConstants.ROLE_ADMIN_AUDITOR,
-			RangerConstants.ROLE_KEY_ADMIN,
-			RangerConstants.ROLE_KEY_ADMIN_AUDITOR
-	);
 
 	@Autowired
 	XUserService xUserService;
@@ -296,7 +287,7 @@ public class XUserMgr extends XUserMgrBase {
 		HashMap<String, Long> moduleNameId = getAllModuleNameAndIdMap();
 		if(moduleNameId!=null && vXPortalUser!=null && CollectionUtils.isNotEmpty(vXPortalUser.getUserRoleList())){
 			for (String role : vXPortalUser.getUserRoleList()) {
-				if (allowedRoles.contains(role)){
+				if (RangerConstants.VALID_USER_ROLE_LIST.contains(role)){
 					createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
 					createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
 					if (role.equals(RangerConstants.ROLE_USER)){
@@ -2965,7 +2956,7 @@ public class XUserMgr extends XUserMgrBase {
 		HashMap<String, Long> moduleNameId = getAllModuleNameAndIdMap();
 		if(moduleNameId != null && CollectionUtils.isNotEmpty(vXPortalUserList)){
 			for (String role : vXPortalUserList) {
-				if (allowedRoles.contains(role)){
+				if (RangerConstants.VALID_USER_ROLE_LIST.contains(role)){
 					createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
 					createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
 					if (role.equals(RangerConstants.ROLE_USER)){
