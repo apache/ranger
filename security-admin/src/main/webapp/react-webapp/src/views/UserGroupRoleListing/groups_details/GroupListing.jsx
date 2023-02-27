@@ -102,8 +102,6 @@ function Groups() {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
       let searchFilterObj = find(searchFilterOption, {
         urlLabel: param
@@ -137,15 +135,6 @@ function Groups() {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
 
@@ -248,7 +237,7 @@ function Groups() {
             errorMsg +=
               `Error occurred during deleting Groups: ${original.name}` + "\n";
           }
-          console.log(errorMsg);
+          console.error(errorMsg);
         }
       }
       if (errorMsg) {
@@ -260,7 +249,9 @@ function Groups() {
             groupListingData.length == selectedRows.current.length) &&
           currentpageIndex > 1
         ) {
-          resetPage.page(0);
+          if(typeof resetPage?.page === "function"){
+            resetPage.page(0);
+          }
         } else {
           setUpdateTable(moment.now());
         }
@@ -291,7 +282,7 @@ function Groups() {
             setUpdateTable(moment.now());
           } catch (error) {
             serverError(error);
-            console.log(`Error occurred during set Group visibility! ${error}`);
+            console.error(`Error occurred during set Group visibility! ${error}`);
           }
         }
       }
@@ -528,20 +519,14 @@ function Groups() {
   ];
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
     let searchFilterParam = {};
     let searchParam = {};
-
     map(filter, function (obj) {
       searchFilterParam[obj.category] = obj.value;
-
       let searchFilterObj = find(searchFilterOption, {
         category: obj.category
       });
-
       let urlLabelParam = searchFilterObj.urlLabel;
-
       if (searchFilterObj.type == "textoptions") {
         let textOptionObj = find(searchFilterObj.options(), {
           value: obj.value
@@ -553,7 +538,9 @@ function Groups() {
     });
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    resetPage.page(0);
+    if(typeof resetPage?.page  === "function"){
+      resetPage.page(0);
+    }
   };
 
   return (

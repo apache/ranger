@@ -108,8 +108,6 @@ function PolicyListing(props) {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
       let searchFilterObj = find(getSearchFilterOption(), {
         urlLabel: param
@@ -143,15 +141,6 @@ function PolicyListing(props) {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
 
@@ -301,7 +290,9 @@ function PolicyListing(props) {
     }
     if (policyListingData.length == 1 && currentpageIndex > 1) {
       let page = currentpageIndex - currentpageIndex;
-      resetPage.page(page);
+      if(typeof resetPage?.page === "function"){
+        resetPage.page(page);
+      }
     } else {
       setUpdateTable(moment.now());
     }
@@ -665,20 +656,14 @@ function PolicyListing(props) {
   };
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
     let searchFilterParam = {};
     let searchParam = {};
-
     map(filter, function (obj) {
       searchFilterParam[obj.category] = obj.value;
-
       let searchFilterObj = find(getSearchFilterOption(), {
         category: obj.category
       });
-
       let urlLabelParam = searchFilterObj.urlLabel;
-
       if (searchFilterObj.type == "textoptions") {
         let textOptionObj = find(searchFilterObj.options(), {
           value: obj.value
@@ -690,7 +675,9 @@ function PolicyListing(props) {
     });
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    resetPage.page(0);
+    if(typeof resetPage?.page === "function"){
+      resetPage.page(0);
+    }
   };
 
   return (

@@ -187,7 +187,7 @@ class Header extends Component {
               {hasAccessToTab("Key Manager") && (
                 <React.Fragment>
                   {(isKeyAdmin() || isKMSAuditor()) && (
-                    <NavDropdown title={encryption}>
+                    <NavDropdown title={encryption} className="header-dropdown" renderMenuOnMount={true}>
                       <NavDropdown.Item
                         to="/kms/keys/new/manage/service"
                         as={NavLink}
