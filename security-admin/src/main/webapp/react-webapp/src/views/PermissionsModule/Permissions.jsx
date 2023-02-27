@@ -50,8 +50,6 @@ function Permissions() {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
       let searchFilterObj = find(searchFilterOption, {
         urlLabel: param
@@ -85,15 +83,6 @@ function Permissions() {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
   }, [searchParams]);
 
   const fetchPermissions = useCallback(
@@ -170,7 +159,6 @@ function Permissions() {
           const Users = raw.userPermList.map((user) => {
             return user.userName;
           });
-          console.log(Users);
           return !isEmpty(Users) ? (
             <MoreLess data={Users} />
           ) : (
@@ -222,20 +210,14 @@ function Permissions() {
   ];
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
     let searchFilterParam = {};
     let searchParam = {};
-
     map(filter, function (obj) {
       searchFilterParam[obj.category] = obj.value;
-
       let searchFilterObj = find(searchFilterOption, {
         category: obj.category
       });
-
       let urlLabelParam = searchFilterObj.urlLabel;
-
       if (searchFilterObj.type == "textoptions") {
         let textOptionObj = find(searchFilterObj.options(), {
           value: obj.value

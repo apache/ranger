@@ -137,8 +137,6 @@ var Typeahead = onClickOutside(
       if (this.props.maxVisible) {
         result = result.slice(0, this.props.maxVisible);
       }
-
-      console.log("PRINT FINAL RESULT : ===== ", result);
       return result;
     },
 
