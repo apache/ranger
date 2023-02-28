@@ -332,7 +332,7 @@ public class ServiceREST {
 		// if serviceDef.id is null, then set param 'id' into serviceDef Object
 		if (serviceDef.getId() == null) {
 			serviceDef.setId(id);
-		} else if(!serviceDef.getId().equals(id)) {
+		} else if(StringUtils.isBlank(serviceDef.getName()) && !serviceDef.getId().equals(id)) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "serviceDef Id mismatch", true);
 		}
 
