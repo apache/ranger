@@ -1625,10 +1625,10 @@ CREATE TABLE `x_rms_service_resource` (
   `service_resource_elements_text` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `x_rms_service_res_UK_guid` (`guid`),
+  UNIQUE KEY `x_rms_service_resource_UK_resource_signature` (`resource_signature`),
   CONSTRAINT `x_rms_service_res_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`)
 );
 CREATE INDEX x_rms_service_resource_IDX_service_id ON x_rms_service_resource(service_id);
-CREATE INDEX x_rms_service_resource_IDX_resource_signature ON x_rms_service_resource(resource_signature);
 
 CREATE TABLE `x_rms_notification` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -1813,6 +1813,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
