@@ -232,15 +232,11 @@ export default function PolicyPermissionItem(props) {
   };
 
   const customStyles = {
-    control: (provided) => ({
-      ...provided,
-      width: "235px"
+    control: base => ({
+      ...base,
+      width: 200,
+      whiteSpace: "nowrap"
     }),
-    multiValueLabel: () => ({
-      whiteSpace: "nowrap",
-      overflow: "hidden",
-      textOverflow: "ellipsis"
-    })
   };
 
   return (
