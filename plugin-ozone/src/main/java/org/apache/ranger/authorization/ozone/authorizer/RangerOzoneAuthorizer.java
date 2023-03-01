@@ -160,7 +160,7 @@ public class RangerOzoneAuthorizer implements IAccessAuthorizer {
 		}
 
 		try {
-			if (snapShotName != null) {
+			if (snapShotName != null && ozoneObj.getResourceType() == OzoneObj.ResourceType.KEY) {
 				rangerResource.setValue(KEY_RESOURCE_KEY,".snapshot/" + snapShotName + "/" + ozoneObj.getKeyName());
 				RangerAccessResult result = rangerPlugin
 						.isAccessAllowed(rangerRequest);
