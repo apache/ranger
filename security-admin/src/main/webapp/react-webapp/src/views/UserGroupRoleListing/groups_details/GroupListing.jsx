@@ -309,13 +309,14 @@ function Groups() {
           if (rawValue.value) {
             return (
               <Link
-                style={{ maxWidth: "100px", display: "inline-block" }}
+                style={{maxWidth:"100%", display: "inline-block" }}
                 className={`text-truncate ${
                   isAuditor() || isKMSAuditor()
                     ? "disabled-link text-secondary"
                     : "text-info"
                 }`}
                 to={"/group/" + rawValue.row.original.id}
+                title={rawValue.value}
               >
                 {rawValue.value}
               </Link>
@@ -350,7 +351,8 @@ function Groups() {
                 </div>
               );
           } else return <div className="text-center">--</div>;
-        }
+        },
+        width:100
       },
       {
         Header: "Sync Source",
@@ -365,7 +367,8 @@ function Groups() {
               </div>
             );
           } else return <div className="text-center">--</div>;
-        }
+        },
+        width:100
       },
       {
         Header: "Visibility",
@@ -393,7 +396,8 @@ function Groups() {
                 </div>
               );
           } else return <div className="text-center">--</div>;
-        }
+        },
+        width:100
       },
       {
         Header: "Users",
@@ -414,7 +418,8 @@ function Groups() {
               </button>
             </div>
           );
-        }
+        },
+        width:80
       },
       {
         Header: "Sync Details",
