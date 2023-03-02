@@ -252,13 +252,14 @@ function Roles() {
           if (rawValue.value) {
             return (
               <Link
-                style={{ maxWidth: "150px", display: "inline-block" }}
+                style={{ maxWidth: "100%", display: "inline-block" }}
                 className={`text-truncate ${
                   isAuditor() || isKMSAuditor()
                     ? "disabled-link text-secondary"
                     : "text-info"
                 }`}
                 to={"/roles/" + rawValue.row.original.id}
+                title={rawValue.value}
               >
                 {rawValue.value}
               </Link>
@@ -266,7 +267,6 @@ function Roles() {
           }
           return "--";
         },
-        width: 150
       },
       {
         Header: "Users",

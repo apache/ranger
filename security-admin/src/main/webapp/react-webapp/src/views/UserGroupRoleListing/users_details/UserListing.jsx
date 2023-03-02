@@ -314,12 +314,13 @@ function Users() {
           if (rawValue.value) {
             return (
               <Link
-                style={{ maxWidth: "100px", display: "inline-block" }}
-                className={` text-truncate ${
+                style={{maxWidth:"100%", display: "inline-block" }}
+                className={`text-truncate ${
                   isAuditor() || isKMSAuditor()
                     ? "disabled-link text-secondary"
                     : "text-info"
                 }`}
+                title={rawValue.value}
                 to={"/user/" + rawValue.row.original.id}
               >
                 {rawValue.value}
@@ -327,17 +328,19 @@ function Users() {
             );
           }
           return "--";
-        }
+        },
       },
       {
         Header: "Email Address",
         accessor: "emailAddress", // accessor is the "key" in the data
         Cell: (rawValue) => {
           if (rawValue.value) {
-            return rawValue.value;
+            return <div style={{maxWidth:"100%", display: "inline-block" }}
+                         className="text-truncate"  title={rawValue.value}>
+                          {rawValue.value}
+                   </div>;
           } else return <div className="text-center">--</div>;
         },
-        width: 220
       },
       {
         Header: "Role",
@@ -353,7 +356,7 @@ function Users() {
           }
           return <div className="textt-center">--</div>;
         },
-        width: 100
+        width:70
       },
       {
         Header: "User Source",
@@ -377,7 +380,8 @@ function Users() {
                 </h6>
               );
           } else return "--";
-        }
+        },
+        width:70
       },
       {
         Header: "Sync Source",
@@ -390,7 +394,8 @@ function Users() {
           ) : (
             <div className="text-center">--</div>
           );
-        }
+        },
+        width:100
       },
       {
         Header: "Groups",
@@ -415,7 +420,6 @@ function Users() {
             return "--";
           }
         },
-        width: 200
       },
       {
         Header: "Visibility",
@@ -439,7 +443,8 @@ function Users() {
                 </h6>
               );
           } else return <div className="text-center">--</div>;
-        }
+        },
+        width:70
       },
       {
         Header: "Sync Details",
@@ -466,7 +471,8 @@ function Users() {
           } else {
             return <div className="text-center">--</div>;
           }
-        }
+      },
+      width:80
       }
     ],
     []
