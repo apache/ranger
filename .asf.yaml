@@ -13,6 +13,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# https://cwiki.apache.org/confluence/display/INFRA/git+-+.asf.yaml+features
+
 github:
   description: "Apache Ranger - To enable, monitor and manage comprehensive data security across the Hadoop platform"
   homepage: https://ranger.apache.org/
