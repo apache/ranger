@@ -22,7 +22,6 @@ package org.apache.ranger.plugin.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
