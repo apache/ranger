@@ -19,10 +19,11 @@ github:
   description: "Apache Ranger - To enable, monitor and manage comprehensive data security across the Hadoop platform"
   homepage: https://ranger.apache.org/
   labels:
-    - AuthZ
-    - Java
-    - Python
-    - Docker
+    - ranger
+    - authz
+    - java
+    - python
+    - docker
   enabled_merge_buttons:
     squash:  true
     merge:   false
