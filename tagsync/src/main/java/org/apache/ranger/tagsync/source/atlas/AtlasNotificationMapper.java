@@ -351,9 +351,14 @@ public class AtlasNotificationMapper {
 
                     RangerTagDef tagDef = new RangerTagDef(tag.getName(), "Atlas");
                     if (MapUtils.isNotEmpty(tag.getAttributes())) {
-                        for (String attributeName : tag.getAttributes().keySet()) {
-                            tagDef.getAttributeDefs().add(new RangerTagAttributeDef(attributeName, entityWithTags.getTagAttributeType(tag.getName(), attributeName)));
+                        List<RangerTagAttributeDef> attributeDefs = tagDef.getAttributeDefs();
+                        if (attributeDefs == null) {
+                            attributeDefs = new ArrayList<>();
                         }
+                        for (String attributeName : tag.getAttributes().keySet()) {
+                            attributeDefs.add(new RangerTagAttributeDef(attributeName, entityWithTags.getTagAttributeType(tag.getName(), attributeName)));
+                        }
+                        tagDef.setAttributeDefs(attributeDefs);
                     }
                     ret.add(tagDef);
                 }
