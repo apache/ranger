@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.common.PropertiesUtil;
@@ -53,6 +54,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
+import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.GROUP_PUBLIC;
 
 
 @Component
@@ -207,37 +210,33 @@ public class ServiceMgr {
 	}
 	
 	public boolean isZoneAdmin(String zoneName) {
-		boolean isZoneAdmin = false;
+		boolean            isZoneAdmin  = false;
 		RangerSecurityZone securityZone = null;
+
 		try {
 			securityZone = zoneStore.getSecurityZoneByName(zoneName);
 		} catch (Exception e) {
-			LOG.error(
-					"Unexpected error when fetching security zone with name:["
-							+ zoneName + "] from database", e);
+			LOG.error("Unexpected error when fetching security zone with name:[" + zoneName + "] from database", e);
 		}
 
 		if (securityZone != null) {
 			String userId = rangerBizUtil.getCurrentUserLoginId();
 
-			List<XXGroupUser> groupUsers = groupUserDao
-					.findByUserId(rangerBizUtil.getXUserId());
-			List<String> loggedInUsersGroups = new ArrayList<>();
-			for (XXGroupUser groupUser : groupUsers) {
-				loggedInUsersGroups.add(groupUser.getName());
-			}
-			for (String loggedInUsersGroup : loggedInUsersGroups) {
-				if (securityZone != null
-						&& securityZone.getAdminUserGroups() != null
-						&& securityZone.getAdminUserGroups().contains(
-								loggedInUsersGroup)) {
-					isZoneAdmin = true;
-					break;
-				}
-			}
-			if ((securityZone != null && securityZone.getAdminUsers() != null && securityZone
-					.getAdminUsers().contains(userId))) {
+			if (securityZone.getAdminUsers() != null && securityZone.getAdminUsers().contains(userId)) {
 				isZoneAdmin = true;
+			} else if (securityZone.getAdminUserGroups() != null) {
+				List<XXGroupUser> groupUsers          = groupUserDao.findByUserId(rangerBizUtil.getXUserId());
+				List<String>      loggedInUsersGroups = new ArrayList<>();
+
+				loggedInUsersGroups.add(GROUP_PUBLIC);
+
+				if (groupUsers != null) {
+					for (XXGroupUser groupUser : groupUsers) {
+						loggedInUsersGroups.add(groupUser.getName());
+					}
+				}
+
+				isZoneAdmin = CollectionUtils.containsAny(securityZone.getAdminUserGroups(), loggedInUsersGroups);
 			}
 		}
 
@@ -245,37 +244,33 @@ public class ServiceMgr {
 	}
 
 	public boolean isZoneAuditor(String zoneName) {
-		boolean isZoneAuditor = false;
-		RangerSecurityZone securityZone = null;
+		boolean            isZoneAuditor = false;
+		RangerSecurityZone securityZone  = null;
+
 		try {
 			securityZone = zoneStore.getSecurityZoneByName(zoneName);
 		} catch (Exception e) {
-			LOG.error(
-					"Unexpected error when fetching security zone with name:["
-							+ zoneName + "] from database", e);
+			LOG.error("Unexpected error when fetching security zone with name:[" + zoneName + "] from database", e);
 		}
 
 		if (securityZone != null) {
 			String userId = rangerBizUtil.getCurrentUserLoginId();
 
-			List<XXGroupUser> groupUsers = groupUserDao
-					.findByUserId(rangerBizUtil.getXUserId());
-			List<String> loggedInUsersGroups = new ArrayList<>();
-			for (XXGroupUser groupUser : groupUsers) {
-				loggedInUsersGroups.add(groupUser.getName());
-			}
-			for (String loggedInUsersGroup : loggedInUsersGroups) {
-				if (securityZone != null
-						&& securityZone.getAuditUserGroups() != null
-						&& securityZone.getAuditUserGroups().contains(
-								loggedInUsersGroup)) {
-					isZoneAuditor = true;
-					break;
-				}
-			}
-			if ((securityZone != null && securityZone.getAuditUsers() != null && securityZone
-					.getAuditUsers().contains(userId))) {
+			if (securityZone.getAuditUsers() != null && securityZone.getAuditUsers().contains(userId)) {
 				isZoneAuditor = true;
+			} else if (securityZone.getAuditUserGroups() != null) {
+				List<XXGroupUser> groupUsers          = groupUserDao.findByUserId(rangerBizUtil.getXUserId());
+				List<String>      loggedInUsersGroups = new ArrayList<>();
+
+				loggedInUsersGroups.add(GROUP_PUBLIC);
+
+				if (groupUsers != null) {
+					for (XXGroupUser groupUser : groupUsers) {
+						loggedInUsersGroups.add(groupUser.getName());
+					}
+				}
+
+				isZoneAuditor = CollectionUtils.containsAny(securityZone.getAuditUserGroups(), loggedInUsersGroups);
 			}
 		}
 
