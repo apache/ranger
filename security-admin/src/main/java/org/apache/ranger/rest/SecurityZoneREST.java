@@ -25,6 +25,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.servlet.http.HttpServletRequest;
@@ -348,31 +349,25 @@ public class SecurityZoneREST {
 				/* Validation for non service related fields of security zone */
 				
 				
-				if (!securityZone.getName().equals(
-						existingSecurityZone.getName())) {
+				if (!Objects.equals(securityZone.getName(), existingSecurityZone.getName())) {
 					throwRestError("User : " + userName
 							+ " is not allowed to edit zone name of zone : " + existingSecurityZone.getName());
-				} else if (!securityZone.getDescription().equals(
-						existingSecurityZone.getDescription())) {
+				} else if (!Objects.equals(securityZone.getDescription(), existingSecurityZone.getDescription())) {
 					throwRestError("User : " + userName
 							+ " is not allowed to edit zone description of zone : " + existingSecurityZone.getName());
 				}
 				if (!serviceMgr.isZoneAdmin(existingSecurityZone.getName())) {
-					if (!securityZone.getAdminUserGroups().equals(
-							existingSecurityZone.getAdminUserGroups())) {
+					if (!Objects.equals(securityZone.getAdminUserGroups(), existingSecurityZone.getAdminUserGroups())) {
 						throwRestError("User : "
 								+ userName
 								+ " is not allowed to edit zone Admin User Group of zone : " + existingSecurityZone.getName());
-					} else if (!securityZone.getAdminUsers().equals(
-							existingSecurityZone.getAdminUsers())) {
+					} else if (!Objects.equals(securityZone.getAdminUsers(), existingSecurityZone.getAdminUsers())) {
 						throwRestError("User : " + userName
 								+ " is not allowed to edit zone Admin User of zone : " + existingSecurityZone.getName());
-					} else if (!securityZone.getAuditUsers().equals(
-							existingSecurityZone.getAuditUsers())) {
+					} else if (!Objects.equals(securityZone.getAuditUsers(), existingSecurityZone.getAuditUsers())) {
 						throwRestError("User : " + userName
 								+ " is not allowed to edit zone Audit User of zone : " + existingSecurityZone.getName());
-					} else if (!securityZone.getAuditUserGroups().equals(
-							existingSecurityZone.getAuditUserGroups())) {
+					} else if (!Objects.equals(securityZone.getAuditUserGroups(), existingSecurityZone.getAuditUserGroups())) {
 						throwRestError("User : "
 								+ userName
 								+ " is not allowed to edit zone Audit User Group of zone : " + existingSecurityZone.getName());
@@ -458,8 +453,7 @@ public class SecurityZoneREST {
 							.getServices().get(svc);
 
 					if (rangerSecurityZnSvcFromUI != null) {
-						if (!rangerSecurityZnSvcFromDB.getResources().equals(
-								rangerSecurityZnSvcFromUI.getResources())) {
+						if (!Objects.equals(rangerSecurityZnSvcFromDB.getResources(), rangerSecurityZnSvcFromUI.getResources())) {
 							if (!svcStore.isServiceAdminUser(svc, userName)) {
 								throwRestError("User : "
 										+ userName
