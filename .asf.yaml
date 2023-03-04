@@ -17,8 +17,9 @@
 
 github:
   description: "Apache Ranger - To enable, monitor and manage comprehensive data security across the Hadoop platform"
-  homepage: https://ranger.apache.org/
+  homepage: https://ranger.apache.org
   labels:
+    - apache
     - ranger
     - authz
     - java
@@ -28,3 +29,11 @@ github:
     squash:  true
     merge:   false
     rebase:  false
+  notifications:
+    commits: commits@ranger.apache.org
+    issues: dev@ranger.apache.org
+    pullrequests: dev@ranger.apache.org
+    pullrequests_comment: dev@ranger.apache.org
+    jira_options: worklog link label
+  protected_branches:
+    master: {}
