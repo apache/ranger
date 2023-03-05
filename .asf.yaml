@@ -16,14 +16,24 @@
 # https://cwiki.apache.org/confluence/display/INFRA/git+-+.asf.yaml+features
 
 github:
-  description: "Apache Ranger - To enable, monitor and manage comprehensive data security across the Hadoop platform"
-  homepage: https://ranger.apache.org/
+  description: "Apache Ranger - To enable, monitor and manage comprehensive data security across the Hadoop platform and beyond"
+  homepage: https://ranger.apache.org
   labels:
-    - AuthZ
-    - Java
-    - Python
-    - Docker
+    - apache
+    - ranger
+    - authz
+    - java
+    - python
+    - docker
   enabled_merge_buttons:
     squash:  true
     merge:   false
     rebase:  false
+  notifications:
+    commits: commits@ranger.apache.org
+    issues: dev@ranger.apache.org
+    pullrequests: dev@ranger.apache.org
+    pullrequests_comment: dev@ranger.apache.org
+    jira_options: worklog link label
+  protected_branches:
+    master: {}
