@@ -21,8 +21,10 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.JSONUtil;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.StringUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.db.*;
@@ -49,6 +51,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.MockitoJUnitRunner;
+
+import static org.apache.ranger.service.RangerServiceDefService.PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION;
 
 @RunWith(MockitoJUnitRunner.class)
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
@@ -748,4 +752,54 @@ public class TestRangerServiceDefService {
 		Mockito.verify(daoManager).getXXEnumDef();
 	}
 
+	@Test
+	public void testImplicitConditionExpression() {
+		RangerServiceDef serviceDef = rangerServiceDef();
+		int              initCount  = serviceDef.getPolicyConditions().size();
+		boolean          isAdded    = serviceDefService.addImplicitConditionExpressionIfNeeded(serviceDef);
+
+		// serviceDef doesn't have RangerScriptConditionEvaluator condition, hence should be added
+		Assert.assertTrue(isAdded);
+
+		int postCount = serviceDef.getPolicyConditions().size();
+
+		Assert.assertEquals(initCount + 1, postCount);
+
+		boolean exists = false;
+
+		for (RangerPolicyConditionDef conditionDef : serviceDef.getPolicyConditions()) {
+			if (StringUtils.equals(conditionDef.getEvaluator(), RangerServiceDefService.IMPLICIT_CONDITION_EXPRESSION_EVALUATOR)) {
+				exists = true;
+
+				break;
+			}
+		}
+
+		Assert.assertTrue(exists);
+
+		isAdded = serviceDefService.addImplicitConditionExpressionIfNeeded(serviceDef);
+
+		// serviceDef already has RangerScriptConditionEvaluator, hence shouldn't be added again
+		Assert.assertFalse(isAdded);
+	}
+
+	@Test
+	public void testImplicitConditionExpressionDisabled() {
+		PropertiesUtil.getPropertiesMap().put(PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION, Boolean.FALSE.toString());
+
+		try {
+			RangerServiceDef serviceDef = rangerServiceDef();
+			int              initCount  = serviceDef.getPolicyConditions().size();
+			boolean          isAdded    = serviceDefService.addImplicitConditionExpressionIfNeeded(serviceDef);
+
+			// PROP_ENABLE_IMPLICIT_CONDITION_EXPR is false, hence shouldn't be added
+			Assert.assertFalse(isAdded);
+
+			int postCount = serviceDef.getPolicyConditions().size();
+
+			Assert.assertEquals(initCount, postCount);
+		} finally {
+			PropertiesUtil.getPropertiesMap().remove(PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION);
+		}
+	}
 }

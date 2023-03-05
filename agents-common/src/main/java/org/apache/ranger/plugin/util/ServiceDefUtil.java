@@ -442,7 +442,7 @@ public class ServiceDefUtil {
         return ret;
     }
 
-    private static boolean getBooleanValue(Map<String, String> map, String elementName, boolean defaultValue) {
+    public static boolean getBooleanValue(Map<String, String> map, String elementName, boolean defaultValue) {
         boolean ret = defaultValue;
 
         if(MapUtils.isNotEmpty(map) && map.containsKey(elementName)) {
