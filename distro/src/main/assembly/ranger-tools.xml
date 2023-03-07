@@ -68,9 +68,6 @@
               <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
               <include>org.apache.ranger:ranger-plugins-common</include>
               <include>org.apache.ranger:ranger-plugins-audit</include>
-              <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-              <include>net.java.dev.jna:jna:jar:${jna.version}</include>
-              <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
               <include>org.slf4j:slf4j-api</include>
             </includes>
           </dependencySet>

@@ -58,9 +58,6 @@
                     <include>org.codehaus.jackson:jackson-mapper-asl</include>
                     <include>org.codehaus.jackson:jackson-xc</include>
                     <include>org.apache.ranger:ranger-plugins-audit</include>
-                    <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-                    <include>net.java.dev.jna:jna:jar:${jna.version}</include>
-                    <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
                     <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
                     <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
                 </includes>
