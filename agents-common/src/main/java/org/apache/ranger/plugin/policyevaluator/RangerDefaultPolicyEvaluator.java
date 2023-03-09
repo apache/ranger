@@ -23,7 +23,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -113,7 +112,7 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 
 		policy = getPolicy();
 
-		preprocessPolicy(policy, serviceDef);
+		preprocessPolicy(policy, serviceDef, options);
 
 		if(policy != null) {
 			validityScheduleEvaluators = createValidityScheduleEvaluators(policy);
@@ -1145,12 +1144,12 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 		return sb;
 	}
 
-	protected void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef) {
+	protected void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
 		if(policy == null || (!hasAllow() && !hasDeny()) || serviceDef == null) {
 			return;
 		}
 
-		Map<String, Collection<String>> impliedAccessGrants = getImpliedAccessGrants(serviceDef);
+		Map<String, Collection<String>> impliedAccessGrants = options.getServiceDefHelper().getImpliedAccessGrants();
 
 		if(impliedAccessGrants == null || impliedAccessGrants.isEmpty()) {
 			return;
@@ -1197,32 +1196,6 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				}
 			}
 		}
-	}
-
-	protected Map<String, Collection<String>> getImpliedAccessGrants(RangerServiceDef serviceDef) {
-		Map<String, Collection<String>> ret = null;
-
-		if(serviceDef != null && !CollectionUtils.isEmpty(serviceDef.getAccessTypes())) {
-			for(RangerAccessTypeDef accessTypeDef : serviceDef.getAccessTypes()) {
-				if(!CollectionUtils.isEmpty(accessTypeDef.getImpliedGrants())) {
-					if(ret == null) {
-						ret = new HashMap<>();
-					}
-
-					Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
-
-					if(impliedAccessGrants == null) {
-						impliedAccessGrants = new HashSet<>();
-
-						ret.put(accessTypeDef.getName(), impliedAccessGrants);
-					}
-
-					impliedAccessGrants.addAll(accessTypeDef.getImpliedGrants());
-				}
-			}
-		}
-
-		return ret;
 	}
 
 	private RangerPolicyItemAccess getAccess(RangerPolicyItem policyItem, String accessType) {

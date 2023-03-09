@@ -36,6 +36,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -311,6 +312,10 @@ public class RangerServiceDefHelper {
 		return _delegate.getWildcardEnabledResourceDef(resourceName, policyType);
 	}
 
+	public Map<String, Collection<String>> getImpliedAccessGrants() {
+		return _delegate.getImpliedAccessGrants();
+	}
+
 	/**
 	 * Not designed for public access.  Package level only for testability.
 	 */
@@ -323,6 +328,7 @@ public class RangerServiceDefHelper {
 		final boolean _checkForCycles;
 		final boolean _valid;
 		final List<String> _orderedResourceNames;
+		final Map<String, Collection<String>> _impliedGrants;
 		final static Set<List<RangerResourceDef>> EMPTY_RESOURCE_HIERARCHY = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
 
 
@@ -351,6 +357,8 @@ public class RangerServiceDefHelper {
 					_hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
 				}
 			}
+
+			_impliedGrants = computeImpliedGrants();
 
 			if (isValid) {
 				_orderedResourceNames = buildSortedResourceNames();
@@ -609,6 +617,46 @@ public class RangerServiceDefHelper {
 
 		List<String> getAllOrderedResourceNames() {
 			return this._orderedResourceNames;
+		}
+
+		Map<String, Collection<String>> getImpliedAccessGrants() { return _impliedGrants; }
+
+		private Map<String, Collection<String>> computeImpliedGrants() {
+			Map<String, Collection<String>> ret = new HashMap<>();
+
+			if (_serviceDef != null && CollectionUtils.isNotEmpty(_serviceDef.getAccessTypes())) {
+				for(RangerAccessTypeDef accessTypeDef : _serviceDef.getAccessTypes()) {
+					if(CollectionUtils.isNotEmpty(accessTypeDef.getImpliedGrants())) {
+						Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
+
+						if(impliedAccessGrants == null) {
+							impliedAccessGrants = new HashSet<>();
+
+							ret.put(accessTypeDef.getName(), impliedAccessGrants);
+						}
+
+						impliedAccessGrants.addAll(accessTypeDef.getImpliedGrants());
+					}
+				}
+
+				if (_serviceDef.getMarkerAccessTypes() != null) {
+					for (RangerAccessTypeDef accessTypeDef : _serviceDef.getMarkerAccessTypes()) {
+						if(CollectionUtils.isNotEmpty(accessTypeDef.getImpliedGrants())) {
+							Collection<String> impliedAccessGrants = ret.get(accessTypeDef.getName());
+
+							if(impliedAccessGrants == null) {
+								impliedAccessGrants = new HashSet<>();
+
+								ret.put(accessTypeDef.getName(), impliedAccessGrants);
+							}
+
+							impliedAccessGrants.addAll(accessTypeDef.getImpliedGrants());
+						}
+					}
+				}
+			}
+
+			return ret;
 		}
 
 		private static class ResourceNameLevel implements Comparable<ResourceNameLevel> {
