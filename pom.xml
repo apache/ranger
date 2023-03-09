@@ -1142,6 +1142,7 @@
                         <exclude>**/src/main/webapp/fonts/**</exclude>
                         <exclude>**/src/main/webapp/libs/**</exclude>
                         <exclude>.git/**</exclude>
+                        <exclude>.github/PULL_REQUEST_TEMPLATE</exclude>
                         <exclude>.pc/**</exclude>
                         <exclude>debian/**</exclude>
                         <exclude>.gitignore/**</exclude>
