@@ -18,8 +18,7 @@
  */
 
 import React from "react";
-import ReactDOM from "react-dom";
-
+import ReactDOMClient from 'react-dom/client';
 import App from "./App";
 
 import "bootstrap/dist/css/bootstrap.css";
@@ -28,4 +27,10 @@ import "react-toastify/dist/ReactToastify.css";
 import "react-datetime/css/react-datetime.css";
 import "./styles/style.css";
 
-ReactDOM.render(<App />, document.getElementById("app"));
+const container = document.getElementById('app');
+
+// Create a root.
+const root = ReactDOMClient.createRoot(container);
+
+// Render an element to the root.
+root.render(<App />);
