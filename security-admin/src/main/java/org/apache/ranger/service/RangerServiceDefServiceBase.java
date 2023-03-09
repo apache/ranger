@@ -128,6 +128,8 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			serviceDef.setAccessTypes(accessTypes);
 		}
 
+		serviceDef.setMarkerAccessTypes(ServiceDefUtil.getMarkerAccessTypes(serviceDef.getAccessTypes()));
+
 		List<XXPolicyConditionDef> xPolicyConditions = daoMgr.getXXPolicyConditionDef()
 				.findByServiceDefId(serviceDefId);
 		if (!stringUtil.isEmpty(xPolicyConditions)) {

@@ -53,6 +53,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerRole;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.service.RangerAuditFields;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.XGroupService;
@@ -227,6 +228,10 @@ public class PolicyRefUpdater {
 		}
 
 		List<XXPolicyRefAccessType> xPolAccesses = new ArrayList<>();
+
+		// ignore built-in access-types while creating ref-table entries
+		accessTypes.removeAll(ServiceDefUtil.ACCESS_TYPE_MARKERS);
+
 		for (String accessType : accessTypes) {
 			XXAccessTypeDef xAccTypeDef = daoMgr.getXXAccessTypeDef().findByNameAndServiceId(accessType, xPolicy.getService());
 

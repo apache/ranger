@@ -48,14 +48,38 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public class ServiceDefUtil {
     private static final Logger LOG = LoggerFactory.getLogger(ServiceDefUtil.class);
 
     private static final String USER_STORE_ENRICHER = RangerUserStoreEnricher.class.getCanonicalName();
+
+
+    public static final String ACCESS_TYPE_MARKER_CREATE = "_CREATE";
+    public static final String ACCESS_TYPE_MARKER_READ   = "_READ";
+    public static final String ACCESS_TYPE_MARKER_UPDATE = "_UPDATE";
+    public static final String ACCESS_TYPE_MARKER_DELETE = "_DELETE";
+    public static final String ACCESS_TYPE_MARKER_MANAGE = "_MANAGE";
+    public static final String ACCESS_TYPE_MARKER_ALL    = "_ALL";
+    public static final Set<String> ACCESS_TYPE_MARKERS;
+
+    static {
+        Set<String> typeMarkers = new LinkedHashSet<>();
+
+        typeMarkers.add(ACCESS_TYPE_MARKER_CREATE);
+        typeMarkers.add(ACCESS_TYPE_MARKER_READ);
+        typeMarkers.add(ACCESS_TYPE_MARKER_UPDATE);
+        typeMarkers.add(ACCESS_TYPE_MARKER_DELETE);
+        typeMarkers.add(ACCESS_TYPE_MARKER_MANAGE);
+        typeMarkers.add(ACCESS_TYPE_MARKER_ALL);
+
+        ACCESS_TYPE_MARKERS = Collections.unmodifiableSet(typeMarkers);
+    }
 
     public static boolean getOption_enableDenyAndExceptionsInPolicies(RangerServiceDef serviceDef, RangerPluginContext pluginContext) {
         boolean ret = false;
@@ -204,65 +228,67 @@ public class ServiceDefUtil {
     }
 
     public static RangerServiceDef normalizeAccessTypeDefs(RangerServiceDef serviceDef, final String componentType) {
-
         if (serviceDef != null && StringUtils.isNotBlank(componentType)) {
+            normalizeAccessTypeDefs(serviceDef.getAccessTypes(), componentType);
+            normalizeAccessTypeDefs(serviceDef.getMarkerAccessTypes(), componentType);
 
-            List<RangerServiceDef.RangerAccessTypeDef> accessTypeDefs = serviceDef.getAccessTypes();
+            if (serviceDef.getDataMaskDef() != null) {
+                normalizeAccessTypeDefs(serviceDef.getDataMaskDef().getAccessTypes(), componentType);
+            }
 
-            if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
-
-                String prefix = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
-
-                List<RangerServiceDef.RangerAccessTypeDef> unneededAccessTypeDefs = null;
-
-                for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
-
-                    String accessType = accessTypeDef.getName();
-
-                    if (StringUtils.startsWith(accessType, prefix)) {
-
-                        String newAccessType = StringUtils.removeStart(accessType, prefix);
-
-                        accessTypeDef.setName(newAccessType);
-
-                        Collection<String> impliedGrants = accessTypeDef.getImpliedGrants();
-
-                        if (CollectionUtils.isNotEmpty(impliedGrants)) {
-
-                            Collection<String> newImpliedGrants = null;
-
-                            for (String impliedGrant : impliedGrants) {
-
-                                if (StringUtils.startsWith(impliedGrant, prefix)) {
-
-                                    String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
-
-                                    if (newImpliedGrants == null) {
-                                        newImpliedGrants = new ArrayList<>();
-                                    }
-
-                                    newImpliedGrants.add(newImpliedGrant);
-                                }
-                            }
-                            accessTypeDef.setImpliedGrants(newImpliedGrants);
-
-                        }
-                    } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
-                        if(unneededAccessTypeDefs == null) {
-                            unneededAccessTypeDefs = new ArrayList<>();
-                        }
-
-                        unneededAccessTypeDefs.add(accessTypeDef);
-                    }
-                }
-
-                if(unneededAccessTypeDefs != null) {
-                    accessTypeDefs.removeAll(unneededAccessTypeDefs);
-                }
+            if (serviceDef.getRowFilterDef() != null) {
+                normalizeAccessTypeDefs(serviceDef.getRowFilterDef().getAccessTypes(), componentType);
             }
         }
 
         return serviceDef;
+    }
+
+    private static void normalizeAccessTypeDefs(List<RangerAccessTypeDef> accessTypeDefs, String componentType) {
+        if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
+            String                    prefix                 = componentType + AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR;
+            List<RangerAccessTypeDef> unneededAccessTypeDefs = null;
+
+            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+                String accessType = accessTypeDef.getName();
+
+                if (StringUtils.startsWith(accessType, prefix)) {
+                    String newAccessType = StringUtils.removeStart(accessType, prefix);
+
+                    accessTypeDef.setName(newAccessType);
+                } else if (StringUtils.contains(accessType, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                    if (unneededAccessTypeDefs == null) {
+                        unneededAccessTypeDefs = new ArrayList<>();
+                    }
+
+                    unneededAccessTypeDefs.add(accessTypeDef);
+
+                    continue;
+                }
+
+                Collection<String> impliedGrants = accessTypeDef.getImpliedGrants();
+
+                if (CollectionUtils.isNotEmpty(impliedGrants)) {
+                    Set<String> newImpliedGrants = new HashSet<>();
+
+                    for (String impliedGrant : impliedGrants) {
+                        if (StringUtils.startsWith(impliedGrant, prefix)) {
+                            String newImpliedGrant = StringUtils.removeStart(impliedGrant, prefix);
+
+                            newImpliedGrants.add(newImpliedGrant);
+                        } else if (!StringUtils.contains(impliedGrant, AbstractServiceStore.COMPONENT_ACCESSTYPE_SEPARATOR)) {
+                            newImpliedGrants.add(impliedGrant);
+                        }
+                    }
+
+                    accessTypeDef.setImpliedGrants(newImpliedGrants);
+                }
+            }
+
+            if (unneededAccessTypeDefs != null) {
+                accessTypeDefs.removeAll(unneededAccessTypeDefs);
+            }
+        }
     }
 
     private static void normalizeDataMaskDef(RangerServiceDef serviceDef) {
@@ -579,6 +605,76 @@ public class ServiceDefUtil {
                 addUserStoreEnricher(policies, retrieverClassName, retrieverPollIntMs);
 
                 ret = true;
+            }
+        }
+
+        return ret;
+    }
+
+    public static List<RangerAccessTypeDef> getMarkerAccessTypes(List<RangerAccessTypeDef> accessTypeDefs) {
+        List<RangerAccessTypeDef> ret              = new ArrayList<>();
+        Map<String, Set<String>>  markerTypeGrants = getMarkerAccessTypeGrants(accessTypeDefs);
+        long                      maxItemId        = getMaxItemId(accessTypeDefs);
+
+        for (String accessTypeMarker : ACCESS_TYPE_MARKERS) {
+            RangerAccessTypeDef accessTypeDef = new RangerAccessTypeDef(++maxItemId, accessTypeMarker, accessTypeMarker, null, markerTypeGrants.get(accessTypeMarker));
+
+            ret.add(accessTypeDef);
+        }
+
+        return ret;
+    }
+
+    private static Map<String, Set<String>> getMarkerAccessTypeGrants(List<RangerAccessTypeDef> accessTypeDefs) {
+        Map<String, Set<String>> ret = new HashMap<>();
+
+        for (String accessTypeMarker : ACCESS_TYPE_MARKERS) {
+            ret.put(accessTypeMarker, new HashSet<>());
+        }
+
+        if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
+            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+                if (accessTypeDef == null || StringUtils.isBlank(accessTypeDef.getName()) || ACCESS_TYPE_MARKERS.contains(accessTypeDef.getName())) {
+                    continue;
+                }
+
+                addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_ALL));
+
+                if (accessTypeDef.getCategory() == null) {
+                    continue;
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.CREATE) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_CREATE));
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.READ) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_READ));
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.UPDATE) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_UPDATE));
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.DELETE) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_DELETE));
+                } else if (accessTypeDef.getCategory() == RangerAccessTypeDef.AccessTypeCategory.MANAGE) {
+                    addToMarkerGrants(accessTypeDef, ret.get(ACCESS_TYPE_MARKER_MANAGE));
+                }
+            }
+        }
+
+        return ret;
+    }
+
+    private static void addToMarkerGrants(RangerAccessTypeDef accessTypeDef, Set<String> markerGrants) {
+        markerGrants.add(accessTypeDef.getName());
+
+        if (CollectionUtils.isNotEmpty(accessTypeDef.getImpliedGrants())) {
+            markerGrants.addAll(accessTypeDef.getImpliedGrants());
+        }
+    }
+
+    private static long getMaxItemId(List<RangerAccessTypeDef> accessTypeDefs) {
+        long ret = -1;
+
+        if (CollectionUtils.isNotEmpty(accessTypeDefs)) {
+            for (RangerAccessTypeDef accessTypeDef : accessTypeDefs) {
+                if (accessTypeDef.getItemId() != null && ret < accessTypeDef.getItemId()) {
+                    ret = accessTypeDef.getItemId();
+                }
             }
         }
 

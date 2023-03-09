@@ -482,6 +482,13 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngin_markerAccessTypes() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_marker_access_types.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);

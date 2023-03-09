@@ -100,10 +100,10 @@ public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
     }
 
     @Override
-    protected void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef) {
-        super.preprocessPolicy(policy, serviceDef);
+    protected void preprocessPolicy(RangerPolicy policy, RangerServiceDef serviceDef, RangerPolicyEngineOptions options) {
+        super.preprocessPolicy(policy, serviceDef, options);
 
-        Map<String, Collection<String>> impliedAccessGrants = getImpliedAccessGrants(serviceDef);
+        Map<String, Collection<String>> impliedAccessGrants = options.getServiceDefHelper().getImpliedAccessGrants();
 
         if (impliedAccessGrants == null || impliedAccessGrants.isEmpty()) {
             return;

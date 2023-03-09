@@ -415,6 +415,18 @@ public class RangerPolicyValidator extends RangerValidator {
 					for(RangerAccessTypeDef rangerAccessTypeDef:serviceDef.getRowFilterDef().getAccessTypes()){
 						rowFilterAccessTypeDefNames.add(rangerAccessTypeDef.getName().toLowerCase());
 					}
+
+					if (serviceDef.getMarkerAccessTypes() != null) {
+						for (RangerAccessTypeDef accessTypeDef : serviceDef.getMarkerAccessTypes()) {
+							if (accessTypeDef == null || accessTypeDef.getImpliedGrants() == null) {
+								continue;
+							}
+
+							if (CollectionUtils.containsAny(accessTypeDef.getImpliedGrants(), rowFilterAccessTypeDefNames)) {
+								rowFilterAccessTypeDefNames.add(accessTypeDef.getName());
+							}
+						}
+					}
 				}
 			}
 
@@ -444,6 +456,18 @@ public class RangerPolicyValidator extends RangerValidator {
 				if(!CollectionUtils.isEmpty(serviceDef.getDataMaskDef().getAccessTypes())){
 					for(RangerAccessTypeDef rangerAccessTypeDef:serviceDef.getDataMaskDef().getAccessTypes()){
 						dataMaskAccessTypeDefNames.add(rangerAccessTypeDef.getName().toLowerCase());
+					}
+
+					if (serviceDef.getMarkerAccessTypes() != null) {
+						for (RangerAccessTypeDef accessTypeDef : serviceDef.getMarkerAccessTypes()) {
+							if (accessTypeDef == null || accessTypeDef.getImpliedGrants() == null) {
+								continue;
+							}
+
+							if (CollectionUtils.containsAny(accessTypeDef.getImpliedGrants(), dataMaskAccessTypeDefNames)) {
+								dataMaskAccessTypeDefNames.add(accessTypeDef.getName());
+							}
+						}
 					}
 				}
 			}

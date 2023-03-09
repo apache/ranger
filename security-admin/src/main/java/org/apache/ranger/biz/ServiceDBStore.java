@@ -71,6 +71,7 @@ import org.apache.ranger.db.XXPolicyDao;
 import org.apache.ranger.entity.XXTagChangeLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefValidator;
 import org.apache.ranger.plugin.model.validation.RangerValidator;
@@ -2975,6 +2976,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (tagServiceDef == null) {
 				throw new Exception("service-def does not exist. id=" + tagServiceDbObj.getType());
 			}
+
+			ServiceDefUtil.normalizeAccessTypeDefs(tagServiceDef, serviceType);
 
 			tagServiceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceId(serviceDbObj.getTagService());
 
