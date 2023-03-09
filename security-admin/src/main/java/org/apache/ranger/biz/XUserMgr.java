@@ -2275,7 +2275,6 @@ public class XUserMgr extends XUserMgrBase {
 		List<XXPortalUserRole> xXPortalUserRoles=xXPortalUserRoleDao.findByUserId(xXPortalUserId);
 
 		XXPolicyDao xXPolicyDao = daoManager.getXXPolicy();
-		List<XXPolicy> xXPolicyList=xXPolicyDao.findByUserId(id);
 		logger.warn("Deleting User : "+vXUser.getName());
 		if (force) {
 			//delete XXGroupUser mapping
@@ -2327,6 +2326,7 @@ public class XUserMgr extends XUserMgrBase {
 				}
 			}
 			//delete XXPolicyItemUserPerm records of user
+			List<XXPolicy> xXPolicyList=xXPolicyDao.findByUserId(id);
 			for(XXPolicy xXPolicy:xXPolicyList){
 				RangerPolicy rangerPolicy = policyService.getPopulatedViewObject(xXPolicy);
 				List<RangerPolicyItem> policyItems = rangerPolicy.getPolicyItems();
@@ -2376,7 +2376,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		} else {
 			boolean hasReferences=false;
-
+			List<XXPolicy> xXPolicyList=xXPolicyDao.findByUserId(id);
 			if(vxGroupUserList!=null && vxGroupUserList.getListSize()>0){
 				hasReferences=true;
 			}
