@@ -318,7 +318,7 @@ public class MetricUtil extends BaseLoader  {
 				case "database" :
 					try {
 						int dbFlavor = RangerBizUtil.getDBFlavor();
-						String dbFlavourType = "Unknow ";
+						String dbFlavourType = "Unknown";
 						if (dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
 							dbFlavourType = "MYSQL ";
 						} else if (dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
@@ -330,10 +330,11 @@ public class MetricUtil extends BaseLoader  {
 						} else if (dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER) {
 							dbFlavourType = "SQLSERVER ";
 						}
+
 						String dbDetail = dbFlavourType + xaBizUtil.getDBVersion();
 						Gson gson = new GsonBuilder().create();
 						final String jsonDBDetail = gson.toJson(dbDetail);
-						System.out.println(jsonDBDetail);
+						logger.info("jsonDBDetail:" + jsonDBDetail);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for database : " + e.getMessage());
 					}
