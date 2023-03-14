@@ -17,14 +17,15 @@
  * under the License.
  */
 
-import React, { useEffect, useReducer, useRef, useState } from "react";
+import React, { useEffect, useReducer, useRef, useState, useCallback } from "react";
 import {
   OverlayTrigger,
   Popover,
   Button,
   Form,
   Row,
-  Col
+  Col,
+  Badge
 } from "react-bootstrap";
 import { findIndex, isArray } from "lodash";
 import { isObject } from "Utils/XAUtils";
@@ -136,7 +137,7 @@ const InputboxComp = (props) => {
       <Form.Group className="mb-3" controlId="expression">
         <Form.Control
           type="text"
-          defaultValue={valRef.current == "" ? null : valRef.current}
+          defaultValue={selectedInputVal == "" ? null : selectedInputVal}
           placeholder="enter expression"
           onChange={(e) => handleChange(e)}
         />
@@ -150,7 +151,7 @@ const CreatableSelectNew = (props) => {
   const [selectedInputVal, setSelectVal] = useState(value);
   const handleChange = (e) => {
     valRef.current = e;
-    setSelectVal(valRef.current);
+    setSelectVal(e);
   };
 
   return (
@@ -160,13 +161,13 @@ const CreatableSelectNew = (props) => {
         <CreatableSelect
           {...selectProps}
           defaultValue={
-            valRef.current == ""
+            selectedInputVal == ""
               ? null
-              : !isArray(valRef.current)
-                ? valRef.current["ip-range"]
+              : !isArray(selectedInputVal)
+                ? selectedInputVal["ip-range"]
                   .split(", ")
                   .map((obj) => ({ label: obj, value: obj }))
-                : valRef.current
+                : selectedInputVal
           }
           onChange={(e) => handleChange(e)}
           placeholder="enter expression"
@@ -196,7 +197,7 @@ const CustomCondition = (props) => {
     valRef.current[key] = val;
   };
   const selectHandleChange = (e, name) => {
-    setCondSelect(e);
+      setCondSelect(e);
     tagAccessData(e?.value || null, name);
   };
   const textAreaHandleChange = (e, name) => {
@@ -217,6 +218,16 @@ const CustomCondition = (props) => {
     }
     return value;
   };
+  const expressionVal = (val) => {
+    let value = null;
+   if(val?.expression !== undefined){
+    return value = val.expression;
+   }
+   if(val != "" && typeof(val) != "object"){
+    return value = val
+   }
+    return value;
+  };
   return (
     <>
       {conditionDefVal?.length > 0 &&
@@ -230,9 +241,9 @@ const CustomCondition = (props) => {
                   isClearable
                   onChange={(e) => selectHandleChange(e, m.name)}
                   value={
-                    value
-                      ? accessedVal(value?.["accessed-after-expiry"])
-                      : accessedVal(valRef?.current?.["accessed-after-expiry"])
+                    selectedCondVal?.value
+                      ? accessedVal(selectedCondVal.value)
+                      : accessedVal(selectedCondVal)
                   }
                 />
               </Form.Group>
@@ -260,7 +271,8 @@ const CustomCondition = (props) => {
                       <Form.Control
                         as="textarea"
                         rows={3}
-                        value={value?.expression || null}
+                        // value={selectedJSCondVal?.expression !== undefined ? selectedJSCondVal.expression : selectedJSCondVal}
+                        value={expressionVal(selectedJSCondVal)}
                         onChange={(e) => textAreaHandleChange(e, m.name)}
                       />
                     </Col>
@@ -329,6 +341,29 @@ const Editable = (props) => {
   const selectValRef = useRef(null);
   const [state, dispatch] = useReducer(reducer, props, innitialState);
   const { show, value, target } = state;
+  let isListenerAttached = false;
+  
+  const handleClickOutside = (e) => {
+    if (document.getElementById("popover-basic")?.contains(e?.target) == false) {
+          dispatch({
+            type: "SET_POPOVER",
+            show: false,
+            target:null
+          });
+        }
+        e?.stopPropagation()
+  };
+  
+  useEffect(() => {
+    if(!isListenerAttached){
+      document?.addEventListener('mousedown', handleClickOutside);
+      isListenerAttached = true;
+      return;
+  }
+      return () => {
+      document?.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
   const displayValue = () => {
     let val = "--";
@@ -384,21 +419,21 @@ const Editable = (props) => {
         val =
           selectVal && selectVal?.length > 0 ? (
             <>
+              <span className="editable-edit-text">
               {selectVal.map((op, index) => (
-                <h6 className="d-inline mr-1 editable-edit-text " key={index}>
-                  <span className="badge bg-info">{op.label}</span>
-                </h6>
-              ))}
-              <div>
+                  <h6 className="d-inline mr-1" key={index}>
+                  <Badge variant="info">{op.label}</Badge>
+                  </h6>
+                 ))}
+              </span>
                 <Button
-                  className="mg-10 btn-mini"
+                  className="mg-10 mx-auto d-block btn-mini"
                   variant="outline-dark"
                   size="sm"
                   type="button"
                 >
                   <i className="fa-fw fa fa-pencil"></i>
                 </Button>
-              </div>
             </>
           ) : (
             <div className="text-center">
@@ -410,7 +445,7 @@ const Editable = (props) => {
                 Add Permission
               </span>
               <Button
-                className="mg-10 btn-mini"
+                className="mg-10 mx-auto d-block btn-mini"
                 variant="outline-dark"
                 size="sm"
                 type="button"
@@ -423,22 +458,25 @@ const Editable = (props) => {
       } else if (type === TYPE_INPUT) {
         val =
           selectVal && selectVal !== "" ? (
-            <h6 className="d-inline mr-1 editable-edit-text ">
-              <span className="badge bg-info">{selectVal}</span>
-              <Button
-                className="mg-10 btn-mini"
-                variant="outline-dark"
-                size="sm"
-                type="button"
-              >
-                <i className="fa-fw fa fa-pencil"></i>
-              </Button>
-            </h6>
+           <>
+             <span className="editable-edit-text">
+                <h6 className="d-inline mr-1">
+                    <Badge variant="info">{selectVal}</Badge>
+                </h6>
+             </span>
+             <Button
+             className="mg-10 mx-auto d-block btn-mini"
+             variant="outline-dark"
+             size="sm"
+             type="button">
+                  <i className="fa-fw fa fa-pencil"></i>
+            </Button>
+          </>
           ) : (
             <div className="text-center">
               <span className="editable-add-text">Add Row Filter</span>
               <Button
-                className="mg-10 btn-mini"
+                className="mg-10 mx-auto d-block btn-mini"
                 variant="outline-dark"
                 size="sm"
                 type="button"
@@ -450,22 +488,26 @@ const Editable = (props) => {
       } else if (type === TYPE_RADIO) {
         val =
           selectVal && selectVal?.label ? (
-            <h6 className="d-inline mr-1 editable-edit-text ">
-              <span className="badge bg-info">{selectVal.label}</span>
+             <>
+             <span className="editable-edit-text">
+                <h6 className="d-inline mr-1">
+                <Badge variant="info">{selectVal.label}</Badge>
+                </h6>
+             </span>
               <Button
-                className="mg-10 btn-mini"
+                className="mg-10 mx-auto d-block btn-mini"
                 variant="outline-dark"
                 size="sm"
                 type="button"
               >
                 <i className="fa-fw fa fa-pencil"></i>
               </Button>
-            </h6>
+               </>
           ) : (
             <div className="text-center">
               <span className="editable-add-text">Select Masking Option</span>
               <Button
-                className="mg-10 btn-mini"
+                className="mg-10 mx-auto d-block  btn-mini"
                 variant="outline-dark"
                 size="sm"
                 type="button"
@@ -478,14 +520,15 @@ const Editable = (props) => {
         if (selectVal?.["accessed-after-expiry"] || selectVal?.expression) {
           val = (
             <h6>
+              {(selectVal?.["accessed-after-expiry"] !== undefined && selectVal?.["accessed-after-expiry"] !== null) &&
               <div className="badge badge-dark">
-                {`Accessed after expiry_date (yes/no) : ${selectVal?.["accessed-after-expiry"] || null
-                  } `}
-              </div>
-              <div className="editable-label">{`Boolean expression : ${selectVal?.expression || null
-                }`}</div>
+                {`Accessed after expiry_date (yes/no) : ${selectVal?.["accessed-after-expiry"]}`}
+              </div>}
+              {(selectVal?.expression !==  undefined && selectVal?.expression !== "") &&
+              <div className="editable-label">{`Boolean expression : ${selectVal?.expression}`}
+              </div>}
               <Button
-                className="mg-10 btn-mini"
+                className="mg-10 mx-auto d-block btn-mini"
                 variant="outline-dark"
                 size="sm"
                 type="button"
@@ -499,7 +542,7 @@ const Editable = (props) => {
             <div className="text-center">
               <span className="editable-add-text">Add Conditions</span>
               <Button
-                className="mg-10 btn-mini"
+                className="mg-10 mx-auto d-block btn-mini"
                 variant="outline-dark"
                 size="sm"
                 type="button"
@@ -528,6 +571,7 @@ const Editable = (props) => {
     } else {
       initialLoad.current = false;
     }
+    type === TYPE_CUSTOM  ? selectValRef.current = {...editableValue} :
     selectValRef.current = editableValue;
   }, [editableValue]);
 
@@ -616,7 +660,7 @@ const Editable = (props) => {
       target: e.target
     });
   };
-
+  
   return (
     <div ref={popoverRef}>
       <OverlayTrigger

@@ -498,9 +498,9 @@ export default function AddUpdatePolicyForm(props) {
           isObject(key.conditions) &&
           serviceCompDetails.name == "tag"
         ) {
+          obj.conditions = [];
           Object.entries(key.conditions).map(([key, value]) => {
             if (!isEmpty(value)) {
-              obj.conditions = [];
               return obj.conditions.push({
                 type: key,
                 values: value?.split(", ")

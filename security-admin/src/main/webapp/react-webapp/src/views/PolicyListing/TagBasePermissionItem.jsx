@@ -18,7 +18,7 @@
  */
 
 import React, { useState } from "react";
-import { Col, Form as FormB, Row, Modal, Button, Table } from "react-bootstrap";
+import { Col, Form as FormB, Row, Modal, Button, Table, Badge } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import Select from "react-select";
 import arrayMutators from "final-form-arrays";
@@ -143,14 +143,14 @@ export default function TagBasePermissionItem(props) {
   };
 
   const handleChange = (e, value, input) => {
-    let val = input.value || [];
+    let val = [...input.value] || [];
     if (e.target.checked) {
       val.push(value);
     } else {
       let index = indexOf(val, value);
       val.splice(index, 1);
     }
-    input.onChange([...val]);
+    input.onChange(val);
   };
 
   const handleSelectAllChange = (e, index, fields) => {
@@ -192,9 +192,18 @@ export default function TagBasePermissionItem(props) {
 
   return (
     <>
-      {inputVal?.value?.tableList?.length > 0 ? (
+      <div className="editable" onClick={()=>{tagPermissionItem(true);}}>
+        {inputVal?.value?.tableList?.length > 0 ? (
+          <div className="text-center">
+            <h6 className="d-inline mr-1 mb-1">
+              <span className="editable-edit-text">
+                {tagAccessTypeDisplayVal(
+                  inputVal?.value?.tableList
+                )}
+              </span>
+            </h6>
         <Button
-          className="mg-10"
+          className="mg-10 mx-auto d-block btn-mini"
           size="sm"
           variant="outline-dark"
           onClick={(e) => {
@@ -204,13 +213,14 @@ export default function TagBasePermissionItem(props) {
         >
           <i className="fa-fw fa fa-pencil"></i>
         </Button>
+        </div>
       ) : (
         <div className="text-center">
           <span className="editable-add-text">Add Permissions</span>
           <div>
             <Button
               size="sm"
-              className="mg-10"
+              className="mg-10 mx-auto d-block btn-mini"
               variant="outline-dark"
               onClick={(e) => {
                 e.stopPropagation();
@@ -221,7 +231,7 @@ export default function TagBasePermissionItem(props) {
             </Button>
           </div>
         </div>
-      )}
+      )}</div>
 
       <Modal
         show={showTagPermissionItem}
