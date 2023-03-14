@@ -72,7 +72,7 @@ define(function(require){
 		},
 		initialize: function(options) {
 			console.log("initialized a RangerPolicyForm Form View");
-			_.extend(this, _.pick(options, 'rangerServiceDefModel', 'rangerService'));
+			_.extend(this, _.pick(options, 'rangerServiceDefModel', 'rangerService', 'rangerServiceDefList'));
     		Backbone.Form.prototype.initialize.call(this, options);
 
 			this.initializeCollection();
@@ -363,7 +363,16 @@ define(function(require){
 			if(enableDenyAndExceptionsInPolicies && this.$el.find(this.ui.isDenyAllElse).find('.toggle-slide').hasClass('active')){
 				this.$el.find(this.ui.denyConditionItems).hide();
 			}
-	
+			var enableDenyAndExceptions = accessType.filter(function(m){
+				if(!_.contains((that.rangerServiceDefList.map(function(m){
+					if(m.get('options').enableDenyAndExceptionsInPolicies == "false"){
+						return m.get("name")
+					}
+				})).filter(Boolean), m.name.substr(0,m.name.indexOf(":")))){
+					return m
+				}
+			})
+
                         that.$('[data-customfields="groupPerms"]').html(new PermissionList({
                                 collection : that.formInputList,
                                 model 	   : that.model,
@@ -377,7 +386,7 @@ define(function(require){
                                 that.$('[data-customfields="groupPermsAllowExclude"]').html(new PermissionList({
                                         collection : that.formInputAllowExceptionList,
                                         model 	   : that.model,
-                                        accessTypes: accessType,
+                                        accessTypes: that.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? accessType : enableDenyAndExceptions,
                                         headerTitle: "",
                                         rangerServiceDefModel : that.rangerServiceDefModel,
                                         rangerPolicyType : that.model.get('policyType')
@@ -386,7 +395,7 @@ define(function(require){
                                 that.$('[data-customfields="groupPermsDeny"]').html(new PermissionList({
                                         collection : that.formInputDenyList,
                                         model 	   : that.model,
-                                        accessTypes: accessType,
+                                        accessTypes: that.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? accessType : enableDenyAndExceptions,
                                         headerTitle: "Deny",
                                         rangerServiceDefModel : that.rangerServiceDefModel,
                                         rangerPolicyType : that.model.get('policyType')
@@ -394,7 +403,7 @@ define(function(require){
                                 that.$('[data-customfields="groupPermsDenyExclude"]').html(new PermissionList({
                                         collection : that.formInputDenyExceptionList,
                                         model 	   : that.model,
-                                        accessTypes: accessType,
+                                        accessTypes: that.rangerServiceDefModel.get('name') != XAEnums.ServiceType.SERVICE_TAG.label ? accessType : enableDenyAndExceptions,
                                         headerTitle: "Deny",
                                         rangerServiceDefModel : that.rangerServiceDefModel,
                                         rangerPolicyType : that.model.get('policyType')
