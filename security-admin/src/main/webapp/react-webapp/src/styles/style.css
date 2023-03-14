@@ -540,8 +540,7 @@ div#center div.letter_container_7 {
   text-decoration: none;
   white-space: normal;
   word-break: break-all;
-  /* border-bottom: dashed 1px #0088cc;
-     */
+  border-bottom: dashed 1px #0088cc;
 }
 
 .editable-add-text {
