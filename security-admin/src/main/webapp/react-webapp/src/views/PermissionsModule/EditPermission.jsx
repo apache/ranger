@@ -26,7 +26,7 @@ import {
   Table,
   Spinner
 } from "react-bootstrap";
-import React, { useEffect, useReducer } from "react";
+import React, { useEffect, useReducer, useRef} from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Loader } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
@@ -87,6 +87,7 @@ function reducer(state, action) {
 const EditPermission = (props) => {
   let { permissionId } = useParams();
   const navigate = useNavigate();
+  const toastId = useRef(null);
   const [permissionState, dispatch] = useReducer(reducer, initialState);
   const {
     loader,
@@ -108,7 +109,8 @@ const EditPermission = (props) => {
       (values.selectGroups && values.selectGroups.length > 0) ||
       (values.selectuser && values.selectuser.length > 0)
     ) {
-      toast.error(
+      toast.dismiss(toastId.current);
+      toastId.current = toast.error(
         "Please add selected user/group to permissions else user/group will not be added."
       );
       return false;
@@ -161,7 +163,8 @@ const EditPermission = (props) => {
         blockUI: false
       });
       navigate("/permissions/models");
-      toast.success("Success! Module Permissions updated successfully");
+      toast.dismiss(toastId.current);
+      toastId.current = toast.success("Success! Module Permissions updated successfully");
     } catch (error) {
       dispatch({
         type: "SET_BLOCK_UI",
@@ -369,8 +372,6 @@ const EditPermission = (props) => {
                                       {" "}
                                       <AsyncSelect
                                         {...input}
-                                        menuPlacement="auto"
-                                        menuPosition="fixed"
                                         className="edit-perm-select"
                                         defaultOptions
                                         filterOption={filterGrpOp}
@@ -393,7 +394,8 @@ const EditPermission = (props) => {
                                             !values.selectGroups ||
                                             values.selectGroups.length === 0
                                           ) {
-                                            toast.error(
+                                            toast.dismiss(toastId.current);
+                                            toastId.current = toast.error(
                                               "Please select group!!"
                                             );
                                             return false;
@@ -440,7 +442,8 @@ const EditPermission = (props) => {
                                             !values.selectuser ||
                                             values.selectuser.length === 0
                                           ) {
-                                            toast.error("Please select user!!");
+                                            toast.dismiss(toastId.current);
+                                            toastId.current = toast.error("Please select user!!");
                                             return false;
                                           }
                                           addInSelectedUsr(values, input);
