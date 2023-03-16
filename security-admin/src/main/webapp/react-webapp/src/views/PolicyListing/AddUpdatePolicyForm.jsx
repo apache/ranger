@@ -818,6 +818,7 @@ export default function AddUpdatePolicyForm(props) {
         url: `plugins/policies/${policyID}`,
         method: "DELETE"
       });
+      setPreventUnblock(true);
       setBlockUI(false);
       toast.dismiss(toastId.current);
       toastId.current = toast.success(" Success! Policy deleted successfully");

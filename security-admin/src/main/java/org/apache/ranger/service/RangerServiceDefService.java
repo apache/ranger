@@ -18,14 +18,19 @@
 package org.apache.ranger.service;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceDef.RangerPolicyConditionDef;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
@@ -33,6 +38,12 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServiceDef, RangerServiceDef> {
+	public static final String PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION = "ranger.servicedef.enableImplicitConditionExpression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_EVALUATOR   = RangerScriptConditionEvaluator.class.getCanonicalName();
+	public static final String IMPLICIT_CONDITION_EXPRESSION_NAME        = "_expression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_LABEL       = "Enter boolean expression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_DESC        = "Boolean expression";
+
 	private final RangerAdminConfig config;
 
 	public RangerServiceDefService() {
@@ -71,6 +82,9 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 			}
 			ret.setOptions(serviceDefOptions);
 		}
+
+		addImplicitConditionExpressionIfNeeded(ret);
+
 		return ret;
 	}
 
@@ -87,5 +101,56 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 
 	public RangerServiceDef getPopulatedViewObject(XXServiceDef xServiceDef) {
 		return this.populateViewBean(xServiceDef);
+	}
+
+
+	boolean addImplicitConditionExpressionIfNeeded(RangerServiceDef serviceDef) {
+		boolean ret                      = false;
+		boolean implicitConditionDefault = PropertiesUtil.getBooleanProperty(PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION, true);
+		boolean implicitConditionEnabled = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_IMPLICIT_CONDITION_EXPRESSION, implicitConditionDefault);
+
+		if (implicitConditionEnabled) {
+			boolean                        exists        = false;
+			Long                           maxItemId     = 0L;
+			List<RangerPolicyConditionDef> conditionDefs = serviceDef.getPolicyConditions();
+
+			if (conditionDefs == null) {
+				conditionDefs = new ArrayList<>();
+			}
+
+			for (RangerPolicyConditionDef conditionDef : conditionDefs) {
+				if (StringUtils.equalsIgnoreCase(conditionDef.getEvaluator(), IMPLICIT_CONDITION_EXPRESSION_EVALUATOR)) {
+					exists = true;
+
+					break;
+				}
+
+				if (conditionDef.getItemId() != null && maxItemId < conditionDef.getItemId()) {
+					maxItemId = conditionDef.getItemId();
+				}
+			}
+
+			if (!exists) {
+				RangerPolicyConditionDef conditionDef = new RangerPolicyConditionDef();
+				Map<String, String>      options      = new HashMap<>();
+
+				options.put("ui.isMultiline", "true");
+
+				conditionDef.setItemId(maxItemId + 1);
+				conditionDef.setName(IMPLICIT_CONDITION_EXPRESSION_NAME);
+				conditionDef.setLabel(IMPLICIT_CONDITION_EXPRESSION_LABEL);
+				conditionDef.setDescription(IMPLICIT_CONDITION_EXPRESSION_DESC);
+				conditionDef.setEvaluator(IMPLICIT_CONDITION_EXPRESSION_EVALUATOR);
+				conditionDef.setEvaluatorOptions(options);
+
+				conditionDefs.add(conditionDef);
+
+				serviceDef.setPolicyConditions(conditionDefs);
+
+				ret = true;
+			}
+		}
+
+		return ret;
 	}
 }

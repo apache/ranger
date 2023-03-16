@@ -278,7 +278,7 @@ public class PublicAPIsv2 {
 			serviceDef.setGuid(existingServiceDef.getGuid());
 		}
 
-		return serviceREST.updateServiceDef(serviceDef, null);
+		return serviceREST.updateServiceDef(serviceDef, serviceDef.getId());
 	}
 
 	/*

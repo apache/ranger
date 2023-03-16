@@ -357,25 +357,28 @@ public abstract class BaseDao<T> {
 
 	public String getDBVersion(){
 		String dbVersion="Not Available";
+		int dbFlavor = RangerBizUtil.getDBFlavor();
 		String query ="SELECT 1";
 		try{
-			if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_MYSQL) {
+			if(dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
 				query="SELECT version()";
 				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_ORACLE){
-				query="SELECT * from v$version where rownum<2";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_POSTGRES){
+			}else if(dbFlavor == AppConstants.DB_FLAVOR_ORACLE){
+				query="SELECT banner from v$version where rownum<2";
+				dbVersion = (String)getEntityManager().createNativeQuery(query).getSingleResult();
+			}else if(dbFlavor == AppConstants.DB_FLAVOR_POSTGRES){
 				query="SELECT version()";
 				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_SQLSERVER){
+			}else if(dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER){
 				query="SELECT @@version";
 				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_SQLANYWHERE){
+			}else if(dbFlavor == AppConstants.DB_FLAVOR_SQLANYWHERE){
 				query="SELECT @@version";
 				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
 			}
-		}catch(Exception ex){}
+		}catch(Exception ex){
+			logger.error("Error occurred while fetching the DB version.", ex);
+		}
 		return dbVersion;
 	}
 }

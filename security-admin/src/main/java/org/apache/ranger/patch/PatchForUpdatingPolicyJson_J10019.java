@@ -84,6 +84,7 @@ import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
@@ -123,6 +124,9 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 
 	@Autowired
 	XUserMgr xUserMgr;
+
+	@Autowired
+	RangerDataHistService dataHistService;
 
 	private final Map<String, Long>              groupIdMap         = new HashMap<>();
 	private final Map<String, Long>              userIdMap          = new HashMap<>();
@@ -289,6 +293,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             		addAccessDefRef(serviceType, policy.getId(), accesses);
             		addPolicyConditionDefRef(serviceType, policy.getId(), conditions);
             		addDataMaskDefRef(serviceType, policy.getId(), dataMasks);
+			dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_UPDATE);
         	} catch (Exception e) {
 		    logger.error("portPoliry(id=" + policy.getId() +") failed!!");
 		    logger.error("Offending policy:" + policyText);

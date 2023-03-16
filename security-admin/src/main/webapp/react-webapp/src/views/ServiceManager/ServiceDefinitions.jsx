@@ -294,9 +294,7 @@ class ServiceDefinitions extends Component {
       ...theme,
       colors: {
         ...theme.colors,
-        text: "#444444",
-        primary25: "#0b7fad;",
-        primary: "#0b7fad;"
+        primary: "#0081ab",
       }
     };
   };
