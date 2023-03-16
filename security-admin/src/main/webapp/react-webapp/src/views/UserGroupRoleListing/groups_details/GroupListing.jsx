@@ -696,8 +696,7 @@ function Groups() {
                 <div className="d-flex">
                   User's List :
                   <div
-                    className="pl-2 more-less-width text-truncate"
-                    title={showAssociateUserModal.groupName}
+                    className="pl-2 more-less-width"
                   >
                     {showAssociateUserModal.groupName}
                   </div>
