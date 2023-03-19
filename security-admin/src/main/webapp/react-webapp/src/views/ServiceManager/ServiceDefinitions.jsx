@@ -275,7 +275,7 @@ class ServiceDefinitions extends Component {
         method: "delete"
       });
       this.setState({
-        services: this.state.filterServices.filter((s) => s.id !== sid),
+        services: this.state.services.filter((s) => s.id !== sid),
         filterServices: this.state.filterServices.filter((s) => s.id !== sid),
         blockUI: false
       });
