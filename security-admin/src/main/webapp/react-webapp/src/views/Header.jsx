@@ -41,7 +41,8 @@ class Header extends Component {
 
   render() {
     const userProps = getUserProfile();
-    const apiUrl = getBaseUrl() + "apidocs/index.html";
+    const apiUrl = getBaseUrl() + "apidocs/swagger.html";
+    const backboneUrl = getBaseUrl() + "backbone-index.html";
     const loginId = (
       <span className="login-id">
         <i className="fa fa-user-circle fa-lg"></i>
@@ -118,7 +119,6 @@ class Header extends Component {
                   Audit
                 </Nav.Link>
               )}
-
               {hasAccessToTab("Security Zone") && (
                 <React.Fragment>
                   {!isKeyAdmin() && (
@@ -150,7 +150,7 @@ class Header extends Component {
                   )}
                 </React.Fragment>
               )}
-              <>
+              <React.Fragment>
                 {(hasAccessToTab("Users/Groups") ||
                   isAuditor() ||
                   isSystemAdmin()) && (
@@ -173,7 +173,7 @@ class Header extends Component {
                     )}
                   </NavDropdown>
                 )}
-              </>
+              </React.Fragment>
             </Nav>
             <Nav>
               <NavDropdown title={loginId} id="user-dropdown" alignRight>
@@ -184,6 +184,9 @@ class Header extends Component {
                 >
                   <i className="fa fa-user"></i> Profile
                 </NavDropdown.Item>
+                <a class="dropdown-item" href={backboneUrl}>
+                  <i className="fa fa fa-sign-out"></i> Backbone UI
+                </a>
                 <a className="dropdown-item" href={apiUrl} target="_blank">
                   <i className="fa fa-user"></i> API Documentation
                 </a>

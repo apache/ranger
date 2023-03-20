@@ -44,7 +44,8 @@ define(function(require){
     		return {
     			userProfile : this.userProfile,
     			oldUi : localStorage.getItem('setOldUI') == "true" ? false : true ,
-				swaggerUI : urlString+"/apidocs/swagger.html"
+				swaggerUI : urlString+"/apidocs/swagger.html",
+				reactUI : urlString+"/index.html"
     		};
     	},
         
