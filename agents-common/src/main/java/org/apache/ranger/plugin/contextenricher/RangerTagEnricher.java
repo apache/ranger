@@ -78,9 +78,8 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 	private static final Logger PERF_SET_SERVICETAGS_LOG      = RangerPerfTracer.getPerfLogger("tagenricher.setservicetags");
 	private static final Logger PERF_SERVICETAGS_RETRIEVAL_LOG = RangerPerfTracer.getPerfLogger("tagenricher.tags.retrieval");
 
-
 	private static final String TAG_REFRESHER_POLLINGINTERVAL_OPTION = "tagRefresherPollingInterval";
-	public  static final String TAG_RETRIEVER_CLASSNAME_OPTION       = "tagRetrieverClassName";
+	public static final String TAG_RETRIEVER_CLASSNAME_OPTION        = "tagRetrieverClassName";
 	private static final String TAG_DISABLE_TRIE_PREFILTER_OPTION    = "disableTrieLookupPrefilter";
 
 	private RangerTagRefresher                 tagRefresher;
@@ -485,12 +484,19 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 					if (resourceMatcher != null) {
 						for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
 
+							RangerPolicy.RangerPolicyResource policyResource = serviceResource.getResourceElements().get(resourceDef.getName());
+
 							RangerResourceTrie<RangerServiceResourceMatcher> trie = serviceResourceTrie.get(resourceDef.getName());
 
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Trying to add resource-matcher to " + (trie == null ? "new" : "existing") + " trie for " + resourceDef.getName());
+							}
+
 							if (trie != null) {
-								trie.add(serviceResource.getResourceElements().get(resourceDef.getName()), resourceMatcher);
+								trie.add(policyResource, resourceMatcher);
+								trie.wrapUpUpdate();
 								if (LOG.isDebugEnabled()) {
-									LOG.debug("Added resource-matcher for service-resource:[" + serviceResource + "]");
+									LOG.debug("Added resource-matcher for policy-resource:[" + policyResource + "]");
 								}
 							} else {
 								trie = new RangerResourceTrie<>(resourceDef, Collections.singletonList(resourceMatcher), getPolicyEngineOptions().optimizeTagTrieForRetrieval, getPolicyEngineOptions().optimizeTagTrieForSpace, null);
@@ -541,7 +547,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			RangerAccessResourceImpl accessResource = new RangerAccessResourceImpl();
 
 			for (Map.Entry<String, RangerPolicy.RangerPolicyResource> entry : serviceResource.getResourceElements().entrySet()) {
-				accessResource.setValue(entry.getKey(), entry.getValue());
+				accessResource.setValue(entry.getKey(), entry.getValue().getValues());
 			}
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerAccessResource:[" + accessResource + "] created to represent service-resource[" + serviceResource + "] to find evaluators from trie-map");
@@ -747,6 +753,9 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			ret = RangerResourceEvaluatorsRetriever.getEvaluators(serviceResourceTrie, resource.getAsMap(), request.getResourceMatchingScope());
 
 			RangerPerfTracer.logAlways(perf);
+		}
+		if (ret == null) {
+			ret = new ArrayList<>();
 		}
 
 		if(LOG.isDebugEnabled()) {

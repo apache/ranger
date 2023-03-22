@@ -31,6 +31,7 @@ import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
@@ -38,6 +39,7 @@ import java.util.Set;
 public class RangerDefaultRequestProcessor implements RangerAccessRequestProcessor {
 
     private static final Logger PERF_CONTEXTENRICHER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("contextenricher.request");
+    private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultRequestProcessor.class);
 
     protected final PolicyEngine policyEngine;
 
@@ -48,10 +50,16 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
     @Override
     public void preProcess(RangerAccessRequest request) {
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> preProcess(" + request + ")");
+        }
+
         if (RangerAccessRequestUtil.getIsRequestPreprocessed(request.getContext())) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("<== preProcess(" + request + ")");
+            }
             return;
         }
-        RangerAccessRequestUtil.setIsRequestPreprocessed(request.getContext(), Boolean.TRUE);
 
         setResourceServiceDef(request);
 
@@ -97,6 +105,13 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         }
 
         enrich(request);
+
+        RangerAccessRequestUtil.setIsRequestPreprocessed(request.getContext(), Boolean.TRUE);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== preProcess(" + request + ")");
+        }
+
     }
 
     @Override
@@ -115,6 +130,8 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
                 RangerPerfTracer.log(perf);
             }
+        } else {
+            LOG.info("No context-enrichers!!!");
         }
     }
 
