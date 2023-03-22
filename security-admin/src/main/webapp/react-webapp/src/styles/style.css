@@ -1849,7 +1849,11 @@ overflow-x: hidden;
     overflow-x: hidden;
     max-height: 250px;
   }
-
+.pagination-error-field{
+  left: 0;
+  top: 28px;
+  line-height:1.1
+}
 .table-service-scroll tr td:last-child {
     border-bottom: 0;
   }

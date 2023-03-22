@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { forwardRef, useEffect, useRef } from "react";
+import React, { forwardRef, useEffect, useState, useRef } from "react";
 import {
   useTable,
   usePagination,
@@ -161,7 +161,8 @@ function XATableLayout({
       });
     }
   );
-
+  const currentPageValRef = useRef();
+  const [currentPageVal, setCurrentPageVal] = useState("");
   useEffect(() => {
     fetchData({ pageIndex, pageSize, gotoPage, sortBy });
   }, [fetchData, pageIndex, pageSize, gotoPage, !clientSideSorting && sortBy]);
@@ -172,6 +173,21 @@ function XATableLayout({
     }
   }, [selectedFlatRows]);
 
+  const validatePageNumber = (pageVal, pageOptions) => {
+    let error = "";
+    if (!Number.isInteger(Number(currentPageVal))) {
+      error = `Please enter a valid value.`;
+    } else if (pageVal < 1) {
+      error = "Value must be greater than or equal to 1";
+    } else if (pageVal > pageOptions.length) {
+      error = `Value must be less than or equal to ${pageOptions.length}`;
+    }
+    return (
+      <span className="text-danger position-absolute text-left pagination-error-field">
+        {error}
+      </span>
+    );
+  };
   let columnShowHide = [];
   return (
     // apply the table props
@@ -321,10 +337,14 @@ function XATableLayout({
           {totalCount > 25 && (
             <div className="row mt-2">
               <div className="col-md-12 m-b-sm">
-                <div className="text-center">
+                <div className="text-center d-flex justify-content-center align-items-center pb-4">
                   <button
                     title="First"
-                    onClick={() => gotoPage(0)}
+                    onClick={() => {
+                      gotoPage(0);
+                      currentPageValRef.current.value = 1;
+                      setCurrentPageVal(1);
+                    }}
                     disabled={!canPreviousPage}
                     className="pagination-btn-first btn btn-outline-dark btn-sm mr-1"
                   >
@@ -332,7 +352,11 @@ function XATableLayout({
                   </button>
                   <button
                     title="Previous"
-                    onClick={() => previousPage()}
+                    onClick={() => {
+                      currentPageValRef.current.value = pageIndex;
+                      previousPage();
+                      setCurrentPageVal(pageIndex);
+                    }}
                     disabled={!canPreviousPage}
                     className="pagination-btn-previous btn btn-outline-dark btn-sm"
                   >
@@ -347,18 +371,34 @@ function XATableLayout({
                   </span>
                   <span className="mr-1"> | </span>
                   Go to page:{" "}
-                  <input
-                    className="pagination-input"
-                    type="number"
-                    defaultValue={pageIndex + 1}
-                    onChange={(e) => {
-                      const page = e.target.value
-                        ? Number(e.target.value) - 1
-                        : 0;
-                      gotoPage(page);
-                    }}
-                  />
-                  <span className="mr-1"> </span>
+                  <div className="position-relative">
+                    <input
+                      className="pagination-input"
+                      type="number"
+                      ref={currentPageValRef}
+                      defaultValue={pageIndex + 1}
+                      onChange={(e) => {
+                        let currPage = e.target.value;
+                        setCurrentPageVal(currPage);
+                        if (
+                          currPage < 1 ||
+                          currPage > pageOptions.length ||
+                          !Number.isInteger(Number(currPage))
+                        ) {
+                          return (currPage = currPage);
+                        } else {
+                          const page = currPage ? Number(currPage) - 1 : 0;
+                          gotoPage(page);
+                        }
+                      }}
+                    />
+                    {currentPageVal !== "" &&
+                      (currentPageVal < 1 ||
+                        currentPageVal > pageOptions.length ||
+                        !Number.isInteger(Number(currentPageVal))) &&
+                      validatePageNumber(currentPageVal, pageOptions)}
+                    <span className="mr-1"> </span>
+                  </div>
                   <span>
                     <select
                       className="select-pagesize"
@@ -366,6 +406,8 @@ function XATableLayout({
                       onChange={(e) => {
                         gotoPage(0);
                         setPageSize(Number(e.target.value));
+                        setCurrentPageVal(1);
+                        currentPageValRef.current.value = 1;
                       }}
                     >
                       {[25, 50, 75, 100].map((pageSize) => (
@@ -377,14 +419,22 @@ function XATableLayout({
                   </span>
                   <span className="mr-1"> </span>
                   <button
-                    onClick={() => nextPage()}
+                    onClick={() => {
+                      currentPageValRef.current.value = pageIndex + 2;
+                      nextPage();
+                      setCurrentPageVal(pageIndex + 2);
+                    }}
                     className="pagination-btn-previous mr-1 btn btn-outline-dark btn-sm lh-1"
                     disabled={!canNextPage}
                   >
                     {">"}
                   </button>
                   <button
-                    onClick={() => gotoPage(pageCount - 1)}
+                    onClick={() => {
+                      gotoPage(pageCount - 1);
+                      currentPageValRef.current.value = pageCount;
+                      setCurrentPageVal(pageCount);
+                    }}
                     className="pagination-btn-last btn btn-outline btn-sm"
                     disabled={!canNextPage}
                   >
