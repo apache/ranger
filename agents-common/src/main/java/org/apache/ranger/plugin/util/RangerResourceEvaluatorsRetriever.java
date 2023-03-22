@@ -112,7 +112,7 @@ public class RangerResourceEvaluatorsRetriever {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerResourceEvaluatorsRetriever.getEvaluators(" + resource + ") : evaluator:[" + ret + "]");
+            LOG.debug("<== RangerResourceEvaluatorsRetriever.getEvaluators(" + resource + ") : evaluator:[" + ret + "]");
         }
         return ret;
     }
