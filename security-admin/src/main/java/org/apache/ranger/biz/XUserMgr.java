@@ -2614,37 +2614,35 @@ public class XUserMgr extends XUserMgrBase {
 		int ret = 0;
 
 		for (VXUser vXUser : users.getList()) {
-			if (vXUser == null || vXUser.getName() == null
-					|| "null".equalsIgnoreCase(vXUser.getName())
-					|| vXUser.getName().trim().isEmpty()) {
-				logger.warn("Ignoring invalid username " + vXUser==null? null : vXUser.getName());
+			final String userName  = vXUser == null ? null : vXUser.getName();
+			final String firstName = vXUser == null ? null : vXUser.getFirstName();
+
+			if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
+				logger.warn("Ignoring user {}: invalid username", userName);
 				continue;
 			}
 
-			String firstName = vXUser.getFirstName();
-			if (firstName == null || "null".equalsIgnoreCase(firstName)
-					|| firstName.trim().isEmpty()) {
-				logger.warn("Ignoring invalid first name " + vXUser == null ? null : vXUser.getFirstName());
+			if (firstName == null || "null".equalsIgnoreCase(firstName) || firstName.trim().isEmpty()) {
+				logger.warn("Ignoring user {}: invalid firstName {}", userName, firstName);
 				continue;
 			}
 
-			checkAccess(vXUser.getName());
+			checkAccess(userName);
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 			try {
 				txTemplate.execute(new TransactionCallback<Object>() {
 					@Override
 					public Object doInTransaction(TransactionStatus status) {
-						String username = vXUser.getName();
-						VXPortalUser vXPortalUser = userMgr.getUserProfileByLoginId(username);
+						VXPortalUser vXPortalUser = userMgr.getUserProfileByLoginId(userName);
 						if (vXPortalUser == null) {
 							if (logger.isDebugEnabled()) {
-								logger.debug("create user " + username);
+								logger.debug("create user " + userName);
 							}
-							createXUser(vXUser, username);
+							createXUser(vXUser, userName);
 						} else {
 							if (logger.isDebugEnabled()) {
-								logger.debug("Update user " + username);
+								logger.debug("Update user " + userName);
 							}
 							updateXUser(vXUser, vXPortalUser);
 						}
