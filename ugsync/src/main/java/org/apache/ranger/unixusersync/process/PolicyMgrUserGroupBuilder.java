@@ -877,6 +877,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	private XUserInfo addXUserInfo(String aUserName, Map<String, String> otherAttrsMap, String otherAttributes) {
 		XUserInfo xuserInfo = new XUserInfo();
 		xuserInfo.setName(aUserName);
+		xuserInfo.setFirstName(aUserName);
 		xuserInfo.setDescription(aUserName + " - add from Unix box");
 		xuserInfo.setUserSource(SOURCE_EXTERNAL);
 		xuserInfo.setStatus(STATUS_ENABLED);
