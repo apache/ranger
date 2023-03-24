@@ -356,27 +356,24 @@ define(function(require){
                                         label : localization.tt("lbl.roles"),
                                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                                 fromRaw: function (rawValue, model) {
-                                                        return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, 'roles', that.rangerServiceDefModel);
+                                                        return XAUtil.showGroupsOrUsersForPolicy(model, 'roles', that.rangerServiceDefModel);
                                                 }
                                         }),
                                         editable : false,
                                         sortable : false
                                 },
-				policyItems : {
-					reName : 'groupName',
-					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
-					label : localization.tt("lbl.group"),
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue, model) {
-							if(!_.isUndefined(rawValue)){
-                                                                return XAUtil.showGroupsOrUsersForPolicy(rawValue, model, 'groups', that.rangerServiceDefModel);
-							}
-							return '--';
-						}
-					}),
-					editable : false,
-					sortable : false
-				},
+                groups : {
+                    reName : 'groupName',
+                    cell : Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                    label : localization.tt("lbl.group"),
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            return XAUtil.showGroupsOrUsersForPolicy(model, 'groups', that.rangerServiceDefModel);
+                        }
+                    }),
+                    editable : false,
+                    sortable : false
+                },
 				//Hack for backgrid plugin doesn't allow to have same column name 
 				users : {
 					reName : 'userName',
@@ -384,7 +381,7 @@ define(function(require){
 					label : localization.tt("lbl.users"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-                                                                return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, 'users', that.rangerServiceDefModel);
+                                                                return XAUtil.showGroupsOrUsersForPolicy(model, 'users', that.rangerServiceDefModel);
                                                 }
                                         }),
                                         editable : false,
