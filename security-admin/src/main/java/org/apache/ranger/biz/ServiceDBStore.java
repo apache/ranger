@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -1473,6 +1474,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return new PList<RangerServiceDef>(svcDefList.getServiceDefs(), svcDefList.getStartIndex(), svcDefList.getPageSize(), svcDefList.getTotalCount(),
 				svcDefList.getResultSize(), svcDefList.getSortType(), svcDefList.getSortBy());
 
+	}
+	public List<String> findAllServiceDefNamesHavingContextEnrichers() {
+		return daoMgr.getXXServiceDef().findAllHavingEnrichers();
 	}
 
 	@Override
@@ -5267,6 +5271,30 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
         return result;
     }
+
+	/**
+	 * This method returns {@linkplain  java.util.Map map} representing policy count for each service Definition,
+	 * filtered by policy type, if policy type is not valid (null or less than zero) default policy type will
+	 * be used (ie Resource Access)
+	 *
+	 * @param policyType
+	 * @return {@linkplain  java.util.Map map} representing policy count for each service Definition
+	 */
+	public Map<String, Long> getPolicyCountByTypeAndServiceType(Integer policyType) {
+		int type = 0;
+		if ((!Objects.isNull(policyType)) && policyType >= 0) {
+			type = policyType;
+		}
+		return daoMgr.getXXServiceDef().getPolicyCountByType(type);
+	}
+
+	public Map<String, Long> getPolicyCountByDenyConditionsAndServiceDef() {
+		return daoMgr.getXXServiceDef().getPolicyCountByDenyItems();
+	}
+
+	public Map<String, Long> getServiceCountByType() {
+		return daoMgr.getXXServiceDef().getServiceCount();
+	}
 
     public enum METRIC_TYPE {
         USER_GROUP {
