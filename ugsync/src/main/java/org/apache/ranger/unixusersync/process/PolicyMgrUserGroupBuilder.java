@@ -84,6 +84,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	public static final String PM_UPDATE_USERS_ROLES_URI  = "/service/xusers/users/roleassignments";	// PUT
 
 	private static final String PM_UPDATE_DELETED_USERS_URI = "/service/xusers/ugsync/users/visibility";	// POST
+	private static final String PM_UPDATE_DELETED_GROUPS_URI = "/service/xusers/ugsync/groups/visibility";	// POST
 	private static final Pattern USER_OR_GROUP_NAME_VALIDATION_REGEX =
 			Pattern.compile("^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s,._\\-+/@= ]|[\u00C0-\u017F])+$", Pattern.CASE_INSENSITIVE);
 
@@ -1809,11 +1810,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		ClientResponse clientRes = null;
 
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(deletedGroups.keySet(), PM_AUDIT_INFO_URI);
+			response = cookieBasedUploadEntity(deletedGroups.keySet(), PM_UPDATE_DELETED_GROUPS_URI);
 		}
 		else {
 			try {
-				clientRes = ldapUgSyncClient.post(PM_AUDIT_INFO_URI, null, deletedGroups.keySet());
+				clientRes = ldapUgSyncClient.post(PM_UPDATE_DELETED_GROUPS_URI, null, deletedGroups.keySet());
 				if (clientRes != null) {
 					response = clientRes.getEntity(String.class);
 				}
