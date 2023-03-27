@@ -3208,6 +3208,10 @@ public class XUserMgr extends XUserMgrBase {
 		return vXUserList;
 	}
 
+	public Map<String, Long> getUserCountByRole() {
+		return daoManager.getXXPortalUser().getCountByUserRole();
+	}
+
 	private class ExternalUserCreator implements Runnable {
 		private String userName;
 
