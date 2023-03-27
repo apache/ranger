@@ -4720,6 +4720,7 @@ input.textFiledInputPadding:disabled {
 }
 .form-resources.policy-resources .form-control.rosource-boder {
   padding: 0px !important;
+  height: 100%;
 }
 .form-resources.policy-resources .sameLevelDropdown {
   margin-right: 31px !important;
@@ -4733,4 +4734,8 @@ input.textFiledInputPadding:disabled {
 }
 .wrap.position-relative.additional-resource{
   padding: 20px 20px 0px 20px !important;
+}
+.excludeRecursiveSupport {
+  position: absolute;
+  top: 30px;
 }

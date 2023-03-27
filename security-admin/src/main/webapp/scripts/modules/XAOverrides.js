@@ -782,7 +782,7 @@
                   recursiveSupportToggleDiv = '<div class="toggle-xa recursive-toggle '+recursiveTogglePosition+'"" data-js="recursive" style="height: 20px; width: 120px;"><div  class="toggle"></div></div>';
 				  
 				  return _.template(selectTemplate+'<input data-js="resource" type="text">'+
-				    					excludeSupportToggleDiv+''+recursiveSupportToggleDiv);
+									'<div class="excludeRecursiveSupport">'+excludeSupportToggleDiv+''+recursiveSupportToggleDiv+'</div>');
 			  },
 			});
 	  
