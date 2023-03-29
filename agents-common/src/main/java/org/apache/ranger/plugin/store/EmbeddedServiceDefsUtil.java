@@ -49,10 +49,11 @@ public class EmbeddedServiceDefsUtil {
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure";
+	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,gds,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
+	public static final String EMBEDDED_SERVICEDEF_GDS_NAME  = "gds";
 	public static final String EMBEDDED_SERVICEDEF_HDFS_NAME  = "hdfs";
 	public static final String EMBEDDED_SERVICEDEF_HBASE_NAME = "hbase";
 	public static final String EMBEDDED_SERVICEDEF_HIVE_NAME  = "hive";
@@ -124,6 +125,7 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef nestedStructureServiveDef;
 
 	private RangerServiceDef tagServiceDef;
+	private RangerServiceDef gdsServiceDef;
 
 	private final Gson              gsonBuilder;
 	private final RangerAdminConfig config;
@@ -162,8 +164,6 @@ public class EmbeddedServiceDefsUtil {
 			nifiServiceDef  = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_NAME);
 			nifiRegistryServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NIFI_REGISTRY_NAME);
 			atlasServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ATLAS_NAME);
-
-			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
 			wasbServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_WASB_NAME);
 			sqoopServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_SQOOP_NAME);
 			kylinServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KYLIN_NAME);
@@ -174,6 +174,9 @@ public class EmbeddedServiceDefsUtil {
 			ozoneServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_OZONE_NAME);
 			kuduServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
 			nestedStructureServiveDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME);
+
+			tagServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TAG_NAME);
+			gdsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_GDS_NAME);
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
@@ -247,7 +250,6 @@ public class EmbeddedServiceDefsUtil {
 	public long getElasticsearchServiceDefId() {
 		return getId(elasticsearchServiceDef);
 	}
-	public long getTagServiceDefId() { return getId(tagServiceDef); }
 
 	public long getWasbServiceDefId() { return getId(wasbServiceDef); }
 
@@ -262,6 +264,10 @@ public class EmbeddedServiceDefsUtil {
 	public long getKuduServiceDefId() { return getId(kuduServiceDef); }
 
 	public long getNestedStructureServiceDefId() { return getId(nestedStructureServiveDef); }
+
+	public long getTagServiceDefId() { return getId(tagServiceDef); }
+
+	public long getGdsServiceDefId() { return getId(gdsServiceDef); }
 
 	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
 		RangerServiceDef serviceDef=null;

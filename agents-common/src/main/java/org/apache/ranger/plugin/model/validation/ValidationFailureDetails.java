@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.model.validation;
 
+import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,6 +36,10 @@ public class ValidationFailureDetails {
 	final boolean _internalError;
 	final String _reason;
 	final int _errorCode;
+
+	public ValidationFailureDetails(ValidationErrorCode errorCode, String fieldName, Object... errorCodeArgs) {
+		this(errorCode.getErrorCode(), fieldName, null, false, false, false, errorCode.getMessage(errorCodeArgs));
+	}
 
 	public ValidationFailureDetails(int errorCode, String fieldName, String subFieldName, boolean missing, boolean semanticError, boolean internalError, String reason) {
 		_errorCode = errorCode;

@@ -536,6 +536,13 @@
 				obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
 	</named-query>
 
+	<named-query name="XXAccessTypeDef.getNamesByServiceName">
+		<query>SELECT obj.name FROM XXAccessTypeDef obj, XXService svc
+		        WHERE svc.name = :serviceName
+		          AND svc.type = obj.defId
+		</query>
+	</named-query>
+
 	<!-- XXPolicyConditionDef -->
 	<named-query name="XXPolicyConditionDef.findByServiceDefId">
 		<query>select obj from XXPolicyConditionDef obj where obj.defId = :serviceDefId order by obj.order</query>
@@ -568,6 +575,13 @@
 	<named-query name="XXDataMaskTypeDef.findByNameAndServiceId">
 		<query>select obj from XXDataMaskTypeDef obj, XXService xSvc where
 			obj.name = :name and xSvc.id = :serviceId and obj.defId = xSvc.type</query>
+	</named-query>
+
+	<named-query name="XXDataMaskTypeDef.getNamesByServiceName">
+		<query>SELECT obj.name FROM XXDataMaskTypeDef obj, XXService svc
+		        WHERE svc.name = :serviceName
+		          AND svc.type = obj.defId
+		</query>
 	</named-query>
 
 	<!-- XXServiceConfigMap -->
@@ -2016,4 +2030,132 @@
 		<query>select obj from XXPolicy obj where obj.zoneId = :zoneId</query>
 	</named-query>
 
+	<named-query name="XXGdsDataset.findByGuid">
+		<query>select obj from XXGdsDataset obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsDataset.findByName">
+		<query>select obj from XXGdsDataset obj where obj.name = :name</query>
+	</named-query>
+
+	<!-- GDS -->
+	<named-query name="XXGdsDataset.findByDataShareId">
+		<query>select obj from XXGdsDataset obj, XXGdsDataShareInDataset dsid
+		        where dsid.dataShareId = :dataShareId
+		          and dsid.datasetId   = obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsDataset.findByProjectId">
+		<query>select obj from XXGdsDataset obj, XXGdsDatasetInProject dip
+		        where dip.projectId = :projectId
+		          and dip.datasetId = obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findByGuid">
+		<query>select obj from XXGdsProject obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findByName">
+		<query>select obj from XXGdsProject obj where obj.name = :name</query>
+	</named-query>
+
+	<named-query name="XXGdsProject.findByDatasetId">
+		<query>select obj from XXGdsProject obj, XXGdsDatasetInProject dip
+		        where dip.datasetId = :datasetId
+		          and dip.projectId = obj.id</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByGuid">
+		<query>select obj from XXGdsDataShare obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByName">
+		<query>select obj from XXGdsDataShare obj where obj.name = :name</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByServiceId">
+		<query>select obj from XXGdsDataShare obj where obj.serviceId = :serviceId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByServiceIdAndZoneId">
+		<query>select obj from XXGdsDataShare obj where obj.serviceId = :serviceId and obj.zoneId = :zoneId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShare.findByDatasetId">
+		<query>select obj from XXGdsDataShare obj, XXGdsDataShareInDataset dsd
+		        where dsd.datasetId   = :datasetId
+		          and dsd.dataShareId = obj.id
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByGuid">
+		<query>select obj from XXGdsSharedResource obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByName">
+		<query>select obj from XXGdsSharedResource obj where obj.name = :name</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByServiceId">
+		<query>select obj from XXGdsSharedResource obj, XXGdsDataShare ds
+		            where ds.serviceId = :serviceId
+		              and ds.id        = obj.dataShareId
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByServiceIdAndZoneId">
+		<query>select obj from XXGdsSharedResource obj, XXGdsDataShare ds
+		            where ds.serviceId = :serviceId
+		              and ds.zoneId    = :zoneId
+		              and ds.id        = obj.dataShareId
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.findByDatasetId">
+		<query>select obj from XXGdsSharedResource obj, XXGdsDataShareInDataset dsd
+		        where dsd.datasetId   = :datasetId
+		          and dsd.dataShareId = obj.dataShareId
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsSharedResource.getIdByDataShareIdAndName">
+		<query>select obj.id from XXGdsSharedResource obj
+		        where obj.dataShareId = :dataShareId
+		          and obj.name = :name
+		</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findByGuid">
+		<query>select obj from XXGdsDataShareInDataset obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findByDataShareIdAndDatasetId">
+		<query>select obj from XXGdsDataShareInDataset obj where obj.dataShareId = :dataShareId and obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findByDataShareId">
+		<query>select obj from XXGdsDataShareInDataset obj where obj.dataShareId = :dataShareId</query>
+	</named-query>
+
+	<named-query name="XXGdsDataShareInDataset.findByDatasetId">
+		<query>select obj from XXGdsDataShareInDataset obj where obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetInProject.findByGuid">
+		<query>select obj from XXGdsDatasetInProject obj where obj.guid = :guid</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetInProject.findByDatasetIdAndProjectId">
+		<query>select obj from XXGdsDatasetInProject obj where obj.datasetId = :datasetId and obj.projectId = :projectId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetInProject.findByDatasetId">
+		<query>select obj from XXGdsDatasetInProject obj where obj.datasetId = :datasetId</query>
+	</named-query>
+
+	<named-query name="XXGdsDatasetInProject.findByProjectId">
+		<query>select obj from XXGdsDatasetInProject obj where obj.projectId = :projectId</query>
+	</named-query>
 </entity-mappings>

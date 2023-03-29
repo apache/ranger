@@ -32,6 +32,11 @@ def type_coerce(obj, objType):
 
         if callable(getattr(ret, 'type_coerce_attrs', None)):
             ret.type_coerce_attrs()
+    elif issubclass(objType, enum.Enum):
+        try:
+            ret = objType.value_of(obj)
+        except AttributeError: # value_of() method not defined in Enum class
+            ret = None
     else:
         ret = None
 
@@ -85,6 +90,17 @@ class HttpMethod(enum.Enum):
     POST   = "POST"
     DELETE = "DELETE"
 
+    @classmethod
+    def value_of(cls, val):
+        if isinstance(val, HttpMethod):
+            return val
+        else:
+            for key, member in cls.__members__.items():
+                if val == member.name or val == member.value:
+                    return member
+            else:
+                raise ValueError(f"'{cls.__name__}' enum not found for '{val}'")
+
 
 class HTTPStatus:
     OK                     = 200
@@ -107,4 +123,5 @@ class HTTPStatus:
     INTERNAL_SERVER_ERROR  = 500
     SERVICE_UNAVAILABLE    = 503
 
-
+class StrEnum(str, enum.Enum):
+  """Enum where members are also (and must be) strings"""

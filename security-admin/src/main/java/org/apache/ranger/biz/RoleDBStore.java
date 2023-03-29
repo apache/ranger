@@ -56,11 +56,11 @@ import org.springframework.stereotype.Component;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
+import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_ROLE;
+
 @Component
 public class RoleDBStore implements RoleStore {
     private static final Logger LOG = LoggerFactory.getLogger(RoleDBStore.class);
-
-    private static final String RANGER_ROLE_GLOBAL_STATE_NAME = "RangerRole";
 
     @Autowired
     RangerRoleService roleService;
@@ -382,7 +382,7 @@ public class RoleDBStore implements RoleStore {
             XXServiceVersionInfo xxServiceVersionInfo = daoMgr.getXXServiceVersionInfo().findByServiceName(serviceName);
             ret = (xxServiceVersionInfo != null) ? xxServiceVersionInfo.getRoleVersion() : null;
         } else {
-            ret = daoMgr.getXXGlobalState().getAppDataVersion(RANGER_ROLE_GLOBAL_STATE_NAME);
+            ret = daoMgr.getXXGlobalState().getAppDataVersion(RANGER_GLOBAL_STATE_NAME_ROLE);
         }
 
         return ret;
@@ -475,9 +475,9 @@ public class RoleDBStore implements RoleStore {
     	@Override
     	public void run() {
     		try {
-    			this.daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_ROLE_GLOBAL_STATE_NAME);
+    			this.daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_GLOBAL_STATE_NAME_ROLE);
     		} catch (Exception e) {
-    			LOG.error("Cannot update GlobalState version for state:[" + RANGER_ROLE_GLOBAL_STATE_NAME + "]", e);
+    			LOG.error("Cannot update GlobalState version for state:[" + RANGER_GLOBAL_STATE_NAME_ROLE + "]", e);
     		}
     	}
     }

@@ -95,6 +95,20 @@ public class SearchFilter {
 	public static final String SERVICE_DISPLAY_NAME_PARTIAL	= "serviceDisplayNamePartial";	// search
 	public static final String SERVICE_TYPE_DISPLAY_NAME	= "serviceTypeDisplayName";		// search, sort
 
+	public static final String DATASET_NAME             = "datasetName";          // search, sort
+	public static final String DATASET_ID               = "datasetId";            // search, sort
+	public static final String PROJECT_NAME             = "projectName";          // search, sort
+	public static final String PROJECT_ID               = "projectId";            // search, sort
+	public static final String DATA_SHARE_NAME          = "dataShareName";        // search, sort
+	public static final String DATA_SHARE_ID            = "dataShareId";          // search, sort
+	public static final String SHARED_RESOURCE_NAME     = "sharedResourceName";   // search, sort
+	public static final String SHARED_RESOURCE_ID       = "sharedResourceId";     // search, sort
+	public static final String PROFILE_NAME             = "profileName";          // search
+	public static final String OWNER_NAME               = "ownerName";            // search
+	public static final String OWNER_TYPE               = "ownerType";            // search: valid-values(user, group, role)
+	public static final String DATA_SHARE_IN_DATASET_ID = "dataShareInDatasetId"; // search, sort
+	public static final String DATASET_IN_PROJECT_ID    = "datasetInProjectId";   // search, sort
+
 	private Map<String, String> params;
 	private int                 startIndex;
 	private int                 maxRows    = Integer.MAX_VALUE;

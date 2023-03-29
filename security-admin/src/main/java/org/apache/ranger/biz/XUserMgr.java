@@ -98,10 +98,11 @@ import org.apache.ranger.entity.XXPortalUserRole;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
+import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_USER_GROUP;
+
 @Component
 public class XUserMgr extends XUserMgrBase {
 
-	private static final String RANGER_USER_GROUP_GLOBAL_STATE_NAME = "RangerUserStore";
 	private static final String USER = "User";
 	private static final String GROUP = "Group";
 	private static final int MAX_DB_TRANSACTION_RETRIES = 5;
@@ -2574,7 +2575,7 @@ public class XUserMgr extends XUserMgrBase {
 	}
 
 	public Long getUserStoreVersion() {
-		return daoManager.getXXGlobalState().getAppDataVersion(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		return daoManager.getXXGlobalState().getAppDataVersion(RANGER_GLOBAL_STATE_NAME_USER_GROUP);
 	}
 
 	public Set<UserInfo> getUsers() {
@@ -2677,7 +2678,7 @@ public class XUserMgr extends XUserMgrBase {
 					do {
 						noOfRetries++;
 						try {
-							daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+							daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_GLOBAL_STATE_NAME_USER_GROUP);
 							if (logger.isDebugEnabled()) {
 								logger.debug("createOrUpdateXGroups(): Successfully updated x_ranger_global_state table");
 							}
@@ -3259,7 +3260,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	private void updateUserStoreVersion(String label) {
 		try {
-			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_GLOBAL_STATE_NAME_USER_GROUP);
 		} catch (Exception excp) {
 			logger.error(label + ": userStore version update failed", excp);
 		}

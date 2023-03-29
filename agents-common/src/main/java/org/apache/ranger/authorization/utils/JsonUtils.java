@@ -24,17 +24,31 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.AuditFilter;
+import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 public class JsonUtils {
     private static final Logger LOG = LoggerFactory.getLogger(JsonUtils.class);
+
+    private static final Type TYPE_MAP_STRING_STRING               = new TypeToken<Map<String, String>>() {}.getType();
+    private static final Type TYPE_SET_STRING                      = new TypeToken<Set<String>>() {}.getType();
+    private static final Type TYPE_LIST_STRING                     = new TypeToken<List<String>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_VALIDITY_SCHEDULE   = new TypeToken<List<RangerValiditySchedule>>() {}.getType();
+    private static final Type TYPE_LIST_AUDIT_FILTER               = new TypeToken<List<AuditFilter>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_VALIDITY_RECURRENCE = new TypeToken<List<RangerValidityRecurrence>>() {}.getType();
+    private static final Type TYPE_LIST_RANGER_PRINCIPAL           = new TypeToken<List<RangerPrincipal>>() {}.getType();
+    private static final Type TYPE_MAP_RANGER_MASK_INFO            = new TypeToken<Map<String, RangerPolicyItemDataMaskInfo>>() {}.getType();
+    private static final Type TYPE_MAP_RANGER_POLICY_RESOURCE      = new TypeToken<Map<String, RangerPolicyResource>>() {}.getType();
 
     private static final ThreadLocal<Gson> gson = new ThreadLocal<Gson>() {
         @Override
@@ -100,8 +114,7 @@ public class JsonUtils {
 
         if(StringUtils.isNotEmpty(jsonStr)) {
             try {
-                Type mapType = new TypeToken<Map<String, String>>() {}.getType();
-                ret = gson.get().fromJson(jsonStr, mapType);
+                ret = gson.get().fromJson(jsonStr, TYPE_MAP_STRING_STRING);
             } catch(Exception excp) {
                 LOG.warn("jsonToObject() failed to convert json to object: " + jsonStr, excp);
             }
@@ -110,10 +123,37 @@ public class JsonUtils {
         return ret;
     }
 
+    public static Set<String> jsonToSetString(String jsonStr) {
+        Set<String> ret = null;
+
+        if (StringUtils.isNotEmpty(jsonStr)) {
+            try {
+                ret = gson.get().fromJson(jsonStr, TYPE_SET_STRING);
+            } catch(Exception excp) {
+                LOG.warn("jsonToSetString() failed to convert json to object: " + jsonStr, excp);
+            }
+        }
+
+        return ret;
+    }
+
+    public static List<String> jsonToListString(String jsonStr) {
+        List<String> ret = null;
+
+        if (StringUtils.isNotEmpty(jsonStr)) {
+            try {
+                ret = gson.get().fromJson(jsonStr, TYPE_LIST_STRING);
+            } catch(Exception excp) {
+                LOG.warn("jsonToListString() failed to convert json to object: " + jsonStr, excp);
+            }
+        }
+
+        return ret;
+    }
+
     public static List<RangerValiditySchedule> jsonToRangerValiditySchedule(String jsonStr) {
         try {
-            Type listType = new TypeToken<List<RangerValiditySchedule>>() {}.getType();
-            return gson.get().fromJson(jsonStr, listType);
+            return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_VALIDITY_SCHEDULE);
         } catch (Exception e) {
             LOG.error("Cannot get List<RangerValiditySchedule> from " + jsonStr, e);
             return null;
@@ -122,8 +162,7 @@ public class JsonUtils {
 
     public static List<AuditFilter> jsonToAuditFilterList(String jsonStr) {
         try {
-            Type listType = new TypeToken<List<AuditFilter>>() {}.getType();
-            return gson.get().fromJson(jsonStr, listType);
+            return gson.get().fromJson(jsonStr, TYPE_LIST_AUDIT_FILTER);
         } catch (Exception e) {
             LOG.error("failed to create audit filters from: " + jsonStr, e);
             return null;
@@ -132,9 +171,34 @@ public class JsonUtils {
 
     public static List<RangerValidityRecurrence> jsonToRangerValidityRecurringSchedule(String jsonStr) {
         try {
-            Type listType = new TypeToken<List<RangerValidityRecurrence>>() {
-            }.getType();
-            return gson.get().fromJson(jsonStr, listType);
+            return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_VALIDITY_RECURRENCE);
+        } catch (Exception e) {
+            LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static List<RangerPrincipal> jsonToRangerPrincipalList(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_LIST_RANGER_PRINCIPAL);
+        } catch (Exception e) {
+            LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static Map<String, RangerPolicyItemDataMaskInfo> jsonToMapMaskInfo(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_MAP_RANGER_MASK_INFO);
+        } catch (Exception e) {
+            LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
+            return null;
+        }
+    }
+
+    public static Map<String, RangerPolicyResource> jsonToMapPolicyResource(String jsonStr) {
+        try {
+            return gson.get().fromJson(jsonStr, TYPE_MAP_RANGER_POLICY_RESOURCE);
         } catch (Exception e) {
             LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
             return null;
