@@ -27,7 +27,7 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install python 
 
 ```bash
 > pip install apache-ranger
-> pip install requests-kerberos (If using kerberos for authentication)
+> pip install requests_kerberos (If using kerberos for authentication)
 ```
 
 Verify if apache-ranger client is installed:
