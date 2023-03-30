@@ -1739,6 +1739,10 @@ header {
 .switch-off {
   padding-left: 20px !important;
 }
+.policy-search-info {
+  font-size: 13px;
+}
+
 
 .ranger-navbar .dropdown-item.active,
 .ranger-navbar .dropdown-item:active {

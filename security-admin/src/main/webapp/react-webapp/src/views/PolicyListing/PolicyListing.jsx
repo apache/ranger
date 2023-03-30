@@ -37,7 +37,8 @@ import {
   sortBy,
   find,
   concat,
-  camelCase
+  camelCase,
+  union
 } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import XATableLayout from "Components/XATableLayout";
@@ -57,8 +58,8 @@ import {
   isKeyAdmin,
   isUser
 } from "../../utils/XAUtils";
-import { alertMessage } from "../../utils/XAEnums";
-import { BlockUi, Loader } from "../../components/CommonComponents";
+import { alertMessage, RangerPolicyType, ResourcesOverrideInfoMsg, ServerAttrName} from "../../utils/XAEnums";
+import { BlockUi, CustomPopover, Loader } from "../../components/CommonComponents";
 
 function PolicyListing(props) {
   const { serviceDef } = props;
@@ -655,6 +656,57 @@ function PolicyListing(props) {
     return sortBy(searchFilterOption, ["label"]);
   };
 
+  const getSearchInfoContent = () => {
+    let resources = [];
+    let resourceSearchOpt = [];
+    let serverRsrcAttrName = [];
+    let policySearchInfoMsg = [];
+    if (
+      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType
+    ) {
+      resources = serviceDef.dataMaskDef?.resources || [];
+    } else if (
+      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
+    ) {
+      resources = serviceDef.rowFilterDef?.resources || [];
+    } else {
+      resources = serviceDef?.resources || [];
+    }
+
+    resourceSearchOpt = map(resources, function(resource) {
+      return {
+          'name': resource.name,
+          'label': resource.label,
+          'description':resource.description
+      };
+    });
+
+    serverRsrcAttrName = map(resourceSearchOpt, function(opt) {
+      return {
+        'text': opt.label,
+        'info': !isUndefined(opt?.description) ? opt.description : ResourcesOverrideInfoMsg[opt.name]
+      };
+    });
+
+    policySearchInfoMsg = union(ServerAttrName, serverRsrcAttrName);
+
+    return (
+      <div className="policy-search-info">
+          <p className="m-0">
+          Wildcard searches ( for example using * or ? ) are not currently supported.
+          </p>
+          {policySearchInfoMsg?.map((m, index)=>{
+            return (
+                <p className="m-0" key={index}>
+                  <span className="font-weight-bold">{m.text}: </span>
+                  <span>{m.info}</span>
+                </p>
+            )
+          })}
+      </div>
+    )
+  }
+
   const updateSearchFilter = (filter) => {
     let searchFilterParam = {};
     let searchParam = {};
@@ -717,6 +769,15 @@ function PolicyListing(props) {
                   onTokenAdd={updateSearchFilter}
                   onTokenRemove={updateSearchFilter}
                   defaultSelected={defaultSearchFilterParams}
+                />
+                 <CustomPopover
+                  icon="fa-fw fa fa-info-circle info-icon"
+                  title={
+                    <span style={{fontSize:"14px"}}>Search Filter Hints</span>
+                  }
+                  content={getSearchInfoContent()}
+                  placement="bottom"
+                  trigger={["hover", "focus"]}
                 />
               </Col>
               <Col sm={2}>
