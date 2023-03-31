@@ -17,24 +17,35 @@
  * under the License.
  */
 
-import React, { useState } from "react";
-import { Col, Form as FormB, Row, Modal, Button, Table, Badge } from "react-bootstrap";
+import React, { useState, useContext } from "react";
+import { Form as FormB, Modal, Button, Table, Badge } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import Select from "react-select";
 import arrayMutators from "final-form-arrays";
 import { FieldArray } from "react-final-form-arrays";
-import { groupBy, keys, indexOf, findIndex, isEmpty } from "lodash";
+import {
+  groupBy,
+  keys,
+  indexOf,
+  findIndex,
+  isEmpty,
+  includes,
+  difference
+} from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
+import { Context } from "./AddUpdatePolicyForm";
 
 export default function TagBasePermissionItem(props) {
   const { options, inputVal, formValues, serviceCompDetails, dataMaskIndex } =
     props;
   const [showTagPermissionItem, tagPermissionItem] = useState(false);
+  const context = useContext(Context);
 
   const msgStyles = {
     background: "white",
     color: "black"
   };
+
   const noOptionMsg = (inputValue) => {
     if (
       formValues?.policyType ==
@@ -122,10 +133,39 @@ export default function TagBasePermissionItem(props) {
         }));
       }
     } else {
-      return keys(tagServicePerms).map((m) => ({
-        value: m,
-        label: m.toUpperCase()
-      }));
+      let enableDenyAndExceptions = [];
+      let filterAccessOptions = [];
+      enableDenyAndExceptions = serviceCompDetails?.accessTypes?.filter(
+        (access) => {
+          if (
+            includes(
+              context?.serviceDefs
+                ?.map((servicedef) => {
+                  if (
+                    servicedef?.options?.enableDenyAndExceptionsInPolicies ==
+                    "false"
+                  ) {
+                    return servicedef.name;
+                  }
+                })
+                .filter(Boolean),
+              access.name.substr(0, access.name.indexOf(":"))
+            )
+          ) {
+            return access;
+          }
+        }
+      );
+      filterAccessOptions = groupBy(enableDenyAndExceptions, function (obj) {
+        let val = obj.name;
+        return val.substr(0, val.indexOf(":"));
+      });
+      return difference(keys(tagServicePerms), keys(filterAccessOptions))?.map(
+        (m) => ({
+          value: m,
+          label: m.toUpperCase()
+        })
+      );
     }
   };
 
@@ -192,46 +232,50 @@ export default function TagBasePermissionItem(props) {
 
   return (
     <>
-      <div className="editable" onClick={()=>{tagPermissionItem(true);}}>
+      <div
+        className="editable"
+        onClick={() => {
+          tagPermissionItem(true);
+        }}
+      >
         {inputVal?.value?.tableList?.length > 0 ? (
           <div className="text-center">
             <h6 className="d-inline mr-1 mb-1">
               <span className="editable-edit-text">
-                {tagAccessTypeDisplayVal(
-                  inputVal?.value?.tableList
-                )}
+                {tagAccessTypeDisplayVal(inputVal?.value?.tableList)}
               </span>
             </h6>
-        <Button
-          className="mg-10 mx-auto d-block btn-mini"
-          size="sm"
-          variant="outline-dark"
-          onClick={(e) => {
-            e.stopPropagation();
-            tagPermissionItem(true);
-          }}
-        >
-          <i className="fa-fw fa fa-pencil"></i>
-        </Button>
-        </div>
-      ) : (
-        <div className="text-center">
-          <span className="editable-add-text">Add Permissions</span>
-          <div>
             <Button
-              size="sm"
               className="mg-10 mx-auto d-block btn-mini"
+              size="sm"
               variant="outline-dark"
               onClick={(e) => {
                 e.stopPropagation();
                 tagPermissionItem(true);
               }}
             >
-              <i className="fa-fw fa fa-plus"></i>
+              <i className="fa-fw fa fa-pencil"></i>
             </Button>
           </div>
-        </div>
-      )}</div>
+        ) : (
+          <div className="text-center">
+            <span className="editable-add-text">Add Permissions</span>
+            <div>
+              <Button
+                size="sm"
+                className="mg-10 mx-auto d-block btn-mini"
+                variant="outline-dark"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  tagPermissionItem(true);
+                }}
+              >
+                <i className="fa-fw fa fa-plus"></i>
+              </Button>
+            </div>
+          </div>
+        )}
+      </div>
 
       <Modal
         show={showTagPermissionItem}

@@ -22,7 +22,8 @@ import React, {
   useReducer,
   useRef,
   useState,
-  useContext
+  useContext,
+  createContext
 } from "react";
 import {
   Form as FormB,
@@ -112,6 +113,7 @@ const Condition = ({ when, is, children }) => (
     {({ input: { value } }) => (value === is ? children : null)}
   </Field>
 );
+export const Context = createContext();
 
 export default function AddUpdatePolicyForm(props) {
   let { serviceId, policyType, policyId } = useParams();
@@ -130,12 +132,12 @@ export default function AddUpdatePolicyForm(props) {
   const [showDelete, setShowDelete] = useState(false);
   const [blockUI, setBlockUI] = useState(false);
   const toastId = React.useRef(null);
+  const [serviceDefs, setServiceDefs] = useState([]);
   // usePrompt("Leave screen?", true);
 
   useEffect(() => {
     fetchInitalData();
   }, []);
-
   const showDeleteModal = () => {
     setShowDelete(true);
   };
@@ -234,6 +236,7 @@ export default function AddUpdatePolicyForm(props) {
   };
 
   const fetchInitalData = async () => {
+    await fetchServiceDefs();
     let serviceData = await fetchServiceDetails();
     let serviceCompData = await fetchRangerServiceDefComp(serviceData);
     await fetchUsersData();
@@ -250,6 +253,20 @@ export default function AddUpdatePolicyForm(props) {
       policyData: policyData || null,
       formData: generateFormData(policyData, serviceCompData)
     });
+  };
+
+  const fetchServiceDefs = async () => {
+    let servicetypeResp;
+
+    try {
+      servicetypeResp = await fetchApi({
+        url: `plugins/definitions`
+      });
+    } catch (error) {
+      console.error(`Error occurred while fetching Services! ${error}`);
+    }
+
+    setServiceDefs(servicetypeResp.data.serviceDefs);
   };
 
   const fetchServiceDetails = async () => {
@@ -1444,106 +1461,135 @@ export default function AddUpdatePolicyForm(props) {
                                         fetchRolesData={fetchRolesData}
                                       />
                                     </div>
-                                    <fieldset>
-                                      <p className="wrap-header search-header">
-                                        <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                        Exclude from Allow Conditions:
-                                      </p>
-                                    </fieldset>
-                                    <div className="wrap">
-                                      <PolicyPermissionItem
-                                        serviceDetails={serviceDetails}
-                                        serviceCompDetails={serviceCompDetails}
-                                        formValues={values}
-                                        addPolicyItem={addPolicyItem}
-                                        attrName="allowExceptions"
-                                        fetchUsersData={fetchUsersData}
-                                        fetchGroupsData={fetchGroupsData}
-                                        fetchRolesData={fetchRolesData}
-                                      />
-                                    </div>
+                                    {serviceCompDetails?.options
+                                      ?.enableDenyAndExceptionsInPolicies ==
+                                      "true" && (
+                                      <>
+                                        <fieldset>
+                                          <p className="wrap-header search-header">
+                                            <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+                                            Exclude from Allow Conditions:
+                                          </p>
+                                        </fieldset>
+                                        <div className="wrap">
+                                          <Context.Provider
+                                            value={{ serviceDefs: serviceDefs }}
+                                          >
+                                            <PolicyPermissionItem
+                                              serviceDetails={serviceDetails}
+                                              serviceCompDetails={
+                                                serviceCompDetails
+                                              }
+                                              formValues={values}
+                                              addPolicyItem={addPolicyItem}
+                                              attrName="allowExceptions"
+                                              fetchUsersData={fetchUsersData}
+                                              fetchGroupsData={fetchGroupsData}
+                                              fetchRolesData={fetchRolesData}
+                                            />
+                                          </Context.Provider>
+                                        </div>
+                                      </>
+                                    )}
                                   </>
                                 </Accordion.Collapse>
                               </>
                             </>
                           </Accordion>
                         </div>
-                        <Field
-                          className="form-control"
-                          name="isDenyAllElse"
-                          render={({ input }) => (
-                            <FormB.Group
-                              as={Row}
-                              className="mb-3"
-                              controlId="isDenyAllElse"
-                            >
-                              <FormB.Label column sm={2}>
-                                Deny All Other Accesses: *
-                              </FormB.Label>
-                              <Col sm={1}>
-                                <span style={{ verticalAlign: "sub" }}>
-                                  <BootstrapSwitchButton
-                                    {...input}
-                                    checked={input.value}
-                                    onlabel="True"
-                                    onstyle="primary"
-                                    offlabel="False"
-                                    offstyle="outline-secondary"
-                                    size="xs"
-                                    style="w-100"
-                                    key="isDenyAllElse"
-                                  />
-                                </span>
-                              </Col>
-                            </FormB.Group>
-                          )}
-                        />
-                        <Condition when="isDenyAllElse" is={false}>
-                          <div>
-                            <Accordion defaultActiveKey="0">
-                              <>
-                                <p className="formHeader">
-                                  Deny Conditions:
-                                  <CustomToggle eventKey="0"></CustomToggle>
-                                </p>
-                                <Accordion.Collapse eventKey="0">
+                        {serviceCompDetails?.options
+                          ?.enableDenyAndExceptionsInPolicies == "true" && (
+                          <>
+                            <Field
+                              className="form-control"
+                              name="isDenyAllElse"
+                              render={({ input }) => (
+                                <FormB.Group
+                                  as={Row}
+                                  className="mb-3"
+                                  controlId="isDenyAllElse"
+                                >
+                                  <FormB.Label column sm={2}>
+                                    Deny All Other Accesses: *
+                                  </FormB.Label>
+                                  <Col sm={1}>
+                                    <span style={{ verticalAlign: "sub" }}>
+                                      <BootstrapSwitchButton
+                                        {...input}
+                                        checked={input.value}
+                                        onlabel="True"
+                                        onstyle="primary"
+                                        offlabel="False"
+                                        offstyle="outline-secondary"
+                                        size="xs"
+                                        style="w-100"
+                                        key="isDenyAllElse"
+                                      />
+                                    </span>
+                                  </Col>
+                                </FormB.Group>
+                              )}
+                            />
+                            <Condition when="isDenyAllElse" is={false}>
+                              <div>
+                                <Accordion defaultActiveKey="0">
                                   <>
-                                    <div className="wrap">
-                                      <PolicyPermissionItem
-                                        serviceDetails={serviceDetails}
-                                        serviceCompDetails={serviceCompDetails}
-                                        formValues={values}
-                                        addPolicyItem={addPolicyItem}
-                                        attrName="denyPolicyItems"
-                                        fetchUsersData={fetchUsersData}
-                                        fetchGroupsData={fetchGroupsData}
-                                        fetchRolesData={fetchRolesData}
-                                      />
-                                    </div>
-                                    <fieldset>
-                                      <p className="wrap-header search-header">
-                                        <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
-                                        Exclude from Deny Conditions:
-                                      </p>
-                                    </fieldset>
-                                    <div className="wrap">
-                                      <PolicyPermissionItem
-                                        serviceDetails={serviceDetails}
-                                        serviceCompDetails={serviceCompDetails}
-                                        formValues={values}
-                                        addPolicyItem={addPolicyItem}
-                                        attrName="denyExceptions"
-                                        fetchUsersData={fetchUsersData}
-                                        fetchGroupsData={fetchGroupsData}
-                                        fetchRolesData={fetchRolesData}
-                                      />
-                                    </div>
+                                    <p className="formHeader">
+                                      Deny Conditions:
+                                      <CustomToggle eventKey="0"></CustomToggle>
+                                    </p>
+                                    <Accordion.Collapse eventKey="0">
+                                      <>
+                                        <div className="wrap">
+                                          <Context.Provider
+                                            value={{ serviceDefs: serviceDefs }}
+                                          >
+                                            <PolicyPermissionItem
+                                              serviceDetails={serviceDetails}
+                                              serviceCompDetails={
+                                                serviceCompDetails
+                                              }
+                                              formValues={values}
+                                              addPolicyItem={addPolicyItem}
+                                              attrName="denyPolicyItems"
+                                              fetchUsersData={fetchUsersData}
+                                              fetchGroupsData={fetchGroupsData}
+                                              fetchRolesData={fetchRolesData}
+                                            />
+                                          </Context.Provider>
+                                        </div>
+                                        <fieldset>
+                                          <p className="wrap-header search-header">
+                                            <i className="fa-fw fa fa-exclamation-triangle fa-fw fa fa-1 text-color-red"></i>
+                                            Exclude from Deny Conditions:
+                                          </p>
+                                        </fieldset>
+                                        <div className="wrap">
+                                          <Context.Provider
+                                            value={{ serviceDefs: serviceDefs }}
+                                          >
+                                            <PolicyPermissionItem
+                                              serviceDetails={serviceDetails}
+                                              serviceCompDetails={
+                                                serviceCompDetails
+                                              }
+                                              formValues={values}
+                                              addPolicyItem={addPolicyItem}
+                                              attrName="denyExceptions"
+                                              fetchUsersData={fetchUsersData}
+                                              fetchGroupsData={fetchGroupsData}
+                                              fetchRolesData={fetchRolesData}
+                                            />
+                                          </Context.Provider>
+                                        </div>
+                                      </>
+                                    </Accordion.Collapse>
                                   </>
-                                </Accordion.Collapse>
-                              </>
-                            </Accordion>
-                          </div>
-                        </Condition>
+                                </Accordion>
+                              </div>
+                            </Condition>
+                          </>
+                        )}
                       </div>
                     ) : values.policyType == 1 ? (
                       <div>
