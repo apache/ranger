@@ -449,19 +449,24 @@ export function PolicyViewDetails(props) {
                       </td>
                     )}
 
-                      {!isEmpty(items.accesses)
-                        ?<td className="text-center d-flex flex-wrap policyview-permission-wrap"> {items.accesses.map((obj) => (
-                            <h6 className="d-inline mr-1">
-                              <Badge
-                                variant="info"
-                                className="d-inline mr-1"
-                                key={obj.type}
-                              >
-                                {obj.type}
-                              </Badge>
-                            </h6>
-                          ))}</td>
-                        : <td className="text-center">--</td>}
+                    {!isEmpty(items.accesses) ? (
+                      <td className="text-center d-flex flex-wrap policyview-permission-wrap">
+                        {" "}
+                        {items.accesses.map((obj) => (
+                          <h6 className="d-inline mr-1">
+                            <Badge
+                              variant="info"
+                              className="d-inline mr-1"
+                              key={obj.type}
+                            >
+                              {obj.type}
+                            </Badge>
+                          </h6>
+                        ))}
+                      </td>
+                    ) : (
+                      <td className="text-center">--</td>
+                    )}
 
                     {policyType ==
                       RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
@@ -528,27 +533,31 @@ export function PolicyViewDetails(props) {
       !isEmpty(conditions) && (
         <>
           <p className="form-header">Policy Conditions :</p>
-          <div className="overflow-auto"><Table bordered size="sm" className="table-audit-filter-ready-only">
-            <tbody>
-              {serviceType == "tag" ? (
-                conditions.map((obj) => (
-                  <tr key={obj.type} colSpan="2">
-                    <td width="40%">{getConditionLabel(obj.type)}</td>
-                    <td width="60% text-truncate">{obj.values}</td>
+          <div className="overflow-auto">
+            <Table bordered size="sm" className="table-audit-filter-ready-only">
+              <tbody>
+                {serviceType == "tag" ? (
+                  conditions.map((obj) => (
+                    <tr key={obj.type} colSpan="2">
+                      <td width="40%">{getConditionLabel(obj.type)}</td>
+                      <td width="60% text-truncate">{obj.values}</td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr colSpan="2">
+                    <td width="20%">
+                      {filterServiceDef.policyConditions.map(
+                        (obj) => obj.label
+                      )}
+                    </td>
+                    <td className="text-left">
+                      {conditions.map((val) => val.values).join("")}
+                    </td>
                   </tr>
-                ))
-              ) : (
-                <tr colSpan="2">
-                  <td width="20%">
-                    {filterServiceDef.policyConditions.map((obj) => obj.label)}
-                  </td>
-                  <td className="text-left">
-                    {conditions.map((val) => val.values).join("")}
-                  </td>
-                </tr>
-              )}
-            </tbody>
-            </Table></div>
+                )}
+              </tbody>
+            </Table>
+          </div>
         </>
       )
     );
@@ -660,43 +669,50 @@ export function PolicyViewDetails(props) {
         </>
       )}
 
-      {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
-        <>
-          <p className="form-header">Exclude from Allow Conditions :</p>
-          <div className="overflow-auto">
-            <Table bordered size="sm" className="table-audit-filter-ready-only">
-              {getFilterPolicy(
-                allowExceptions,
-                serviceDef,
-                serviceType,
-                `No policy items of "Exclude from Allow Conditions" are present`
-              )}
-            </Table>
-          </div>
-          <br />
-        </>
-      )}
-      {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
-        <>
-          <b>
-            Deny All Other Accesses :{" "}
-            {isDenyAllElse == false ? (
-              <h6 className="d-inline">
-                <Badge variant="dark">FALSE</Badge>
-              </h6>
-            ) : (
-              <h6 className="d-inline">
-                <Badge variant="dark">TRUE</Badge>
-              </h6>
-            )}
+      {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
+        serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
+          <>
+            <p className="form-header">Exclude from Allow Conditions :</p>
+            <div className="overflow-auto">
+              <Table
+                bordered
+                size="sm"
+                className="table-audit-filter-ready-only"
+              >
+                {getFilterPolicy(
+                  allowExceptions,
+                  serviceDef,
+                  serviceType,
+                  `No policy items of "Exclude from Allow Conditions" are present`
+                )}
+              </Table>
+            </div>
             <br />
-          </b>
+          </>
+        )}
+      {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
+        serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
+          <>
+            <b>
+              Deny All Other Accesses :{" "}
+              {isDenyAllElse == false ? (
+                <h6 className="d-inline">
+                  <Badge variant="dark">FALSE</Badge>
+                </h6>
+              ) : (
+                <h6 className="d-inline">
+                  <Badge variant="dark">TRUE</Badge>
+                </h6>
+              )}
+              <br />
+            </b>
 
-          <br />
-        </>
-      )}
+            <br />
+          </>
+        )}
       {isDenyAllElse == false &&
-        policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
+        policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
+        serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
           <>
             <p className="form-header">Deny Condition :</p>
             <div className="overflow-auto">
@@ -717,7 +733,8 @@ export function PolicyViewDetails(props) {
           </>
         )}
       {isDenyAllElse == false &&
-        policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
+        policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
+        serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
           <>
             <p className="form-header">Exclude from Deny Conditions :</p>
             <div className="overflow-auto">

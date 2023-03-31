@@ -97,7 +97,9 @@ function AccessLogDetail(props) {
               <div className="wrap">
                 <PolicyViewDetails
                   paramsData={access}
-                  serviceDefs={serviceDefs}
+                  serviceDef={serviceDefs?.find((servicedef) => {
+                    return servicedef.name == access.serviceType;
+                  })}
                   policyView={false}
                 />
               </div>
