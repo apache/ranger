@@ -101,9 +101,9 @@ public class KafkaRangerAuthorizerTest {
     			
         zkServer = new TestingServer();
 		zkServer.start() ;
-
+        
         // Get a random port
-		try (ServerSocket serverSocket = new ServerSocket(0)) {
+        try (ServerSocket serverSocket = new ServerSocket(0)) {
 			Assert.assertNotNull(serverSocket) ;
 			port = serverSocket.getLocalPort() ;
 			Assert.assertTrue(port > 0) ;
@@ -114,7 +114,7 @@ public class KafkaRangerAuthorizerTest {
         tempDir = Files.createTempDirectory("kafka");
 
         final Properties props = new Properties();
-        props.put("broker.id", String.valueOf(1)) ;
+        props.put("broker.id", String.valueOf(1));
         props.put("host.name", "localhost");
         props.put("port", String.valueOf(port));
         props.put("log.dir", tempDir.toString());
