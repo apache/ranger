@@ -48,6 +48,7 @@ export default function PolicyPermissionItem(props) {
   } = props;
   const dragItem = useRef();
   const dragOverItem = useRef();
+  const toastId = React.useRef(null);
   let { values, errors, change, error, ...args } = useFormState();
 
   const permList = ["Select Roles", "Select Groups", "Select Users"];
@@ -385,19 +386,6 @@ export default function PolicyPermissionItem(props) {
                           if (serviceCompDetails?.name == "tag") {
                             return (
                               <td key={colName} className="align-middle">
-                                {!isEmpty(
-                                  fields?.value[index]?.accesses?.tableList
-                                ) ? (
-                                  <h6 className="d-inline mr-1 mb-1">
-                                    <span className="editable-edit-text">
-                                      {tagAccessTypeDisplayVal(
-                                        fields.value[index].accesses.tableList
-                                      )}
-                                    </span>
-                                  </h6>
-                                ) : (
-                                  <></>
-                                )}
                                 <Field
                                   className="form-control"
                                   name={`${name}.accesses`}
@@ -513,7 +501,8 @@ export default function PolicyPermissionItem(props) {
                                           size="sm"
                                           type="button"
                                           onClick={() => {
-                                            return toast.warning(
+                                            toast.dismiss(toastId.current);
+                                            return toast.current =toast.warning(
                                               "Please select access type first to enable add masking options."
                                             );
                                           }}
@@ -630,10 +619,9 @@ export default function PolicyPermissionItem(props) {
                         }
                         return <td key={colName}>{colName}</td>;
                       })}
-                      <td>
+                      <td className="align-middle">
                         <Button
                           variant="danger"
-                          className="align-middle"
                           size="sm"
                           title="Remove"
                           onClick={() => fields.remove(index)}

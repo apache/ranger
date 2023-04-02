@@ -37,7 +37,8 @@ import {
   sortBy,
   find,
   concat,
-  camelCase
+  camelCase,
+  union
 } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import XATableLayout from "Components/XATableLayout";
@@ -57,8 +58,8 @@ import {
   isKeyAdmin,
   isUser
 } from "../../utils/XAUtils";
-import { alertMessage } from "../../utils/XAEnums";
-import { BlockUi, Loader } from "../../components/CommonComponents";
+import { alertMessage, RangerPolicyType, ResourcesOverrideInfoMsg, ServerAttrName} from "../../utils/XAEnums";
+import { BlockUi, CustomPopover, Loader } from "../../components/CommonComponents";
 
 function PolicyListing(props) {
   const { serviceDef } = props;
@@ -108,8 +109,6 @@ function PolicyListing(props) {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
       let searchFilterObj = find(getSearchFilterOption(), {
         urlLabel: param
@@ -143,15 +142,6 @@ function PolicyListing(props) {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
 
@@ -301,7 +291,9 @@ function PolicyListing(props) {
     }
     if (policyListingData.length == 1 && currentpageIndex > 1) {
       let page = currentpageIndex - currentpageIndex;
-      resetPage.page(page);
+      if(typeof resetPage?.page === "function"){
+        resetPage.page(page);
+      }
     } else {
       setUpdateTable(moment.now());
     }
@@ -664,21 +656,66 @@ function PolicyListing(props) {
     return sortBy(searchFilterOption, ["label"]);
   };
 
-  const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
+  const getSearchInfoContent = () => {
+    let resources = [];
+    let resourceSearchOpt = [];
+    let serverRsrcAttrName = [];
+    let policySearchInfoMsg = [];
+    if (
+      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType
+    ) {
+      resources = serviceDef.dataMaskDef?.resources || [];
+    } else if (
+      RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
+    ) {
+      resources = serviceDef.rowFilterDef?.resources || [];
+    } else {
+      resources = serviceDef?.resources || [];
+    }
 
+    resourceSearchOpt = map(resources, function(resource) {
+      return {
+          'name': resource.name,
+          'label': resource.label,
+          'description':resource.description
+      };
+    });
+
+    serverRsrcAttrName = map(resourceSearchOpt, function(opt) {
+      return {
+        'text': opt.label,
+        'info': !isUndefined(opt?.description) ? opt.description : ResourcesOverrideInfoMsg[opt.name]
+      };
+    });
+
+    policySearchInfoMsg = union(ServerAttrName, serverRsrcAttrName);
+
+    return (
+      <div className="policy-search-info">
+          <p className="m-0">
+          Wildcard searches ( for example using * or ? ) are not currently supported.
+          </p>
+          {policySearchInfoMsg?.map((m, index)=>{
+            return (
+                <p className="m-0" key={index}>
+                  <span className="font-weight-bold">{m.text}: </span>
+                  <span>{m.info}</span>
+                </p>
+            )
+          })}
+      </div>
+    )
+  }
+
+  const updateSearchFilter = (filter) => {
     let searchFilterParam = {};
     let searchParam = {};
-
     map(filter, function (obj) {
       searchFilterParam[obj.category] = obj.value;
-
       let searchFilterObj = find(getSearchFilterOption(), {
         category: obj.category
       });
-
       let urlLabelParam = searchFilterObj.urlLabel;
-
       if (searchFilterObj.type == "textoptions") {
         let textOptionObj = find(searchFilterObj.options(), {
           value: obj.value
@@ -690,7 +727,9 @@ function PolicyListing(props) {
     });
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    resetPage.page(0);
+    if(typeof resetPage?.page === "function"){
+      resetPage.page(0);
+    }
   };
 
   return (
@@ -730,6 +769,15 @@ function PolicyListing(props) {
                   onTokenAdd={updateSearchFilter}
                   onTokenRemove={updateSearchFilter}
                   defaultSelected={defaultSearchFilterParams}
+                />
+                 <CustomPopover
+                  icon="fa-fw fa fa-info-circle info-icon"
+                  title={
+                    <span style={{fontSize:"14px"}}>Search Filter Hints</span>
+                  }
+                  content={getSearchInfoContent()}
+                  placement="bottom"
+                  trigger={["hover", "focus"]}
                 />
               </Col>
               <Col sm={2}>

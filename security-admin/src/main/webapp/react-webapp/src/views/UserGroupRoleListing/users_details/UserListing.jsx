@@ -66,6 +66,7 @@ function Users() {
   const [userListingData, setUserData] = useState([]);
   const fetchIdRef = useRef(0);
   const selectedRows = useRef([]);
+  const toastId = useRef(null);
   const [showModal, setConfirmModal] = useState(false);
   const [showUserSyncDetails, setUserSyncdetails] = useState({
     syncDteails: {},
@@ -104,8 +105,6 @@ function Users() {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
       let searchFilterObj = find(searchFilterOption, {
         urlLabel: param
@@ -139,15 +138,6 @@ function Users() {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
 
@@ -232,32 +222,45 @@ function Users() {
   const handleSetVisibility = async (e) => {
     if (selectedRows.current.length > 0) {
       let selectedRowData = selectedRows.current;
+      let obj = {};
       for (const { original } of selectedRowData) {
-        if (original.isVisible == e) {
-          toast.warning(
-            e == VisibilityStatus.STATUS_VISIBLE.value
-              ? "Selected user is already visible"
-              : "Selected user is already hidden"
-          );
-        } else {
-          let obj = {};
+        if (original.isVisible != e) {
           obj[original.id] = e;
-          try {
-            await fetchApi({
-              url: "xusers/secure/users/visibility",
-              method: "PUT",
-              data: obj
-            });
-            toast.success("Sucessfully updated Users visibility!!");
-            setUpdateTable(moment.now());
-          } catch (error) {
-            serverError(error);
-            console.log(`Error occurred during set Users visibility! ${error}`);
-          }
         }
       }
+      if (isEmpty(obj)) {
+        toast.dismiss(toastId.current);
+        toastId.current = toast.warning(
+          e == VisibilityStatus.STATUS_VISIBLE.value
+            ? `Selected ${
+                selectedRows.current.length === 1 ? "User is" : "Users are"
+              } already visible`
+            : `Selected ${
+                selectedRows.current.length === 1 ? "User is " : "Users are"
+              } already hidden`
+        );
+        return;
+      }
+      try {
+        await fetchApi({
+          url: "xusers/secure/users/visibility",
+          method: "PUT",
+          data: obj
+        });
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success(
+          `Sucessfully updated ${
+            selectedRows.current.length === 1 ? "User" : "Users"
+          } visibility!!`
+        );
+        setUpdateTable(moment.now());
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred during set User visibility! ${error}`);
+      }
     } else {
-      toast.warning("Please select atleast one user!!");
+      toast.dismiss(toastId.current);
+      toastId.current = toast.warning("Please select atleast one user!!");
     }
   };
 
@@ -285,19 +288,23 @@ function Users() {
             errorMsg +=
               `Error occurred during deleting Users: ${original.name}` + "\n";
           }
-          console.log(errorMsg);
+          console.error(errorMsg);
         }
       }
       if (errorMsg) {
-        toast.error(errorMsg);
+        toast.dismiss(toastId.current);
+        toastId.current = toast.error(errorMsg);
       } else {
-        toast.success("User deleted successfully!");
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success("User deleted successfully!");
         if (
           (userListingData.length == 1 ||
             userListingData.length == selectedRows.current.length) &&
           currentpageIndex > 1
         ) {
-          resetPage.page(0);
+          if (typeof resetPage?.page === "function") {
+            resetPage.page(0);
+          }
         } else {
           setUpdateTable(moment.now());
         }
@@ -314,7 +321,7 @@ function Users() {
           if (rawValue.value) {
             return (
               <Link
-                style={{maxWidth:"100%", display: "inline-block" }}
+                style={{ maxWidth: "100%", display: "inline-block" }}
                 className={`text-truncate ${
                   isAuditor() || isKMSAuditor()
                     ? "disabled-link text-secondary"
@@ -328,19 +335,24 @@ function Users() {
             );
           }
           return "--";
-        },
+        }
       },
       {
         Header: "Email Address",
         accessor: "emailAddress", // accessor is the "key" in the data
         Cell: (rawValue) => {
           if (rawValue.value) {
-            return <div style={{maxWidth:"100%", display: "inline-block" }}
-                         className="text-truncate"  title={rawValue.value}>
-                          {rawValue.value}
-                   </div>;
+            return (
+              <div
+                style={{ maxWidth: "100%", display: "inline-block" }}
+                className="text-truncate"
+                title={rawValue.value}
+              >
+                {rawValue.value}
+              </div>
+            );
           } else return <div className="text-center">--</div>;
-        },
+        }
       },
       {
         Header: "Role",
@@ -356,11 +368,11 @@ function Users() {
           }
           return <div className="textt-center">--</div>;
         },
-        width:70
+        width: 70
       },
       {
         Header: "User Source",
-        accessor: "userSource", // accessor is the "key" in the data
+        accessor: "userSource",
         Cell: (rawValue) => {
           if (rawValue.value !== null && rawValue.value !== undefined) {
             if (rawValue.value == UserSource.XA_PORTAL_USER.value)
@@ -381,7 +393,7 @@ function Users() {
               );
           } else return "--";
         },
-        width:70
+        width: 70
       },
       {
         Header: "Sync Source",
@@ -395,7 +407,7 @@ function Users() {
             <div className="text-center">--</div>
           );
         },
-        width:100
+        width: 100
       },
       {
         Header: "Groups",
@@ -419,7 +431,7 @@ function Users() {
           } else {
             return "--";
           }
-        },
+        }
       },
       {
         Header: "Visibility",
@@ -444,7 +456,7 @@ function Users() {
               );
           } else return <div className="text-center">--</div>;
         },
-        width:70
+        width: 70
       },
       {
         Header: "Sync Details",
@@ -471,8 +483,8 @@ function Users() {
           } else {
             return <div className="text-center">--</div>;
           }
-      },
-      width:80
+        },
+        width: 80
       }
     ],
     []
@@ -582,20 +594,14 @@ function Users() {
   ];
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
     let searchFilterParam = {};
     let searchParam = {};
-
     map(filter, function (obj) {
       searchFilterParam[obj.category] = obj.value;
-
       let searchFilterObj = find(searchFilterOption, {
         category: obj.category
       });
-
       let urlLabelParam = searchFilterObj.urlLabel;
-
       if (searchFilterObj.type == "textoptions") {
         let textOptionObj = find(searchFilterObj.options(), {
           value: obj.value
@@ -607,7 +613,9 @@ function Users() {
     });
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    resetPage.page(0);
+    if (typeof resetPage?.page === "function") {
+      resetPage.page(0);
+    }
   };
 
   return (

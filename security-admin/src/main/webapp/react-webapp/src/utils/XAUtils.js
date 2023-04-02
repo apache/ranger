@@ -1130,8 +1130,6 @@ export const fetchSearchFilterParams = (
 
   // Get search filter params from current search params
   const currentParams = Object.fromEntries([...searchParams]);
-  console.log("PRINT current search params : ", currentParams);
-
   for (const param in currentParams) {
     let searchFilterObj = find(searchFilterOptions, {
       urlLabel: param
@@ -1159,8 +1157,6 @@ export const fetchSearchFilterParams = (
   // Get search filter params from localStorage
   if (isEmpty(searchFilterParam)) {
     const localStorageParams = JSON.parse(localStorage.getItem(auditTabName));
-    console.log("PRINT available localStorage : ", localStorageParams);
-
     if (!isNull(localStorageParams) && !isEmpty(localStorageParams)) {
       for (const localParam in localStorageParams) {
         let searchFilterObj = find(searchFilterOptions, {
@@ -1188,17 +1184,6 @@ export const fetchSearchFilterParams = (
       }
     }
   }
-
-  console.log("PRINT Final searchFilterParam to server : ", searchFilterParam);
-  console.log(
-    "PRINT Final defaultSearchFilterParam to tokenzier : ",
-    defaultSearchFilterParam
-  );
-  console.log(
-    "PRINT Final available localStorage is : ",
-    localStorage.getItem(auditTabName)
-  );
-
   finalSearchFilterData["searchFilterParam"] = searchFilterParam;
   finalSearchFilterData["defaultSearchFilterParam"] = defaultSearchFilterParam;
   finalSearchFilterData["searchParam"] = { ...currentParams, ...searchParam };

@@ -49,7 +49,7 @@ import {
   isKMSAuditor,
   serverError
 } from "Utils/XAUtils";
-import { find, isUndefined, map } from "lodash";
+import { find, isUndefined, map, isEmpty } from "lodash";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import {
   BlockUi,
@@ -65,6 +65,7 @@ function Groups() {
   const [totalCount, setTotalCount] = useState(0);
   const fetchIdRef = useRef(0);
   const selectedRows = useRef([]);
+  const toastId = useRef(null);
   const [showModal, setConfirmModal] = useState(false);
   const [updateTable, setUpdateTable] = useState(moment.now());
   const [showGroupSyncDetails, setGroupSyncdetails] = useState({
@@ -102,8 +103,6 @@ function Groups() {
 
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
-    console.log("PRINT search params : ", currentParams);
-
     for (const param in currentParams) {
       let searchFilterObj = find(searchFilterOption, {
         urlLabel: param
@@ -137,15 +136,6 @@ function Groups() {
     }
     setDefaultSearchFilterParams(defaultSearchFilterParam);
     setPageLoader(false);
-
-    console.log(
-      "PRINT Final searchFilterParam to server : ",
-      searchFilterParam
-    );
-    console.log(
-      "PRINT Final defaultSearchFilterParam to tokenzier : ",
-      defaultSearchFilterParam
-    );
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
 
@@ -212,7 +202,8 @@ function Groups() {
     if (selectedRows.current.length > 0) {
       toggleConfirmModal();
     } else {
-      toast.warning("Please select atleast one group!!");
+      toast.dismiss(toastId.current);
+      toastId.current = toast.warning("Please select atleast one group!!");
     }
   };
 
@@ -248,19 +239,23 @@ function Groups() {
             errorMsg +=
               `Error occurred during deleting Groups: ${original.name}` + "\n";
           }
-          console.log(errorMsg);
+          console.error(errorMsg);
         }
       }
       if (errorMsg) {
-        toast.error(errorMsg);
+        toast.dismiss(toastId.current);
+        toastId.current = toast.error(errorMsg);
       } else {
-        toast.success("Group deleted successfully!");
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success("Group deleted successfully!");
         if (
           (groupListingData.length == 1 ||
             groupListingData.length == selectedRows.current.length) &&
           currentpageIndex > 1
         ) {
-          resetPage.page(0);
+          if (typeof resetPage?.page === "function") {
+            resetPage.page(0);
+          }
         } else {
           setUpdateTable(moment.now());
         }
@@ -271,32 +266,45 @@ function Groups() {
   const handleSetVisibility = async (e) => {
     if (selectedRows.current.length > 0) {
       let selectedRowData = selectedRows.current;
+      let obj = {};
       for (const { original } of selectedRowData) {
-        if (original.isVisible == e) {
-          toast.warning(
-            e == VisibilityStatus.STATUS_VISIBLE.value
-              ? "Selected group is already visible"
-              : "Selected group is already hidden"
-          );
-        } else {
-          let obj = {};
+        if (original.isVisible != e) {
           obj[original.id] = e;
-          try {
-            await fetchApi({
-              url: "xusers/secure/groups/visibility",
-              method: "PUT",
-              data: obj
-            });
-            toast.success("Sucessfully updated Group visibility!!");
-            setUpdateTable(moment.now());
-          } catch (error) {
-            serverError(error);
-            console.log(`Error occurred during set Group visibility! ${error}`);
-          }
         }
       }
+      if (isEmpty(obj)) {
+        toast.dismiss(toastId.current);
+        toastId.current = toast.warning(
+          e == VisibilityStatus.STATUS_VISIBLE.value
+            ? `Selected ${
+                selectedRows.current.length === 1 ? "Group is" : "Groups are"
+              } already visible`
+            : `Selected ${
+                selectedRows.current.length === 1 ? "Group is " : "Groups are"
+              } already hidden`
+        );
+        return;
+      }
+      try {
+        await fetchApi({
+          url: "xusers/secure/groups/visibility",
+          method: "PUT",
+          data: obj
+        });
+        toast.dismiss(toastId.current);
+        toastId.current = toast.success(
+          `Sucessfully updated ${
+            selectedRows.current.length === 1 ? "Group" : "Groups"
+          } visibility!!`
+        );
+        setUpdateTable(moment.now());
+      } catch (error) {
+        serverError(error);
+        console.error(`Error occurred during set Group visibility! ${error}`);
+      }
     } else {
-      toast.warning("Please select atleast one group!!");
+      toast.dismiss(toastId.current);
+      toastId.current = toast.warning("Please select atleast one group!!");
     }
   };
 
@@ -309,7 +317,7 @@ function Groups() {
           if (rawValue.value) {
             return (
               <Link
-                style={{maxWidth:"100%", display: "inline-block" }}
+                style={{ maxWidth: "100%", display: "inline-block" }}
                 className={`text-truncate ${
                   isAuditor() || isKMSAuditor()
                     ? "disabled-link text-secondary"
@@ -327,7 +335,7 @@ function Groups() {
       },
       {
         Header: "Group Source",
-        accessor: "groupSource", // accessor is the "key" in the data
+        accessor: "groupSource",
         Cell: (rawValue) => {
           if (rawValue.value !== null && rawValue.value !== undefined) {
             if (rawValue.value == GroupSource.XA_PORTAL_GROUP.value)
@@ -352,7 +360,7 @@ function Groups() {
               );
           } else return <div className="text-center">--</div>;
         },
-        width:100
+        width: 100
       },
       {
         Header: "Sync Source",
@@ -368,7 +376,7 @@ function Groups() {
             );
           } else return <div className="text-center">--</div>;
         },
-        width:100
+        width: 100
       },
       {
         Header: "Visibility",
@@ -397,7 +405,7 @@ function Groups() {
               );
           } else return <div className="text-center">--</div>;
         },
-        width:100
+        width: 100
       },
       {
         Header: "Users",
@@ -419,7 +427,7 @@ function Groups() {
             </div>
           );
         },
-        width:80
+        width: 80
       },
       {
         Header: "Sync Details",
@@ -528,20 +536,14 @@ function Groups() {
   ];
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
     let searchFilterParam = {};
     let searchParam = {};
-
     map(filter, function (obj) {
       searchFilterParam[obj.category] = obj.value;
-
       let searchFilterObj = find(searchFilterOption, {
         category: obj.category
       });
-
       let urlLabelParam = searchFilterObj.urlLabel;
-
       if (searchFilterObj.type == "textoptions") {
         let textOptionObj = find(searchFilterObj.options(), {
           value: obj.value
@@ -553,7 +555,9 @@ function Groups() {
     });
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    resetPage.page(0);
+    if (typeof resetPage?.page === "function") {
+      resetPage.page(0);
+    }
   };
 
   return (
@@ -695,10 +699,7 @@ function Groups() {
               <Modal.Title>
                 <div className="d-flex">
                   User's List :
-                  <div
-                    className="pl-2 more-less-width text-truncate"
-                    title={showAssociateUserModal.groupName}
-                  >
+                  <div className="pl-2 more-less-width">
                     {showAssociateUserModal.groupName}
                   </div>
                 </div>

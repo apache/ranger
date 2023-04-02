@@ -331,7 +331,9 @@ const KeyManager = (props) => {
       toast.success(`Success! Key deleted successfully`);
       if (keydata.length == 1 && currentPageIndex > 1) {
         let page = currentPageIndex - currentPageIndex;
-        resetPage.page(page);
+        if(typeof resetPage?.page === "function"){
+          resetPage.page(page);
+        }
       } else {
         dispatch({
           type: "SET_UPDATE_TABLE",
@@ -346,7 +348,7 @@ const KeyManager = (props) => {
       } else {
         errorMsg = `Error occurred during deleting Key` + "\n";
       }
-      console.log(errorMsg);
+      console.error(errorMsg);
     }
   }, [filterdata]);
 
@@ -546,20 +548,14 @@ const KeyManager = (props) => {
   ];
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
     let searchFilterParam = {};
     let searchParam = {};
-
     map(filter, function (obj) {
       searchFilterParam[obj.category] = obj.value;
-
       let searchFilterObj = find(searchFilterOptions, {
         category: obj.category
       });
-
       let urlLabelParam = searchFilterObj.urlLabel;
-
       if (searchFilterObj.type == "textoptions") {
         let textOptionObj = find(searchFilterObj.options(), {
           value: obj.value
@@ -569,7 +565,6 @@ const KeyManager = (props) => {
         searchParam[urlLabelParam] = obj.value;
       }
     });
-
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
   };

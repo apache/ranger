@@ -540,8 +540,7 @@ div#center div.letter_container_7 {
   text-decoration: none;
   white-space: normal;
   word-break: break-all;
-  /* border-bottom: dashed 1px #0088cc;
-     */
+  border-bottom: dashed 1px #0088cc;
 }
 
 .editable-add-text {
@@ -1740,6 +1739,10 @@ header {
 .switch-off {
   padding-left: 20px !important;
 }
+.policy-search-info {
+  font-size: 13px;
+}
+
 
 .ranger-navbar .dropdown-item.active,
 .ranger-navbar .dropdown-item:active {
@@ -1850,7 +1853,11 @@ overflow-x: hidden;
     overflow-x: hidden;
     max-height: 250px;
   }
-
+.pagination-error-field{
+  left: 0;
+  top: 28px;
+  line-height:1.1
+}
 .table-service-scroll tr td:last-child {
     border-bottom: 0;
   }

@@ -517,20 +517,14 @@ function Plugin_Status() {
   );
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
     let searchFilterParam = {};
     let searchParam = {};
-
     map(filter, function (obj) {
       searchFilterParam[obj.category] = obj.value;
-
       let searchFilterObj = find(searchFilterOptions, {
         category: obj.category
       });
-
       let urlLabelParam = searchFilterObj.urlLabel;
-
       if (searchFilterObj.type == "textoptions") {
         let textOptionObj = find(searchFilterObj.options(), {
           value: obj.value
@@ -540,11 +534,12 @@ function Plugin_Status() {
         searchParam[urlLabelParam] = obj.value;
       }
     });
-
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("pluginStatus", JSON.stringify(searchParam));
-    resetPage.page(0);
+    if(typeof resetPage?.page === "function"){
+      resetPage.page(0);
+    }
   };
 
   const getServiceDefType = () => {

@@ -497,7 +497,7 @@ define(function(require) {
 		} else
 			return '--';
 	};
-        XAUtils.showGroupsOrUsersForPolicy = function(rawValue, model, showType, rangerServiceDefModel) {
+        XAUtils.showGroupsOrUsersForPolicy = function(model, showType, rangerServiceDefModel) {
 		var showMoreLess = false, groupArr = [], items = [];
 		var itemList = ['policyItems','allowExceptions','denyPolicyItems','denyExceptions','dataMaskPolicyItems','rowFilterPolicyItems']
 		if(!_.isUndefined(rangerServiceDefModel)){

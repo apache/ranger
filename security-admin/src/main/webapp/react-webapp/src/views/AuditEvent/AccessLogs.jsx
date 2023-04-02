@@ -752,8 +752,6 @@ function Access() {
   };
 
   const updateSearchFilter = (filter) => {
-    console.log("PRINT Filter from tokenizer : ", filter);
-
     let searchFilterParam = {};
     let searchParam = {};
 
@@ -781,7 +779,9 @@ function Access() {
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("bigData", JSON.stringify(searchParam));
-    resetPage.page(0);
+    if(typeof resetPage?.page === "function"){
+      resetPage.page(0);
+    }
   };
 
   const searchFilterOptions = [
