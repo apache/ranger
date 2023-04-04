@@ -104,7 +104,7 @@ export default function TagBasePermissionItem(props) {
     } else {
       let removeItemIndex = findIndex(input.value, [
         "value",
-        e.removedValue.value
+        e?.removedValue?.value
       ]);
       remove("tableList", removeItemIndex);
       if (
