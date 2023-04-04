@@ -17,13 +17,14 @@
  * under the License.
  */
 
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useEffect, useReducer, useState, useRef } from "react";
 import { Form as FormB, Row, Col } from "react-bootstrap";
 import { Field } from "react-final-form";
 import Select from "react-select";
 import BootstrapSwitchButton from "bootstrap-switch-button-react";
 import CreatableSelect from "react-select/creatable";
 import { debounce, filter, groupBy, some, sortBy } from "lodash";
+import { toast } from "react-toastify";
 
 import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType } from "Utils/XAEnums";
@@ -45,6 +46,7 @@ export default function ResourceComp(props) {
   const [rsrcState, setLoader] = useState({ loader: false, resourceKey: -1 });
   const [options, setOptions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
+  const toastId = useRef(null);
 
   let resources = sortBy(serviceCompDetails.resources, "itemId");
   if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
@@ -101,7 +103,16 @@ export default function ResourceComp(props) {
             value: name
           })) || [];
       }
-    } catch (error) {}
+    } catch (error) {
+      toast.dismiss(toastId.current);
+      if (error?.response?.data?.msgDesc) {
+        toastId.current = toast.error(error.response.data.msgDesc);
+      } else {
+        toastId.current = toast.error(
+          "Resouce lookup failed for current resource"
+        );
+      }
+    }
 
     setOptions(op);
   };
