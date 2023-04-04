@@ -54,7 +54,7 @@
     "react-toastify": "^8.1.0",
     "style-loader": "^2.0.0",
     "tether": "^2.0.0",
-    "webpack": "^5.75.0",
+    "webpack": "^5.76.0",
     "webpack-cli": "^5.0.0",
     "webpack-dev-server": "^4.11.0",
     "webpack-merge": "^5.8.0"
