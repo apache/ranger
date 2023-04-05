@@ -33,6 +33,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-zk
+      args:
+        - ZK_VERSION=${ZK_VERSION}
     image: ranger-zk
     container_name: ranger-zk
     hostname: ranger-zk.example.com
@@ -45,6 +47,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-solr
+      args:
+        - SOLR_VERSION=${SOLR_VERSION}
     image: ranger-solr
     container_name: ranger-solr
     hostname: ranger-solr.example.com
