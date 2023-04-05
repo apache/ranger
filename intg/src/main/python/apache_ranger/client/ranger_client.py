@@ -220,6 +220,9 @@ class RangerClient:
 
       return type_coerce_list(resp, RangerServiceHeaderInfo)
 
+    def get_zone_names_for_resource(self, serviceName, resource):
+      return self.client_http.call_api(RangerClient.GET_ZONE_NAMES_FOR_RESOURCE.format_path({ 'serviceName': serviceName }), query_params=resource_to_query_params(resource))
+
     def find_security_zones(self, filter=None):
         resp = self.client_http.call_api(RangerClient.FIND_ZONES, filter)
 
@@ -325,11 +328,12 @@ class RangerClient:
     URI_GRANT_ROLE          = URI_ROLE + "/grant/{name}"
     URI_REVOKE_ROLE         = URI_ROLE + "/revoke/{name}"
 
-    URI_ZONE                 = URI_BASE + "/zones"
-    URI_ZONE_BY_ID           = URI_ZONE + "/{id}"
-    URI_ZONE_BY_NAME         = URI_ZONE + "/name/{name}"
-    URI_ZONE_HEADERS         = URI_BASE + "/zone-headers"
-    URI_ZONE_SERVICE_HEADERS = URI_ZONE + "/{id}/service-headers"
+    URI_ZONE                    = URI_BASE + "/zones"
+    URI_ZONE_BY_ID              = URI_ZONE + "/{id}"
+    URI_ZONE_BY_NAME            = URI_ZONE + "/name/{name}"
+    URI_ZONE_HEADERS            = URI_BASE + "/zone-headers"
+    URI_ZONE_SERVICE_HEADERS    = URI_ZONE + "/{id}/service-headers"
+    URI_ZONE_NAMES_FOR_RESOURCE = URI_BASE + "/zone-names/{serviceName}/resource"
 
     URI_SERVICE_TAGS        = URI_SERVICE + "/{serviceName}/tags"
     URI_PLUGIN_INFO         = URI_BASE + "/plugins/info"
@@ -365,16 +369,17 @@ class RangerClient:
     GET_POLICIES_IN_SERVICE   = API(URI_POLICIES_IN_SERVICE, HttpMethod.GET, HTTPStatus.OK)
     FIND_POLICIES             = API(URI_POLICY, HttpMethod.GET, HTTPStatus.OK)
 
-    CREATE_ZONE               = API(URI_ZONE, HttpMethod.POST, HTTPStatus.OK)
-    UPDATE_ZONE_BY_ID         = API(URI_ZONE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
-    UPDATE_ZONE_BY_NAME       = API(URI_ZONE_BY_NAME, HttpMethod.PUT, HTTPStatus.OK)
-    DELETE_ZONE_BY_ID         = API(URI_ZONE_BY_ID, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
-    DELETE_ZONE_BY_NAME       = API(URI_ZONE_BY_NAME, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
-    GET_ZONE_BY_ID            = API(URI_ZONE_BY_ID, HttpMethod.GET, HTTPStatus.OK)
-    GET_ZONE_BY_NAME          = API(URI_ZONE_BY_NAME, HttpMethod.GET, HTTPStatus.OK)
-    FIND_ZONES                = API(URI_ZONE, HttpMethod.GET, HTTPStatus.OK)
-    GET_ZONE_HEADERS          = API(URI_ZONE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
-    GET_ZONE_SERVICE_HEADERS  = API(URI_ZONE_SERVICE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
+    CREATE_ZONE                 = API(URI_ZONE, HttpMethod.POST, HTTPStatus.OK)
+    UPDATE_ZONE_BY_ID           = API(URI_ZONE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
+    UPDATE_ZONE_BY_NAME         = API(URI_ZONE_BY_NAME, HttpMethod.PUT, HTTPStatus.OK)
+    DELETE_ZONE_BY_ID           = API(URI_ZONE_BY_ID, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    DELETE_ZONE_BY_NAME         = API(URI_ZONE_BY_NAME, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    GET_ZONE_BY_ID              = API(URI_ZONE_BY_ID, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_BY_NAME            = API(URI_ZONE_BY_NAME, HttpMethod.GET, HTTPStatus.OK)
+    FIND_ZONES                  = API(URI_ZONE, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_HEADERS            = API(URI_ZONE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_SERVICE_HEADERS    = API(URI_ZONE_SERVICE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_NAMES_FOR_RESOURCE = API(URI_ZONE_NAMES_FOR_RESOURCE, HttpMethod.GET, HTTPStatus.OK)
 
     CREATE_ROLE               = API(URI_ROLE, HttpMethod.POST, HTTPStatus.OK)
     UPDATE_ROLE_BY_ID         = API(URI_ROLE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
