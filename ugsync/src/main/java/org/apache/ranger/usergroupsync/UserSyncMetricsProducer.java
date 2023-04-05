@@ -21,6 +21,7 @@ package org.apache.ranger.usergroupsync;
 
 import java.io.File;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.slf4j.Logger;
@@ -79,11 +80,20 @@ public class UserSyncMetricsProducer implements Runnable {
 	private void writeJVMMetrics(String logFileNameWithPath) throws Throwable {
 		try {
 			File userMetricFile = null;
+			UserGroupSyncConfig userConfig = UserGroupSyncConfig.getInstance();
+			Configuration config = userConfig.getUserGroupConfig();
 			userMetricFile = new File(logFileNameWithPath);
 			if (!userMetricFile.exists()) {
 				userMetricFile.createNewFile();
 			}
 			RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
+			if (config.getBoolean(UserGroupSyncConfig.UGSYNC_SERVER_HA_ENABLED_PARAM, false)) {
+				if(userConfig.isUgsyncServiceActive()){
+					rangerMetricsUtil.setIsRoleActive(1);
+				}else{
+					rangerMetricsUtil.setIsRoleActive(0);
+				}
+			}
 			rangerMetricsUtil.writeMetricsToFile(userMetricFile);
 		} catch (Throwable t) {
 			LOG.error("UserSyncMetricsProducer.writeJVMMetrics() failed to write metrics into file. Error details: ", t);

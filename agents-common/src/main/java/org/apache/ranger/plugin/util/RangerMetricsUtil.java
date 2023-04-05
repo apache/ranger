@@ -55,7 +55,7 @@ public class RangerMetricsUtil {
     private static final String JVM_MACHINE_REPRESENTATION_NAME = RUNTIME.getName();
     private static final long UP_TIME_OF_JVM = RUNTIME.getUptime();
     private static final String JVM_VENDOR_NAME =  RUNTIME.getVmVendor();
-
+    private static int IS_ROLE_ACTIVE =  0;
 
     static {
         OS = ManagementFactory.getOperatingSystemMXBean();
@@ -158,6 +158,7 @@ public class RangerMetricsUtil {
 		vmDetails.put("Up time of JVM", UP_TIME_OF_JVM);
 		vmDetails.put("JVM Vendor Name", JVM_VENDOR_NAME);
 		vmDetails.putAll(getValues());
+        vmDetails.put("isRoleActive",getIsRoleActive());
 		jvm.put("jvm", vmDetails);
 
 		if (LOG.isDebugEnabled()) {
@@ -167,7 +168,15 @@ public class RangerMetricsUtil {
 		return new RangerMetrics(jvm);
 	}
 
-	public void writeMetricsToFile(File filePath) throws Throwable {
+    public static int getIsRoleActive() {
+        return IS_ROLE_ACTIVE;
+    }
+
+    public static void setIsRoleActive(int isRoleActive) {
+        IS_ROLE_ACTIVE = isRoleActive;
+    }
+
+    public void writeMetricsToFile(File filePath) throws Throwable {
 
 		RangerMetrics rangerMetrics = null;
 		rangerMetrics = getVMStatus();
