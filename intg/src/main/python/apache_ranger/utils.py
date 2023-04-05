@@ -18,7 +18,8 @@
 
 import enum
 
-APPLICATION_JSON         = 'application/json'
+APPLICATION_JSON            = 'application/json'
+QUERY_PARAM_PREFIX_RESOURCE = 'resource:'
 
 
 def non_null(obj, defValue):
@@ -61,6 +62,16 @@ def type_coerce_dict_list(obj, objType):
         ret = None
 
     return ret
+
+def resource_to_query_params(resource, query_params=None):
+    if isinstance(resource, dict):
+      if query_params is None:
+        query_params = {}
+
+      for key, value in resource.items():
+        query_params[QUERY_PARAM_PREFIX_RESOURCE + key] = value
+
+    return query_params
 
 def type_coerce_list_dict(obj, objType):
     if isinstance(obj, list):

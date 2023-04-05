@@ -60,6 +60,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Path("public/v2")
@@ -204,6 +205,14 @@ public class PublicAPIsv2 {
         }
         return ret;
     }
+
+	@GET
+	@Path("/api/zone-names/{serviceName}/resource")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
+	public Collection<String> getSecurityZoneNamesForResource(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		return securityZoneRest.getZoneNamesForResource(serviceName, request);
+	}
 
 	/*
 	* ServiceDef Manipulation APIs
