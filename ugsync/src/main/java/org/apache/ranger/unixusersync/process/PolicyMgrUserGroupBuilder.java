@@ -147,6 +147,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 	private boolean isRangerCookieEnabled;
 	private String rangerCookieName;
+	private static String errMsgForInactiveServer = "This userGroupSync server is not in active state. Cannot commit transaction!";
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -287,6 +288,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 
 		if (!isMockRun) {
+			checkStatus();
 			addUserGroupAuditInfo(ugsyncAuditInfo);
 		}
 
@@ -297,6 +299,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 									   Map<String, Map<String, String>> sourceUsers,
 									   Map<String, Set<String>> sourceGroupUsers,
 									   boolean computeDeletes) throws Throwable {
+		checkStatus();
 
 		noOfNewUsers = 0;
 		noOfNewGroups = 0;
@@ -971,6 +974,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
+			checkStatus();
 			String response = null;
 			ClientResponse clientRes = null;
 			GetXUserListResponse pagedXUserList = new GetXUserListResponse();
@@ -1067,11 +1071,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getGroups()");
 		}
+
 		int ret = 0;
 		int totalCount = xGroupList.getTotalCount();
 		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
+			checkStatus();
 			String response = null;
 			ClientResponse clientRes = null;
 			GetXGroupListResponse pagedXGroupList = new GetXGroupListResponse();
@@ -1165,6 +1171,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
+			checkStatus();
 			String response = null;
 			ClientResponse clientRes = null;
 
@@ -1250,6 +1257,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			int uploadedCount = 0;
 			int pageSize = Integer.valueOf(recordsToPullPerCall);
 			while (uploadedCount < totalCount) {
+				checkStatus();
 				int pagedUgRoleAssignmentsListLen = uploadedCount + pageSize;
 				UsersGroupRoleAssignments pagedUgRoleAssignmentsList = new UsersGroupRoleAssignments();
 				pagedUgRoleAssignmentsList.setUsers(ugRoleAssignments.getUsers().subList(uploadedCount,
@@ -1300,7 +1308,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		return ret;
 	}
 
-	private void addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) {
+	private void addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) throws Throwable{
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.addAuditInfo(" + auditInfo.getNoOfNewUsers() + ", " + auditInfo.getNoOfNewGroups() +
 					", " + auditInfo.getNoOfModifiedUsers() + ", " + auditInfo.getNoOfModifiedGroups() +
@@ -1319,7 +1327,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					public Void run() {
 						try {
 							getUserGroupAuditInfo(auditInfoFinal);
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							LOG.error("Failed to add User : ", e);
 						}
 						return null;
@@ -1336,10 +1344,11 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	}
 
 
-	private void getUserGroupAuditInfo(UgsyncAuditInfo userInfo) {
+	private void getUserGroupAuditInfo(UgsyncAuditInfo userInfo) throws Throwable{
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getUserGroupAuditInfo()");
 		}
+		checkStatus();
 		String response = null;
 		ClientResponse clientRes = null;
 		Gson gson = new GsonBuilder().create();
@@ -1409,7 +1418,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		String response = null;
 		ClientResponse clientResp = null;
-
 		try {
 			clientResp = ldapUgSyncClient.post(apiURL, null, obj, sessionId);
 		}
@@ -1805,6 +1813,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getDeletedGroups()");
 		}
+		checkStatus();
 		int ret = 0;
 		String response = null;
 		ClientResponse clientRes = null;
@@ -1925,6 +1934,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getDeletedUsers()");
 		}
+		checkStatus();
 		int ret = 0;
 		String response = null;
 		ClientResponse clientRes = null;
@@ -1969,5 +1979,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	protected void setUserSyncNameValidationEnabled(String isNameValidationEnabled) {
 		config.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, isNameValidationEnabled);
 		this.isUserSyncNameValidationEnabled = config.isUserSyncNameValidationEnabled();
+	}
+
+	// This will throw RuntimeException if Server is not Active
+	private void checkStatus() throws Exception {
+		if(!UserGroupSyncConfig.isUgsyncServiceActive()) {
+			LOG.error(errMsgForInactiveServer);
+			throw new RuntimeException(errMsgForInactiveServer);
+		}
 	}
 }
