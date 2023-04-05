@@ -370,6 +370,10 @@ public class PolicyEngine {
         return ret;
     }
 
+    public Set<String> getMatchedZonesForResourceAndChildren(Map<String, ?> resource) {
+        return getMatchedZonesForResourceAndChildren(convertToAccessResource(resource));
+    }
+
     public Set<String> getMatchedZonesForResourceAndChildren(RangerAccessResource accessResource) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> PolicyEngine.getMatchedZonesForResourceAndChildren(" + accessResource + ")");
