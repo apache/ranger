@@ -14,4 +14,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM zookeeper:3.5.9
+ARG ZK_VERSION
+FROM zookeeper:${ZK_VERSION}
