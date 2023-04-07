@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-postgres
+      args:
+        - POSTGRES_VERSION=${POSTGRES_VERSION}
     image: ranger-postgres
     container_name: ranger-postgres
     hostname: ranger-db.example.com
