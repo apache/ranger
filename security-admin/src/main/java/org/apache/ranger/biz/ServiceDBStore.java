@@ -2000,7 +2000,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Override
 	public RangerPolicy createPolicy(RangerPolicy policy) throws Exception {
-		return createPolicy(policy, false);
+		return createPolicy(policy, bizUtil.getCreatePrincipalsIfAbsent());
 	}
 
 	@Override
@@ -2008,7 +2008,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		return createPolicy(policy, true);
 	}
 
-	public RangerPolicy createPolicy(RangerPolicy policy, boolean isDefaultPolicy) throws Exception {
+	public RangerPolicy createPolicy(RangerPolicy policy, boolean createPrincipalsIfAbsent) throws Exception {
 
 		RangerService service = getServiceByName(policy.getService());
 
@@ -2057,7 +2057,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
-		policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef, isDefaultPolicy);
+		policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef, createPrincipalsIfAbsent);
 		createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 
@@ -2230,7 +2230,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policyRefUpdater.cleanupRefTables(policy);
 		deleteExistingPolicyLabel(policy);
 
-		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef, false);
+		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef, bizUtil.getCreatePrincipalsIfAbsent());
 		createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
 
