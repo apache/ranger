@@ -1538,6 +1538,13 @@ public class RangerBizUtil {
 		return isBulkMode();
 	}
 
+	public boolean getCreatePrincipalsIfAbsent() {
+		RangerAdminOpContext opContext = RangerContextHolder.getOpContext();
+		Boolean              ret       = opContext != null ? opContext.getCreatePrincipalsIfAbsent() : null;
+
+		return ret != null ? ret : false;
+	}
+
 	//should be used only in bulk operation like importPolicies, policies delete.
 	public void bulkModeOnlyFlushAndClear() {
 		if (batchClearEnabled) {
