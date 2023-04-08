@@ -54,7 +54,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
         if (logger.isDebugEnabled()) {
             logger.debug("==> RangerORCAuditWriter.init()");
         }
-        init(props,propPrefix);
+        init(props,propPrefix,auditProviderName);
         super.init(props, propPrefix, auditProviderName, auditConfigs);
         if (logger.isDebugEnabled()) {
             logger.debug("<== RangerORCAuditWriter.init()");
@@ -174,7 +174,7 @@ public class RangerORCAuditWriter extends AbstractRangerAuditWriter {
         return ret;
     }
 
-    public void init(Properties props, String propPrefix) {
+    public void init(Properties props, String propPrefix, String auditProviderName) {
         compression    = MiscUtil.getStringProperty(props, propPrefix + "." + fileType +".compression");
         orcBufferSize  = MiscUtil.getIntProperty(props, propPrefix + "." + fileType +".buffersize",defaultbufferSize);
         orcStripeSize  = MiscUtil.getLongProperty(props, propPrefix + "." + fileType +".stripesize",defaultStripeSize);
