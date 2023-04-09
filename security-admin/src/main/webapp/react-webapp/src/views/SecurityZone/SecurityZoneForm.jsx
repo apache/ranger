@@ -530,7 +530,7 @@ const SecurityZoneForm = (props) => {
     if (e.action == "remove-value" || e.action == "pop-value") {
       let removeItemIndex = findIndex(input.value, [
         "value",
-        e.removedValue.value
+        e?.removedValue?.value
       ]);
       remove("tableList", removeItemIndex);
     }

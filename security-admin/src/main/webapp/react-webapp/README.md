@@ -19,6 +19,13 @@ under the License.
 
 # Ranger React
 
+## Build Ranger Admin using react code base
+
+Maven command :
+
+```
+mvn clean compile package -DskipTests -Psecurity-admin-react
+
 ## Contributors
 
 - Dhaval Rajpara

@@ -50,7 +50,6 @@ function SearchPolicyTable(props) {
   };
 
   const hidePolicyConditionModal = () => setShowModal(false);
-
   const fetchSearchPolicies = useCallback(
     async ({ pageSize, pageIndex }) => {
       setLoader(true);
@@ -278,7 +277,10 @@ function SearchPolicyTable(props) {
             <Modal.Title>Policy Condition Details</Modal.Title>
           </Modal.Header>
           <Modal.Body>
-            <PolicyConditionData policyData={policyData} />
+            <PolicyConditionData
+              policyData={policyData}
+              serviceDef={props.serviceDef}
+            />
           </Modal.Body>
         </Modal>
       </Col>
@@ -493,54 +495,59 @@ function PolicyConditionData(props) {
             </thead>
             <tbody>{getPolicyData(props.policyData.policyItems)}</tbody>
           </Table>
-          <p className="form-header">Allow Exclude</p>
-          <Table
-            bordered
-            size="sm"
-            className="mb-3 table-audit-filter-ready-only"
-          >
-            <thead>
-              <tr>
-                <th>Roles</th>
-                <th>Groups</th>
-                <th>Users</th>
-                <th>Accesses</th>
-              </tr>
-            </thead>
-            <tbody>{getPolicyData(props.policyData.allowExceptions)}</tbody>
-          </Table>
-          <p className="form-header">Deny Conditions</p>
-          <Table
-            bordered
-            size="sm"
-            className="mb-3 table-audit-filter-ready-only"
-          >
-            <thead>
-              <tr>
-                <th>Roles</th>
-                <th>Groups</th>
-                <th>Users</th>
-                <th>Accesses</th>
-              </tr>
-            </thead>
-            <tbody>{getPolicyData(props.policyData.denyPolicyItems)}</tbody>
-          </Table>
-          <p className="form-header">Deny Exclude</p>
-          <Table
-            bordered
-            size="sm"
-            className="mb-3 table-audit-filter-ready-only"
-          >
-            <thead>
-              <tr>
-                <th>Roles</th>
-                <th>Groups</th>
-                <th>Users</th>
-                <th>Accesses</th>
-              </tr>
-            </thead>
-            <tbody>{getPolicyData(props.policyData.denyExceptions)}</tbody>
-          </Table>
+          {props.serviceDef?.options?.enableDenyAndExceptionsInPolicies ==
+            "true" && (
+            <>
+              <p className="form-header">Allow Exclude</p>
+              <Table
+                bordered
+                size="sm"
+                className="mb-3 table-audit-filter-ready-only"
+              >
+                <thead>
+                  <tr>
+                    <th>Roles</th>
+                    <th>Groups</th>
+                    <th>Users</th>
+                    <th>Accesses</th>
+                  </tr>
+                </thead>
+                <tbody>{getPolicyData(props.policyData.allowExceptions)}</tbody>
+              </Table>
+              <p className="form-header">Deny Conditions</p>
+              <Table
+                bordered
+                size="sm"
+                className="mb-3 table-audit-filter-ready-only"
+              >
+                <thead>
+                  <tr>
+                    <th>Roles</th>
+                    <th>Groups</th>
+                    <th>Users</th>
+                    <th>Accesses</th>
+                  </tr>
+                </thead>
+                <tbody>{getPolicyData(props.policyData.denyPolicyItems)}</tbody>
+              </Table>
+              <p className="form-header">Deny Exclude</p>
+              <Table
+                bordered
+                size="sm"
+                className="mb-3 table-audit-filter-ready-only"
+              >
+                <thead>
+                  <tr>
+                    <th>Roles</th>
+                    <th>Groups</th>
+                    <th>Users</th>
+                    <th>Accesses</th>
+                  </tr>
+                </thead>
+                <tbody>{getPolicyData(props.policyData.denyExceptions)}</tbody>
+              </Table>
+            </>
+          )}
         </>
       )}
 

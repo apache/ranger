@@ -83,6 +83,7 @@ function Access() {
     []
   );
   const [resetPage, setResetpage] = useState({ page: 0 });
+  const [policyDetails, setPolicyDetails] = useState({});
 
   useEffect(() => {
     if (isEmpty(serviceDefs)) {
@@ -244,6 +245,7 @@ function Access() {
       "policyVersion"
     ]);
     setPolicyViewModal(true);
+    setPolicyDetails(policyDetails);
     setPolicyParamsData(policyParams);
     fetchVersions(policyDetails.policyId);
   };
@@ -575,8 +577,14 @@ function Access() {
         accessor: "action",
         Cell: (rawValue) => {
           return (
-            <h6 >
-              <Badge variant="info" title={rawValue.value} className="text-truncate w-100">{rawValue.value}</Badge>
+            <h6>
+              <Badge
+                variant="info"
+                title={rawValue.value}
+                className="text-truncate w-100"
+              >
+                {rawValue.value}
+              </Badge>
             </h6>
           );
         },
@@ -779,7 +787,7 @@ function Access() {
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("bigData", JSON.stringify(searchParam));
-    if(typeof resetPage?.page === "function"){
+    if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
   };
@@ -1040,7 +1048,9 @@ function Access() {
           <Modal.Body>
             <PolicyViewDetails
               paramsData={policyParamsData}
-              serviceDefs={serviceDefs}
+              serviceDef={serviceDefs.find((servicedef) => {
+                return servicedef.name == policyDetails.serviceType;
+              })}
               policyView={false}
             />
           </Modal.Body>

@@ -17,13 +17,14 @@
  * under the License.
  */
 
-import React, { useEffect, useReducer, useState } from "react";
+import React, { useEffect, useReducer, useState, useRef } from "react";
 import { Form as FormB, Row, Col } from "react-bootstrap";
 import { Field } from "react-final-form";
 import Select from "react-select";
 import BootstrapSwitchButton from "bootstrap-switch-button-react";
-import AsyncCreatableSelect from "react-select/async-creatable";
+import CreatableSelect from "react-select/creatable";
 import { debounce, filter, groupBy, some, sortBy } from "lodash";
+import { toast } from "react-toastify";
 
 import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType } from "Utils/XAEnums";
@@ -43,6 +44,10 @@ export default function ResourceComp(props) {
     policyId
   } = props;
   const [rsrcState, setLoader] = useState({ loader: false, resourceKey: -1 });
+  const [options, setOptions] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const toastId = useRef(null);
+
   let resources = sortBy(serviceCompDetails.resources, "itemId");
   if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
     resources = sortBy(serviceCompDetails.dataMaskDef.resources, "itemId");
@@ -71,8 +76,7 @@ export default function ResourceComp(props) {
   const fetchResourceLookup = async (
     inputValue,
     resourceObj,
-    selectedValues,
-    callback
+    selectedValues
   ) => {
     let resourceName = resourceObj.name;
     let data = {
@@ -99,12 +103,21 @@ export default function ResourceComp(props) {
             value: name
           })) || [];
       }
-    } catch (error) {}
+    } catch (error) {
+      toast.dismiss(toastId.current);
+      if (error?.response?.data?.msgDesc) {
+        toastId.current = toast.error(error.response.data.msgDesc);
+      } else {
+        toastId.current = toast.error(
+          "Resouce lookup failed for current resource"
+        );
+      }
+    }
 
-    callback(op);
+    setOptions(op);
   };
 
-  const _fetchResourceLookup = debounce(fetchResourceLookup, 1000);
+  const fetchDelayResourceLookup = debounce(fetchResourceLookup, 1000);
 
   const getResourceLabelOp = (levelKey, index) => {
     let op = grpResources[levelKey];
@@ -210,6 +223,17 @@ export default function ResourceComp(props) {
     }
   };
 
+  const onLookupChange = (object, resourceObj, selectedValues, { action }) => {
+    switch (action) {
+      case "input-change":
+        if (object)
+          fetchDelayResourceLookup(object, resourceObj, selectedValues);
+        return;
+      default:
+        return;
+    }
+  };
+
   return grpResourcesKeys.map((levelKey, index) => {
     const resourceKey = `resourceName-${levelKey}`;
     if (index !== 0) {
@@ -283,7 +307,7 @@ export default function ResourceComp(props) {
               }
               render={({ input, meta }) => (
                 <>
-                  <AsyncCreatableSelect
+                  <CreatableSelect
                     {...input}
                     id={
                       formValues &&
@@ -293,22 +317,28 @@ export default function ResourceComp(props) {
                         ? "isError"
                         : `value-${levelKey}`
                     }
-                    defaultOptions
                     isMulti
                     isDisabled={
                       formValues[`resourceName-${levelKey}`].value ===
                       noneOptions.value
                     }
-                    loadOptions={(inputValue) =>
-                      new Promise((resolve, reject) => {
-                        _fetchResourceLookup(
-                          inputValue,
-                          formValues[`resourceName-${levelKey}`],
-                          input.value,
-                          resolve
-                        );
-                      })
-                    }
+                    options={options}
+                    onFocus={() => {
+                      fetchResourceLookup(
+                        "",
+                        formValues[`resourceName-${levelKey}`],
+                        input.value
+                      );
+                    }}
+                    onInputChange={(inputVal, action) => {
+                      onLookupChange(
+                        inputVal,
+                        formValues[`resourceName-${levelKey}`],
+                        input.value,
+                        action
+                      );
+                    }}
+                    isLoading={isLoading}
                   />
                   {formValues &&
                     formValues[`resourceName-${levelKey}`]?.mandatory &&
