@@ -194,7 +194,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         xObj.setResource(JsonUtils.mapToJson(vObj.getResource()));
         xObj.setSubResourceNames(JsonUtils.listToJson(vObj.getSubResourceNames()));
         xObj.setResourceSignature(vObj.getResourceSignature());
-        xObj.setCondition(vObj.getCondition());
+        xObj.setConditionExpr(vObj.getConditionExpr());
         xObj.setAccessTypes(JsonUtils.objectToJson(vObj.getAccessTypes()));
         xObj.setRowFilter(JsonUtils.objectToJson(vObj.getRowFilter()));
         xObj.setSubResourceMasks(JsonUtils.objectToJson(vObj.getSubResourceMasks()));
@@ -216,7 +216,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         vObj.setResource(JsonUtils.jsonToMapPolicyResource(xObj.getResource()));
         vObj.setSubResourceNames(JsonUtils.jsonToListString(xObj.getSubResourceNames()));
         vObj.setResourceSignature(xObj.getResourceSignature());
-        vObj.setCondition(xObj.getCondition());
+        vObj.setConditionExpr(xObj.getConditionExpr());
         vObj.setAccessTypes(JsonUtils.jsonToSetString(xObj.getAccessTypes()));
         vObj.setRowFilter(JsonUtils.jsonToObject(xObj.getRowFilter(), RangerPolicy.RangerPolicyItemRowFilterInfo.class));
         vObj.setSubResourceMasks(JsonUtils.jsonToMapMaskInfo(xObj.getSubResourceMasks()));

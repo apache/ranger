@@ -186,7 +186,7 @@ public class RangerGds {
         private List<RangerPrincipal>                     owners;
         private String                                    service;
         private String                                    zone;
-        private String                                    condition;
+        private String                                    conditionExpr;
         private Set<String>                               defaultAccessTypes;
         private Map<String, RangerPolicyItemDataMaskInfo> defaultMasks;
         private String                                    termsOfUse;
@@ -209,9 +209,9 @@ public class RangerGds {
 
         public void setZone(String zone) { this.zone = zone; }
 
-        public String getCondition() { return condition; }
+        public String getConditionExpr() { return conditionExpr; }
 
-        public void setCondition(String condition) { this.condition = condition; }
+        public void setConditionExpr(String conditionExpr) { this.conditionExpr = conditionExpr; }
 
         public Set<String> getDefaultAccessTypes() {
             return defaultAccessTypes;
@@ -243,7 +243,7 @@ public class RangerGds {
               .append("owners={").append(owners).append("} ")
               .append("service={").append(service).append("} ")
               .append("zone={").append(zone).append("} ")
-              .append("condition={").append(condition).append("} ")
+              .append("conditionExpr={").append(conditionExpr).append("} ")
               .append("defaultAccessTypes={").append(defaultAccessTypes).append("} ")
               .append("defaultMasks={").append(defaultMasks).append("} ")
               .append("termsOfUse={").append(termsOfUse).append("} ")
@@ -261,7 +261,7 @@ public class RangerGds {
         private Map<String, RangerPolicyResource>         resource;
         private List<String>                              subResourceNames;
         private String                                    resourceSignature;
-        private String                                    condition;
+        private String                                    conditionExpr;
         private Set<String>                               accessTypes;
         private RangerPolicyItemRowFilterInfo             rowFilter;
         private Map<String, RangerPolicyItemDataMaskInfo> subResourceMasks;
@@ -289,9 +289,9 @@ public class RangerGds {
 
         public void setResourceSignature(String resourceSignature) { this.resourceSignature = resourceSignature; }
 
-        public String getCondition() { return condition; }
+        public String getConditionExpr() { return conditionExpr; }
 
-        public void setCondition(String condition) { this.condition = condition; }
+        public void setConditionExpr(String conditionExpr) { this.conditionExpr = conditionExpr; }
 
         public Set<String> getAccessTypes() {
             return accessTypes;
@@ -323,7 +323,7 @@ public class RangerGds {
               .append("resource={").append(resource).append("} ")
               .append("subResourceNames={").append(subResourceNames).append("} ")
               .append("resourceSignature={").append(resourceSignature).append("} ")
-              .append("conditions={").append(condition).append("} ")
+              .append("conditionExpr={").append(conditionExpr).append("} ")
               .append("accessTypes={").append(accessTypes).append("} ")
               .append("rowFilterInfo={").append(rowFilter).append("} ")
               .append("subResourceMasks={").append(subResourceMasks).append("} ")

@@ -224,7 +224,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         xObj.setOwners(JsonUtils.listToJson(vObj.getOwners()));
         xObj.setServiceId(xService.getId());
         xObj.setZoneId(zoneId);
-        xObj.setCondition(vObj.getCondition());
+        xObj.setConditionExpr(vObj.getConditionExpr());
         xObj.setDefaultAccessTypes(JsonUtils.objectToJson(vObj.getDefaultAccessTypes()));
         xObj.setDefaultMasks(JsonUtils.objectToJson(vObj.getDefaultMasks()));
         xObj.setTermsOfUse(vObj.getTermsOfUse());
@@ -250,7 +250,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         vObj.setOwners(JsonUtils.jsonToRangerPrincipalList(xObj.getOwners()));
         vObj.setService(serviceName);
         vObj.setZone(zoneName);
-        vObj.setCondition(xObj.getCondition());
+        vObj.setConditionExpr(xObj.getConditionExpr());
         vObj.setDefaultAccessTypes(JsonUtils.jsonToSetString(xObj.getDefaultAccessTypes()));
         vObj.setDefaultMasks(JsonUtils.jsonToMapMaskInfo(xObj.getDefaultMasks()));
         vObj.setTermsOfUse(xObj.getTermsOfUse());

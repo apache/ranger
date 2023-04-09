@@ -67,8 +67,8 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
     @Column(name = "resource_signature")
     protected String resourceSignature;
 
-    @Column(name = "condition")
-    protected String condition;
+    @Column(name = "condition_expr")
+    protected String conditionExpr;
 
     @Column(name = "access_types")
     protected String accessTypes;
@@ -131,9 +131,9 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
 
     public void setResourceSignature(String resourceSignature) { this.resourceSignature = resourceSignature; }
 
-    public String getCondition() { return condition; }
+    public String getConditionExpr() { return conditionExpr; }
 
-    public void setCondition(String condition) { this.condition = condition; }
+    public void setConditionExpr(String conditionExpr) { this.conditionExpr = conditionExpr; }
 
     public String getAccessTypes() { return accessTypes; }
 
@@ -164,7 +164,7 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, guid, version, isEnabled, name, description, dataShareId, resource, subResourceNames, resourceSignature, condition, accessTypes, rowFilter, subResourceMasks, profiles, options, additionalInfo);
+        return Objects.hash(id, guid, version, isEnabled, name, description, dataShareId, resource, subResourceNames, resourceSignature, conditionExpr, accessTypes, rowFilter, subResourceMasks, profiles, options, additionalInfo);
     }
 
     @Override
@@ -189,7 +189,7 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
                Objects.equals(resource, other.resource) &&
                Objects.equals(subResourceNames, other.subResourceNames) &&
                Objects.equals(resourceSignature, other.resourceSignature) &&
-               Objects.equals(condition, other.condition) &&
+               Objects.equals(conditionExpr, other.conditionExpr) &&
                Objects.equals(accessTypes, other.accessTypes) &&
                Objects.equals(rowFilter, other.rowFilter) &&
                Objects.equals(subResourceMasks, other.subResourceMasks) &&
@@ -216,7 +216,7 @@ public class XXGdsSharedResource extends XXDBBase implements Serializable {
           .append("dataShareId={").append(dataShareId).append("} ")
           .append("resource={").append(resource).append("} ")
           .append("subResourceNames={").append(subResourceNames).append("} ")
-          .append("condition={").append(condition).append("} ")
+          .append("conditionExpr={").append(conditionExpr).append("} ")
           .append("accessTypes={").append(accessTypes).append("} ")
           .append("rowFilter={").append(rowFilter).append("} ")
           .append("subResourceMasks={").append(subResourceMasks).append("} ")

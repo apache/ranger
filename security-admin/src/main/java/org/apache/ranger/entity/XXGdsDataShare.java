@@ -64,8 +64,8 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
     @Column(name = "owners")
     protected String owners;
 
-    @Column(name = "condition")
-    protected String condition;
+    @Column(name = "condition_expr")
+    protected String conditionExpr;
 
     @Column(name = "default_access_types")
     protected String defaultAccessTypes;
@@ -121,9 +121,9 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
 
     public void setOwners(String owners) { this.owners = owners; }
 
-    public String getCondition() { return condition; }
+    public String getConditionExpr() { return conditionExpr; }
 
-    public void setCondition(String condition) { this.condition = condition; }
+    public void setConditionExpr(String conditionExpr) { this.conditionExpr = conditionExpr; }
 
     public String getDefaultAccessTypes() { return defaultAccessTypes; }
 
@@ -150,7 +150,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, guid, version, isEnabled, serviceId, zoneId, name, description, owners, condition, defaultAccessTypes, defaultMasks, termsOfUse, options, additionalInfo);
+        return Objects.hash(id, guid, version, isEnabled, serviceId, zoneId, name, description, owners, conditionExpr, defaultAccessTypes, defaultMasks, termsOfUse, options, additionalInfo);
     }
 
     @Override
@@ -174,7 +174,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
                Objects.equals(name, other.name) &&
                Objects.equals(description, other.description) &&
                Objects.equals(owners, other.owners) &&
-               Objects.equals(condition, other.condition) &&
+               Objects.equals(conditionExpr, other.conditionExpr) &&
                Objects.equals(defaultAccessTypes, other.defaultAccessTypes) &&
                Objects.equals(defaultMasks, other.defaultMasks) &&
                Objects.equals(termsOfUse, other.termsOfUse) &&
@@ -199,7 +199,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
           .append("name={").append(name).append("} ")
           .append("description={").append(description).append("} ")
           .append("owners={").append(owners).append("} ")
-          .append("condition={").append(condition).append("} ")
+          .append("conditionExpr={").append(conditionExpr).append("} ")
           .append("defaultAccessTypes={").append(defaultAccessTypes).append("} ")
           .append("defaultMasks={").append(defaultMasks).append("} ")
           .append("termsOfUse={").append(termsOfUse).append("} ")

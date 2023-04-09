@@ -39,14 +39,14 @@ project_2 = RangerProject({ 'name': 'project-2', 'description': 'the second proj
 hive_share_1 = RangerDataShare({ 'name': 'datashare-1', 'description': 'the first datashare!', 'owners': [ { 'type': PrincipalType.USER, 'name': 'Sandy.Williams' } ], 'termsOfUse': None })
 hive_share_1.service            = 'dev_hive'
 hive_share_1.zone               = None
-hive_share_1.condition          = "HAS_TAG('SCAN_COMPLETE')"
+hive_share_1.conditionExpr      = "HAS_TAG('SCAN_COMPLETE')"
 hive_share_1.defaultAccessTypes = [ '_READ' ]
 hive_share_1.defaultMasks       = { 'HAS_TAG("PII")': { 'dataMaskType': 'MASK' } }
 
 hdfs_share_1 = RangerDataShare({ 'name': 'datashare-2', 'description': 'the second datashare!', 'owners': [ { 'type': PrincipalType.GROUP, 'name': 'finance' } ], 'termsOfUse': None })
 hdfs_share_1.service            = 'dev_hdfs'
 hdfs_share_1.zone               = None
-hdfs_share_1.condition          = "HAS_TAG('SCAN_COMPLETE')"
+hdfs_share_1.conditionExpr      = "HAS_TAG('SCAN_COMPLETE')"
 hdfs_share_1.defaultAccessTypes = [ '_READ' ]
 hdfs_share_1.defaultMasks       = None
 
@@ -78,7 +78,7 @@ print(f'  created data_share: {hdfs_share_1}')
 hive_resource_1 = RangerSharedResource({ 'dataShareId': hive_share_1.id, 'name': 'db1.tbl1' })
 hive_resource_1.resource         = { 'database': { 'values': ['db1'] }, 'table': { 'values': ['tbl1'] } }
 hive_resource_1.subResourceNames = [ 'col1', 'col2' ]
-hive_resource_1.condition        = "HAS_TAG('SCAN_COMPLETE') && !HAS_TAG('PII') && TAGS['DATA_QUALITY'].score > 0.8"
+hive_resource_1.conditionExpr    = "HAS_TAG('SCAN_COMPLETE') && !HAS_TAG('PII') && TAGS['DATA_QUALITY'].score > 0.8"
 hive_resource_1.accessTypes      = [ '_READ' ]
 hive_resource_1.rowFilter        = { 'filterExpr': "country = 'US'" }
 hive_resource_1.subResourceMasks = { 'col1': { 'dataMaskType': 'MASK' } }
