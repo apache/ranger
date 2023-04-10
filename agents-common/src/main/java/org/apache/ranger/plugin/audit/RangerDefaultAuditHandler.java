@@ -124,10 +124,10 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 			ret.setRequestData(request.getRequestData());
 			ret.setEventTime(request.getAccessTime() != null ? request.getAccessTime() : new Date());
 			ret.setUser(request.getUser());
-			ret.setAction(request.getAccessType());
+			ret.setAction(request.getAction());
 			ret.setAccessResult((short) (result.getIsAllowed() ? 1 : 0));
 			ret.setPolicyId(result.getPolicyId());
-			ret.setAccessType(request.getAction());
+			ret.setAccessType(request.getAccessType());
 			ret.setClientIP(request.getClientIPAddress());
 			ret.setClientType(request.getClientType());
 			ret.setSessionId(request.getSessionId());
