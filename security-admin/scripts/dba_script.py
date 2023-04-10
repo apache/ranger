@@ -180,7 +180,7 @@ class MysqlConf(BaseDB):
 	def get_jisql_cmd(self, user, password ,db_name):
 		#TODO: User array for forming command
 		path = RANGER_ADMIN_HOME
-		db_ssl_param=''
+		db_ssl_param='?useSSL=false'
 		db_ssl_cert_param=''
 		if self.db_ssl_enabled == 'true':
 			db_ssl_param="?useSSL=%s&requireSSL=%s&verifyServerCertificate=%s" %(self.db_ssl_enabled,self.db_ssl_required,self.db_ssl_verifyServerCertificate)
