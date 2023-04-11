@@ -19,6 +19,11 @@ FROM ranger-base:latest AS ranger
 
 ARG RANGER_VERSION
 ARG RANGER_DB_TYPE
+ARG TARGETARCH
+ARG RANGER_ADMIN_JAVA_VERSION
+
+ENV JAVA_HOME      /usr/lib/jvm/java-${RANGER_ADMIN_JAVA_VERSION}-openjdk-${TARGETARCH}
+RUN update-java-alternatives --set /usr/lib/jvm/java-1.${RANGER_ADMIN_JAVA_VERSION}.0-openjdk-${TARGETARCH}
 
 COPY ./dist/version                               /home/ranger/dist/
 COPY ./dist/ranger-${RANGER_VERSION}-admin.tar.gz /home/ranger/dist/
