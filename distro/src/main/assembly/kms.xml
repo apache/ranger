@@ -182,6 +182,8 @@
                     <include>com.tencentcloudapi:tencentcloud-sdk-java</include>
                     <include>com.squareup.okhttp:logging-interceptor</include>
                     <include>com.squareup.okhttp:okhttp</include>
+                    <!-- ranger common metrics module-->
+                            <include>org.apache.ranger:ranger-metrics</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
@@ -233,6 +235,7 @@
                     <include>org.codehaus.jackson:jackson-xc</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
+                    <include>org.apache.commons:commons-text:jar:${commons.text.version}</include>
                 </includes>
             </binaries>
         </moduleSet>
