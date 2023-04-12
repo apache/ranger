@@ -568,6 +568,26 @@
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>${nimbus-jose-jwt.version}</version>
         </dependency>
+        <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-kms</artifactId>
+            <version>${google.cloud.kms}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java</artifactId>
+            <version>${gcp.protobuf-java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.google.protobuf</groupId>
+            <artifactId>protobuf-java-util</artifactId>
+            <version>${gcp.protobuf-java.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-metrics</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>
