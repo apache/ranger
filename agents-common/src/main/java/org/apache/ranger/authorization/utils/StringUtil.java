@@ -32,7 +32,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TimeZone;
 
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 
 public class StringUtil {
 
@@ -337,5 +340,175 @@ public class StringUtil {
 			}
 		}
 		return configuredURLs;
+	}
+
+	public static Map<String, Map<String, String>> dedupStringsMapOfMap(Map<String, Map<String, String>> value, Map<String, String> strTbl) {
+		final Map<String, Map<String, String>> ret;
+
+		if (MapUtils.isNotEmpty(value)) {
+			ret = new HashMap<>(value.size());
+
+			for (Map.Entry<String, Map<String, String>> entry : value.entrySet()) {
+				ret.put(dedupString(entry.getKey(), strTbl), dedupStringsMap(entry.getValue(), strTbl));
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static Map<String, Set<String>> dedupStringsMapOfSet(Map<String, Set<String>> value, Map<String, String> strTbl) {
+		final Map<String, Set<String>> ret;
+
+		if (MapUtils.isNotEmpty(value)) {
+			ret = new HashMap<>(value.size());
+
+			for (Map.Entry<String, Set<String>> entry : value.entrySet()) {
+				ret.put(dedupString(entry.getKey(), strTbl), dedupStringsSet(entry.getValue(), strTbl));
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static Map<String, List<String>> dedupStringsMapOfList(Map<String, List<String>> value, Map<String, String> strTbl) {
+		final Map<String, List<String>> ret;
+
+		if (MapUtils.isNotEmpty(value)) {
+			ret = new HashMap<>(value.size());
+
+			for (Map.Entry<String, List<String>> entry : value.entrySet()) {
+				ret.put(dedupString(entry.getKey(), strTbl), dedupStringsList(entry.getValue(), strTbl));
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static HashMap<String, List<String>> dedupStringsHashMapOfList(HashMap<String, List<String>> value, Map<String, String> strTbl) {
+		final HashMap<String, List<String>> ret;
+
+		if (MapUtils.isNotEmpty(value)) {
+			ret = new HashMap<>(value.size());
+
+			for (Map.Entry<String, List<String>> entry : value.entrySet()) {
+				ret.put(dedupString(entry.getKey(), strTbl), dedupStringsList(entry.getValue(), strTbl));
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static Map<String, Object> dedupStringsMapOfObject(Map<String, Object> value, Map<String, String> strTbl) {
+		final Map<String, Object> ret;
+
+		if (MapUtils.isNotEmpty(value)) {
+			ret = new HashMap<>(value.size());
+
+			for (Map.Entry<String, Object> entry : value.entrySet()) {
+				ret.put(dedupString(entry.getKey(), strTbl), entry.getValue());
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static Map<String, RangerPolicyResource> dedupStringsMapOfPolicyResource(Map<String, RangerPolicyResource> value, Map<String, String> strTbl) {
+		final Map<String, RangerPolicyResource> ret;
+
+		if (MapUtils.isNotEmpty(value)) {
+			ret = new HashMap<>(value.size());
+
+			for (Map.Entry<String, RangerPolicyResource> entry : value.entrySet()) {
+				RangerPolicyResource resource = entry.getValue();
+
+				resource.dedupStrings(strTbl);
+
+				ret.put(dedupString(entry.getKey(), strTbl), resource);
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static Map<String, String> dedupStringsMap(Map<String, String> value, Map<String, String> strTbl) {
+		final Map<String, String> ret;
+
+		if (MapUtils.isNotEmpty(value)) {
+			ret = new HashMap<>(value.size());
+
+			for (Map.Entry<String, String> entry : value.entrySet()) {
+				ret.put(dedupString(entry.getKey(), strTbl), dedupString(entry.getValue(), strTbl));
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static Set<String> dedupStringsSet(Set<String> value, Map<String, String> strTbl) {
+		final Set<String> ret;
+
+		if (CollectionUtils.isNotEmpty(value)) {
+			ret = new HashSet<>(value.size());
+
+			for (String val : value) {
+				ret.add(dedupString(val, strTbl));
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static List<String> dedupStringsList(List<String> value, Map<String, String> strTbl) {
+		final List<String> ret;
+
+		if (CollectionUtils.isNotEmpty(value)) {
+			ret = new ArrayList<>(value.size());
+
+			for (String val : value) {
+				ret.add(dedupString(val, strTbl));
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static Collection<String> dedupStringsCollection(Collection<String> value, Map<String, String> strTbl) {
+		final Collection<String> ret;
+
+		if (CollectionUtils.isNotEmpty(value)) {
+			ret = value instanceof Set ? new HashSet<>(value.size()) : new ArrayList<>(value.size());
+
+			for (String val : value) {
+				ret.add(dedupString(val, strTbl));
+			}
+		} else {
+			ret = value;
+		}
+
+		return ret;
+	}
+
+	public static String dedupString(String str, Map<String, String> strTbl) {
+		String ret = str != null ? strTbl.putIfAbsent(str, str) : null;
+
+		return ret == null ? str : ret;
 	}
 }

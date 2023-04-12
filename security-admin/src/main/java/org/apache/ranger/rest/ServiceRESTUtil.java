@@ -219,9 +219,7 @@ public class ServiceRESTUtil {
 		if (ServiceRESTUtil.containsRangerCondition(existingPolicy) || ServiceRESTUtil.containsRangerCondition(appliedPolicy)) {
 			LOG.info("Applied policy [" + appliedPolicy + "] or existing policy [" + existingPolicy + "] contains condition(s). Combining two policies.");
 			combinePolicy(existingPolicy, appliedPolicy);
-
 		} else {
-
 			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
 			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
 			processApplyPolicyForItemType(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
@@ -234,33 +232,52 @@ public class ServiceRESTUtil {
 	}
 
 	static private void combinePolicy(RangerPolicy existingPolicy, RangerPolicy appliedPolicy) {
+		combinePolicyItems(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW);
+		combinePolicyItems(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY);
+		combinePolicyItems(existingPolicy, appliedPolicy, POLICYITEM_TYPE.ALLOW_EXCEPTIONS);
+		combinePolicyItems(existingPolicy, appliedPolicy, POLICYITEM_TYPE.DENY_EXCEPTIONS);
+	}
 
+	static private void combinePolicyItems(RangerPolicy existingPolicy, RangerPolicy appliedPolicy, POLICYITEM_TYPE polityItemType) {
+		List<RangerPolicy.RangerPolicyItem> existingPolicyItems;
 		List<RangerPolicy.RangerPolicyItem> appliedPolicyItems;
 
-		// Combine allow policy-items
-		appliedPolicyItems = appliedPolicy.getPolicyItems();
-		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
-			existingPolicy.getPolicyItems().addAll(appliedPolicyItems);
+		switch (polityItemType) {
+			case ALLOW:
+				existingPolicyItems = existingPolicy.getPolicyItems();
+				appliedPolicyItems = appliedPolicy.getPolicyItems();
+				break;
+			case DENY:
+				existingPolicyItems = existingPolicy.getDenyPolicyItems();
+				appliedPolicyItems = appliedPolicy.getDenyPolicyItems();
+				break;
+			case ALLOW_EXCEPTIONS:
+				existingPolicyItems = existingPolicy.getAllowExceptions();
+				appliedPolicyItems = appliedPolicy.getAllowExceptions();
+				break;
+			case DENY_EXCEPTIONS:
+				existingPolicyItems = existingPolicy.getDenyExceptions();
+				appliedPolicyItems = appliedPolicy.getDenyExceptions();
+				break;
+			default:
+				existingPolicyItems = null;
+				appliedPolicyItems = null;
+				break;
 		}
 
-		// Combine deny policy-items
-		appliedPolicyItems = appliedPolicy.getDenyPolicyItems();
 		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
-			existingPolicy.getDenyPolicyItems().addAll(appliedPolicyItems);
+			if (CollectionUtils.isNotEmpty(existingPolicyItems)) {
+				List<RangerPolicy.RangerPolicyItem> itemsToAdd = new ArrayList<>();
+				for (RangerPolicy.RangerPolicyItem appliedPolicyItem : appliedPolicyItems) {
+					if (!existingPolicyItems.contains(appliedPolicyItem)) {
+						itemsToAdd.add(appliedPolicyItem);
+					}
+				}
+				existingPolicyItems.addAll(itemsToAdd);
+			} else {
+				existingPolicyItems.addAll(appliedPolicyItems);
+			}
 		}
-
-		// Combine allow-exception policy-items
-		appliedPolicyItems = appliedPolicy.getAllowExceptions();
-		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
-			existingPolicy.getAllowExceptions().addAll(appliedPolicyItems);
-		}
-
-		// Combine deny-exception policy-items
-		appliedPolicyItems = appliedPolicy.getDenyExceptions();
-		if (CollectionUtils.isNotEmpty(appliedPolicyItems)) {
-			existingPolicy.getDenyExceptions().addAll(appliedPolicyItems);
-		}
-
 	}
 
 	static private void processApplyPolicyForItemType(RangerPolicy existingPolicy, RangerPolicy appliedPolicy, POLICYITEM_TYPE policyItemType) {
@@ -592,32 +609,39 @@ public class ServiceRESTUtil {
 		for (RangerPolicy.RangerPolicyItem policyItem : appliedPolicyItems) {
 			List<String> users = policyItem.getUsers();
 			for (String user : users) {
-				RangerPolicy.RangerPolicyItem[] items = existingUserPolicyItems.get(user);
+				RangerPolicy.RangerPolicyItem[] existingPolicyItems = existingUserPolicyItems.get(user);
 
-				if (items == null) {
+				if (existingPolicyItems == null) {
 					// Should not get here
 					LOG.warn("Should not have come here..");
-					items = new RangerPolicy.RangerPolicyItem[4];
-					existingUserPolicyItems.put(user, items);
+					existingPolicyItems = new RangerPolicy.RangerPolicyItem[4];
+					existingUserPolicyItems.put(user, existingPolicyItems);
 				}
 
-				addPolicyItemForUser(items, policyItemType.ordinal(), user, policyItem);
+				addPolicyItemForUser(existingPolicyItems, policyItemType.ordinal(), user, policyItem);
 
 				switch (policyItemType) {
 					case ALLOW:
-						removeAccesses(items[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()], policyItem.getAccesses());
-						addPolicyItemForUser(items, POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal(), user, policyItem);
+						RangerPolicy.RangerPolicyItem denyPolicyItem = existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()];
+						if (denyPolicyItem != null) {
+							removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
+							addPolicyItemForUser(existingPolicyItems, POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal(), user, policyItem);
+						}
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()], policyItem.getAccesses());
 						break;
 					case DENY:
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
-						addPolicyItemForUser(items, POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal(), user, policyItem);
-						removeAccesses(items[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], policyItem.getAccesses());
+						RangerPolicy.RangerPolicyItem allowPolicyItem = existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()];
+						if (allowPolicyItem != null) {
+							removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
+							addPolicyItemForUser(existingPolicyItems, POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal(), user, policyItem);
+						}
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], policyItem.getAccesses());
 						break;
 					case ALLOW_EXCEPTIONS:
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
 						break;
 					case DENY_EXCEPTIONS:
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
 						break;
 					default:
 						LOG.warn("Should not have come here..");
@@ -629,31 +653,38 @@ public class ServiceRESTUtil {
 		for (RangerPolicy.RangerPolicyItem policyItem : appliedPolicyItems) {
 			List<String> groups = policyItem.getGroups();
 			for (String group : groups) {
-				RangerPolicy.RangerPolicyItem[] items = existingGroupPolicyItems.get(group);
+				RangerPolicy.RangerPolicyItem[] existingPolicyItems = existingGroupPolicyItems.get(group);
 
-				if (items == null) {
+				if (existingPolicyItems == null) {
 					// Should not get here
-					items = new RangerPolicy.RangerPolicyItem[4];
-					existingGroupPolicyItems.put(group, items);
+					existingPolicyItems = new RangerPolicy.RangerPolicyItem[4];
+					existingGroupPolicyItems.put(group, existingPolicyItems);
 				}
 
-				addPolicyItemForGroup(items, policyItemType.ordinal(), group, policyItem);
+				addPolicyItemForGroup(existingPolicyItems, policyItemType.ordinal(), group, policyItem);
 
 				switch (policyItemType) {
 					case ALLOW:
-						removeAccesses(items[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()], policyItem.getAccesses());
-						addPolicyItemForGroup(items, POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal(), group, policyItem);
+						RangerPolicy.RangerPolicyItem denyPolicyItem = existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()];
+						if (denyPolicyItem != null) {
+							removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
+							addPolicyItemForGroup(existingPolicyItems, POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal(), group, policyItem);
+						}
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()], policyItem.getAccesses());
 						break;
 					case DENY:
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
-						addPolicyItemForGroup(items, POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal(), group, policyItem);
-						removeAccesses(items[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], policyItem.getAccesses());
+						RangerPolicy.RangerPolicyItem allowPolicyItem = existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()];
+						if (allowPolicyItem != null) {
+							removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
+							addPolicyItemForGroup(existingPolicyItems, POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal(), group, policyItem);
+						}
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], policyItem.getAccesses());
 						break;
 					case ALLOW_EXCEPTIONS:
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
 						break;
 					case DENY_EXCEPTIONS:
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
 						break;
 					default:
 						break;
@@ -664,31 +695,38 @@ public class ServiceRESTUtil {
 		for (RangerPolicy.RangerPolicyItem policyItem : appliedPolicyItems) {
 			List<String> roles = policyItem.getRoles();
 			for (String role : roles) {
-				RangerPolicy.RangerPolicyItem[] items = existingRolePolicyItems.get(role);
+				RangerPolicy.RangerPolicyItem[] existingPolicyItems = existingRolePolicyItems.get(role);
 
-				if (items == null) {
+				if (existingPolicyItems == null) {
 					// Should not get here
-					items = new RangerPolicy.RangerPolicyItem[4];
-					existingRolePolicyItems.put(role, items);
+					existingPolicyItems = new RangerPolicy.RangerPolicyItem[4];
+					existingRolePolicyItems.put(role, existingPolicyItems);
 				}
 
-				addPolicyItemForRole(items, policyItemType.ordinal(), role, policyItem);
+				addPolicyItemForRole(existingPolicyItems, policyItemType.ordinal(), role, policyItem);
 
 				switch (policyItemType) {
 					case ALLOW:
-						removeAccesses(items[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()], policyItem.getAccesses());
-						addPolicyItemForRole(items, POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal(), role, policyItem);
+						RangerPolicy.RangerPolicyItem denyPolicyItem = existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()];
+						if (denyPolicyItem != null) {
+							removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
+							addPolicyItemForRole(existingPolicyItems, POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal(), role, policyItem);
+						}
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal()], policyItem.getAccesses());
 						break;
 					case DENY:
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
-						addPolicyItemForRole(items, POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal(), role, policyItem);
-						removeAccesses(items[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], policyItem.getAccesses());
+						RangerPolicy.RangerPolicyItem allowPolicyItem = existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()];
+						if (allowPolicyItem != null) {
+							removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
+							addPolicyItemForRole(existingPolicyItems, POLICYITEM_TYPE.ALLOW_EXCEPTIONS.ordinal(), role, policyItem);
+						}
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY_EXCEPTIONS.ordinal()], policyItem.getAccesses());
 						break;
 					case ALLOW_EXCEPTIONS:
-						removeAccesses(items[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.ALLOW.ordinal()], policyItem.getAccesses());
 						break;
 					case DENY_EXCEPTIONS:
+						removeAccesses(existingPolicyItems[POLICYITEM_TYPE.DENY.ordinal()], policyItem.getAccesses());
 						break;
 					default:
 						break;

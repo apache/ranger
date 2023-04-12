@@ -29,7 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 
 @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -37,7 +37,7 @@ import java.io.Serializable;
 public class RangerValidityRecurrence implements Serializable {
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
@@ -81,7 +81,7 @@ public class RangerValidityRecurrence implements Serializable {
     }
 
     @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-    @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+    @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
     @JsonIgnoreProperties(ignoreUnknown=true)
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)

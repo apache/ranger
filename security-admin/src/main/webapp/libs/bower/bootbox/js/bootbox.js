@@ -1,6 +1,6 @@
 /*! @preserve
  * bootbox.js
- * version: 5.4.0
+ * version: 5.5.3
  * author: Nick Payne <nick@kurai.co.uk>
  * license: MIT
  * http://bootboxjs.com/
@@ -65,7 +65,7 @@
 
   var exports = {};
 
-  var VERSION = '5.0.0';
+  var VERSION = '5.5.3';
   exports.VERSION = VERSION;
 
   var locales = {
@@ -154,7 +154,11 @@
     // Append "multiple" property to the select when using the "prompt" helper
     multiple: false,
     // Automatically scroll modal content when height exceeds viewport height
-    scrollable: false
+    scrollable: false,
+    // whether or not to destroy the modal on hide
+    reusable: false,
+    // the element that triggered the dialog opening
+    relatedTarget: null
   };
 
 
@@ -383,8 +387,10 @@
     // setup & teardown required after the underlying
     // modal has performed certain actions.
 
-    // make sure we unbind any listeners once the dialog has definitively been dismissed
-    dialog.one('hide.bs.modal', { dialog: dialog }, unbindModal);
+    if(!options.reusable) {
+      // make sure we unbind any listeners once the dialog has definitively been dismissed
+      dialog.one('hide.bs.modal', { dialog: dialog }, unbindModal);
+    }
 
     if (options.onHide) {
       if ($.isFunction(options.onHide)) {
@@ -395,7 +401,9 @@
       }
     }
 
-    dialog.one('hidden.bs.modal', { dialog: dialog }, destroyModal);
+    if(!options.reusable) {
+      dialog.one('hidden.bs.modal', { dialog: dialog }, destroyModal);
+    }
 
     if (options.onHidden) {
       if ($.isFunction(options.onHidden)) {
@@ -429,7 +437,7 @@
     // Bootbox event listeners; used to decouple some
     // behaviours from their respective triggers
 
-    if (options.backdrop !== 'static') {
+    if (options.backdrop === true) {
       // A boolean true/false according to the Bootstrap docs
       // should show a dialog the user can dismiss by clicking on
       // the background.
@@ -493,13 +501,13 @@
     $(options.container).append(dialog);
 
     dialog.modal({
-      backdrop: options.backdrop ? 'static' : false,
+      backdrop: options.backdrop,
       keyboard: false,
       show: false
     });
 
     if (options.show) {
-      dialog.modal('show');
+      dialog.modal('show', options.relatedTarget);
     }
 
     return dialog;
@@ -1064,12 +1072,19 @@
     // make sure any supplied options take precedence over defaults
     options = $.extend({}, defaults, options);
 
+    //make sure backdrop is either true, false, or 'static'
+    if (!options.backdrop) {
+      options.backdrop = (options.backdrop === false || options.backdrop === 0) ? false : 'static';
+    } else {
+      options.backdrop = typeof options.backdrop === 'string' && options.backdrop.toLowerCase() === 'static' ? 'static' : true;
+    } 
+
     // no buttons is still a valid dialog but it's cleaner to always have
     // a buttons object to iterate over, even if it's empty
     if (!options.buttons) {
       options.buttons = {};
     }
-
+    
     buttons = options.buttons;
 
     total = getKeyLength(buttons);

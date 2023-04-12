@@ -30,7 +30,8 @@ def type_coerce(obj, objType):
     elif isinstance(obj, dict):
         ret = objType(obj)
 
-        ret.type_coerce_attrs()
+        if callable(getattr(ret, 'type_coerce_attrs', None)):
+            ret.type_coerce_attrs()
     else:
         ret = None
 
@@ -38,13 +39,8 @@ def type_coerce(obj, objType):
 
 def type_coerce_list(obj, objType):
     if isinstance(obj, list):
-        ret = []
-        for entry in obj:
-            ret.append(type_coerce(entry, objType))
-    else:
-        ret = None
-
-    return ret
+        return [ type_coerce(entry, objType) for entry in obj ]
+    return None
 
 def type_coerce_dict(obj, objType):
     if isinstance(obj, dict):
@@ -66,6 +62,10 @@ def type_coerce_dict_list(obj, objType):
 
     return ret
 
+def type_coerce_list_dict(obj, objType):
+    if isinstance(obj, list):
+        return [ type_coerce_dict(entry, objType) for entry in obj ]
+    return None
 
 class API:
     def __init__(self, path, method, expected_status, consumes=APPLICATION_JSON, produces=APPLICATION_JSON):
@@ -87,8 +87,24 @@ class HttpMethod(enum.Enum):
 
 
 class HTTPStatus:
-    OK                    = 200
-    NO_CONTENT            = 204
-    NOT_FOUND             = 404
-    INTERNAL_SERVER_ERROR = 500
-    SERVICE_UNAVAILABLE   = 503
+    OK                     = 200
+    CREATED                = 201
+    ACCEPTED               = 202
+    NO_CONTENT             = 204
+    MOVED_PERMANENTLY      = 301
+    SEE_OTHER              = 303
+    NOT_MODIFIED           = 304
+    TEMPORARY_REDIRECT     = 307
+    BAD_REQUEST            = 400
+    UNAUTHORIZED           = 401
+    FORBIDDEN              = 403
+    NOT_FOUND              = 404
+    NOT_ACCEPTABLE         = 406
+    CONFLICT               = 409
+    GONE                   = 410
+    PRECONDITION_FAILED    = 412
+    UNSUPPORTED_MEDIA_TYPE = 415
+    INTERNAL_SERVER_ERROR  = 500
+    SERVICE_UNAVAILABLE    = 503
+
+

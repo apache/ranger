@@ -29,8 +29,10 @@ import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import java.util.Map;
+
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -90,6 +92,12 @@ public class RangerPolicyDelta implements java.io.Serializable {
     private void setPoliciesVersion(Long policiesVersion) { this.policiesVersion = policiesVersion; }
 
     public void setPolicy(RangerPolicy policy) { this.policy = policy; }
+
+    public void dedupStrings(Map<String, String> strTbl) {
+        if (policy != null) {
+            policy.dedupStrings(strTbl);
+        }
+    }
 
     @Override
     public String toString() {

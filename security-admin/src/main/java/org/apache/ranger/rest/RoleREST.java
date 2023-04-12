@@ -132,6 +132,8 @@ public class RoleREST {
 
     @POST
     @Path("/roles")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     public RangerRole createRole(@QueryParam("serviceName") String serviceName,  RangerRole role
            , @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
            ) {
@@ -169,6 +171,8 @@ public class RoleREST {
 
     @PUT
     @Path("/roles/{id}")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     public RangerRole updateRole(@PathParam("id") Long roleId
                                 , RangerRole role
                                 , @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
@@ -279,6 +283,7 @@ public class RoleREST {
 
     @GET
     @Path("/roles/name/{name}")
+    @Produces({ "application/json" })
     public RangerRole getRole(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String execUser, @PathParam("name") String roleName) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getRole(name=" + roleName + ")");
@@ -305,6 +310,7 @@ public class RoleREST {
 
     @GET
     @Path("/roles/{id}")
+    @Produces({ "application/json" })
     public RangerRole getRole(@PathParam("id") Long id) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getRole(id=" + id + ")");
@@ -333,6 +339,7 @@ public class RoleREST {
 
     @GET
     @Path("/roles")
+    @Produces({ "application/json" })
     public RangerRoleList getAllRoles(@Context HttpServletRequest request) {
         RangerRoleList ret = new RangerRoleList();
         if (LOG.isDebugEnabled()) {
@@ -356,6 +363,7 @@ public class RoleREST {
 
     @GET
     @Path("/lookup/roles")
+    @Produces({ "application/json" })
     public RangerRoleList getAllRolesForUser(@Context HttpServletRequest request) {
         RangerRoleList ret = new RangerRoleList();
         if (LOG.isDebugEnabled()) {
@@ -385,6 +393,7 @@ public class RoleREST {
 
     @GET
     @Path("/roles/names")
+    @Produces({ "application/json" })
     public List<String> getAllRoleNames(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @Context HttpServletRequest request) {
         final List<String> ret;
         if (LOG.isDebugEnabled()) {
@@ -413,7 +422,9 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/addUsersAndGroups")
-    public RangerRole addUsersAndGroups(Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> addUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ", isAdmin=" + isAdmin + ")");
         }
@@ -478,7 +489,9 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/removeUsersAndGroups")
-    public RangerRole removeUsersAndGroups(Long roleId, List<String> users, List<String> groups) {
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> removeUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
         }
@@ -531,7 +544,9 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/removeAdminFromUsersAndGroups")
-    public RangerRole removeAdminFromUsersAndGroups(Long roleId, List<String> users, List<String> groups) {
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> removeAdminFromUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
         }
@@ -579,8 +594,8 @@ public class RoleREST {
      */
 
     @PUT
-    @Consumes({ "application/json", "application/xml" })
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @Path("/roles/grant/{serviceName}")
     public RESTResponse grantRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest grantRoleRequest, @Context HttpServletRequest request) {
         if(LOG.isDebugEnabled()) {
@@ -634,8 +649,8 @@ public class RoleREST {
 
     @PUT
     @Path("/roles/revoke/{serviceName}")
-    @Consumes({ "application/json", "application/xml" })
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     public RESTResponse revokeRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest revokeRoleRequest, @Context HttpServletRequest request) {
 
         if(LOG.isDebugEnabled()) {
@@ -691,7 +706,7 @@ public class RoleREST {
 
     @GET
     @Path("/roles/user/{user}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public List<String> getUserRoles(@PathParam("user") String userName, @Context HttpServletRequest request) {
         Set<String> ret = new HashSet<>();
         if (LOG.isDebugEnabled()) {
@@ -723,7 +738,7 @@ public class RoleREST {
 
     @GET
     @Path("/download/{serviceName}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public RangerRoles getRangerRolesIfUpdated(
             @PathParam("serviceName") String serviceName,
             @DefaultValue("-1") @QueryParam("lastKnownRoleVersion") Long lastKnownRoleVersion,
@@ -790,7 +805,7 @@ public class RoleREST {
 
     @GET
     @Path("/secure/download/{serviceName}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public RangerRoles getSecureRangerRolesIfUpdated(
             @PathParam("serviceName") String serviceName,
             @DefaultValue("-1") @QueryParam("lastKnownRoleVersion") Long lastKnownRoleVersion,
@@ -834,7 +849,7 @@ public class RoleREST {
                 XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
                 RangerService rangerService = svcStore.getServiceByName(serviceName);
 
-                if (org.apache.commons.lang.StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+                if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
                     if (isKeyAdmin) {
                         isAllowed = true;
                     }else {
@@ -909,7 +924,7 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
 
-        if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
+        if (!bizUtil.isUserRangerAdmin(effectiveUser) && !svcStore.isServiceAdminUser(serviceName, effectiveUser)) {
             throw new Exception("User " + effectiveUser + " does not have permission for this operation");
         }
     }
@@ -937,7 +952,7 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
         try {
-            if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
+            if (!bizUtil.isUserRangerAdmin(effectiveUser) && !svcStore.isServiceAdminUser(serviceName, effectiveUser)) {
                 existingRole = roleStore.getRole(roleName);
                 ensureRoleAccess(effectiveUser, userGroups, existingRole);
 

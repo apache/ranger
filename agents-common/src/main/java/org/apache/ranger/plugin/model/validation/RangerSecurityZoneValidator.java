@@ -35,11 +35,13 @@ import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatche
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.RangerResourceEvaluatorsRetriever;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -407,69 +409,12 @@ public class RangerSecurityZoneValidator extends RangerValidator {
         //       flag error if there are more than one matching evaluators with different zone-ids.
         //
 
-        RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef, true);
-
         for (RangerSecurityZone zone : zones) {
             List<HashMap<String, List<String>>> resources = zone.getServices().get(serviceName).getResources();
 
             for (Map<String, List<String>> resource : resources) {
 
-                Set<RangerZoneResourceMatcher>       smallestList     = null;
-
-                List<String> resourceKeys = serviceDefHelper.getOrderedResourceNames(resource.keySet());
-
-                for (String resourceDefName : resourceKeys) {
-                    List<String> resourceValues = resource.get(resourceDefName);
-
-                    RangerResourceTrie<RangerZoneResourceMatcher> trie = trieMap.get(resourceDefName);
-
-                    Set<RangerZoneResourceMatcher> zoneMatchersForResource = trie.getEvaluatorsForResource(resourceValues);
-                    Set<RangerZoneResourceMatcher> inheritedZoneMatchers = trie.getInheritedEvaluators();
-
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("ResourceDefName:[" + resourceDefName + "], values:[" + resourceValues + "], matched-zones:[" + zoneMatchersForResource + "], inherited-zones:[" + inheritedZoneMatchers + "]");
-                    }
-
-                    if (smallestList != null) {
-                        if (CollectionUtils.isEmpty(inheritedZoneMatchers) && CollectionUtils.isEmpty(zoneMatchersForResource)) {
-                            smallestList = null;
-                        } else if (CollectionUtils.isEmpty(inheritedZoneMatchers)) {
-                            smallestList.retainAll(zoneMatchersForResource);
-                        } else if (CollectionUtils.isEmpty(zoneMatchersForResource)) {
-                            smallestList.retainAll(inheritedZoneMatchers);
-                        } else {
-                            Set<RangerZoneResourceMatcher> smaller, bigger;
-                            if (zoneMatchersForResource.size() < inheritedZoneMatchers.size()) {
-                                smaller = zoneMatchersForResource;
-                                bigger = inheritedZoneMatchers;
-                            } else {
-                                smaller = inheritedZoneMatchers;
-                                bigger = zoneMatchersForResource;
-                            }
-                            Set<RangerZoneResourceMatcher> tmp = new HashSet<>();
-                            if (smallestList.size() < smaller.size()) {
-                                smallestList.stream().filter(smaller::contains).forEach(tmp::add);
-                                smallestList.stream().filter(bigger::contains).forEach(tmp::add);
-                            } else {
-                                smaller.stream().filter(smallestList::contains).forEach(tmp::add);
-                                if (smallestList.size() < bigger.size()) {
-                                    smallestList.stream().filter(bigger::contains).forEach(tmp::add);
-                                } else {
-                                    bigger.stream().filter(smallestList::contains).forEach(tmp::add);
-                                }
-                            }
-                            smallestList = tmp;
-                        }
-                    } else {
-                        if (CollectionUtils.isEmpty(inheritedZoneMatchers) || CollectionUtils.isEmpty(zoneMatchersForResource)) {
-                            Set<RangerZoneResourceMatcher> tmp = CollectionUtils.isEmpty(inheritedZoneMatchers) ? zoneMatchersForResource : inheritedZoneMatchers;
-                            smallestList = resourceKeys.size() == 1 || CollectionUtils.isEmpty(tmp) ? tmp : new HashSet<>(tmp);
-                        } else {
-                            smallestList = new HashSet<>(zoneMatchersForResource);
-                            smallestList.addAll(inheritedZoneMatchers);
-                        }
-                    }
-                }
+                Collection<RangerZoneResourceMatcher> smallestList = RangerResourceEvaluatorsRetriever.getEvaluators(trieMap, resource);
 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Resource:[" + resource +"], matched-zones:[" + smallestList +"]");
@@ -478,8 +423,6 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                 if (CollectionUtils.isEmpty(smallestList) || smallestList.size() == 1) {
                     continue;
                 }
-
-                final Set<RangerZoneResourceMatcher> intersection = smallestList;
 
                 RangerAccessResourceImpl accessResource = new RangerAccessResourceImpl();
 
@@ -491,7 +434,7 @@ public class RangerSecurityZoneValidator extends RangerValidator {
 
                 Set<String> matchedZoneNames = new HashSet<>();
 
-                for (RangerZoneResourceMatcher zoneMatcher : intersection) {
+                for (RangerZoneResourceMatcher zoneMatcher : smallestList) {
                     if (LOG.isDebugEnabled()) {
                         LOG.debug("Trying to match resource:[" + accessResource +"] using zoneMatcher:[" + zoneMatcher + "]");
                     }

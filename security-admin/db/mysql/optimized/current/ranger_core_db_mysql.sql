@@ -115,9 +115,9 @@ CREATE TABLE `x_portal_user` (
   `email` varchar(512) DEFAULT NULL,
   `status` int(11) NOT NULL DEFAULT '0',
   `user_src` int(11) NOT NULL DEFAULT '0',
-  `notes` varchar(4000) DEFAULT NULL,
-  `other_attributes` varchar(4000) DEFAULT NULL,
-  `sync_source` varchar(4000) DEFAULT NULL,
+  `notes` text DEFAULT NULL,
+  `other_attributes` text DEFAULT NULL,
+  `sync_source` text DEFAULT NULL,
   `old_passwords` text DEFAULT NULL,
   `password_updated_time` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
@@ -272,14 +272,14 @@ CREATE TABLE `x_group` (
   `added_by_id` bigint(20) DEFAULT NULL,
   `upd_by_id` bigint(20) DEFAULT NULL,
   `group_name` varchar(767) NOT NULL,
-  `descr` varchar(4000) NOT NULL,
+  `descr` text DEFAULT NULL,
   `status` int(11) NOT NULL DEFAULT '0',
   `group_type` int(11) NOT NULL DEFAULT '0',
   `cred_store_id` bigint(20) DEFAULT NULL,
   `group_src` INT NOT NULL DEFAULT 0,
   `is_visible` INT(11) NOT NULL DEFAULT '1',
-  `other_attributes` varchar(4000) DEFAULT NULL,
-  `sync_source` varchar(4000) DEFAULT NULL,
+  `other_attributes` text DEFAULT NULL,
+  `sync_source` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `x_group_UK_group_name` (`group_name`),
   KEY `x_group_FK_added_by_id` (`added_by_id`),
@@ -321,12 +321,12 @@ CREATE TABLE `x_user` (
   `added_by_id` bigint(20) DEFAULT NULL,
   `upd_by_id` bigint(20) DEFAULT NULL,
   `user_name` varchar(767) NOT NULL,
-  `descr` varchar(4000) NOT NULL,
+  `descr` text DEFAULT NULL,
   `status` int(11) NOT NULL DEFAULT '0',
   `cred_store_id` bigint(20) DEFAULT NULL,
   `is_visible` INT(11) NOT NULL DEFAULT '1',
-  `other_attributes` varchar(4000) DEFAULT NULL,
-  `sync_source` varchar(4000) DEFAULT NULL,
+  `other_attributes` text DEFAULT NULL,
+  `sync_source` text DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `x_user_FK_added_by_id` (`added_by_id`),
   KEY `x_user_FK_upd_by_id` (`upd_by_id`),
@@ -1625,10 +1625,10 @@ CREATE TABLE `x_rms_service_resource` (
   `service_resource_elements_text` text,
   PRIMARY KEY (`id`),
   UNIQUE KEY `x_rms_service_res_UK_guid` (`guid`),
+  UNIQUE KEY `x_rms_service_resource_UK_resource_signature` (`resource_signature`),
   CONSTRAINT `x_rms_service_res_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`)
 );
 CREATE INDEX x_rms_service_resource_IDX_service_id ON x_rms_service_resource(service_id);
-CREATE INDEX x_rms_service_resource_IDX_resource_signature ON x_rms_service_resource(resource_signature);
 
 CREATE TABLE `x_rms_notification` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -1812,6 +1812,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('057',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');

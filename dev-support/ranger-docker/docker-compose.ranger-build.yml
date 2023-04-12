@@ -10,16 +10,17 @@ services:
     networks:
       - ranger
     volumes:
-      - ~/.m2:/home/ranger/.m2:delegated
+      - ${HOME:-~}/.m2:/home/ranger/.m2:delegated
       - ./scripts:/home/ranger/scripts
       - ./patches:/home/ranger/patches
-      - ./dist:/home/ranger/dist
-      - ./../../:/home/ranger/src:delegated
+      - ./dist:/home/ranger/dist:delegated
+      - ${RANGER_HOME:-./../../}:/home/ranger/src:delegated
     depends_on:
       - ranger-base
     environment:
       - BRANCH
       - BUILD_HOST_SRC
+      - PROFILE
       - GIT_URL
       - RANGER_VERSION
       - SKIPTESTS

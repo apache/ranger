@@ -1184,7 +1184,7 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 		try {
-			Mockito.doNothing().when(tagStore).deleteServiceResource(oldTagResourceMap.getId());
+			Mockito.doNothing().when(tagStore).deleteTagResourceMap(oldTagResourceMap.getId());
 		} catch (Exception e) {
 		}
 		
@@ -1197,7 +1197,7 @@ public class TestTagREST {
 		} catch (Exception e) {
 		}
 		try {
-			Mockito.verify(tagStore).deleteServiceResource(oldTagResourceMap.getId());
+			Mockito.verify(tagStore).deleteTagResourceMap(oldTagResourceMap.getId());
 		} catch (Exception e) {
 		}
 	}
@@ -1821,6 +1821,52 @@ public class TestTagREST {
 			Mockito.verify(tagStore).getServiceTagsIfUpdated(serviceName, lastKnownVersion, false);
 		} catch (Exception e) {
 		}
+		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean());
+	}
+
+	@Test
+	public void test58resetTagCacheByServiceNameForServiceAdmin() {
+		boolean isAdmin = false;
+		boolean res = true;
+		RangerService rangerService = new RangerService();
+		rangerService.setId(id);
+		rangerService.setName(serviceName);
+		String userName = "admin";
+		Mockito.when(bizUtil.getCurrentUserLoginId()).thenReturn(userName);
+
+		Mockito.when(bizUtil.isAdmin()).thenReturn(isAdmin);
+		try {
+			Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(rangerService);
+		} catch (Exception e) {
+		}
+		Mockito.when(bizUtil.isUserServiceAdmin(Mockito.any(RangerService.class), Mockito.anyString())).thenReturn(true);
+		try {
+			Mockito.when(tagStore.resetTagCache(serviceName)).thenReturn(true);
+		} catch (Exception e) {
+		}
+		boolean isReset = tagREST.resetTagCache(serviceName);
+		assert isReset == res;
+		Mockito.verify(bizUtil).isAdmin();
+		Mockito.verify(bizUtil).isUserServiceAdmin(Mockito.any(RangerService.class),  Mockito.anyString());
+		try {
+			Mockito.verify(svcStore).getServiceByName(serviceName);
+		} catch (Exception e) {
+		}
+
+		try {
+			Mockito.verify(tagStore).resetTagCache(serviceName);
+		} catch (Exception e) {
+		}
+	}
+	@Test
+	public void test59resetTagCacheWhenServiceNameIsInvalid() {
+		try {
+			Mockito.when(svcStore.getServiceByName(serviceName)).thenReturn(null);
+		} catch (Exception e) {
+		}
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		tagREST.resetTagCache(serviceName);
 		Mockito.verify(restErrorUtil).createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean());
 	}
 }

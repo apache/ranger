@@ -79,6 +79,7 @@ public class SampleClient {
         String serviceDefName     = "sampleServiceDef";
         String serviceName        = "sampleService";
         String policyName         = "samplePolicy";
+        String zoneName           = null;
         String roleName           = "sampleRole";
         Map<String,String> filter = Collections.emptyMap();
 
@@ -145,24 +146,31 @@ public class SampleClient {
                 "root", new RangerPolicy.RangerPolicyResource(Collections.singletonList("/path/to/sample/resource"),false,false));
         RangerPolicy policy = new RangerPolicy();
         policy.setService(serviceName);
+        policy.setZoneName(zoneName);
         policy.setName(policyName);
         policy.setResources(resource);
 
         RangerPolicy createdPolicy = rangerClient.createPolicy(policy);
-        LOG.info("New Policy created successfully {}", gsonBuilder.toJson(createdPolicy));
+        LOG.info("Created policy {} in zone {}: {}", policyName, zoneName, gsonBuilder.toJson(createdPolicy));
 
         /*
-        Get a policy by name
-         */
-        RangerPolicy fetchedPolicy = rangerClient.getPolicy(serviceName, policyName);
-        LOG.info("Policy: {} fetched {}", policyName, gsonBuilder.toJson(fetchedPolicy));
-
+        Get a policy by name and Zone
+        */
+        RangerPolicy fetchedPolicy = rangerClient.getPolicyByNameAndZone(serviceName, policyName, zoneName);
+        LOG.info("Fetched policy {} in zone {}: {}", policyName, zoneName ,gsonBuilder.toJson(fetchedPolicy));
 
         /*
-        Delete a policy
-         */
-        rangerClient.deletePolicy(serviceName, policyName);
-        LOG.info("Policy {} successfully deleted", policyName);
+        Update a policy by name and Zone
+        */
+        RangerPolicy updatedPolicy = rangerClient.updatePolicyByNameAndZone(serviceName, policyName, zoneName, fetchedPolicy);
+        LOG.info("Updated policy {} in zone {}: {}", policyName, zoneName ,gsonBuilder.toJson(updatedPolicy));
+
+        /*
+        Delete a policy by name and zone
+        */
+        rangerClient.deletePolicyByNameAndZone(serviceName, policyName, zoneName);
+        LOG.info("Deleted policy {} in zone {}", policyName, zoneName);
+
 
         /* import tags */
         RangerTagDef tagDefTest1 = new RangerTagDef("test1");

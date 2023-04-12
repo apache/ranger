@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.util;
 
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -32,6 +33,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.commons.collections.MapUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -45,7 +47,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -172,6 +174,40 @@ public class ServicePolicies implements java.io.Serializable {
 		this.securityZones = securityZones;
 	}
 
+	public void dedupStrings() {
+		Map<String, String> strTbl = new HashMap<>();
+
+		serviceName   = StringUtil.dedupString(serviceName, strTbl);
+		auditMode     = StringUtil.dedupString(auditMode, strTbl);
+		serviceConfig = StringUtil.dedupStringsMap(serviceConfig, strTbl);
+
+		if (policies != null) {
+			for (RangerPolicy policy : policies) {
+				policy.dedupStrings(strTbl);
+			}
+		}
+
+		if (serviceDef != null) {
+			serviceDef.dedupStrings(strTbl);
+		}
+
+		if (tagPolicies != null) {
+			tagPolicies.dedupStrings(strTbl);
+		}
+
+		if (securityZones != null) {
+			for (SecurityZoneInfo securityZoneInfo : securityZones.values()) {
+				securityZoneInfo.dedupStrings(strTbl);
+			}
+		}
+
+		if (policyDeltas != null) {
+			for (RangerPolicyDelta policyDelta : policyDeltas) {
+				policyDelta.dedupStrings(strTbl);
+			}
+		}
+	}
+
 	@Override
 	public String toString() {
 		return "serviceName=" + serviceName + ", "
@@ -191,7 +227,7 @@ public class ServicePolicies implements java.io.Serializable {
 	public void setPolicyDeltas(List<RangerPolicyDelta> policyDeltas) { this.policyDeltas = policyDeltas; }
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -296,6 +332,22 @@ public class ServicePolicies implements java.io.Serializable {
 			this.serviceConfig = serviceConfig;
 		}
 
+		public void dedupStrings(Map<String, String> strTbl) {
+			serviceName   = StringUtil.dedupString(serviceName, strTbl);
+			auditMode     = StringUtil.dedupString(auditMode, strTbl);
+			serviceConfig = StringUtil.dedupStringsMap(serviceConfig, strTbl);
+
+			if (policies != null) {
+				for (RangerPolicy policy : policies) {
+					policy.dedupStrings(strTbl);
+				}
+			}
+
+			if (serviceDef != null) {
+				serviceDef.dedupStrings(strTbl);
+			}
+		}
+
 		@Override
 		public String toString() {
 			return "serviceName=" + serviceName + ", "
@@ -311,7 +363,7 @@ public class ServicePolicies implements java.io.Serializable {
 	}
 
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
@@ -354,6 +406,32 @@ public class ServicePolicies implements java.io.Serializable {
 		public void setPolicyDeltas(List<RangerPolicyDelta> policyDeltas) { this.policyDeltas = policyDeltas; }
 
 		public void setContainsAssociatedTagService(Boolean containsAssociatedTagService) { this.containsAssociatedTagService = containsAssociatedTagService; }
+
+		public void dedupStrings(Map<String, String> strTbl) {
+			zoneName = StringUtil.dedupString(zoneName, strTbl);
+
+			if (resources != null && resources.size() > 0) {
+				List<HashMap<String, List<String>>> updated = new ArrayList<>(resources.size());
+
+				for (HashMap<String, List<String>> resource : resources) {
+					updated.add(StringUtil.dedupStringsHashMapOfList(resource, strTbl));
+				}
+
+				resources = updated;
+			}
+
+			if (policies != null) {
+				for (RangerPolicy policy : policies) {
+					policy.dedupStrings(strTbl);
+				}
+			}
+
+			if (policyDeltas != null) {
+				for (RangerPolicyDelta policyDelta : policyDeltas) {
+					policyDelta.dedupStrings(strTbl);
+				}
+			}
+		}
 
 		@Override
 		public String toString() {

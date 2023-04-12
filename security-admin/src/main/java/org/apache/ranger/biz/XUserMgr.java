@@ -46,7 +46,6 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.plugin.util.RangerUserStore;
-import org.apache.ranger.security.context.RangerAPIMapping;
 import org.apache.ranger.service.*;
 import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
 import org.apache.ranger.ugsyncutil.model.UsersGroupRoleAssignments;
@@ -193,11 +192,19 @@ public class XUserMgr extends XUserMgrBase {
 		xaBizUtil.blockAuditorRoleUser();
 		validatePassword(vXUser);
 		String userName = vXUser.getName();
+		String firstName = vXUser.getFirstName();
 		if (userName == null || "null".equalsIgnoreCase(userName)
 				|| userName.trim().isEmpty()) {
 			throw restErrorUtil.createRESTException(
 					"Please provide a valid username.",
 					MessageEnums.INVALID_INPUT_DATA);
+		}
+
+		if (firstName == null || "null".equalsIgnoreCase(firstName)
+			|| firstName.trim().isEmpty()) {
+			throw restErrorUtil.createRESTException(
+				"Please provide a valid first name.",
+				MessageEnums.INVALID_INPUT_DATA);
 		}
 
 		if (vXUser.getDescription() == null) {
@@ -271,49 +278,33 @@ public class XUserMgr extends XUserMgrBase {
 			assignPermissionToUser(vXPortalUser, true);
 		}
 
+		updateUserStoreVersion("createXUser(" + vXUser.getName() + ")");
+
 		return createdXUser;
 	}
 
 	public void assignPermissionToUser(VXPortalUser vXPortalUser, boolean isCreate) {
 		HashMap<String, Long> moduleNameId = getAllModuleNameAndIdMap();
-		if(moduleNameId!=null && vXPortalUser!=null){
-			if(CollectionUtils.isNotEmpty(vXPortalUser.getUserRoleList())){
-				for (String role : vXPortalUser.getUserRoleList()) {
-
-					if (role.equals(RangerConstants.ROLE_USER)) {
-
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+		if(moduleNameId!=null && vXPortalUser!=null && CollectionUtils.isNotEmpty(vXPortalUser.getUserRoleList())){
+			for (String role : vXPortalUser.getUserRoleList()) {
+				if (RangerConstants.VALID_USER_ROLE_LIST.contains(role)){
+					createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+					createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+					if (role.equals(RangerConstants.ROLE_USER)){
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
-					} else if (role.equals(RangerConstants.ROLE_SYS_ADMIN)) {
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
-					} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
+					} else {
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
 						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-					} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-					} else if (role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerAPIMapping.TAB_PERMISSIONS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
-					}
 
+						if (role.equals(RangerConstants.ROLE_SYS_ADMIN) || role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
+
+							createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
+							createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
+
+						} else {
+							createOrUpdateUserPermisson(vXPortalUser, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
+						}
+					}
 				}
 			}
 		}
@@ -384,6 +375,12 @@ public class XUserMgr extends XUserMgrBase {
 			throw restErrorUtil.createRESTException("Please provide a valid "
 					+ "username.", MessageEnums.INVALID_INPUT_DATA);
 		}
+		String firstName = vXUser.getFirstName();
+		if (firstName == null || "null".equalsIgnoreCase(firstName)
+				|| firstName.trim().isEmpty()) {
+			throw restErrorUtil.createRESTException("Please provide a valid first name.", MessageEnums.INVALID_INPUT_DATA);
+		}
+
 		checkAccess(vXUser.getName());
 		xaBizUtil.blockAuditorRoleUser();
 		VXPortalUser oldUserProfile = userMgr.getUserProfileByLoginId(vXUser
@@ -504,6 +501,8 @@ public class XUserMgr extends XUserMgrBase {
 		trxLogList.addAll(createOrDelGrpUserWithUpdatedGrpId(vXUser, groupIdList,userId, groupUsersToRemove));
 		xaBizUtil.createTrxLog(trxLogList);
 
+		updateUserStoreVersion("updateXUser(" + vXUser.getName() + ")");
+
 		return vXUser;
 	}
 	private List<XXTrxLog> createOrDelGrpUserWithUpdatedGrpId(VXUser vXUser, Collection<Long> groupIdList,Long userId, List<Long> groupUsersToRemove) {
@@ -605,11 +604,9 @@ public class XUserMgr extends XUserMgrBase {
 			assignPermissionToUser(vXPortalUser, true);
 		}
 		vxUGInfo.setXgroupInfo(vxg);
-		try {
-			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
-		} catch (Exception excp) {
-			logger.error("createXUserGroupFromMap(" + vXUser.getName() + ") failed", excp);
-		}
+
+		updateUserStoreVersion("createXUserGroupFromMap(" + vXUser.getName() + ")");
+
 		return vxUGInfo;
 	}
 
@@ -667,11 +664,7 @@ public class XUserMgr extends XUserMgrBase {
 
 		vxGUInfo.setXuserInfo(vxu);
 
-		try {
-			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
-		} catch (Exception excp) {
-			logger.error("createXGroupUserFromMap(" + vXGroup.getName() + ") failed", excp);
-		}
+		updateUserStoreVersion("createXGroupUserFromMap(" + vXGroup.getName() + ")");
 
 		return vxGUInfo;
 	}
@@ -725,7 +718,11 @@ public class XUserMgr extends XUserMgrBase {
 		checkAdminAccess();
 		xaBizUtil.blockAuditorRoleUser();
 		validatePassword(vXUser);
-		return xUserService.createXUserWithOutLogin(vXUser);
+		VXUser ret = xUserService.createXUserWithOutLogin(vXUser);
+
+		updateUserStoreVersion("createXUserWithOutLogin(" + vXUser.getName() + ")");
+
+		return ret;
 	}
 
 	public VXUser createExternalUser(String userName) {
@@ -745,13 +742,21 @@ public class XUserMgr extends XUserMgrBase {
 		List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup,
 				"create");
 		xaBizUtil.createTrxLog(trxLogList);
+
+		updateUserStoreVersion("createXGroup(" + vXGroup.getName() + ")");
+
 		return vXGroup;
 	}
 
 	public VXGroup createXGroupWithoutLogin(VXGroup vXGroup) {
 		checkAdminAccess();
 		xaBizUtil.blockAuditorRoleUser();
-		return xGroupService.createXGroupWithOutLogin(vXGroup);
+
+		VXGroup ret = xGroupService.createXGroupWithOutLogin(vXGroup);
+
+		updateUserStoreVersion("createXGroupWithoutLogin(" + vXGroup.getName() + ")");
+
+		return ret;
 	}
 
 	public VXGroupUser createXGroupUser(VXGroupUser vXGroupUser) {
@@ -2251,7 +2256,6 @@ public class XUserMgr extends XUserMgrBase {
 		List<XXPortalUserRole> xXPortalUserRoles=xXPortalUserRoleDao.findByUserId(xXPortalUserId);
 
 		XXPolicyDao xXPolicyDao = daoManager.getXXPolicy();
-		List<XXPolicy> xXPolicyList=xXPolicyDao.findByUserId(id);
 		logger.warn("Deleting User : "+vXUser.getName());
 		if (force) {
 			//delete XXGroupUser mapping
@@ -2303,6 +2307,7 @@ public class XUserMgr extends XUserMgrBase {
 				}
 			}
 			//delete XXPolicyItemUserPerm records of user
+			List<XXPolicy> xXPolicyList=xXPolicyDao.findByUserId(id);
 			for(XXPolicy xXPolicy:xXPolicyList){
 				RangerPolicy rangerPolicy = policyService.getPopulatedViewObject(xXPolicy);
 				List<RangerPolicyItem> policyItems = rangerPolicy.getPolicyItems();
@@ -2352,7 +2357,7 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		} else {
 			boolean hasReferences=false;
-
+			List<XXPolicy> xXPolicyList=xXPolicyDao.findByUserId(id);
 			if(vxGroupUserList!=null && vxGroupUserList.getListSize()>0){
 				hasReferences=true;
 			}
@@ -2492,7 +2497,6 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	@Transactional(readOnly = false, propagation = Propagation.REQUIRES_NEW)
 	public VXUser createServiceConfigUser(String userName){
 		if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
 			logger.error("User Name: "+userName);
@@ -2506,6 +2510,27 @@ public class XUserMgr extends XUserMgrBase {
 
 		xxUser = daoManager.getXXUser().findByUserName(userName);
 		VXUser vXUser = null;
+		if (xxUser != null) {
+			vXUser = xUserService.populateViewBean(xxUser);
+		}
+		return vXUser;
+	}
+
+	public VXUser createServiceConfigUserSynchronously(String userName){
+		if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
+			logger.error("User Name: "+userName);
+			throw restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA);
+		}
+
+		VXUser vXUser = null;
+
+		XXUser xxUser = daoManager.getXXUser().findByUserName(userName);
+		if (xxUser == null) {
+			ExternalUserCreator externalUserCreator = new ExternalUserCreator(userName);
+			externalUserCreator.run();
+			xxUser = daoManager.getXXUser().findByUserName(userName);
+		}
+
 		if (xxUser != null) {
 			vXUser = xUserService.populateViewBean(xxUser);
 		}
@@ -2564,20 +2589,19 @@ public class XUserMgr extends XUserMgrBase {
 		return daoManager.getXXUser().findGroupsByUserIds();
 	}
 
-	public RangerUserStore getRangerUserStore(Long lastKnownUserStoreVersion) throws Exception {
-		RangerUserStore ret                   = null;
-		Long        rangerUserStoreVersionInDB = getUserStoreVersion();
-
+	public RangerUserStore getRangerUserStoreIfUpdated(Long lastKnownUserStoreVersion) throws Exception {
 		if (logger.isDebugEnabled()) {
-			logger.debug("==> XUserMgr.getRangerUserStore() lastKnownUserStoreVersion= " + lastKnownUserStoreVersion + " rangerUserStoreVersionInDB= " + rangerUserStoreVersionInDB);
+			logger.debug("==> XUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion=" + lastKnownUserStoreVersion + ")");
 		}
 
-		if (rangerUserStoreVersionInDB != null) {
-			ret = RangerUserStoreCache.getInstance().getLatestRangerUserStoreOrCached(this, lastKnownUserStoreVersion, rangerUserStoreVersionInDB);
+		RangerUserStore ret = RangerUserStoreCache.getInstance().getLatestRangerUserStoreOrCached(this);
+
+		if (ret != null && Objects.equals(ret.getUserStoreVersion(), lastKnownUserStoreVersion)) {
+			ret = null;
 		}
 
 		if (logger.isDebugEnabled()) {
-			logger.debug("<= XUserMgr.getRangerUserStore() lastKnownUserStoreVersion= " + lastKnownUserStoreVersion + " rangerUserStoreVersionInDB= " + rangerUserStoreVersionInDB + " RangerRoles= " + ret);
+			logger.debug("<== XUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion=" + lastKnownUserStoreVersion + "): ret=" + ret);
 		}
 
 		return ret;
@@ -2591,29 +2615,35 @@ public class XUserMgr extends XUserMgrBase {
 		int ret = 0;
 
 		for (VXUser vXUser : users.getList()) {
-			if (vXUser == null || vXUser.getName() == null
-					|| "null".equalsIgnoreCase(vXUser.getName())
-					|| vXUser.getName().trim().isEmpty()) {
-				logger.warn("Ignoring invalid username " + vXUser==null? null : vXUser.getName());
+			final String userName  = vXUser == null ? null : vXUser.getName();
+			final String firstName = vXUser == null ? null : vXUser.getFirstName();
+
+			if (userName == null || "null".equalsIgnoreCase(userName) || userName.trim().isEmpty()) {
+				logger.warn("Ignoring user {}: invalid username", userName);
 				continue;
 			}
-			checkAccess(vXUser.getName());
+
+			if (firstName == null || "null".equalsIgnoreCase(firstName) || firstName.trim().isEmpty()) {
+				logger.warn("Ignoring user {}: invalid firstName {}", userName, firstName);
+				continue;
+			}
+
+			checkAccess(userName);
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 			try {
 				txTemplate.execute(new TransactionCallback<Object>() {
 					@Override
 					public Object doInTransaction(TransactionStatus status) {
-						String username = vXUser.getName();
-						VXPortalUser vXPortalUser = userMgr.getUserProfileByLoginId(username);
+						VXPortalUser vXPortalUser = userMgr.getUserProfileByLoginId(userName);
 						if (vXPortalUser == null) {
 							if (logger.isDebugEnabled()) {
-								logger.debug("create user " + username);
+								logger.debug("create user " + userName);
 							}
-							createXUser(vXUser, username);
+							createXUser(vXUser, userName);
 						} else {
 							if (logger.isDebugEnabled()) {
-								logger.debug("Update user " + username);
+								logger.debug("Update user " + userName);
 							}
 							updateXUser(vXUser, vXPortalUser);
 						}
@@ -2755,11 +2785,9 @@ public class XUserMgr extends XUserMgrBase {
             }
 			createXGroupWithoutLogin(vXGroup);
 		}
-		try {
-			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
-		} catch (Exception excp) {
-			logger.error("createOrUpdateXGroups() failed", excp);
-		}
+
+		updateUserStoreVersion("createOrUpdateXGroups(groupsCount=" + groups.getListSize() + ")");
+
 		return groups.getListSize();
 	}
 
@@ -2924,44 +2952,26 @@ public class XUserMgr extends XUserMgrBase {
 
 	private void assignPermissionToUser(Collection<String> vXPortalUserList, Long vXPortalUserId, Long xUserId, boolean isCreate) {
 		HashMap<String, Long> moduleNameId = getAllModuleNameAndIdMap();
-		if(moduleNameId!=null){
-			if(CollectionUtils.isNotEmpty(vXPortalUserList)){
-				for (String role : vXPortalUserList) {
+		if(moduleNameId != null && CollectionUtils.isNotEmpty(vXPortalUserList)){
+			for (String role : vXPortalUserList) {
+				if (RangerConstants.VALID_USER_ROLE_LIST.contains(role)){
+					createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
+					createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
+					if (role.equals(RangerConstants.ROLE_USER)){
+						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
+					} else {
+						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
+						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
 
-					if (role.equals(RangerConstants.ROLE_USER)) {
+						if (role.equals(RangerConstants.ROLE_SYS_ADMIN) || role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
 
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
-					} else if (role.equals(RangerConstants.ROLE_SYS_ADMIN)) {
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
-					} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN)) {
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS),isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-					} else if (role.equals(RangerConstants.ROLE_KEY_ADMIN_AUDITOR)) {
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-					} else if (role.equals(RangerConstants.ROLE_ADMIN_AUDITOR)) {
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_REPORTS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_RESOURCE_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_AUDIT), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_USER_GROUPS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerAPIMapping.TAB_PERMISSIONS), isCreate);
-						createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
+							createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_TAG_BASED_POLICIES), isCreate);
+							createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_SECURITY_ZONE), isCreate);
+
+						} else {
+							createOrUpdateUserPermisson(vXPortalUserId, xUserId, moduleNameId.get(RangerConstants.MODULE_KEY_MANAGER), isCreate);
+						}
 					}
-
 				}
 			}
 		}
@@ -3161,6 +3171,10 @@ public class XUserMgr extends XUserMgrBase {
 		return vXUserList;
 	}
 
+	public Map<String, Long> getUserCountByRole() {
+		return daoManager.getXXPortalUser().getCountByUserRole();
+	}
+
 	private class ExternalUserCreator implements Runnable {
 		private String userName;
 
@@ -3244,6 +3258,14 @@ public class XUserMgr extends XUserMgrBase {
 			if (logger.isDebugEnabled()) {
 				logger.debug("<== ExternalUserCreator.createExternalUser(username=" + userName);
 			}
+		}
+	}
+
+	private void updateUserStoreVersion(String label) {
+		try {
+			daoManager.getXXGlobalState().onGlobalAppDataChange(RANGER_USER_GROUP_GLOBAL_STATE_NAME);
+		} catch (Exception excp) {
+			logger.error(label + ": userStore version update failed", excp);
 		}
 	}
 }

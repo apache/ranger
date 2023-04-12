@@ -231,6 +231,9 @@ public class TestXUserMgr {
 	@Mock
 	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
+	@Mock
+	XXGlobalStateDao xxGlobalStateDao;
+
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
 
@@ -248,6 +251,7 @@ public class TestXUserMgr {
 		xXPortalUser.setLoginId(adminLoginID);
 		xXPortalUser.setId(userId);
 		currentUserSession.setXXPortalUser(xXPortalUser);
+		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xxGlobalStateDao);
 	}
 
 	@After
@@ -659,8 +663,7 @@ public class TestXUserMgr {
 		vxUser.setName(null);
 		Mockito.when(restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
-		VXUser vXUser=xUserMgr.createXUser(vxUser);
-		Assert.assertNull(vXUser);
+		xUserMgr.createXUser(vxUser);
 	}
 
 	@Test
@@ -678,7 +681,32 @@ public class TestXUserMgr {
 	}
 
 	@Test
+	public void testCreateXUser_WithBlankFirstName() {
+		destroySession();
+		setup();
+		VXUser vxUser = vxUser();
+		vxUser.setName("test");
+		vxUser.setFirstName(null);
+		Mockito.when(restErrorUtil.createRESTException("Please provide a valid first name.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.createXUser(vxUser);
+	}
+
+	@Test
 	public void test04CreateXUser_WithBlankValues() {
+		destroySession();
+		setup();
+		VXUser vxUser = vxUser();
+		vxUser.setDescription(null);
+		vxUser.setFirstName("test");
+		vxUser.setLastName("null");
+		Mockito.when(restErrorUtil.createRESTException("Please provide valid email address.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.createXUser(vxUser);
+	}
+
+	@Test
+	public void testUpdateXUser_WithBlankFirstName() {
 		setup();
 		VXUser vxUser = vxUser();
 		ArrayList<String> userRoleListVXPortaUser = getRoleList();
@@ -686,10 +714,23 @@ public class TestXUserMgr {
 		vXPortalUser.setUserRoleList(userRoleListVXPortaUser);
 		vxUser.setDescription(null);
 		vxUser.setFirstName("null");
-		vxUser.setLastName("null");
-		Mockito.when(restErrorUtil.createRESTException("Please provide valid email address.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
+		Mockito.when(restErrorUtil.createRESTException("Please provide a valid first name.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
 		thrown.expect(WebApplicationException.class);
-		xUserMgr.createXUser(vxUser);
+		xUserMgr.updateXUser(vxUser);
+	}
+
+	@Test
+	public void testUpdateXUser_WithBlankUserName() {
+		setup();
+		VXUser vxUser = vxUser();
+		ArrayList<String> userRoleListVXPortaUser = getRoleList();
+		VXPortalUser vXPortalUser = new VXPortalUser();
+		vXPortalUser.setUserRoleList(userRoleListVXPortaUser);
+		vxUser.setDescription(null);
+		vxUser.setName("null");
+		Mockito.when(restErrorUtil.createRESTException("Please provide a valid username.",MessageEnums.INVALID_INPUT_DATA)).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		xUserMgr.updateXUser(vxUser);
 	}
 
 	@Test
@@ -2438,6 +2479,8 @@ public class TestXUserMgr {
 		Mockito.when(xUserService.searchXUsers(testSearchCriteria)).thenReturn(vXUserListSort);
 		VXGroupUserList vxGroupUserList = vxGroupUserList();
 		Mockito.when(xGroupUserService.searchXGroupUsers((SearchCriteria) Mockito.any())).thenReturn(vxGroupUserList);
+		VXGroup vXGroup = vxGroup();
+		Mockito.when(xGroupService.readResource(Mockito.anyLong())).thenReturn(vXGroup);
 		VXUserList dbVXUserList = xUserMgr.searchXUsers(testSearchCriteria);
 		Assert.assertNotNull(dbVXUserList);
 		testSearchCriteria.addParam("isvisible", "true");
@@ -2576,7 +2619,7 @@ public class TestXUserMgr {
 		vxUser.setUserRoleList(reqRoleList);
 		vxUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
 		vxUser.setGroupIdList(groupIdList);
-		vxUser.setFirstName("null");
+		vxUser.setFirstName("user1");
 		vxUser.setLastName("null");
 		vxUser.setPassword("*****");
 		Mockito.when(xUserService.updateResource(vxUser)).thenReturn(vxUser);
@@ -3753,6 +3796,9 @@ public class TestXUserMgr {
 		List<VXUser> vXUserList=new ArrayList<VXUser>();
 		VXUser vXUser = vxUser();
 		VXUser vXUser1 = vxUser();
+		VXUser vXUser2 = vxUser();
+		vXUser2.setFirstName("user12");
+		vXUser2.setEmailAddress(null);
 		vXUser.setFirstName("null");
 		vXUser.setLastName("null");
 		vXUser.setEmailAddress("");
@@ -3765,13 +3811,14 @@ public class TestXUserMgr {
 		userRoleList.add(RangerConstants.ROLE_ADMIN_AUDITOR);
 		vXUser.setUserRoleList(userRoleList);
 		vXUser1.setUserRoleList(userRoleList);
+		vXUser2.setUserRoleList(userRoleList);
 		vXUserList.add(vXUser);
 		vXUserList.add(vXUser1);
+		vXUserList.add(vXUser2);
 		VXUserList users = new VXUserList(vXUserList);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 		XXModuleDefDao xXModuleDefDao = Mockito.mock(XXModuleDefDao.class);
-		XXGlobalStateDao xxGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
 		XXUser xXUser = xxUser(vXUser);
 		VXPortalUser vXPortalUser = userProfile();
 		vXPortalUser.setFirstName("null");
@@ -3789,7 +3836,6 @@ public class TestXUserMgr {
 		Mockito.when(xxUserDao.findByUserName(vXUser.getName())).thenReturn(xXUser);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
 		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xXModuleDefDao);
-		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xxGlobalStateDao);
 		Mockito.when(xXModuleDefDao.getAll()).thenReturn(xXModuleDefs);
 
 		Mockito.when(userMgr.mapVXPortalUserToXXPortalUser((VXPortalUser) Mockito.any())).thenReturn(xXPortalUser);
@@ -3819,12 +3865,11 @@ public class TestXUserMgr {
 
 		Mockito.when(xUserPermissionService.createResource((VXUserPermission) Mockito.any())).thenReturn(userPermission);
 		Mockito.when(sessionMgr.getActiveUserSessionsForPortalUserId(userId)).thenReturn(userSessions);
-		xUserMgr.createOrUpdateXUsers(users);
-
 		Mockito.when(xUserPermissionDao.findByModuleIdAndPortalUserId(null, null)).thenReturn(xUserPermissionObj);
 		Mockito.when(xUserPermissionService.populateViewBean(xUserPermissionObj)).thenReturn(userPermission);
 		Mockito.when(xUserPermissionService.updateResource((VXUserPermission) Mockito.any())).thenReturn(userPermission);
-		xUserMgr.createOrUpdateXUsers(users);
+		int createdOrUpdatedUserCount = xUserMgr.createOrUpdateXUsers(users);
+		Assert.assertEquals(createdOrUpdatedUserCount, 1);
 	}
 
 	@Test
@@ -3870,7 +3915,6 @@ public class TestXUserMgr {
 		XXPortalUserDao userDao = Mockito.mock(XXPortalUserDao.class);
 		XXModuleDefDao xXModuleDefDao = Mockito.mock(XXModuleDefDao.class);
 		XXUserPermissionDao xUserPermissionDao = Mockito.mock(XXUserPermissionDao.class);
-		XXGlobalStateDao xxGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
 
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(daoManager.getXXPortalUser()).thenReturn(userDao);
@@ -3884,7 +3928,6 @@ public class TestXUserMgr {
 		Mockito.when(xUserService.createResource((VXUser) Mockito.any())).thenReturn(vXUser);
 		Mockito.when(xUserPermissionService.populateViewBean(xUserPermissionObj)).thenReturn(userPermission);
 		Mockito.when(xUserPermissionService.updateResource((VXUserPermission) Mockito.any())).thenReturn(userPermission);
-		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xxGlobalStateDao);
 		xUserMgr.createOrUpdateXUsers(users);
 
 		vXUser.setPassword("*****");
@@ -3903,7 +3946,6 @@ public class TestXUserMgr {
 		VXUserList users = new VXUserList(vXUserList);
 		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
 		XXModuleDefDao xXModuleDefDao = Mockito.mock(XXModuleDefDao.class);
-		XXGlobalStateDao xxGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
 		XXUser xXUser = xxUser(vXUser);
 		VXPortalUser vXPortalUser = userProfile();
 		vXPortalUser.setFirstName("null");
@@ -3920,7 +3962,6 @@ public class TestXUserMgr {
 		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
 		Mockito.when(xxUserDao.findByUserName(vXUser.getName())).thenReturn(xXUser);
 		Mockito.when(daoManager.getXXModuleDef()).thenReturn(xXModuleDefDao);
-		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xxGlobalStateDao);
 		Mockito.when(xXModuleDefDao.getAll()).thenReturn(xXModuleDefs);
 		Mockito.when(xUserService.updateResource(vXUser)).thenReturn(vXUser);
 
@@ -3975,7 +4016,6 @@ public class TestXUserMgr {
 		VXUser vXUser = vxUser();
 		List<VXUser> vXUserList=new ArrayList<VXUser>();
 		vXUserList.add(vXUser);
-		XXGlobalStateDao xxGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
 		VXPortalUser vXPortalUser = userProfile();
 		XXPortalUser xXPortalUser = xxPortalUser(vXPortalUser);
 		xXPortalUser.setUserSource(RangerCommonEnums.USER_EXTERNAL);
@@ -3983,7 +4023,6 @@ public class TestXUserMgr {
 		lstRole.add(RangerConstants.ROLE_SYS_ADMIN);
 
 		vXPortalUser.setUserRoleList(lstRole);
-		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xxGlobalStateDao);
 
 		List<XXUserPermission> xUserPermissionsList = new ArrayList<XXUserPermission>();
 		XXUserPermission xUserPermissionObj = new XXUserPermission();
@@ -4135,10 +4174,12 @@ public class TestXUserMgr {
 		destroySession();
 		setup();
 		Long lastKnownUserStoreVersion=Long.valueOf(1);
-		XXGlobalStateDao xxGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
-		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xxGlobalStateDao);
 		Mockito.when(xxGlobalStateDao.getAppDataVersion(RANGER_USER_GROUP_GLOBAL_STATE_NAME)).thenReturn(lastKnownUserStoreVersion);
-		xUserMgr.getRangerUserStore(lastKnownUserStoreVersion);
+		Map<String, Set<String>> userGroupMap = new HashMap<String, Set<String>>();
+		XXUserDao xxUserDao = Mockito.mock(XXUserDao.class);
+		Mockito.when(daoManager.getXXUser()).thenReturn(xxUserDao);
+		Mockito.when(xxUserDao.findGroupsByUserIds()).thenReturn(userGroupMap);
+		xUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion);
 	}
 
 	@Test
@@ -4146,8 +4187,6 @@ public class TestXUserMgr {
 		destroySession();
 		setup();
 		Long lastKnownUserStoreVersion=Long.valueOf(1);
-		XXGlobalStateDao xxGlobalStateDao = Mockito.mock(XXGlobalStateDao.class);
-		Mockito.when(daoManager.getXXGlobalState()).thenReturn(xxGlobalStateDao);
 		Mockito.when(xxGlobalStateDao.getAppDataVersion(RANGER_USER_GROUP_GLOBAL_STATE_NAME)).thenReturn(lastKnownUserStoreVersion);
 		Long userStoreVersion = xUserMgr.getUserStoreVersion();
 		Assert.assertNotNull(userStoreVersion);

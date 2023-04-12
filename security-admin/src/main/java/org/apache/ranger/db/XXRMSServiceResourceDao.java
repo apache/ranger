@@ -101,17 +101,13 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 	}
 
 	public RangerServiceResource getServiceResourceByServiceAndResourceSignature(String serviceName, String resourceSignature) {
-
 		RangerServiceResource ret = null;
 
 		if (StringUtils.isNotBlank(resourceSignature)) {
+			Long serviceId = daoManager.getXXService().findIdByName(serviceName);
 
-			XXService service = daoManager.getXXService().findByName(serviceName);
-
-			if (service != null) {
-
+			if (serviceId != null) {
 				try {
-					Long serviceId = service.getId();
 					XXRMSServiceResource xxServiceResource = getEntityManager().createNamedQuery("XXRMSServiceResource.findByServiceAndResourceSignature", tClass)
 							.setParameter("serviceId", serviceId).setParameter("resourceSignature", resourceSignature)
 							.getSingleResult();
@@ -121,8 +117,8 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 					return null;
 				}
 			}
-
 		}
+
 		return ret;
 	}
 
@@ -176,10 +172,10 @@ public class XXRMSServiceResourceDao extends BaseDao<XXRMSServiceResource> {
 		ret.setIsEnabled(serviceResource.getIsEnabled());
 		ret.setResourceSignature(serviceResource.getResourceSignature());
 
-		XXService service = daoManager.getXXService().findByName(serviceResource.getServiceName());
+		Long serviceId = daoManager.getXXService().findIdByName(serviceResource.getServiceName());
 
-		if (service != null) {
-			ret.setServiceId(service.getId());
+		if (serviceId != null) {
+			ret.setServiceId(serviceId);
 
 			StoredServiceResource storedServiceResource = new StoredServiceResource(serviceResource.getResourceElements(), serviceResource.getOwnerUser(), serviceResource.getAdditionalInfo());
 			try {

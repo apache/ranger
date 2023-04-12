@@ -27,6 +27,7 @@ Use the package manager [pip](https://pip.pypa.io/en/stable/) to install python 
 
 ```bash
 > pip install apache-ranger
+> pip install requests_kerberos (If using kerberos for authentication)
 ```
 
 Verify if apache-ranger client is installed:
@@ -35,7 +36,7 @@ Verify if apache-ranger client is installed:
 
 Package      Version
 ------------ ---------
-apache-ranger 0.0.5
+apache-ranger 0.0.10
 ```
 
 ## Usage
@@ -120,4 +121,112 @@ ranger.delete_service_by_id(created_service.id)
 print('    deleted service: id=' + str(created_service.id))
 
 ```
+
+```python test_ranger_kms.py```
+```python
+# test_ranger_kms.py
+from apache_ranger.client.ranger_kms_client import RangerKMSClient
+from apache_ranger.client.ranger_client     import HadoopSimpleAuth
+from apache_ranger.model.ranger_kms         import RangerKey
+import time
+
+
+##
+## Step 1: create a client to connect to Apache Ranger KMS
+##
+kms_url  = 'http://localhost:9292'
+kms_auth = HadoopSimpleAuth('keyadmin')
+
+# For Kerberos authentication
+#
+# from requests_kerberos import HTTPKerberosAuth
+#
+# kms_auth = HTTPKerberosAuth()
+#
+# For HTTP Basic authentication
+#
+# kms_auth = ('keyadmin', 'rangerR0cks!')
+
+kms_client = RangerKMSClient(kms_url, kms_auth)
+
+
+
+##
+## Step 2: Let's call KMS APIs
+##
+
+kms_status = kms_client.kms_status()
+print('kms_status():', kms_status)
+print()
+
+key_name = 'test_' + str(int(time.time() * 1000))
+
+key = kms_client.create_key(RangerKey({'name':key_name}))
+print('create_key(' + key_name + '):', key)
+print()
+
+rollover_key = kms_client.rollover_key(key_name, key.material)
+print('rollover_key(' + key_name + '):', rollover_key)
+print()
+
+kms_client.invalidate_cache_for_key(key_name)
+print('invalidate_cache_for_key(' + key_name + ')')
+print()
+
+key_metadata = kms_client.get_key_metadata(key_name)
+print('get_key_metadata(' + key_name + '):', key_metadata)
+print()
+
+current_key = kms_client.get_current_key(key_name)
+print('get_current_key(' + key_name + '):', current_key)
+print()
+
+encrypted_keys = kms_client.generate_encrypted_key(key_name, 6)
+print('generate_encrypted_key(' + key_name + ', ' + str(6) + '):')
+for i in range(len(encrypted_keys)):
+  encrypted_key   = encrypted_keys[i]
+  decrypted_key   = kms_client.decrypt_encrypted_key(key_name, encrypted_key.versionName, encrypted_key.iv, encrypted_key.encryptedKeyVersion.material)
+  reencrypted_key = kms_client.reencrypt_encrypted_key(key_name, encrypted_key.versionName, encrypted_key.iv, encrypted_key.encryptedKeyVersion.material)
+  print('  encrypted_keys[' + str(i) + ']: ', encrypted_key)
+  print('  decrypted_key[' + str(i) + ']:  ', decrypted_key)
+  print('  reencrypted_key[' + str(i) + ']:', reencrypted_key)
+print()
+
+reencrypted_keys = kms_client.batch_reencrypt_encrypted_keys(key_name, encrypted_keys)
+print('batch_reencrypt_encrypted_keys(' + key_name + ', ' + str(len(encrypted_keys)) + '):')
+for i in range(len(reencrypted_keys)):
+  print('  batch_reencrypt_encrypted_key[' + str(i) + ']:', reencrypted_keys[i])
+print()
+
+key_versions = kms_client.get_key_versions(key_name)
+print('get_key_versions(' + key_name + '):', len(key_versions))
+for i in range(len(key_versions)):
+  print('  key_versions[' + str(i) + ']:', key_versions[i])
+print()
+
+for i in range(len(key_versions)):
+  key_version = kms_client.get_key_version(key_versions[i].versionName)
+  print('get_key_version(' + str(i) + '):', key_version)
+print()
+
+key_names = kms_client.get_key_names()
+print('get_key_names():', len(key_names))
+for i in range(len(key_names)):
+  print('  key_name[' + str(i) + ']:', key_names[i])
+print()
+
+keys_metadata = kms_client.get_keys_metadata(key_names)
+print('get_keys_metadata(' + str(key_names) + '):', len(keys_metadata))
+for i in range(len(keys_metadata)):
+  print('  key_metadata[' + str(i) + ']:', keys_metadata[i])
+print()
+
+key = kms_client.get_key(key_name)
+print('get_key(' + key_name + '):', key)
+print()
+
+kms_client.delete_key(key_name)
+print('delete_key(' + key_name + ')')
+```
+
 For more examples, checkout `sample-client` python  project in [ranger-examples](https://github.com/apache/ranger/blob/master/ranger-examples/sample-client/src/main/python/sample_client.py) module.

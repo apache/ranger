@@ -38,35 +38,36 @@ public class MacroProcessor {
     }
 
     public String expandMacros(String expr) {
-        StringBuffer ret     = null;
-        Matcher      matcher = macrosPattern.matcher(expr);
+        StringBuffer ret = null;
 
-        while (matcher.find()) {
+        if (expr != null) {
+            Matcher matcher = macrosPattern.matcher(expr);
+
+            while (matcher.find()) {
+                if (ret == null) {
+                    ret = new StringBuffer();
+                }
+
+                String keyword  = matcher.group();
+                String replacer = macrosMap.get(keyword);
+
+                matcher.appendReplacement(ret, replacer);
+            }
+
             if (ret == null) {
-                ret = new StringBuffer();
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("expandMacros({}): no match found!", expr);
+                }
+            } else {
+                matcher.appendTail(ret);
+
+                if (LOG.isDebugEnabled()) {
+                    LOG.debug("expandMacros({}): match found. ret={}", expr, ret);
+                }
             }
-
-            String keyword  = matcher.group();
-            String replacer = macrosMap.get(keyword);
-
-            matcher.appendReplacement(ret, replacer);
         }
 
-        if (ret == null) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("expandMacros({}): no match found!", expr);
-            }
-
-            return expr;
-        } else {
-            matcher.appendTail(ret);
-
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("expandMacros({}): match found. ret={}", expr, ret);
-            }
-
-            return ret.toString();
-        }
+        return ret != null ? ret.toString() : expr;
     }
 
     private Pattern getMacrosPattern(Map<String, String> macros) {

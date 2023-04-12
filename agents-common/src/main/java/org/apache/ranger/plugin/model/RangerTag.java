@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.model;
 
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
@@ -26,13 +27,11 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -45,7 +44,7 @@ public class RangerTag extends RangerBaseModelObject {
 	public static final String OPTION_TAG_VALIDITY_PERIODS = "TAG_VALIDITY_PERIODS";
 
 	private String                       type;
-	private Short                        owner = OWNER_SERVICERESOURCE;
+	private Short                        owner;
 	private Map<String, String>          attributes;
 	private Map<String, Object>          options;
 	private List<RangerValiditySchedule> validityPeriods;
@@ -87,7 +86,7 @@ public class RangerTag extends RangerBaseModelObject {
 	}
 
 	public void setAttributes(Map<String, String> attributes) {
-		this.attributes = attributes == null ? new HashMap<String, String>() : attributes;
+		this.attributes = attributes;
 	}
 
 	public Short getOwner() {
@@ -101,36 +100,21 @@ public class RangerTag extends RangerBaseModelObject {
 	public Map<String, Object> getOptions() { return options; }
 
 	public void setOptions(Map<String, Object> options) {
-		if (this.options == null) {
-			this.options = new HashMap<>();
-		}
-		if (this.options == options) {
-			return;
-		}
-		this.options.clear();
-
-		if(options != null) {
-			for(Map.Entry<String, Object> e : options.entrySet()) {
-				this.options.put(e.getKey(), e.getValue());
-			}
-		}
+		this.options = options;
 	}
 
 	public List<RangerValiditySchedule> getValidityPeriods() { return validityPeriods; }
 
 	public void setValidityPeriods(List<RangerValiditySchedule> validityPeriods) {
-		if (this.validityPeriods == null) {
-			this.validityPeriods = new ArrayList<>();
-		}
-		if (this.validityPeriods == validityPeriods) {
-			return;
-		}
-		this.validityPeriods.clear();
-
-		if(validityPeriods != null) {
-			this.validityPeriods.addAll(validityPeriods);
-		}
+		this.validityPeriods = validityPeriods;
 	}
+
+	public void dedupStrings(Map<String, String> strTbl) {
+		type       = StringUtil.dedupString(type, strTbl);
+		attributes = StringUtil.dedupStringsMap(attributes, strTbl);
+		options    = StringUtil.dedupStringsMapOfObject(options, strTbl);
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -151,6 +135,16 @@ public class RangerTag extends RangerBaseModelObject {
 		sb.append("attributes={");
 		if (attributes != null) {
 			for (Map.Entry<String, String> e : attributes.entrySet()) {
+				sb.append(e.getKey()).append("={");
+				sb.append(e.getValue());
+				sb.append("} ");
+			}
+		}
+		sb.append("} ");
+
+		sb.append("options={");
+		if (options != null) {
+			for (Map.Entry<String, Object> e : options.entrySet()) {
 				sb.append(e.getKey()).append("={");
 				sb.append(e.getValue());
 				sb.append("} ");

@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.util;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -38,7 +39,7 @@ import java.util.Map;
 import java.util.Set;
 
 @JsonAutoDetect(fieldVisibility= JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -118,6 +119,16 @@ public class RangerUserStore implements Serializable {
         this.groupCloudIdMapping = groupCloudIdMapping;
     }
 
+    public void dedupStrings() {
+        Map<String, String> strTbl = new HashMap<>();
+
+        userAttrMapping     = StringUtil.dedupStringsMapOfMap(userAttrMapping, strTbl);
+        groupAttrMapping    = StringUtil.dedupStringsMapOfMap(groupAttrMapping, strTbl);
+        userGroupMapping    = StringUtil.dedupStringsMapOfSet(userGroupMapping, strTbl);
+        userCloudIdMapping  = StringUtil.dedupStringsMap(userCloudIdMapping, strTbl);
+        groupCloudIdMapping = StringUtil.dedupStringsMap(groupCloudIdMapping, strTbl);
+    }
+
     @Override
     public String toString( ) {
         StringBuilder sb = new StringBuilder();
@@ -131,20 +142,40 @@ public class RangerUserStore implements Serializable {
         sb.append("RangerUserStore={")
                 .append("userStoreVersion=").append(userStoreVersion).append(", ")
                 .append("userStoreUpdateTime=").append(userStoreUpdateTime).append(", ");
+
         sb.append("users={");
         if(MapUtils.isNotEmpty(userAttrMapping)) {
             for(String user : userAttrMapping.keySet()) {
-                sb.append(user);
+                sb.append(user).append(" ");
             }
         }
         sb.append("}, ");
+
         sb.append("groups={");
         if(MapUtils.isNotEmpty(groupAttrMapping)) {
             for(String group : groupAttrMapping.keySet()) {
-                sb.append(group);
+                sb.append(group).append(" ");
             }
         }
         sb.append("}");
+
+        sb.append(", userGroupMapping={");
+        if(MapUtils.isNotEmpty(userGroupMapping)) {
+            for(Map.Entry<String, Set<String>> entry : userGroupMapping.entrySet()) {
+                String      user       = entry.getKey();
+                Set<String> userGroups = entry.getValue();
+
+                sb.append(user).append("[");
+                if (CollectionUtils.isNotEmpty(userGroups)) {
+                    for (String userGroup : userGroups) {
+                        sb.append(userGroup).append(" ");
+                    }
+                }
+                sb.append("] ");
+            }
+        }
+        sb.append("}");
+
         sb.append("}");
 
         return sb;

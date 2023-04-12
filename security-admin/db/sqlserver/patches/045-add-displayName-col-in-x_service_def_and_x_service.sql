@@ -37,17 +37,17 @@ END
 GO
 IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_portal_user' and column_name = 'other_attributes')
 BEGIN
-	ALTER TABLE [dbo].[x_portal_user] ADD [other_attributes] [varchar](4000) DEFAULT NULL NULL;
+	ALTER TABLE [dbo].[x_portal_user] ADD [other_attributes] [nvarchar](max) DEFAULT NULL NULL;
 END
 GO
 IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_user' and column_name = 'other_attributes')
 BEGIN
-	ALTER TABLE [dbo].[x_user] ADD [other_attributes] [varchar](4000) DEFAULT NULL NULL;
+	ALTER TABLE [dbo].[x_user] ADD [other_attributes] [nvarchar](max) DEFAULT NULL NULL;
 END
 GO
 IF NOT EXISTS(select * from INFORMATION_SCHEMA.columns where table_name = 'x_group' and column_name = 'other_attributes')
 BEGIN
-	ALTER TABLE [dbo].[x_group] ADD [other_attributes] [varchar](4000) DEFAULT NULL NULL;
+	ALTER TABLE [dbo].[x_group] ADD [other_attributes] [nvarchar](max) DEFAULT NULL NULL;
 END
 GO
 exit

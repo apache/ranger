@@ -29,4 +29,5 @@ cd ${RANGER_HOME}/ranger-kafka-plugin
 
 sed -i 's/localhost:2181/ranger-zk.example.com:2181/' ${KAFKA_HOME}/config/server.properties
 
+echo >> ${KAFKA_HOME}/config/server.properties
 echo "authorizer.class.name=org.apache.ranger.authorization.kafka.authorizer.RangerKafkaAuthorizer" >> ${KAFKA_HOME}/config/server.properties

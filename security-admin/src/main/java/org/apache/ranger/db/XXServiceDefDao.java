@@ -24,6 +24,10 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXServiceDef;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
 import java.util.Objects;
 
 @Service
@@ -106,5 +110,72 @@ public class XXServiceDefDao extends BaseDao<XXServiceDef> {
 			return null;
 		}
 		return serviceType;
+	}
+
+	/**
+	 * Fetch and return names of service type/ def which are using context enrichers.
+	 * @return {@link java.util.List list} of {@link java.lang.String strings} representing service type/ def
+	 */
+	public List<String> findAllHavingEnrichers() {
+		return getEntityManager().createNamedQuery("XXServiceDef.getNameByHasEnricher", String.class).getResultList();
+	}
+
+	/**
+	 * Fetch and return count of services for each service type/ def
+	 * @return {@link java.util.Map map} representing service type/ def as key and their respective service count as value
+	 */
+	public Map<String, Long> getServiceCount() {
+		Map<String, Long> ret = Collections.emptyMap();
+		List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXServiceDef.getServiceCount").getResultList();
+		if (rows != null) {
+			ret = new HashMap<>();
+			for (Object[] row : rows) {
+				if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
+					// since group by query will not return empty count field, no need to check
+					ret.put((String) row[0], (Long) row[1]);
+				}
+			}
+		}
+		return ret;
+	}
+
+	/**
+	 * Fetch and return count of policies for each service type/ def
+	 * @return {@link java.util.Map map} representing service type/ def as key and their respective policy count as value
+	 */
+	public Map<String, Long> getPolicyCountByType(int policyType) {
+		Map<String, Long> ret = Collections.emptyMap();
+		List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXServiceDef.getPolicyCountByType")
+				.setParameter("policyType", policyType)
+				.getResultList();
+		if (rows != null) {
+			ret = new HashMap<>();
+			for (Object[] row : rows) {
+				if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
+					// since group by query will not return empty count field, no need to check
+					ret.put((String) row[0], (Long) row[1]);
+				}
+			}
+		}
+		return ret;
+	}
+
+	/**
+	 * Fetch and return count of deny items (conditions) for each service type/ def
+	 * @return {@link java.util.Map map} representing service type/ def as key and their respective deny items (conditions) count as value
+	 */
+	public Map<String, Long> getPolicyCountByDenyItems() {
+		Map<String, Long> ret = Collections.emptyMap();
+		List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXServiceDef.getPolicyCountByDenyItems").getResultList();
+		if (rows != null) {
+			ret = new HashMap<>();
+			for (Object[] row : rows) {
+				if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
+					// since group by query will not return empty count field, no need to check
+					ret.put((String) row[0], (Long) row[1]);
+				}
+			}
+		}
+		return ret;
 	}
 }

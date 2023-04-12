@@ -17,6 +17,7 @@
 # limitations under the License.
 
 from apache_ranger.model.ranger_base import RangerBase, RangerBaseModelObject
+from apache_ranger.utils             import *
 
 
 class RangerSecurityZoneService(RangerBase):
@@ -27,6 +28,11 @@ class RangerSecurityZoneService(RangerBase):
         RangerBase.__init__(self, attrs)
 
         self.resources = attrs.get('resources')
+
+    def type_coerce_attrs(self):
+        super(RangerSecurityZoneService, self).type_coerce_attrs()
+
+        self.resources = type_coerce_list_dict(self.resources, list)
 
 
 class RangerSecurityZone(RangerBaseModelObject):
@@ -44,3 +50,17 @@ class RangerSecurityZone(RangerBaseModelObject):
         self.auditUsers      = attrs.get('auditUsers')
         self.auditUserGroups = attrs.get('auditUserGroups')
         self.description     = attrs.get('description')
+
+    def type_coerce_attrs(self):
+        super(RangerSecurityZone, self).type_coerce_attrs()
+
+        self.services = type_coerce_dict(self.services, RangerSecurityZoneService)
+
+class RangerSecurityZoneHeaderInfo(RangerBaseModelObject):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
+        RangerBaseModelObject.__init__(self, attrs)
+
+        self.name = attrs.get('name')

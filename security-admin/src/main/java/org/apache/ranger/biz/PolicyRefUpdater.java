@@ -54,6 +54,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.service.RangerAuditFields;
+import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXResponse;
@@ -97,7 +98,7 @@ public class PolicyRefUpdater {
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
-	public void createNewPolMappingForRefTable(RangerPolicy policy, XXPolicy xPolicy, XXServiceDef xServiceDef) throws Exception {
+	public void createNewPolMappingForRefTable(RangerPolicy policy, XXPolicy xPolicy, XXServiceDef xServiceDef, boolean isDefaultPolicy) throws Exception {
 		if(policy == null) {
 			return;
 		}
@@ -168,7 +169,7 @@ public class PolicyRefUpdater {
 		}
 		daoMgr.getXXPolicyRefResource().batchCreate(xPolResources);
 
-		final boolean isAdmin = rangerBizUtil.checkAdminAccess();
+		final boolean isAdmin = rangerBizUtil.checkAdminAccess() || isDefaultPolicy;
 
 		List<XXPolicyRefRole> xPolRoles = new ArrayList<>();
 		for (String role : roleNames) {
@@ -248,6 +249,10 @@ public class PolicyRefUpdater {
 			XXPolicyConditionDef xPolCondDef = daoMgr.getXXPolicyConditionDef().findByServiceDefIdAndName(xServiceDef.getId(), condition);
 
 			if (xPolCondDef == null) {
+				if (StringUtils.equalsIgnoreCase(condition, RangerServiceDefService.IMPLICIT_CONDITION_EXPRESSION_NAME)) {
+					continue;
+				}
+
 				throw new Exception(condition + ": is not a valid condition-type. policy='"+  xPolicy.getName() + "' service='"+ xPolicy.getService() + "'");
 			}
 
@@ -397,7 +402,7 @@ public class PolicyRefUpdater {
 							ret = xUser.getId();
 						}
 					} else {
-						LOG.error("serviceConfigUser:[" + name + "] creation failed");
+						LOG.warn("serviceConfigUser:[" + name + "] creation failed. This may be a transient/spurious condition that may correct itself when transaction is committed");
 					}
 				}
 				break;

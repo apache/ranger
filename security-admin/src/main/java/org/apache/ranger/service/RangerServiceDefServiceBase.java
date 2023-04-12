@@ -31,11 +31,13 @@ import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
@@ -60,6 +62,11 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 
 	private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS = "__accessTypeRestrictions";
 	private static final String OPTION_RESOURCE_IS_VALID_LEAF            = "__isValidLeaf";
+	public static final String PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION = "ranger.servicedef.enableImplicitConditionExpression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_EVALUATOR   = RangerScriptConditionEvaluator.class.getCanonicalName();
+	public static final String IMPLICIT_CONDITION_EXPRESSION_NAME        = "_expression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_LABEL       = "Enter boolean expression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_DESC        = "Boolean expression";
 
 	@Autowired
 	RangerAuditFields<?> rangerAuditFields;
@@ -200,6 +207,8 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		}
 		serviceDef.setDataMaskDef(dataMaskDef);
 		serviceDef.setRowFilterDef(rowFilterDef);
+
+		addImplicitConditionExpressionIfNeeded(serviceDef);
 
 		ServiceDefUtil.normalize(serviceDef);
 
@@ -707,4 +716,58 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		return ret;
 	}
 
+
+	boolean addImplicitConditionExpressionIfNeeded(RangerServiceDef serviceDef) {
+		boolean ret                      = false;
+		boolean implicitConditionDefault = PropertiesUtil.getBooleanProperty(PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION, true);
+		boolean implicitConditionEnabled = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_IMPLICIT_CONDITION_EXPRESSION, implicitConditionDefault);
+
+		if (implicitConditionEnabled) {
+			boolean                        exists        = false;
+			Long                           maxItemId     = 0L;
+			List<RangerPolicyConditionDef> conditionDefs = serviceDef.getPolicyConditions();
+
+			if (conditionDefs == null) {
+				conditionDefs = new ArrayList<>();
+			}
+
+			for (RangerPolicyConditionDef conditionDef : conditionDefs) {
+				if (StringUtils.equalsIgnoreCase(conditionDef.getEvaluator(), IMPLICIT_CONDITION_EXPRESSION_EVALUATOR)) {
+					exists = true;
+
+					break;
+				}
+
+				if (conditionDef.getItemId() != null && maxItemId < conditionDef.getItemId()) {
+					maxItemId = conditionDef.getItemId();
+				}
+			}
+
+			if (!exists) {
+				RangerPolicyConditionDef conditionDef = new RangerPolicyConditionDef();
+				Map<String, String>      options      = new HashMap<>();
+
+				options.put("ui.isMultiline", "true");
+
+				conditionDef.setItemId(maxItemId + 1);
+				conditionDef.setName(IMPLICIT_CONDITION_EXPRESSION_NAME);
+				conditionDef.setLabel(IMPLICIT_CONDITION_EXPRESSION_LABEL);
+				conditionDef.setDescription(IMPLICIT_CONDITION_EXPRESSION_DESC);
+				conditionDef.setEvaluator(IMPLICIT_CONDITION_EXPRESSION_EVALUATOR);
+				conditionDef.setEvaluatorOptions(options);
+
+				conditionDefs.add(conditionDef);
+
+				serviceDef.setPolicyConditions(conditionDefs);
+
+				ret = true;
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("addImplicitConditionExpressionIfNeeded(serviceType={}): implicitConditionDefault={}, implicitConditionEnabled={}, conditionDefs={}, ret={}", serviceDef.getName(), implicitConditionDefault, implicitConditionEnabled, serviceDef.getPolicyConditions(), ret);
+		}
+
+		return ret;
+	}
 }

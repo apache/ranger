@@ -125,9 +125,7 @@ public class XXPolicyRefRoleDao extends BaseDao<XXPolicyRefRole>{
             return;
         }
 
-        getEntityManager()
-                .createNamedQuery("XXPolicyRefRole.deleteByIds", tClass)
-                .setParameter("ids", ids).executeUpdate();
+        batchDeleteByIds("XXPolicyRefRole.deleteByIds", ids, "ids");
 	}
 }
 

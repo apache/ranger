@@ -54,6 +54,10 @@
                 <exclude>**/debugfiles.list</exclude>
                 <exclude>**/debuglinks.list</exclude>
                 <exclude>**/debugsources.list</exclude>
+                <exclude>dev-support/ranger-docker/downloads/**</exclude>
+                <exclude>dev-support/ranger-docker/dist/**</exclude>
+                <exclude>intg/src/main/python/dist/**</exclude>
+                <exclude>security-admin/src/main/webapp/react-webapp/dist/**</exclude>
             </excludes>
         </fileSet>
     </fileSets>

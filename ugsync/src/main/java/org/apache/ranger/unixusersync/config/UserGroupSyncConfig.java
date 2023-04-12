@@ -254,6 +254,9 @@ public class UserGroupSyncConfig  {
 	private static final String SYNC_MAPPING_GROUPNAME_HANDLER = "ranger.usersync.mapping.groupname.handler";
 	private static final String DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
 
+	private static final String SYNC_MAPPING_SEPARATOR = "ranger.usersync.mapping.regex.separator";
+
+	private static final String DEFAULT_MAPPING_SEPARATOR = "/";
     private static final String ROLE_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.role.assignment.list.delimiter";
 
     private static final String USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.users.groups.assignment.list.delimiter";
@@ -1330,6 +1333,20 @@ public class UserGroupSyncConfig  {
 			isUserSyncNameValidationEnabled  = Boolean.valueOf(val);
 		}
 		return isUserSyncNameValidationEnabled;
+	}
+
+	public String getRegexSeparator() {
+		String ret = DEFAULT_MAPPING_SEPARATOR;
+		String val = prop.getProperty(SYNC_MAPPING_SEPARATOR);
+		if(StringUtils.isNotEmpty(val)) {
+			if (val.length() == 1) {
+				ret = val;
+			} else {
+				LOG.warn("More than one character found in RegEx Separator, using default RegEx Separator /");
+			}
+		}
+		LOG.info(String.format("Using %s as the RegEx Separator", ret));
+		return ret;
 	}
 
 

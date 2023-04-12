@@ -27,6 +27,7 @@ import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConst
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.WRITE_EXECUTE_PERM;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.READ_WRITE_PERM;
 import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.ALL_PERM;
+import static org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants.ACCESS_TYPE_MONITOR_HEALTH;
 
 import java.net.InetAddress;
 import java.security.SecureRandom;
@@ -198,7 +199,7 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 		return rangerPlugin.getConfig();
 	}
 
-	private enum AuthzStatus { ALLOW, DENY, NOT_DETERMINED };
+	private enum AuthzStatus { ALLOW, DENY, NOT_DETERMINED }
 
 	class RangerAccessControlEnforcer implements AccessControlEnforcer {
 		private INodeAttributeProvider.AccessControlEnforcer defaultEnforcer = null;
@@ -715,11 +716,12 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				accessTypes = access2ActionListMapper.get(FsAction.NONE);
 			}
 
-			for(String accessType : accessTypes) {
-				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, accessType, context.operationName, context.user, context.userGroups);
+			if (accessTypes.size() > 0) {
+				RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(inode, path, pathOwner, access, accessTypes.iterator().next(), context.operationName, context.user, context.userGroups);
 
-				Map<String, Object> requestContext = request.getContext();
-				requestContext.put(RangerAccessRequestUtil.KEY_CONTEXT_ACCESSTYPES, accessTypes);
+				if (accessTypes.size() > 1) {
+					RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), accessTypes);
+				}
 
 				RangerAccessResult result = context.plugin.isAccessAllowed(request, context.auditHandler);
 
@@ -727,14 +729,10 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 				if (result == null || !result.getIsAccessDetermined()) {
 					ret = AuthzStatus.NOT_DETERMINED;
-					// don't break yet; subsequent accessType could be denied
-				} else if(! result.getIsAllowed()) { // explicit deny
+				} else if (!result.getIsAllowed()) { // explicit deny
 					ret = AuthzStatus.DENY;
-					break;
 				} else { // allowed
-					if(!AuthzStatus.NOT_DETERMINED.equals(ret)) { // set to ALLOW only if there was no NOT_DETERMINED earlier
-						ret = AuthzStatus.ALLOW;
-					}
+					ret = AuthzStatus.ALLOW;
 				}
 			}
 
@@ -781,11 +779,12 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 				}
 				subDirPath = subDirPath + rangerPlugin.getRandomizedWildcardPathName();
 
-				for (String accessType : accessTypes) {
-					RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(null, subDirPath, pathOwner, access, accessType, context.operationName, context.user, context.userGroups);
+				if (accessTypes.size() > 0) {
+					RangerHdfsAccessRequest request = new RangerHdfsAccessRequest(null, subDirPath, pathOwner, access, accessTypes.iterator().next(), context.operationName, context.user, context.userGroups);
 
-					Map<String, Object> requestContext = request.getContext();
-					requestContext.put(RangerAccessRequestUtil.KEY_CONTEXT_ACCESSTYPES, accessTypes);
+					if (accessTypes.size() > 1) {
+						RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), accessTypes);
+					}
 
 					RangerAccessResult result = context.plugin.isAccessAllowed(request, null);
 
@@ -793,14 +792,10 @@ public class RangerHdfsAuthorizer extends INodeAttributeProvider {
 
 					if (result == null || !result.getIsAccessDetermined()) {
 						ret = AuthzStatus.NOT_DETERMINED;
-						// don't break yet; subsequent accessType could be denied
 					} else if(! result.getIsAllowed()) { // explicit deny
 						ret = AuthzStatus.DENY;
-						break;
 					} else { // allowed
-						if(!AuthzStatus.NOT_DETERMINED.equals(ret)) { // set to ALLOW only if there was no NOT_DETERMINED earlier
-							ret = AuthzStatus.ALLOW;
-						}
+						ret = AuthzStatus.ALLOW;
 					}
 				}
 			}
@@ -1108,8 +1103,11 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 		if(isAuditEnabled && auditEvent != null && !StringUtils.isEmpty(auditEvent.getAccessType())) {
 			String username = auditEvent.getUser();
+			String accessType = auditEvent.getAccessType();
 
-			boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username)) || (auditOnlyIfDenied && auditEvent.getAccessResult() != 0);
+			boolean skipLog = (username != null && excludeUsers != null && excludeUsers.contains(username))
+								|| (auditOnlyIfDenied && auditEvent.getAccessResult() != 0)
+								|| (ACCESS_TYPE_MONITOR_HEALTH.equals(accessType));
 
 			if (! skipLog) {
 				super.logAuthzAudit(auditEvent);
@@ -1141,17 +1139,16 @@ class RangerHdfsAuditHandler extends RangerDefaultAuditHandler {
 
 	private String getAccessTypesAsString(RangerAccessRequest request) {
 		String             ret         = null;
-		Map<String,Object> context     = request.getContext();
-		Set<String>        accessTypes = null;
+		Set<String>        accessTypes = RangerAccessRequestUtil.getAllRequestedAccessTypes(request);
 
-		Object val = context.get(RangerAccessRequestUtil.KEY_CONTEXT_ACCESSTYPES);
-		if (val instanceof Set<?>) {
+		if (CollectionUtils.isNotEmpty(accessTypes)) {
 			try {
-				accessTypes = (Set<String>) val;
 				ret = getFormattedAccessType(accessTypes);
 			} catch (Throwable t) {
 				LOG.error("getAccessTypesAsString(): failed to get accessTypes from context", t);
 			}
+		} else {
+			ret = request.getAccessType();
 		}
 		return ret;
 	}

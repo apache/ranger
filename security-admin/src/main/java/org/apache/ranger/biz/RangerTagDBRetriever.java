@@ -36,6 +36,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
 import org.apache.ranger.service.RangerServiceResourceService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +109,7 @@ public class RangerTagDBRetriever {
 
 		}
 	}
+
 
 	List<RangerServiceResource> getServiceResources() {
 		return serviceResources;
@@ -295,13 +297,19 @@ public class RangerTagDBRetriever {
 					ret.setResourceElements(serviceResourceElements);
 
 					List<RangerTag> tags = gsonBuilder.fromJson(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
+
+					if (CollectionUtils.isNotEmpty(tags)) {
+						for (RangerTag tag : tags) {
+							RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+						}
+					}
+
 					lookupCache.serviceResourceToTags.put(xServiceResource.getId(), tags);
 				}
 			}
 
 			return ret;
 		}
-
 	}
 
 	private class TagRetrieverTagDefContext {

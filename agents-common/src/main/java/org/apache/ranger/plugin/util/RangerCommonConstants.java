@@ -50,7 +50,7 @@ public class RangerCommonConstants {
 	public static final boolean RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT     = false;
 	public static final boolean PLUGIN_CONFIG_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT    = false;
 
-	public static final boolean RANGER_ADMIN_SUPPORTS_TAGS_DEDUP_DEFAULT             = false;
+	public static final boolean RANGER_ADMIN_SUPPORTS_TAGS_DEDUP_DEFAULT             = true;
 
 	public static final boolean POLICY_REST_CLIENT_SESSION_COOKIE_ENABLED            = true;
 
@@ -99,6 +99,25 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_FIELD_UGA                     = "uga";
 	public static final String SCRIPT_FIELD_USER_ROLES              = "userRoles";
 
+	public static final String SCRIPT_MACRO_GET_TAG_NAMES         = "GET_TAG_NAMES";
+	public static final String SCRIPT_MACRO_GET_TAG_NAMES_Q       = "GET_TAG_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_TAG_ATTR_NAMES    = "GET_TAG_ATTR_NAMES";
+	public static final String SCRIPT_MACRO_GET_TAG_ATTR_NAMES_Q  = "GET_TAG_ATTR_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_TAG_ATTR          = "GET_TAG_ATTR";
+	public static final String SCRIPT_MACRO_GET_TAG_ATTR_Q        = "GET_TAG_ATTR_Q";
+	public static final String SCRIPT_MACRO_GET_UG_NAMES          = "GET_UG_NAMES";
+	public static final String SCRIPT_MACRO_GET_UG_NAMES_Q        = "GET_UG_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_UG_ATTR_NAMES     = "GET_UG_ATTR_NAMES";
+	public static final String SCRIPT_MACRO_GET_UG_ATTR_NAMES_Q   = "GET_UG_ATTR_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_UG_ATTR           = "GET_UG_ATTR";
+	public static final String SCRIPT_MACRO_GET_UG_ATTR_Q         = "GET_UG_ATTR_Q";
+	public static final String SCRIPT_MACRO_GET_UR_NAMES          = "GET_UR_NAMES";
+	public static final String SCRIPT_MACRO_GET_UR_NAMES_Q        = "GET_UR_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_USER_ATTR_NAMES   = "GET_USER_ATTR_NAMES";
+	public static final String SCRIPT_MACRO_GET_USER_ATTR_NAMES_Q = "GET_USER_ATTR_NAMES_Q";
+	public static final String SCRIPT_MACRO_GET_USER_ATTR         = "GET_USER_ATTR";
+	public static final String SCRIPT_MACRO_GET_USER_ATTR_Q       = "GET_USER_ATTR_Q";
+
 	public static final String SCRIPT_MACRO_GET_TAG_ATTR_CSV      = "GET_TAG_ATTR_CSV";
 	public static final String SCRIPT_MACRO_GET_TAG_ATTR_Q_CSV    = "GET_TAG_ATTR_Q_CSV";
 	public static final String SCRIPT_MACRO_GET_UG_ATTR_CSV       = "GET_UG_ATTR_CSV";
@@ -115,6 +134,7 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_MACRO_UR_NAMES_Q_CSV        = "UR_NAMES_Q_CSV";
 	public static final String SCRIPT_MACRO_USER_ATTR_NAMES_CSV   = "USER_ATTR_NAMES_CSV";
 	public static final String SCRIPT_MACRO_USER_ATTR_NAMES_Q_CSV = "USER_ATTR_NAMES_Q_CSV";
+
 	public static final String SCRIPT_MACRO_HAS_TAG               = "HAS_TAG";
 	public static final String SCRIPT_MACRO_HAS_ANY_TAG           = "HAS_ANY_TAG";
 	public static final String SCRIPT_MACRO_HAS_NO_TAG            = "HAS_NO_TAG";
@@ -127,4 +147,35 @@ public class RangerCommonConstants {
 	public static final String SCRIPT_MACRO_IS_IN_ANY_ROLE        = "IS_IN_ANY_ROLE";
 	public static final String SCRIPT_MACRO_IS_NOT_IN_ANY_GROUP   = "IS_NOT_IN_ANY_GROUP";
 	public static final String SCRIPT_MACRO_IS_NOT_IN_ANY_ROLE    = "IS_NOT_IN_ANY_ROLE";
+
+	public static final String SCRIPT_POLYFILL_INCLUDES = "if (!Array.prototype.includes) {\n" +
+			"    Object.defineProperty(\n" +
+			"      Array.prototype, 'includes', {\n" +
+			"        value: function(valueToFind) {\n" +
+			"                var o = Object(this); \n" +
+			"                var len = o.length;\n" +
+			"                if (len === 0) { return false; }\n" +
+			"                for (var k=0; k < len; k++) {\n" +
+			"                    if (o[k]==valueToFind) {return true; }\n" +
+			"                }   \n" +
+			"                return false;\n" +
+			"            }\n" +
+			"        }\n" +
+			"    );\n" +
+			" }; ";
+
+	public static final String SCRIPT_POLYFILL_INTERSECTS = "if (!Array.prototype.intersects) {\n" +
+			"    Object.defineProperty(\n" +
+			"      Array.prototype, 'intersects', {\n" +
+			"          value: function (x) {\n" +
+			"           if (x == null) {return false;}\n" +
+			"                        var o = Object(this);\n" +
+			"                        var len = o.length >>> 0;\n" +
+			"            if (len === 0) { return false; }\n" +
+			"            var result = o.filter(function(n) { return x.indexOf(n) > -1;})\n" +
+			"            return result.length != 0;\n" +
+			"        }\n" +
+			"      }\n" +
+			"    )\n" +
+			"}; ";
 }

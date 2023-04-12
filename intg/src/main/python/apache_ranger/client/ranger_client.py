@@ -19,26 +19,30 @@
 
 import json
 import logging
-import os
 from apache_ranger.exceptions                 import RangerServiceException
 from apache_ranger.model.ranger_base          import RangerBase
 from apache_ranger.model.ranger_policy        import RangerPolicy
 from apache_ranger.model.ranger_role          import RangerRole
-from apache_ranger.model.ranger_security_zone import RangerSecurityZone
-from apache_ranger.model.ranger_service       import RangerService
+from apache_ranger.model.ranger_security_zone import RangerSecurityZone, RangerSecurityZoneHeaderInfo
+from apache_ranger.model.ranger_service       import RangerService, RangerServiceHeaderInfo
 from apache_ranger.model.ranger_service_def   import RangerServiceDef
 from apache_ranger.model.ranger_service_tags  import RangerServiceTags
 from apache_ranger.utils                      import *
 from requests                                 import Session
 from requests                                 import Response
+from requests.auth                            import AuthBase
+from urllib.parse                             import urlencode
+from urllib.parse                             import urljoin
 
 LOG = logging.getLogger(__name__)
 
+QUERY_PARAM_USER_DOT_NAME = 'user.name'.encode("utf-8")
+
 
 class RangerClient:
-    def __init__(self, url, auth):
-        self.client_http = RangerClientHttp(url, auth)
-
+    def __init__(self, url, auth, query_params=None, headers=None):
+        self.client_http = RangerClientHttp(url, auth, query_params, headers)
+        self.session     = self.client_http.session
         logging.getLogger("requests").setLevel(logging.WARNING)
 
 
@@ -134,6 +138,11 @@ class RangerClient:
 
         return type_coerce(resp, RangerPolicy)
 
+    def get_policy_by_name_zone(self, serviceName, policyName, zoneName):
+        resp = self.client_http.call_api(RangerClient.GET_POLICY_BY_NAME.format_path({ 'serviceName': serviceName, 'policyName': policyName}), { 'zoneName': zoneName })
+
+        return type_coerce(resp, RangerPolicy)
+
     def get_policies_in_service(self, serviceName, params=None):
         resp = self.client_http.call_api(RangerClient.GET_POLICIES_IN_SERVICE.format_path({ 'serviceName': serviceName }), params)
 
@@ -149,6 +158,11 @@ class RangerClient:
 
         return type_coerce(resp, RangerPolicy)
 
+    def update_policy_by_name_zone(self, serviceName, policyName, zoneName, policy):
+        resp = self.client_http.call_api(RangerClient.UPDATE_POLICY_BY_NAME.format_path({ 'serviceName': serviceName, 'policyName': policyName}), { 'zoneName': zoneName },  request_data=policy)
+
+        return type_coerce(resp, RangerPolicy)
+
     def apply_policy(self, policy, params=None):
         resp = self.client_http.call_api(RangerClient.APPLY_POLICY, params, policy)
 
@@ -159,6 +173,9 @@ class RangerClient:
 
     def delete_policy(self, serviceName, policyName):
         self.client_http.call_api(RangerClient.DELETE_POLICY_BY_NAME, { 'servicename': serviceName, 'policyname': policyName })
+
+    def delete_policy_by_name_zone(self, serviceName, policyName, zoneName):
+        self.client_http.call_api(RangerClient.DELETE_POLICY_BY_NAME, { 'servicename': serviceName, 'policyname': policyName, 'zoneName': zoneName })
 
     def find_policies(self, filter=None):
         resp = self.client_http.call_api(RangerClient.FIND_POLICIES, filter)
@@ -177,11 +194,6 @@ class RangerClient:
 
         return type_coerce(resp, RangerSecurityZone)
 
-    def update_security_zone(self, zoneName, securityZone):
-        resp = self.client_http.call_api(RangerClient.UPDATE_ZONE_BY_NAME.format_path({ 'name': zoneName }), request_data=securityZone)
-
-        return type_coerce(resp, RangerSecurityZone)
-
     def delete_security_zone_by_id(self, zoneId):
         self.client_http.call_api(RangerClient.DELETE_ZONE_BY_ID.format_path({ 'id': zoneId }))
 
@@ -197,6 +209,16 @@ class RangerClient:
         resp = self.client_http.call_api(RangerClient.GET_ZONE_BY_NAME.format_path({ 'name': zoneName }))
 
         return type_coerce(resp, RangerSecurityZone)
+
+    def get_security_zone_headers(self):
+      resp = self.client_http.call_api(RangerClient.GET_ZONE_HEADERS)
+
+      return type_coerce_list(resp, RangerSecurityZoneHeaderInfo)
+
+    def get_security_zone_service_headers(self, zoneId):
+      resp = self.client_http.call_api(RangerClient.GET_ZONE_SERVICE_HEADERS.format_path({ 'id': zoneId }))
+
+      return type_coerce_list(resp, RangerServiceHeaderInfo)
 
     def find_security_zones(self, filter=None):
         resp = self.client_http.call_api(RangerClient.FIND_ZONES, filter)
@@ -303,9 +325,11 @@ class RangerClient:
     URI_GRANT_ROLE          = URI_ROLE + "/grant/{name}"
     URI_REVOKE_ROLE         = URI_ROLE + "/revoke/{name}"
 
-    URI_ZONE                = URI_BASE + "/zones"
-    URI_ZONE_BY_ID          = URI_ZONE + "/{id}"
-    URI_ZONE_BY_NAME        = URI_ZONE + "/name/{name}"
+    URI_ZONE                 = URI_BASE + "/zones"
+    URI_ZONE_BY_ID           = URI_ZONE + "/{id}"
+    URI_ZONE_BY_NAME         = URI_ZONE + "/name/{name}"
+    URI_ZONE_HEADERS         = URI_BASE + "/zone-headers"
+    URI_ZONE_SERVICE_HEADERS = URI_ZONE + "/{id}/service-headers"
 
     URI_SERVICE_TAGS        = URI_SERVICE + "/{serviceName}/tags"
     URI_PLUGIN_INFO         = URI_BASE + "/plugins/info"
@@ -349,6 +373,8 @@ class RangerClient:
     GET_ZONE_BY_ID            = API(URI_ZONE_BY_ID, HttpMethod.GET, HTTPStatus.OK)
     GET_ZONE_BY_NAME          = API(URI_ZONE_BY_NAME, HttpMethod.GET, HTTPStatus.OK)
     FIND_ZONES                = API(URI_ZONE, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_HEADERS          = API(URI_ZONE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
+    GET_ZONE_SERVICE_HEADERS  = API(URI_ZONE_SERVICE_HEADERS, HttpMethod.GET, HTTPStatus.OK)
 
     CREATE_ROLE               = API(URI_ROLE, HttpMethod.POST, HTTPStatus.OK)
     UPDATE_ROLE_BY_ID         = API(URI_ROLE_BY_ID, HttpMethod.PUT, HTTPStatus.OK)
@@ -367,6 +393,21 @@ class RangerClient:
     GET_PLUGIN_INFO           = API(URI_PLUGIN_INFO, HttpMethod.GET, HTTPStatus.OK)
     DELETE_POLICY_DELTAS      = API(URI_POLICY_DELTAS, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
 
+
+
+class HadoopSimpleAuth(AuthBase):
+  def __init__(self, user_name):
+    self.user_name = user_name.encode("utf-8")
+
+  def __call__(self, req):
+    sep_char = '?'
+
+    if req.url.find('?') != -1:
+      sep_char = '&'
+
+    req.url = req.url + sep_char + urlencode({ QUERY_PARAM_USER_DOT_NAME: self.user_name })
+
+    return req
 
 class Message(RangerBase):
     def __init__(self, attrs=None):
@@ -401,8 +442,10 @@ class RESTResponse(RangerBase):
 
 
 class RangerClientHttp:
-    def __init__(self, url, auth):
-        self.url          = url
+    def __init__(self, url, auth, query_params=None, headers=None):
+        self.url          = url.rstrip('/') + '/' # ensure that self.url ends with a /
+        self.query_params = query_params
+        self.headers      = headers
         self.session      = Session()
         self.session.auth = auth
 
@@ -411,13 +454,27 @@ class RangerClientHttp:
         ret    = None
         params = { 'headers': { 'Accept': api.consumes, 'Content-type': api.produces } }
 
+        if self.headers:
+          params['headers'].update(self.headers)
+
+        if self.query_params:
+          if query_params:
+              merged_query_params = {}
+
+              merged_query_params.update(self.query_params)
+              merged_query_params.update(query_params)
+
+              query_params = merged_query_params
+          else:
+              query_params = self.query_params
+
         if query_params:
             params['params'] = query_params
 
         if request_data:
             params['data'] = json.dumps(request_data)
 
-        path = os.path.join(self.url, api.path)
+        path = urljoin(self.url, api.path.lstrip('/'))
 
         if LOG.isEnabledFor(logging.DEBUG):
             LOG.debug("------------------------------------------------------")
@@ -449,9 +506,13 @@ class RangerClientHttp:
                     if LOG.isEnabledFor(logging.DEBUG):
                         LOG.debug("<== __call_api(%s, %s, %s), result=%s", vars(api), params, request_data, response)
 
-                        LOG.debug(response.json())
+                        LOG.debug(response.content)
 
-                    ret = response.json()
+                    if response.content:
+                      try:
+                        ret = response.json()
+                      except Exception:
+                        ret = response.content
             except Exception as e:
                 print(e)
 
@@ -459,7 +520,7 @@ class RangerClientHttp:
 
                 raise RangerServiceException(api, response)
         elif response.status_code == HTTPStatus.SERVICE_UNAVAILABLE:
-            LOG.error("Ranger admin unavailable. HTTP Status: %s", HTTPStatus.SERVICE_UNAVAILABLE)
+            LOG.error("Ranger server at %s unavailable. HTTP Status: %s", self.url, HTTPStatus.SERVICE_UNAVAILABLE)
 
             ret = None
         elif response.status_code == HTTPStatus.NOT_FOUND:

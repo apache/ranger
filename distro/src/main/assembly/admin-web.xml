@@ -101,6 +101,7 @@
             <include>org.apache.hbase:hbase-protocol:jar:${hbase.version}</include>
             <include>org.apache.hbase:hbase-server:jar:${hbase.version}</include>
             <include>org.apache.hbase:hbase-protocol-shaded:jar:${hbase.version}</include>
+            <include>org.apache.hbase:hbase-shaded-client:jar:${hbase.version}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-protobuf:jar:${hbase-shaded-protobuf}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-netty:jar:${hbase-shaded-netty}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-miscellaneous:jar:${hbase-shaded-miscellaneous}</include>
@@ -177,13 +178,13 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.hadoop:hadoop-ozone-common:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-ozone-client:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-hdds-common:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-hdds-client:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-hdds-config:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-hdds-interface-client:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-ozone-interface-client:jar:${ozone.version}</include>
+          <include>org.apache.ozone:ozone-common:jar:${ozone.version}</include>
+          <include>org.apache.ozone:ozone-client:jar:${ozone.version}</include>
+          <include>org.apache.ozone:hdds-common:jar:${ozone.version}</include>
+          <include>org.apache.ozone:hdds-client:jar:${ozone.version}</include>
+          <include>org.apache.ozone:hdds-config:jar:${ozone.version}</include>
+          <include>org.apache.ozone:hdds-interface-client:jar:${ozone.version}</include>
+          <include>org.apache.ozone:ozone-interface-client:jar:${ozone.version}</include>
           <include>org.apache.ratis:ratis-common:jar:${ratis.version}</include>
           <include>org.apache.ratis:ratis-proto:jar:${ratis.version}</include>
           <include>org.apache.ratis:ratis-thirdparty-misc:jar:${ratis-thirdparty.version}</include>

@@ -347,46 +347,14 @@ public class RangerPluginClassLoader extends URLClassLoader {
         }
     }
 
-    public ScriptEngine getScriptEngine(String engineName) {
-        ClassLoader classLoader = preActivateClassLoader.get();
+    public ClassLoader getPrevActiveClassLoader() {
+        ClassLoader ret = preActivateClassLoader.get();
 
-        if (classLoader == null) {
+        if (ret == null) {
             MyClassLoader savedClassLoader = getComponentClassLoader();
 
             if (savedClassLoader != null && savedClassLoader.getParent() != null) {
-                classLoader = savedClassLoader.getParent();
-            }
-        }
-
-        ScriptEngineManager manager;
-
-        if (classLoader != null) {
-            LOG.debug("Creating a ScriptEngineManager with a classloader:[" + classLoader + "]");
-            manager = new ScriptEngineManager(classLoader);
-        } else {
-            LOG.debug("Creating a ScriptEngineManager without a classloader");
-            manager = new ScriptEngineManager();
-        }
-
-        if (LOG.isDebugEnabled()) {
-            List<ScriptEngineFactory> factories = manager.getEngineFactories();
-
-            if (factories == null || factories.size() == 0) {
-                LOG.debug("List of scriptEngineFactories is empty!!");
-            } else {
-                for (ScriptEngineFactory factory : factories) {
-                    LOG.debug("engineName=" + factory.getEngineName() + ", language=" + factory.getLanguageName());
-                }
-            }
-        }
-
-        final ScriptEngine ret = manager.getEngineByName(engineName);
-
-        if (ret == null) {
-            LOG.error("scriptEngine for '" + engineName + "' is null!!");
-        } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("scriptEngine for '" + engineName + "':[" + ret + "]");
+                ret = savedClassLoader.getParent();
             }
         }
 

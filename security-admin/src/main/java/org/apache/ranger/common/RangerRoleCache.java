@@ -69,10 +69,8 @@ public class RangerRoleCache {
 		if (lastKnownRoleVersion == null || !lastKnownRoleVersion.equals(rangerRoleVersionInDB)) {
 			roleCacheWrapper = new RangerRoleCacheWrapper();
 			ret              = roleCacheWrapper.getLatestRangerRoles(serviceName, roleDBStore, lastKnownRoleVersion, rangerRoleVersionInDB);
-		} else if (lastKnownRoleVersion.equals(rangerRoleVersionInDB)) {
-			ret = null;
 		} else {
-			ret = roleCacheWrapper.getRoles();
+			ret = null;
 		}
 
 		return ret;
@@ -121,6 +119,7 @@ public class RangerRoleCache {
 						ret.setRoleVersion(rolesVersionInDB);
 
 						rolesVersion = rolesVersionInDB;
+						roles = ret;
 					} else {
 						LOG.error("Could not get Ranger Roles from database ...");
 					}

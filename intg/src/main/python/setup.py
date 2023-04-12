@@ -27,7 +27,7 @@ with open("README.md", "r") as fh:
 
 setup(
     name="apache-ranger",
-    version="0.0.5",
+    version="0.0.10",
     author="Apache Ranger",
     author_email="dev@ranger.apache.org",
     description="Apache Ranger Python client",

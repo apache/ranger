@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
@@ -108,8 +109,8 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     }
 
     @Override
-    public RangerSecurityZone updateSecurityZoneById(RangerSecurityZone securityZone) throws Exception {
-        XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(securityZone.getId());
+	public RangerSecurityZone updateSecurityZoneById(RangerSecurityZone securityZone) throws Exception {
+		XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(securityZone.getId());
         if (xxSecurityZone == null) {
             throw restErrorUtil.createRESTException("security-zone with id: " + securityZone.getId() + " does not exist");
         }
@@ -124,6 +125,10 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             throw new Exception("Cannot update security zone:[" + securityZone + "]");
         }
         securityZoneRefUpdater.createNewZoneMappingForRefTable(updatedSecurityZone);
+        boolean isRenamed = !StringUtils.equals(securityZone.getName(), (null == oldSecurityZone) ? null : oldSecurityZone.getName());
+		if (isRenamed) {
+			securityZoneRefUpdater.updateResourceSignatureWithZoneName(updatedSecurityZone);
+		}
         List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(updatedSecurityZone, oldSecurityZone, "update");
         bizUtil.createTrxLog(trxLogList);
         return securityZone;

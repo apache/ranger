@@ -26,6 +26,7 @@ define(function(require){
 	var Communicator	= require('communicator');
 	var SessionMgr 		= require('mgrs/SessionMgr');
 	var vError 			= require('views/common/ErrorView');
+	var XAUtil			= require('utils/XAUtils');
 	
 	var ProfileBar_tmpl = require('hbs!tmpl/common/ProfileBar_tmpl'); 
 	
@@ -36,9 +37,14 @@ define(function(require){
 		
     	template: ProfileBar_tmpl,
     	templateHelpers : function(){
+			var urlString = XAUtil.getBaseUrl();
+			if(urlString.slice(-1) == "/") {
+				urlString = urlString.slice(0,-1);
+			};
     		return {
     			userProfile : this.userProfile,
     			oldUi : localStorage.getItem('setOldUI') == "true" ? false : true ,
+				swaggerUI : urlString+"/apidocs/swagger.html"
     		};
     	},
         

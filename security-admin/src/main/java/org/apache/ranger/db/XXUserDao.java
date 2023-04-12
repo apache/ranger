@@ -122,5 +122,4 @@ public class XXUserDao extends BaseDao<XXUser> {
 		}
 		return users;
 	}
-
 }

@@ -190,9 +190,9 @@ password VARCHAR(512) NOT NULL,
 email VARCHAR(512) DEFAULT NULL NULL,
 status INT DEFAULT '0' NOT NULL,
 user_src INT DEFAULT '0' NOT NULL,
-notes VARCHAR(4000) DEFAULT NULL NULL,
-other_attributes VARCHAR(4000) DEFAULT NULL NULL,
-sync_source VARCHAR(4000) DEFAULT NULL NULL,
+notes TEXT DEFAULT NULL NULL,
+other_attributes TEXT DEFAULT NULL NULL,
+sync_source TEXT DEFAULT NULL NULL,
 old_passwords TEXT DEFAULT NULL,
 password_updated_time TIMESTAMP DEFAULT NULL,
 PRIMARY KEY(id),
@@ -321,14 +321,14 @@ UPDATE_TIME TIMESTAMP DEFAULT NULL,
 ADDED_BY_ID BIGINT DEFAULT NULL,
 UPD_BY_ID BIGINT DEFAULT NULL,
 GROUP_NAME VARCHAR(1024) NOT NULL,
-DESCR VARCHAR(4000) DEFAULT NULL NULL,
+DESCR TEXT DEFAULT NULL NULL,
 STATUS INT DEFAULT '0' NOT NULL,
 GROUP_TYPE INT DEFAULT '0' NOT NULL,
 CRED_STORE_ID BIGINT DEFAULT NULL,
 GROUP_SRC INT DEFAULT 0 NOT NULL,
 IS_VISIBLE INT DEFAULT '1' NOT NULL,
-other_attributes VARCHAR(4000) DEFAULT NULL NULL,
-sync_source VARCHAR(4000) DEFAULT NULL NULL,
+other_attributes TEXT DEFAULT NULL NULL,
+sync_source TEXT DEFAULT NULL NULL,
 PRIMARY KEY(ID),
 CONSTRAINT x_group_UK_group_name UNIQUE(group_name),
 CONSTRAINT X_GROUP_FK_ADDED_BY_ID FOREIGN KEY(ADDED_BY_ID) REFERENCES X_PORTAL_USER(ID),
@@ -361,12 +361,12 @@ update_time TIMESTAMP DEFAULT NULL NULL,
 added_by_id BIGINT DEFAULT NULL NULL,
 upd_by_id BIGINT DEFAULT NULL NULL,
 user_name VARCHAR(767) NOT NULL,
-descr VARCHAR(4000) DEFAULT NULL NULL,
+descr TEXT DEFAULT NULL NULL,
 status INT DEFAULT '0' NOT NULL,
 cred_store_id BIGINT DEFAULT NULL NULL,
 is_visible INT DEFAULT '1' NOT NULL,
-other_attributes VARCHAR(4000) DEFAULT NULL NULL,
-sync_source VARCHAR(4000) DEFAULT NULL NULL,
+other_attributes TEXT DEFAULT NULL NULL,
+sync_source TEXT DEFAULT NULL NULL,
 PRIMARY KEY(id),
 CONSTRAINT x_user_UK_user_name UNIQUE(user_name),
 CONSTRAINT x_user_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
@@ -1604,6 +1604,7 @@ is_enabled BOOLEAN DEFAULT '1' NOT NULL,
 service_resource_elements_text TEXT DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_rms_service_res_UK_guid UNIQUE (guid),
+CONSTRAINT x_rms_service_resource_UK_resource_signature UNIQUE (resource_signature),
 CONSTRAINT x_rms_service_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
 );
 commit;
@@ -1809,7 +1810,6 @@ CREATE INDEX x_ugsync_audit_info_uname ON x_ugsync_audit_info(user_name);
 CREATE INDEX x_data_hist_idx_objid_objclstype ON x_data_hist(obj_id,obj_class_type);
 
 CREATE INDEX x_rms_service_resource_IDX_service_id ON x_rms_service_resource(service_id);
-CREATE INDEX x_rms_service_resource_IDX_resource_signature ON x_rms_service_resource(resource_signature);
 CREATE INDEX x_rms_notification_IDX_notification_id ON x_rms_notification(notification_id);
 CREATE INDEX x_rms_notification_IDX_hms_name_notification_id ON x_rms_notification(hms_name, notification_id);
 CREATE INDEX x_rms_notification_IDX_hl_service_id ON x_rms_notification(hl_service_id);
@@ -1895,6 +1895,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('057',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

@@ -123,10 +123,42 @@
       "policyItems":[
         {"accesses":[{"type":"read","isAllowed":true},{"type":"write","isAllowed":true}],"users":["user1"],"groups":[],"delegateAdmin":false}
       ]
+    },
+    {"id":1001,"name":"db=org; table=employee; column=*","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"database":{"values":["org"]},"table":{"values":["employee"]},"column":{"values":["*"], "isExcludes":false}},
+      "policyItems":[
+        {"accesses":[{"type":"select","isAllowed":true}, {"type":"create","isAllowed":true}, {"type":"read","isAllowed":true}],"users":["john"],"groups":[],"delegateAdmin":false}
+      ]
     }
   ],
 
   "tests":[
+    {"name":"DENY 'create or write for org;' for john",
+      "request":{
+        "resource":{"elements":{"database":"org"}},
+        "accessType":"create","user":"john","userGroups":[],"requestData":"create org",
+        "context": {"ISANYACCESS":true, "ACCESSTYPES": [ "create",  "write" ]}
+      },
+      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+    }
+  ,
+    {"name":"DENY 'create and write for org;' for john",
+      "request":{
+        "resource":{"elements":{"database":"org"}},
+        "accessType":"create","user":"john","userGroups":[],"requestData":"create org",
+        "context": {"ISANYACCESS":false, "ACCESSTYPES": [ "create",  "write" ]}
+      },
+      "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
+    }
+  ,
+    {"name":"ALLOW 'any' for org;' for john",
+      "request":{
+        "resource":{"elements":{"database":"org"}},
+        "accessType":"","user":"john","userGroups":[],"requestData":"'any' access for org"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":1001}
+    }
+  ,
     {"name":"ALLOW 'read http://qe-s3-bucket-mst/test_abcd/abcd;' for user1",
       "request":{
         "resource":{"elements":{"url":["http://qe-s3-bucket-mst/test_abcd/abcd", "http://qe-s3-bucket-mst/test_abcd/abcd/"]}},

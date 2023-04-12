@@ -101,6 +101,7 @@ TAG_SOURCE_FILE_ENABLED = 'ranger.tagsync.source.file'
 hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-tagsync-env-hadoopconfdir.sh"
 ENV_PID_FILE = 'ranger-tagsync-env-piddir.sh'
+ENV_CONF_FILE = 'ranger-tagsync-env-confdir.sh'
 
 globalDict = {}
 configure_security = False
@@ -488,10 +489,13 @@ def main():
 
 	write_env_files("RANGER_TAGSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE)
 	write_env_files("TAGSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
+	write_env_files("TAGSYNC_CONF_DIR", os.path.join(tagsyncBaseDirFullName,confBaseDirName), ENV_CONF_FILE)
 	os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
 	os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0o755)
 	os.chown(os.path.join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
 	os.chmod(os.path.join(confBaseDirName, ENV_PID_FILE),0o755)
+	os.chown(os.path.join(confBaseDirName, ENV_CONF_FILE),ownerId,groupId)
+	os.chmod(os.path.join(confBaseDirName, ENV_CONF_FILE),0o755)
 
 	f = open(os.path.join(confBaseDirName, ENV_PID_FILE), "a+")
 	f.write("\nexport {0}={1}".format("UNIX_TAGSYNC_USER",unix_user))

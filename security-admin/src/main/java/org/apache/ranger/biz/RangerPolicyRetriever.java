@@ -343,7 +343,7 @@ public class RangerPolicyRetriever {
 				ret = userScreenNames.get(userId);
 
 				if(ret == null) {
-					XXPortalUser user = daoMgr.getXXPortalUser().getById(userId);
+					XXPortalUser user = daoMgr.getXXPortalUser().findById(userId);
 
 					if(user != null) {
 						ret = user.getPublicScreenName();

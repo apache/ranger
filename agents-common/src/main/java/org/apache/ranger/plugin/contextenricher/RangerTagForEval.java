@@ -44,7 +44,7 @@ import java.util.List;
 import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
@@ -69,10 +69,10 @@ public class RangerTagForEval implements Serializable {
 
     public RangerTagForEval(RangerTag tag, RangerPolicyResourceMatcher.MatchType matchType) {
         this.type            = tag.getType();
-        this.attributes      = tag.getAttributes();
-        this.options         = tag.getOptions();
+        this.attributes      = tag.getAttributes() != null ? tag.getAttributes() : Collections.emptyMap();
+        this.options         = tag.getOptions() != null ? tag.getOptions() : Collections.emptyMap();
         this.matchType       = matchType;
-        this.validityPeriods = tag.getValidityPeriods();
+        this.validityPeriods = tag.getValidityPeriods() != null ? tag.getValidityPeriods() : Collections.emptyList();
 
         this.validityPeriodEvaluators = createValidityPeriodEvaluators();
     }

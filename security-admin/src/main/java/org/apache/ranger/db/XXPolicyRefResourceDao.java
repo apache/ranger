@@ -79,10 +79,7 @@ public class XXPolicyRefResourceDao extends BaseDao<XXPolicyRefResource>{
 			return;
 		}
 
-		getEntityManager()
-				.createNamedQuery("XXPolicyRefResource.deleteByIds", tClass)
-				.setParameter("ids", ids).executeUpdate();
-
+		batchDeleteByIds("XXPolicyRefResource.deleteByIds", ids, "ids");
 	}
 
 	 @SuppressWarnings("unchecked")

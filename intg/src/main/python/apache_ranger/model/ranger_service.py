@@ -36,3 +36,14 @@ class RangerService(RangerBaseModelObject):
         self.policyUpdateTime = attrs.get('policyUpdateTime')
         self.tagVersion       = attrs.get('tagVersion')
         self.tagUpdateTime    = attrs.get('tagUpdateTime')
+
+
+class RangerServiceHeaderInfo(RangerBaseModelObject):
+    def __init__(self, attrs=None):
+        if attrs is None:
+            attrs = {}
+
+        RangerBaseModelObject.__init__(self, attrs)
+
+        self.name         = attrs.get('name')
+        self.isTagService = attrs.get('isTagService')

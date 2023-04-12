@@ -45,6 +45,7 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
     private       RangerUserStoreRetriever       userStoreRetriever;
     private       RangerUserStore                rangerUserStore;
     private       boolean                        disableCacheIfServiceNotFound = true;
+    private       boolean                        dedupStrings                  = true;
     private final BlockingQueue<DownloadTrigger> userStoreDownloadQueue = new LinkedBlockingQueue<>();
     private       Timer                          userStoreDownloadTimer;
 
@@ -56,9 +57,11 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
 
         super.init();
 
+        String propertyPrefix              = getPropertyPrefix();
         String userStoreRetrieverClassName = getOption(USERSTORE_RETRIEVER_CLASSNAME_OPTION);
+        long   pollingIntervalMs           = getLongOption(USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, 3600 * 1000);
 
-        long pollingIntervalMs = getLongOption(USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, 3600 * 1000);
+        dedupStrings = getBooleanConfig(propertyPrefix + ".dedup.strings", true);
 
         if (StringUtils.isNotBlank(userStoreRetrieverClassName)) {
 
@@ -79,7 +82,6 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
             }
 
             if (userStoreRetriever != null) {
-                String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
                 disableCacheIfServiceNotFound = getBooleanConfig(propertyPrefix + ".disable.cache.if.servicenotfound", true);
                 String cacheDir      = getConfig(propertyPrefix + ".policy.cache.dir", null);
                 String cacheFilename = String.format("%s_%s_userstore.json", appId, serviceName);
@@ -191,7 +193,12 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
                 perf = RangerPerfTracer.getPerfTracer(PERF_SET_USERSTORE_LOG, "RangerUserStoreEnricher.setRangerUserStore(newUserStoreVersion=" + rangerUserStore.getUserStoreVersion() + ")");
             }
 
+            if (dedupStrings) {
+                rangerUserStore.dedupStrings();
+            }
+
             this.rangerUserStore = rangerUserStore;
+
             RangerPerfTracer.logAlways(perf);
         }
 

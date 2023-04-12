@@ -14,7 +14,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-FROM solr:8
+ARG SOLR_VERSION
+FROM solr:${SOLR_VERSION}
 
 # Copy audit config set
 USER 0

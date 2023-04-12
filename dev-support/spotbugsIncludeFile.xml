@@ -45,6 +45,7 @@
         <Bug pattern="NM_SAME_SIMPLE_NAME_AS_SUPERCLASS" />
         <Bug pattern="IL_INFINITE_RECURSIVE_LOOP" />
         <Bug pattern="DMI_RANDOM_USED_ONLY_ONCE" />
+        <Bug pattern="UI_INHERITANCE_UNSAFE_GETRESOURCE" />
       </Or>
     </Not>
   </Match>

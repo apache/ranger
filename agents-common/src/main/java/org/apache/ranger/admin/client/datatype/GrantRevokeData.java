@@ -32,7 +32,7 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class GrantRevokeData implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
@@ -162,7 +162,7 @@ public class GrantRevokeData implements java.io.Serializable {
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class PermMap implements java.io.Serializable {
 		private List<String> userList  = new ArrayList<>();

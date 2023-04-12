@@ -39,6 +39,8 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.policyengine.PolicyEngine;
+import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
@@ -46,7 +48,6 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
-import org.apache.ranger.plugin.policyengine.RangerResourceAccessInfo;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 
@@ -641,5 +642,7 @@ public interface RangerPolicyEvaluator {
 		}
 
 		RangerPolicyEvaluator getPolicyEvaluator();
+
+		RangerPolicyResourceMatcher getMacrosReplaceWithWildcardMatcher(PolicyEngine policyEngine);
 	}
 }

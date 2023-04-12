@@ -31,6 +31,9 @@ http://www.springframework.org/schema/security/oauth2
 http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 
 	<security:http pattern="/login.jsp" security="none" />
+	<security:http pattern="/dist/**" security="none" />
+	<security:http pattern="/favicon.ico" security="none"/>
+	<security:http pattern="/images/**" security="none" />
 	<security:http pattern="/styles/**" security="none" />
 	<security:http pattern="/fonts/**" security="none" />
 	<security:http pattern="/scripts/prelogin/XAPrelogin.js" security="none" />
@@ -46,7 +49,7 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
 	<security:http pattern="/service/tags/download/*" security="none"/>
 	<security:http pattern="/service/roles/download/*" security="none"/>
 	<security:http pattern="/service/xusers/download/*" security="none"/>
-	<security:http pattern="/service/metrics/status" security="none" />
+	<security:http pattern="/service/metrics/**" security="none" />
 	<security:http disable-url-rewriting="true" use-expressions="true" create-session="always" entry-point-ref="authenticationProcessingFilterEntryPoint">
 		<csrf disabled="true"/>
 		<security:headers>
@@ -104,6 +107,9 @@ http://www.springframework.org/schema/security/spring-security-oauth2-2.0.xsd">
     </beans:bean>
 
 	<beans:bean id="CSRFPreventionFilter" class="org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter">
+    </beans:bean>
+
+	<beans:bean id="mdcFilter" class="org.apache.ranger.security.web.filter.RangerMDCFilter">
     </beans:bean>
 
     <beans:bean id="ssoAuthenticationFilter" class="org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter">

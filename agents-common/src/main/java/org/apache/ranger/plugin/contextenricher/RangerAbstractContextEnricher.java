@@ -204,6 +204,12 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		}
 	}
 
+	public String getPropertyPrefix() {
+		RangerPluginConfig pluginConfig = getPluginConfig();
+
+		return pluginConfig != null ? pluginConfig.getPropertyPrefix() : "ranger.plugin." + serviceDef.getName();
+	}
+
 	public String getConfig(String configName, String defaultValue) {
 		RangerPluginContext pluginContext = this.pluginContext;
 		String              ret           = defaultValue;

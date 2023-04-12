@@ -114,8 +114,6 @@ public class XXPolicyRefAccessTypeDao extends BaseDao<XXPolicyRefAccessType> {
 			return;
 		}
 
-		getEntityManager()
-				.createNamedQuery("XXPolicyRefAccessType.deleteByIds", tClass)
-				.setParameter("ids", ids).executeUpdate();
+		batchDeleteByIds("XXPolicyRefAccessType.deleteByIds", ids, "ids");
 	}
 }

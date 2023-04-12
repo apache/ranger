@@ -38,6 +38,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeSet;
@@ -132,6 +133,7 @@ import org.apache.ranger.entity.XXServiceConfigMap;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTrxLog;
+import org.apache.ranger.entity.XXRole;
 import org.apache.ranger.entity.XXUser;
 import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -266,19 +268,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
-	
+
 	@Autowired
 	RangerServiceService svcService;
-	
+
 	@Autowired
 	StringUtil stringUtil;
-	
+
 	@Autowired
 	RangerAuditFields<?> rangerAuditFields;
-	
+
 	@Autowired
 	RangerPolicyService policyService;
-	
+
 	@Autowired
         RangerPolicyLabelsService<XXPolicyLabel, ?> policyLabelsService;
 
@@ -333,6 +335,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Autowired
 	RoleDBStore roleStore;
+
+	@Autowired
+	TagDBStore tagStore;
 
 	@Autowired
 	RangerRoleService roleService;
@@ -1470,6 +1475,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 				svcDefList.getResultSize(), svcDefList.getSortType(), svcDefList.getSortBy());
 
 	}
+	public List<String> findAllServiceDefNamesHavingContextEnrichers() {
+		return daoMgr.getXXServiceDef().findAllHavingEnrichers();
+	}
 
 	@Override
 	public RangerService createService(RangerService service) throws Exception {
@@ -1510,7 +1518,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service = svcService.create(service);
 		}
 		XXService xCreatedService = daoMgr.getXXService().getById(service.getId());
-		VXUser vXUser = null;
 
 		XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
 		for (Entry<String, String> configMap : validConfigs.entrySet()) {
@@ -1521,14 +1528,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 				String userName = stringUtil.getValidUserName(configValue);
 				XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
 				if (xxUser != null) {
-					vXUser = xUserService.populateViewBean(xxUser);
+					VXUser vXUser = xUserService.populateViewBean(xxUser);
 				} else {
 					UserSessionBase usb = ContextUtil.getCurrentUserSession();
 					if (usb != null && !usb.isUserAdmin() && !usb.isSpnegoEnabled()) {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-					vXUser = xUserMgr.createServiceConfigUser(userName);
+					xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 
@@ -1557,9 +1564,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMap = xConfMapDao.create(xConfMap);
 		}
 		updateTabPermissions(service.getType(), validConfigs);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("vXUser:[" + vXUser + "]");
-		}
+
 		RangerService createdService = svcService.getPopulatedViewObject(xCreatedService);
 
 		if (createdService == null) {
@@ -1684,7 +1689,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service = svcService.update(service);
 
 			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
-				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null, false);
+				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null,false);
 			}
 		}
 
@@ -1699,7 +1704,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 			daoMgr.getXXServiceConfigMap().remove(dbConfigMap);
 		}
 
-		VXUser vXUser = null;
 		XXServiceConfigMapDao xConfMapDao = daoMgr.getXXServiceConfigMap();
 		for (Entry<String, String> configMap : validConfigs.entrySet()) {
 			String configKey = configMap.getKey();
@@ -1709,14 +1713,14 @@ public class ServiceDBStore extends AbstractServiceStore {
 				String userName = stringUtil.getValidUserName(configValue);
 				XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
 				if (xxUser != null) {
-					vXUser = xUserService.populateViewBean(xxUser);
+					VXUser vXUser = xUserService.populateViewBean(xxUser);
 				} else {
 					UserSessionBase usb = ContextUtil.getCurrentUserSession();
 					if (usb != null && !usb.isUserAdmin()) {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ userName + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-					vXUser = xUserMgr.createServiceConfigUser(userName);
+					xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 
@@ -1758,9 +1762,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			xConfMapDao.create(xConfMap);
 		}
 		updateTabPermissions(service.getType(), validConfigs);
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("vXUser:[" + vXUser + "]");
-		}
+
 		RangerService updService = svcService.getPopulatedViewObject(xUpdService);
 		dataHistService.createObjectDataHistory(updService, RangerDataHistService.ACTION_UPDATE);
 		bizUtil.createTrxLog(trxLogList);
@@ -1822,6 +1824,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		List<XXTrxLog> trxLogList = svcService.getTransactionLog(service, RangerServiceService.OPERATION_DELETE_CONTEXT);
 		bizUtil.createTrxLog(trxLogList);
+		//During the servie deletion ,we need to clear the RangerServicePoliciesCache,RangerServiceTagsCache for the given serviceName.
+		resetPolicyCache(service.getName());
+		tagStore.resetTagCache(service.getName());
+
 	}
 
 	private void updateTabPermissions(String svcType, Map<String, String> svcConfig) {
@@ -1994,6 +2000,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Override
 	public RangerPolicy createPolicy(RangerPolicy policy) throws Exception {
+		return createPolicy(policy, false);
+	}
+
+	@Override
+	public RangerPolicy createDefaultPolicy(RangerPolicy policy) throws Exception {
+		return createPolicy(policy, true);
+	}
+
+	public RangerPolicy createPolicy(RangerPolicy policy, boolean isDefaultPolicy) throws Exception {
 
 		RangerService service = getServiceByName(policy.getService());
 
@@ -2042,7 +2057,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		XXPolicy xCreatedPolicy = daoMgr.getXXPolicy().getById(policy.getId());
-		policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef);
+		policyRefUpdater.createNewPolMappingForRefTable(policy, xCreatedPolicy, xServiceDef, isDefaultPolicy);
 		createOrMapLabels(xCreatedPolicy, uniquePolicyLabels);
 		RangerPolicy createdPolicy = policyService.getPopulatedViewObject(xCreatedPolicy);
 
@@ -2215,7 +2230,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		policyRefUpdater.cleanupRefTables(policy);
 		deleteExistingPolicyLabel(policy);
 
-		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef);
+		policyRefUpdater.createNewPolMappingForRefTable(policy, newUpdPolicy, xServiceDef, false);
 		createOrMapLabels(newUpdPolicy, uniquePolicyLabels);
 		RangerPolicy updPolicy = policyService.getPopulatedViewObject(newUpdPolicy);
 
@@ -2334,7 +2349,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	public RangerPolicy getPolicy(String guid, String serviceName, String zoneName) throws Exception {
 		RangerPolicy ret = null;
-		if (StringUtils.isNotBlank(guid) && StringUtils.isNotBlank(serviceName)) {
+		if (StringUtils.isNotBlank(guid)) {
 			XXPolicy xPolicy = daoMgr.getXXPolicy().findPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
 			if (xPolicy != null) {
 				ret = policyService.getPopulatedViewObject(xPolicy);
@@ -2587,13 +2602,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		final List<RangerPolicy> policies = servicePolicies != null ? servicePolicies.getPolicies() : null;
 
 		if(policies != null && filter != null && MapUtils.isNotEmpty(filter.getParams())) {
-			Map<String, String> filterResources = filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
-			String resourceMatchScope = filter.getParam(SearchFilter.RESOURCE_MATCH_SCOPE);
-
-			boolean useLegacyResourceSearch = true;
-
-			Map<String, String> paramsCopy  = new HashMap<>(filter.getParams());
-			SearchFilter       searchFilter = new SearchFilter(paramsCopy);
+			Map<String, String> filterResources         = filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
+			String              resourceMatchScope      = filter.getParam(SearchFilter.RESOURCE_MATCH_SCOPE);
+			boolean             useLegacyResourceSearch = true;
+			SearchFilter        searchFilter            = new SearchFilter(filter);
 
 			if (MapUtils.isNotEmpty(filterResources) && resourceMatchScope != null) {
 				useLegacyResourceSearch = false;
@@ -3277,7 +3289,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (CollectionUtils.isNotEmpty(defaultPolicies)) {
 
 			for (RangerPolicy defaultPolicy : defaultPolicies) {
-				createPolicy(defaultPolicy);
+				createDefaultPolicy(defaultPolicy);
 			}
 		}
 
@@ -3302,7 +3314,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 							defaultPolicy.setZoneName(zoneName);
 
-							createPolicy(defaultPolicy);
+							createDefaultPolicy(defaultPolicy);
 						}
 					}
 				}
@@ -3350,17 +3362,14 @@ public class ServiceDBStore extends AbstractServiceStore {
                         if(serviceCheckUsers != null){
                                 for (String userName : serviceCheckUsers) {
                                         if(!StringUtils.isEmpty(userName)){
-                                                VXUser vXUser = null;
                                                 XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
                                                 if (xxUser != null) {
-                                                        vXUser = xUserService.populateViewBean(xxUser);
+                                                        VXUser vXUser = xUserService.populateViewBean(xxUser);
                                                 } else {
-                                                        vXUser = xUserMgr.createServiceConfigUser(userName);
-                                                        LOG.info("Creating Ambari Service Check User : "+vXUser.getName());
+                                                        xUserMgr.createServiceConfigUser(userName);
+                                                        LOG.info("Creating Ambari Service Check User : "+ userName);
                                                 }
-                                                if(vXUser != null){
-                                                        users.add(vXUser.getName());
-                                                }
+												users.add(userName);
                                         }
                                 }
                         }
@@ -3454,7 +3463,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 						throw restErrorUtil.createRESTException("User does not exist with given username: ["
 								+ policyUser + "] please use existing user", MessageEnums.OPER_NO_PERMISSION);
 					}
-                                        xUserMgr.createServiceConfigUser(userName);
+					xUserMgr.createServiceConfigUser(userName);
 				}
 			}
 		}
@@ -4870,6 +4879,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		RangerPolicyList retList = new RangerPolicyList();
 		Map<Long,RangerPolicy> policyMap=new HashMap<Long,RangerPolicy>();
 		Set<Long> processedServices=new HashSet<Long>();
+		Set<Long> processedSvcIdsForRole = new HashSet<>();
 		Set<Long> processedPolicies=new HashSet<Long>();
 		Comparator<RangerPolicy> comparator = new Comparator<RangerPolicy>() {
 			public int compare(RangerPolicy c1, RangerPolicy c2) {
@@ -4943,7 +4953,109 @@ public class ServiceDBStore extends AbstractServiceStore {
 						}
 					}
 				}
+
+			// fetch policies maintained for the roles belonging to the user
+			searchFilter.removeParam("group");
+			XXUser xxUser = daoMgr.getXXUser().findByUserName(userName);
+			if (xxUser != null) {
+				Set<Long> allContainedRoles = new HashSet<>();
+				List<XXRole> xxRoles = daoMgr.getXXRole().findByUserId(xxUser.getId());
+				for(XXRole xxRole: xxRoles) {
+					getContainingRoles(xxRole.getId(), allContainedRoles);
+				}
+				Set<String> roleNames = getRoleNames(allContainedRoles);
+				Set<String> processedRoleName = new HashSet<>();
+				List<XXPolicy> xPolList3;
+				for (String roleName : roleNames) {
+					searchFilter.setParam("role", roleName);
+					xPolList3 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+					if (!CollectionUtils.isEmpty(xPolList3)) {
+						for (XXPolicy xPol3 : xPolList3) {
+							if (xPol3 != null) {
+								if (!processedPolicies.contains(xPol3.getId())) {
+									if (!processedSvcIdsForRole.contains(xPol3.getService())
+											|| !processedRoleName.contains(roleName)) {
+										loadRangerPolicies(xPol3.getService(), processedSvcIdsForRole, policyMap, searchFilter);
+										processedRoleName.add(roleName);
+									}
+									if (policyMap.containsKey(xPol3.getId())) {
+										policyList.add(policyMap.get(xPol3.getId()));
+										processedPolicies.add(xPol3.getId());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
 		}
+
+		// fetch policies maintained for the roles and groups belonging to the group
+		String groupName = searchFilter.getParam("group");
+		if (!StringUtils.isEmpty(groupName)) {
+			Set<String> groupNames = daoMgr.getXXGroupGroup().findGroupNamesByGroupName(groupName);
+			groupNames.add(RangerConstants.GROUP_PUBLIC);
+			groupNames.add(groupName);
+			Set<Long> processedSvcIdsForGroup = new HashSet<Long>();
+			Set<String> processedGroupsName = new HashSet<String>();
+			List<XXPolicy> xPolList2;
+			for (String grpName : groupNames) {
+				searchFilter.setParam("group", grpName);
+				xPolList2 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+				if (!CollectionUtils.isEmpty(xPolList2)) {
+					for (XXPolicy xPol2 : xPolList2) {
+						if(xPol2!=null){
+							if (!processedPolicies.contains(xPol2.getId())) {
+								if (!processedSvcIdsForGroup.contains(xPol2.getService())
+										|| !processedGroupsName.contains(groupName)) {
+									loadRangerPolicies(xPol2.getService(), processedSvcIdsForGroup, policyMap, searchFilter);
+									processedGroupsName.add(groupName);
+								}
+								if (policyMap.containsKey(xPol2.getId())) {
+									policyList.add(policyMap.get(xPol2.getId()));
+									processedPolicies.add(xPol2.getId());
+								}
+							}
+						}
+					}
+				}
+			}
+
+			searchFilter.removeParam("group");
+			XXGroup xxGroup = daoMgr.getXXGroup().findByGroupName(groupName);
+			if (xxGroup != null) {
+				Set<Long> allContainedRoles = new HashSet<>();
+				List<XXRole> xxRoles = daoMgr.getXXRole().findByGroupId(xxGroup.getId());
+				for (XXRole xxRole : xxRoles) {
+					getContainingRoles(xxRole.getId(), allContainedRoles);
+				}
+				Set<String> roleNames = getRoleNames(allContainedRoles);
+				Set<String> processedRoleName = new HashSet<>();
+				List<XXPolicy> xPolList3;
+				for (String roleName : roleNames) {
+					searchFilter.setParam("role", roleName);
+					xPolList3 = policyService.searchResources(searchFilter, policyService.searchFields, policyService.sortFields, retList);
+					if (!CollectionUtils.isEmpty(xPolList3)) {
+						for (XXPolicy xPol3 : xPolList3) {
+							if (xPol3 != null) {
+								if (!processedPolicies.contains(xPol3.getId())) {
+									if (!processedSvcIdsForRole.contains(xPol3.getService())
+											|| !processedRoleName.contains(roleName)) {
+										loadRangerPolicies(xPol3.getService(), processedSvcIdsForRole, policyMap, searchFilter);
+										processedRoleName.add(roleName);
+									}
+									if (policyMap.containsKey(xPol3.getId())) {
+										policyList.add(policyMap.get(xPol3.getId()));
+										processedPolicies.add(xPol3.getId());
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
 		if (!CollectionUtils.isEmpty(xPolList)) {
 			if (isSearchQuerybyResource(searchFilter)) {
 				if (MapUtils.isNotEmpty(policyMap)) {
@@ -5159,6 +5271,30 @@ public class ServiceDBStore extends AbstractServiceStore {
         }
         return result;
     }
+
+	/**
+	 * This method returns {@linkplain  java.util.Map map} representing policy count for each service Definition,
+	 * filtered by policy type, if policy type is not valid (null or less than zero) default policy type will
+	 * be used (ie Resource Access)
+	 *
+	 * @param policyType
+	 * @return {@linkplain  java.util.Map map} representing policy count for each service Definition
+	 */
+	public Map<String, Long> getPolicyCountByTypeAndServiceType(Integer policyType) {
+		int type = 0;
+		if ((!Objects.isNull(policyType)) && policyType >= 0) {
+			type = policyType;
+		}
+		return daoMgr.getXXServiceDef().getPolicyCountByType(type);
+	}
+
+	public Map<String, Long> getPolicyCountByDenyConditionsAndServiceDef() {
+		return daoMgr.getXXServiceDef().getPolicyCountByDenyItems();
+	}
+
+	public Map<String, Long> getServiceCountByType() {
+		return daoMgr.getXXServiceDef().getServiceCount();
+	}
 
     public enum METRIC_TYPE {
         USER_GROUP {
@@ -6128,5 +6264,31 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<=== ServiceDBStore.removeUserGroupRoleReferences( user : "+ user + " group : "+ group + " role : " + role + " auditFilters : " + auditFilters +")");
 		}
+	}
+
+	private void getContainingRoles(Long roleId, Set<Long> allRoles) {
+		if (!allRoles.contains(roleId)) {
+			allRoles.add(roleId);
+			Set<Long> roles = daoMgr.getXXRoleRefRole().getContainingRoles(roleId);
+			for (Long role : roles) {
+				getContainingRoles(role, allRoles);
+			}
+		}
+	}
+
+	private Set<String> getRoleNames(Set<Long> roles) {
+		Set<String> roleNames = new HashSet<>();
+		if (CollectionUtils.isNotEmpty(roles)) {
+			List<XXRole> xxRoles = daoMgr.getXXRole().getAll();
+			for (Long role : roles) {
+				for (XXRole xxRole : xxRoles) {
+					if (xxRole.getId() == role) {
+						roleNames.add(xxRole.getName());
+						break;
+					}
+				}
+			}
+		}
+		return roleNames;
 	}
 }

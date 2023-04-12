@@ -84,6 +84,7 @@ import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyItemEvaluator;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.service.RangerDataHistService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
 import org.slf4j.Logger;
@@ -92,6 +93,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
@@ -122,6 +124,9 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 
 	@Autowired
 	XUserMgr xUserMgr;
+
+	@Autowired
+	RangerDataHistService dataHistService;
 
 	private final Map<String, Long>              groupIdMap         = new HashMap<>();
 	private final Map<String, Long>              userIdMap          = new HashMap<>();
@@ -288,6 +293,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
             		addAccessDefRef(serviceType, policy.getId(), accesses);
             		addPolicyConditionDefRef(serviceType, policy.getId(), conditions);
             		addDataMaskDefRef(serviceType, policy.getId(), dataMasks);
+			dataHistService.createObjectDataHistory(policy, RangerDataHistService.ACTION_UPDATE);
         	} catch (Exception e) {
 		    logger.error("portPoliry(id=" + policy.getId() +") failed!!");
 		    logger.error("Offending policy:" + policyText);
@@ -356,7 +362,19 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 
 				if (userObject == null) {
 					logger.info(user +" user is not found, adding user: "+user);
-					xUserMgr.createServiceConfigUser(user);
+					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+					txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+					try {
+						txTemplate.execute(new TransactionCallback<Object>() {
+							@Override
+							public Object doInTransaction(TransactionStatus status) {
+								xUserMgr.createServiceConfigUserSynchronously(user);
+								return null;
+							}
+						});
+					} catch(Exception exception) {
+						logger.error("Cannot create ServiceConfigUser(" + user + ")", exception);
+					}
 					userObject = userDao.findByUserName(user);
 					if (userObject == null) {
 						throw new Exception(user + ": unknown user in policy [id=" + policyId + "]");
@@ -364,6 +382,7 @@ public class PatchForUpdatingPolicyJson_J10019 extends BaseLoader {
 				}
 
 				userId = userObject.getId();
+				logger.info("userId:"+userId);
 
 				userIdMap.put(user, userId);
 			}
