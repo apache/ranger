@@ -44,4 +44,27 @@ jobs:
         distribution: 'temurin'
         cache: maven
     - name: Build with Maven
-      run: mvn clean install --no-transfer-progress -B -V 
+      run: mvn clean install --no-transfer-progress -B -V
+    - name: Transfer artifacts
+      run: cp target/ranger-* dev-support/ranger-docker/dist/ && cp target/version dev-support/ranger-docker/dist/
+  
+  docker-build:
+  
+    needs:
+     - build
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Build Ranger Docker Image
+      run: |
+        cd dev-support/ranger-docker/
+        chmod +x download-archives.sh && ./download-archives.sh
+        export DOCKER_BUILDKIT=1
+        export COMPOSE_DOCKER_CLI_BUILD=1
+        export RANGER_DB_TYPE=postgres
+        docker build --no-cache -t ranger-base:latest -f Dockerfile.ranger-base .
+        docker build --no-cache -t ranger-db:latest -f Dockerfile.ranger-postgres .
+        docker build --no-cache -t ranger-solr:latest -f Dockerfile.ranger-solr .
+        docker build --no-cache -t ranger-zk:latest -f Dockerfile.ranger-zk .
+        docker build --build-arg RANGER_VERSION=3.0.0-SNAPSHOT --build-arg RANGER_DB_TYPE=${RANGER_DB_TYPE} -t ranger-admin:latest -f Dockerfile.ranger .
+
