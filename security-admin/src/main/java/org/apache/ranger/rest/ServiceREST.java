@@ -1757,7 +1757,7 @@ public class ServiceREST {
 					} else {
 						policy.setId(existingPolicy.getId());
 					}
-					ret = updatePolicy(policy, null);
+					ret = updatePolicy(policy, policy.getId());
 				}
 			} catch(WebApplicationException excp) {
 				throw excp;
