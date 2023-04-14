@@ -30,6 +30,9 @@ on:
   pull_request:
     branches: [ "master" ]
 
+env:
+  VERSION: 3.0.0-SNAPSHOT
+
 jobs:
   build:
 
@@ -68,7 +71,7 @@ jobs:
         name: artifacts
     - name: Build Ranger Docker Image
       run: |
-        cp ranger-* dev-support/ranger-docker/dist/
+        cp *.tar.gz dev-support/ranger-docker/dist/
         cp version dev-support/ranger-docker/dist/
         cd dev-support/ranger-docker/
         chmod +x download-archives.sh && ./download-archives.sh
@@ -79,5 +82,5 @@ jobs:
         docker build --no-cache -t ranger-db:latest -f Dockerfile.ranger-postgres .
         docker build --no-cache -t ranger-solr:latest -f Dockerfile.ranger-solr .
         docker build --no-cache -t ranger-zk:latest -f Dockerfile.ranger-zk .
-        docker build --build-arg RANGER_VERSION=3.0.0-SNAPSHOT --build-arg RANGER_DB_TYPE=${RANGER_DB_TYPE} -t ranger-admin:latest -f Dockerfile.ranger .
+        docker build --build-arg RANGER_VERSION=${VERSION} --build-arg RANGER_DB_TYPE=${RANGER_DB_TYPE} -t ranger-admin:latest -f Dockerfile.ranger .
 
