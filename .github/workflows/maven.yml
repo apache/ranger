@@ -68,9 +68,9 @@ jobs:
         name: artifacts
     - name: Build Ranger Docker Image
       run: |
-        cd dev-support/ranger-docker/
         cp ranger-* dev-support/ranger-docker/dist/
         cp version dev-support/ranger-docker/dist/
+        cd dev-support/ranger-docker/
         chmod +x download-archives.sh && ./download-archives.sh
         export DOCKER_BUILDKIT=1
         export COMPOSE_DOCKER_CLI_BUILD=1
