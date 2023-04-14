@@ -36,7 +36,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
+    - name: Checkout project
+      uses: actions/checkout@v3
     - name: Set up JDK 8
       uses: actions/setup-java@v3
       with:
@@ -45,8 +46,12 @@ jobs:
         cache: maven
     - name: Build with Maven
       run: mvn clean install --no-transfer-progress -B -V
-    - name: Transfer artifacts
-      run: cp target/ranger-* dev-support/ranger-docker/dist/ && cp target/version dev-support/ranger-docker/dist/
+    - name: Archive build results
+      uses: actions/upload-artifact@v3
+      with:
+        name: artifacts
+        path: target
+        continue-on-error: true
   
   docker-build:
   
@@ -55,9 +60,17 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
+    - name: Checkout project
+      uses: actions/checkout@v3
+    - name: Download ranger artifacts
+      uses: actions/download-artifact@v3
+      with:
+        name: artifacts
     - name: Build Ranger Docker Image
       run: |
         cd dev-support/ranger-docker/
+        cp ranger-* dev-support/ranger-docker/dist/
+        cp version dev-support/ranger-docker/dist/
         chmod +x download-archives.sh && ./download-archives.sh
         export DOCKER_BUILDKIT=1
         export COMPOSE_DOCKER_CLI_BUILD=1
