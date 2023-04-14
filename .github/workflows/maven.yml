@@ -32,6 +32,10 @@ on:
 
 env:
   VERSION: 3.0.0-SNAPSHOT
+  RANGER_DB_TYPE: postgres
+  COMPOSE_DOCKER_CLI_BUILD: 1
+  DOCKER_BUILDKIT: 1
+  
 
 jobs:
   build:
@@ -75,12 +79,5 @@ jobs:
         cp version dev-support/ranger-docker/dist/
         cd dev-support/ranger-docker/
         chmod +x download-archives.sh && ./download-archives.sh
-        export DOCKER_BUILDKIT=1
-        export COMPOSE_DOCKER_CLI_BUILD=1
-        export RANGER_DB_TYPE=postgres
-        docker build --no-cache -t ranger-base:latest -f Dockerfile.ranger-base .
-        docker build --no-cache -t ranger-db:latest -f Dockerfile.ranger-postgres .
-        docker build --no-cache -t ranger-solr:latest -f Dockerfile.ranger-solr .
-        docker build --no-cache -t ranger-zk:latest -f Dockerfile.ranger-zk .
-        docker build --build-arg RANGER_VERSION=${VERSION} --build-arg RANGER_DB_TYPE=${RANGER_DB_TYPE} -t ranger-admin:latest -f Dockerfile.ranger .
-
+        docker-compose -f docker-compose.ranger-base.yml build --no-cache
+        docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger.yml -f docker-compose.ranger-${RANGER_DB_TYPE}.yml build
