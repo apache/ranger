@@ -228,6 +228,9 @@ public class ServiceTags implements java.io.Serializable {
 				.append("tagUpdateTime={").append(tagUpdateTime).append("}")
 				.append("isDelta={").append(isDelta).append("}")
 				.append("tagsChangeExtent={").append(tagsChangeExtent).append("}")
+				.append(", serviceResources={").append(serviceResources).append("}")
+				.append(", tags={").append(tags).append("}")
+				.append(", resourceToTagIds={").append(resourceToTagIds).append("}")
 				.append("}");
 
 		return sb;
