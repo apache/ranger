@@ -377,7 +377,7 @@ function GroupForm(props) {
                               `input[id=${Object.keys(errors)[0]}]`
                             ) ||
                             document.querySelector(
-                              `span[class="invalid-field"]`
+                              `span[className="invalid-field"]`
                             );
                           scrollToError(selector);
                         }

@@ -142,7 +142,11 @@ class Header extends Component {
           <Navbar.Toggle aria-controls="responsive-navbar-nav" />
           <Navbar.Collapse id="responsive-navbar-nav">
             <Nav className="mr-auto">
-              <NavDropdown title={accessManager} className="header-dropdown" renderMenuOnMount={true}>
+              <NavDropdown
+                title={accessManager}
+                className="header-dropdown"
+                renderMenuOnMount={true}
+              >
                 {hasAccessToTab("Resource Based Policies") && (
                   <NavDropdown.Item to="/policymanager/resource" as={NavLink}>
                     <i className="fa fa-fw fa-file m-r-xs"></i> Resource Based
@@ -187,7 +191,11 @@ class Header extends Component {
               {hasAccessToTab("Key Manager") && (
                 <React.Fragment>
                   {(isKeyAdmin() || isKMSAuditor()) && (
-                    <NavDropdown title={encryption} className="header-dropdown" renderMenuOnMount={true}>
+                    <NavDropdown
+                      title={encryption}
+                      className="header-dropdown"
+                      renderMenuOnMount={true}
+                    >
                       <NavDropdown.Item
                         to="/kms/keys/new/manage/service"
                         as={NavLink}
@@ -202,33 +210,37 @@ class Header extends Component {
                 {(hasAccessToTab("Users/Groups") ||
                   isAuditor() ||
                   isSystemAdmin()) && (
-                    <NavDropdown title={settings} className="header-dropdown" renderMenuOnMount={true}>
-                      {hasAccessToTab("Users/Groups") && (
-                        <NavDropdown.Item to="/users/usertab" as={NavLink}>
-                          <i className="fa-fw fa fa-group m-r-xs"></i>
-                          Users/Groups/Roles
-                        </NavDropdown.Item>
-                      )}
-                      {(isAuditor() || isSystemAdmin()) && (
-                        <NavDropdown.Item to="/permissions/models" as={NavLink}>
-                          <i className="fa-fw fa fa-file-o m-r-xs"></i>{" "}
-                          Permissions
-                        </NavDropdown.Item>
-                      )}
-                    </NavDropdown>
-                  )}
+                  <NavDropdown
+                    title={settings}
+                    className="header-dropdown"
+                    renderMenuOnMount={true}
+                  >
+                    {hasAccessToTab("Users/Groups") && (
+                      <NavDropdown.Item to="/users/usertab" as={NavLink}>
+                        <i className="fa-fw fa fa-group m-r-xs"></i>
+                        Users/Groups/Roles
+                      </NavDropdown.Item>
+                    )}
+                    {(isAuditor() || isSystemAdmin()) && (
+                      <NavDropdown.Item to="/permissions/models" as={NavLink}>
+                        <i className="fa-fw fa fa-file-o m-r-xs"></i>{" "}
+                        Permissions
+                      </NavDropdown.Item>
+                    )}
+                  </NavDropdown>
+                )}
               </>
             </Nav>
             <Nav>
               <NavDropdown title={loginId} id="user-dropdown" alignRight>
                 <NavDropdown.Item
-                  class="dropdown-item"
+                  className="dropdown-item"
                   to="/userprofile"
                   as={NavLink}
                 >
                   <i className="fa fa-user"></i> Profile
                 </NavDropdown.Item>
-                <a class="dropdown-item" href={apiUrl} target="_blank">
+                <a className="dropdown-item" href={apiUrl} target="_blank">
                   <i className="fa fa-user"></i> API Documentation
                 </a>
                 <NavDropdown.Item

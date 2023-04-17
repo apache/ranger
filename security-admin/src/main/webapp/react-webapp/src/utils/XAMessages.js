@@ -93,7 +93,7 @@ export const roleChngWarning = (user) => {
   );
 };
 
-/* policyInfo Message */
+/* Policy Info Message */
 
 export const policyInfoMessage = {
   maskingPolicyInfoMsg: (
@@ -117,4 +117,15 @@ export const policyInfoMessage = {
       access to the table.
     </p>
   )
+};
+
+/* UDF resource change warning */
+
+export const udfResourceWarning = () => {
+  return (
+    <p>
+      <strong>Warning !! </strong> : UDF create is a privileged operation.
+      Please make sure you grant them to only trusted users.
+    </p>
+  );
 };
