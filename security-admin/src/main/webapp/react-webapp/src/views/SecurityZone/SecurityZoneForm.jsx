@@ -446,22 +446,22 @@ const SecurityZoneForm = (props) => {
       tableValues["resources"] = [];
       zone.services[name].resources.map((obj) => {
         let serviceResource = {};
-        let lastResourceLvl = [];
+        let lastResourceLevel = [];
         Object.entries(obj).map(([key, value]) => {
           let setResources = find(filterServiceDef.resources, ["name", key]);
           serviceResource[`resourceName-${setResources.level}`] = setResources;
           serviceResource[`value-${setResources.level}`] = value.map((m) => {
             return { label: m, value: m };
           });
-          lastResourceLvl.push({
+          lastResourceLevel.push({
             level: setResources.level,
             name: setResources.name
           });
         });
-        lastResourceLvl = maxBy(lastResourceLvl, "level");
+        lastResourceLevel = maxBy(lastResourceLevel, "level");
         let setLastResources = find(
           sortBy(filterServiceDef.resources, "itemId"),
-          ["parent", lastResourceLvl.name]
+          ["parent", lastResourceLevel.name]
         );
         if (setLastResources) {
           serviceResource[`resourceName-${setLastResources.level}`] = {
@@ -1107,7 +1107,7 @@ const SecurityZoneForm = (props) => {
                                   `input[id=${Object.keys(errors)[0]}]`
                                 ) ||
                                 document.querySelector(
-                                  `span[class="invalid-field"]`
+                                  `span[className="invalid-field"]`
                                 );
                               scrollToError(selector);
                             }

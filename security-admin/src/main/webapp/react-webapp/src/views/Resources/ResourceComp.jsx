@@ -25,7 +25,7 @@ import BootstrapSwitchButton from "bootstrap-switch-button-react";
 import CreatableSelect from "react-select/creatable";
 import { debounce, filter, groupBy, some, sortBy } from "lodash";
 import { toast } from "react-toastify";
-
+import { udfResourceWarning } from "../../utils/XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType } from "Utils/XAEnums";
 
@@ -212,6 +212,12 @@ export default function ResourceComp(props) {
         CurrentSelectedResourcs = nextResource.name;
       }
     }
+
+    if (selectedVal?.name === "udf" && selectedVal?.parent === "database") {
+      toast.dismiss(toastId.current);
+      toastId.current = toast.warning(udfResourceWarning());
+    }
+
     input.onChange(selectedVal);
   };
 

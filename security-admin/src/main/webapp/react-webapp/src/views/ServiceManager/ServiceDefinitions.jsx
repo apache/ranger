@@ -109,15 +109,18 @@ class ServiceDefinitions extends Component {
       });
 
       if (this.state.isTagView) {
-        tagServiceDef = sortBy(filter(serviceDefsResp.data.serviceDefs, [
-          "name",
-          "tag"
-        ]),"id");
+        tagServiceDef = sortBy(
+          filter(serviceDefsResp.data.serviceDefs, ["name", "tag"]),
+          "id"
+        );
       } else {
-        resourceServiceDef = sortBy(filter(
-          serviceDefsResp.data.serviceDefs,
-          (serviceDef) => serviceDef.name !== "tag"
-        ),"id");
+        resourceServiceDef = sortBy(
+          filter(
+            serviceDefsResp.data.serviceDefs,
+            (serviceDef) => serviceDef.name !== "tag"
+          ),
+          "id"
+        );
       }
     } catch (error) {
       console.error(
@@ -233,11 +236,14 @@ class ServiceDefinitions extends Component {
         let zoneServiceDefTypes = uniq(map(zoneServices, "type"));
         let filterZoneServiceDef;
         if (!this.state.isTagView) {
-          filterZoneServiceDef = sortBy(zoneServiceDefTypes.map((obj) => {
-            return this.state.serviceDefs.find((serviceDef) => {
-              return serviceDef.name == obj;
-            });
-          }),"id");
+          filterZoneServiceDef = sortBy(
+            zoneServiceDefTypes.map((obj) => {
+              return this.state.serviceDefs.find((serviceDef) => {
+                return serviceDef.name == obj;
+              });
+            }),
+            "id"
+          );
         } else {
           filterZoneServiceDef = this.state.serviceDefs;
         }
@@ -267,7 +273,6 @@ class ServiceDefinitions extends Component {
   };
 
   deleteService = async (sid) => {
-    console.log("Service Id to delete is ", sid);
     try {
       this.setState({ blockUI: true });
       await fetchApi({
@@ -294,7 +299,7 @@ class ServiceDefinitions extends Component {
       ...theme,
       colors: {
         ...theme.colors,
-        primary: "#0081ab",
+        primary: "#0081ab"
       }
     };
   };

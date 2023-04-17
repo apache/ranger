@@ -54,7 +54,6 @@ export default function PolicyValidityPeriodComp(props) {
   };
 
   const validationForTimePeriod = () => {
-    console.log(this);
     setModal(false);
   };
 

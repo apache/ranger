@@ -111,7 +111,7 @@ const Layout = () => {
           </h6>
         </Modal.Header>
         <Modal.Body className="fnt-14">
-          <span class="d-inline-block">
+          <span className="d-inline-block">
             Because you have been inactive, your session is about to expire.
             <br />
             <div id="Timer">

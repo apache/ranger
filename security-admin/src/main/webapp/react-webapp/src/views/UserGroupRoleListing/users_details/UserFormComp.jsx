@@ -734,7 +734,7 @@ function UserFormComp(props) {
                           document.querySelector(
                             `input[id=${Object.keys(errors)[0]}]`
                           ) ||
-                          document.querySelector(`span[class="invalid-field"]`);
+                          document.querySelector(`span[className="invalid-field"]`);
 
                         scrollToError(selector);
                       }
