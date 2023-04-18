@@ -48,7 +48,8 @@ import _, {
   isArray,
   isEqual,
   forIn,
-  has
+  has,
+  maxBy
 } from "lodash";
 import { toast } from "react-toastify";
 import { Loader, scrollToError } from "Components/CommonComponents";
@@ -411,6 +412,7 @@ export default function AddUpdatePolicyForm(props) {
         serviceCompResourcesDetails = serviceCompData.resources;
       }
       if (policyData.resources) {
+        let lastResourceLvl = [];
         Object.entries(policyData.resources).map(([key, value]) => {
           let setResources = find(serviceCompResourcesDetails, ["name", key]);
           data[`resourceName-${setResources.level}`] = setResources;
@@ -425,7 +427,22 @@ export default function AddUpdatePolicyForm(props) {
             data[`isRecursiveSupport-${setResources.level}`] =
               value.isRecursive;
           }
+          lastResourceLvl.push({
+            level: setResources.level,
+            name: setResources.name
+          });
         });
+        lastResourceLvl = maxBy(lastResourceLvl, "level");
+        let setLastResources = find(serviceCompResourcesDetails, [
+          "parent",
+          lastResourceLvl.name
+        ]);
+        if (setLastResources) {
+          data[`resourceName-${setLastResources.level}`] = {
+            label: "None",
+            value: "none"
+          };
+        }
       }
       if (policyData.validitySchedules) {
         data["validitySchedules"] = [];
@@ -1087,11 +1104,7 @@ export default function AddUpdatePolicyForm(props) {
                     </fieldset>
                     <Row className="user-role-grp-form">
                       <Col md={8}>
-                        <FormB.Group
-                          as={Row}
-                          className="mb-3"
-                          controlId="policyType"
-                        >
+                        <FormB.Group as={Row} className="mb-3">
                           <Field
                             className="form-control"
                             name="policyType"
@@ -1122,11 +1135,7 @@ export default function AddUpdatePolicyForm(props) {
                           />
                         </FormB.Group>
                         {policyId && (
-                          <FormB.Group
-                            as={Row}
-                            className="mb-3"
-                            controlId="policyId"
-                          >
+                          <FormB.Group as={Row} className="mb-3">
                             <FormB.Label column sm={3}>
                               <span className="pull-right fnt-14">
                                 Policy ID*
@@ -1143,15 +1152,10 @@ export default function AddUpdatePolicyForm(props) {
                             </Col>
                           </FormB.Group>
                         )}
-                        <FormB.Group
-                          as={Row}
-                          className="mb-3"
-                          controlId="policyNames"
-                        >
+                        <FormB.Group as={Row} className="mb-3">
                           <Field
                             className="form-control"
                             name="policyName"
-                            // validate={required}
                             render={({ input, meta }) => (
                               <>
                                 <FormB.Label column sm={3}>
@@ -1249,11 +1253,7 @@ export default function AddUpdatePolicyForm(props) {
                           className="form-control"
                           name="policyLabel"
                           render={({ input }) => (
-                            <FormB.Group
-                              as={Row}
-                              className="mb-3"
-                              controlId="policyLabel"
-                            >
+                            <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
                                 <span className="pull-right fnt-14">
                                   Policy Label
@@ -1284,11 +1284,7 @@ export default function AddUpdatePolicyForm(props) {
                           className="form-control"
                           name="description"
                           render={({ input }) => (
-                            <FormB.Group
-                              as={Row}
-                              className="mb-3"
-                              controlId="description"
-                            >
+                            <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
                                 <span className="pull-right fnt-14">
                                   Description
@@ -1309,11 +1305,7 @@ export default function AddUpdatePolicyForm(props) {
                           className="form-control"
                           name="isAuditEnabled"
                           render={({ input }) => (
-                            <FormB.Group
-                              as={Row}
-                              className="mb-3"
-                              controlId="isAuditEnabled"
-                            >
+                            <FormB.Group as={Row} className="mb-3">
                               <FormB.Label column sm={3}>
                                 <span className="pull-right fnt-14">
                                   Audit Logging*
