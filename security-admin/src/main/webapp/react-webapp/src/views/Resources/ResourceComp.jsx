@@ -183,7 +183,7 @@ export default function ResourceComp(props) {
   };
 
   const handleResourceChange = (selectedVal, input, index) => {
-    for (let i = index + 1; i < grpResourcesKeys.length; i++) {
+    for (let i = index; i < grpResourcesKeys.length; i++) {
       let levelKey = grpResourcesKeys[i];
 
       delete formValues[`resourceName-${levelKey}`];
@@ -194,11 +194,24 @@ export default function ResourceComp(props) {
     if (policyItem) {
       removedSeletedAccess();
     }
+    delete formValues[`value-${grpResourcesKeys[index]}`];
     setLoader({
       loader: true,
       resourceKey: grpResourcesKeys[index]
     });
-    delete formValues[`value-${grpResourcesKeys[index]}`];
+    let CurrentSelectedResourcs = selectedVal.name;
+    for (let j = index + 1; j < grpResourcesKeys.length; j++) {
+      let level = grpResourcesKeys[j];
+      let nextResource = resources.find((m) => {
+        if (m?.parent) {
+          return m.parent === CurrentSelectedResourcs;
+        }
+      });
+      if (nextResource) {
+        formValues[`resourceName-${level}`] = nextResource;
+        CurrentSelectedResourcs = nextResource.name;
+      }
+    }
     input.onChange(selectedVal);
   };
 
@@ -217,9 +230,20 @@ export default function ResourceComp(props) {
     }
   };
 
-  const required = (value) => {
-    if (!value || value.length == 0) {
+  const required = (val, formVal) => {
+    if (!val || val.length == 0) {
       return "Required";
+    }
+    if (formVal?.validationRegEx && val?.length > 0) {
+      var regex = new RegExp(formVal.validationRegEx);
+      if (formVal.validationRegEx == "^\\*$") {
+        if (regex.test(val[val.length - 1].value) == false)
+          return 'Only "*" value is allowed';
+      }
+      if (formVal.validationRegEx == "^[/*]$|^/.*?[^/]$") {
+        if (regex.test(val[val.length - 1].value) == false)
+          return "Relative Path start with slash and must not end with a slash";
+      }
     }
   };
 
@@ -254,6 +278,10 @@ export default function ResourceComp(props) {
       })
     };
 
+    const rcsValidation = (m) => {
+      return required(m, formValues[`resourceName-${levelKey}`]);
+    };
+
     return (
       <FormB.Group
         as={Row}
@@ -263,7 +291,7 @@ export default function ResourceComp(props) {
       >
         <Col sm={3}>
           <Field
-            defaultValue={getResourceLabelOp(levelKey, index)[0]}
+            defaultValue={!policyId && getResourceLabelOp(levelKey, index)[0]}
             className="form-control"
             name={`resourceName-${levelKey}`}
             render={({ input, meta }) =>
@@ -286,6 +314,7 @@ export default function ResourceComp(props) {
                         handleResourceChange(value, input, index)
                       }
                       styles={customStyles}
+                      isSearchable={false}
                     />
                     <RenderValidateField name={`resourceName-${levelKey}`} />
                   </>
@@ -303,7 +332,7 @@ export default function ResourceComp(props) {
               validate={
                 formValues &&
                 formValues[`resourceName-${levelKey}`]?.mandatory &&
-                required
+                rcsValidation
               }
               render={({ input, meta }) => (
                 <>

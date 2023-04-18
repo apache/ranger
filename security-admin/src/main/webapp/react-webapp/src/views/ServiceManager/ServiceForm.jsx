@@ -50,7 +50,8 @@ import {
   isUndefined,
   has,
   split,
-  without
+  without,
+  maxBy
 } from "lodash";
 import withRouter from "Hooks/withRouter";
 
@@ -479,45 +480,39 @@ class ServiceForm extends Component {
 
         if (key === "resources") {
           obj.resources = {};
-
-          let resourceKeys = keys(item.resources);
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            return (obj.resources[`resourceName-${resourceLevel}`] =
-              resourceObj);
-          });
-
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            let resourceValues = item.resources[resourceKey].values;
-            return (obj.resources[`value-${resourceLevel}`] =
-              resourceValues.map((resourceValue) => {
-                return { value: resourceValue, label: resourceValue };
-              }));
-          });
-
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            let resourceIsRecursive = item.resources[resourceKey].isRecursive;
-            let resourceIsExcludes = item.resources[resourceKey].isExcludes;
-            if (resourceIsRecursive !== undefined) {
-              return (obj.resources[`isRecursiveSupport-${resourceLevel}`] =
-                resourceIsRecursive);
-            } else if (resourceObj.recursiveSupported) {
-              return (obj.resources[`isRecursiveSupport-${resourceLevel}`] =
-                resourceObj.recursiveSupported);
+          let lastResourceLvl = [];
+          Object.entries(item.resources).map(([key, value]) => {
+            let setResources = find(serviceDef.resources, ["name", key]);
+            obj.resources[`resourceName-${setResources.level}`] = setResources;
+            obj.resources[`value-${setResources.level}`] = value.values.map(
+              (m) => {
+                return { label: m, value: m };
+              }
+            );
+            if (setResources.excludesSupported) {
+              obj.resources[`isExcludesSupport-${setResources.level}`] =
+                value?.isExcludes != false;
             }
-            if (resourceIsExcludes !== undefined) {
-              return (obj.resources[`isExcludesSupport-${resourceLevel}`] =
-                resourceIsExcludes);
-            } else if (resourceObj.excludesSupported) {
-              return (obj.resources[`isExcludesSupport-${resourceLevel}`] =
-                resourceObj.excludesSupported);
+            if (setResources.recursiveSupported) {
+              obj.resources[`isRecursiveSupport-${setResources.level}`] =
+                value.isRecursive != false;
             }
+            lastResourceLvl.push({
+              level: setResources.level,
+              name: setResources.name
+            });
           });
+          lastResourceLvl = maxBy(lastResourceLvl, "level");
+          let setLastResources = find(serviceDef.resources, [
+            "parent",
+            lastResourceLvl.name
+          ]);
+          if (setLastResources) {
+            obj.resources[`resourceName-${setLastResources.level}`] = {
+              label: "None",
+              value: "none"
+            };
+          }
         }
 
         if (key === "actions") {

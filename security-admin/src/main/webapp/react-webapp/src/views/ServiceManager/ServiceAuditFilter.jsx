@@ -28,7 +28,7 @@ import CreatableField from "Components/CreatableField";
 import ModalResourceComp from "../Resources/ModalResourceComp";
 import { uniq, map, join, isEmpty, find, toUpper } from "lodash";
 import TagBasePermissionItem from "../PolicyListing/TagBasePermissionItem";
-import {dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
+import { dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
 
 export default function ServiceAuditFilter(props) {
   const {
@@ -91,14 +91,10 @@ export default function ServiceAuditFilter(props) {
         resourceData[`resourceName-${level}`] !== undefined &&
         resourceData[`value-${level}`] !== undefined
       ) {
-        let excludesSupported = find(serviceDefDetails.resources, {
-          level: level,
-          excludesSupported: true
-        });
-        let recursiveSupported = find(serviceDefDetails.resources, {
-          level: level,
-          recursiveSupported: true
-        });
+        let excludesSupported =
+          resourceData[`resourceName-${level}`].excludesSupported;
+        let recursiveSupported =
+          resourceData[`resourceName-${level}`].recursiveSupported;
         return (
           <div className="resource-filter" key={index}>
             <div>
@@ -111,36 +107,24 @@ export default function ServiceAuditFilter(props) {
               </span>
             </div>
             <div>
-              {resourceData[`isRecursiveSupport-${level}`] !== undefined && (
+              {excludesSupported && (
                 <h6 className="text-center">
-                  {resourceData[`isRecursiveSupport-${level}`] ? (
-                    <span className="badge badge-dark">Recursive</span>
-                  ) : (
-                    <span className="badge badge-dark">Non Recursive</span>
-                  )}
-                </h6>
-              )}
-              {resourceData[`isExcludesSupport-${level}`] !== undefined && (
-                <h6 className="text-center">
-                  {resourceData[`isExcludesSupport-${level}`] ? (
-                    <span className="badge badge-dark">Include</span>
-                  ) : (
+                  {resourceData[`isExcludesSupport-${level}`] == false ? (
                     <span className="badge badge-dark">Exclude</span>
+                  ) : (
+                    <span className="badge badge-dark">Include</span>
                   )}
                 </h6>
               )}
-              {recursiveSupported !== undefined &&
-                resourceData[`isRecursiveSupport-${level}`] === undefined && (
-                  <h6 className="text-center">
+              {recursiveSupported && (
+                <h6 className="text-center">
+                  {resourceData[`isRecursiveSupport-${level}`] == false ? (
+                    <span className="badge badge-dark">Non Recursive</span>
+                  ) : (
                     <span className="badge badge-dark">Recursive</span>
-                  </h6>
-                )}
-              {excludesSupported !== undefined &&
-                resourceData[`isExcludesSupport-${level}`] === undefined && (
-                  <h6 className="text-center">
-                    <span className="badge badge-dark">Include</span>
-                  </h6>
-                )}
+                  )}
+                </h6>
+              )}
             </div>
           </div>
         );
@@ -222,25 +206,30 @@ export default function ServiceAuditFilter(props) {
           <FieldArray name="auditFilters">
             {({ fields }) =>
               fields.map((name, index) => (
-                <tr key={name}  onDragStart={(e) => dragStart(e, index, dragItem)}
-                onDragEnter={(e) => dragEnter(e, index, dragOverItem)}
-                onDragEnd={(e) => drop(e, fields , dragItem, dragOverItem)}
-                onDragOver={(e) => dragOver(e)}
-                draggable id={index}>
+                <tr
+                  key={name}
+                  onDragStart={(e) => dragStart(e, index, dragItem)}
+                  onDragEnter={(e) => dragEnter(e, index, dragOverItem)}
+                  onDragEnd={(e) => drop(e, fields, dragItem, dragOverItem)}
+                  onDragOver={(e) => dragOver(e)}
+                  draggable
+                  id={index}
+                >
                   {permList.map((colName) => {
                     if (colName == "Is Audited") {
                       return (
                         <td key={`${name}.isAudited`} className="align-middle">
-                        <div className="d-flex">
-                         <Field
-                            className="form-control audit-filter-select"
-                            name={`${name}.isAudited`}
-                            component="select"
-                            style={{ minWidth: "75px" }}
-                          >
-                            <option value="true">Yes</option>
-                            <option value="false">No</option>
-                          </Field></div>
+                          <div className="d-flex">
+                            <Field
+                              className="form-control audit-filter-select"
+                              name={`${name}.isAudited`}
+                              component="select"
+                              style={{ minWidth: "75px" }}
+                            >
+                              <option value="true">Yes</option>
+                              <option value="false">No</option>
+                            </Field>
+                          </div>
                         </td>
                       );
                     }
@@ -325,7 +314,7 @@ export default function ServiceAuditFilter(props) {
                             name={`${name}.actions`}
                           >
                             {({ input, meta }) => (
-                             <CreatableField
+                              <CreatableField
                                 actionValues={input.value}
                                 creatableOnChange={(value) =>
                                   handleSelectChange(value, input)
@@ -339,7 +328,10 @@ export default function ServiceAuditFilter(props) {
                     if (colName == "Permissions") {
                       if (serviceDefDetails.name == "tag") {
                         return (
-                          <td key={`${name}.accessTypes`} className="align-middle">
+                          <td
+                            key={`${name}.accessTypes`}
+                            className="align-middle"
+                          >
                             <Field
                               className="form-control"
                               name={`${name}.accessTypes`}
@@ -368,7 +360,10 @@ export default function ServiceAuditFilter(props) {
                         );
                       } else {
                         return (
-                          <td key={`${name}.accessTypes`} className="align-middle">
+                          <td
+                            key={`${name}.accessTypes`}
+                            className="align-middle"
+                          >
                             <Field
                               className="form-control"
                               name={`${name}.accessTypes`}
