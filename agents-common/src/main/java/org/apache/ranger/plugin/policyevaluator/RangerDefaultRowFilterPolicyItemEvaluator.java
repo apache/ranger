@@ -34,7 +34,7 @@ public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPoli
 	final private RangerRequestExprResolver exprResolver;
 
 	public RangerDefaultRowFilterPolicyItemEvaluator(RangerServiceDef serviceDef, RangerPolicy policy, RangerRowFilterPolicyItem policyItem, int policyItemIndex, RangerPolicyEngineOptions options) {
-		super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_DATAMASK, policyItemIndex, options);
+		super(serviceDef, policy, policyItem, RangerPolicyItemEvaluator.POLICY_ITEM_TYPE_ROWFILTER, policyItemIndex, options);
 
 		rowFilterPolicyItem = policyItem;
 
@@ -60,17 +60,14 @@ public class RangerDefaultRowFilterPolicyItemEvaluator extends RangerDefaultPoli
 
 	@Override
 	public void updateAccessResult(RangerPolicyEvaluator policyEvaluator, RangerAccessResult result, RangerPolicyResourceMatcher.MatchType matchType) {
-		if (result.getFilterExpr() == null) {
-			if (exprResolver != null) {
-				result.setFilterExpr(exprResolver.resolveExpressions(result.getAccessRequest()));
-			} else if (rowFilterExpr != null) {
-				result.setFilterExpr(rowFilterExpr);
-			}
+		if (exprResolver != null) {
+			result.setFilterExpr(exprResolver.resolveExpressions(result.getAccessRequest()));
+		} else if (rowFilterExpr != null) {
+			result.setFilterExpr(rowFilterExpr);
+		}
 
-			if (result.getFilterExpr() != null) {
-				policyEvaluator.updateAccessResult(result, matchType, true, getComments());
-				result.setIsAccessDetermined(true);
-			}
+		if (result.getFilterExpr() != null) {
+			policyEvaluator.updateAccessResult(result, matchType, true, getComments());
 		}
 	}
 }
