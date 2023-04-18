@@ -23,7 +23,7 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <knox.jetty.version>9.4.31.v20200723</knox.jetty.version>
+        <knox.jetty.version>10.0.14</knox.jetty.version>
     </properties>
     <parent>
         <groupId>org.apache.ranger</groupId>
