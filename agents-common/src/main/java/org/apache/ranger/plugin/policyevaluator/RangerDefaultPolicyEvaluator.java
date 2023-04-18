@@ -887,7 +887,9 @@ public class RangerDefaultPolicyEvaluator extends RangerAbstractPolicyEvaluator 
 				}
 
 				if (allowResult != null) {
-					result.setAccessResultFrom(allowResult);
+					if (!result.getIsAllowed() || result.getPolicyPriority() < allowResult.getPolicyPriority()) {
+						result.setAccessResultFrom(allowResult);
+					}
 				} else if (denyResult != null) {
 					result.setAccessResultFrom(denyResult);
 				}
