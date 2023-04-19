@@ -185,13 +185,22 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                                         LOG.debug("Failed to execute runnable " + runnable + "because of OpmimisticLockException");
                                     }
                                 } catch (Throwable e) {
-                                    LOG.error("Failed to execute runnable " + runnable, e);
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("Failed to execute runnable " + runnable, e);
+                                    }
                                 }
                                 return result;
                             }
                         });
 
                         isThisTransactionCommitted = result == runnable;
+                        if (isParentTransactionCommitted) {
+                            if (!isThisTransactionCommitted) {
+                                LOG.info("Failed to commit runnable:[" + runnable + "]. Will retry!");
+                            } else {
+                                LOG.info("Committed runnable:[" + runnable + "].");
+                            }
+                        }
 
                     } catch (OptimisticLockException optimisticLockException) {
                         if (LOG.isDebugEnabled()) {
@@ -202,7 +211,9 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
                             LOG.debug("Failed to commit TransactionService transaction, exception:[" + tse + "]");
                         }
                     } catch (Throwable e){
-                        LOG.warn("Failed to commit TransactionService transaction, throwable:[" + e + "]");
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Failed to commit TransactionService transaction, throwable:[" + e + "]");
+                        }
                     }
                 } while (isParentTransactionCommitted && !isThisTransactionCommitted);
             }

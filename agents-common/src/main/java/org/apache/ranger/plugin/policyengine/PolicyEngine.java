@@ -200,7 +200,15 @@ public class PolicyEngine {
         this.pluginContext = pluginContext;
         this.lock          = new RangerReadWriteLock(isUseReadWriteLock);
 
-        LOG.info("Policy engine will" + (isUseReadWriteLock ? " " : " not ") + "perform in place update while processing policy-deltas.");
+        Boolean                  hasPolicyDeltas      = RangerPolicyDeltaUtil.hasPolicyDeltas(servicePolicies);
+
+        if (hasPolicyDeltas != null) {
+            if (hasPolicyDeltas.equals(Boolean.TRUE)) {
+                LOG.info("Policy engine will" + (isUseReadWriteLock ? " " : " not ") + "perform in place update while processing policy-deltas.");
+            } else {
+                LOG.info("Policy engine will" + (isUseReadWriteLock ? " " : " not ") + "perform in place update while processing policies.");
+            }
+        }
 
         this.pluginContext.setAuthContext(new RangerAuthContext(null, roles));
 
