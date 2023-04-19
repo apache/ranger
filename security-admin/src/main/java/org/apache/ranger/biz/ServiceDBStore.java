@@ -393,6 +393,12 @@ public class ServiceDBStore extends AbstractServiceStore {
 					isRolesDownloadedByService   = config.getBoolean("ranger.support.for.service.specific.role.download", false);
 					SUPPORTS_IN_PLACE_POLICY_UPDATES    = SUPPORTS_POLICY_DELTAS && config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES, RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES_DEFAULT);
 
+					LOG.info("SUPPORTS_POLICY_DELTAS=" + SUPPORTS_POLICY_DELTAS);
+					LOG.info("RETENTION_PERIOD_IN_DAYS=" + RETENTION_PERIOD_IN_DAYS);
+					LOG.info("TAG_RETENTION_PERIOD_IN_DAYS=" + TAG_RETENTION_PERIOD_IN_DAYS);
+					LOG.info("isRolesDownloadedByService=" + isRolesDownloadedByService);
+					LOG.info("SUPPORTS_IN_PLACE_POLICY_UPDATES=" + SUPPORTS_IN_PLACE_POLICY_UPDATES);
+
 					TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 
 					final ServiceDBStore dbStore = this;
@@ -2924,11 +2930,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	@Override
 	public ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception {
-		boolean getOnlyDeltas = true;
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA + "\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
+		ServicePolicies ret = null;
+
+		if (SUPPORTS_POLICY_DELTAS) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Support for incremental policy updates enabled using \"ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA + "\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS + "]");
+			}
+			ret = getServicePolicies(serviceName, lastKnownVersion, true, SUPPORTS_POLICY_DELTAS);
 		}
-		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, SUPPORTS_POLICY_DELTAS);
+
+		return ret;
 	}
 
 	@Override
@@ -3104,6 +3115,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 											break;
 										}
 									}
+									policyDeltasForPolicy.clear();
+									policyDeltas.get(index).setChangeType(RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE);
+									policyDeltasForPolicy.add(policyDeltas.get(index));
 									index++;
 									break;
 								case RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE:
@@ -3174,8 +3188,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 						break;
 				}
 				if (policyDeltasForPolicy != null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Processed multiple deltas for policy:[" + entry.getKey() + "], compressed-deltas:[" + policyDeltasForPolicy + "]");
+					}
+					if (policyDeltasForPolicy.size() > 1) {
+						LOG.error("More than one Compressed-deltas for policy:[" + entry.getKey() + "], compressed-deltas:[" + policyDeltasForPolicy + "].. Should not have come here!!");
+					}
 					ret.addAll(policyDeltasForPolicy);
 				} else {
+					LOG.error("Error processing deltas for policy:[" + entry.getKey() + "], Cannot compress deltas");
 					ret = null;
 					break;
 				}

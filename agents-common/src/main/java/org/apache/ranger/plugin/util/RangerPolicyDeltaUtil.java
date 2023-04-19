@@ -42,7 +42,7 @@ public class RangerPolicyDeltaUtil {
 
     public static List<RangerPolicy> applyDeltas(List<RangerPolicy> policies, List<RangerPolicyDelta> deltas, String serviceType) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> applyDeltas(serviceType=" + serviceType + ")");
+            LOG.debug("==> applyDeltas(serviceType=" + serviceType + ", deltas=" + deltas + ")");
         }
 
         List<RangerPolicy> ret;
