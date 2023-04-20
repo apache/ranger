@@ -87,6 +87,8 @@ public class EmbeddedServer {
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE = KeyManagerFactory.getDefaultAlgorithm();
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE = TrustManagerFactory.getDefaultAlgorithm();
 
+	private static EmbeddedServerMetricsCollector serverMetricsCollector;
+
 	public static void main(String[] args) {
 		new EmbeddedServer(args).start();
 	}
@@ -342,6 +344,8 @@ public class EmbeddedServer {
 					}
 				}
 			}
+
+			serverMetricsCollector = new EmbeddedServerMetricsCollector(server);
 			server.start();
 			server.getServer().await();
 			shutdownServer();
@@ -571,6 +575,15 @@ public class EmbeddedServer {
 				LOG.log(Level.SEVERE, "Error while closing file: [" + filename + "]", excp);
 			}
 		}
+	}
+
+	public static EmbeddedServerMetricsCollector getServerMetricsCollector(){
+
+		EmbeddedServerMetricsCollector embeddedServerMetricsCollector = EmbeddedServer.serverMetricsCollector;
+		if( null != embeddedServerMetricsCollector ){
+			LOG.info("Selected Tomcat protocolHandler: "+ embeddedServerMetricsCollector.getProtocolHandlerName());
+		}
+		return embeddedServerMetricsCollector;
 	}
 
 }
