@@ -77,7 +77,7 @@ public class MetricsREST {
         jvm.put("jvm",vmDetails);
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== MetricsREST.getStatus() " + jvm);
+            LOG.debug("<== MetricsREST.getStatus(): jvm=" + jvm);
         }
 
         return new RangerMetrics(jvm);
@@ -88,7 +88,7 @@ public class MetricsREST {
     @Produces(MediaType.TEXT_PLAIN)
     public String getMetricsPrometheus() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("MetricsREST.getMetricsPrometheus() ===>>");
+            LOG.debug("==> MetricsREST.getMetricsPrometheus()");
         }
         String ret = "";
         try {
@@ -98,7 +98,7 @@ public class MetricsREST {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("MetricsREST.getMetricsPrometheus() <<=== {}", ret);
+            LOG.debug("<== MetricsREST.getMetricsPrometheus(): ret=" + ret);
         }
         return ret;
     }
@@ -108,7 +108,7 @@ public class MetricsREST {
     @Produces(MediaType.APPLICATION_JSON)
     public Map<String, Map<String, Object>> getMetricsJson() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("MetricsREST.getMetricsJson() ===>>");
+            LOG.debug("==> MetricsREST.getMetricsJson()");
         }
 
         Map<String, Map<String, Object>> ret = null;
@@ -119,7 +119,7 @@ public class MetricsREST {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("MetricsREST.getMetricsJson() <<=== {}", ret);
+            LOG.debug("<== MetricsREST.getMetricsJson(): ret=" + ret);
         }
         return ret;
     }
