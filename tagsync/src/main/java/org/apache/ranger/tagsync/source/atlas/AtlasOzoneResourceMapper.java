@@ -160,7 +160,7 @@ public class AtlasOzoneResourceMapper extends AtlasResourceMapper {
 						ret[IDX_VOLUME]     = resources.length > 1 ? resources[1] : null;
 						int idxRelativePath = qualifiedName.indexOf(SEP_RELATIVE_PATH, idxResourceStart);
 						if (idxRelativePath != -1) {
-							ret[IDX_KEY] = qualifiedName.substring(idxRelativePath, idxClusterNameSep);
+							ret[IDX_KEY] = qualifiedName.substring(idxRelativePath+1, idxClusterNameSep);
 						}
 					}
 				}
