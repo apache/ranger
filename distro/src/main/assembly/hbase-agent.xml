@@ -54,7 +54,6 @@
         <fileMode>644</fileMode>
         <includes>
           <include>com.sun.jersey:jersey-client:jar:${jersey-bundle.version}</include>
-          <include>com.sun.jersey:jersey-core:jar:${jersey-bundle.version}</include>
           <include>org.codehaus.jackson:jackson-jaxrs:jar:${codehaus.jackson.version}</include>
           <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
