@@ -90,6 +90,10 @@
                     <include>com.fasterxml.jackson.core:jackson-core</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations</include>
                     <include>com.fasterxml.jackson.core:jackson-databind</include>
+                    <include>org.apache.kerby:kerb-core:jar:${kerby.version}</include>
+                    <include>org.apache.kerby:kerb-util:jar:${kerby.version}</include>
+                    <include>org.apache.kerby:kerb-crypto:jar:${kerby.version}</include>
+                    <include>org.apache.kerby:kerby-asn1:jar:${kerby.version}</include>
                     <include>com.microsoft.azure:azure:jar:${com.microsoft.azure.version}</include>
                     <include>com.microsoft.azure:azure-keyvault:jar:${com.microsoft.azure.azure-keyvault.version}</include>
                     <include>com.microsoft.azure:azure-mgmt-keyvault:jar:${com.microsoft.azure.azure-mgmt-keyvault.version}</include>
