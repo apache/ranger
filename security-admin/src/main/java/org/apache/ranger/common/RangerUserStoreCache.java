@@ -83,14 +83,16 @@ public class RangerUserStoreCache {
 
 				if (!Objects.equals(cachedUserStoreVersion, dbUserStoreVersion)) {
 					LOG.info("RangerUserStoreCache refreshing from version " + cachedUserStoreVersion + " to " + dbUserStoreVersion);
-
+					final long                     startTimeMs      = System.currentTimeMillis();
 					final Set<UserInfo>            rangerUsersInDB  = xUserMgr.getUsers();
 					final Set<GroupInfo>           rangerGroupsInDB = xUserMgr.getGroups();
 					final Map<String, Set<String>> userGroups       = xUserMgr.getUserGroups();
+					final long                     dbLoadTime       = System.currentTimeMillis() - startTimeMs;
 
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("No. of users from DB = " + rangerUsersInDB.size() + " and no. of groups from DB = " + rangerGroupsInDB.size());
 						LOG.debug("No. of userGroupMappings = " + userGroups.size());
+						LOG.debug("loading Users from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
 					}
 
 					RangerUserStore rangerUserStore = new RangerUserStore(dbUserStoreVersion, rangerUsersInDB, rangerGroupsInDB, userGroups);
