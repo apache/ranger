@@ -322,9 +322,14 @@ public class RangerServicePoliciesCache {
 				if (dbLoadTime > longestDbLoadTimeInMs) {
 					longestDbLoadTimeInMs = dbLoadTime;
 				}
+
 				updateTime = new Date();
 
 				if (servicePoliciesFromDb != null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("loading servicePolicies from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
+					}
+
 					if (dedupStrings) {
 						servicePoliciesFromDb.dedupStrings();
 					}
