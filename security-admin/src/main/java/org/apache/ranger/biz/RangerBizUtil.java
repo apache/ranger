@@ -1445,7 +1445,13 @@ public class RangerBizUtil {
 	}
 
 	public boolean isUserServiceAdmin(RangerService rangerService, String userName) {
-		return isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_USERS, userName);
+		boolean ret = isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_USERS, userName);
+
+		if (!ret && userMgr != null && userMgr.xUserMgr != null) {
+			ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+		}
+
+		return ret;
 	}
 
 	public boolean isUserInConfigParameter(RangerService rangerService, String configParamName, String userName) {
@@ -1463,6 +1469,26 @@ public class RangerBizUtil {
 			}
 		}
 		return false;
+	}
+
+	public boolean isAnyGroupInConfigParameter(RangerService rangerService, String configParamName, Set<String> groupNames) {
+		boolean             ret      = false;
+		Map<String, String> map      = rangerService.getConfigs();
+		String              cfgValue = map != null ? map.get(configParamName) : null;
+
+		if (StringUtils.isNotBlank(cfgValue) && CollectionUtils.isNotEmpty(groupNames)) {
+			String[] svcCfgGroupNames = cfgValue.split(",");
+
+			for (String svcCfgGroupName : svcCfgGroupNames) {
+				if (RangerConstants.GROUP_PUBLIC.equals(svcCfgGroupName) || groupNames.contains(svcCfgGroupName)) {
+					ret = true;
+
+					break;
+				}
+			}
+		}
+
+		return ret;
 	}
 
         public void blockAuditorRoleUser() {
