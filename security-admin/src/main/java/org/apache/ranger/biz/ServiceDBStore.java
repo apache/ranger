@@ -237,6 +237,7 @@ public class ServiceDBStore extends AbstractServiceStore {
     private static final String SERVICE_CHECK_USER = "service.check.user";
     private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
 	public static final String SERVICE_ADMIN_USERS     = "service.admin.users";
+	public static final String SERVICE_ADMIN_GROUPS    = "service.admin.groups";
 
 	private static boolean isRolesDownloadedByService = false;
 
@@ -1845,7 +1846,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 		}
-
 	}
 
 	private void validateUserAndProvideTabTagBasedPolicyPermission(String username){
@@ -5808,17 +5808,39 @@ public class ServiceDBStore extends AbstractServiceStore {
     }
 
     public boolean isServiceAdminUser(String serviceName, String userName) {
-		boolean ret=false;
-		XXServiceConfigMap cfgSvcAdminUsers = daoMgr.getXXServiceConfigMap().findByServiceNameAndConfigKey(serviceName, SERVICE_ADMIN_USERS);
-		String svcAdminUsers = cfgSvcAdminUsers != null ? cfgSvcAdminUsers.getConfigvalue() : null;
+		boolean               ret              = false;
+		XXServiceConfigMapDao svcCfgMapDao     = daoMgr.getXXServiceConfigMap();
+		XXServiceConfigMap    cfgSvcAdminUsers = svcCfgMapDao.findByServiceNameAndConfigKey(serviceName, SERVICE_ADMIN_USERS);
+		String                svcAdminUsers    = cfgSvcAdminUsers != null ? cfgSvcAdminUsers.getConfigvalue() : null;
+
 		if (svcAdminUsers != null) {
 			for (String svcAdminUser : svcAdminUsers.split(",")) {
 				if (userName.equals(svcAdminUser)) {
-					ret=true;
+					ret = true;
 					break;
 				}
 			}
 		}
+
+		if (!ret) {
+			XXServiceConfigMap cfgSvcAdminGroups = svcCfgMapDao.findByServiceNameAndConfigKey(serviceName, SERVICE_ADMIN_GROUPS);
+			String             svcAdminGroups    = cfgSvcAdminGroups != null ? cfgSvcAdminGroups.getConfigvalue() : null;
+
+			if (StringUtils.isNotBlank(svcAdminGroups)) {
+				Set<String> userGroups = xUserMgr.getGroupsForUser(userName);
+
+				if (CollectionUtils.isNotEmpty(userGroups)) {
+					for (String svcAdminGroup : svcAdminGroups.split(",")) {
+						if (RangerConstants.GROUP_PUBLIC.equals(svcAdminGroup) || userGroups.contains(svcAdminGroup)) {
+							ret = true;
+
+							break;
+						}
+					}
+				}
+			}
+		}
+
 		return ret;
 	}
 
