@@ -75,7 +75,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         this.auditProviderName = auditProviderName;
         this.auditConfigs	   = auditConfigs;
 
-        init(props,propPrefix);
+        init0(props,propPrefix);
 
         logger.info("<== AbstractRangerAuditWriter.init()");
     }
@@ -146,10 +146,10 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         }
     }
 
-    public void init(Properties props, String propPrefix) {
+    public void init0(Properties props, String propPrefix) {
 
         if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.init()");
+            logger.debug("==> AbstractRangerAuditWriter.init0()");
         }
 
         String logFolderProp = MiscUtil.getStringProperty(props, propPrefix	+ "." + PROP_FILESYSTEM_DIR);
