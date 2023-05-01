@@ -285,10 +285,15 @@ public class AuditFileQueueSpool implements Runnable {
                 }
             }
 
-            auditFileType = MiscUtil.getStringProperty(props, propPrefix + ".filetype", DEFAULT_AUDIT_FILE_TYPE);
-            if (auditFileType == null) {
-                auditFileType = DEFAULT_AUDIT_FILE_TYPE;
+            String postfix = ".batch.filequeue";
+            String fileTypePrefix = propPrefix;
+            if(propPrefix.endsWith(postfix)){
+                fileTypePrefix = propPrefix.substring(0,propPrefix.length()-postfix.length());
             }
+            if(logger.isDebugEnabled()){
+                logger.debug("AuditFileQueueSpool fileTypePrefix="+fileTypePrefix);
+            }
+            auditFileType = MiscUtil.getStringProperty(props, fileTypePrefix + ".filetype", DEFAULT_AUDIT_FILE_TYPE);
 
         } catch (Throwable t) {
             logger.error("Error initializing File Spooler. queue="
