@@ -19,7 +19,6 @@
 package org.apache.ranger;
 
 import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.GenericType;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
