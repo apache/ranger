@@ -82,6 +82,7 @@ public class RangerClient {
     private static final String URI_ZONE_BY_NAME          = URI_ZONE + "/name/%s";
     private static final String URI_ZONE_HEADERS          = URI_BASE + "/zone-headers";
     private static final String URI_ZONE_SERVICE_HEADERS  = URI_ZONE + "/%d/service-headers";
+    private static final String URI_ZONE_NAMES_FOR_RES    = URI_BASE + "/zone-names/%s/resource";
 
     private static final String URI_SERVICE_TAGS          = URI_SERVICE + "/%s/tags";
     private static final String URI_PLUGIN_INFO           = URI_BASE + "/plugins/info";
@@ -126,6 +127,7 @@ public class RangerClient {
     public static final API GET_ZONE_BY_NAME         = new API(URI_ZONE_BY_NAME, HttpMethod.GET, Response.Status.OK);
     public static final API GET_ZONE_HEADERS         = new API(URI_ZONE_HEADERS, HttpMethod.GET, Response.Status.OK);
     public static final API GET_ZONE_SERVICE_HEADERS = new API(URI_ZONE_SERVICE_HEADERS, HttpMethod.GET, Response.Status.OK);
+    public static final API GET_ZONE_NAMES_FOR_RES   = new API(URI_ZONE_NAMES_FOR_RES, HttpMethod.GET, Response.Status.OK);
     public static final API FIND_ZONES               = new API(URI_ZONE, HttpMethod.GET, Response.Status.OK);
 
     public static final API CREATE_ROLE         = new API(URI_ROLE, HttpMethod.POST, Response.Status.OK);
@@ -357,6 +359,10 @@ public class RangerClient {
 
     public List<RangerServiceHeaderInfo> getSecurityZoneServiceHeaders(Map<String, String> filter) throws RangerServiceException {
         return callAPI(GET_ZONE_SERVICE_HEADERS, filter, null, new GenericType<List<RangerServiceHeaderInfo>>(){});
+    }
+
+    public Set<String> getSecurityZoneNamesForResource(String serviceName, Map<String, String> resource) throws RangerServiceException {
+        return callAPI(GET_ZONE_NAMES_FOR_RES.applyUrlFormat(serviceName), resource, null, new GenericType<Set<String>>(){});
     }
 
     public List<RangerSecurityZone> findSecurityZones(Map<String, String> filter) throws RangerServiceException {

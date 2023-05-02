@@ -87,7 +87,7 @@ public class RangerPolicyDelta implements java.io.Serializable {
 
     public void setId(Long id) { this.id = id;}
 
-    private void setChangeType(Integer changeType) { this.changeType = changeType; }
+    public void setChangeType(Integer changeType) { this.changeType = changeType; }
 
     private void setPoliciesVersion(Long policiesVersion) { this.policiesVersion = policiesVersion; }
 

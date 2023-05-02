@@ -84,14 +84,14 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
+                Cloudera
             </organization>
         </developer>
         <developer>
             <id>abhi</id>
             <name>Abhishek Kumar</name>
             <email>abhi@apache.org</email>
-            <timezone>PST</timezone>
+            <timezone>-8</timezone>
             <roles>
                 <role>Committer</role>
             </roles>
@@ -121,7 +121,7 @@
                 <role>Mentor</role>
             </roles>
             <organization>
-                Hortonworks
+                Datadog
             </organization>
         </developer>
         <developer>
@@ -137,6 +137,19 @@
             </organization>
         </developer>
         <developer>
+            <id>bganesan</id>
+            <name>Balaji Ganesan</name>
+            <email>bganesan@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>PMC</role>
+                <role>Committer</role>
+            </roles>
+            <organization>
+		Privacera
+            </organization>
+        </developer>
+        <developer>
             <id>bpatel</id>
             <name>Bhavik Patel</name>
             <email>bpatel@apache.org</email>
@@ -149,9 +162,9 @@
             </organization>
         </developer>
         <developer>
-            <id>bganesan</id>
-            <name>Balaji Ganesan</name>
-            <email>bganesan@apache.org</email>
+            <id>bdurai</id>
+            <name>Don Bosco Durai</name>
+            <email>bosco@apache.org</email>
             <timezone>-8</timezone>
             <roles>
                 <role>PMC</role>
@@ -187,18 +200,6 @@
             </organization>
         </developer>
         <developer>
-            <id>ddas</id>
-            <name>Devaraj Das</name>
-            <email>ddas@hortonworks.com</email>
-            <timezone>-8</timezone>
-            <roles>
-                <role>PMC</role>
-            </roles>
-            <organization>
-            Hortonworks
-        </organization>
-        </developer>
-        <developer>
             <id>deepaksharma</id>
             <name>Deepak Sharma</name>
             <email>deepaksharma@apache.org</email>
@@ -207,7 +208,31 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
+                Twitter
+            </organization>
+        </developer>
+        <developer>
+            <id>ddas</id>
+            <name>Devaraj Das</name>
+            <email>ddas@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>PMC</role>
+            </roles>
+            <organization>
+            	Oracle
+        	</organization>
+        </developer>
+        <developer>
+            <id>dhavalshah9131</id>
+            <name>Dhaval Shah</name>
+            <email>dhavalshah9131@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
             </organization>
         </developer>
         <developer>
@@ -220,20 +245,19 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                BlueTalon
+                Ordr Inc.
             </organization>
         </developer>
         <developer>
-            <id>bdurai</id>
-            <name>Don Bosco Durai</name>
-            <email>bosco@apache.org</email>
-            <timezone>-8</timezone>
+            <id>dineshkumar</id>
+            <name>Dineshkumar Yadav</name>
+            <email>dineshkumar@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
             <roles>
-                <role>PMC</role>
                 <role>Committer</role>
             </roles>
             <organization>
-		Privacera
+                Freestone Infotech
             </organization>
         </developer>
         <developer>
@@ -249,16 +273,16 @@
                 Freestone Infotech
             </organization>
         </developer>
-        <developer>
-            <id>jghoman</id>
-            <name>Jakob Homan</name>
-            <email>jghoman@apache.org</email>
-            <timezone>-8</timezone>
+	    <developer>
+            <id>pengjianhua</id>
+            <name>Jianhua Peng</name>
+            <email>pengjianhua@apache.org</email>
+            <timezone>+8</timezone>
             <roles>
-                <role>Mentor</role>
+                <role>Committer</role>
             </roles>
             <organization>
-                Microsoft
+                NIIT
             </organization>
         </developer>
         <developer>
@@ -274,6 +298,18 @@
             </organization>
         </developer>
         <developer>
+            <id>kishor</id>
+            <name>Kishor Gollapalliwar</name>
+            <email>kishor@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
+            </organization>
+        </developer>
+        <developer>
             <id>lmccay</id>
             <name>Larry Mccay</name>
             <email>lmccay@apache.org</email>
@@ -283,19 +319,7 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
-            </organization>
-        </developer>
-	<developer>
-            <id>mehul</id>
-            <name>Mehul Parikh</name>
-            <email>mehul@apache.org</email>
-            <timezone>Asia/Kolkata</timezone>
-            <roles>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                Freestone Infotech
+                Cloudera
             </organization>
         </developer>
         <developer>
@@ -308,7 +332,19 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
+                Privacera
+            </organization>
+        </developer>
+	    <developer>
+            <id>mehul</id>
+            <name>Mehul Parikh</name>
+            <email>mehul@apache.org</email>
+            <timezone>Asia/Kolkata</timezone>
+            <roles>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Freestone Infotech
             </organization>
         </developer>
         <developer>
@@ -335,30 +371,6 @@
                 Freestone Infotech
             </organization>
         </developer>
-        <developer>
-            <id>dhavalshah9131</id>
-            <name>Dhaval Shah</name>
-            <email>dhavalshah9131@apache.org</email>
-            <timezone>Asia/Kolkata</timezone>
-            <roles>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                Freestone Infotech
-            </organization>
-        </developer>
-        <developer>
-            <id>omalley</id>
-            <name>Owen O'Malley</name>
-            <email>omalley@apache.org</email>
-            <timezone>-8</timezone>
-            <roles>
-                <role>Champion, Committer, Mentor</role>
-            </roles>
-            <organization>
-                Hortonworks
-            </organization>
-        </developer>
 	<developer>
             <id>pradeep</id>
             <name>Pradeep Agrawal</name>
@@ -371,70 +383,6 @@
                 Cloudera
             </organization>
 	</developer>
-        <developer>
-            <id>rmani</id>
-            <name>Ramesh Mani</name>
-            <email>mani@hortonworks.com</email>
-            <timezone>-8</timezone>
-            <roles>
-                <role>PMC</role>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                    Hortonworks
-                </organization>
-        </developer>
-	<developer>
-            <id>spolavarapu</id>
-            <name>Sailaja Polavarapu</name>
-            <email>spolavarapu@apache.org</email>
-            <timezone>-8</timezone>
-            <roles>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                Hortonworks
-            </organization>
-        </developer>
-        <developer>
-            <id>sradia</id>
-            <name>Sanjay Radia</name>
-            <email>sanjay@hortonworks.com</email>
-            <timezone>-8</timezone>
-            <roles>
-                <role>PMC</role>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                Hortonworks
-            </organization>
-        </developer>
-        <developer>
-            <id>sneethiraj</id>
-            <name>Selvamohan Neethiraj</name>
-            <email>sneethir@apache.org</email>
-            <timezone>-5</timezone>
-            <roles>
-                <role>PMC</role>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                InfoTekies
-            </organization>
-        </developer>
-        <developer>
-            <id>vel</id>
-            <name>Velmurugan Periasamy</name>
-            <email>vel@apache.org</email>
-            <timezone>-5</timezone>
-            <roles>
-                <role>PMC</role>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                Hortonworks
-            </organization>
-        </developer>
 	<developer>
             <id>zhangqiang</id>
             <name>zhang qiang</name>
@@ -448,16 +396,69 @@
                 ZTE
             </organization>
         </developer>
+        <developer>
+            <id>rmani</id>
+            <name>Ramesh Mani</name>
+            <email>rmani@apache.org</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>PMC</role>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                    Cloudera
+                </organization>
+        </developer>
 	<developer>
-            <id>pengjianhua</id>
-            <name>Jianhua Peng</name>
-            <email>pengjianhua@apache.org</email>
-            <timezone>+8</timezone>
+            <id>spolavarapu</id>
+            <name>Sailaja Polavarapu</name>
+            <email>spolavarapu@apache.org</email>
+            <timezone>-8</timezone>
             <roles>
                 <role>Committer</role>
             </roles>
             <organization>
-                NIIT
+                Cloudera
+            </organization>
+        </developer>
+        <developer>
+            <id>sradia</id>
+            <name>Sanjay Radia</name>
+            <email>sanjay@cloudera.com</email>
+            <timezone>-8</timezone>
+            <roles>
+                <role>PMC</role>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Cloudera
+            </organization>
+        </developer>
+        <developer>
+            <id>sneethiraj</id>
+            <name>Selvamohan Neethiraj</name>
+            <email>sneethir@apache.org</email>
+            <timezone>-5</timezone>
+            <roles>
+                <role>PMC-Chair</role>
+                <role>PMC</role>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Privacera
+            </organization>
+        </developer>
+        <developer>
+            <id>vel</id>
+            <name>Velmurugan Periasamy</name>
+            <email>vel@apache.org</email>
+            <timezone>-5</timezone>
+            <roles>
+                <role>PMC</role>
+                <role>Committer</role>
+            </roles>
+            <organization>
+                Cloudera
             </organization>
         </developer>
         <developer>
@@ -469,31 +470,7 @@
                 <role>Committer</role>
             </roles>
             <organization>
-                Hortonworks
-            </organization>
-        </developer>
-        <developer>
-            <id>kishor</id>
-            <name>Kishor Gollapalliwar</name>
-            <email>kishor@apache.org</email>
-            <timezone>Asia/Kolkata</timezone>
-            <roles>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                Freestone Infotech
-            </organization>
-        </developer>
-        <developer>
-            <id>dineshkumar</id>
-            <name>Dineshkumar Yadav</name>
-            <email>dineshkumar@apache.org</email>
-            <timezone>Asia/Kolkata</timezone>
-            <roles>
-                <role>Committer</role>
-            </roles>
-            <organization>
-                Freestone Infotech
+                Tset
             </organization>
         </developer>
     </developers>
@@ -692,7 +669,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-site-plugin</artifactId>
-                    <version>3.7</version>
+                    <version>3.12.1</version>
                     <dependencies>
                       <dependency>
                         <groupId>org.apache.velocity</groupId>

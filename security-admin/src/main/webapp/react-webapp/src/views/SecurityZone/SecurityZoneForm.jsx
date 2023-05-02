@@ -24,7 +24,16 @@ import { useParams, useNavigate } from "react-router-dom";
 import Select from "react-select";
 import AsyncSelect from "react-select/async";
 import { fetchApi } from "Utils/fetchAPI";
-import { groupBy, findIndex, isEmpty, pickBy, find, has } from "lodash";
+import {
+  groupBy,
+  findIndex,
+  isEmpty,
+  pickBy,
+  find,
+  has,
+  maxBy,
+  sortBy
+} from "lodash";
 import { Table } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import arrayMutators from "final-form-arrays";
@@ -437,21 +446,29 @@ const SecurityZoneForm = (props) => {
       tableValues["resources"] = [];
       zone.services[name].resources.map((obj) => {
         let serviceResource = {};
+        let lastResourceLevel = [];
         Object.entries(obj).map(([key, value]) => {
           let setResources = find(filterServiceDef.resources, ["name", key]);
           serviceResource[`resourceName-${setResources.level}`] = setResources;
           serviceResource[`value-${setResources.level}`] = value.map((m) => {
             return { label: m, value: m };
           });
-          if (setResources.excludesSupported) {
-            serviceResource[`isExcludesSupport-${setResources.level}`] =
-              value.isExcludes;
-          }
-          if (setResources.recursiveSupported) {
-            serviceResource[`recursiveSupported-${setResources.level}`] =
-              value.isRecursive;
-          }
+          lastResourceLevel.push({
+            level: setResources.level,
+            name: setResources.name
+          });
         });
+        lastResourceLevel = maxBy(lastResourceLevel, "level");
+        let setLastResources = find(
+          sortBy(filterServiceDef.resources, "itemId"),
+          ["parent", lastResourceLevel.name]
+        );
+        if (setLastResources) {
+          serviceResource[`resourceName-${setLastResources.level}`] = {
+            label: "None",
+            value: "none"
+          };
+        }
         tableValues["resources"].push(serviceResource);
       });
 
@@ -1090,7 +1107,7 @@ const SecurityZoneForm = (props) => {
                                   `input[id=${Object.keys(errors)[0]}]`
                                 ) ||
                                 document.querySelector(
-                                  `span[class="invalid-field"]`
+                                  `span[className="invalid-field"]`
                                 );
                               scrollToError(selector);
                             }

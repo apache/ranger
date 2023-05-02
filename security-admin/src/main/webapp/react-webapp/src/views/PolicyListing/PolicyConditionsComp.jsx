@@ -37,7 +37,6 @@ export default function PolicyConditionsComp(props) {
   ];
 
   const handleSubmit = (values) => {
-    console.log(values);
     for (let val in values.conditions) {
       if (values.conditions[val] == null || values.conditions[val] == "") {
         omit(values.conditions, val);
@@ -52,7 +51,6 @@ export default function PolicyConditionsComp(props) {
   };
 
   const formInitialData = () => {
-    console.log();
     var conditions = {};
     if (inputVal && inputVal.value) {
       for (let val in inputVal.value) {

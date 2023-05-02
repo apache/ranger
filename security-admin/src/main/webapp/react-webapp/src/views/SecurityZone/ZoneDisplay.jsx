@@ -30,14 +30,13 @@ import {
   Modal
 } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { fetchApi } from "Utils/fetchAPI";
+import { find } from "lodash";
 import { isSystemAdmin, isKeyAdmin } from "Utils/XAUtils";
 
 class ZoneDisplay extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      services: [],
       expand: true,
       eventKey0: true,
       eventKey1: true,
@@ -52,10 +51,6 @@ class ZoneDisplay extends Component {
     this.closeZoneModal = this.closeZoneModal.bind(this);
   }
 
-  componentDidMount() {
-    this.fetchServices();
-  }
-
   deleteZoneModal = (zoneId) => {
     this.setState({ showDeleteModal: zoneId });
   };
@@ -67,26 +62,6 @@ class ZoneDisplay extends Component {
   deleteZone = (id) => {
     this.setState({ showDeleteModal: null });
     this.props.deleteZone(id);
-  };
-
-  fetchServices = async () => {
-    var servicesResp;
-    try {
-      servicesResp = await fetchApi({
-        url: "plugins/services",
-        params: {
-          page: 0,
-          pageSize: 200,
-          total_pages: 0,
-          startIndex: 0
-        }
-      });
-    } catch (error) {
-      console.error(`Error occurred while fetching Services! ${error}`);
-    }
-    this.setState({
-      services: servicesResp.data.services
-    });
   };
 
   expandbtn = () => {
@@ -385,10 +360,8 @@ class ZoneDisplay extends Component {
                       <tbody>
                         {Object.keys(this.props?.zone?.services)?.map(
                           (key, index) => {
-                            let servicetype = Object.values(
-                              this.state.services
-                            )?.find((obj) => {
-                              return obj.name === key;
+                            let servicetype = find(this.props.services, {
+                              name: key
                             });
 
                             return (
@@ -398,7 +371,7 @@ class ZoneDisplay extends Component {
                                 </td>
                                 <td className="align-middle" width="20%">
                                   {servicetype &&
-                                    servicetype.type.toString().toUpperCase()}
+                                    servicetype.type.toUpperCase()}
                                 </td>
                                 <td
                                   className="text-center"

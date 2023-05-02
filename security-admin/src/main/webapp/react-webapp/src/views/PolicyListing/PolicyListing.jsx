@@ -58,8 +58,17 @@ import {
   isKeyAdmin,
   isUser
 } from "../../utils/XAUtils";
-import { alertMessage, RangerPolicyType, ResourcesOverrideInfoMsg, ServerAttrName} from "../../utils/XAEnums";
-import { BlockUi, CustomPopover, Loader } from "../../components/CommonComponents";
+import {
+  alertMessage,
+  RangerPolicyType,
+  ResourcesOverrideInfoMsg,
+  ServerAttrName
+} from "../../utils/XAEnums";
+import {
+  BlockUi,
+  CustomPopover,
+  Loader
+} from "../../components/CommonComponents";
 
 function PolicyListing(props) {
   const { serviceDef } = props;
@@ -287,11 +296,11 @@ function PolicyListing(props) {
         errorMsg += error.response.data.msgDesc;
       }
       toast.error(errorMsg);
-      console.log("Error occurred during deleting policy : " + error);
+      console.error("Error occurred during deleting policy : " + error);
     }
     if (policyListingData.length == 1 && currentpageIndex > 1) {
       let page = currentpageIndex - currentpageIndex;
-      if(typeof resetPage?.page === "function"){
+      if (typeof resetPage?.page === "function") {
         resetPage.page(page);
       }
     } else {
@@ -661,9 +670,7 @@ function PolicyListing(props) {
     let resourceSearchOpt = [];
     let serverRsrcAttrName = [];
     let policySearchInfoMsg = [];
-    if (
-      RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType
-    ) {
+    if (RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == policyType) {
       resources = serviceDef.dataMaskDef?.resources || [];
     } else if (
       RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value == policyType
@@ -673,18 +680,20 @@ function PolicyListing(props) {
       resources = serviceDef?.resources || [];
     }
 
-    resourceSearchOpt = map(resources, function(resource) {
+    resourceSearchOpt = map(resources, function (resource) {
       return {
-          'name': resource.name,
-          'label': resource.label,
-          'description':resource.description
+        name: resource.name,
+        label: resource.label,
+        description: resource.description
       };
     });
 
-    serverRsrcAttrName = map(resourceSearchOpt, function(opt) {
+    serverRsrcAttrName = map(resourceSearchOpt, function (opt) {
       return {
-        'text': opt.label,
-        'info': !isUndefined(opt?.description) ? opt.description : ResourcesOverrideInfoMsg[opt.name]
+        text: opt.label,
+        info: !isUndefined(opt?.description)
+          ? opt.description
+          : ResourcesOverrideInfoMsg[opt.name]
       };
     });
 
@@ -692,20 +701,21 @@ function PolicyListing(props) {
 
     return (
       <div className="policy-search-info">
-          <p className="m-0">
-          Wildcard searches ( for example using * or ? ) are not currently supported.
-          </p>
-          {policySearchInfoMsg?.map((m, index)=>{
-            return (
-                <p className="m-0" key={index}>
-                  <span className="font-weight-bold">{m.text}: </span>
-                  <span>{m.info}</span>
-                </p>
-            )
-          })}
+        <p className="m-0">
+          Wildcard searches ( for example using * or ? ) are not currently
+          supported.
+        </p>
+        {policySearchInfoMsg?.map((m, index) => {
+          return (
+            <p className="m-0" key={index}>
+              <span className="font-weight-bold">{m.text}: </span>
+              <span>{m.info}</span>
+            </p>
+          );
+        })}
       </div>
-    )
-  }
+    );
+  };
 
   const updateSearchFilter = (filter) => {
     let searchFilterParam = {};
@@ -727,7 +737,7 @@ function PolicyListing(props) {
     });
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    if(typeof resetPage?.page === "function"){
+    if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
   };
@@ -770,10 +780,12 @@ function PolicyListing(props) {
                   onTokenRemove={updateSearchFilter}
                   defaultSelected={defaultSearchFilterParams}
                 />
-                 <CustomPopover
+                <CustomPopover
                   icon="fa-fw fa fa-info-circle info-icon"
                   title={
-                    <span style={{fontSize:"14px"}}>Search Filter Hints</span>
+                    <span style={{ fontSize: "14px" }}>
+                      Search Filter Hints
+                    </span>
                   }
                   content={getSearchInfoContent()}
                   placement="bottom"

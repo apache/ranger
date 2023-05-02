@@ -154,7 +154,9 @@ public class ServiceTagsProcessor {
 						}
 						existing = tagStore.getServiceResourceByGuid(resource.getGuid());
 						RangerPerfTracer.logAlways(perf);
-					} else {
+					}
+
+					if (existing == null) {
 						if(MapUtils.isNotEmpty(resource.getResourceElements())) {
 							if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
 								perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.search_service_resource_by_signature(" + resourceId + ")");

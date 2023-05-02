@@ -238,8 +238,8 @@ export function PolicyViewDetails(props) {
               <td>
                 <Row>
                   <Col>
-                    {obj.values.map((val) => (
-                      <h6 className="d-inline mr-1">
+                    {obj.values.map((val, index) => (
+                      <h6 className="d-inline mr-1" key={index}>
                         <Badge
                           className="d-inline mr-1"
                           variant="info"
@@ -252,11 +252,15 @@ export function PolicyViewDetails(props) {
                   </Col>
                   <Col className="text-right">
                     <h6 className="d-inline mr-1">
-                      <Badge variant="dark">{obj.Rec_Exc}</Badge>
+                      <Badge variant="dark text-capitalize">
+                        {obj.Rec_Exc}
+                      </Badge>
                     </h6>
 
                     <h6 className="d-inline mr-1">
-                      <Badge variant="dark">{obj.Rec_Recursive}</Badge>
+                      <Badge variant="dark text-capitalize">
+                        {obj.Rec_Recursive}
+                      </Badge>
                     </h6>
                   </Col>
                 </Row>
@@ -299,10 +303,11 @@ export function PolicyViewDetails(props) {
           <td className="text-nowrap">Policy Labels </td>
           <td>
             {!isEmpty(policyLabels)
-              ? policyLabels.map((policyLabel) => (
+              ? policyLabels.map((policyLabel, index) => (
                   <Badge
                     variant="dark"
                     className="mr-1 more-less-width text-truncate"
+                    key={index}
                   >
                     {policyLabel}
                   </Badge>
@@ -432,9 +437,9 @@ export function PolicyViewDetails(props) {
                     ) && (
                       <td className="text-center">
                         {!isEmpty(items.conditions)
-                          ? items.conditions.map((obj) => {
+                          ? items.conditions.map((obj, index) => {
                               return (
-                                <h6 className="d-inline mr-1">
+                                <h6 className="d-inline mr-1" key={index}>
                                   <Badge
                                     variant="info"
                                     className="d-inline mr-1"
@@ -452,8 +457,8 @@ export function PolicyViewDetails(props) {
                     {!isEmpty(items.accesses) ? (
                       <td className="text-center d-flex flex-wrap policyview-permission-wrap">
                         {" "}
-                        {items.accesses.map((obj) => (
-                          <h6 className="d-inline mr-1">
+                        {items.accesses.map((obj, index) => (
+                          <h6 className="d-inline mr-1" key={index}>
                             <Badge
                               variant="info"
                               className="d-inline mr-1"
@@ -785,8 +790,8 @@ export function PolicyViewDetails(props) {
           </div>
         </>
       )}
-      <div class="updateInfo">
-        <div class="pull-left">
+      <div className="updateInfo">
+        <div className="pull-left">
           <p>
             <strong>Updated By : </strong> {updatedBy}
           </p>
@@ -795,7 +800,7 @@ export function PolicyViewDetails(props) {
             {dateFormat(updateTime, "mm/dd/yyyy hh:MM TT ")}
           </p>
         </div>
-        <div class="pull-right">
+        <div className="pull-right">
           <p>
             <strong>Created By : </strong> {createdBy}
           </p>

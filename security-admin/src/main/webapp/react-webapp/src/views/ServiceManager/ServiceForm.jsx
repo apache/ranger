@@ -50,7 +50,8 @@ import {
   isUndefined,
   has,
   split,
-  without
+  without,
+  maxBy
 } from "lodash";
 import withRouter from "Hooks/withRouter";
 
@@ -131,7 +132,7 @@ class ServiceForm extends Component {
     } catch (error) {
       this.setState({ blockUI: false });
       serverError(error);
-      console.log(apiError);
+      console.error(apiError);
     }
   };
 
@@ -199,7 +200,10 @@ class ServiceForm extends Component {
             let levels = uniq(map(serviceDef.resources, "level"));
 
             levels.map((level) => {
-              let resourceObj = find(serviceDef.resources, { level: level });
+              let resourceObj = find(serviceDef.resources, {
+                level: level,
+                name: value[`resourceName-${level}`]?.name
+              });
               if (
                 value[`resourceName-${level}`] !== undefined &&
                 value[`value-${level}`] !== undefined
@@ -208,21 +212,33 @@ class ServiceForm extends Component {
                   values: map(value[`value-${level}`], "value")
                 };
 
-                if (value[`isRecursiveSupport-${level}`] !== undefined) {
+                if (
+                  value[`isRecursiveSupport-${level}`] !== undefined &&
+                  resourceObj.recursiveSupported
+                ) {
                   obj.resources[
                     value[`resourceName-${level}`].name
                   ].isRecursive = value[`isRecursiveSupport-${level}`];
-                } else if (resourceObj.recursiveSupported) {
+                } else if (
+                  value[`isRecursiveSupport-${level}`] === undefined &&
+                  resourceObj.recursiveSupported
+                ) {
                   obj.resources[
                     value[`resourceName-${level}`].name
                   ].isRecursive = resourceObj.recursiveSupported;
                 }
 
-                if (value[`isExcludesSupport-${level}`] !== undefined) {
+                if (
+                  value[`isExcludesSupport-${level}`] !== undefined &&
+                  resourceObj.excludesSupported
+                ) {
                   obj.resources[
                     value[`resourceName-${level}`].name
                   ].isExcludes = value[`isExcludesSupport-${level}`];
-                } else if (resourceObj.excludesSupported) {
+                } else if (
+                  value[`isExcludesSupport-${level}`] === undefined &&
+                  resourceObj.excludesSupported
+                ) {
                   obj.resources[
                     value[`resourceName-${level}`].name
                   ].isExcludes = resourceObj.excludesSupported;
@@ -264,7 +280,6 @@ class ServiceForm extends Component {
       }
     });
 
-    console.log("PRINT save auditFiltersArray : ", auditFiltersArray);
     return JSON.stringify(auditFiltersArray).replace(/"/g, "'");
   };
 
@@ -304,31 +319,18 @@ class ServiceForm extends Component {
 
     serviceJson["auditFilters"] = [];
 
-    console.log(
-      "PRINT getAuditFilters from response during create : ",
-      auditFilters
-    );
-
     if (
       auditFilters &&
       auditFilters !== undefined &&
       this.props.params.serviceId === undefined
     ) {
       auditFilters = JSON.parse(auditFilters.defaultValue.replace(/'/g, '"'));
-      console.log(
-        "PRINT getAuditFilters after parsing during create : ",
-        auditFilters
-      );
       serviceJson["isAuditFilter"] = auditFilters.length > 0 ? true : false;
-
-      console.log("PRINT serviceDef during create : ", serviceDef);
 
       serviceJson["auditFilters"] = this.getAuditFilters(
         auditFilters,
         serviceDef
       );
-
-      console.log("PRINT final serviceJson during create : ", serviceJson);
     }
 
     this.setState({
@@ -400,23 +402,11 @@ class ServiceForm extends Component {
       this.props.params.serviceId !== undefined
     ) {
       editAuditFilters = JSON.parse(editAuditFilters.replace(/'/g, '"'));
-      console.log(
-        "PRINT getEditAuditFilters after parsing during edit : ",
-        editAuditFilters
-      );
       serviceJson["isAuditFilter"] = editAuditFilters.length > 0 ? true : false;
-
-      console.log(
-        "PRINT serviceDef from state during edit : ",
-        this.state.serviceDef
-      );
-
       serviceJson["auditFilters"] = this.getAuditFilters(
         editAuditFilters,
         this.state.serviceDef
       );
-
-      console.log("PRINT final serviceJson during edit : ", serviceJson);
     }
 
     this.setState({
@@ -479,45 +469,42 @@ class ServiceForm extends Component {
 
         if (key === "resources") {
           obj.resources = {};
+          let lastResourceLevel = [];
 
-          let resourceKeys = keys(item.resources);
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            return (obj.resources[`resourceName-${resourceLevel}`] =
-              resourceObj);
-          });
-
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            let resourceValues = item.resources[resourceKey].values;
-            return (obj.resources[`value-${resourceLevel}`] =
-              resourceValues.map((resourceValue) => {
-                return { value: resourceValue, label: resourceValue };
-              }));
-          });
-
-          resourceKeys.map((resourceKey) => {
-            let resourceObj = find(serviceDef.resources, ["name", resourceKey]);
-            let resourceLevel = resourceObj.level;
-            let resourceIsRecursive = item.resources[resourceKey].isRecursive;
-            let resourceIsExcludes = item.resources[resourceKey].isExcludes;
-            if (resourceIsRecursive !== undefined) {
-              return (obj.resources[`isRecursiveSupport-${resourceLevel}`] =
-                resourceIsRecursive);
-            } else if (resourceObj.recursiveSupported) {
-              return (obj.resources[`isRecursiveSupport-${resourceLevel}`] =
-                resourceObj.recursiveSupported);
+          Object.entries(item.resources).map(([key, value]) => {
+            let setResources = find(serviceDef.resources, ["name", key]);
+            obj.resources[`resourceName-${setResources.level}`] = setResources;
+            obj.resources[`value-${setResources.level}`] = value.values.map(
+              (m) => {
+                return { label: m, value: m };
+              }
+            );
+            if (setResources.excludesSupported) {
+              obj.resources[`isExcludesSupport-${setResources.level}`] =
+                value?.isExcludes != false;
             }
-            if (resourceIsExcludes !== undefined) {
-              return (obj.resources[`isExcludesSupport-${resourceLevel}`] =
-                resourceIsExcludes);
-            } else if (resourceObj.excludesSupported) {
-              return (obj.resources[`isExcludesSupport-${resourceLevel}`] =
-                resourceObj.excludesSupported);
+            if (setResources.recursiveSupported) {
+              obj.resources[`isRecursiveSupport-${setResources.level}`] =
+                value.isRecursive != false;
             }
+            lastResourceLevel.push({
+              level: setResources.level,
+              name: setResources.name
+            });
           });
+
+          lastResourceLevel = maxBy(lastResourceLevel, "level");
+          let setLastResources = find(serviceDef.resources, [
+            "parent",
+            lastResourceLevel.name
+          ]);
+
+          if (setLastResources) {
+            obj.resources[`resourceName-${setLastResources.level}`] = {
+              label: "None",
+              value: "none"
+            };
+          }
         }
 
         if (key === "actions") {

@@ -20,6 +20,8 @@
 package org.apache.ranger.rest;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -41,6 +43,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
+import org.apache.ranger.biz.RangerPolicyAdmin;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -323,6 +326,36 @@ public class SecurityZoneREST {
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== getAllZones():" + ret);
         }
+        return ret;
+    }
+
+    @GET
+    @Path("/zone-names/{serviceName}/resource")
+    @Produces({ "application/json" })
+    public Collection<String> getZoneNamesForResource(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> SecurityZoneREST.getZoneNamesForResource(" + serviceName + ")");
+        }
+
+        if (!serviceRest.isServiceAdmin(serviceName)) {
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
+                    "User '" + bizUtil.getCurrentUserLoginId() + "' does not have privilege", true);
+        }
+
+        Collection<String> ret         = null;
+        RangerPolicyAdmin  policyAdmin = serviceRest.getPolicyAdminForDelegatedAdmin(serviceName);
+
+        if (policyAdmin != null) {
+            SearchFilter        filter   = searchUtil.getSearchFilter(request, Collections.emptyList());
+            Map<String, String> resource = filter.getParamsWithPrefix(SearchFilter.RESOURCE_PREFIX, true);
+
+            ret = policyAdmin.getZoneNamesForResource(resource);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== SecurityZoneREST.getZoneNamesForResource(" + serviceName + "): ret=" + ret);
+        }
+
         return ret;
     }
 

@@ -772,6 +772,11 @@
             <artifactId>ranger-authn</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-metrics</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <pluginManagement>

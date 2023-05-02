@@ -24,8 +24,7 @@ import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
 import { isSystemAdmin, isKeyAdmin } from "Utils/XAUtils";
 import ZoneDisplay from "./ZoneDisplay";
-import moment from "moment-timezone";
-import { Row, Col, Collapse, Breadcrumb } from "react-bootstrap";
+import { Row, Col, Collapse } from "react-bootstrap";
 import { sortBy } from "lodash";
 import { commonBreadcrumb } from "../../utils/XAUtils";
 import withRouter from "Hooks/withRouter";
@@ -35,6 +34,7 @@ class ZoneListing extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      services: [],
       zones: [],
       selectedZone: null,
       isCollapse: true,
@@ -47,10 +47,11 @@ class ZoneListing extends Component {
   }
 
   componentDidMount() {
-    this.fetchZones();
+    this.fetchData();
   }
 
-  fetchZones = async () => {
+  fetchData = async () => {
+    let servicesResp;
     let zoneList = [],
       selectedZone = null,
       zoneId = this.props.params.zoneId;
@@ -61,6 +62,20 @@ class ZoneListing extends Component {
       zoneList = zonesResp.data.securityZones || [];
     } catch (error) {
       console.error(`Error occurred while fetching Zones! ${error}`);
+    }
+
+    try {
+      servicesResp = await fetchApi({
+        url: "plugins/services",
+        params: {
+          page: 0,
+          pageSize: 200,
+          total_pages: 0,
+          startIndex: 0
+        }
+      });
+    } catch (error) {
+      console.error(`Error occurred while fetching Services! ${error}`);
     }
 
     zoneList = sortBy(zoneList, ["name"]);
@@ -77,7 +92,8 @@ class ZoneListing extends Component {
       loader: false,
       selectedZone: selectedZone,
       zones: zoneList,
-      filterZone: zoneList
+      filterZone: zoneList,
+      services: servicesResp.data.services
     });
   };
 
@@ -266,6 +282,7 @@ class ZoneListing extends Component {
                     <ZoneDisplay
                       history={this.props.navigate}
                       zone={this.state.selectedZone}
+                      services={this.state.services}
                       deleteZone={this.deleteZone}
                       expandBtn={this.expandBtn}
                       isCollapse={this.state.isCollapse}

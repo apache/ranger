@@ -4539,7 +4539,7 @@ public class ServiceREST {
 		return deletedServiceName;
 	}
 
-	private boolean isServiceAdmin(String serviceName) {
+	boolean isServiceAdmin(String serviceName) {
 		boolean ret = bizUtil.isAdmin();
 
 		if (!ret && StringUtils.isNotEmpty(serviceName)) {

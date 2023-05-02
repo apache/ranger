@@ -53,8 +53,8 @@
             </p>
             <ul>
                 <source>$ export JAVA_HOME=%jdk 7 Home%</source>
-                <source> $ mvn clean </source>
-                <source> $ mvn -DskipTests=false clean compile package install assembly:assembly </source>
+                <source> $ mvn -Pall clean </source>
+                <source> $ mvn -Pall -DskipTests=false clean compile package install</source>
             </ul>
                 <p>
                     3. After the above build command execution, you should see the following TAR files in the target folder:
@@ -80,13 +80,13 @@
             </p>
             <ul>
                 <source>$ export JAVA_HOME=%jdk 7 Home%</source>
-                <source> $ mvn clean </source>
-                <source> $ mvn -DskipTests=false clean compile package install assembly:assembly </source>
+                <source> $ mvn -Pall clean </source>
+                <source> $ mvn -Pall -DskipTests=false clean compile package install</source>
             </ul>
             <p>
                 3.  Clean all generated files for building the source build
             <source>
-                $ mvn clean
+                $ mvn -Pall clean
             </source>
             </p>
             <p>
@@ -140,8 +140,8 @@
             </p>
             <source>
                 $ export JAVA_HOME=%Jdk 7 Home%
-                $ mvn clean
-                $ mvn -DskipTests=false clean compile package install assembly:assembly
+                $ mvn -Pall clean
+                $ mvn -Pall -DskipTests=false clean compile package install
                 $ mvn eclipse:eclipse
             </source>
         </subsection>

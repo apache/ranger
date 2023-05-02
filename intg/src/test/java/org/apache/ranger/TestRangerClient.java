@@ -19,6 +19,7 @@
 package org.apache.ranger;
 
 import com.sun.jersey.api.client.ClientResponse;
+import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
@@ -172,5 +173,33 @@ public class TestRangerClient {
         List<RangerServiceHeaderInfo> serviceHeaders = client.getSecurityZoneServiceHeaders(filter);
 
         Assert.assertEquals(Collections.emptyList(), serviceHeaders);
+    }
+
+    @Test
+    public void testGetSecurityZoneNamesForResource() throws RangerServiceException {
+        RangerClient        client      = Mockito.mock(RangerClient.class);
+        String              serviceName = "dev_hive";
+        Map<String, String> resource    = new HashMap<String, String>() {{
+                                                put("database", "testdb");
+                                                put("table", "testtbl1");
+                                            }};
+
+        when(client.getSecurityZoneNamesForResource(serviceName, resource)).thenReturn(Collections.emptySet());
+
+        Set<String> zoneNames = client.getSecurityZoneNamesForResource(serviceName, resource);
+
+        Assert.assertEquals(Collections.emptySet(), zoneNames);
+    }
+
+    @Test
+    public void testFindSecurityZones() throws RangerServiceException {
+        RangerClient        client = Mockito.mock(RangerClient.class);
+        Map<String, String> filter = Collections.emptyMap();
+
+        when(client.findSecurityZones(filter)).thenReturn(Collections.emptyList());
+
+        List<RangerSecurityZone> securityZones = client.findSecurityZones(filter);
+
+        Assert.assertEquals(Collections.emptyList(), securityZones);
     }
 }
