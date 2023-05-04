@@ -18,6 +18,7 @@ services:
         condition: service_started
     environment:
       - RANGER_VERSION
+      - ENABLE_FILE_SYNC_SOURCE
 
 networks:
   ranger:

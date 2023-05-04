@@ -35,6 +35,15 @@ then
   fi
 fi
 
+if [ "${ENABLE_FILE_SYNC_SOURCE}" == "true" ]
+then
+  # shellcheck disable=SC2164
+  cd "${RANGER_HOME}"/usersync/conf
+  xmlstarlet ed -u "//property[name='ranger.usersync.source.impl.class']/value" -v "org.apache.ranger.unixusersync.process.FileSourceUserGroupBuilder" ranger-ugsync-site.xml > temp.xml
+  mv temp.xml ranger-ugsync-site.xml
+  xmlstarlet ed -L -s "//configuration" -t elem -n "property" -s "//property[last()]" -t elem -n "name" -v "ranger.usersync.filesource.file" -s "//property[last()]" -t elem -n "value" -v "${RANGER_SCRIPTS}/ugsync-file-source.csv" ranger-ugsync-site.xml
+fi
+
 cd ${RANGER_HOME}/usersync && ./start.sh
 
 RANGER_USERSYNC_PID=`ps -ef  | grep -v grep | grep -i "org.apache.ranger.authentication.UnixAuthenticationService" | awk '{print $2}'`
