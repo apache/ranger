@@ -183,6 +183,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 
 	public void setResource(RangerAccessResource resource) {
 		this.resource = resource;
+		if (context != null) {
+			RangerAccessRequestUtil.setIsRequestPreprocessed(context, Boolean.FALSE);
+		}
 	}
 
 	public void setAccessType(String accessType) {
@@ -255,7 +258,12 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.clusterType = clusterType;
 	}
 
-	public void setResourceMatchingScope(ResourceMatchingScope scope) { this.resourceMatchingScope = scope; }
+	public void setResourceMatchingScope(ResourceMatchingScope scope) {
+		this.resourceMatchingScope = scope;
+		if (context != null) {
+			RangerAccessRequestUtil.setIsRequestPreprocessed(context, Boolean.FALSE);
+		}
+	}
 
 	public void setContext(Map<String, Object> context) {
 		if (context == null) {

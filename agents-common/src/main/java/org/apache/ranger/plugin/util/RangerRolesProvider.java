@@ -22,8 +22,8 @@ package org.apache.ranger.plugin.util;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.admin.client.RangerAdminClient;
+import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -57,7 +57,7 @@ public class RangerRolesProvider {
 	private boolean rangerUserGroupRolesSetInPlugin;
 	private boolean serviceDefSetInPlugin;
 
-	public RangerRolesProvider(String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, String cacheDir, Configuration config) {
+	public RangerRolesProvider(String serviceType, String appId, String serviceName, RangerAdminClient rangerAdmin, String cacheDir, RangerPluginConfig config) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerRolesProvider(serviceName=" + serviceName + ").RangerRolesProvider()");
 		}
@@ -87,7 +87,7 @@ public class RangerRolesProvider {
 		}
 		this.gson = gson;
 
-		String propertyPrefix = "ranger.plugin." + serviceType;
+		String propertyPrefix = config.getPropertyPrefix();
 		disableCacheIfServiceNotFound = config.getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
 
 		if (LOG.isDebugEnabled()) {
@@ -139,7 +139,7 @@ public class RangerRolesProvider {
 				plugIn.setRoles(roles);
 				rangerUserGroupRolesSetInPlugin = true;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
-				lastKnownRoleVersion = roles.getRoleVersion();
+				lastKnownRoleVersion = roles.getRoleVersion() != null ? roles.getRoleVersion() : -1;
 			} else {
 				if (!rangerUserGroupRolesSetInPlugin && !serviceDefSetInPlugin) {
 					plugIn.setRoles(null);

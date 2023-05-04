@@ -417,6 +417,14 @@
 		<query>select obj from XXPolicy obj where obj.id in (select item.policyId from XXPolicyItem item) </query>
 	</named-query>
 
+	<named-query name="XXPolicy.findPolicyByPolicyGUID">
+		<query>select obj from XXPolicy obj where obj.guid = :guid and obj.zoneId = :zoneId</query>
+	</named-query>
+
+	<named-query name="XXPolicy.findPolicyByPolicyGUIDAndZoneName">
+		<query>select obj from XXPolicy obj, XXSecurityZone zone where obj.guid = :guid and obj.zoneId = zone.id and zone.name = :zoneName</query>
+	</named-query>
+
 	<named-query name="XXPolicy.findPolicyByPolicyGUIDAndServiceName">
 		<query>select obj from XXPolicy obj, XXService svc where obj.guid = :guid and obj.service = svc.id and svc.name = :serviceName and obj.zoneId = :zoneId</query>
 	</named-query>
@@ -447,11 +455,27 @@
 	</named-query>
 
     <named-query name="XXServiceDef.findServiceDefNameByServiceName">
-                <query>select obj.name from XXServiceDef obj, XXService serviceObj where obj.id = serviceObj.type and serviceObj.name = :name</query>
-        </named-query>
+        <query>select obj.name from XXServiceDef obj, XXService serviceObj where obj.id = serviceObj.type and serviceObj.name = :name</query>
+	</named-query>
 
 	<named-query name="XXServiceDef.findServiceDefNameByServiceId">
 		<query>select obj.name from XXServiceDef obj, XXService serviceObj where obj.id = serviceObj.type and serviceObj.id = :id</query>
+	</named-query>
+
+	<named-query name="XXServiceDef.getNameByHasEnricher">
+		<query>SELECT DISTINCT(xsd.name) FROM XXServiceDef xsd, XXContextEnricherDef xced WHERE xsd.id = xced.defId</query>
+	</named-query>
+
+	<named-query name="XXServiceDef.getServiceCount">
+		<query>SELECT xsd.name, COUNT(xs.id) FROM XXService xs, XXServiceDef xsd WHERE xs.type = xsd.id GROUP BY xsd.name</query>
+	</named-query>
+
+	<named-query name="XXServiceDef.getPolicyCountByType">
+		<query>SELECT xsd.name, COUNT(xp.id) FROM XXPolicy xp, XXService xs, XXServiceDef xsd WHERE xs.id = xp.service AND xs.type = xsd.id AND xp.policyType = :policyType GROUP BY xsd.name</query>
+	</named-query>
+
+	<named-query name="XXServiceDef.getPolicyCountByDenyItems">
+	    <query>SELECT xsd.name, COUNT(xp.id) FROM XXPolicy xp, XXService xs, XXServiceDef xsd WHERE xp.policyText LIKE '%denyPolicyItems":[{%' AND xp.service = xs.id AND xsd.id = xs.type GROUP by xsd.name</query>
 	</named-query>
 
 	<!-- XXResourceDef -->
@@ -1200,6 +1224,10 @@
 		<query>SELECT xxPortalUser FROM XXPortalUser xxPortalUser,XXUser xxUser
 			   WHERE xxUser.id=:id and xxPortalUser.loginId=xxUser.name
 		</query>
+	</named-query>
+
+	<named-query name="XXPortalUser.getCountByUserRole">
+		<query>SELECT xpur.userRole, COUNT(xpu.id) FROM XXPortalUser xpu, XXPortalUserRole xpur WHERE xpur.userId = xpu.id GROUP BY xpur.userRole</query>
 	</named-query>
 
 	<named-query name="XXPortalUser.findAllXPortalUser">
@@ -2007,5 +2035,4 @@
 	<named-query name="XXPolicy.findByZoneId">
 		<query>select obj from XXPolicy obj where obj.zoneId = :zoneId</query>
 	</named-query>
-
 </entity-mappings>

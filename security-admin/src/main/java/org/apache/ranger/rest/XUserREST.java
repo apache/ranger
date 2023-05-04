@@ -1111,7 +1111,7 @@ public class XUserREST {
 	public VXGroupPermission createXGroupPermission(
 			VXGroupPermission vXGroupPermission) {
 		xUserMgr.checkAdminAccess();
-                bizUtil.blockAuditorRoleUser();
+		bizUtil.blockAuditorRoleUser();
 		return xUserMgr.createXGroupPermission(vXGroupPermission);
 	}
 
@@ -1128,10 +1128,16 @@ public class XUserREST {
 	@Consumes({ "application/json" })
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_GROUP_PERMISSION + "\")")
-	public VXGroupPermission updateXGroupPermission(
+	public VXGroupPermission updateXGroupPermission(@PathParam("id") Long id,
 			VXGroupPermission vXGroupPermission) {
+		// if VXGroupPermission.id is specified, it should be same as the param 'id'
+		if(vXGroupPermission.getId() == null) {
+			vXGroupPermission.setId(id);
+		} else if(!vXGroupPermission.getId().equals(id)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "vXGroupPermission Id mismatch", true);
+		}
 		xUserMgr.checkAdminAccess();
-                bizUtil.blockAuditorRoleUser();
+		bizUtil.blockAuditorRoleUser();
 		return xUserMgr.updateXGroupPermission(vXGroupPermission);
 	}
 

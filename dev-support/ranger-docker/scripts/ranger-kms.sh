@@ -35,6 +35,9 @@ then
   fi
 fi
 
+# delete PID file if exists
+rm -f /var/run/ranger_kms/rangerkms.pid
+
 cd ${RANGER_HOME}/kms && ./ranger-kms-services.sh start
 
 RANGER_KMS_PID=`ps -ef  | grep -v grep | grep "Dproc_rangerkms" | awk '{print $2}'`

@@ -33,240 +33,231 @@ import javax.persistence.TypedQuery;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public abstract class BaseDao<T> {
-	static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
+    private static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
 
-	protected DaoManager daoManager;
+    protected final DaoManager daoManager;
+    protected final Class<T>   tClass;
 
-	protected Class<T> tClass;
+    @SuppressWarnings("unchecked")
+    protected BaseDao(DaoManagerBase daoManager) {
+        this.daoManager = (DaoManager) daoManager;
 
-	public BaseDao(DaoManagerBase daoManager) {
-		this.init(daoManager);
-	}
+        ParameterizedType genericSuperclass = (ParameterizedType) getClass().getGenericSuperclass();
+        Type              type              = genericSuperclass.getActualTypeArguments()[0];
 
-	@SuppressWarnings("unchecked")
-	private void init(DaoManagerBase daoManager) {
-		this.daoManager = (DaoManager) daoManager;
+        if (type instanceof ParameterizedType) {
+            this.tClass = (Class<T>) ((ParameterizedType) type).getRawType();
+        } else {
+            this.tClass = (Class<T>) type;
+        }
+    }
 
-		ParameterizedType genericSuperclass = (ParameterizedType) getClass()
-				.getGenericSuperclass();
+    public EntityManager getEntityManager() {
+        return daoManager.getEntityManager();
+    }
 
-		Type type = genericSuperclass.getActualTypeArguments()[0];
+    public boolean beginTransaction() {
+        boolean ret = false;
 
-		if (type instanceof ParameterizedType) {
-			this.tClass = (Class<T>) ((ParameterizedType) type).getRawType();
-		} else {
-			this.tClass = (Class<T>) type;
-		}
-	}
+        EntityManager em = getEntityManager();
 
-	public EntityManager getEntityManager() {
-		return daoManager.getEntityManager();
-	}
+        if(em != null) {
+            EntityTransaction et = em.getTransaction();
 
-	public boolean beginTransaction() {
-		boolean ret = false;
+            // check the transaction is not already active
+            if(et != null && !et.isActive()) {
+                et.begin();
 
-		EntityManager em = getEntityManager();
+                ret = true;
+            }
+        }
 
-		if(em != null) {
-			EntityTransaction et = em.getTransaction();
-			
-			// check the transaction is not already active
-			if(et != null && !et.isActive()) {
-				et.begin();
-				ret = true;
-			}
-		}
-		
-		return ret;
-	}
+        return ret;
+    }
 
-	public void commitTransaction() {
-		EntityManager em = getEntityManager();
+    public void commitTransaction() {
+        EntityManager em = getEntityManager();
 
-		if(em != null) {
-			em.flush();
+        if(em != null) {
+            em.flush();
 
-			EntityTransaction et = em.getTransaction();
+            EntityTransaction et = em.getTransaction();
 
-			if(et != null) {
-				et.commit();
-			}
-		}
-	}
+            if(et != null) {
+                et.commit();
+            }
+        }
+    }
 
-	public void rollbackTransaction() {
-		EntityManager em = getEntityManager();
+    public void rollbackTransaction() {
+        EntityManager em = getEntityManager();
 
-		if(em != null) {
-			EntityTransaction et = em.getTransaction();
+        if(em != null) {
+            EntityTransaction et = em.getTransaction();
 
-			if(et != null) {
-				et.rollback();
-			}
-		}
-	}
+            if(et != null) {
+                et.rollback();
+            }
+        }
+    }
 
-	public T create(T obj) {
-		T ret = null;
-		boolean trxBegan = beginTransaction();
-		try{
-			getEntityManager().persist(obj);
-			if(trxBegan) {
-				commitTransaction();
-			}
-			ret = obj;
-		}catch(Exception e){
-			e.printStackTrace();
-			rollbackTransaction();
-		}
-		return ret;
-	}
+    public T create(T obj) {
+        T       ret      = null;
+        boolean trxBegan = beginTransaction();
 
-	public T update(T obj) {
-		boolean trxBegan = beginTransaction();
+        try {
+            getEntityManager().persist(obj);
 
-		getEntityManager().merge(obj);
+            if(trxBegan) {
+                commitTransaction();
+            }
 
-		if(trxBegan) {
-			commitTransaction();
-		}
+            ret = obj;
+        }catch(Exception e){
+            logger.error("create({}) failed", tClass.getSimpleName(), e);
 
-		return obj;
-	}
+            rollbackTransaction();
+        }
 
-	public boolean remove(Long id) {
-		return remove(getById(id));
-	}
+        return ret;
+    }
 
-	public boolean remove(T obj) {
-		if (obj == null) {
-			return true;
-		}
+    public T update(T obj) {
+        boolean trxBegan = beginTransaction();
 
-		boolean ret = false;
+        getEntityManager().merge(obj);
 
-		boolean trxBegan = beginTransaction();
+        if(trxBegan) {
+            commitTransaction();
+        }
 
-		getEntityManager().remove(obj);
+        return obj;
+    }
 
-		if(trxBegan) {
-			commitTransaction();
-		}
+    public boolean remove(Long id) {
+        return remove(getById(id));
+    }
 
-		ret = true;
+    public boolean remove(T obj) {
+        if (obj == null) {
+            return true;
+        }
 
-		return ret;
-	}
+        boolean trxBegan = beginTransaction();
 
-	public T getById(Long id) {
-		if (id == null) {
-			return null;
-		}
-		T ret = null;
-		try {
-			ret = getEntityManager().find(tClass, id);
-		} catch (NoResultException e) {
-			return null;
-		}
-		return ret;
-	}
+        getEntityManager().remove(obj);
 
-	public List<T> getAll() {
-		List<T> ret = null;
-		
-		TypedQuery<T> qry = getEntityManager().createQuery(
-				"SELECT t FROM " + tClass.getSimpleName() + " t", tClass);
-		qry.setHint("eclipselink.refresh", "true");
-		ret = qry.getResultList();
-		return ret;
-	}
+        if(trxBegan) {
+            commitTransaction();
+        }
 
-	public Long getAllCount() {
-		Long ret = null;
+        return true;
+    }
 
-		TypedQuery<Long> qry = getEntityManager().createQuery(
-				"SELECT count(t) FROM " + tClass.getSimpleName() + " t",
-				Long.class);
-		qry.setHint("eclipselink.refresh", "true");
-		ret = qry.getSingleResult();
-		return ret;
-	}
+    public T getById(Long id) {
+        if (id == null) {
+            return null;
+        }
 
-	public T getUniqueResult(TypedQuery<T> qry) {
-		T ret = null;
+        T ret;
 
-		try {
-			ret = qry.getSingleResult();
-		} catch (NoResultException e) {
-			// ignore
-		}
-		return ret;
-	}
+        try {
+            ret = getEntityManager().find(tClass, id);
+        } catch (NoResultException e) {
+            return null;
+        }
 
-	public List<T> executeQuery(TypedQuery<T> qry) {
-		List<T> ret = null;
+        return ret;
+    }
 
-		ret = qry.getResultList();
+    public List<T> getAll() {
+        List<T>       ret;
+        TypedQuery<T> qry = getEntityManager().createQuery("SELECT t FROM " + tClass.getSimpleName() + " t", tClass);
 
-		return ret;
-	}
+        qry.setHint("eclipselink.refresh", "true");
 
-	public List<T> findByNamedQuery(String namedQuery, String paramName,
-			Object refId) {
-		List<T> ret = new ArrayList<T>();
+        ret = qry.getResultList();
 
-		if (namedQuery == null) {
-			return ret;
-		}
-		try {
-			TypedQuery<T> qry = getEntityManager().createNamedQuery(namedQuery, tClass);
-			qry.setParameter(paramName, refId);
-			ret = qry.getResultList();
-		} catch (NoResultException e) {
-			// ignore
-		}
-		return ret;
-	}	
-	
-	public T findByAlias(String namedQuery, String alias) {
-		try {
-			return getEntityManager()
-					.createNamedQuery(namedQuery, tClass)
-					.setParameter("alias", alias)
-					.getSingleResult();
-		} catch (NoResultException e) {
-		}
-		return null;
-	}
-	
-	public int deleteByAlias(String namedQuery, String alias) {
-		boolean trxBegan = beginTransaction();
-		try {
-			int i = getEntityManager()
-					.createNamedQuery(namedQuery, tClass)
-					.setParameter("alias", alias).executeUpdate();
-			if(trxBegan) {
-				commitTransaction();
-			}
-			return i;
-		} catch (NoResultException e) {
-			e.printStackTrace();
-			rollbackTransaction();
-		}		
-		return 0;
-	}
+        return ret;
+    }
 
-	public List<T> getAllKeys(String namedQuery) {
-		try {
-			List<T> ret = getEntityManager()
-					.createNamedQuery(namedQuery, tClass).setHint("eclipselink.refresh", "true").getResultList();
-			getEntityManager().clear();
-			return ret;
-		} catch (NoResultException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+    public Long getAllCount() {
+        TypedQuery<Long> qry = getEntityManager().createQuery("SELECT count(t) FROM " + tClass.getSimpleName() + " t", Long.class);
+
+        qry.setHint("eclipselink.refresh", "true");
+
+        Long ret = qry.getSingleResult();
+
+        return ret;
+    }
+
+    public T getUniqueResult(TypedQuery<T> qry) {
+        T ret = null;
+
+        try {
+            ret = qry.getSingleResult();
+        } catch (NoResultException e) {
+            // ignore
+        }
+
+        return ret;
+    }
+
+    public List<T> executeQuery(TypedQuery<T> qry) {
+        List<T> ret = qry.getResultList();
+
+        return ret;
+    }
+
+    public List<T> findByNamedQuery(String namedQuery, String paramName, Object refId) {
+        List<T> ret = new ArrayList<>();
+
+        if (namedQuery != null) {
+            try {
+                TypedQuery<T> qry = getEntityManager().createNamedQuery(namedQuery, tClass);
+
+                qry.setParameter(paramName, refId);
+
+                ret = qry.getResultList();
+            } catch (NoResultException e) {
+                // ignore
+            }
+        }
+
+        return ret;
+    }
+
+    public T findByAlias(String namedQuery, String alias) {
+        try {
+            return getEntityManager().createNamedQuery(namedQuery, tClass)
+                                     .setParameter("alias", alias)
+                                     .getSingleResult();
+        } catch (NoResultException e) {
+            // ignore
+        }
+
+        return null;
+    }
+
+    public int deleteByAlias(String namedQuery, String alias) {
+        int     ret      = 0;
+        boolean trxBegan = beginTransaction();
+
+        try {
+            ret = getEntityManager().createNamedQuery(namedQuery, tClass)
+                                    .setParameter("alias", alias).executeUpdate();
+
+            if(trxBegan) {
+                commitTransaction();
+            }
+        } catch (NoResultException e) {
+            logger.error("deleteByAlias({}) failed", alias, e);
+
+            rollbackTransaction();
+        }
+
+        return ret;
+    }
 }

@@ -34,7 +34,6 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.model.RangerServiceTags;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
-import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,6 +60,7 @@ import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 @Path("public/v2")
@@ -206,6 +206,14 @@ public class PublicAPIsv2 {
         return ret;
     }
 
+	@GET
+	@Path("/api/zone-names/{serviceName}/resource")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPISpnegoAccessible()")
+	public Collection<String> getSecurityZoneNamesForResource(@PathParam("serviceName") String serviceName, @Context HttpServletRequest request) {
+		return securityZoneRest.getZoneNamesForResource(serviceName, request);
+	}
+
 	/*
 	* ServiceDef Manipulation APIs
 	 */
@@ -253,7 +261,7 @@ public class PublicAPIsv2 {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "serviceDef id mismatch", true);
 		}
 
-		return serviceREST.updateServiceDef(serviceDef);
+		return serviceREST.updateServiceDef(serviceDef, serviceDef.getId());
 	}
 
 
@@ -279,7 +287,7 @@ public class PublicAPIsv2 {
 			serviceDef.setGuid(existingServiceDef.getGuid());
 		}
 
-		return serviceREST.updateServiceDef(serviceDef);
+		return serviceREST.updateServiceDef(serviceDef, serviceDef.getId());
 	}
 
 	/*
@@ -463,23 +471,20 @@ public class PublicAPIsv2 {
 	@Produces({ "application/json" })
 	public RangerPolicy getPolicyByName(@PathParam("servicename") String serviceName,
 	                                    @PathParam("policyname") String policyName,
+	                                    @QueryParam("zoneName") String zoneName,
 	                                    @Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
-			logger.debug("==> PublicAPIsv2.getPolicyByName(" + serviceName + "," + policyName + ")");
+			logger.debug("==> PublicAPIsv2.getPolicyByName(" + serviceName + "," + policyName + "," + zoneName + ")");
 		}
 
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		filter.setParam(SearchFilter.POLICY_NAME, policyName);
-		List<RangerPolicy> policies = serviceREST.getPolicies(filter);
+		RangerPolicy policy = serviceREST.getPolicyByName(serviceName, policyName, zoneName);
 
-		if (policies.size() != 1) {
+		if (policy == null) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "Not found", true);
 		}
-		RangerPolicy policy = policies.get(0);
 
 		if(logger.isDebugEnabled()) {
-			logger.debug("<== PublicAPIsv2.getPolicyByName(" + serviceName + "," + policyName + ")" + policy);
+			logger.debug("<== PublicAPIsv2.getPolicyByName(" + serviceName + "," + policyName + "," + zoneName + ")" + policy);
 		}
 		return policy;
 	}
@@ -507,7 +512,14 @@ public class PublicAPIsv2 {
 	public RangerPolicy getPolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
 																 @DefaultValue("") @QueryParam("serviceName") String serviceName,
 																 @DefaultValue("") @QueryParam("ZoneName") String zoneName) {
-		return serviceREST.getPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.getPolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName  + "," + zoneName + ")");
+		}
+		RangerPolicy rangerPolicy = serviceREST.getPolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.getPolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName  + "," + zoneName + ")");
+		}
+		return rangerPolicy;
 	}
 
 	@POST
@@ -538,7 +550,7 @@ public class PublicAPIsv2 {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "policyID mismatch", true);
 		}
 
-		return serviceREST.updatePolicy(policy);
+		return serviceREST.updatePolicy(policy, id);
 	}
 
 	@PUT
@@ -548,11 +560,12 @@ public class PublicAPIsv2 {
 	public RangerPolicy updatePolicyByName(RangerPolicy policy,
 	                                               @PathParam("servicename") String serviceName,
 	                                               @PathParam("policyname") String policyName,
+	                                               @QueryParam("zoneName") String zoneName,
 	                                               @Context HttpServletRequest request) {
 		if (policy.getService() == null || !policy.getService().equals(serviceName)) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "service name mismatch", true);
 		}
-		RangerPolicy oldPolicy = getPolicyByName(serviceName, policyName, request);
+		RangerPolicy oldPolicy = getPolicyByName(serviceName, policyName, zoneName, request);
 
 		// ignore policy.id - if specified. Retrieve using the given serviceName+policyName and use id from the retrieved object
 		policy.setId(oldPolicy.getId());
@@ -563,7 +576,7 @@ public class PublicAPIsv2 {
 			policy.setName(StringUtils.trim(oldPolicy.getName()));
 		}
 
-		return serviceREST.updatePolicy(policy);
+		return serviceREST.updatePolicy(policy, policy.getId());
 	}
 
 
@@ -595,6 +608,7 @@ public class PublicAPIsv2 {
 	@Path("/api/policy")
 	public void deletePolicyByName(@QueryParam("servicename") String serviceName,
 	                               @QueryParam("policyname") String policyName,
+	                               @QueryParam("zoneName") String zoneName,
 	                               @Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIsv2.deletePolicyByName(" + serviceName + "," + policyName + ")");
@@ -603,7 +617,7 @@ public class PublicAPIsv2 {
 		if (serviceName == null || policyName == null) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Invalid service name or policy name", true);
 		}
-		RangerPolicy policy = getPolicyByName(serviceName, policyName, request);
+		RangerPolicy policy = getPolicyByName(serviceName, policyName, zoneName, request);
 		serviceREST.deletePolicy(policy.getId());
 		if(logger.isDebugEnabled()) {
 			logger.debug("<== PublicAPIsv2.deletePolicyByName(" + serviceName + "," + policyName + ")");
@@ -615,7 +629,13 @@ public class PublicAPIsv2 {
 	public void deletePolicyByGUIDAndServiceNameAndZoneName(@PathParam("guid") String guid,
 												 @DefaultValue("") @QueryParam("serviceName") String serviceName,
 												 @DefaultValue("") @QueryParam("zoneName") String zoneName) {
+		if(logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.deletePolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName  + "," + zoneName + ")");
+		}
 		serviceREST.deletePolicyByGUIDAndServiceNameAndZoneName(guid, serviceName, zoneName);
+		if(logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.deletePolicyByGUIDAndServiceNameAndZoneName(" + guid + "," + serviceName  + "," + zoneName + ")");
+		}
 	}
 
 	@PUT

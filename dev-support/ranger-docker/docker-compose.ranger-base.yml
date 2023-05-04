@@ -4,6 +4,9 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-base
+      args:
+        - UBUNTU_VERSION=${UBUNTU_VERSION}
+        - RANGER_BASE_JAVA_VERSION=${RANGER_BASE_JAVA_VERSION}
     image: ranger-base
     container_name: ranger-base
     networks:

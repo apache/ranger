@@ -106,12 +106,16 @@ public class RangerRoleCache {
 
 				if (lockResult) {
 					// We are getting all the Roles to be downloaded for now. Should do downloades for each service based on what roles are there in the policies.
+					final long            startTimeMs  = System.currentTimeMillis();
 					SearchFilter          searchFilter = null;
 					final Set<RangerRole> rolesInDB    = new HashSet<>(roleDBStore.getRoles(searchFilter));
-
-					Date updateTime = new Date();
+					final long            dbLoadTimeMs = System.currentTimeMillis() - startTimeMs;
+					Date                  updateTime   = new Date();
 
 					if (rolesInDB != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("loading Roles from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTimeMs) + " seconds");
+						}
 						ret = new RangerRoles();
 
 						ret.setRangerRoles(rolesInDB);

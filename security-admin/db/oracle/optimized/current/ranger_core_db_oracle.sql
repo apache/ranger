@@ -1841,11 +1841,11 @@ is_enabled NUMBER(1) DEFAULT '1' NOT NULL,
 service_resource_elements_text CLOB DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_rms_service_res_UK_guid UNIQUE (guid),
+CONSTRAINT x_rms_svc_res_UK_res_sign UNIQUE (resource_signature),
 CONSTRAINT x_rms_svc_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
 );
 
 CREATE INDEX x_rms_svc_res_IDX_service_id ON x_rms_service_resource(service_id);
-CREATE INDEX x_rms_svc_res_IDX_res_sign ON x_rms_service_resource(resource_signature);
 
 CREATE TABLE x_rms_notification (
 id NUMBER(20) NOT NULL,
@@ -1973,6 +1973,7 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '058',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '059',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '060',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '065',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

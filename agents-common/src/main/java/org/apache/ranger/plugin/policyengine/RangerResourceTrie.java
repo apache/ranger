@@ -105,7 +105,7 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         this(resourceDef, evaluators, isOptimizedForRetrieval, false, pluginContext);
     }
 
-    public RangerResourceTrie(RangerResourceDef resourceDef, List<T> evaluators, boolean isOptimizedForRetrieval, boolean isOptimizedForSpace, RangerPluginContext pluginContext) {
+    public <T extends RangerResourceEvaluator, E> RangerResourceTrie(RangerResourceDef resourceDef, List<E> evaluators, boolean isOptimizedForRetrieval, boolean isOptimizedForSpace, RangerPluginContext pluginContext) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerResourceTrie(" + resourceDef.getName() + ", evaluatorCount=" + evaluators.size() + ", isOptimizedForRetrieval=" + isOptimizedForRetrieval + ", isOptimizedForSpace=" + isOptimizedForSpace + ")");
         }
@@ -154,7 +154,7 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         this.isOptimizedForRetrieval = !isOptimizedForSpace && isOptimizedForRetrieval;  // isOptimizedForSpace takes precedence
         this.separatorChar           = ServiceDefUtil.getCharOption(matcherOptions, OPTION_PATH_SEPARATOR, DEFAULT_PATH_SEPARATOR_CHAR);
 
-        TrieNode<T> tmpRoot = buildTrie(resourceDef, evaluators, builderThreadCount);
+        final TrieNode tmpRoot = buildTrie(resourceDef, evaluators, builderThreadCount);
 
         if (builderThreadCount > 1 && tmpRoot == null) { // if multi-threaded trie-creation failed, build using a single thread
             this.root = buildTrie(resourceDef, evaluators, 1);

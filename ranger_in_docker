@@ -1,0 +1,245 @@
+#!/bin/bash
+
+# Licensed to the Apache Software Foundation (ASF) under one
+# or more contributor license agreements.  See the NOTICE file
+# distributed with this work for additional information
+# regarding copyright ownership.  The ASF licenses this file
+# to you under the Apache License, Version 2.0 (the
+# "License"); you may not use this file except in compliance
+# with the License.  You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+#
+# This script provides an reference implementation of what is specified in
+# ./dev-support/ranger-docker/README.md
+#
+# Using this command, you should be able to build and run Apache Ranger
+# within few minites (in a docker container)
+#
+# Pre Request:
+#
+# Java version  1.8.*
+# Maven version 3.0+
+# Docker Installation (docker, docker-compose, ...)
+#
+# By default, the directory where the script exists - is assumed to be RANGER_HOME.
+# However, you can define RANGER_HOME to be a different directory before running this script via exported env variable.
+#
+# Also, you can force rebuild of ranger image by setting RANGER_REBUILD=1
+# By default, the script will check if a ranger image does not exists and will do ranger build and docker image build.
+#
+# Also, you can force rebuild of ranger using local maven and java based build
+# instead of building it using Docker based buid by setting DOCKER_MAVEN_BUILD=1.
+#
+# Also, you can optionally start services by setting ENABLED_RANGER_SERVICES env variables
+# by defining comma separated optional services as following:
+#       ENABLED_RANGER_SERVICES="hadoop,hive,hbase,knox,kms"
+# List of optional services:
+#       tagsync,hadoop,hbase,kafka,hive,knox,kms
+#
+
+ENABLED_RANGER_SERVICE_FILE=${HOME}/.ranger_docker_services
+
+[ -z "${RANGER_DB_TYPE}" ] && RANGER_DB_TYPE="postgres"
+
+CORE_SERVICES="ranger-base,ranger,ranger-${RANGER_DB_TYPE},ranger-usersync"
+
+if [ -z "${ENABLED_RANGER_SERVICES}" ]
+then
+    if [ -f ${ENABLED_RANGER_SERVICE_FILE} ]
+    then
+        ENABLED_RANGER_SERVICES="`cat ${ENABLED_RANGER_SERVICE_FILE}`"
+    fi
+else
+    echo "${ENABLED_RANGER_SERVICES}" > ${ENABLED_RANGER_SERVICE_FILE}
+fi
+
+if [ -z "${RANGER_HOME}" ]
+then
+    rhd=`dirname $0`
+    RANGER_HOME=$(cd ${rhd}; pwd)
+fi
+
+if [ ! -d "${RANGER_HOME}" ]
+then
+    echo "ERROR: directory RANGER_HOME=[${RANGER_HOME}] does not exists."
+    exit 1
+fi
+
+RD_HOME=${RANGER_HOME}/dev-support/ranger-docker
+export RD_HOME
+
+cd ${RD_HOME}
+
+ALL_SERVICES="${CORE_SERVICES} ${ENABLED_RANGER_SERVICES}"
+
+for service in `echo ${ALL_SERVICES} | sed -e 's:,: :g'`
+do
+    echo "${service}" | grep '^ranger' > /dev/null 2>&1
+    if [ $? -eq 0 ]
+    then
+        serviceFile="docker-compose.${service}.yml"
+    else
+        serviceFile="docker-compose.ranger-${service}.yml"
+    fi
+    [ -f ${serviceFile} ] && OPT="${OPT} -f ${serviceFile}"
+done
+
+#
+# This is needed to build ranger-base build based on architecture
+#
+DOCKER_BUILDKIT=1
+export DOCKER_BUILDKIT
+
+if [ $# -eq 1 ]
+then
+    DOCKER_ACTION="$1"
+else
+    DOCKER_ACTION=""
+fi
+
+if [ "${DOCKER_ACTION}" != "up" -a "${DOCKER_ACTION}" != "down" ]
+then
+    echo "ERROR: Invalid argument [${DOCKER_ACTION}]"
+    echo "USAGE: $0 <up|down>"
+    exit 1
+fi
+
+docker -v > /dev/null 2>&1
+
+if [ $? -ne 0 ]
+then
+    echo "ERROR: You must have a valid DOCKER installed on your system to do a docker build. (error running docker command)"
+    exit 1
+fi
+
+docker-compose --version > /dev/null 2>&1
+
+if [ $? -ne 0 ]
+then
+    echo "ERROR: You must have a valid DOCKER installed on your system to do a docker build. (error running docker-compose command)"
+    exit 1
+fi
+
+if [ -z "${DOCKER_MAVEN_BUILD}" ]
+then
+    DOCKER_MAVEN_BUILD=0
+fi
+
+ENV_FILE=${RD_HOME}/.env
+export RANGER_DB_TYPE
+
+cd ${RANGER_HOME}
+
+if [ ! -f ${ENV_FILE} ]
+then
+    echo "ERROR: Environment file [${ENV_FILE}] is missing."
+    exit 1
+fi
+
+build_ranger=0
+build_base_image=0
+
+cd ${RD_HOME}
+
+if [ ${DOCKER_ACTION} == "up" ]
+then
+
+    DOCKER_COMPOSE_FLAGS="-d"
+
+    chmod +x download-archives.sh && ./download-archives.sh
+
+    if [ -z "${RANGER_REBUILD}" ]
+    then
+        noOfFiles=`ls -l ${RD_HOME}/dist/*.tar.gz 2> /dev/null| wc -l | awk '{ print $1 }'`
+        if [ ${noOfFiles} -lt 20 ]
+        then
+            #echo "Found only [${noOfFiles}] RANGER tar files. Enabling RANGER BUILD."
+            build_ranger=1
+            build_base_image=1
+        #else
+            #echo "Found [${noOfFiles}] RANGER tar files. Skipping RANGER BUILD. To Force RANGER BUILD, please set RANGER_REBUILD=1 before running this script."
+        fi
+    else
+        #echo "Found [RANGER_REBUILD as ${RANGER_REBUILD}]. Enabling RANGER BUILD."
+        build_base_image=1
+        build_ranger=1
+    fi
+
+
+    cd ${RD_HOME}
+
+    if [ ${build_base_image} -eq 0 ]
+    then
+        docker images ranger-base:latest 2> /dev/null  | grep ranger-base  > /dev/null 2>&1
+        if [ $? -ne 0 ]
+        then
+            build_base_image=1
+        fi
+    fi
+
+    if [ ${build_base_image} -eq 1 ]
+    then
+        echo "+ docker-compose -f docker-compose.ranger-base.yml build --no-cache"
+        docker-compose -f docker-compose.ranger-base.yml build --no-cache
+    fi
+
+    if [ ${build_ranger} -eq 1 ]
+    then
+        if [ ${DOCKER_MAVEN_BUILD} -eq 0 ]
+        then
+            cd ${RD_HOME}
+
+            echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans"
+            docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml down --remove-orphans
+
+            echo "+ docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up"
+            docker-compose -f docker-compose.ranger-base.yml -f docker-compose.ranger-build.yml up
+            if [ $? -ne 0 ]
+            then
+                echo "ERROR: Unable to complete RANGER build using DOCKER. Exiting ...."
+                exit 1
+            fi
+        else
+            cd ${RANGER_HOME}
+            mvn clean package -DskipTests
+            if [ $? -ne 0 ]
+            then
+                echo "ERROR: Unable to complete RANGER build. Exiting ...."
+                exit 1
+            fi
+            cp target/ranger-* ${RD_HOME}/dist
+            cp target/version ${RD_HOME}/dist
+        fi
+
+    fi
+fi
+
+
+cd ${RD_HOME}
+
+docker-compose ${OPT} ${DOCKER_ACTION} ${DOCKER_COMPOSE_FLAGS}
+
+echo
+echo "################### LIST OF DOCKER PROCESSES EXPOSING PORTS #####################"
+echo
+docker container ls --format "table {{.Names}}\t{{.Ports}}" -a | grep ranger | \
+        grep -v '^$' | awk '{ for(i = 2 ; i <= NF; i++) { print $1, $i } }' | \
+        grep  -- '->' | sed -e 's:,::g' | awk '{ s = $2 ; split(s,a, "->") ; f = split(a[1],b,":");  print $1, b[f] }' | \
+        sort  | uniq | awk '{ printf("SERVICE: %25s ExposedPort: %10s\n", $1, $2 ) ; }'
+echo
+echo "###################################################################################"
+echo
+if [ "${DOCKER_ACTION}" == "up" ]
+then
+    echo
+    echo "Now, You can run  access RANGER portal via http://localhost:6080 (admin/rangerR0cks!)"
+    echo
+fi

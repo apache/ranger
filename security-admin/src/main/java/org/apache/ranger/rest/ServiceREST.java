@@ -323,9 +323,17 @@ public class ServiceREST {
 	@Consumes({ "application/json" })
 	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_SERVICE_DEF + "\")")
-	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef) {
+	public RangerServiceDef updateServiceDef(RangerServiceDef serviceDef,  @PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updateServiceDef(serviceDefName=" + serviceDef.getName() + ")");
+		}
+
+		// if serviceDef.id and param 'id' are specified, serviceDef.id should be same as the param 'id'
+		// if serviceDef.id is null, then set param 'id' into serviceDef Object
+		if (serviceDef.getId() == null) {
+			serviceDef.setId(id);
+		} else if(StringUtils.isBlank(serviceDef.getName()) && !serviceDef.getId().equals(id)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "serviceDef Id mismatch", true);
 		}
 
 		RangerServiceDef ret  = null;
@@ -1650,7 +1658,7 @@ public class ServiceREST {
 				    RangerPolicy existingPolicy = getPolicyMatchByName(policy, request);
 				    if (existingPolicy != null) {
 				       policy.setId(existingPolicy.getId());
-				       ret = updatePolicy(policy);
+				       ret = updatePolicy(policy, null);
 				    } else {
 				       ret = createPolicyUnconditionally(policy);
 				    }
@@ -1744,12 +1752,16 @@ public class ServiceREST {
 					}
 
 					if(mergeIfExists) {
+						if (!existingPolicy.getIsDenyAllElse() && policy.getIsDenyAllElse()) {
+							LOG.error("Attempt to change the isDenyAllElse flag from false to true! Not supported!!");
+							throw new Exception("Merging existing policy(isDenyAllElse=false) with another policy(isDenyAllElse=true) is not allowed!");
+						}
 						ServiceRESTUtil.processApplyPolicy(existingPolicy, policy);
 						policy = existingPolicy;
 					} else {
 						policy.setId(existingPolicy.getId());
 					}
-					ret = updatePolicy(policy);
+					ret = updatePolicy(policy, null);
 				}
 			} catch(WebApplicationException excp) {
 				throw excp;
@@ -1772,10 +1784,19 @@ public class ServiceREST {
 	@Path("/policies/{id}")
 	@Consumes({ "application/json" })
 	@Produces({ "application/json" })
-	public RangerPolicy updatePolicy(RangerPolicy policy) {
+	public RangerPolicy updatePolicy(RangerPolicy policy, @PathParam("id") Long id) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.updatePolicy(" + policy + ")");
 		}
+
+		// if policy.id and param 'id' are specified, policy.id should be same as the param 'id'
+		// if policy.id is null, then set param 'id' into policy Object
+		if (policy.getId() == null) {
+			policy.setId(id);
+		} else if(!policy.getId().equals(id)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "policyID mismatch", true);
+		}
+
 		RangerPolicy ret  = null;
 		RangerPerfTracer perf = null;
 
@@ -1825,7 +1846,7 @@ public class ServiceREST {
 			RangerPolicy policy = svcStore.getPolicy(id);
 
 			ensureAdminAccess(policy);
-                        bizUtil.blockAuditorRoleUser();
+			bizUtil.blockAuditorRoleUser();
 			svcStore.deletePolicy(policy);
 		} catch(WebApplicationException excp) {
 			throw excp;
@@ -1983,13 +2004,23 @@ public class ServiceREST {
             throw restErrorUtil.createRESTException("Required parameter [serviceName] is missing.", MessageEnums.INVALID_INPUT_DATA);
         }
 
+		RangerService rangerService = null;
+		try {
+			rangerService = svcStore.getServiceByName(serviceName);
+		} catch (Exception e) {
+			LOG.error( HttpServletResponse.SC_BAD_REQUEST + "No Service Found for ServiceName:" + serviceName );
+		}
+
+		if (rangerService == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "Invalid service name", true);
+		}
+
         // check for ADMIN access
         if (!bizUtil.isAdmin()) {
             boolean isServiceAdmin = false;
             String  loggedInUser   = bizUtil.getCurrentUserLoginId();
 
             try {
-                RangerService rangerService = svcStore.getServiceByName(serviceName);
                 isServiceAdmin = bizUtil.isUserServiceAdmin(rangerService, loggedInUser);
             } catch (Exception e) {
                 LOG.warn("Failed to find if user [" + loggedInUser + "] has service admin privileges on service [" + serviceName + "]", e);
@@ -2471,7 +2502,7 @@ public class ServiceREST {
 												createPolicy(policy, request);
 											} else {
 												ServiceRESTUtil.mergeExactMatchPolicyForResource(existingPolicy, policy);
-												updatePolicy(existingPolicy);
+												updatePolicy(existingPolicy, null);
 											}
 										} else {
 											createPolicy(policy, request);
@@ -2507,7 +2538,7 @@ public class ServiceREST {
 									createPolicy(policy, request);
 								} else {
 									ServiceRESTUtil.mergeExactMatchPolicyForResource(existingPolicy, policy);
-									updatePolicy(existingPolicy);
+									updatePolicy(existingPolicy, null);
 								}
 							} else {
 								createPolicy(policy, request);
@@ -4334,58 +4365,32 @@ public class ServiceREST {
 	}
 
 	/**
-	 * Returns {@link RangerPolicy} for non-empty serviceName and policyName, null otherwise.
+	 * Returns {@link RangerPolicy} for non-empty serviceName, policyName and zoneName null otherwise.
 	 * @param serviceName
 	 * @param policyName
+	 * @param zoneName
 	 * @return
 	 */
-    private RangerPolicy getPolicyByName(String serviceName, String policyName) {
 
+	public RangerPolicy getPolicyByName(String serviceName, String policyName, String zoneName) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ")");
+            LOG.debug("==> ServiceREST.getPolicyByName(" + serviceName + "," + policyName + "," + zoneName + ")");
         }
 
         RangerPolicy ret = null;
         if (StringUtils.isNotBlank(serviceName) && StringUtils.isNotBlank(policyName)) {
-            SearchFilter filter = new SearchFilter();
+            XXPolicy dbPolicy = daoManager.getXXPolicy().findPolicy(policyName, serviceName, zoneName);
 
-            filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-            filter.setParam(SearchFilter.POLICY_NAME, policyName);
-
-            List<RangerPolicy> policies = getPolicies(filter);
-
-            if (CollectionUtils.isNotEmpty(policies)) {
-                ret = policies.get(0);
+            if (dbPolicy != null) {
+                ret = policyService.getPopulatedViewObject(dbPolicy);
             }
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName + ") " + (ret != null ? ret : "ret is null"));
+            LOG.debug("<== ServiceREST.getPolicyByName(" + serviceName + "," + policyName  + "," + zoneName + ") " + (ret != null ? ret : "ret is null"));
         }
         return ret;
     }
-
-	private RangerPolicy getPolicyByNameAndZone(String serviceName, String policyName, String zoneName) {
-		RangerPolicy ret = null;
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
-		}
-
-		SearchFilter filter = new SearchFilter();
-		filter.setParam(SearchFilter.SERVICE_NAME, serviceName);
-		filter.setParam(SearchFilter.POLICY_NAME, policyName);
-		filter.setParam(SearchFilter.ZONE_NAME, zoneName);
-		List<RangerPolicy> policies = getPolicies(filter);
-
-		if (CollectionUtils.isNotEmpty(policies) && policies.size()==1) {
-			ret = policies.get(0);
-		}
-
-		if(LOG.isDebugEnabled()) {
-			LOG.debug("<== ServiceREST.getPolicyByNameAndZone(" + serviceName + "," + policyName + "," + zoneName + ")");
-		}
-		return ret;
-	}
 
 	private RangerPolicy createPolicyUnconditionally(RangerPolicy policy) throws Exception {
 		if(LOG.isDebugEnabled()) {
@@ -4448,11 +4453,7 @@ public class ServiceREST {
 			if (StringUtils.isNotBlank(zoneName)) {
 				policy.setZoneName(StringUtils.trim(zoneName));
 			}
-			if (StringUtils.isNotBlank(zoneName)) {
-				existingPolicy = getPolicyByNameAndZone(policy.getService(), policy.getName(), policy.getZoneName());
-			} else {
-				existingPolicy = getPolicyByName(policy.getService(), policy.getName());
-			}
+			existingPolicy = getPolicyByName(policy.getService(), policy.getName(), policy.getZoneName());
 		}
 
 		if(LOG.isDebugEnabled()) {
@@ -4538,7 +4539,7 @@ public class ServiceREST {
 		return deletedServiceName;
 	}
 
-	private boolean isServiceAdmin(String serviceName) {
+	boolean isServiceAdmin(String serviceName) {
 		boolean ret = bizUtil.isAdmin();
 
 		if (!ret && StringUtils.isNotEmpty(serviceName)) {

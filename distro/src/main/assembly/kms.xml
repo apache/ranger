@@ -90,6 +90,10 @@
                     <include>com.fasterxml.jackson.core:jackson-core</include>
                     <include>com.fasterxml.jackson.core:jackson-annotations</include>
                     <include>com.fasterxml.jackson.core:jackson-databind</include>
+                    <include>org.apache.kerby:kerb-core:jar:${kerby.version}</include>
+                    <include>org.apache.kerby:kerb-util:jar:${kerby.version}</include>
+                    <include>org.apache.kerby:kerb-crypto:jar:${kerby.version}</include>
+                    <include>org.apache.kerby:kerby-asn1:jar:${kerby.version}</include>
                     <include>com.microsoft.azure:azure:jar:${com.microsoft.azure.version}</include>
                     <include>com.microsoft.azure:azure-keyvault:jar:${com.microsoft.azure.azure-keyvault.version}</include>
                     <include>com.microsoft.azure:azure-mgmt-keyvault:jar:${com.microsoft.azure.azure-mgmt-keyvault.version}</include>
@@ -178,6 +182,8 @@
                     <include>com.tencentcloudapi:tencentcloud-sdk-java</include>
                     <include>com.squareup.okhttp:logging-interceptor</include>
                     <include>com.squareup.okhttp:okhttp</include>
+                    <!-- ranger common metrics module-->
+                            <include>org.apache.ranger:ranger-metrics</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>
@@ -229,6 +235,7 @@
                     <include>org.codehaus.jackson:jackson-xc</include>
                     <include>org.codehaus.woodstox:stax2-api</include>
                     <include>com.fasterxml.woodstox:woodstox-core</include>
+                    <include>org.apache.commons:commons-text:jar:${commons.text.version}</include>
                 </includes>
             </binaries>
         </moduleSet>

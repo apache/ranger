@@ -75,29 +75,6 @@ public class AtlasNotificationMapper {
         }
     }
 
-    public static ServiceTags processEntityNotification(EntityNotificationWrapper entityNotification) {
-
-        ServiceTags ret = null;
-
-        if (isNotificationHandled(entityNotification)) {
-            try {
-                RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(entityNotification);
-
-                if (entityNotification.getIsEntityDeleteOp()) {
-                    ret = buildServiceTagsForEntityDeleteNotification(entityWithTags);
-                } else {
-                    ret = buildServiceTags(entityWithTags, null);
-                }
-
-            } catch (Exception exception) {
-                LOG.error("createServiceTags() failed!! ", exception);
-            }
-        } else {
-            logUnhandledEntityNotification(entityNotification);
-        }
-        return ret;
-    }
-
     public static Map<String, ServiceTags> processAtlasEntities(List<RangerAtlasEntityWithTags> atlasEntities) {
         Map<String, ServiceTags> ret = null;
 
@@ -154,35 +131,6 @@ public class AtlasNotificationMapper {
                     LOG.debug("Notification : [" + entityNotification + "] will NOT be processed.");
                 }
             }
-        }
-
-        return ret;
-    }
-
-    @SuppressWarnings("unchecked")
-    static ServiceTags buildServiceTagsForEntityDeleteNotification(RangerAtlasEntityWithTags entityWithTags) {
-        final ServiceTags ret;
-
-        RangerAtlasEntity   entity = entityWithTags.getEntity();
-        String              guid   = entity.getGuid();
-
-        if (StringUtils.isNotBlank(guid)) {
-            ret                                   = new ServiceTags();
-            RangerServiceResource serviceResource = new RangerServiceResource();
-            serviceResource.setGuid(guid);
-            ret.getServiceResources().add(serviceResource);
-        } else {
-            ret = buildServiceTags(entityWithTags, null);
-            if (ret != null) {
-                // tag-definitions should NOT be deleted as part of service-resource delete
-                ret.setTagDefinitions(MapUtils.EMPTY_MAP);
-                // Ranger deletes tags associated with deleted service-resource
-                ret.setTags(MapUtils.EMPTY_MAP);
-            }
-        }
-
-        if (ret != null) {
-            ret.setOp(ServiceTags.OP_DELETE);
         }
 
         return ret;
@@ -351,9 +299,14 @@ public class AtlasNotificationMapper {
 
                     RangerTagDef tagDef = new RangerTagDef(tag.getName(), "Atlas");
                     if (MapUtils.isNotEmpty(tag.getAttributes())) {
-                        for (String attributeName : tag.getAttributes().keySet()) {
-                            tagDef.getAttributeDefs().add(new RangerTagAttributeDef(attributeName, entityWithTags.getTagAttributeType(tag.getName(), attributeName)));
+                        List<RangerTagAttributeDef> attributeDefs = tagDef.getAttributeDefs();
+                        if (attributeDefs == null) {
+                            attributeDefs = new ArrayList<>();
                         }
+                        for (String attributeName : tag.getAttributes().keySet()) {
+                            attributeDefs.add(new RangerTagAttributeDef(attributeName, entityWithTags.getTagAttributeType(tag.getName(), attributeName)));
+                        }
+                        tagDef.setAttributeDefs(attributeDefs);
                     }
                     ret.add(tagDef);
                 }

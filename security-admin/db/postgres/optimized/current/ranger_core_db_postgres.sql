@@ -1604,6 +1604,7 @@ is_enabled BOOLEAN DEFAULT '1' NOT NULL,
 service_resource_elements_text TEXT DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_rms_service_res_UK_guid UNIQUE (guid),
+CONSTRAINT x_rms_service_resource_UK_resource_signature UNIQUE (resource_signature),
 CONSTRAINT x_rms_service_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
 );
 commit;
@@ -1809,7 +1810,6 @@ CREATE INDEX x_ugsync_audit_info_uname ON x_ugsync_audit_info(user_name);
 CREATE INDEX x_data_hist_idx_objid_objclstype ON x_data_hist(obj_id,obj_class_type);
 
 CREATE INDEX x_rms_service_resource_IDX_service_id ON x_rms_service_resource(service_id);
-CREATE INDEX x_rms_service_resource_IDX_resource_signature ON x_rms_service_resource(resource_signature);
 CREATE INDEX x_rms_notification_IDX_notification_id ON x_rms_notification(notification_id);
 CREATE INDEX x_rms_notification_IDX_hms_name_notification_id ON x_rms_notification(hms_name, notification_id);
 CREATE INDEX x_rms_notification_IDX_hl_service_id ON x_rms_notification(hl_service_id);
@@ -1896,6 +1896,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

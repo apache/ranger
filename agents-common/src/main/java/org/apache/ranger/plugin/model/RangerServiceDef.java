@@ -47,6 +47,7 @@ public class RangerServiceDef extends RangerBaseModelObject implements java.io.S
 	private static final long serialVersionUID = 1L;
 
 	public static final String OPTION_ENABLE_DENY_AND_EXCEPTIONS_IN_POLICIES = "enableDenyAndExceptionsInPolicies";
+	public static final String OPTION_ENABLE_IMPLICIT_CONDITION_EXPRESSION   = "enableImplicitConditionExpression";
 
 	private String                         name;
 	private String                         displayName;

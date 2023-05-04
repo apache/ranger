@@ -98,7 +98,7 @@
         <commons.collections.version>3.2.2</commons.collections.version>
         <commons.compress.version>1.21</commons.compress.version>
         <commons.configuration1.version>1.10</commons.configuration1.version>
-        <commons.configuration.version>2.1.1</commons.configuration.version>
+        <commons.configuration.version>2.8.0</commons.configuration.version>
         <commons.dbcp.version>1.4</commons.dbcp.version>
         <commons.digester.version>2.1</commons.digester.version>
         <commons.io.version>2.11.0</commons.io.version>
@@ -106,13 +106,14 @@
         <commons.lang3.version>3.3.2</commons.lang3.version>
         <commons.logging.version>1.2</commons.logging.version>
         <commons.math.version>2.2</commons.math.version>
-        <commons.net.version>3.6</commons.net.version>
+        <commons.net.version>3.9.0</commons.net.version>
         <commons.pool.version>1.6</commons.pool.version>
         <commons.text.version>1.10.0</commons.text.version>
-        <curator.test.version>2.12.0</curator.test.version>
+        <curator.test.version>5.4.0</curator.test.version>
+        <curator.version>5.4.0</curator.version>
         <derby.version>10.11.1.1</derby.version>
         <dnsjava.version>2.1.7</dnsjava.version>
-        <eclipse.jpa.version>2.5.2</eclipse.jpa.version>
+        <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
         <enunciate.version>2.13.2</enunciate.version>
         <spotbugs.plugin.version>4.5.0.0</spotbugs.plugin.version>
@@ -122,7 +123,7 @@
         <gson.version>2.9.0</gson.version>
         <guice.version>4.0</guice.version>
         <hadoop.version>3.3.0</hadoop.version>
-        <ozone.version>1.0.0</ozone.version>
+        <ozone.version>1.3.0</ozone.version>
         <hamcrest.version>2.2</hamcrest.version>
         <hbase.version>2.4.6</hbase.version>
         <hive.version>3.1.2</hive.version>
@@ -142,6 +143,7 @@
         <javax.servlet.version>3.1.0</javax.servlet.version>
         <javax-inject.version>1</javax-inject.version>
         <javax.annotation-api>1.3.2</javax.annotation-api>
+        <javax.el.version>3.0.1-b12</javax.el.version>
         <jaxb.api.version>2.3.1</jaxb.api.version>
         <jericho.html.version>3.3</jericho.html.version>
         <jersey-bundle.version>1.19.3</jersey-bundle.version>
@@ -150,17 +152,17 @@
         <jersey-server.version>1.19.3</jersey-server.version>
         <jersey-spring.version>1.19.3</jersey-spring.version>
         <jaxb-impl.version>2.3.3</jaxb-impl.version>
-        <jettison.version>1.5.2</jettison.version>
-        <jetty-client.version>9.4.44.v20210927</jetty-client.version>
+        <jettison.version>1.5.4</jettison.version>
+        <jetty-client.version>9.4.49.v20220914</jetty-client.version>
         <jline.version>0.9.94</jline.version>
         <jopt-simple.version>3.2</jopt-simple.version>
         <json4s.version>3.2.11</json4s.version>
-        <jsonsmart.version>2.4.7</jsonsmart.version>
+        <jsonsmart.version>2.4.10</jsonsmart.version>
         <jsr250.version>1.0</jsr250.version>
         <jsr305.version>1.3.9</jsr305.version>
         <junit.version>4.13.1</junit.version>
         <kafka.version>2.8.1</kafka.version>
-        <kerby.version>1.0.0</kerby.version>
+        <kerby.version>2.0.3</kerby.version>
         <knox.gateway.version>1.4.0</knox.gateway.version>
         <kylin.version>3.1.3</kylin.version>
         <libpam4j.version>1.10</libpam4j.version>
@@ -198,22 +200,22 @@
         <solr.version>8.11.2</solr.version>
         <spring-ldap-core.version>2.3.8.RELEASE</spring-ldap-core.version>
         <springframework.security.version>5.7.5</springframework.security.version>
-        <springframework.test.version>5.3.23</springframework.test.version>
-        <springframework.version>5.3.23</springframework.version>
+        <springframework.test.version>5.3.26</springframework.test.version>
+        <springframework.version>5.3.26</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
-        <tomcat.embed.version>8.5.83</tomcat.embed.version>
+        <tomcat.embed.version>8.5.86</tomcat.embed.version>
         <testng.version>6.9.4</testng.version>
         <velocity.version>2.3</velocity.version>
-        <zookeeper.version>3.4.14</zookeeper.version>
-        <codehaus.woodstox.stax2api.version>3.1.4</codehaus.woodstox.stax2api.version>
-        <fasterxml.woodstox.version>5.0.3</fasterxml.woodstox.version>
+        <zookeeper.version>3.5.5</zookeeper.version>
+        <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
+        <fasterxml.woodstox.version>5.4.0</fasterxml.woodstox.version>
         <fasterxml.jackson.version>2.14.0</fasterxml.jackson.version>
         <fasterxml.jackson.databind.version>2.14.0</fasterxml.jackson.databind.version>
-        <kstruct.gethostname4j.version>0.0.2</kstruct.gethostname4j.version>
-        <jna.version>5.2.0</jna.version>
-        <jna-platform.version>5.2.0</jna-platform.version>
+        <kstruct.gethostname4j.version>1.0.0</kstruct.gethostname4j.version>
+        <jna.version>5.7.0</jna.version>
+        <jna-platform.version>5.7.0</jna-platform.version>
         <!-- presto plugin deps -->
         <presto.airlift.version>0.192</presto.airlift.version>
         <presto.bval-jsr.version>2.0.0</presto.bval-jsr.version>
@@ -225,7 +227,7 @@
         <!-- trino plugin deps -->
         <trino.airlift.version>0.192</trino.airlift.version>
         <trino.bval-jsr.version>2.0.0</trino.bval-jsr.version>
-        <trino.guice.version>4.2.2</trino.guice.version>
+        <trino.guice.version>5.1.0</trino.guice.version>
         <trino.guava.version>26.0-jre</trino.guava.version>
         <trino.validation-api.version>2.0.1.Final</trino.validation-api.version>
         <trino.re2j.version>1.1</trino.re2j.version>
@@ -274,6 +276,7 @@
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
+		<module>ranger-common-ha</module>
                 <module>kms</module>
                 <module>hbase-agent</module>
                 <module>hdfs-agent</module>
@@ -343,6 +346,7 @@
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
+		<module>ranger-common-ha</module>
                 <module>kms</module>
                 <module>hbase-agent</module>
                 <module>hdfs-agent</module>
@@ -365,6 +369,7 @@
                 <module>ugsync/ldapconfigchecktool/ldapconfigcheck</module>
                 <module>unixauthclient</module>
                 <module>unixauthservice</module>
+                <module>unixauthnative</module>
                 <module>ranger-util</module>
                 <module>plugin-kms</module>
                 <module>tagsync</module>
@@ -393,6 +398,7 @@
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-authn</module>
+                <module>ranger-metrics</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -670,6 +676,7 @@
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
+		<module>ranger-common-ha</module>
                 <module>kms</module>
                 <module>hbase-agent</module>
                 <module>hdfs-agent</module>
@@ -718,6 +725,7 @@
                 <module>plugin-elasticsearch</module>
                 <module>ranger-elasticsearch-plugin-shim</module>
                 <module>ranger-authn</module>
+                <module>ranger-metrics</module>
                 <!--
                    'distro' should be the last module. If a module gets inserted after
                    ranger-elasticsearch-plugin-shim, make sure to update dependency in distro/pom.xml
@@ -756,6 +764,7 @@
                 <module>agents-installer</module>
                 <module>credentialbuilder</module>
                 <module>embeddedwebserver</module>
+		<module>ranger-common-ha</module>
                 <module>kms</module>
                 <module>hbase-agent</module>
                 <module>hdfs-agent</module>
@@ -1142,6 +1151,7 @@
                         <exclude>**/src/main/webapp/fonts/**</exclude>
                         <exclude>**/src/main/webapp/libs/**</exclude>
                         <exclude>.git/**</exclude>
+                        <exclude>.github/pull_request_template.md</exclude>
                         <exclude>.pc/**</exclude>
                         <exclude>debian/**</exclude>
                         <exclude>.gitignore/**</exclude>
@@ -1184,6 +1194,7 @@
                         <exclude>**/__init__.py</exclude>
                         <exclude>**/default_primary_config.json</exclude>
                         <exclude>**/default_secondary_config.json</exclude>
+                        <exclude>**/babel.config.json</exclude>
                     </excludes>
                 </configuration>
             </plugin>

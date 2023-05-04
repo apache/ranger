@@ -44,6 +44,7 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
+import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.RangerPolicyResourceEvaluator;
@@ -69,6 +70,7 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -519,8 +521,9 @@ public class TestPolicyEngine {
 			servicePolicies.setTagPolicies(tagPolicies);
 		}
 
-		boolean useForwardedIPAddress = pluginContext.getConfig().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
-		String trustedProxyAddressString = pluginContext.getConfig().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
+		RangerPluginConfig config = pluginContext.getConfig();
+		boolean useForwardedIPAddress = config.getBoolean(config.getPropertyPrefix() + ".use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = config.get(config.getPropertyPrefix() + ".trusted.proxy.ipaddresses");
 		String[] trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, ';');
 		if (trustedProxyAddresses != null) {
 			for (int i = 0; i < trustedProxyAddresses.length; i++) {
@@ -577,18 +580,18 @@ public class TestPolicyEngine {
 
 		roles.setRangerRoles(rolesSet);
 
-        RangerPolicyEngineOptions policyEngineOptions = pluginContext.getConfig().getPolicyEngineOptions();
+        RangerPolicyEngineOptions policyEngineOptions = config.getPolicyEngineOptions();
 
         policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
 
-        setPluginConfig(pluginContext.getConfig(), ".super.users", testCase.superUsers);
-        setPluginConfig(pluginContext.getConfig(), ".super.groups", testCase.superGroups);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.users", testCase.auditExcludedUsers);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.groups", testCase.auditExcludedGroups);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.roles", testCase.auditExcludedRoles);
+        setPluginConfig(config, ".super.users", testCase.superUsers);
+        setPluginConfig(config, ".super.groups", testCase.superGroups);
+        setPluginConfig(config, ".audit.exclude.users", testCase.auditExcludedUsers);
+        setPluginConfig(config, ".audit.exclude.groups", testCase.auditExcludedGroups);
+        setPluginConfig(config, ".audit.exclude.roles", testCase.auditExcludedRoles);
 
         // so that setSuperUsersAndGroups(), setAuditExcludedUsersGroupsRoles() will be called on the pluginConfig
-        new RangerBasePlugin(pluginContext.getConfig());
+        new RangerBasePlugin(config);
 
         RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 
@@ -923,6 +926,13 @@ public class TestPolicyEngine {
 			if (ret.getAccessTime() == null) {
 				ret.setAccessTime(new Date());
 			}
+			Map<String, Object> reqContext = ret.getContext();
+			Object accessTypes = reqContext.get("ACCESSTYPES");
+			if (accessTypes != null) {
+				Collection<String> accessTypesCollection = (Collection<String>) accessTypes;
+				Set<String> requestedAccesses = new HashSet<>(accessTypesCollection);
+				ret.getContext().put("ACCESSTYPES", requestedAccesses);
+			}
 
 			return ret;
 		}
@@ -958,7 +968,7 @@ public class TestPolicyEngine {
 			ret = Objects.equals(me.getResourceZoneTrie().keySet(), other.getResourceZoneTrie().keySet());
 
 			if (ret) {
-				for (Map.Entry<String, RangerResourceTrie> entry : me.getResourceZoneTrie().entrySet()) {
+				for (Map.Entry<String, RangerResourceTrie<RangerZoneResourceMatcher>> entry : me.getResourceZoneTrie().entrySet()) {
 					ret = compareSubtree(entry.getValue(), other.getResourceZoneTrie().get(entry.getKey()));
 
 					if (!ret) {
@@ -994,13 +1004,13 @@ public class TestPolicyEngine {
 	public static boolean compareTrie(final int policyType, RangerPolicyRepository me, RangerPolicyRepository other) {
 		boolean ret;
 
-		Map<String, RangerResourceTrie> myTrie    = me.getTrie(policyType);
-		Map<String, RangerResourceTrie> otherTrie = other.getTrie(policyType);
+		Map<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> myTrie    = me.getTrie(policyType);
+		Map<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> otherTrie = other.getTrie(policyType);
 
 		ret = myTrie.size() == otherTrie.size();
 
 		if (ret) {
-			for (Map.Entry<String, RangerResourceTrie> entry : myTrie.entrySet()) {
+			for (Map.Entry<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> entry : myTrie.entrySet()) {
 				RangerResourceTrie myResourceTrie    = entry.getValue();
 				RangerResourceTrie otherResourceTrie = otherTrie.get(entry.getKey());
 

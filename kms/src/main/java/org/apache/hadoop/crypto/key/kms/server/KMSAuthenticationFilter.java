@@ -30,6 +30,8 @@ import org.apache.hadoop.security.token.delegation.web.PseudoDelegationTokenAuth
 import com.google.common.annotations.VisibleForTesting;
 
 import org.apache.hadoop.http.HtmlQuoting;
+import org.apache.ranger.kms.metrics.KMSMetrics;
+
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
@@ -137,6 +139,7 @@ public class KMSAuthenticationFilter
     	if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
     		filterChain.doFilter(request, response);
 		} else {
+            KMSWebApp.getKmsMetricsCollector().incrementCounter(KMSMetrics.KMSMetric.TOTAL_CALL_COUNT);
 			super.doFilter(request, kmsResponse, filterChain);
 
 			if (kmsResponse.statusCode != HttpServletResponse.SC_OK

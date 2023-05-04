@@ -24,6 +24,7 @@ import java.io.Serializable;
 public class RangerAdminOpContext implements Serializable {
 	private static final long serialVersionUID = 1L;
 	private boolean bulkModeContext = false;
+	private Boolean createPrincipalsIfAbsent = null;
 
 	public boolean isBulkModeContext() {
 		return bulkModeContext;
@@ -33,4 +34,11 @@ public class RangerAdminOpContext implements Serializable {
 		this.bulkModeContext = bulkMode;
 	}
 
+	public Boolean getCreatePrincipalsIfAbsent() {
+		return createPrincipalsIfAbsent;
+	}
+
+	public void setCreatePrincipalsIfAbsent(Boolean createPrincipalsIfAbsent) {
+		this.createPrincipalsIfAbsent = createPrincipalsIfAbsent;
+	}
 }

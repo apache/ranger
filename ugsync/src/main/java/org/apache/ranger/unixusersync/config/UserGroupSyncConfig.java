@@ -37,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.XMLUtils;
+import org.apache.ranger.unixusersync.ha.UserSyncHAInitializerImpl;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
@@ -254,6 +255,9 @@ public class UserGroupSyncConfig  {
 	private static final String SYNC_MAPPING_GROUPNAME_HANDLER = "ranger.usersync.mapping.groupname.handler";
 	private static final String DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
 
+	private static final String SYNC_MAPPING_SEPARATOR = "ranger.usersync.mapping.regex.separator";
+
+	private static final String DEFAULT_MAPPING_SEPARATOR = "/";
     private static final String ROLE_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.role.assignment.list.delimiter";
 
     private static final String USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.users.groups.assignment.list.delimiter";
@@ -283,8 +287,11 @@ public class UserGroupSyncConfig  {
 	private static final long    DEFAULT_UGSYNC_DELETES_FREQUENCY = 10L; // After every 10 sync cycles
 	public static final String UGSYNC_NAME_VALIDATION_ENABLED = "ranger.usersync.name.validation.enabled";
 	private static final boolean DEFAULT_UGSYNC_NAME_VALIDATION_ENABLED = false;
+	private static final long UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA = 5000L;
+	public static final String UGSYNC_SERVER_HA_ENABLED_PARAM = "ranger-ugsync.server.ha.enabled";
 
     private Properties prop = new Properties();
+	private Configuration userGroupConfig = null;
 
 	private static volatile UserGroupSyncConfig me = null;
 
@@ -309,6 +316,7 @@ public class UserGroupSyncConfig  {
 		XMLUtils.loadConfig(DEFAULT_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CONFIG_FILE, prop);
+		userGroupConfig = getConfig();
 	}
 
 	public Configuration getConfig() {
@@ -319,6 +327,13 @@ public class UserGroupSyncConfig  {
 		}
 
 		return ret;
+	}
+
+	public Configuration getUserGroupConfig(){
+		return userGroupConfig;
+	}
+	synchronized public static boolean isUgsyncServiceActive() {
+		return UserSyncHAInitializerImpl.getInstance(UserGroupSyncConfig.getInstance().getUserGroupConfig()).isActive();
 	}
 
 	public String getUserSyncFileSource(){
@@ -488,6 +503,16 @@ public class UserGroupSyncConfig  {
 		return ret;
 	}
 
+	public long getInitSleepTimeInMillisBetweenCycle() throws Throwable{
+		long initSleepValue = 0;
+		Configuration config = getUserGroupConfig();
+		if(config.getBoolean(UGSYNC_SERVER_HA_ENABLED_PARAM, false)){
+			initSleepValue = UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA;
+		}else{
+			initSleepValue = getSleepTimeInMillisBetweenCycle();
+		}
+		return initSleepValue;
+	}
 	public long getSleepTimeInMillisBetweenCycle() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM);
 		String className = getUserGroupSource().getClass().getName();
@@ -1330,6 +1355,20 @@ public class UserGroupSyncConfig  {
 			isUserSyncNameValidationEnabled  = Boolean.valueOf(val);
 		}
 		return isUserSyncNameValidationEnabled;
+	}
+
+	public String getRegexSeparator() {
+		String ret = DEFAULT_MAPPING_SEPARATOR;
+		String val = prop.getProperty(SYNC_MAPPING_SEPARATOR);
+		if(StringUtils.isNotEmpty(val)) {
+			if (val.length() == 1) {
+				ret = val;
+			} else {
+				LOG.warn("More than one character found in RegEx Separator, using default RegEx Separator /");
+			}
+		}
+		LOG.info(String.format("Using %s as the RegEx Separator", ret));
+		return ret;
 	}
 
 

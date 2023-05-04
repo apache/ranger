@@ -20,7 +20,6 @@
 package org.apache.ranger.authorization.hive.authorizer;
 
 import java.io.IOException;
-import java.net.InetAddress;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -65,7 +64,6 @@ import org.apache.hadoop.hive.ql.security.authorization.plugin.HivePrivilegeObje
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveRoleGrant;
 import org.apache.hadoop.hive.ql.security.authorization.plugin.HiveResourceACLs;
 import org.apache.hadoop.hive.ql.session.SessionState;
-import org.apache.hadoop.ipc.Server;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -1722,7 +1720,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 						accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.CREATE;
 					}
 				break;
-
+				case ALTERVIEW_AS:
+					if (hiveObj.getType() == HivePrivilegeObjectType.TABLE_OR_VIEW) {
+						accessType = isInput ? HiveAccessType.SELECT : HiveAccessType.ALTER;
+					} else if (hiveObj.getType() == HivePrivilegeObjectType.DATABASE) {
+						accessType = HiveAccessType.SELECT;
+					}
+				break;
 				case ALTERDATABASE:
 				case ALTERDATABASE_LOCATION:
 				case ALTERDATABASE_OWNER:
@@ -1763,7 +1767,6 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 				case ALTERTABLE_UPDATETABLESTATS:
 				case ALTERTABLE_UPDATECOLUMNS:
 				case ALTERTBLPART_SKEWED_LOCATION:
-				case ALTERVIEW_AS:
 				case ALTERVIEW_PROPERTIES:
 				case ALTERVIEW_RENAME:
 				case ALTER_MATERIALIZED_VIEW_REWRITE:
@@ -2942,10 +2945,13 @@ public class RangerHiveAuthorizer extends RangerHiveAuthorizerBase {
 
 
 	private static String getRemoteIp() {
+		SessionState ss = SessionState.get();
 		String ret = null;
-		InetAddress ip = Server.getRemoteIp();
-		if (ip != null) {
-			ret = ip.getHostAddress();
+		if(ss != null) {
+			ret = ss.getUserIpAddress();
+		}
+		if(LOG.isDebugEnabled()){
+			LOG.debug("RangerHiveAuthorizer.getRemoteIp()="+ret);
 		}
 		return ret;
 	}

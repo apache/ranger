@@ -71,6 +71,7 @@ public class RangerServiceDefService extends RangerServiceDefServiceBase<XXServi
 			}
 			ret.setOptions(serviceDefOptions);
 		}
+
 		return ret;
 	}
 

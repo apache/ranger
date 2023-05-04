@@ -17,6 +17,8 @@
 
 package org.apache.ranger.biz;
 
+import static org.mockito.ArgumentMatchers.anyString;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -153,6 +155,10 @@ public class TestServiceDBStore {
 
 	@Mock
 	GUIDUtil guidUtil;
+
+	@Mock
+	TagDBStore tagStore;
+
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -1402,8 +1408,11 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXRMSServiceResource()).thenReturn(xRMSServiceResourceDao);
 
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-        serviceDBStore.deleteService(Id);
+		Mockito.when(tagStore.resetTagCache(rangerService.getName())).thenReturn(true);
+
+		serviceDBStore.deleteService(Id);
 		Mockito.verify(svcService).delete(rangerService);
+		Mockito.verify(tagStore).resetTagCache(rangerService.getName());
 	}
 
 	@Test
@@ -2323,7 +2332,7 @@ public void test42getMetricByTypeaudits() throws Exception {
     Date date = new Date();
     date.setYear(2018);
 
-    Mockito.when(restErrorUtil.parseDate(Mockito.anyString(), Mockito.anyString(), Mockito.any(), Mockito.any(), Mockito.anyString(), Mockito.anyString())).thenReturn(date);
+    Mockito.when(restErrorUtil.parseDate(anyString(), anyString(), Mockito.any(), Mockito.any(), anyString(), anyString())).thenReturn(date);
     RangerServiceDefList svcDefList = new RangerServiceDefList();
     svcDefList.setTotalCount(10l);
     Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
@@ -2566,5 +2575,71 @@ public void test47getMetricByTypeDenyconditions() throws Exception {
 		index = xConfMapList.size();
 		xConfMap = xConfMapList.remove(index - 1);
 		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+	}
+
+	@Test
+	public void test51GetPolicyByGUID() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, null)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), null, null);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, null);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test52GetPolicyByGUIDAndServiceName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService rangerService = rangerService();
+		String serviceName = rangerService.getName();
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, null)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), serviceName, null);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, null);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test53GetPolicyByGUIDAndServiceNameAndZoneName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService rangerService = rangerService();
+		String serviceName = rangerService.getName();
+		String zoneName = "zone-1";
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, zoneName)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), serviceName, zoneName);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, zoneName);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test53GetPolicyByGUIDAndZoneName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		String zoneName = "zone-1";
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, zoneName)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), null, zoneName);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, zoneName);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
 	}
 }

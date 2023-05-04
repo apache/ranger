@@ -98,6 +98,10 @@
                     <artifactId>commons-text</artifactId>
                 </exclusion>
                 <exclusion>
+                    <groupId>org.apache.commons</groupId>
+                    <artifactId>commons-configuration2</artifactId>
+                </exclusion>
+                <exclusion>
                     <groupId>log4j</groupId>
                     <artifactId>*</artifactId>
                 </exclusion>
@@ -137,6 +141,16 @@
             <artifactId>log4j-over-slf4j</artifactId>
             <version>${slf4j.version}</version>
 	    <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.codehaus.woodstox</groupId>
+            <artifactId>stax2-api</artifactId>
+            <version>${codehaus.woodstox.stax2api.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.woodstox</groupId>
+            <artifactId>woodstox-core</artifactId>
+            <version>${fasterxml.woodstox.version}</version>
         </dependency>
     </dependencies>
 </project>
