@@ -18,7 +18,6 @@ KIND, either express or implied.  See the License for the
 specific language governing permissions and limitations
 under the License.
 -->
-
 <project xmlns="http://maven.apache.org/DECORATION/2.0.0"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:schemaLocation="http://maven.apache.org/DECORATION/2.0.0 http://maven.apache.org/xsd/decoration-2.0.0.xsd">
@@ -105,8 +104,10 @@ under the License.
 
     <footer><![CDATA[
         <p class="version-date">
-            <span class="projectVersion">Version: 3.0.0-SNAPSHOT. </span>
-            <span class="publishDate">Last Published: 2022-04-23. </span>
+            $dateFormat.applyPattern("MMM-dd-yyyy")
+            #set ( $pubDt = $dateFormat.format( ${currentDate} ) )
+            <span class="projectVersion">Version: ${version}.</span>
+            <span class="publishDate">Last Published: ${pubDt}.</span>
         </p>]]>
     </footer>
 
