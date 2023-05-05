@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
@@ -56,6 +57,7 @@ public class VXPolicyList extends VList {
 	/**
 	 * @return the vXPolicies
 	 */
+	@JsonProperty("vXPolicies")
 	public List<VXPolicy> getVXPolicies() {
 		return vXPolicies;
 	}
@@ -64,6 +66,7 @@ public class VXPolicyList extends VList {
 	 * @param vXPolicies
 	 *            the vXPolicies to set
 	 */
+	@JsonProperty("vXPolicies")
 	public void setVXPolicies(List<VXPolicy> vXPolicies) {
 		this.vXPolicies = vXPolicies;
 	}

@@ -29,6 +29,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
@@ -43,10 +44,12 @@ public class VXAuditRecordList extends VList {
 	private static final long serialVersionUID = 1L;
 	List<VXAuditRecord> vXAuditRecords = new ArrayList<VXAuditRecord>();
 
+	@JsonProperty("vXAuditRecords")
 	public List<VXAuditRecord> getvAudits() {
 		return vXAuditRecords;
 	}
 
+	@JsonProperty("vXAuditRecords")
 	public void setvAudits(List<VXAuditRecord> vXAuditRecords) {
 		this.vXAuditRecords = vXAuditRecords;
 	}

@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
@@ -56,6 +57,7 @@ public class VXPortalUserList extends VList {
     /**
      * @return the vXPortalUsers
      */
+    @JsonProperty("vXPortalUsers")
     public List<VXPortalUser> getVXPortalUsers() {
 	return vXPortalUsers;
     }
@@ -64,6 +66,7 @@ public class VXPortalUserList extends VList {
      * @param vXPortalUsers
      *            the vXPortalUsers to set
      */
+    @JsonProperty("vXPortalUsers")
     public void setVXPortalUsers(List<VXPortalUser> vXPortalUsers) {
 	this.vXPortalUsers = vXPortalUsers;
     }

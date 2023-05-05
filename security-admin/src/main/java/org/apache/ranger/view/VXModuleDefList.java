@@ -27,6 +27,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
@@ -52,6 +53,7 @@ public class VXModuleDefList extends VList {
 	/**
 	 * @return the vXModuleDef
 	 */
+	@JsonProperty("vXModuleDef")
 	public List<VXModuleDef> getvXModuleDef() {
 		return vXModuleDef;
 	}
@@ -59,6 +61,7 @@ public class VXModuleDefList extends VList {
 	/**
 	 * @param vXModuleDef the vXModuleDef to set
 	 */
+	@JsonProperty("vXModuleDef")
 	public void setvXModuleDef(List<VXModuleDef> vXModuleDef) {
 		this.vXModuleDef = vXModuleDef;
 	}

@@ -34,6 +34,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
+import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
@@ -56,6 +57,7 @@ public class VXPermObjList extends VList {
 	/**
 	 * @return the vXPermObjs
 	 */
+	@JsonProperty("vXPermObjs")
 	public List<VXPermObj> getVXPermObjs() {
 		return vXPermObjs;
 	}
@@ -64,6 +66,7 @@ public class VXPermObjList extends VList {
 	 * @param vXPermObjs
 	 *            the vXPermObjs to set
 	 */
+	@JsonProperty("vXPermObjs")
 	public void setVXPermObjs(List<VXPermObj> vXPermObjs) {
 		this.vXPermObjs = vXPermObjs;
 	}
