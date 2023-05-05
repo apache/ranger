@@ -2431,7 +2431,7 @@ public void test47getMetricByTypeDenyconditions() throws Exception {
 
 		Mockito.when(serviceDBStore.xUserMgr.getGroupsForUser("testUser2")).thenReturn(new HashSet<String>() {{ add("testServiceAdminGroup2"); }});
 
-		result = serviceDBStore.isServiceAdminUser(rService.getName(), "testUser1");
+		result = serviceDBStore.isServiceAdminUser(rService.getName(), "testUser2");
 
 		Assert.assertTrue(result);
 		Mockito.verify(daoManager).getXXServiceConfigMap();
