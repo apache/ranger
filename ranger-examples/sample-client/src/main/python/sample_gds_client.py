@@ -30,20 +30,20 @@ ranger = RangerClient(ranger_url, ranger_auth)
 gds    = RangerGdsClient(ranger)
 
 
-dataset_1 = RangerDataset({ 'name': 'dataset-1', 'description': 'the first dataset!', 'owners': [ { 'type': PrincipalType.USER, 'name': 'John.Doe' } ], 'acl': {}, 'termsOfUse': None })
-dataset_2 = RangerDataset({ 'name': 'dataset-2', 'description': 'the second dataset!', 'owners': [ { 'type': PrincipalType.GROUP, 'name': 'sales' } ], 'acl': {}, 'termsOfUse': None })
+dataset_1 = RangerDataset({ 'name': 'dataset-1', 'description': 'the first dataset!', 'admins': [ { 'type': PrincipalType.USER, 'name': 'John.Doe' } ], 'acl': {}, 'termsOfUse': None })
+dataset_2 = RangerDataset({ 'name': 'dataset-2', 'description': 'the second dataset!', 'admins': [ { 'type': PrincipalType.GROUP, 'name': 'sales' } ], 'acl': {}, 'termsOfUse': None })
 
-project_1 = RangerProject({ 'name': 'project-1', 'description': 'the first project!', 'owners': [ { 'type': PrincipalType.USER, 'name': 'Diane.Scott' } ], 'acl': {}, 'termsOfUse': None })
-project_2 = RangerProject({ 'name': 'project-2', 'description': 'the second project!', 'owners': [ { 'type': PrincipalType.GROUP, 'name': 'marketing' } ], 'acl': {}, 'termsOfUse': None })
+project_1 = RangerProject({ 'name': 'project-1', 'description': 'the first project!', 'admins': [ { 'type': PrincipalType.USER, 'name': 'Diane.Scott' } ], 'acl': {}, 'termsOfUse': None })
+project_2 = RangerProject({ 'name': 'project-2', 'description': 'the second project!', 'admins': [ { 'type': PrincipalType.GROUP, 'name': 'marketing' } ], 'acl': {}, 'termsOfUse': None })
 
-hive_share_1 = RangerDataShare({ 'name': 'datashare-1', 'description': 'the first datashare!', 'owners': [ { 'type': PrincipalType.USER, 'name': 'Sandy.Williams' } ], 'termsOfUse': None })
+hive_share_1 = RangerDataShare({ 'name': 'datashare-1', 'description': 'the first datashare!', 'admins': [ { 'type': PrincipalType.USER, 'name': 'Sandy.Williams' } ], 'termsOfUse': None })
 hive_share_1.service            = 'dev_hive'
 hive_share_1.zone               = None
 hive_share_1.conditionExpr      = "HAS_TAG('SCAN_COMPLETE')"
 hive_share_1.defaultAccessTypes = [ '_READ' ]
 hive_share_1.defaultMasks       = { 'HAS_TAG("PII")': { 'dataMaskType': 'MASK' } }
 
-hdfs_share_1 = RangerDataShare({ 'name': 'datashare-2', 'description': 'the second datashare!', 'owners': [ { 'type': PrincipalType.GROUP, 'name': 'finance' } ], 'termsOfUse': None })
+hdfs_share_1 = RangerDataShare({ 'name': 'datashare-2', 'description': 'the second datashare!', 'admins': [ { 'type': PrincipalType.GROUP, 'name': 'finance' } ], 'termsOfUse': None })
 hdfs_share_1.service            = 'dev_hdfs'
 hdfs_share_1.zone               = None
 hdfs_share_1.conditionExpr      = "HAS_TAG('SCAN_COMPLETE')"

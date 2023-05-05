@@ -158,7 +158,7 @@ public class RangerGdsProjectService extends RangerGdsBaseModelService<XXGdsProj
         xObj.setIsEnabled(vObj.getIsEnabled());
         xObj.setName(vObj.getName());
         xObj.setDescription(vObj.getDescription());
-        xObj.setOwners(JsonUtils.listToJson(vObj.getOwners()));
+        xObj.setAdmins(JsonUtils.listToJson(vObj.getAdmins()));
         xObj.setAcl(JsonUtils.objectToJson(vObj.getAcl()));
         xObj.setTermsOfUse(vObj.getTermsOfUse());
         xObj.setOptions(JsonUtils.mapToJson(vObj.getOptions()));
@@ -174,7 +174,7 @@ public class RangerGdsProjectService extends RangerGdsBaseModelService<XXGdsProj
         vObj.setVersion(xObj.getVersion());
         vObj.setName(xObj.getName());
         vObj.setDescription(xObj.getDescription());
-        vObj.setOwners(JsonUtils.jsonToRangerPrincipalList(xObj.getOwners()));
+        vObj.setAdmins(JsonUtils.jsonToRangerPrincipalList(xObj.getAdmins()));
         vObj.setAcl(JsonUtils.jsonToObject(xObj.getAcl(), RangerGds.RangerGdsACL.class));
         vObj.setTermsOfUse(xObj.getTermsOfUse());
         vObj.setOptions(JsonUtils.jsonToMapStringString(xObj.getOptions()));

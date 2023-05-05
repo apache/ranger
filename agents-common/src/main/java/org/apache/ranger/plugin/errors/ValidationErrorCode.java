@@ -137,7 +137,7 @@ public enum ValidationErrorCode {
     GDS_VALIDATION_ERR_NON_EXISTING_ROLE(4103, "Role [{0}] does not exist"),
     GDS_VALIDATION_ERR_NON_EXISTING_SERVICE(4104, "Service [{0}] does not exist"),
     GDS_VALIDATION_ERR_NON_EXISTING_ZONE(4105, "Zone [{0}] does not exist"),
-    GDS_VALIDATION_ERR_NOT_OWNER(4106, "User [{0}] is not an owner"),
+    GDS_VALIDATION_ERR_NOT_ADMIN(4106, "User [{0}] is not an admin for {1} [{2}]"),
     GDS_VALIDATION_ERR_SERVICE_NAME_MISSING(4107, "Service name not provided"),
     GDS_VALIDATION_ERR_DATASET_NAME_CONFLICT(4108, "Dataset with name [{0}] already exists. ID=[{1}]"),
     GDS_VALIDATION_ERR_DATASET_NAME_NOT_FOUND(4109, "Dataset with name [{0}] does not exist"),

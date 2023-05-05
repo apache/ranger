@@ -89,7 +89,7 @@ public class RangerGds {
         private static final long serialVersionUID = 1L;
 
         private String                name;
-        private List<RangerPrincipal> owners;
+        private List<RangerPrincipal> admins;
         private RangerGdsACL          acl;
         private String                termsOfUse;
 
@@ -99,9 +99,9 @@ public class RangerGds {
 
         public void setName(String name) { this.name = name; }
 
-        public List<RangerPrincipal> getOwners() { return owners; }
+        public List<RangerPrincipal> getAdmins() { return admins; }
 
-        public void setOwners(List<RangerPrincipal> owners) { this.owners = owners; }
+        public void setAdmins(List<RangerPrincipal> admins) { this.admins = admins; }
 
         public RangerGdsACL getAcl() { return acl; }
 
@@ -118,7 +118,7 @@ public class RangerGds {
             super.toString(sb);
 
             sb.append("name={").append(name).append("} ")
-              .append("owners={").append(owners).append("} ")
+              .append("admin={").append(admins).append("} ")
               .append("acl={").append(acl).append("} ")
               .append("termsOfUse={").append(termsOfUse).append("} ")
               .append("}");
@@ -136,7 +136,7 @@ public class RangerGds {
         private static final long serialVersionUID = 1L;
 
         private String                name;
-        private List<RangerPrincipal> owners;
+        private List<RangerPrincipal> admins;
         private RangerGdsACL          acl;
         private String                termsOfUse;
 
@@ -146,9 +146,9 @@ public class RangerGds {
 
         public void setName(String name) { this.name = name; }
 
-        public List<RangerPrincipal> getOwners() { return owners; }
+        public List<RangerPrincipal> getAdmins() { return admins; }
 
-        public void setOwners(List<RangerPrincipal> owners) { this.owners = owners; }
+        public void setAdmins(List<RangerPrincipal> admins) { this.admins = admins; }
 
         public RangerGdsACL getAcl() { return acl; }
 
@@ -165,7 +165,7 @@ public class RangerGds {
             super.toString(sb);
 
             sb.append("name={").append(name).append("} ")
-              .append("owners={").append(owners).append("} ")
+              .append("admins={").append(admins).append("} ")
               .append("acl={").append(acl).append("} ")
               .append("termsOfUse={").append(termsOfUse).append("} ")
               .append("}");
@@ -183,7 +183,7 @@ public class RangerGds {
         private static final long serialVersionUID = 1L;
 
         private String                                    name;
-        private List<RangerPrincipal>                     owners;
+        private List<RangerPrincipal>                     admins;
         private String                                    service;
         private String                                    zone;
         private String                                    conditionExpr;
@@ -197,9 +197,9 @@ public class RangerGds {
 
         public void setName(String name) { this.name = name; }
 
-        public List<RangerPrincipal> getOwners() { return owners; }
+        public List<RangerPrincipal> getAdmins() { return admins; }
 
-        public void setOwners(List<RangerPrincipal> owners) { this.owners = owners; }
+        public void setAdmins(List<RangerPrincipal> admins) { this.admins = admins; }
 
         public String getService() { return service; }
 
@@ -240,7 +240,7 @@ public class RangerGds {
             super.toString(sb);
 
             sb.append("name={").append(name).append("} ")
-              .append("owners={").append(owners).append("} ")
+              .append("admins={").append(admins).append("} ")
               .append("service={").append(service).append("} ")
               .append("zone={").append(zone).append("} ")
               .append("conditionExpr={").append(conditionExpr).append("} ")

@@ -1677,7 +1677,7 @@ CREATE TABLE x_gds_dataset (
   , is_enabled      BOOLEAN      NOT NULL DEFAULT '1'
   , name            VARCHAR(512) NOT NULL
   , description     TEXT         NULL     DEFAULT NULL
-  , owners          TEXT         NOT NULL
+  , admins          TEXT         NOT NULL
   , acl             TEXT         NULL     DEFAULT NULL
   , terms_of_use    TEXT         NULL     DEFAULT NULL
   , options         TEXT         NULL     DEFAULT NULL
@@ -1702,7 +1702,7 @@ CREATE TABLE x_gds_project (
   , is_enabled      BOOLEAN      NOT NULL DEFAULT '1'
   , name            VARCHAR(512) NOT NULL
   , description     TEXT         NULL     DEFAULT NULL
-  , owners          TEXT         NOT NULL
+  , admins          TEXT         NOT NULL
   , acl             TEXT         NULL     DEFAULT NULL
   , terms_of_use    TEXT         NULL     DEFAULT NULL
   , options         TEXT         NULL     DEFAULT NULL
@@ -1727,7 +1727,7 @@ CREATE TABLE x_gds_data_share(
   , is_enabled           BOOLEAN      NOT NULL DEFAULT '1'
   , name                 VARCHAR(512) NOT NULL
   , description          TEXT         NULL     DEFAULT NULL
-  , owners               TEXT         NOT NULL
+  , admins               TEXT         NOT NULL
   , service_id           BIGINT       NOT NULL
   , zone_id              BIGINT       NOT NULL
   , condition_expr       TEXT         NULL

@@ -55,8 +55,8 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
     @Column(name = "description")
     protected String description;
 
-    @Column(name = "owners")
-    protected String owners;
+    @Column(name = "admins")
+    protected String admins;
 
     @Column(name = "acl")
     protected String acl;
@@ -97,9 +97,9 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
 
     public void setDescription(String description) { this.description = description; }
 
-    public String getOwners() { return owners; }
+    public String getAdmins() { return admins; }
 
-    public void setOwners(String owners) { this.owners = owners; }
+    public void setAdmins(String admins) { this.admins = admins; }
 
     public String getAcl() { return acl; }
 
@@ -122,7 +122,7 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, guid, version, isEnabled, name, description, owners, acl, termsOfUse, options, additionalInfo);
+        return Objects.hash(id, guid, version, isEnabled, name, description, admins, acl, termsOfUse, options, additionalInfo);
     }
 
     @Override
@@ -143,7 +143,7 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
                Objects.equals(isEnabled, other.isEnabled) &&
                Objects.equals(name, other.name) &&
                Objects.equals(description, other.description) &&
-               Objects.equals(owners, other.owners) &&
+               Objects.equals(admins, other.admins) &&
                Objects.equals(acl, other.acl) &&
                Objects.equals(termsOfUse, other.termsOfUse) &&
                Objects.equals(options, other.options) &&
@@ -164,7 +164,7 @@ public class XXGdsDataset extends XXDBBase implements Serializable {
           .append("isEnabled={").append(isEnabled).append("} ")
           .append("name={").append(name).append("} ")
           .append("description={").append(description).append("} ")
-          .append("owners={").append(owners).append("} ")
+          .append("admins={").append(admins).append("} ")
           .append("condition={").append(acl).append("} ")
           .append("acl={").append(acl).append("} ")
           .append("termsOfUse={").append(termsOfUse).append("} ")
