@@ -23,6 +23,10 @@ COPY ./dist/ranger-${RANGER_VERSION}-usersync.tar.gz /home/ranger/dist/
 
 COPY ./scripts/ranger-usersync.sh                 ${RANGER_SCRIPTS}/
 COPY ./scripts/ranger-usersync-install.properties ${RANGER_SCRIPTS}/
+COPY ./scripts/ugsync-file-source.csv             ${RANGER_SCRIPTS}/
+
+#Install xmlstarlet
+RUN apt-get -y install xmlstarlet
 
 RUN tar xvfz /home/ranger/dist/ranger-${RANGER_VERSION}-usersync.tar.gz --directory=${RANGER_HOME} && \
     ln -s ${RANGER_HOME}/ranger-${RANGER_VERSION}-usersync ${RANGER_HOME}/usersync && \

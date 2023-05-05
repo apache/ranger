@@ -343,6 +343,10 @@ public class RangerServiceTagsCache {
 				updateTime = new Date();
 
 				if (serviceTagsFromDb != null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("loading serviceTags from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
+					}
+
 					if (dedupStrings) {
 						serviceTagsFromDb.dedupStrings();
 					}

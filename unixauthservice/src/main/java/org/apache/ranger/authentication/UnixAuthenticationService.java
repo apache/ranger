@@ -43,6 +43,7 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
+import org.apache.ranger.unixusersync.ha.UserSyncHAInitializerImpl;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
@@ -86,6 +87,7 @@ public class UnixAuthenticationService {
 	private String trustStoreType;
 	private List<String>  adminUserList = new ArrayList<String>();
 	private String adminRoleNames;
+	private UserSyncHAInitializerImpl userSyncHAInitializerImpl = null;
 	
 	private int  portNum;
 	
@@ -105,6 +107,7 @@ public class UnixAuthenticationService {
 			}
 		}
 		UnixAuthenticationService service = new UnixAuthenticationService();
+		service.userSyncHAInitializerImpl = UserSyncHAInitializerImpl.getInstance(UserGroupSyncConfig.getInstance().getUserGroupConfig());
 		service.run();
 	}
 
@@ -130,6 +133,10 @@ public class UnixAuthenticationService {
 		}
 		finally {
 			LOG.info("Service: " + serviceName + " - STOPPED.");
+			if(this.userSyncHAInitializerImpl != null) {
+				LOG.info("Stopping curator leader latch service as main thread is closing");
+				this.userSyncHAInitializerImpl.stop();
+			}
 		}
 	}
 

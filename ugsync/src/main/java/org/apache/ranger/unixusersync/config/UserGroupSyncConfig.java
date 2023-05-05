@@ -37,6 +37,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.XMLUtils;
+import org.apache.ranger.unixusersync.ha.UserSyncHAInitializerImpl;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
@@ -286,8 +287,11 @@ public class UserGroupSyncConfig  {
 	private static final long    DEFAULT_UGSYNC_DELETES_FREQUENCY = 10L; // After every 10 sync cycles
 	public static final String UGSYNC_NAME_VALIDATION_ENABLED = "ranger.usersync.name.validation.enabled";
 	private static final boolean DEFAULT_UGSYNC_NAME_VALIDATION_ENABLED = false;
+	private static final long UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA = 5000L;
+	public static final String UGSYNC_SERVER_HA_ENABLED_PARAM = "ranger-ugsync.server.ha.enabled";
 
     private Properties prop = new Properties();
+	private Configuration userGroupConfig = null;
 
 	private static volatile UserGroupSyncConfig me = null;
 
@@ -312,6 +316,7 @@ public class UserGroupSyncConfig  {
 		XMLUtils.loadConfig(DEFAULT_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CONFIG_FILE, prop);
+		userGroupConfig = getConfig();
 	}
 
 	public Configuration getConfig() {
@@ -322,6 +327,13 @@ public class UserGroupSyncConfig  {
 		}
 
 		return ret;
+	}
+
+	public Configuration getUserGroupConfig(){
+		return userGroupConfig;
+	}
+	synchronized public static boolean isUgsyncServiceActive() {
+		return UserSyncHAInitializerImpl.getInstance(UserGroupSyncConfig.getInstance().getUserGroupConfig()).isActive();
 	}
 
 	public String getUserSyncFileSource(){
@@ -491,6 +503,16 @@ public class UserGroupSyncConfig  {
 		return ret;
 	}
 
+	public long getInitSleepTimeInMillisBetweenCycle() throws Throwable{
+		long initSleepValue = 0;
+		Configuration config = getUserGroupConfig();
+		if(config.getBoolean(UGSYNC_SERVER_HA_ENABLED_PARAM, false)){
+			initSleepValue = UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA;
+		}else{
+			initSleepValue = getSleepTimeInMillisBetweenCycle();
+		}
+		return initSleepValue;
+	}
 	public long getSleepTimeInMillisBetweenCycle() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM);
 		String className = getUserGroupSource().getClass().getName();
