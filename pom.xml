@@ -1197,6 +1197,10 @@
                         <exclude>**/default_primary_config.json</exclude>
                         <exclude>**/default_secondary_config.json</exclude>
                         <exclude>**/babel.config.json</exclude>
+                        <exclude>**/docs/src/site/resources/css/custom.css</exclude>
+			<exclude>**/docs/src/site/resources/ranger-logo.svg</exclude>
+			<exclude>**/docs/src/site/resources/override-banner.js</exclude>
+			<exclude>**/docs/src/site/resources/smooth-scroll.js</exclude>
                     </excludes>
                 </configuration>
             </plugin>
