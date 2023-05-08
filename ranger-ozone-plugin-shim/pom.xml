@@ -78,6 +78,11 @@
             <version>${httpcomponents.httpcore.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>${org.bouncycastle.bcpkix-jdk15on}</version>
+        </dependency>
+        <dependency>
             <groupId>org.apache.ozone</groupId>
             <artifactId>ozone-common</artifactId>
 	        <version>${ozone.version}</version>
@@ -93,6 +98,10 @@
             <artifactId>hdds-common</artifactId>
 	    <version>${ozone.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>*</artifactId>
