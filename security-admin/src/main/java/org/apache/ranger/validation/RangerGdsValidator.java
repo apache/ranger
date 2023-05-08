@@ -26,7 +26,7 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
-import org.apache.ranger.plugin.model.RangerGds.RangerGdsACL;
+import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
@@ -542,7 +542,7 @@ public class RangerGdsValidator {
         }
     }
 
-    private void validateAcl(RangerGdsACL acl, String fieldName, ValidationResult result) {
+    private void validateAcl(RangerGdsObjectACL acl, String fieldName, ValidationResult result) {
         if (acl != null) {
             if (acl.getUsers() != null) {
                 for (String userName : acl.getUsers().keySet()) {

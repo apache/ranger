@@ -90,7 +90,7 @@ public class RangerGds {
 
         private String                name;
         private List<RangerPrincipal> admins;
-        private RangerGdsACL          acl;
+        private RangerGdsObjectACL    acl;
         private String                termsOfUse;
 
         public RangerDataset() { }
@@ -103,9 +103,9 @@ public class RangerGds {
 
         public void setAdmins(List<RangerPrincipal> admins) { this.admins = admins; }
 
-        public RangerGdsACL getAcl() { return acl; }
+        public RangerGdsObjectACL getAcl() { return acl; }
 
-        public void setAcl(RangerGdsACL acl) { this.acl = acl; }
+        public void setAcl(RangerGdsObjectACL acl) { this.acl = acl; }
 
         public String getTermsOfUse() { return termsOfUse; }
 
@@ -137,7 +137,7 @@ public class RangerGds {
 
         private String                name;
         private List<RangerPrincipal> admins;
-        private RangerGdsACL          acl;
+        private RangerGdsObjectACL    acl;
         private String                termsOfUse;
 
         public RangerProject() { }
@@ -150,9 +150,9 @@ public class RangerGds {
 
         public void setAdmins(List<RangerPrincipal> admins) { this.admins = admins; }
 
-        public RangerGdsACL getAcl() { return acl; }
+        public RangerGdsObjectACL getAcl() { return acl; }
 
-        public void setAcl(RangerGdsACL acl) { this.acl = acl; }
+        public void setAcl(RangerGdsObjectACL acl) { this.acl = acl; }
 
         public String getTermsOfUse() { return termsOfUse; }
 
@@ -447,7 +447,7 @@ public class RangerGds {
     @JsonIgnoreProperties(ignoreUnknown = true)
     @XmlRootElement
     @XmlAccessorType(XmlAccessType.FIELD)
-    public static class RangerGdsACL implements java.io.Serializable {
+    public static class RangerGdsObjectACL implements java.io.Serializable {
         private static final long serialVersionUID = 1L;
 
         private Map<String, GdsPermission> users;
@@ -455,7 +455,7 @@ public class RangerGds {
         private Map<String, GdsPermission> roles;
 
 
-        public RangerGdsACL() { }
+        public RangerGdsObjectACL() { }
 
         public Map<String, GdsPermission> getUsers() { return users; }
 
@@ -475,7 +475,7 @@ public class RangerGds {
         }
 
         public StringBuilder toString(StringBuilder sb) {
-            sb.append("RangerGdsACL={");
+            sb.append("RangerGdsObjectACL={");
 
             sb.append("users={").append(users).append("} ")
               .append("groups={").append(groups).append("} ")

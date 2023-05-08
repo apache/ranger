@@ -88,7 +88,7 @@ class RangerDataset(RangerGdsBaseModelObject):
         super(RangerDataset, self).type_coerce_attrs()
 
         self.admins = type_coerce_list(self.admins, RangerPrincipal)
-        self.acl    = type_coerce_dict(self.acl, RangerGdsACL)
+        self.acl    = type_coerce_dict(self.acl, RangerGdsObjectACL)
 
 
 class RangerProject(RangerGdsBaseModelObject):
@@ -107,7 +107,7 @@ class RangerProject(RangerGdsBaseModelObject):
         super(RangerProject, self).type_coerce_attrs()
 
         self.admins = type_coerce_list(self.admins, RangerPrincipal)
-        self.acl    = type_coerce_dict(self.acl, RangerGdsACL)
+        self.acl    = type_coerce_dict(self.acl, RangerGdsObjectACL)
 
 
 class RangerDataShare(RangerGdsBaseModelObject):
@@ -199,7 +199,7 @@ class RangerDatasetInProject(RangerGdsBaseModelObject):
         self.validitySchedule = type_coerce(self.validitySchedule, RangerValiditySchedule)
 
 
-class RangerGdsACL(RangerBase):
+class RangerGdsObjectACL(RangerBase):
     def __init__(self, attrs=None):
         if attrs is None:
             attrs = {}
@@ -211,7 +211,7 @@ class RangerGdsACL(RangerBase):
         self.roles  = attrs.get('roles')
 
     def type_coerce_attrs(self):
-        super(RangerGdsACL, self).type_coerce_attrs()
+        super(RangerGdsObjectACL, self).type_coerce_attrs()
 
         self.users  = type_coerce_dict(self.users, GdsPermission)
         self.groups = type_coerce_dict(self.groups, GdsPermission)
