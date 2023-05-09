@@ -33,6 +33,7 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.util.Time;
 import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.*;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
@@ -2197,6 +2198,33 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
+	public void bulkDeleteGroups(){
+		// get all external groups
+		long timeNow = Time.now();
+		List<Long> groupsIds = daoManager.getXXGroup().findByGroupSource(1);
+		logger.info("External groups fetched in memory!");
+		logger.info(String.format("Time taken to fetch users in memory = %d", (Time.now() - timeNow)));
+		logger.info("No of external groups is " + groupsIds.size());
+		long curTime = Time.now();
+		for(Long userId: groupsIds){
+			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+			try {
+				txTemplate.execute(new TransactionCallback<Object>() {
+					@Override
+					public Object doInTransaction(TransactionStatus status) {
+						deleteXGroup(userId, true);
+						return null;
+					}
+				});
+			} catch (Throwable ex) {
+				logger.error("bulkDeleteGroups(): Failed to delete DB for group id: " + userId + " ", ex);
+				throw new RuntimeException(ex);
+			}
+		}
+		logger.info(String.format("Force Deletion of %d groups took %d milliseconds", groupsIds.size(), (Time.now() - curTime)));
+	}
+
 	private void blockIfZoneGroup(Long grpId) {
 		List<XXSecurityZoneRefGroup> zoneRefGrpList = daoManager.getXXSecurityZoneRefGroup().findByGroupId(grpId);
 		if (CollectionUtils.isNotEmpty(zoneRefGrpList)) {
@@ -2398,6 +2426,32 @@ public class XUserMgr extends XUserMgrBase {
 				xaBizUtil.createTrxLog(trxLogList);
 			}
 		}
+	}
+
+	public void bulkDeleteUsers(){
+		// get all external users
+		long timeNow = Time.now();
+		List<Long> userIds = daoManager.getXXUser().findByUserSource(1);
+		logger.info(String.format("%d External users fetched in memory!", userIds.size()));
+		logger.info(String.format("Time taken to fetch users in memory = %d", (Time.now() - timeNow)));
+		long curTime = Time.now();
+		for(Long userId: userIds){
+			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+			try {
+				txTemplate.execute(new TransactionCallback<Object>() {
+					@Override
+					public Object doInTransaction(TransactionStatus status) {
+						deleteXUser(userId, true);
+						return null;
+					}
+				});
+			} catch (Throwable ex) {
+				logger.error("bulkDeleteUsers(): Failed to delete DB for user id: " + userId + " ", ex);
+				throw new RuntimeException(ex);
+			}
+		}
+		logger.info(String.format("Force Deletion of %d users took %d milliseconds", userIds.size(), (Time.now() - curTime)));
 	}
 
 	private void blockIfZoneUser(Long id) {

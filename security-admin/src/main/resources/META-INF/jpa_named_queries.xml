@@ -161,6 +161,20 @@
 		</query>
 	</named-query>
 
+	<named-query name="XXUser.findByUserSource">
+		<query>
+			SELECT user.id FROM XXUser user, XXPortalUser portalUser
+			WHERE user.name = portalUser.loginId and portalUser.userSource = :userSource
+		</query>
+	</named-query>
+
+	<named-query name="XXGroup.findByGroupSource">
+		<query>
+			SELECT group.id FROM XXGroup group
+			WHERE group.groupSource = :groupSource
+		</query>
+	</named-query>
+
 	<named-query name="XXUser.getAllUserIdNames">
 		<query>SELECT portalUser.id, user.id, user.name FROM XXUser user, XXPortalUser portalUser WHERE user.name=portalUser.loginId
 		</query>

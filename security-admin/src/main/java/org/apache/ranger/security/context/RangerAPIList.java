@@ -209,4 +209,6 @@ public class RangerAPIList {
 	public static final String SET_USER_ROLES_BY_NAME="XUserREST.setUserRolesByName";
 	public static final String GET_USER_ROLES_BY_ID="XUserREST.getUserRolesByID";
 	public static final String GET_USER_ROLES_BY_NAME="XUserREST.getUserRolesByName";
+	public static final String DELETE_X_USERS = "XUserREST.deleteXUsers";
+	public static final String DELETE_X_GROUPS = "XUserREST.deleteXGroups";
 }

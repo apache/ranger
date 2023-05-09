@@ -17,7 +17,7 @@
  * under the License.
  */
 
- package org.apache.ranger.db;
+package org.apache.ranger.db;
 
 
 import java.util.ArrayList;
@@ -29,6 +29,7 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroup;
 import org.springframework.stereotype.Service;
 
+import javax.persistence.NoResultException;
 @Service
 public class XXGroupDao extends BaseDao<XXGroup> {
 
@@ -79,6 +80,20 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 				}
 			}
 		} catch (Exception ex) {
+		}
+		return groups;
+	}
+
+	public List<Long> findByGroupSource(int groupSource) {
+		List<Long> groups = new ArrayList<>();
+		try {
+			List<Long> rows = (List<Long>) getEntityManager().createNamedQuery("XXGroup.findByGroupSource")
+					.setParameter("groupSource", groupSource)
+					.getResultList();
+			if (rows != null) {
+				groups.addAll(rows);
+			}
+		} catch (NoResultException ignored) {
 		}
 		return groups;
 	}

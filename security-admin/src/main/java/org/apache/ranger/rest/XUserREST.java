@@ -39,6 +39,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -164,6 +165,10 @@ public class XUserREST {
 	ServiceDBStore svcStore;
 	
 	static final Logger logger = LoggerFactory.getLogger(XUserMgr.class);
+
+	static volatile boolean usersDeletionInProgress = false;
+
+	static volatile boolean groupsDeletionInProgress = false;
 
 	// Handle XGroup
 	@GET
@@ -861,6 +866,49 @@ public class XUserREST {
 		}
 		VXUser vxUser = xUserService.getXUserByUserName(userName);
 		xUserMgr.deleteXUser(vxUser.getId(), forceDelete);
+	}
+
+
+	/**
+	 * Proceed with caution: Force deletes users in bulk from the ranger db,
+	 * essentially serves as a cleanup Op for external users.
+	 * <tt>Delete</tt> happens one at a time with immediate commit on the transaction.
+	 */
+	@DELETE
+	@Path("/delete/external/users")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Produces({ "application/json" })
+	public Response deleteXUsers() {
+		if (!usersDeletionInProgress){
+			synchronized (XUserREST.class) {
+				usersDeletionInProgress = true;
+				xUserMgr.bulkDeleteUsers();
+				usersDeletionInProgress = false;
+			}
+			return Response.ok("External users deleted successfully").build();
+		}
+		return Response.ok("Users Deletion in progress, check ranger admin logs!").build();
+	}
+
+	/**
+	 * Proceed with caution: Force deletes groups in bulk from the ranger db,
+	 * essentially serves as a cleanup Op for external groups.
+	 * <tt>Delete</tt> happens one at a time with immediate commit on the transaction.
+	 */
+	@DELETE
+	@Path("/delete/external/groups")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Produces({ "application/json" })
+	public Response deleteXGroups() {
+		if (!groupsDeletionInProgress) {
+			synchronized (XUserREST.class) {
+				groupsDeletionInProgress = true;
+				xUserMgr.bulkDeleteGroups();
+				groupsDeletionInProgress = false;
+			}
+			return Response.ok("External groups deleted successfully").build();
+		}
+		return Response.ok("Groups Deletion in progress, check ranger admin logs!").build();
 	}
 
 	@DELETE
