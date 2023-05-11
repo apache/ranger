@@ -29,7 +29,6 @@ import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroup;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.NoResultException;
 @Service
 public class XXGroupDao extends BaseDao<XXGroup> {
 
