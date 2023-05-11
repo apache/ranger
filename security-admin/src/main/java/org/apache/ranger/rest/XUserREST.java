@@ -166,10 +166,6 @@ public class XUserREST {
 	
 	static final Logger logger = LoggerFactory.getLogger(XUserMgr.class);
 
-	static volatile boolean usersDeletionInProgress = false;
-
-	static volatile boolean groupsDeletionInProgress = false;
-
 	// Handle XGroup
 	@GET
 	@Path("/groups/{id}")
@@ -870,45 +866,57 @@ public class XUserREST {
 
 
 	/**
-	 * Proceed with caution: Force deletes users in bulk from the ranger db,
-	 * essentially serves as a cleanup Op for external users.
+	 * Proceed with <tt>caution</tt>: Force deletes users from the ranger db,
 	 * <tt>Delete</tt> happens one at a time with immediate commit on the transaction.
 	 */
 	@DELETE
 	@Path("/delete/external/users")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json" })
-	public Response deleteXUsers() {
-		if (!usersDeletionInProgress){
-			synchronized (XUserREST.class) {
-				usersDeletionInProgress = true;
-				xUserMgr.bulkDeleteUsers();
-				usersDeletionInProgress = false;
-			}
-			return Response.ok("External users deleted successfully").build();
-		}
-		return Response.ok("Users Deletion in progress, check ranger admin logs!").build();
+	public Response forceDeleteUsers(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchUtil.extractString(
+				request, searchCriteria, "name", "User name",null);
+		searchUtil.extractString(
+				request, searchCriteria, "emailAddress", "Email Address", null);
+		searchUtil.extractInt(
+				request, searchCriteria, "userSource", "User Source");
+		searchUtil.extractInt(
+				request, searchCriteria, "isVisible", "User Visibility");
+		searchUtil.extractInt(
+				request, searchCriteria, "status", "User Status");
+		searchUtil.extractString(
+				request, searchCriteria, "syncSource", "Sync Source", null);
+		searchUtil.extractRoleString(
+				request, searchCriteria, "userRole", "Role", null);
+
+		VXUserList userList = xUserMgr.searchXUsers(searchCriteria);
+		xUserMgr.forceDeleteUsers(userList.getList());
+		return Response.ok(userList.getListSize() + " users deleted successfully").build();
 	}
 
 	/**
-	 * Proceed with caution: Force deletes groups in bulk from the ranger db,
-	 * essentially serves as a cleanup Op for external groups.
+	 * Proceed with <tt>caution</tt>: Force deletes groups from the ranger db,
 	 * <tt>Delete</tt> happens one at a time with immediate commit on the transaction.
 	 */
 	@DELETE
 	@Path("/delete/external/groups")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json" })
-	public Response deleteXGroups() {
-		if (!groupsDeletionInProgress) {
-			synchronized (XUserREST.class) {
-				groupsDeletionInProgress = true;
-				xUserMgr.bulkDeleteGroups();
-				groupsDeletionInProgress = false;
-			}
-			return Response.ok("External groups deleted successfully").build();
-		}
-		return Response.ok("Groups Deletion in progress, check ranger admin logs!").build();
+	public Response forceDeleteGroups(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchUtil.extractString(
+				request, searchCriteria, "name", "Group Name",null);
+		searchUtil.extractInt(
+				request, searchCriteria, "groupSource", "Group Source");
+		searchUtil.extractInt(
+				request, searchCriteria, "isVisible", "Group Visibility");
+		searchUtil.extractString(
+				request, searchCriteria, "syncSource", "Sync Source", null);
+
+		VXGroupList groupList = xUserMgr.searchXGroups(searchCriteria);
+		xUserMgr.forceDeleteGroups(groupList.getList());
+		return Response.ok(groupList.getListSize() + " groups deleted successfully").build();
 	}
 
 	@DELETE

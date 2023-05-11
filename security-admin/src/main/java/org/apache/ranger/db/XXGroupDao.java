@@ -83,18 +83,4 @@ public class XXGroupDao extends BaseDao<XXGroup> {
 		}
 		return groups;
 	}
-
-	public List<Long> findByGroupSource(int groupSource) {
-		List<Long> groups = new ArrayList<>();
-		try {
-			List<Long> rows = (List<Long>) getEntityManager().createNamedQuery("XXGroup.findByGroupSource")
-					.setParameter("groupSource", groupSource)
-					.getResultList();
-			if (rows != null) {
-				groups.addAll(rows);
-			}
-		} catch (NoResultException ignored) {
-		}
-		return groups;
-	}
 }

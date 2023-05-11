@@ -2198,31 +2198,29 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	public void bulkDeleteGroups(){
-		// get all external groups
-		long timeNow = Time.now();
-		List<Long> groupsIds = daoManager.getXXGroup().findByGroupSource(1);
-		logger.info("External groups fetched in memory!");
-		logger.info(String.format("Time taken to fetch users in memory = %d", (Time.now() - timeNow)));
-		logger.info("No of external groups is " + groupsIds.size());
-		long curTime = Time.now();
-		for(Long userId: groupsIds){
+	public void forceDeleteGroups(List<VXGroup> groups){
+		long startTime = Time.now();
+		for(VXGroup group: groups){
+			Long groupId = group.getId();
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 			try {
 				txTemplate.execute(new TransactionCallback<Object>() {
 					@Override
 					public Object doInTransaction(TransactionStatus status) {
-						deleteXGroup(userId, true);
+						deleteXGroup(groupId, true);
 						return null;
 					}
 				});
 			} catch (Throwable ex) {
-				logger.error("bulkDeleteGroups(): Failed to delete DB for group id: " + userId + " ", ex);
+				logger.error("forceDeleteGroups(): Failed to delete group id: " + groupId + " ", ex);
 				throw new RuntimeException(ex);
 			}
 		}
-		logger.info(String.format("Force Deletion of %d groups took %d milliseconds", groupsIds.size(), (Time.now() - curTime)));
+		if (groups.size() > 0) {
+			logger.info(String.format("Force Deletion of %d groups took %d milliseconds",
+					groups.size(), (Time.now() - startTime)));
+		}
 	}
 
 	private void blockIfZoneGroup(Long grpId) {
@@ -2428,14 +2426,10 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	public void bulkDeleteUsers(){
-		// get all external users
-		long timeNow = Time.now();
-		List<Long> userIds = daoManager.getXXUser().findByUserSource(1);
-		logger.info(String.format("%d External users fetched in memory!", userIds.size()));
-		logger.info(String.format("Time taken to fetch users in memory = %d", (Time.now() - timeNow)));
-		long curTime = Time.now();
-		for(Long userId: userIds){
+	public void forceDeleteUsers(List<VXUser> users){
+		long startTime = Time.now();
+		for(VXUser user: users){
+			Long userId = user.getId();
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 			try {
@@ -2447,11 +2441,14 @@ public class XUserMgr extends XUserMgrBase {
 					}
 				});
 			} catch (Throwable ex) {
-				logger.error("bulkDeleteUsers(): Failed to delete DB for user id: " + userId + " ", ex);
+				logger.error("forceDeleteUsers(): Failed to delete user id: " + userId + " ", ex);
 				throw new RuntimeException(ex);
 			}
 		}
-		logger.info(String.format("Force Deletion of %d users took %d milliseconds", userIds.size(), (Time.now() - curTime)));
+		if (users.size() > 0) {
+			logger.info(String.format("Force Deletion of %d users took %d milliseconds",
+					users.size(), (Time.now() - startTime)));
+		}
 	}
 
 	private void blockIfZoneUser(Long id) {

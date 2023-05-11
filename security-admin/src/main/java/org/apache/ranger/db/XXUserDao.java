@@ -122,21 +122,4 @@ public class XXUserDao extends BaseDao<XXUser> {
 		}
 		return users;
 	}
-
-	public List<Long> findByUserSource(int userSource) {
-		List<Long> users = new ArrayList<>();
-		try {
-			List<Long> rows = (List<Long>) getEntityManager().createNamedQuery("XXUser.findByUserSource")
-					.setParameter("userSource", userSource)
-					.getResultList();
-			if (rows != null) {
-				users.addAll(rows);
-			}
-		} catch (NoResultException e) {
-			if (logger.isDebugEnabled()) {
-				logger.debug(e.getMessage());
-			}
-		}
-		return users;
-	}
 }
