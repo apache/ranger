@@ -289,6 +289,8 @@ public class UserGroupSyncConfig  {
 	private static final boolean DEFAULT_UGSYNC_NAME_VALIDATION_ENABLED = false;
 	private static final long UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA = 5000L;
 	public static final String UGSYNC_SERVER_HA_ENABLED_PARAM = "ranger-ugsync.server.ha.enabled";
+	public static final String UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED = "ranger.usersync.syncsource.validation.enabled";
+	private static final boolean DEFAULT_UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED = true;
 
     private Properties prop = new Properties();
 	private Configuration userGroupConfig = null;
@@ -1385,5 +1387,14 @@ public class UserGroupSyncConfig  {
 		}
 
 		return ret;
+	}
+
+	public boolean isSyncSourceValidationEnabled() {
+		boolean isSyncSourceValidationEnabled = DEFAULT_UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED;
+		String val = prop.getProperty(UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED);
+		if(StringUtils.isNotEmpty(val)) {
+			isSyncSourceValidationEnabled = Boolean.parseBoolean(val);
+		}
+		return isSyncSourceValidationEnabled;
 	}
 }
