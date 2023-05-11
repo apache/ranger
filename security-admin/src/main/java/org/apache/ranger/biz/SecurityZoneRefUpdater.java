@@ -125,6 +125,8 @@ public class SecurityZoneRefUpdater {
 
 			daoMgr.getXXSecurityZoneRefService().create(xZoneService);
 
+			Set<String> resourceDefNames = new HashSet<>();
+
 			for(Map<String, List<String>> resourceMap:service.getValue().getResources()){//add all resourcedefs in pre defined set
 				for(Map.Entry<String, List<String>> resource : resourceMap.entrySet()) {
 					String resourceName = resource.getKey();
@@ -132,16 +134,20 @@ public class SecurityZoneRefUpdater {
 						continue;
 					}
 
-					XXResourceDef xResourceDef = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resourceName, xServiceDef.getId());
-
-					XXSecurityZoneRefResource xZoneResource = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefResource());
-
-					xZoneResource.setZoneId(zoneId);
-					xZoneResource.setResourceDefId(xResourceDef.getId());
-					xZoneResource.setResourceName(resourceName);
-
-					daoMgr.getXXSecurityZoneRefResource().create(xZoneResource);
+					resourceDefNames.add(resourceName);
 				}
+			}
+
+			for (String resourceName : resourceDefNames) {
+				XXResourceDef xResourceDef = daoMgr.getXXResourceDef().findByNameAndServiceDefId(resourceName, xServiceDef.getId());
+
+				XXSecurityZoneRefResource xZoneResource = rangerAuditFields.populateAuditFieldsForCreate(new XXSecurityZoneRefResource());
+
+				xZoneResource.setZoneId(zoneId);
+				xZoneResource.setResourceDefId(xResourceDef.getId());
+				xZoneResource.setResourceName(resourceName);
+
+				daoMgr.getXXSecurityZoneRefResource().create(xZoneResource);
 			}
 		}
 
