@@ -174,3 +174,113 @@ footer.well {
 .main-body {
     padding-top: 100px;
 }
+
+/* Css for tablet and mobile phone view */
+#banner  > .span12 {
+    width:100%;
+}
+
+@media (min-width: 768px) and (max-width: 979px) {
+    .container{
+        width: 100%;
+    }
+    .main-body {
+        padding-top: 0px !important; 
+    }
+}
+
+@media (max-width: 979px){
+    .navbar-fixed-top {
+        position: relative;
+    }
+    .header-section {
+        top: 0;
+        padding: 10px 20px;
+        overflow: hidden;
+    }
+    .body-content{
+        padding: 10px 20px;
+    }
+    .subfooter,
+    footer.well {
+        padding: 10px 20px;
+    }
+
+    #bannerLeft > h1 {
+        margin:0
+    }
+    .header-section:after{
+        overflow: hidden;
+    }
+    .row {
+        overflow: hidden;
+    }
+    .navbar-fixed-top {
+        margin-bottom: 0 !important;
+    }
+    .navbar-fixed-top ~ .container {
+        width:auto;
+    }
+
+}
+
+@media (max-width: 768px) {
+    .row-fluid .span6 {
+        width: 70%;
+    }
+    .navbar .nav-collapse .nav>li>a {
+        color: #17425a;
+    }
+    .navbar .nav li.dropdown.active>.dropdown-toggle{
+        color: #ffffff;
+    }
+    .dropdown.open .dropdown-menu{
+        background-color: #ffffff;
+    }
+}
+
+@media (max-width: 767px){
+    .row-fluid .span6 {
+        width: 90%;
+    }
+    .navbar-fixed-top{
+        position: fixed;
+    }
+    .navbar-fixed-top .brand {
+        margin-left: 30px;
+    }
+    .btn.btn-navbar {
+        position: relative;
+        top: 15px;
+        right: 15px;
+    }
+    .header-section{
+        top: 90px;
+    }
+    .header-section:after {
+        background-image: none;
+    }
+    .nav-collapse, .nav-collapse.collapse{
+        padding: 0 15px;
+    }
+    .header-section,
+    .subfooter,
+    footer.well,
+    .body-content {
+        padding: 10px 30px;
+    }
+}
+
+table.bodyTable.table.table-striped.table-hover {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+}
+
+#Contributors ~ table.bodyTable.table.table-striped.table-hover {
+    display:table;
+}
+
+.dropdown-backdrop{
+    display: none;
+}
