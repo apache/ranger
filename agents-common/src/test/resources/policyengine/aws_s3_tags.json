@@ -1,0 +1,33 @@
+{
+    "op":          "add_or_update",
+    "serviceName": "dev_aws-s3",
+    "tagDefinitions": {
+      "1": { "id": 1, "name": "PII" },
+      "2": { "id": 2, "name": "PII-VENDOR" }
+    },
+    "tags": {
+      "1": { "id": 1, "type": "PII" },
+      "2": { "id": 2, "type": "PII-VENDOR" }
+    },
+    "serviceResources": [
+      {
+        "id": 1, "serviceName": "dev_aws-s3",
+        "resourceElements": {
+          "bucketname": { "values": [ "mycompany" ] },
+          "objectpath": { "values": [ "/pii" ], "isRecursive": true }
+        }
+     },
+      {
+        "id": 2, "serviceName": "dev_aws-s3",
+        "resourceElements": {
+          "bucketname": { "values": [ "mycompany" ] },
+          "objectpath": { "values": [ "/vendor/pii" ], "isRecursive": true }
+        }
+     }
+    ],
+    "resourceToTagIds": {
+      "1": [ 1 ],
+      "2": [ 2 ]
+    }
+}
+

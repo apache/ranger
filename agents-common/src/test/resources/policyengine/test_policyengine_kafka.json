@@ -1,0 +1,157 @@
+{
+  "serviceName": "kafkadev",
+
+  "serviceDef": {
+    "name": "kafka", "id": 9,
+    "resources": [
+      { "name": "topic",           "level": 1, "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Topic",            "description": "Topic",            "accessTypeRestrictions": [ "create", "delete", "configure", "alter", "alter_configs", "describe", "describe_configs", "consume", "publish" ] },
+      { "name": "transactionalid", "level": 1, "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Transactional Id", "description": "Transactional Id", "accessTypeRestrictions": [ "describe", "publish" ] },
+      { "name": "cluster",         "level": 1, "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Cluster",          "description": "Cluster",          "accessTypeRestrictions": [ "create", "configure", "alter", "alter_configs", "describe", "describe_configs", "kafka_admin", "idempotent_write", "cluster_action" ] },
+      { "name": "delegationtoken", "level": 1, "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Delegation Token", "description": "Delegation Token", "accessTypeRestrictions": [ "describe" ] },
+      { "name": "consumergroup",   "level": 1, "mandatory": true, "lookupSupported": true, "matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher", "matcherOptions": { "wildCard": true, "ignoreCase": true }, "label": "Consumer Group",   "description": "Consumer Group",   "accessTypeRestrictions": [ "consume", "describe", "delete" ] }
+    ],
+    "accessTypes": [
+      { "name": "publish",     "label": "Publish",     "impliedGrants": [ "describe" ] },
+      { "name": "consume",     "label": "Consume",     "impliedGrants": [ "describe" ] },
+      { "name": "configure",   "label": "Configure",   "impliedGrants": [ "describe" ] },
+      { "name": "describe",    "label": "Describe" },
+      { "name": "kafka_admin", "label": "Kafka Admin", "impliedGrants": [ "publish", "consume", "configure", "describe", "create", "delete", "describe_configs", "alter_configs", "alter", "idempotent_write", "cluster_action" ] },
+      { "name": "create",           "label": "Create" },
+      { "name": "delete",           "label": "Delete", "impliedGrants": [ "describe" ] },
+      { "name": "idempotent_write", "label": "Idempotent Write" },
+      { "name": "describe_configs", "label": "Describe Configs" },
+      { "name": "alter_configs",    "label": "Alter Configs" },
+      { "name": "cluster_action",   "label": "Cluster Action" },
+      { "name": "alter",            "label": "alter" }
+    ]
+  },
+
+  "policies": [
+    {
+      "id": 10,"name": "10: test-topic publish/consume allowed","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "topic": {"values": [ "test-topic-1" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "publish", "isAllowed": true },{"type": "consume", "isAllowed": true }], "users": [ "user1" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 101,"name": "101: test-topic publish/consume allowed","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "topic": {"values": [ "test-topic-2" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "publish", "isAllowed": true },{"type": "consume", "isAllowed": true }], "users": [ "user2" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 102,"name": "102: test-topic publish/consume allowed","isEnabled": true,"isAuditEnabled": true,
+      "resources": {"topic": {"values": [ "test-topic-1","test-topic-4" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "consume", "isAllowed": true }], "users": [ "user3" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 103,"name": "103: test-topic publish/consume allowed","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "topic": {"values": [ "test-topic-1","test-topic-5" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "consume", "isAllowed": true }], "users": [ "user4", "user5" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 104,"name": "104: test-topic publish/consume allowed","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "topic": {"values": [ "test-topic-7" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "publish", "isAllowed": true },{"type": "consume", "isAllowed": true }], "users": [ "user6" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 20,"name": "02: transation id","isEnabled": true,"isAuditEnabled": true,"policyType": 1,
+      "resources": { "delegationtoken": {"values": [ "tid-1" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "publish", "isAllowed": true }], "users": [ "user1" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 30,"name": "create/alter access for user1 on cluster-1","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "cluster": {"values": [ "cluseter-1" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "create", "isAllowed": true },{"type": "alter", "isAllowed": true }], "users": [ "user1" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 301,"name": "Alter access for user31 on cluster-2","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "cluster": {"values": [ "cluster-2" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "alter", "isAllowed": true }], "users": [ "user31" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 302,"name": "Alter access for user32 on cluster-1","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "cluster": {"values": [ "cluseter-1" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "alter", "isAllowed": true }], "users": [ "user32" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 40,"name": "delegationtoken","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "delegationtoken": {"values": [ "dt-1" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "describe", "isAllowed": true }], "users": [ "user1" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 50,"name": "consumergroup-1 access","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "consumergroup": {"values": [ "consumergroup-1" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "consume", "isAllowed": true }], "users": [ "user1" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 52,"name": "consumergroup-2 access for user4","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "consumergroup": {"values": [ "consumergroup-2" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "consume", "isAllowed": true }], "users": [ "user4" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 110,"name": "110: test-topic-1/2 consume allowed for user2","isEnabled": true,"isAuditEnabled": true,
+      "resources": { "topic": {"values": [ "test-topic-1", "test-topic-2" ], "isRecursive": true } },
+      "policyItems": [
+        {"accesses": [{"type": "consume", "isAllowed": true }], "users": [ "user2" ], "groups": [] }
+      ]
+    },
+    {
+      "id": 111, "name": "110: new-topic-1/2 allowed for user2", "isEnabled": true, "isAuditEnabled": true,
+      "resources": { "topic": { "values": [ "new-topic-1", "new-topic-2" ], "isRecursive": true } },
+      "policyItems": [
+        { "accesses": [ { "type": "consume", "isAllowed": true } ], "users": [ "user2" ], "groups": [] }
+      ]
+    }
+  ],
+  "tests": [
+    {
+      "name":    "Any topic Consume access for user3",
+      "request": {
+        "resource":   { "elements": { "topic": "" } }, "resourceElementMatchingScopes": { "topic": "SELF_OR_PREFIX" },
+        "accessType": "consume", "user": "user3", "userGroups": []
+      },
+      "result": { "isAudited": true, "isAllowed": true, "policyId": 102 }
+    },
+    {
+      "name":    "Any consumergroup consume access for user1",
+      "request": {
+        "resource":   { "elements": { "consumergroup": "" } }, "resourceElementMatchingScopes": { "consumergroup": "SELF_OR_PREFIX" },
+        "accessType": "consume", "user": "user1", "userGroups": []
+      },
+      "result": { "isAudited": true, "isAllowed": true," policyId": 50 }
+    },
+
+    {
+      "name":    "Any consumergroup consume access for user3",
+      "request": {
+        "resource":   { "elements": { "consumergroup": "" } }, "resourceElementMatchingScopes": { "consumergroup": "SELF_OR_PREFIX" },
+        "accessType": "consume", "user": "user3", "userGroups": []
+      },
+      "result": { "isAudited": true, "isAllowed": false, "policyId": -1 }
+    }
+  ]
+}
+

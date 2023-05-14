@@ -101,5 +101,8 @@ public class RangerAccessRequestWrapper implements RangerAccessRequest {
     @Override
     public ResourceMatchingScope getResourceMatchingScope() { return request.getResourceMatchingScope(); }
 
+    @Override
+    public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() { return request.getResourceElementMatchingScopes(); }
+
 }
 

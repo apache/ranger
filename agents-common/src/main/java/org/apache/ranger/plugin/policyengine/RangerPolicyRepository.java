@@ -719,7 +719,7 @@ public class RangerPolicyRepository {
             perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_OP_LOG, "RangerPolicyRepository.getLikelyMatchEvaluators(resource=" + resource.getAsString() + ")");
         }
 
-        Collection<RangerPolicyResourceEvaluator> smallestList = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTrie, resource.getAsMap(), request.getResourceMatchingScope());
+        Collection<RangerPolicyResourceEvaluator> smallestList = RangerResourceEvaluatorsRetriever.getEvaluators(resourceTrie, resource.getAsMap(), request.getResourceElementMatchingScopes());
 
         if (smallestList != null) {
             if (smallestList.size() == 0) {

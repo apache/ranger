@@ -20,7 +20,6 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.ArrayUtils;
@@ -261,15 +260,15 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		if (needWildcardMatch) { // test?, test*a*, test*a*b, *test*a
 			ret = new WildcardResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, FilenameUtils::wildcardMatch, 6);
 		} else if (wildcardStartIdx == -1) { // test, testa, testab
-			ret = new StringResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, optIgnoreCase ? 2 : 1);
+			ret = new PathResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::equalsIgnoreCase : StringUtils::equals, optIgnoreCase ? 2 : 1, !optIgnoreCase);
 		} else if (wildcardStartIdx == 0) { // *test, **test, *testa, *testab
 			String matchStr = policyValue.substring(wildcardEndIdx + 1);
-			ret = new StringResourceMatcher(matchStr, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::endsWithIgnoreCase : StringUtils::endsWith, optIgnoreCase ? 4 : 3);
+			ret = new PathResourceMatcher(matchStr, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::endsWithIgnoreCase : StringUtils::endsWith, optIgnoreCase ? 4 : 3, !optIgnoreCase);
 		} else if (wildcardEndIdx != (len - 1)) { // test*a, test*ab
 			ret = new WildcardResourceMatcher(policyValue, getOptions(), pathSeparatorChar, optIgnoreCase, FilenameUtils::wildcardMatch, 6);
 		} else { // test*, test**, testa*, testab*
 			String matchStr = policyValue.substring(0, wildcardStartIdx);
-			ret = new StringResourceMatcher(matchStr, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith, optIgnoreCase ? 4 : 3);
+			ret = new PathResourceMatcher(matchStr, getOptions(), pathSeparatorChar, optIgnoreCase ? StringUtils::startsWithIgnoreCase : StringUtils::startsWith, optIgnoreCase ? 4 : 3, !optIgnoreCase);
 		}
 
 		if (optReplaceTokens) {
@@ -291,99 +290,132 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		R apply(T t, U u, V v, W w, X x);
 	}
 
-	static abstract class PathResourceMatcher extends ResourceMatcher {
+	static abstract class AbstractPathResourceMatcher extends ResourceMatcher {
 		final char    pathSeparatorChar;
 		final int     priority;
+		final boolean isCaseSensitive;
 
-		PathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, int priority) {
+		AbstractPathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, int priority, boolean isCaseSensitive) {
 			super(value, options);
-			this.pathSeparatorChar    = pathSeparatorChar;
-			this.priority             = priority;
+
+			this.pathSeparatorChar = pathSeparatorChar;
+			this.priority          = priority;
+			this.isCaseSensitive   = isCaseSensitive;
 		}
 		int getPriority() {
 			return priority + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);
 		}
+
+		@Override
+		public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+			return isCaseSensitive ? StringUtils.startsWith(getExpandedValue(evalContext), resourceValue)
+			                       : StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
+		}
 	}
 
-	static class StringResourceMatcher extends PathResourceMatcher {
+	static class PathResourceMatcher extends AbstractPathResourceMatcher {
 		final BiFunction<String, String, Boolean> function;
-		StringResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, BiFunction<String, String, Boolean> function, int priority) {
-			super(value, options, pathSeparatorChar, priority);
+
+		PathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, BiFunction<String, String, Boolean> function, int priority, boolean isCaseSensitive) {
+			super(value, options, pathSeparatorChar, priority, isCaseSensitive);
+
 			this.function = function;
 		}
+
 		@Override
 		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> StringResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
+				LOG.debug("==> PathResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
 			}
-			String expandedValue = getExpandedValue(evalContext);
-			boolean ret = function.apply(resourceValue, expandedValue);
-			if (!ret) {
-				RangerAccessRequest.ResourceMatchingScope scope = MapUtils.isNotEmpty(evalContext) ? (RangerAccessRequest.ResourceMatchingScope) evalContext.get(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING) : null;
-				if (scope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD) {
-					int lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
-					if (lastLevelSeparatorIndex != -1) {
-						String shorterExpandedValue = expandedValue.substring(0, lastLevelSeparatorIndex);
-						if (resourceValue.charAt(resourceValue.length()-1) == pathSeparatorChar) {
-							resourceValue = resourceValue.substring(0, resourceValue.length()-1);
-						}
-						ret = function.apply(resourceValue, shorterExpandedValue);
-					}
-				}
-			}
+
+			String  expandedValue = getExpandedValue(evalContext);
+			boolean ret           = function.apply(resourceValue, expandedValue);
+
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== StringResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
+				LOG.debug("<== PathResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
 			}
+
+			return ret;
+		}
+
+		@Override
+		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
+			boolean ret                     = false;
+			String  expandedValue           = getExpandedValue(evalContext);
+			int     lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
+
+			if (lastLevelSeparatorIndex != -1) {
+				String shorterExpandedValue = expandedValue.substring(0, lastLevelSeparatorIndex);
+
+				if (resourceValue.charAt(resourceValue.length()-1) == pathSeparatorChar) {
+					resourceValue = resourceValue.substring(0, resourceValue.length()-1);
+				}
+
+				ret = function.apply(resourceValue, shorterExpandedValue);
+			}
+
 			return ret;
 		}
 
 	}
 
-	static class WildcardResourceMatcher extends PathResourceMatcher {
+	static class WildcardResourceMatcher extends AbstractPathResourceMatcher {
 		final TriFunction<String, String, IOCase, Boolean> function;
-		final IOCase ioCase;
+		final IOCase                                       ioCase;
 
 		WildcardResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, TriFunction<String, String, IOCase, Boolean> function, int priority) {
-			super(value, options, pathSeparatorChar, priority);
+			super(value, options, pathSeparatorChar, priority, !optIgnoreCase);
+
 			this.function = function;
 			this.ioCase   = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
 		}
+
 		@Override
 		boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("==> WildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", evalContext=" + evalContext + ")");
 			}
-			String expandedValue = getExpandedValue(evalContext);
-			boolean ret = function.apply(resourceValue, expandedValue, ioCase);
-			if (!ret) {
-				RangerAccessRequest.ResourceMatchingScope scope = MapUtils.isNotEmpty(evalContext) ? (RangerAccessRequest.ResourceMatchingScope) evalContext.get(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING) : null;
-				if (scope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD) {
-					int lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
-					if (lastLevelSeparatorIndex != -1) {
-						String shorterExpandedValue = expandedValue.substring(0, lastLevelSeparatorIndex);
-						if (resourceValue.charAt(resourceValue.length()-1) == pathSeparatorChar) {
-							resourceValue = resourceValue.substring(0, resourceValue.length()-1);
-						}
-						ret = function.apply(resourceValue, shorterExpandedValue, ioCase);
-					}
-				}
-			}
+
+			String  expandedValue = getExpandedValue(evalContext);
+			boolean ret           = function.apply(resourceValue, expandedValue, ioCase);
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== WildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
 			}
 			return ret;
 		}
+
+		@Override
+		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
+			boolean ret                     = false;
+			String  expandedValue           = getExpandedValue(evalContext);
+			int     lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
+
+			if (lastLevelSeparatorIndex != -1) {
+				String shorterExpandedValue = expandedValue.substring(0, lastLevelSeparatorIndex);
+
+				if (resourceValue.charAt(resourceValue.length()-1) == pathSeparatorChar) {
+					resourceValue = resourceValue.substring(0, resourceValue.length()-1);
+				}
+
+				ret = function.apply(resourceValue, shorterExpandedValue, ioCase);
+			}
+
+			return ret;
+		}
 	}
 
-	static class RecursiveWildcardResourceMatcher extends PathResourceMatcher {
+	static class RecursiveWildcardResourceMatcher extends AbstractPathResourceMatcher {
 		final QuintFunction<String, String, Character, IOCase, Boolean, String[]> function;
 		final IOCase ioCase;
 		String[] wildcardPathElements;
 
 		RecursiveWildcardResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, boolean optIgnoreCase, QuintFunction<String, String, Character, IOCase, Boolean, String[]> function, int priority) {
-			super(value, options, pathSeparatorChar, priority);
+			super(value, options, pathSeparatorChar, priority, !optIgnoreCase);
+
 			this.function = function;
 			this.ioCase   = optIgnoreCase ? IOCase.INSENSITIVE : IOCase.SENSITIVE;
+
 			if (!getNeedsDynamicEval()) {
 				wildcardPathElements = StringUtils.split(value, pathSeparatorChar);
 			}
@@ -402,28 +434,36 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 			}
 
 			boolean ret = function.apply(resourceValue, expandedValue, pathSeparatorChar, ioCase, wildcardPathElements);
-			if (!ret) {
-				RangerAccessRequest.ResourceMatchingScope scope = MapUtils.isNotEmpty(evalContext) ? (RangerAccessRequest.ResourceMatchingScope) evalContext.get(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING) : null;
-				if (scope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD) {
-					int lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
-					if (lastLevelSeparatorIndex != -1) {
-						String shorterExpandedValue = expandedValue.substring(0, lastLevelSeparatorIndex);
-						if (resourceValue.charAt(resourceValue.length()-1) == pathSeparatorChar) {
-							resourceValue = resourceValue.substring(0, resourceValue.length()-1);
-						}
-						String[] shorterWildCardPathElements = StringUtils.split(shorterExpandedValue, pathSeparatorChar);
-						ret = function.apply(resourceValue, shorterExpandedValue, pathSeparatorChar, ioCase, shorterWildCardPathElements);
-					}
-				}
-			}
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== RecursiveWildcardResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValue=" + expandedValue + ") : result:[" + ret + "]");
 			}
 			return ret;
 		}
+
+		@Override
+		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
+			boolean ret = false;
+			String expandedValue = getExpandedValue(evalContext);
+			int lastLevelSeparatorIndex = expandedValue.lastIndexOf(pathSeparatorChar);
+
+			if (lastLevelSeparatorIndex != -1) {
+				String shorterExpandedValue = expandedValue.substring(0, lastLevelSeparatorIndex);
+
+				if (resourceValue.charAt(resourceValue.length() - 1) == pathSeparatorChar) {
+					resourceValue = resourceValue.substring(0, resourceValue.length() - 1);
+				}
+
+				String[] shorterWildCardPathElements = StringUtils.split(shorterExpandedValue, pathSeparatorChar);
+
+				ret = function.apply(resourceValue, shorterExpandedValue, pathSeparatorChar, ioCase, shorterWildCardPathElements);
+			}
+
+			return ret;
+		}
 	}
 
-	static class RecursivePathResourceMatcher extends PathResourceMatcher {
+	static class RecursivePathResourceMatcher extends AbstractPathResourceMatcher {
 		String valueWithoutSeparator;
 		String valueWithSeparator;
 
@@ -431,7 +471,8 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 		final BiFunction<String, String, Boolean> fallbackFunction;
 
 		RecursivePathResourceMatcher(String value, Map<String, String> options, char pathSeparatorChar, BiFunction<String, String, Boolean> primaryFunction, BiFunction<String, String, Boolean> fallbackFunction, int priority) {
-			super(value, options, pathSeparatorChar, priority);
+			super(value, options, pathSeparatorChar, priority, true);
+
 			this.primaryFunction    = primaryFunction;
 			this.fallbackFunction   = fallbackFunction;
 		}
@@ -465,28 +506,44 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 
 			if (!ret && noSeparator != null) {
 				final String withSeparator = getNeedsDynamicEval() ? noSeparator + pathSeparatorChar : valueWithSeparator;
-				ret = fallbackFunction.apply(resourceValue, withSeparator);
 
-				if (!ret) {
-					RangerAccessRequest.ResourceMatchingScope scope = MapUtils.isNotEmpty(evalContext) ? (RangerAccessRequest.ResourceMatchingScope) evalContext.get(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING) : null;
-					if (scope == RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD) {
-						final int lastLevelSeparatorIndex = noSeparator.lastIndexOf(pathSeparatorChar);
-						if (lastLevelSeparatorIndex != -1) {
-							final String shorterExpandedValue = noSeparator.substring(0, lastLevelSeparatorIndex);
-							if (resourceValue.charAt(resourceValue.length() - 1) == pathSeparatorChar) {
-								resourceValue = resourceValue.substring(0, resourceValue.length() - 1);
-							}
-							ret = primaryFunction.apply(resourceValue, shorterExpandedValue);
-						}
-					}
-				}
+				ret = fallbackFunction.apply(resourceValue, withSeparator);
 			}
+
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== RecursivePathResourceMatcher.isMatch(resourceValue=" + resourceValue + ", expandedValueWithoutTrailingSeparatorChar=" + noSeparator + ") : result:[" + ret + "]");
 			}
 
 			return ret;
 		}
-	}
 
+		@Override
+		public boolean isChildMatch(String resourceValue, Map<String, Object> evalContext) {
+			boolean ret = false;
+			final String noSeparator;
+			if (getNeedsDynamicEval()) {
+				String expandedPolicyValue = getExpandedValue(evalContext);
+				noSeparator = expandedPolicyValue != null ? getStringToCompare(expandedPolicyValue) : null;
+			} else {
+				if (valueWithoutSeparator == null && value != null) {
+					valueWithoutSeparator = getStringToCompare(value);
+					valueWithSeparator = valueWithoutSeparator + pathSeparatorChar;
+				}
+				noSeparator = valueWithoutSeparator;
+			}
+			final int lastLevelSeparatorIndex = noSeparator.lastIndexOf(pathSeparatorChar);
+
+			if (lastLevelSeparatorIndex != -1) {
+				final String shorterExpandedValue = noSeparator.substring(0, lastLevelSeparatorIndex);
+
+				if (resourceValue.charAt(resourceValue.length() - 1) == pathSeparatorChar) {
+					resourceValue = resourceValue.substring(0, resourceValue.length() - 1);
+				}
+
+				ret = primaryFunction.apply(resourceValue, shorterExpandedValue);
+			}
+
+			return ret;
+		}
+	}
 }

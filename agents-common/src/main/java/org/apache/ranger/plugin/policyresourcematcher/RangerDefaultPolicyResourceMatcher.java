@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyresourcematcher;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +34,7 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher;
@@ -378,6 +380,11 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
     @Override
     public boolean isMatch(RangerPolicy policy, MatchScope scope, Map<String, Object> evalContext) {
+        return isMatch(policy, Collections.emptyMap(), scope, evalContext);
+    }
+
+    @Override
+    public boolean isMatch(RangerPolicy policy, Map<String, ResourceElementMatchingScope> scopes, MatchScope scope, Map<String, Object> evalContext) {
         boolean ret = false;
 
         RangerPerfTracer perf = null;
@@ -428,7 +435,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                             for (String value : policyResource.getValues()) {
                                 accessResource.setValue(name, value);
 
-                                matchType = getMatchType(accessResource, evalContext);
+                                matchType = getMatchType(accessResource, scopes, evalContext);
 
                                 if (matchType != MatchType.NONE) { // One value for this resourceDef matched
                                     ret = true;
@@ -458,6 +465,11 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
     @Override
     public boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext) {
+        return isMatch(resource, Collections.emptyMap(), evalContext);
+    }
+
+    @Override
+    public boolean isMatch(RangerAccessResource resource, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext) {
         RangerPerfTracer perf = null;
 
         if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_RESOURCE_MATCHER_MATCH_LOG)) {
@@ -487,7 +499,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                 break;
             }
         }
-        final boolean ret = MapUtils.isNotEmpty(policyResources) && isMatch(policyResources, evalContext);
+        final boolean ret = MapUtils.isNotEmpty(policyResources) && isMatch(policyResources, scopes, evalContext);
 
         RangerPerfTracer.log(perf);
 
@@ -496,6 +508,11 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
     @Override
     public boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext) {
+        return isMatch(resources, Collections.emptyMap(), evalContext);
+    }
+
+    @Override
+    public boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyResourceMatcher.isMatch(" + resources  + ", " + evalContext + ")");
         }
@@ -524,7 +541,8 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                     if (matcher != null) {
                         if (CollectionUtils.isNotEmpty(values)) {
                             for (String value : values) {
-                                ret = matcher.isMatch(value, evalContext);
+                                ret = matcher.isMatch(value, scopes.get(resourceName), evalContext);
+
                                 if (!ret) {
                                     break;
                                 }
@@ -558,12 +576,22 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
     @Override
     public boolean isMatch(RangerAccessResource resource, MatchScope scope, Map<String, Object> evalContext) {
-        MatchType matchType = getMatchType(resource, evalContext);
+        return isMatch(resource, Collections.emptyMap(), scope, evalContext);
+    }
+
+    @Override
+    public boolean isMatch(RangerAccessResource resource, Map<String, ResourceElementMatchingScope> scopes, MatchScope scope, Map<String, Object> evalContext) {
+        MatchType matchType = getMatchType(resource, scopes, evalContext);
         return isMatch(scope, matchType);
     }
 
     @Override
     public MatchType getMatchType(RangerAccessResource resource, Map<String, Object> evalContext) {
+        return getMatchType(resource, Collections.emptyMap(), evalContext);
+    }
+
+    @Override
+    public MatchType getMatchType(RangerAccessResource resource, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyResourceMatcher.getMatchType(" + resource + evalContext + ")");
         }
@@ -582,6 +610,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
                 ret = MatchType.SELF;
             } else {
                 List<RangerResourceDef> hierarchy = getMatchingHierarchy(resource);
+
                 if (CollectionUtils.isNotEmpty(hierarchy)) {
 
                     int lastNonAnyMatcherIndex = -1;
@@ -610,7 +639,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
                         if (matcher != null) {
                             if (resourceValue != null || matcher.isMatchAny()) {
-                                if (matcher.isMatch(resourceValue, evalContext)) {
+                                if (matcher.isMatch(resourceValue, scopes.get(resourceDef.getName()), evalContext)) {
                                     ret = MatchType.SELF;
                                 } else {
                                     ret = MatchType.NONE;

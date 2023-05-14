@@ -22,7 +22,7 @@ package org.apache.ranger.plugin.resourcematcher;
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.junit.Test;
 
@@ -100,7 +100,7 @@ public class RangerPathResourceMatcherTest {
             RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);
-            assertEquals(getMessage(row), result, matcher.isMatch(resource, evalContext));
+            assertEquals(getMessage(row), result, matcher.isMatch(resource, ResourceElementMatchingScope.SELF, evalContext));
         }
     }
 
@@ -116,10 +116,9 @@ public class RangerPathResourceMatcherTest {
 
             Map<String, Object> evalContext = new HashMap<>();
             RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
-            evalContext.put(RangerAccessRequest.RANGER_ACCESS_REQUEST_SCOPE_STRING, RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD);
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);
-            assertEquals(getMessage(row), result, matcher.isMatch(resource, evalContext));
+            assertEquals(getMessage(row), result, matcher.isMatch(resource, ResourceElementMatchingScope.SELF_OR_CHILD, evalContext));
         }
     }
 

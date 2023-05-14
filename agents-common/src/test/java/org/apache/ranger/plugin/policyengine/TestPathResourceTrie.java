@@ -21,6 +21,7 @@ package org.apache.ranger.plugin.policyengine;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
@@ -71,7 +72,7 @@ public class TestPathResourceTrie {
 
 	@Test
 	public void testChildrenScope() {
-		final RangerAccessRequest.ResourceMatchingScope scope = RangerAccessRequest.ResourceMatchingScope.SELF_OR_CHILD;
+		final ResourceElementMatchingScope scope = ResourceElementMatchingScope.SELF_OR_CHILD;
 
 		verifyEvaluators("/", scope, EVAL_, EVAL_nr, EVAL_HOME, EVAL_HOME_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMPFILE, EVAL_TMPdTXT);
 		verifyEvaluators("/tmp", scope, EVAL_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMP_AB);
@@ -85,8 +86,23 @@ public class TestPathResourceTrie {
 	}
 
 	@Test
+	public void testPrefixScope() {
+		final ResourceElementMatchingScope scope = ResourceElementMatchingScope.SELF_OR_PREFIX;
+
+		verifyEvaluators("/", scope, EVAL_, EVAL_nr, EVAL_HOME, EVAL_HOME_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMP_AB, EVAL_TMP_A_B, EVAL_TMP_AC_D_E_F, EVAL_TMPFILE, EVAL_TMPdTXT, EVAL_TMPA_B);
+		verifyEvaluators("/tmp", scope, EVAL_, EVAL_TMPnr, EVAL_TMP_nr, EVAL_TMP_AB, EVAL_TMP_A_B, EVAL_TMP_AC_D_E_F, EVAL_TMPFILE, EVAL_TMPdTXT, EVAL_TMPA_B);
+		verifyEvaluators("/tmp/", scope, EVAL_, EVAL_TMP_nr, EVAL_TMP_AB, EVAL_TMP_A_B, EVAL_TMP_AC_D_E_F);
+		verifyEvaluators("/tmp/a", scope, EVAL_, EVAL_TMP_AB, EVAL_TMP_A_B, EVAL_TMP_AC_D_E_F);
+		verifyEvaluators("/tmp/ac", scope, EVAL_, EVAL_TMP_AC_D_E_F);
+		verifyEvaluators("/tmp/ac/d", scope, EVAL_, EVAL_TMP_AC_D_E_F);
+		verifyEvaluators("/tmp/ac/d/e", scope, EVAL_, EVAL_TMP_AC_D_E_F);
+		verifyEvaluators("/unmatched", scope, EVAL_);
+		verifyEvaluators("invalid: does-not-begin-with-sep", scope);
+	}
+
+	@Test
 	public void testSelfScope() {
-		final RangerAccessRequest.ResourceMatchingScope scope = RangerAccessRequest.ResourceMatchingScope.SELF;
+		final ResourceElementMatchingScope scope = ResourceElementMatchingScope.SELF;
 
 		verifyEvaluators("/", scope, EVAL_, EVAL_nr);
 		verifyEvaluators("/tmp", scope, EVAL_, EVAL_TMPnr);
@@ -99,7 +115,7 @@ public class TestPathResourceTrie {
 		verifyEvaluators("invalid: does-not-begin-with-sep", scope);
 	}
 
-	private void verifyEvaluators(String resource, RangerAccessRequest.ResourceMatchingScope scope, RangerResourceEvaluator... evaluators) {
+	private void verifyEvaluators(String resource, ResourceElementMatchingScope scope, RangerResourceEvaluator... evaluators) {
 		Set<RangerResourceEvaluator> expected = evaluators.length == 0 ? null : new HashSet<>(Arrays.asList(evaluators));
 		Set<RangerResourceEvaluator> result   = trie.getEvaluatorsForResource(resource, scope);
 

@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.resourcematcher;
 
 
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,38 +32,45 @@ public class RangerDefaultResourceMatcher extends RangerAbstractResourceMatcher 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultResourceMatcher.class);
 
 	@Override
-	public boolean isMatch(Object resource, Map<String, Object> evalContext) {
+	public boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerDefaultResourceMatcher.isMatch(" + resource + ", " + evalContext + ")");
 		}
 
 		boolean ret = false;
 		boolean allValuesRequested = isAllValuesRequested(resource);
+		boolean isPrefixMatch = matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX;
 
-		if(allValuesRequested || isMatchAny) {
+		if (isMatchAny || (allValuesRequested && !isPrefixMatch)) {
 			ret = isMatchAny;
 		} else {
 			if (resource instanceof String) {
 				String strValue = (String) resource;
 
 				for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
-					ret = resourceMatcher.isMatch(strValue, evalContext);
+					ret = resourceMatcher.isMatch(strValue, matchingScope, evalContext);
+
 					if (ret) {
 						break;
 					}
 				}
 			} else if (resource instanceof Collection) {
 				@SuppressWarnings("unchecked")
-				Collection<String> collValue = (Collection<String>) resource;
+				Collection<String> resourceValues = (Collection<String>) resource;
 
 				for (ResourceMatcher resourceMatcher : resourceMatchers.getResourceMatchers()) {
-					ret = resourceMatcher.isMatchAny(collValue, evalContext);
+					for (String resourceValue : resourceValues) {
+						ret = resourceMatcher.isMatch(resourceValue, matchingScope, evalContext);
+
+						if (ret) {
+							break;
+						}
+					}
 					if (ret) {
 						break;
 					}
 				}
 			}
-
 		}
 
 		ret = applyExcludes(allValuesRequested, ret);
