@@ -318,7 +318,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						for (RangerPolicyResourceEvaluator resourceEvaluator : evaluator.getResourceEvaluators()) {
 							RangerPolicyResourceMatcher matcher = resourceEvaluator.getPolicyResourceMatcher();
 
-							matchType = matcher.getMatchType(request.getResource(), request.getContext());
+							matchType = matcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
 							isMatched = isMatch(matchType, request.getResourceMatchingScope());
 
 							if (isMatched) {
@@ -326,7 +326,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 								break;
 							} else if (matcher.getNeedsDynamicEval() && !isConditionalMatch) {
-								MatchType dynWildCardMatch = resourceEvaluator.getMacrosReplaceWithWildcardMatcher(policyEngine).getMatchType(request.getResource(), request.getContext());
+								MatchType dynWildCardMatch = resourceEvaluator.getMacrosReplaceWithWildcardMatcher(policyEngine).getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
 
 								isConditionalMatch = isMatch(dynWildCardMatch, request.getResourceMatchingScope());
 							}

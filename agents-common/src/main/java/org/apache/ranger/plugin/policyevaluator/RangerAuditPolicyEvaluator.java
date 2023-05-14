@@ -129,7 +129,7 @@ public class RangerAuditPolicyEvaluator extends RangerDefaultPolicyEvaluator {
                     RangerPolicyResourceMatcher resourceMatcher = resourceEvaluator.getPolicyResourceMatcher();
 
                     if (resourceMatcher != null) {
-                        matchType = resourceMatcher.getMatchType(request.getResource(), request.getContext());
+                        matchType = resourceMatcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
                     } else {
                         matchType = RangerPolicyResourceMatcher.MatchType.NONE;
                     }

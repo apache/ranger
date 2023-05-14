@@ -564,7 +564,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				List<RangerServiceResourceMatcher> notMatched = new ArrayList<>();
 
 				for (RangerServiceResourceMatcher resourceMatcher : oldMatchers) {
-					final RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher.getMatchType(accessResource, request.getContext());
+					final RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher.getMatchType(accessResource, request.getResourceElementMatchingScopes(), request.getContext());
 
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("resource:[" + accessResource + ", MatchType:[" + matchType + "]");
@@ -703,10 +703,9 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 			final Collection<RangerServiceResourceMatcher> serviceResourceMatchers = getEvaluators(request, enrichedServiceTags);
 
 			if (CollectionUtils.isNotEmpty(serviceResourceMatchers)) {
-
 				for (RangerServiceResourceMatcher resourceMatcher : serviceResourceMatchers) {
 
-					final RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher.getMatchType(resource, request.getContext());
+					final RangerPolicyResourceMatcher.MatchType matchType = resourceMatcher.getMatchType(resource, request.getResourceElementMatchingScopes(), request.getContext());
 
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("resource:[" + resource + ", MatchType:[" + matchType + "]");
@@ -771,7 +770,7 @@ public class RangerTagEnricher extends RangerAbstractContextEnricher {
 				perf = RangerPerfTracer.getPerfTracer(PERF_TRIE_OP_LOG, "RangerTagEnricher.getEvaluators(resource=" + resource.getAsString() + ")");
 			}
 
-			ret = RangerResourceEvaluatorsRetriever.getEvaluators(serviceResourceTrie, resource.getAsMap(), request.getResourceMatchingScope());
+			ret = RangerResourceEvaluatorsRetriever.getEvaluators(serviceResourceTrie, resource.getAsMap(), request.getResourceElementMatchingScopes());
 
 			RangerPerfTracer.logAlways(perf);
 		}

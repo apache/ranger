@@ -482,6 +482,20 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testAnyResourceAccess_Kafka() throws Exception {
+		String[] resourceFiles = {"/policyengine/test_policyengine_kafka.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
+	public void testAnyResourceAccess_S3() throws Exception {
+		String[] resourceFiles = {"/policyengine/test_policyengine_aws_s3.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);

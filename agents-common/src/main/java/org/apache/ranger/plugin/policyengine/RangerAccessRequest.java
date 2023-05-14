@@ -19,14 +19,13 @@
 
 package org.apache.ranger.plugin.policyengine;
 
+import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 public interface RangerAccessRequest {
-	String RANGER_ACCESS_REQUEST_SCOPE_STRING = "Scope";
-
 	RangerAccessResource getResource();
 
 	String getAccessType();
@@ -67,5 +66,13 @@ public interface RangerAccessRequest {
 
 	ResourceMatchingScope getResourceMatchingScope();
 
-	enum ResourceMatchingScope {SELF, SELF_OR_DESCENDANTS, SELF_OR_CHILD}
+	default Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() {
+		return Collections.emptyMap();
+	}
+
+	enum ResourceMatchingScope { SELF, SELF_OR_DESCENDANTS }
+
+	enum ResourceElementMatchingScope { SELF, SELF_OR_CHILD, SELF_OR_PREFIX }
+
+	enum ResourceElementMatchType { NONE, SELF, CHILD, PREFIX }
 }
