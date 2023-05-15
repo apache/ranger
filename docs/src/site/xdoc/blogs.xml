@@ -19,15 +19,25 @@
 <body>
 <section name="Apache Ranger&#8482; blogs">
 <ul>
-<li>
-<p>
-<a href="blogs/adventures_in_abac_1.html" target="_blank">Adventures in attribute-based access control (ABAC) - part 1</a>
-</p>
-    Explores choices for setting up access control based on sensitivity level and content of the data, and attributes of the user.<br/>
-    <div style="font-size: 90%;color: #999;">
-    Posted on Apr 29, 2023 by Barbara Eckman, Comcast
-    </div>
-</li>
+    <li>
+        <p>
+            <a href="blogs/policy_model.html" target="_blank">Apache Ranger Policy Model</a>
+        </p>
+        Apache Ranger provides a rich and extensible policy model to support access control, data masking, row-filters, RBAC, ABAC and TBAC. This blog highlights key features of the policy model along with few examples.<br/>
+        <div style="font-size: 90%;color: #999;">
+            Posted on Mar 08, 2022 by Madhan Neethiraj, Apache Ranger committer
+        </div>
+    </li>
+    <p/>
+    <li>
+        <p>
+            <a href="blogs/adventures_in_abac_1.html" target="_blank">Adventures in attribute-based access control (ABAC) - part 1</a>
+        </p>
+        Explores choices for setting up access control based on sensitivity level and content of the data, and attributes of the user.<br/>
+        <div style="font-size: 90%;color: #999;">
+            Posted on Apr 29, 2023 by Barbara Eckman, Comcast
+        </div>
+    </li>
 </ul>
 </section>
 </body>

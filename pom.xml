@@ -86,7 +86,7 @@
         <atlas.jackson.databind.version>2.11.3</atlas.jackson.databind.version>
         <atlas.jettison.version>1.3.7</atlas.jettison.version>
         <atlas.commons.logging.version>1.1.3</atlas.commons.logging.version>
-        <bouncycastle.version>1.55</bouncycastle.version>
+        <bouncycastle.version>1.70</bouncycastle.version>
         <c3p0.version>0.9.5.5</c3p0.version>
         <cglib.version>2.2.0-b23</cglib.version>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
@@ -199,9 +199,9 @@
         <slf4j.version>1.7.32</slf4j.version>
         <solr.version>8.11.2</solr.version>
         <spring-ldap-core.version>2.3.8.RELEASE</spring-ldap-core.version>
-        <springframework.security.version>5.7.5</springframework.security.version>
-        <springframework.test.version>5.3.26</springframework.test.version>
-        <springframework.version>5.3.26</springframework.version>
+        <springframework.security.version>5.7.8</springframework.security.version>
+        <springframework.test.version>5.3.27</springframework.test.version>
+        <springframework.version>5.3.27</springframework.version>
         <sqoop.version>1.99.7</sqoop.version>
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
@@ -241,12 +241,12 @@
         <com.microsoft.azure.adal4j.version>1.6.4</com.microsoft.azure.adal4j.version>
         <io.reactivex.rxjava.version>1.3.8</io.reactivex.rxjava.version>
         <net.minidev.asm.version>1.0.2</net.minidev.asm.version>
-        <org.bouncycastle.bcprov-jdk15on>1.68</org.bouncycastle.bcprov-jdk15on>
-        <org.bouncycastle.bcpkix-jdk15on>1.59</org.bouncycastle.bcpkix-jdk15on>
+        <org.bouncycastle.bcprov-jdk15on>1.70</org.bouncycastle.bcprov-jdk15on>
+        <org.bouncycastle.bcpkix-jdk15on>1.70</org.bouncycastle.bcpkix-jdk15on>
         <lucene.version>8.4.0</lucene.version>
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
-        <nimbus-jose-jwt.version>8.22.1</nimbus-jose-jwt.version>
+        <nimbus-jose-jwt.version>9.31</nimbus-jose-jwt.version>
         <aws-java-sdk.version>1.12.125</aws-java-sdk.version>
 
         <!-- GCP HSM -->
@@ -1195,6 +1195,10 @@
                         <exclude>**/default_primary_config.json</exclude>
                         <exclude>**/default_secondary_config.json</exclude>
                         <exclude>**/babel.config.json</exclude>
+                        <exclude>**/docs/src/site/resources/css/custom.css</exclude>
+			<exclude>**/docs/src/site/resources/ranger-logo.svg</exclude>
+			<exclude>**/docs/src/site/resources/override-banner.js</exclude>
+			<exclude>**/docs/src/site/resources/smooth-scroll.js</exclude>
                     </excludes>
                 </configuration>
             </plugin>
