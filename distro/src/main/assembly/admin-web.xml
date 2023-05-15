@@ -588,10 +588,9 @@
         <include>update_property.py</include>
         <include>ranger_credential_helper.py</include>
         <include>deleteUserGroupUtil.py</include>
-        <include>changepasswordutil.py</include>
-        <include>changeusernameutil.py</include>
+        <include>update_credentials.py</include>
         <include>rolebasedusersearchutil.py</include>
-	<include>updateUserAndGroupNamesInJson.py</include>
+	    <include>updateUserAndGroupNamesInJson.py</include>
       </includes>
       <fileMode>544</fileMode>
     </fileSet>
