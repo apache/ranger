@@ -1216,7 +1216,6 @@ public class TestXUserMgr {
 		xXUserPermissions.add(xxUserPermission());
 		List<XXPortalUserRole> xXPortalUserRoles=new ArrayList<XXPortalUserRole>();
 		xXPortalUserRoles.add(XXPortalUserRole);
-		Mockito.when(xXAuthSessionDao.getAuthSessionByUserId(vXPortalUser.getId())).thenReturn(xXAuthSessions);
 		Mockito.when(xXUserPermissionDao.findByUserPermissionId(vXPortalUser.getId())).thenReturn(xXUserPermissions);
 		Mockito.when(xXPortalUserRoleDao.findByUserId(vXPortalUser.getId())).thenReturn(xXPortalUserRoles);
 		XXPolicyDao xXPolicyDao = Mockito.mock(XXPolicyDao.class);
@@ -3057,7 +3056,6 @@ public class TestXUserMgr {
 		xXAuthSession.setLoginId(vXPortalUser.getLoginId());
 		List<XXUserPermission> xXUserPermissions=new ArrayList<XXUserPermission>();
 		List<XXPortalUserRole> xXPortalUserRoles=new ArrayList<XXPortalUserRole>();
-		Mockito.when(xXAuthSessionDao.getAuthSessionByUserId(vXPortalUser.getId())).thenReturn(xXAuthSessions);
 		Mockito.when(xXUserPermissionDao.findByUserPermissionId(vXPortalUser.getId())).thenReturn(xXUserPermissions);
 		Mockito.when(xXPortalUserRoleDao.findByUserId(vXPortalUser.getId())).thenReturn(xXPortalUserRoles);
 		XXPolicyDao xXPolicyDao = Mockito.mock(XXPolicyDao.class);
@@ -3095,9 +3093,7 @@ public class TestXUserMgr {
 		xUserMgr.deleteXUser(vXUser.getId(), force);
 		Mockito.when(xAuditMapService.searchXAuditMaps((SearchCriteria) Mockito.any())).thenReturn(new VXAuditMapList());
 		xXAuthSessions.add(xXAuthSession);
-		Mockito.when(xXAuthSessionDao.getAuthSessionByUserId(vXPortalUser.getId())).thenReturn(xXAuthSessions);
 		xUserMgr.deleteXUser(vXUser.getId(), force);
-		Mockito.when(xXAuthSessionDao.getAuthSessionByUserId(vXPortalUser.getId())).thenReturn(new ArrayList<XXAuthSession>());
 		XXUserPermission xUserPermissionObj=xxUserPermission();
 		xXUserPermissions.add(xUserPermissionObj);
 		Mockito.when(xXUserPermissionDao.findByUserPermissionId(vXPortalUser.getId())).thenReturn(xXUserPermissions);

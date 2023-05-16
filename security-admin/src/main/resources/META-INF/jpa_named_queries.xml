@@ -36,6 +36,14 @@
 			    :authWindowStartTime)
 		</query>
 	</named-query>
+	<named-query name="XXAuthSession.findIdsByUserId">
+		<query>SELECT obj.id FROM XXAuthSession obj WHERE obj.userId = :userId
+		</query>
+	</named-query>
+	<named-query name="XXAuthSession.deleteByIds">
+		<query>DELETE FROM XXAuthSession obj WHERE obj.id in :ids
+		</query>
+	</named-query>
 
 	<!-- XXPortalUser -->
 	<named-query name="XXPortalUser.findByEmailAddress">
