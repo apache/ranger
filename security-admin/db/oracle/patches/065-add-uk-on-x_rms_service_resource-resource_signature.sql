@@ -12,7 +12,6 @@
 -- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
--- sync_source_info CLOB NOT NULL,
 
 DECLARE
     v_index_exists number:=0;
@@ -30,7 +29,7 @@ BEGIN
     commit;
     SELECT COUNT(*) INTO v_index_exists FROM USER_INDEXES WHERE INDEX_NAME = upper('x_rms_svc_res_IDX_res_sgn') AND TABLE_NAME= upper('x_rms_service_resource');
     IF (v_index_exists > 0) THEN
-        EXECUTE IMMEDIATE 'DROP INDEX x_rms_svc_res_IDX_res_sgn ON x_rms_service_resource(resource_signature)';
+        EXECUTE IMMEDIATE 'DROP INDEX x_rms_svc_res_IDX_res_sgn';
         commit;
     END IF;
 
