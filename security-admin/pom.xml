@@ -814,7 +814,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-war-plugin</artifactId>
-                        <version>2.6</version>
+                        <version>3.3.2</version>
                         <executions>
                             <execution>
                                 <id>prepare</id>
@@ -1138,7 +1138,7 @@
                     <plugin>
                         <groupId>org.apache.maven.plugins</groupId>
                         <artifactId>maven-war-plugin</artifactId>
-                        <version>2.6</version>
+                        <version>3.3.2</version>
                         <configuration>
                             <packagingExcludes>
                                 WEB-INF/lib/spring-*.SEC03.jar,

@@ -17,6 +17,7 @@
 
 package org.apache.ranger.authorization.trino.authorizer;
 
+import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import io.trino.spi.connector.CatalogSchemaName;
 import io.trino.spi.connector.CatalogSchemaRoutineName;
@@ -111,13 +112,13 @@ public class RangerSystemAccessControlTest {
     assertEquals(accessControlManager.filterSchemas(context(alice), aliceCatalog, aliceSchemas), aliceSchemas);
     assertEquals(accessControlManager.filterSchemas(context(bob), "alice-catalog", aliceSchemas), ImmutableSet.of());
 
-    accessControlManager.checkCanCreateSchema(context(alice), aliceSchema);
+    accessControlManager.checkCanCreateSchema(context(alice), aliceSchema,ImmutableMap.of());
     accessControlManager.checkCanDropSchema(context(alice), aliceSchema);
     accessControlManager.checkCanRenameSchema(context(alice), aliceSchema, "new-schema");
     accessControlManager.checkCanShowSchemas(context(alice), aliceCatalog);
 
     try {
-      accessControlManager.checkCanCreateSchema(context(bob), aliceSchema);
+      accessControlManager.checkCanCreateSchema(context(bob), aliceSchema,ImmutableMap.of());
     } catch (AccessDeniedException expected) {
     }
 
@@ -133,7 +134,7 @@ public class RangerSystemAccessControlTest {
     assertEquals(accessControlManager.filterTables(context(alice), aliceCatalog, aliceTables), aliceTables);
     assertEquals(accessControlManager.filterTables(context(bob), "alice-catalog", aliceTables), ImmutableSet.of());
 
-    accessControlManager.checkCanCreateTable(context(alice), aliceTable,Map.of());
+    accessControlManager.checkCanCreateTable(context(alice), aliceTable,ImmutableMap.of());
     accessControlManager.checkCanDropTable(context(alice), aliceTable);
     accessControlManager.checkCanSelectFromColumns(context(alice), aliceTable, ImmutableSet.of());
     accessControlManager.checkCanInsertIntoTable(context(alice), aliceTable);
@@ -142,7 +143,7 @@ public class RangerSystemAccessControlTest {
 
 
     try {
-      accessControlManager.checkCanCreateTable(context(bob), aliceTable,Map.of());
+      accessControlManager.checkCanCreateTable(context(bob), aliceTable,ImmutableMap.of());
     } catch (AccessDeniedException expected) {
     }
   }

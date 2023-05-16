@@ -158,7 +158,6 @@ public class RangerSystemAccessControl
     return result != null && result.isRowFilterEnabled();
   }
 
-  @Override
   public Optional<ViewExpression> getRowFilter(SystemSecurityContext context, CatalogSchemaTableName tableName) {
     RangerTrinoAccessRequest request = createAccessRequest(createResource(tableName), context, TrinoAccessType.SELECT);
     RangerAccessResult result = getRowFilterResult(request);
@@ -360,7 +359,7 @@ public class RangerSystemAccessControl
    * to create a schema when you have create rights on the catalog level
    */
   @Override
-  public void checkCanCreateSchema(SystemSecurityContext context, CatalogSchemaName schema) {
+  public void checkCanCreateSchema(SystemSecurityContext context, CatalogSchemaName schema,Map<String, Object> properties) {
     if (!hasPermission(createResource(schema.getCatalogName()), context, TrinoAccessType.CREATE)) {
       LOG.debug("RangerSystemAccessControl.checkCanCreateSchema(" + schema.getSchemaName() + ") denied");
       AccessDeniedException.denyCreateSchema(schema.getSchemaName());
