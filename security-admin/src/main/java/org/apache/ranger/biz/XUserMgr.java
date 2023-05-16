@@ -2270,7 +2270,7 @@ public class XUserMgr extends XUserMgrBase {
 		XXAuthSessionDao xXAuthSessionDao=daoManager.getXXAuthSession();
 		XXUserPermissionDao xXUserPermissionDao=daoManager.getXXUserPermission();
 		XXPortalUserRoleDao xXPortalUserRoleDao=daoManager.getXXPortalUserRole();
-		List<XXAuthSession> xXAuthSessions=xXAuthSessionDao.getAuthSessionByUserId(xXPortalUserId);
+		List<Long> xXAuthSessionIds = xXAuthSessionDao.getAuthSessionIdsByUserId(xXPortalUserId);
 		List<XXUserPermission> xXUserPermissions=xXUserPermissionDao.findByUserPermissionId(xXPortalUserId);
 		List<XXPortalUserRole> xXPortalUserRoles=xXPortalUserRoleDao.findByUserId(xXPortalUserId);
 
@@ -2303,12 +2303,11 @@ public class XUserMgr extends XUserMgrBase {
 			//delete XXPortalUser references
 			if(vXPortalUser!=null){
 				xPortalUserService.updateXXPortalUserReferences(xXPortalUserId);
-				if(xXAuthSessions!=null && xXAuthSessions.size()>0){
-					logger.warn("Deleting " + xXAuthSessions.size() + " login session records for user '" +  vXPortalUser.getLoginId() + "'");
+				if(CollectionUtils.isNotEmpty(xXAuthSessionIds)){
+					logger.warn("Deleting " + xXAuthSessionIds.size() + " login session records for user '" +  vXPortalUser.getLoginId() + "'");
+					xXAuthSessionDao.deleteAuthSessionsByIds(xXAuthSessionIds);
 				}
-				for (XXAuthSession xXAuthSession : xXAuthSessions) {
-					xXAuthSessionDao.remove(xXAuthSession.getId());
-				}
+
 				for (XXUserPermission xXUserPermission : xXUserPermissions) {
 					if(xXUserPermission!=null){
 						XXModuleDef xXModuleDef=daoManager.getXXModuleDef().findByModuleId(xXUserPermission.getModuleId());
@@ -2389,7 +2388,7 @@ public class XUserMgr extends XUserMgrBase {
 			if(hasReferences==false && vXAuditMapList!=null && vXAuditMapList.getListSize()>0){
 				hasReferences=true;
 			}
-			if(hasReferences==false && xXAuthSessions!=null && xXAuthSessions.size()>0){
+			if(hasReferences==false && CollectionUtils.isNotEmpty(xXAuthSessionIds)){
 				hasReferences=true;
 			}
 			if(hasReferences==false && xXUserPermissions!=null && xXUserPermissions.size()>0){
