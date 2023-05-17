@@ -500,7 +500,7 @@ function Users() {
 
   const toggleUserSyncModal = (raw) => {
     setUserSyncdetails({
-      syncDteails: JSON.parse(raw),
+      syncDteails: !isEmpty(raw) && JSON.parse(raw),
       showSyncDetails: true
     });
   };

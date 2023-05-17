@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation, matchRoutes } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import errorIcon from "Images/error-404-icon.png";
 import { Button } from "react-bootstrap";
 import { PathAssociateWithModule } from "../utils/XAEnums";
@@ -27,26 +27,13 @@ export const ErrorPage = (props) => {
   const [errorCode, setErrorCode] = useState(null);
   const [errorInfo, setErrorInfo] = useState(null);
   let navigate = useNavigate();
-  let location = useLocation();
 
-  let allRouter = [];
-
-  for (const key in PathAssociateWithModule) {
-    allRouter = [...allRouter, ...PathAssociateWithModule[key]];
-  }
-  let isValidRouter = matchRoutes(
-    allRouter.map((val) => ({ path: val })),
-    location.pathname
-  );
   useEffect(() => {
-    if (isValidRouter != null && isValidRouter.length > 0) {
+    if (props.errorCode == "401") {
       setErrorCode("Access Denied (401).");
       setErrorInfo(
         "Sorry, you don't have enough privileges to view this page."
       );
-    } else {
-      setErrorCode("Page not found (404).");
-      setErrorInfo("Sorry, this page isn't here or has moved.");
     }
     if (props.errorCode == "204") {
       setErrorCode("Content not found (204).");
@@ -71,6 +58,10 @@ export const ErrorPage = (props) => {
           <strong>close all browser windows and exit the browser</strong>.
         </span>
       );
+    }
+    if (props.errorCode == "404") {
+      setErrorCode("Page not found (404).");
+      setErrorInfo("Sorry, this page isn't here or has moved.");
     }
   });
 
