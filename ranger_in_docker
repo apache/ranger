@@ -44,12 +44,31 @@
 # List of optional services:
 #       tagsync,hadoop,hbase,kafka,hive,knox,kms
 #
+if [ -z "${RANGER_HOME}" ]
+then
+    rhd=`dirname $0`
+    RANGER_HOME=$(cd ${rhd}; pwd)
+fi
+RD_HOME=${RANGER_HOME}/dev-support/ranger-docker
+
+ENV_FILE=${RD_HOME}/.env
+
+source "${ENV_FILE}"
 
 ENABLED_RANGER_SERVICE_FILE=${HOME}/.ranger_docker_services
 
 [ -z "${RANGER_DB_TYPE}" ] && RANGER_DB_TYPE="postgres"
 
-CORE_SERVICES="ranger-base,ranger,ranger-${RANGER_DB_TYPE},ranger-usersync"
+   export ENABLE_DB_MOUNT
+
+if [ "${ENABLE_DB_MOUNT}" = "true" ];
+then
+    DB_SERVICE_NAME="ranger-${RANGER_DB_TYPE}-mounted"
+else
+    DB_SERVICE_NAME="ranger-${RANGER_DB_TYPE}"
+fi
+
+CORE_SERVICES="ranger-base,ranger,${DB_SERVICE_NAME},ranger-usersync"
 
 if [ -z "${ENABLED_RANGER_SERVICES}" ]
 then
@@ -61,11 +80,6 @@ else
     echo "${ENABLED_RANGER_SERVICES}" > ${ENABLED_RANGER_SERVICE_FILE}
 fi
 
-if [ -z "${RANGER_HOME}" ]
-then
-    rhd=`dirname $0`
-    RANGER_HOME=$(cd ${rhd}; pwd)
-fi
 
 if [ ! -d "${RANGER_HOME}" ]
 then
@@ -73,7 +87,6 @@ then
     exit 1
 fi
 
-RD_HOME=${RANGER_HOME}/dev-support/ranger-docker
 export RD_HOME
 
 cd ${RD_HOME}
@@ -133,7 +146,6 @@ then
     DOCKER_MAVEN_BUILD=0
 fi
 
-ENV_FILE=${RD_HOME}/.env
 export RANGER_DB_TYPE
 
 cd ${RANGER_HOME}
