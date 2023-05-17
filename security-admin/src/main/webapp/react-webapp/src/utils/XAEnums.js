@@ -620,7 +620,8 @@ export const PathAssociateWithModule = {
   ],
   Permission: ["/permissions/models", "/permissions/:permissionId/edit"],
   Profile: ["/userprofile"],
-  KnoxSignOut: ["/knoxSSOWarning"]
+  KnoxSignOut: ["/knoxSSOWarning"],
+  localLogin: ["/locallogin"]
 };
 
 /* Access */
@@ -743,54 +744,54 @@ export const ServiceType = {
 export const ServerAttrName = [
   {
     text: "Group Name",
-    info: "Name of Group.",
+    info: "Name of Group."
   },
   {
     text: "Policy Name",
-    info: "Enter name of policy.",
+    info: "Enter name of policy."
   },
   {
     text: "Status",
-    info: "Status of Policy Enable/Disable.",
+    info: "Status of Policy Enable/Disable."
   },
   {
     text: "User Name",
-    info: "Name of User.",
+    info: "Name of User."
   },
   {
-    text : "Role Name",
-    info : "Name of Role.",
+    text: "Role Name",
+    info: "Name of Role."
   },
   {
     text: "Policy Label",
-    info: "Label of policy",
+    info: "Label of policy"
   }
 ];
 
 export const ResourcesOverrideInfoMsg = {
-    "collection": "Solr collection.",
-    "column": "Column Name",
-    "column-family": "Hbase column-family",
-    "database": "Database",
-    "entity": "Atlas all-entity.",
-    "keyname": "Key Name",
-    "path": "Name of policy resource path.",
-    "queue": "Yarn queue.",
-    "service": "Name of service.",
-    "table": "Table Name",
-    "tag": "Tag Name.",
-    "topic": "Kafka topic.",
-    "topology": "Topology Name",
-    "type": "Policy for all type.",
-    "udf": "Hive udf.",
-    "url": "Hive url.",
-    "type-category": "Atlas type category.",
-    "entity-type": "Atlas entity type.",
-    "entity-classification": "Atlas entity classification.",
-    "atlas-service": "Atlas services.",
-    "connector": "Connectivity By Sqoop.",
-    "link": "Linker Name.",
-    "job": "Sqoop Job Name.",
-    "project": "Kylin Project Level.",
-    "nifi-resource": "NiFi Resource Identifier."
-}
+  collection: "Solr collection.",
+  column: "Column Name",
+  "column-family": "Hbase column-family",
+  database: "Database",
+  entity: "Atlas all-entity.",
+  keyname: "Key Name",
+  path: "Name of policy resource path.",
+  queue: "Yarn queue.",
+  service: "Name of service.",
+  table: "Table Name",
+  tag: "Tag Name.",
+  topic: "Kafka topic.",
+  topology: "Topology Name",
+  type: "Policy for all type.",
+  udf: "Hive udf.",
+  url: "Hive url.",
+  "type-category": "Atlas type category.",
+  "entity-type": "Atlas entity type.",
+  "entity-classification": "Atlas entity classification.",
+  "atlas-service": "Atlas services.",
+  connector: "Connectivity By Sqoop.",
+  link: "Linker Name.",
+  job: "Sqoop Job Name.",
+  project: "Kylin Project Level.",
+  "nifi-resource": "NiFi Resource Identifier."
+};
