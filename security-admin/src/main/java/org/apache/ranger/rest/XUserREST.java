@@ -890,9 +890,9 @@ public class XUserREST {
 		searchUtil.extractRoleString(
 				request, searchCriteria, "userRole", "Role", null);
 
-		VXUserList userList = xUserMgr.searchXUsers(searchCriteria);
-		xUserMgr.forceDeleteUsers(userList.getList());
-		return Response.ok(userList.getListSize() + " users deleted successfully").build();
+		List<Long> userIds = xUserService.searchXUsersForIds(searchCriteria);
+		long usersDeleted = xUserMgr.forceDeleteUsers(userIds);
+		return Response.ok(usersDeleted + " users deleted successfully").build();
 	}
 
 	/**
@@ -914,9 +914,9 @@ public class XUserREST {
 		searchUtil.extractString(
 				request, searchCriteria, "syncSource", "Sync Source", null);
 
-		VXGroupList groupList = xUserMgr.searchXGroups(searchCriteria);
-		xUserMgr.forceDeleteGroups(groupList.getList());
-		return Response.ok(groupList.getListSize() + " groups deleted successfully").build();
+		List<Long> groupIds = xGroupService.searchXGroupsForIds(searchCriteria);
+		long groupsDeleted = xUserMgr.forceDeleteGroups(groupIds);
+		return Response.ok(groupsDeleted + " groups deleted successfully").build();
 	}
 
 	@DELETE

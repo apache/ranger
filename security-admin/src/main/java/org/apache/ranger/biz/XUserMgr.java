@@ -2198,10 +2198,10 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	public void forceDeleteGroups(List<VXGroup> groups){
+	public long forceDeleteGroups(List<Long> groupIds){
+		long groupsDeleted = 0;
 		long startTime = Time.now();
-		for(VXGroup group: groups){
-			Long groupId = group.getId();
+		for(Long groupId: groupIds){
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 			try {
@@ -2212,15 +2212,17 @@ public class XUserMgr extends XUserMgrBase {
 						return null;
 					}
 				});
+				groupsDeleted += 1;
 			} catch (Throwable ex) {
 				logger.error("forceDeleteGroups(): Failed to delete group id: " + groupId + " ", ex);
 				throw new RuntimeException(ex);
 			}
 		}
-		if (groups.size() > 0) {
+		if (groupsDeleted > 0) {
 			logger.info(String.format("Force Deletion of %d groups took %d milliseconds",
-					groups.size(), (Time.now() - startTime)));
+					groupIds.size(), (Time.now() - startTime)));
 		}
+		return groupsDeleted;
 	}
 
 	private void blockIfZoneGroup(Long grpId) {
@@ -2426,10 +2428,10 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	public void forceDeleteUsers(List<VXUser> users){
+	public long forceDeleteUsers(List<Long> userIds){
+		long usersDeleted = 0;
 		long startTime = Time.now();
-		for(VXUser user: users){
-			Long userId = user.getId();
+		for(Long userId: userIds){
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
 			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 			try {
@@ -2440,15 +2442,17 @@ public class XUserMgr extends XUserMgrBase {
 						return null;
 					}
 				});
+				usersDeleted += 1;
 			} catch (Throwable ex) {
 				logger.error("forceDeleteUsers(): Failed to delete user id: " + userId + " ", ex);
 				throw new RuntimeException(ex);
 			}
 		}
-		if (users.size() > 0) {
+		if (usersDeleted > 0) {
 			logger.info(String.format("Force Deletion of %d users took %d milliseconds",
-					users.size(), (Time.now() - startTime)));
+					userIds.size(), (Time.now() - startTime)));
 		}
+		return usersDeleted;
 	}
 
 	private void blockIfZoneUser(Long id) {
