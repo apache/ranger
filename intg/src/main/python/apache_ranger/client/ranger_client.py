@@ -29,6 +29,7 @@ from apache_ranger.model.ranger_service_def   import RangerServiceDef
 from apache_ranger.model.ranger_service_tags  import RangerServiceTags
 from apache_ranger.utils                      import *
 from requests                                 import Session
+from requests                                 import Response
 from requests.auth                            import AuthBase
 from urllib.parse                             import urlencode
 from urllib.parse                             import urljoin
