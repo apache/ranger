@@ -2198,7 +2198,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	public long forceDeleteGroups(List<Long> groupIds){
+	public long forceDeleteExternalGroups(List<Long> groupIds){
 		long groupsDeleted = 0;
 		long startTime = Time.now();
 		for(Long groupId: groupIds){
@@ -2428,7 +2428,7 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
-	public long forceDeleteUsers(List<Long> userIds){
+	public long forceDeleteExternalUsers(List<Long> userIds){
 		long usersDeleted = 0;
 		long startTime = Time.now();
 		for(Long userId: userIds){

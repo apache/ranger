@@ -91,6 +91,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import static org.apache.ranger.common.RangerCommonEnums.GROUP_EXTERNAL;
+import static org.apache.ranger.common.RangerCommonEnums.USER_EXTERNAL;
+
 
 @Path("xusers")
 @Component
@@ -873,14 +876,12 @@ public class XUserREST {
 	@Path("/delete/external/users")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json" })
-	public Response forceDeleteUsers(@Context HttpServletRequest request) {
+	public Response forceDeleteExternalUsers(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = new SearchCriteria();
 		searchUtil.extractString(
 				request, searchCriteria, "name", "User name",null);
 		searchUtil.extractString(
 				request, searchCriteria, "emailAddress", "Email Address", null);
-		searchUtil.extractInt(
-				request, searchCriteria, "userSource", "User Source");
 		searchUtil.extractInt(
 				request, searchCriteria, "isVisible", "User Visibility");
 		searchUtil.extractInt(
@@ -890,9 +891,16 @@ public class XUserREST {
 		searchUtil.extractRoleString(
 				request, searchCriteria, "userRole", "Role", null);
 
+		// only for external users
+		searchCriteria.addParam("userSource", USER_EXTERNAL);
+
 		List<Long> userIds = xUserService.searchXUsersForIds(searchCriteria);
-		long usersDeleted = xUserMgr.forceDeleteUsers(userIds);
-		return Response.ok(usersDeleted + " users deleted successfully").build();
+		long usersDeleted = xUserMgr.forceDeleteExternalUsers(userIds);
+		String response = "No users were deleted!";
+		if (usersDeleted > 0){
+			response = usersDeleted + " users deleted successfully";
+		}
+		return Response.ok(response).build();
 	}
 
 	/**
@@ -903,20 +911,24 @@ public class XUserREST {
 	@Path("/delete/external/groups")
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	@Produces({ "application/json" })
-	public Response forceDeleteGroups(@Context HttpServletRequest request) {
+	public Response forceDeleteExternalGroups(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = new SearchCriteria();
 		searchUtil.extractString(
 				request, searchCriteria, "name", "Group Name",null);
 		searchUtil.extractInt(
-				request, searchCriteria, "groupSource", "Group Source");
-		searchUtil.extractInt(
 				request, searchCriteria, "isVisible", "Group Visibility");
 		searchUtil.extractString(
 				request, searchCriteria, "syncSource", "Sync Source", null);
+		// only for external groups
+		searchCriteria.addParam("groupSource", GROUP_EXTERNAL);
 
 		List<Long> groupIds = xGroupService.searchXGroupsForIds(searchCriteria);
-		long groupsDeleted = xUserMgr.forceDeleteGroups(groupIds);
-		return Response.ok(groupsDeleted + " groups deleted successfully").build();
+		long groupsDeleted = xUserMgr.forceDeleteExternalGroups(groupIds);
+		String response = "No groups were deleted!";
+		if (groupsDeleted > 0){
+			response = groupsDeleted + " groups deleted successfully";
+		}
+		return Response.ok(response).build();
 	}
 
 	@DELETE
