@@ -101,44 +101,48 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
     let newVal = {};
     resources.map((obj) => {
-      newVal = JSON.parse(obj.newValue);
+      newVal = !isEmpty(obj.newValue) && JSON.parse(obj.newValue);
     });
 
-    Object.keys(newVal).map((key, index) => {
-      return tablerow.push(
-        <>
-          <tr key={index}>
-            <td className="table-warning text-nowrap policyitem-field">
-              {key}
-            </td>
-            <td className="table-warning"> {newVal[key].values.join(", ")}</td>
-          </tr>
-          <tr>
-            <td className="table-warning text-nowrap policyitem-field">
-              {key + " " + "exclude"}
-            </td>
-            <td className="table-warning">
-              {newVal[key].isExcludes == false ? "false" : "true"}
-            </td>
-          </tr>
-          <tr>
-            <td className="table-warning text-nowrap policyitem-field">
-              {key + " " + "recursive"}
-            </td>
-            <td className="table-warning policyitem-field">
-              {newVal[key].isRecursive == false ? "false" : "true"}
-            </td>
-          </tr>
-        </>
-      );
-    });
+    !isEmpty(newVal) &&
+      Object.keys(newVal).map((key, index) => {
+        return tablerow.push(
+          <>
+            <tr key={index}>
+              <td className="table-warning text-nowrap policyitem-field">
+                {key}
+              </td>
+              <td className="table-warning">
+                {" "}
+                {newVal[key].values.join(", ")}
+              </td>
+            </tr>
+            <tr>
+              <td className="table-warning text-nowrap policyitem-field">
+                {key + " " + "exclude"}
+              </td>
+              <td className="table-warning">
+                {newVal[key].isExcludes == false ? "false" : "true"}
+              </td>
+            </tr>
+            <tr>
+              <td className="table-warning text-nowrap policyitem-field">
+                {key + " " + "recursive"}
+              </td>
+              <td className="table-warning policyitem-field">
+                {newVal[key].isRecursive == false ? "false" : "true"}
+              </td>
+            </tr>
+          </>
+        );
+      });
     return tablerow;
   };
   const createValidity = reportdata.filter(
     (obj) => obj.attributeName == "Validity Schedules" && obj.action == "create"
   );
   const createValidityNew = createValidity.map(
-    (obj) => obj && obj.newValue && JSON.parse(obj.newValue)
+    (obj) => !isEmpty(obj.newValue) && JSON.parse(obj.newValue)
   );
   const createCondition = reportdata.filter((obj) => {
     return obj.attributeName == "Policy Conditions" && obj.action == "create";
@@ -288,8 +292,8 @@ export const PolicyLogs = ({ data, reportdata }) => {
     let oldVal = {};
     let newVal = {};
     resources.map((obj) => {
-      oldVal = JSON.parse(obj.previousValue);
-      newVal = JSON.parse(obj.newValue);
+      oldVal = !isEmpty(obj.previousValue) && JSON.parse(obj.previousValue);
+      newVal = !isEmpty(obj.newValue) && JSON.parse(obj.newValue);
     });
 
     const diffVal = (obj1, obj2) => {
@@ -584,13 +588,13 @@ export const PolicyLogs = ({ data, reportdata }) => {
     let newVal = [];
 
     oldVal =
-      policy.previousValue &&
+      !isEmpty(policy.previousValue) &&
       JSON.parse(policy.previousValue).map(
         (obj) => `${obj.type}: ${obj.values.join(", ")}`
       );
 
     newVal =
-      policy.newValue &&
+      !isEmpty(policy.newValue) &&
       JSON.parse(policy.newValue).map(
         (obj) => `${obj.type}: ${obj.values.join(", ")}`
       );
@@ -1609,7 +1613,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
     let keynew = {};
     resources.map((obj) => {
-      keynew = JSON.parse(obj.previousValue);
+      keynew = !isEmpty(obj.previousValue) && JSON.parse(obj.previousValue);
     });
 
     Object.keys(keynew).map((key, index) => {
@@ -1735,7 +1739,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
 
     let keynew = {};
     resources.map((obj) => {
-      keynew = JSON.parse(obj.previousValue);
+      keynew = !isEmpty(ovj.previousValue) && JSON.parse(obj.previousValue);
     });
 
     Object.keys(keynew).map((key, index) => {
@@ -1990,8 +1994,9 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {createPolicyItems.map((policyitem) => {
-                      return JSON.parse(policyitem.newValue).map(
-                        (policy, index) => (
+                      return (
+                        !isEmpty(policyitem.newValue) &&
+                        JSON.parse(policyitem.newValue).map((policy, index) => (
                           <tbody>
                             <tr key={index}>
                               <td className="table-warning text-nowrap policyitem-field">
@@ -2055,7 +2060,7 @@ export const PolicyLogs = ({ data, reportdata }) => {
                               </td>
                             </tr>
                           </tbody>
-                        )
+                        ))
                       );
                     })}
                   </Table>
@@ -2079,59 +2084,62 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {createRowMaskNew.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Accesses`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Accesses`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
 
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Row Level Filter`}</i>
-                              {!isEmpty(policy.rowFilterInfo.filterExpr)
-                                ? `: ${policy.rowFilterInfo.filterExpr} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Row Level Filter`}</i>
+                                {!isEmpty(policy.rowFilterInfo.filterExpr)
+                                  ? `: ${policy.rowFilterInfo.filterExpr} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -2152,73 +2160,77 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {createExceptionNew.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Permissions`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                          <tr>
-                            {policy.conditions &&
-                              policy.conditions.length > 0 && (
-                                <td className="table-warning text-nowrap policyitem-field">
-                                  <i>{`Conditions`}</i>
-                                  {`: ${policy.conditions
-                                    .map(
-                                      (type) => `${type.type} : ${type.values}`
-                                    )
-                                    .join(", ")}`}
-                                </td>
-                              )}
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Delegate Admin`}</i>
-                              {`: ${
-                                policy.delegateAdmin == true
-                                  ? "enabled"
-                                  : "disabled"
-                              }`}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Permissions`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {policy.conditions &&
+                                policy.conditions.length > 0 && (
+                                  <td className="table-warning text-nowrap policyitem-field">
+                                    <i>{`Conditions`}</i>
+                                    {`: ${policy.conditions
+                                      .map(
+                                        (type) =>
+                                          `${type.type} : ${type.values}`
+                                      )
+                                      .join(", ")}`}
+                                  </td>
+                                )}
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Delegate Admin`}</i>
+                                {`: ${
+                                  policy.delegateAdmin == true
+                                    ? "enabled"
+                                    : "disabled"
+                                }`}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -2239,73 +2251,77 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {createDenyPolicyNew.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Permissions`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                          <tr>
-                            {policy.conditions &&
-                              policy.conditions.length > 0 && (
-                                <td className="table-warning text-nowrap policyitem-field">
-                                  <i>{`Conditions`}</i>
-                                  {`: ${policy.conditions
-                                    .map(
-                                      (type) => `${type.type} : ${type.values}`
-                                    )
-                                    .join(", ")}`}
-                                </td>
-                              )}
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Delegate Admin`}</i>
-                              {`: ${
-                                policy.delegateAdmin == true
-                                  ? "enabled"
-                                  : "disabled"
-                              }`}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Permissions`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {policy.conditions &&
+                                policy.conditions.length > 0 && (
+                                  <td className="table-warning text-nowrap policyitem-field">
+                                    <i>{`Conditions`}</i>
+                                    {`: ${policy.conditions
+                                      .map(
+                                        (type) =>
+                                          `${type.type} : ${type.values}`
+                                      )
+                                      .join(", ")}`}
+                                  </td>
+                                )}
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Delegate Admin`}</i>
+                                {`: ${
+                                  policy.delegateAdmin == true
+                                    ? "enabled"
+                                    : "disabled"
+                                }`}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -2328,71 +2344,74 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {createDenyExceptionNew.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Permissions`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                          <tr>
-                            {policy.conditions &&
-                              policy.conditions.length > 0 && (
-                                <td className="table-warning text-nowrap policyitem-field">
-                                  <i>{`Conditions`}</i>
-                                  {`: ${policy.conditions.map(
-                                    (type) => `${type.type} : ${type.values}`
-                                  )}`}
-                                </td>
-                              )}
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Delegate Admin`}</i>
-                              {`: ${
-                                policy.delegateAdmin == true
-                                  ? "enabled"
-                                  : "disabled"
-                              }`}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Permissions`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {policy.conditions &&
+                                policy.conditions.length > 0 && (
+                                  <td className="table-warning text-nowrap policyitem-field">
+                                    <i>{`Conditions`}</i>
+                                    {`: ${policy.conditions.map(
+                                      (type) => `${type.type} : ${type.values}`
+                                    )}`}
+                                  </td>
+                                )}
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Delegate Admin`}</i>
+                                {`: ${
+                                  policy.delegateAdmin == true
+                                    ? "enabled"
+                                    : "disabled"
+                                }`}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -2415,74 +2434,77 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {createMaskPolicyNew.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning text-nowrap policyitem-field">
-                              <i>{`Accesses`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-
-                          <tr>
-                            {policy.delegateAdmin == true && (
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
                               <td className="table-warning text-nowrap policyitem-field">
-                                <i>{`Delegate Admin`}</i>
+                                <i>{`Roles`}</i>
                                 {`: ${
-                                  policy.delegateAdmin == true
-                                    ? "enabled"
-                                    : "disabled"
-                                }`}
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
                               </td>
-                            )}
-                          </tr>
-                          <tr>
-                            {!isEmpty(policy.DataMasklabel) && (
+                            </tr>
+                            <tr>
                               <td className="table-warning text-nowrap policyitem-field">
-                                <i>{`Data Mask Types`}</i>
-                                {!isEmpty(policy.DataMasklabel)
-                                  ? `: ${policy.DataMasklabel} `
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning text-nowrap policyitem-field">
+                                <i>{`Accesses`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
                                   : "<empty>"}
                               </td>
-                            )}
-                          </tr>
-                          <br />
-                        </tbody>
-                      ));
+                            </tr>
+
+                            <tr>
+                              {policy.delegateAdmin == true && (
+                                <td className="table-warning text-nowrap policyitem-field">
+                                  <i>{`Delegate Admin`}</i>
+                                  {`: ${
+                                    policy.delegateAdmin == true
+                                      ? "enabled"
+                                      : "disabled"
+                                  }`}
+                                </td>
+                              )}
+                            </tr>
+                            <tr>
+                              {!isEmpty(policy.DataMasklabel) && (
+                                <td className="table-warning text-nowrap policyitem-field">
+                                  <i>{`Data Mask Types`}</i>
+                                  {!isEmpty(policy.DataMasklabel)
+                                    ? `: ${policy.DataMasklabel} `
+                                    : "<empty>"}
+                                </td>
+                              )}
+                            </tr>
+                            <br />
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                 </>
@@ -2892,38 +2914,43 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </tr>
                     </thead>
                     {deleteValidityOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Start Date`}</i>
-                              {`: ${
-                                !isEmpty(policy.startTime)
-                                  ? policy.startTime
-                                  : "--"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`End Date`}</i>
-                              {`: ${
-                                !isEmpty(policy.endTime) ? policy.endTime : "--"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Time Zone`}</i>
-                              {`: ${
-                                !isEmpty(policy.timeZone)
-                                  ? policy.timeZone
-                                  : "--"
-                              } `}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Start Date`}</i>
+                                {`: ${
+                                  !isEmpty(policy.startTime)
+                                    ? policy.startTime
+                                    : "--"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`End Date`}</i>
+                                {`: ${
+                                  !isEmpty(policy.endTime)
+                                    ? policy.endTime
+                                    : "--"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Time Zone`}</i>
+                                {`: ${
+                                  !isEmpty(policy.timeZone)
+                                    ? policy.timeZone
+                                    : "--"
+                                } `}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -2946,15 +2973,18 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {deleteConditionOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              {`${policy.type}: ${policy.values.join(", ")}`}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                {`${policy.type}: ${policy.values.join(", ")}`}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -2977,59 +3007,62 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {deleteRowMaskOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.suers)
-                                  ? policy.suers.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Accesses`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.suers)
+                                    ? policy.suers.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Accesses`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
 
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Row Level Filter`}</i>
-                              {!isEmpty(policy.rowFilterInfo.filterExpr)
-                                ? `: ${policy.rowFilterInfo.filterExpr}`
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Row Level Filter`}</i>
+                                {!isEmpty(policy.rowFilterInfo.filterExpr)
+                                  ? `: ${policy.rowFilterInfo.filterExpr}`
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                     <br />
                   </Table>
@@ -3051,73 +3084,76 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {deletemaskPolicyOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Accesses`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-
-                          <tr>
-                            {policy.delegateAdmin == true && (
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
                               <td className="table-warning policyitem-field">
-                                <i>{`Delegate Admin`}</i>
+                                <i>{`Roles`}</i>
                                 {`: ${
-                                  policy.delegateAdmin == true
-                                    ? "enabled"
-                                    : "disabled"
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
                                 } `}
                               </td>
-                            )}
-                          </tr>
-                          <tr>
-                            {policy.DataMasklabel &&
-                              policy.DataMasklabel.length > 0 && (
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Accesses`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+
+                            <tr>
+                              {policy.delegateAdmin == true && (
                                 <td className="table-warning policyitem-field">
-                                  <i>{`Data Mask Types`}</i>
-                                  {`: ${policy.DataMasklabel} `}
+                                  <i>{`Delegate Admin`}</i>
+                                  {`: ${
+                                    policy.delegateAdmin == true
+                                      ? "enabled"
+                                      : "disabled"
+                                  } `}
                                 </td>
                               )}
-                          </tr>
-                          <br />
-                        </tbody>
-                      ));
+                            </tr>
+                            <tr>
+                              {policy.DataMasklabel &&
+                                policy.DataMasklabel.length > 0 && (
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Data Mask Types`}</i>
+                                    {`: ${policy.DataMasklabel} `}
+                                  </td>
+                                )}
+                            </tr>
+                            <br />
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                 </>
@@ -3138,72 +3174,77 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {deletePolicyItemsOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Permissions`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                          <tr>
-                            {policy.conditions &&
-                              policy.conditions.length > 0 && (
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Conditions`}</i>
-                                  {`: ${policy.conditions.map(
-                                    (type) =>
-                                      `${type.type} : ${type.values.join(", ")}`
-                                  )} `}
-                                </td>
-                              )}
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Delegate Admin`}</i>
-                              {`: ${
-                                policy.delegateAdmin == true
-                                  ? "enabled"
-                                  : "disabled"
-                              } `}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Permissions`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {policy.conditions &&
+                                policy.conditions.length > 0 && (
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Conditions`}</i>
+                                    {`: ${policy.conditions.map(
+                                      (type) =>
+                                        `${type.type} : ${type.values.join(
+                                          ", "
+                                        )}`
+                                    )} `}
+                                  </td>
+                                )}
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Delegate Admin`}</i>
+                                {`: ${
+                                  policy.delegateAdmin == true
+                                    ? "enabled"
+                                    : "disabled"
+                                } `}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -3225,72 +3266,77 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {deleteExceptionOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Permissions`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                          <tr>
-                            {policy.conditions &&
-                              policy.conditions.length > 0 && (
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Conditions`}</i>
-                                  {`: ${policy.conditions.map(
-                                    (type) =>
-                                      `${type.type} : ${type.values.join(", ")}`
-                                  )} `}
-                                </td>
-                              )}
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Delegate Admin`}</i>
-                              {`: ${
-                                policy.delegateAdmin == true
-                                  ? "enabled"
-                                  : "disabled"
-                              } `}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Permissions`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {policy.conditions &&
+                                policy.conditions.length > 0 && (
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Conditions`}</i>
+                                    {`: ${policy.conditions.map(
+                                      (type) =>
+                                        `${type.type} : ${type.values.join(
+                                          ", "
+                                        )}`
+                                    )} `}
+                                  </td>
+                                )}
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Delegate Admin`}</i>
+                                {`: ${
+                                  policy.delegateAdmin == true
+                                    ? "enabled"
+                                    : "disabled"
+                                } `}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -3310,72 +3356,77 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {deleteDenyPolicyOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Permissions`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                          <tr>
-                            {policy.conditions &&
-                              policy.conditions.length > 0 && (
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Conditions`}</i>
-                                  {`: ${policy.conditions.map(
-                                    (type) =>
-                                      `${type.type} : ${type.values.join(", ")}`
-                                  )} `}
-                                </td>
-                              )}
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Delegate Admin`}</i>
-                              {`: ${
-                                policy.delegateAdmin == true
-                                  ? "enabled"
-                                  : "disabled"
-                              } `}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Permissions`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {policy.conditions &&
+                                policy.conditions.length > 0 && (
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Conditions`}</i>
+                                    {`: ${policy.conditions.map(
+                                      (type) =>
+                                        `${type.type} : ${type.values.join(
+                                          ", "
+                                        )}`
+                                    )} `}
+                                  </td>
+                                )}
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Delegate Admin`}</i>
+                                {`: ${
+                                  policy.delegateAdmin == true
+                                    ? "enabled"
+                                    : "disabled"
+                                } `}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -3398,72 +3449,77 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {deleteDenyExceptionOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Permissions`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-                          <tr>
-                            {policy.conditions &&
-                              policy.conditions.length > 0 && (
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Conditions`}</i>
-                                  {`: ${policy.conditions.map(
-                                    (type) =>
-                                      `${type.type} : ${type.values.join(", ")}`
-                                  )} `}
-                                </td>
-                              )}
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Delegate Admin`}</i>
-                              {`: ${
-                                policy.delegateAdmin == true
-                                  ? "enabled"
-                                  : "disabled"
-                              } `}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Roles`}</i>
+                                {`: ${
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Permissions`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+                            <tr>
+                              {policy.conditions &&
+                                policy.conditions.length > 0 && (
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Conditions`}</i>
+                                    {`: ${policy.conditions.map(
+                                      (type) =>
+                                        `${type.type} : ${type.values.join(
+                                          ", "
+                                        )}`
+                                    )} `}
+                                  </td>
+                                )}
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Delegate Admin`}</i>
+                                {`: ${
+                                  policy.delegateAdmin == true
+                                    ? "enabled"
+                                    : "disabled"
+                                } `}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -3478,17 +3534,19 @@ export const PolicyLogs = ({ data, reportdata }) => {
           <div>
             <h5 className="bold wrap-header m-t-sm">Details:</h5>
             <Table className="table table-striped table-bordered w-50">
-              {importEnd.map((c) =>
-                Object.keys(JSON.parse(c.previousValue)).map((s, index) => (
-                  <tbody key={index}>
-                    <tr>
-                      <td className="table-warning policyitem-field">{s}</td>
-                      <td className="table-warning policyitem-field">
-                        {JSON.parse(c.previousValue)[s]}
-                      </td>
-                    </tr>
-                  </tbody>
-                ))
+              {importEnd.map(
+                (c) =>
+                  !isEmpty(c.previousValue) &&
+                  Object.keys(JSON.parse(c.previousValue)).map((s, index) => (
+                    <tbody key={index}>
+                      <tr>
+                        <td className="table-warning policyitem-field">{s}</td>
+                        <td className="table-warning policyitem-field">
+                          {JSON.parse(c.previousValue)[s]}
+                        </td>
+                      </tr>
+                    </tbody>
+                  ))
               )}
             </Table>
           </div>
@@ -3511,21 +3569,23 @@ export const PolicyLogs = ({ data, reportdata }) => {
           <>
             <h5 className="bold wrap-header m-t-sm">Details:</h5>
             <Table className="table table-striped table-bordered w-50">
-              {exportVal.map((c) =>
-                Object.keys(JSON.parse(c.previousValue)).map((s, index) => (
-                  <tbody key={index}>
-                    <tr>
-                      <td className="table-warning">{s}</td>
-                      <td className="table-warning">
-                        {c &&
-                        c.previousValue &&
-                        !isEmpty(JSON.parse(c.previousValue))
-                          ? exportOldVal(s, JSON.parse(c.previousValue)[s])
-                          : "--"}
-                      </td>
-                    </tr>
-                  </tbody>
-                ))
+              {exportVal.map(
+                (c) =>
+                  !isEmpty(c.previousValue) &&
+                  Object.keys(JSON.parse(c.previousValue)).map((s, index) => (
+                    <tbody key={index}>
+                      <tr>
+                        <td className="table-warning">{s}</td>
+                        <td className="table-warning">
+                          {c &&
+                          c.previousValue &&
+                          !isEmpty(JSON.parse(c.previousValue))
+                            ? exportOldVal(s, JSON.parse(c.previousValue)[s])
+                            : "--"}
+                        </td>
+                      </tr>
+                    </tbody>
+                  ))
               )}
             </Table>
           </>
@@ -3580,38 +3640,43 @@ export const PolicyLogs = ({ data, reportdata }) => {
                       </tr>
                     </thead>
                     {importDelValidityOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Start Date`}</i>
-                              {`: ${
-                                !isEmpty(policy.startTime)
-                                  ? policy.startTime
-                                  : "--"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`End Date`}</i>
-                              {`: ${
-                                !isEmpty(policy.endTime) ? policy.endTime : "--"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Time Zone`}</i>
-                              {`: ${
-                                !isEmpty(policy.timeZone)
-                                  ? policy.timeZone
-                                  : "--"
-                              } `}
-                            </td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Start Date`}</i>
+                                {`: ${
+                                  !isEmpty(policy.startTime)
+                                    ? policy.startTime
+                                    : "--"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`End Date`}</i>
+                                {`: ${
+                                  !isEmpty(policy.endTime)
+                                    ? policy.endTime
+                                    : "--"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Time Zone`}</i>
+                                {`: ${
+                                  !isEmpty(policy.timeZone)
+                                    ? policy.timeZone
+                                    : "--"
+                                } `}
+                              </td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -3635,73 +3700,76 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {importdelmaskpolicyold.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Roles`}</i>
-                              {`: ${
-                                !isEmpty(policy.roles)
-                                  ? policy.roles.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Groups`}</i>
-                              {`: ${
-                                !isEmpty(policy.groups)
-                                  ? policy.groups.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Users`}</i>
-                              {`: ${
-                                !isEmpty(policy.users)
-                                  ? policy.users.join(", ")
-                                  : "<empty>"
-                              } `}
-                            </td>
-                          </tr>
-                          <tr>
-                            <td className="table-warning policyitem-field">
-                              <i>{`Accesses`}</i>
-                              {!isEmpty(policy.accesses)
-                                ? `: ${policy.accesses
-                                    .map((obj) => obj.type)
-                                    .join(", ")} `
-                                : "<empty>"}
-                            </td>
-                          </tr>
-
-                          <tr>
-                            {policy.delegateAdmin == true && (
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
                               <td className="table-warning policyitem-field">
-                                <i>{`Delegate Admin`}</i>
+                                <i>{`Roles`}</i>
                                 {`: ${
-                                  policy.delegateAdmin == true
-                                    ? "enabled"
-                                    : "disabled"
+                                  !isEmpty(policy.roles)
+                                    ? policy.roles.join(", ")
+                                    : "<empty>"
                                 } `}
                               </td>
-                            )}
-                          </tr>
-                          <tr>
-                            {policy.DataMasklabel &&
-                              policy.DataMasklabel.length > 0 && (
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Groups`}</i>
+                                {`: ${
+                                  !isEmpty(policy.groups)
+                                    ? policy.groups.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Users`}</i>
+                                {`: ${
+                                  !isEmpty(policy.users)
+                                    ? policy.users.join(", ")
+                                    : "<empty>"
+                                } `}
+                              </td>
+                            </tr>
+                            <tr>
+                              <td className="table-warning policyitem-field">
+                                <i>{`Accesses`}</i>
+                                {!isEmpty(policy.accesses)
+                                  ? `: ${policy.accesses
+                                      .map((obj) => obj.type)
+                                      .join(", ")} `
+                                  : "<empty>"}
+                              </td>
+                            </tr>
+
+                            <tr>
+                              {policy.delegateAdmin == true && (
                                 <td className="table-warning policyitem-field">
-                                  <i>{`Data Mask Types`}</i>
-                                  {`: ${policy.DataMasklabel} `}
+                                  <i>{`Delegate Admin`}</i>
+                                  {`: ${
+                                    policy.delegateAdmin == true
+                                      ? "enabled"
+                                      : "disabled"
+                                  } `}
                                 </td>
                               )}
-                          </tr>
-                          <br />
-                        </tbody>
-                      ));
+                            </tr>
+                            <tr>
+                              {policy.DataMasklabel &&
+                                policy.DataMasklabel.length > 0 && (
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Data Mask Types`}</i>
+                                    {`: ${policy.DataMasklabel} `}
+                                  </td>
+                                )}
+                            </tr>
+                            <br />
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -3724,13 +3792,16 @@ export const PolicyLogs = ({ data, reportdata }) => {
                     </thead>
 
                     {importPolicyConditionOld.map((policyitem) => {
-                      return JSON.parse(policyitem).map((policy) => (
-                        <tbody>
-                          <tr>
-                            <td className="table-warning policyitem-field">{`${policy.type}: ${policy.values}`}</td>
-                          </tr>
-                        </tbody>
-                      ));
+                      return (
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => (
+                          <tbody>
+                            <tr>
+                              <td className="table-warning policyitem-field">{`${policy.type}: ${policy.values}`}</td>
+                            </tr>
+                          </tbody>
+                        ))
+                      );
                     })}
                   </Table>
                   <br />
@@ -3750,77 +3821,79 @@ export const PolicyLogs = ({ data, reportdata }) => {
                         <th>Old Value</th>
                       </tr>
                     </thead>
-                    {importDeleteItemsOld.map((policyitem) =>
-                      JSON.parse(policyitem).map((policy) => {
-                        return (
-                          <>
-                            <tbody>
-                              <tr>
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Roles`}</i>
-                                  {`: ${
-                                    !isEmpty(policy.roles)
-                                      ? policy.roles.join(", ")
-                                      : "<empty>"
-                                  } `}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Groups`}</i>
-                                  {`: ${
-                                    !isEmpty(policy.groups)
-                                      ? policy.groups.join(", ")
-                                      : "<empty>"
-                                  } `}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Users`}</i>
-                                  {`: ${
-                                    !isEmpty(policy.users)
-                                      ? policy.users.join(", ")
-                                      : "<empty>"
-                                  } `}
-                                </td>
-                              </tr>
-                              <tr>
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Permissions`}</i>
-                                  {!isEmpty(policy.accesses)
-                                    ? `: ${policy.accesses
-                                        .map((obj) => obj.type)
-                                        .join(", ")} `
-                                    : "<empty>"}
-                                </td>
-                              </tr>
-                              <tr>
-                                {policy.conditions &&
-                                  policy.conditions.length > 0 && (
-                                    <td className="table-warning policyitem-field">
-                                      <i>{`Conditions`}</i>
-                                      {`: ${policy.conditions.map(
-                                        (type) =>
-                                          `${type.type} : ${type.values}`
-                                      )} `}
-                                    </td>
-                                  )}
-                              </tr>
-                              <tr>
-                                <td className="table-warning policyitem-field">
-                                  <i>{`Delegate Admin`}</i>
-                                  {`: ${
-                                    policy.delegateAdmin == false
-                                      ? "enabled"
-                                      : "disabled"
-                                  } `}
-                                </td>
-                              </tr>
-                            </tbody>
-                          </>
-                        );
-                      })
+                    {importDeleteItemsOld.map(
+                      (policyitem) =>
+                        !isEmpty(policyitem) &&
+                        JSON.parse(policyitem).map((policy) => {
+                          return (
+                            <>
+                              <tbody>
+                                <tr>
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Roles`}</i>
+                                    {`: ${
+                                      !isEmpty(policy.roles)
+                                        ? policy.roles.join(", ")
+                                        : "<empty>"
+                                    } `}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Groups`}</i>
+                                    {`: ${
+                                      !isEmpty(policy.groups)
+                                        ? policy.groups.join(", ")
+                                        : "<empty>"
+                                    } `}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Users`}</i>
+                                    {`: ${
+                                      !isEmpty(policy.users)
+                                        ? policy.users.join(", ")
+                                        : "<empty>"
+                                    } `}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Permissions`}</i>
+                                    {!isEmpty(policy.accesses)
+                                      ? `: ${policy.accesses
+                                          .map((obj) => obj.type)
+                                          .join(", ")} `
+                                      : "<empty>"}
+                                  </td>
+                                </tr>
+                                <tr>
+                                  {policy.conditions &&
+                                    policy.conditions.length > 0 && (
+                                      <td className="table-warning policyitem-field">
+                                        <i>{`Conditions`}</i>
+                                        {`: ${policy.conditions.map(
+                                          (type) =>
+                                            `${type.type} : ${type.values}`
+                                        )} `}
+                                      </td>
+                                    )}
+                                </tr>
+                                <tr>
+                                  <td className="table-warning policyitem-field">
+                                    <i>{`Delegate Admin`}</i>
+                                    {`: ${
+                                      policy.delegateAdmin == false
+                                        ? "enabled"
+                                        : "disabled"
+                                    } `}
+                                  </td>
+                                </tr>
+                              </tbody>
+                            </>
+                          );
+                        })
                     )}
                   </Table>
                   <br />
@@ -3845,68 +3918,73 @@ export const PolicyLogs = ({ data, reportdata }) => {
               </thead>
 
               {importdelPolicyExceptionOld.map((policyitem) => {
-                return JSON.parse(policyitem).map((policy) => (
-                  <tbody>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Roles`}</i>
-                        {`: ${
-                          !isEmpty(policy.roles)
-                            ? policy.roles.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Groups`}</i>
-                        {`: ${
-                          !isEmpty(policy.groups)
-                            ? policy.groups.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Users`}</i>
-                        {`: ${
-                          !isEmpty(policy.users)
-                            ? policy.users.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Permissions`}</i>
-                        {!isEmpty(policy.accesses)
-                          ? `: ${policy.accesses
-                              .map((obj) => obj.type)
-                              .join(", ")} `
-                          : "<empty>"}
-                      </td>
-                    </tr>
-                    <tr>
-                      {policy.conditions && policy.conditions.length > 0 && (
+                return (
+                  !isEmpty(policyitem) &&
+                  JSON.parse(policyitem).map((policy) => (
+                    <tbody>
+                      <tr>
                         <td className="table-warning policyitem-field">
-                          <i>{`Conditions`}</i>
-                          {`: ${policy.conditions.map(
-                            (type) => `${type.type} : ${type.values}`
-                          )} `}
+                          <i>{`Roles`}</i>
+                          {`: ${
+                            !isEmpty(policy.roles)
+                              ? policy.roles.join(", ")
+                              : "<empty>"
+                          } `}
                         </td>
-                      )}
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Delegate Admin`}</i>
-                        {`: ${
-                          policy.delegateAdmin == true ? "enabled" : "disabled"
-                        } `}
-                      </td>
-                    </tr>
-                  </tbody>
-                ));
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Groups`}</i>
+                          {`: ${
+                            !isEmpty(policy.groups)
+                              ? policy.groups.join(", ")
+                              : "<empty>"
+                          } `}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Users`}</i>
+                          {`: ${
+                            !isEmpty(policy.users)
+                              ? policy.users.join(", ")
+                              : "<empty>"
+                          } `}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Permissions`}</i>
+                          {!isEmpty(policy.accesses)
+                            ? `: ${policy.accesses
+                                .map((obj) => obj.type)
+                                .join(", ")} `
+                            : "<empty>"}
+                        </td>
+                      </tr>
+                      <tr>
+                        {policy.conditions && policy.conditions.length > 0 && (
+                          <td className="table-warning policyitem-field">
+                            <i>{`Conditions`}</i>
+                            {`: ${policy.conditions.map(
+                              (type) => `${type.type} : ${type.values}`
+                            )} `}
+                          </td>
+                        )}
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Delegate Admin`}</i>
+                          {`: ${
+                            policy.delegateAdmin == true
+                              ? "enabled"
+                              : "disabled"
+                          } `}
+                        </td>
+                      </tr>
+                    </tbody>
+                  ))
+                );
               })}
             </Table>
             <br />
@@ -3927,68 +4005,73 @@ export const PolicyLogs = ({ data, reportdata }) => {
               </thead>
 
               {importdeldenyPolicyold.map((policyitem) => {
-                return JSON.parse(policyitem).map((policy) => (
-                  <tbody>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Roles`}</i>
-                        {`: ${
-                          !isEmpty(policy.roles)
-                            ? policy.roles.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Groups`}</i>
-                        {`: ${
-                          !isEmpty(policy.groups)
-                            ? policy.groups.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Users`}</i>
-                        {`: ${
-                          !isEmpty(policy.users)
-                            ? policy.users.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Permissions`}</i>
-                        {!isEmpty(policy.accesses)
-                          ? `: ${policy.accesses
-                              .map((obj) => obj.type)
-                              .join(", ")} `
-                          : "<empty>"}
-                      </td>
-                    </tr>
-                    <tr>
-                      {policy.conditions && policy.conditions.length > 0 && (
+                return (
+                  !isEmpty(policyitem) &&
+                  JSON.parse(policyitem).map((policy) => (
+                    <tbody>
+                      <tr>
                         <td className="table-warning policyitem-field">
-                          <i>{`Conditions`}</i>
-                          {`: ${policy.conditions.map(
-                            (type) => `${type.type} : ${type.values}`
-                          )}`}
+                          <i>{`Roles`}</i>
+                          {`: ${
+                            !isEmpty(policy.roles)
+                              ? policy.roles.join(", ")
+                              : "<empty>"
+                          } `}
                         </td>
-                      )}
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Delegate Admin`}</i>
-                        {`: ${
-                          policy.delegateAdmin == true ? "enabled" : "disabled"
-                        }`}
-                      </td>
-                    </tr>
-                  </tbody>
-                ));
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Groups`}</i>
+                          {`: ${
+                            !isEmpty(policy.groups)
+                              ? policy.groups.join(", ")
+                              : "<empty>"
+                          } `}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Users`}</i>
+                          {`: ${
+                            !isEmpty(policy.users)
+                              ? policy.users.join(", ")
+                              : "<empty>"
+                          } `}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Permissions`}</i>
+                          {!isEmpty(policy.accesses)
+                            ? `: ${policy.accesses
+                                .map((obj) => obj.type)
+                                .join(", ")} `
+                            : "<empty>"}
+                        </td>
+                      </tr>
+                      <tr>
+                        {policy.conditions && policy.conditions.length > 0 && (
+                          <td className="table-warning policyitem-field">
+                            <i>{`Conditions`}</i>
+                            {`: ${policy.conditions.map(
+                              (type) => `${type.type} : ${type.values}`
+                            )}`}
+                          </td>
+                        )}
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Delegate Admin`}</i>
+                          {`: ${
+                            policy.delegateAdmin == true
+                              ? "enabled"
+                              : "disabled"
+                          }`}
+                        </td>
+                      </tr>
+                    </tbody>
+                  ))
+                );
               })}
             </Table>
             <br />
@@ -4011,67 +4094,72 @@ export const PolicyLogs = ({ data, reportdata }) => {
               </thead>
 
               {importDeldenyExceptionsold.map((policyitem) => {
-                return JSON.parse(policyitem).map((policy) => (
-                  <tbody>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Roles`}</i>
-                        {`: ${
-                          !isEmpty(policy.roles)
-                            ? policy.roles.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Groups`}</i>
-                        {`: ${
-                          !isEmpty(policy.groups)
-                            ? policy.groups.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Users`}</i>
-                        {`: ${
-                          !isEmpty(policy.users)
-                            ? policy.users.join(", ")
-                            : "<empty>"
-                        } `}
-                      </td>
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Permissions`}</i>
-                        {`: ${policy.accesses
-                          .map((obj) => obj.type)
-                          .join(", ")}`}
-                      </td>
-                    </tr>
-                    <tr>
-                      {policy.conditions && policy.conditions.length > 0 && (
+                return (
+                  !isEmpty(policyitem) &&
+                  JSON.parse(policyitem).map((policy) => (
+                    <tbody>
+                      <tr>
                         <td className="table-warning policyitem-field">
-                          <i>{`Conditions:`}</i>
-                          {`: ${policy.conditions.map(
-                            (type) => `${type.type} : ${type.values}`
-                          )}`}
+                          <i>{`Roles`}</i>
+                          {`: ${
+                            !isEmpty(policy.roles)
+                              ? policy.roles.join(", ")
+                              : "<empty>"
+                          } `}
                         </td>
-                      )}
-                    </tr>
-                    <tr>
-                      <td className="table-warning policyitem-field">
-                        <i>{`Delegate Admin`}</i>
-                        {`: ${
-                          policy.delegateAdmin == true ? "enabled" : "disabled"
-                        }`}
-                      </td>
-                    </tr>
-                    <br />
-                  </tbody>
-                ));
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Groups`}</i>
+                          {`: ${
+                            !isEmpty(policy.groups)
+                              ? policy.groups.join(", ")
+                              : "<empty>"
+                          } `}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Users`}</i>
+                          {`: ${
+                            !isEmpty(policy.users)
+                              ? policy.users.join(", ")
+                              : "<empty>"
+                          } `}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Permissions`}</i>
+                          {`: ${policy.accesses
+                            .map((obj) => obj.type)
+                            .join(", ")}`}
+                        </td>
+                      </tr>
+                      <tr>
+                        {policy.conditions && policy.conditions.length > 0 && (
+                          <td className="table-warning policyitem-field">
+                            <i>{`Conditions:`}</i>
+                            {`: ${policy.conditions.map(
+                              (type) => `${type.type} : ${type.values}`
+                            )}`}
+                          </td>
+                        )}
+                      </tr>
+                      <tr>
+                        <td className="table-warning policyitem-field">
+                          <i>{`Delegate Admin`}</i>
+                          {`: ${
+                            policy.delegateAdmin == true
+                              ? "enabled"
+                              : "disabled"
+                          }`}
+                        </td>
+                      </tr>
+                      <br />
+                    </tbody>
+                  ))
+                );
               })}
             </Table>
           </>

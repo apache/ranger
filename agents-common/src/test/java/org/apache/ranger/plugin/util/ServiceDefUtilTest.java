@@ -252,6 +252,35 @@ public class ServiceDefUtilTest {
 		}
 	}
 
+	@Test
+	public void testPolicyItemDataMaskExprUserGroupRef() {
+		for (String attrExpr : UGA_ATTR_EXPRESSIONS) {
+			String          filterExpr  = "${{" + attrExpr + "}}";
+			ServicePolicies svcPolicies = getServicePolicies();
+			RangerPolicy    policy      = getPolicy(svcPolicies);
+
+			policy.getDataMaskPolicyItems().get(0).setDataMaskInfo(new RangerPolicyItemDataMaskInfo("CUSTOM", "", "CASE WHEN dept in (" + filterExpr + ")THEN {col} ELSE '0' END"));
+
+			svcPolicies.getPolicies().add(policy);
+			assertTrue("policy data-mask refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+
+			svcPolicies.getServiceDef().getContextEnrichers().clear();
+			svcPolicies.getPolicies().clear();
+			svcPolicies.getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE,  1L, policy));
+			assertTrue("policy-delta data-mask refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+
+			svcPolicies.getServiceDef().getContextEnrichers().clear();
+			svcPolicies.getPolicyDeltas().clear();
+			svcPolicies.getSecurityZones().put("zone1", getSecurityZoneInfo("zone1"));
+			svcPolicies.getSecurityZones().get("zone1").getPolicies().add(policy);
+			assertTrue("zone-policy data-mask refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+
+			svcPolicies.getServiceDef().getContextEnrichers().clear();
+			svcPolicies.getSecurityZones().get("zone1").getPolicies().clear();
+			svcPolicies.getSecurityZones().get("zone1").getPolicyDeltas().add(new RangerPolicyDelta(1L, RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE,  1L, policy));
+			assertTrue("zone-policy-delta data-mask refers to user/group attribute: " + filterExpr, ServiceDefUtil.addUserStoreEnricherIfNeeded(svcPolicies, RangerAdminUserStoreRetriever.class.getCanonicalName(), "60000"));
+		}
+	}
 
 	private ServicePolicies getServicePolicies() {
 		ServicePolicies ret = new ServicePolicies();

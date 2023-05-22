@@ -189,7 +189,7 @@
           <include>org.apache.ratis:ratis-proto:jar:${ratis.version}</include>
           <include>org.apache.ratis:ratis-thirdparty-misc:jar:${ratis-thirdparty.version}</include>
           <include>org.apache.commons:commons-compress:jar:1.4.1</include>
-          <include>org.bouncycastle:bcpkix-jdk15on</include>
+          <include>org.bouncycastle:bcpkix-jdk15on:jar:${org.bouncycastle.bcpkix-jdk15on}</include>
           <include>commons-net:commons-net:jar:${commons.net.version}</include>
           <include>com.google.guava:guava</include>
           <include>io.jaegertracing:jaeger-core:jar:1.6.0</include>
