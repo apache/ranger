@@ -111,7 +111,7 @@
         <commons.text.version>1.10.0</commons.text.version>
         <curator.test.version>5.4.0</curator.test.version>
         <curator.version>5.4.0</curator.version>
-        <derby.version>10.11.1.1</derby.version>
+        <derby.version>10.14.2.0</derby.version>
         <dnsjava.version>2.1.7</dnsjava.version>
         <eclipse.jpa.version>2.7.12</eclipse.jpa.version>
         <elasticsearch.version>7.10.2</elasticsearch.version>
@@ -198,7 +198,7 @@
         <slf4j-api.version>1.7.32</slf4j-api.version>
         <slf4j.version>1.7.32</slf4j.version>
         <solr.version>8.11.2</solr.version>
-        <spring-ldap-core.version>2.3.8.RELEASE</spring-ldap-core.version>
+        <spring-ldap-core.version>2.4.1</spring-ldap-core.version>
         <springframework.security.version>5.7.8</springframework.security.version>
         <springframework.test.version>5.3.27</springframework.test.version>
         <springframework.version>5.3.27</springframework.version>
@@ -206,7 +206,7 @@
         <storm.version>1.2.4</storm.version>
         <sun-jersey-bundle.version>1.19</sun-jersey-bundle.version>
         <tomcat.embed.version>8.5.86</tomcat.embed.version>
-        <testng.version>6.9.4</testng.version>
+        <testng.version>7.0.0</testng.version>
         <velocity.version>2.3</velocity.version>
         <zookeeper.version>3.5.5</zookeeper.version>
         <codehaus.woodstox.stax2api.version>4.2.1</codehaus.woodstox.stax2api.version>
