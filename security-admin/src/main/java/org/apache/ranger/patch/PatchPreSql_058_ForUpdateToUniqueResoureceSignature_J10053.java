@@ -30,6 +30,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.XXPolicyLabelMapDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyLabelMap;
+import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.util.CLIUtil;
@@ -110,11 +111,12 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
 		logger.info("==> updateDisabledPolicyResourceSignature() ");
 
 		List<XXPolicy> xxPolicyList = daoMgr.getXXPolicy().findByPolicyStatus(isPolicyEnabled);
-		if (CollectionUtils.isNotEmpty(xxPolicyList)) {
-			logger.info("==> Total number of disabled policies :" + xxPolicyList.size());
 
+		logger.info("Total number of disabled policies :[" + xxPolicyList.size() + "]");
+
+		if (CollectionUtils.isNotEmpty(xxPolicyList)) {
 			for (XXPolicy xxPolicy : xxPolicyList) {
-				RangerPolicy policy = svcStore.getPolicy(xxPolicy.getId());
+				RangerPolicy policy = getPolicy(xxPolicy);
 				if (policy != null) {
 					policy.setResourceSignature(null);
 					xxPolicy.setResourceSignature(null);
@@ -123,13 +125,17 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
 					policy.setResourceSignature(signature);
 					xxPolicy.setPolicyText(JsonUtils.objectToJson(policy));
 					xxPolicy.setResourceSignature(signature);
-
+					if (logger.isDebugEnabled()) {
+						logger.debug("Ranger text after update:[" + xxPolicy.getPolicyText() + "]");
+					}
 					daoMgr.getXXPolicy().update(xxPolicy);
+				} else {
+					logger.info("RangerPolicy object cannot be created from xxPolicy: ["+ xxPolicy + "]");
 				}
 			}
-		} else {
-			logger.info("no disabled Policy found");
 		}
+
+		logger.info("<== updateDisabledPolicyResourceSignature() ");
 	}
 
 	private void removeDuplicateResourceSignaturesPolicies() throws Exception {
@@ -157,6 +163,7 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
 		} else {
 			logger.info("no duplicate Policy found");
 		}
+		logger.info("<== removeDuplicateResourceSignaturesPolicies() ");
 	}
 
 	private Boolean cleanupRefTables(Long policyId) {
@@ -176,5 +183,33 @@ public class PatchPreSql_058_ForUpdateToUniqueResoureceSignature_J10053 extends 
 			policyLabelMapDao.remove(xxPolicyLabelMap);
 		}
 		return true;
+	}
+
+	private RangerPolicy getPolicy(final XXPolicy xPolicy) {
+		final RangerPolicy ret;
+
+		if (xPolicy != null) {
+			String policyText = xPolicy.getPolicyText();
+			if (logger.isDebugEnabled()) {
+				logger.debug("Ranger Policy text:[" + policyText + "]");
+			}
+			ret = JsonUtils.jsonToObject(policyText, RangerPolicy.class);
+
+			if (ret != null) {
+				ret.setId(xPolicy.getId());
+				ret.setGuid(xPolicy.getGuid());
+				ret.setCreateTime(xPolicy.getCreateTime());
+				ret.setUpdateTime(xPolicy.getUpdateTime());
+				ret.setVersion(xPolicy.getVersion());
+				ret.setPolicyType(xPolicy.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : xPolicy.getPolicyType());
+				XXSecurityZone xSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(xPolicy.getZoneId());
+				if (xSecurityZone != null) {
+					ret.setZoneName(xSecurityZone.getName());
+				}
+			}
+		} else {
+			ret = null;
+		}
+		return ret;
 	}
 }
