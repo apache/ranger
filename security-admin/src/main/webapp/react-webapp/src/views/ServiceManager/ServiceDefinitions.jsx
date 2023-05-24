@@ -17,11 +17,11 @@
  * under the License.
  */
 
-import React, { Component, useCallback } from "react";
-import { Button, Col, Row } from "react-bootstrap";
+import React, { Component } from "react";
+import { Button, Row } from "react-bootstrap";
 import Select from "react-select";
 import { toast } from "react-toastify";
-import { filter, map, sortBy, uniq, some, isEmpty } from "lodash";
+import { filter, map, sortBy, uniq, isEmpty } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
 import {
   isSystemAdmin,
@@ -34,15 +34,21 @@ import withRouter from "Hooks/withRouter";
 import ServiceDefinition from "./ServiceDefinition";
 import ExportPolicy from "./ExportPolicy";
 import ImportPolicy from "./ImportPolicy";
-import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
+import { serverError } from "../../utils/XAUtils";
 import { BlockUi, Loader } from "../../components/CommonComponents";
+import { getServiceDef } from "../../utils/appState";
 
 class ServiceDefinitions extends Component {
   constructor(props) {
     super(props);
+    this.serviceDefData = getServiceDef();
     this.state = {
-      serviceDefs: [],
-      filterServiceDefs: [],
+      serviceDefs: this.props.isTagView
+        ? this.serviceDefData.tagServiceDefs
+        : this.serviceDefData.serviceDefs,
+      filterServiceDefs: this.props.isTagView
+        ? this.serviceDefData.tagServiceDefs
+        : this.serviceDefData.serviceDefs,
       services: [],
       filterServices: [],
       allServices: [],
@@ -65,7 +71,6 @@ class ServiceDefinitions extends Component {
   }
 
   initialFetchResp = async () => {
-    await this.fetchServiceDefs();
     await this.fetchServices();
     await this.fetchZones();
   };
@@ -95,48 +100,8 @@ class ServiceDefinitions extends Component {
     }
   };
 
-  fetchServiceDefs = async () => {
-    this.setState({
-      loader: true
-    });
-    let serviceDefsResp;
-    let resourceServiceDef = [];
-    let tagServiceDef = [];
-
-    try {
-      serviceDefsResp = await fetchApi({
-        url: "plugins/definitions"
-      });
-
-      if (this.state.isTagView) {
-        tagServiceDef = sortBy(
-          filter(serviceDefsResp.data.serviceDefs, ["name", "tag"]),
-          "id"
-        );
-      } else {
-        resourceServiceDef = sortBy(
-          filter(
-            serviceDefsResp.data.serviceDefs,
-            (serviceDef) => serviceDef.name !== "tag"
-          ),
-          "id"
-        );
-      }
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definitions or CSRF headers! ${error}`
-      );
-    }
-    this.setState({
-      serviceDefs: this.state.isTagView ? tagServiceDef : resourceServiceDef,
-      filterServiceDefs: this.state.isTagView
-        ? tagServiceDef
-        : resourceServiceDef,
-      loader: false
-    });
-  };
-
   fetchZones = async () => {
+    this.props.disableTabs(true);
     this.setState({
       loader: true
     });
@@ -153,14 +118,17 @@ class ServiceDefinitions extends Component {
       zones: sortBy(zoneList, ["name"]),
       loader: false
     });
-    this.getSelectedZone(this.state.selectedZone);
+    this.props.disableTabs(false);
+    this.state.selectedZone != "" &&
+      this.getSelectedZone(this.state.selectedZone);
   };
 
   fetchServices = async () => {
+    this.props.disableTabs(true);
     this.setState({
       loader: true
     });
-    let servicesResp;
+    let servicesResp = [];
     let resourceServices = [];
     let tagServices = [];
 
@@ -188,15 +156,18 @@ class ServiceDefinitions extends Component {
         `Error occurred while fetching Services or CSRF headers! ${error}`
       );
     }
+
     this.setState({
       allServices: servicesResp.data.services,
       services: this.state.isTagView ? tagServices : resourceServices,
       filterServices: this.state.isTagView ? tagServices : resourceServices,
       loader: false
     });
+    this.props.disableTabs(false);
   };
 
   getSelectedZone = async (e) => {
+    this.props.disableTabs(true);
     this.setState({
       loader: true
     });
@@ -257,6 +228,7 @@ class ServiceDefinitions extends Component {
           selectedZone: { label: e.label, value: e.value },
           loader: false
         });
+        this.props.disableTabs(false);
       } else {
         localStorage.removeItem("zoneDetails");
         this.props.navigate(this.props.location.pathname);
@@ -266,6 +238,7 @@ class ServiceDefinitions extends Component {
           selectedZone: "",
           loader: false
         });
+        this.props.disableTabs(false);
       }
     } catch (error) {
       console.error(`Error occurred while fetching Zone Services ! ${error}`);
@@ -273,18 +246,39 @@ class ServiceDefinitions extends Component {
   };
 
   deleteService = async (sid) => {
+    let localStorageZoneDetails = localStorage.getItem("zoneDetails");
+    let zonesResp = [];
     try {
       this.setState({ blockUI: true });
       await fetchApi({
         url: `plugins/services/${sid}`,
         method: "delete"
       });
+
+      if (
+        localStorageZoneDetails !== undefined &&
+        localStorageZoneDetails !== null
+      ) {
+        zonesResp = await fetchApi({
+          url: `public/v2/api/zones/${
+            JSON.parse(localStorageZoneDetails)?.value
+          }/service-headers`
+        });
+
+        if (isEmpty(zonesResp?.data)) {
+          localStorage.removeItem("zoneDetails");
+          this.setState({
+            selectedZone: ""
+          });
+        }
+      }
       this.setState({
         services: this.state.services.filter((s) => s.id !== sid),
         filterServices: this.state.filterServices.filter((s) => s.id !== sid),
         blockUI: false
       });
       toast.success("Successfully deleted the service");
+      this.props.navigate(this.props.location.pathname);
     } catch (error) {
       this.setState({ blockUI: false });
       serverError(error);
@@ -303,25 +297,6 @@ class ServiceDefinitions extends Component {
       }
     };
   };
-  serviceBreadcrumb = () => {
-    let serviceDetails = {};
-    serviceDetails["selectedZone"] = JSON.parse(
-      localStorage.getItem("zoneDetails")
-    );
-    if (some(this.state.serviceDefs, { name: "tag" })) {
-      if (serviceDetails.selectedZone) {
-        return commonBreadcrumb(["TagBasedServiceManager"], serviceDetails);
-      } else {
-        return commonBreadcrumb(["TagBasedServiceManager"]);
-      }
-    } else {
-      if (serviceDetails.selectedZone) {
-        return commonBreadcrumb(["ServiceManager"], serviceDetails);
-      } else {
-        return commonBreadcrumb(["ServiceManager"]);
-      }
-    }
-  };
 
   render() {
     const {
@@ -335,15 +310,16 @@ class ServiceDefinitions extends Component {
       isUserRole,
       isKMSRole
     } = this.state;
+
     const customStyles = {
       control: (provided) => ({
         ...provided,
-        minHeight: "30px",
-        height: "25px"
+        minHeight: "33px",
+        height: "33px"
       }),
       indicatorsContainer: (provided) => ({
         ...provided,
-        height: "30px"
+        height: "33px"
       }),
       valueContainer: (provided) => ({
         ...provided,
@@ -352,18 +328,14 @@ class ServiceDefinitions extends Component {
     };
     return (
       <React.Fragment>
-        {this.serviceBreadcrumb()}
-        <Row>
-          <Col sm={5}>
-            <h5 className="wrap-header bold  pd-b-10">Service Manager</h5>
-          </Col>
-          <Col sm={7} className="text-right">
+        <div>
+          <div className="text-right px-3 pt-3">
             {!isKMSRole && (
               <div
                 className="body bold  pd-b-10"
                 style={{ display: "inline-block" }}
               >
-                Security Zone:
+                Security Zone :
               </div>
             )}
             {!isKMSRole && (
@@ -375,10 +347,11 @@ class ServiceDefinitions extends Component {
                   verticalAlign: "middle",
                   cursor: "not-allowed"
                 }}
+                title={`${isEmpty(zones) ? "Create zone first" : ""} `}
                 className="mg-l-5"
               >
                 <Select
-                  className={isEmpty(zones) ? "not-allowed" : ""}
+                  className={isEmpty(zones) ? "not-allowed" : "pe-auto"}
                   styles={customStyles}
                   value={
                     isEmpty(this.state.selectedZone)
@@ -392,6 +365,7 @@ class ServiceDefinitions extends Component {
                             this.state.selectedZone.value
                         }
                   }
+                  //isDisabled={true}
                   isDisabled={isEmpty(zones) ? true : false}
                   onChange={this.getSelectedZone}
                   isClearable
@@ -414,7 +388,7 @@ class ServiceDefinitions extends Component {
               <Button
                 variant="outline-secondary"
                 size="sm"
-                className="ml-2 btn-mini "
+                className="ml-2"
                 onClick={this.showImportModal}
                 data-id="importBtn"
                 data-cy="importBtn"
@@ -423,7 +397,7 @@ class ServiceDefinitions extends Component {
                 Import
               </Button>
             )}
-            {filterServiceDefs.length > 0 && showImportModal && (
+            {filterServiceDefs?.length > 0 && showImportModal && (
               <ImportPolicy
                 serviceDef={filterServiceDefs}
                 services={filterServices}
@@ -440,7 +414,7 @@ class ServiceDefinitions extends Component {
               <Button
                 variant="outline-secondary"
                 size="sm"
-                className="ml-2 btn-mini "
+                className="ml-2"
                 onClick={this.showExportModal}
                 data-id="exportBtn"
                 data-cy="exportBtn"
@@ -449,7 +423,7 @@ class ServiceDefinitions extends Component {
                 Export
               </Button>
             )}
-            {filterServiceDefs.length > 0 && showExportModal && (
+            {filterServiceDefs?.length > 0 && showExportModal && (
               <ExportPolicy
                 serviceDef={filterServiceDefs}
                 services={filterServices}
@@ -460,14 +434,14 @@ class ServiceDefinitions extends Component {
                 showBlockUI={this.showBlockUI}
               />
             )}
-          </Col>
-        </Row>
+          </div>
+        </div>
         {this.state.loader ? (
           <Loader />
         ) : (
-          <div className="wrap policy-manager mt-2">
+          <div className="wrap policy-manager">
             <Row>
-              {filterServiceDefs.map((serviceDef) => (
+              {filterServiceDefs?.map((serviceDef) => (
                 <ServiceDefinition
                   key={serviceDef && serviceDef.id}
                   serviceDefData={serviceDef}

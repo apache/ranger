@@ -158,7 +158,7 @@ export const AdminModal = (props) => {
       </Modal.Body>
 
       <Modal.Footer>
-        <Button variant="primary" className="btn-mini" onClick={props.onHide}>
+        <Button variant="primary" size="sm" onClick={props.onHide}>
           OK
         </Button>
       </Modal.Footer>

@@ -70,11 +70,13 @@ class AuditLayout extends Component {
   render() {
     return (
       <>
+        <div className="header-wraper">
+          <h3 className="wrap-header bold">Audits</h3>
+        </div>
         <Tabs
           id="AuditLayout"
           activeKey={this.state.activeKey}
           onSelect={(tabKey) => this.tabChange(tabKey)}
-          className="mt-5"
         >
           <Tab eventKey="bigData" title="Access" />
           <Tab eventKey="admin" title="Admin" />

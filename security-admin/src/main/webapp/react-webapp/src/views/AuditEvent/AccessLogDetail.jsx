@@ -83,17 +83,17 @@ function AccessLogDetail(props) {
         <Loader />
       ) : (
         <>
-          <h4>
+          <h5 className="heading-without-wrap">
             {params.eventId !== undefined
               ? "Ranger – audit log"
               : "Audit Access Log Detail"}
-          </h4>
+          </h5>
           <div className="wrap">
             <AccessLogsTable data={access}></AccessLogsTable>
           </div>
           {access.policyId != -1 && (
             <>
-              <h4>Policy Details</h4>
+              <h5 className="heading-without-wrap">Policy Details</h5>
               <div className="wrap">
                 <PolicyViewDetails
                   paramsData={access}

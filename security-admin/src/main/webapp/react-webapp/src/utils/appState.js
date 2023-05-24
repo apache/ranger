@@ -18,7 +18,7 @@
  */
 
 const appState = {};
-
+const serviceDefData = {};
 function getUserProfile() {
   return appState.userProfile;
 }
@@ -26,5 +26,13 @@ function getUserProfile() {
 function setUserProfile(profile = null) {
   appState.userProfile = profile;
 }
+function getServiceDef() {
+  return serviceDefData;
+}
+function setServiceDef(serviceDef, tagServiceDef, allServiceDefs) {
+  serviceDefData.serviceDefs = serviceDef;
+  serviceDefData.tagServiceDefs = tagServiceDef;
+  serviceDefData.allServiceDefs = allServiceDefs;
+}
 
-export { getUserProfile, setUserProfile };
+export { getUserProfile, setUserProfile, getServiceDef, setServiceDef };

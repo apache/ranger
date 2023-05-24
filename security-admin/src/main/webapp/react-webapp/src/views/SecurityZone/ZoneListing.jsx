@@ -26,9 +26,9 @@ import { isSystemAdmin, isKeyAdmin } from "Utils/XAUtils";
 import ZoneDisplay from "./ZoneDisplay";
 import { Row, Col, Collapse } from "react-bootstrap";
 import { sortBy } from "lodash";
-import { commonBreadcrumb } from "../../utils/XAUtils";
 import withRouter from "Hooks/withRouter";
 import { BlockUi, Loader } from "../../components/CommonComponents";
+import CustomBreadcrumb from "../CustomBreadcrumb";
 
 class ZoneListing extends Component {
   constructor(props) {
@@ -169,22 +169,20 @@ class ZoneListing extends Component {
   render() {
     return (
       <React.Fragment>
+        <div className="header-wraper">
+          <h3 className="wrap-header bold">Security Zones</h3>
+          <CustomBreadcrumb />
+        </div>
         {this.state.loader ? (
           <Loader />
         ) : (
           <React.Fragment>
-            {commonBreadcrumb(["SecurityZone"])}
-            <div className="wrap mt-1">
+            <div className="wrap">
               <Row>
                 <BlockUi isUiBlock={this.state.blockUI} />
                 <Collapse in={this.state.isCollapse} data-id="panel">
                   <Col sm={3} className="border-right border-grey">
                     <Row>
-                      <Col>
-                        <h5 className="text-muted wrap-header bold pull-left">
-                          Security Zones
-                        </h5>
-                      </Col>
                       {this.state.isAdminRole && (
                         <Col>
                           <Link
@@ -194,18 +192,19 @@ class ZoneListing extends Component {
                                 detail: this.state.filterZone[0]
                               }
                             }}
-                            className="btn btn-outline-secondary btn-sm pull-right"
+                            className="btn btn-outline-secondary btn-sm"
                             title="Create zone"
                           >
-                            <i className="fa-fw fa fa-plus"></i>
+                            <i className="fa-fw fa fa-plus"></i>Create Zone
                           </Link>
+                          <hr />
                         </Col>
                       )}
                     </Row>
                     <Row>
                       <Col>
                         <input
-                          className="form-control mt-2"
+                          className="form-control"
                           type="text"
                           onChange={this.onChangeSearch}
                           placeholder="Search"
@@ -214,10 +213,10 @@ class ZoneListing extends Component {
                         ></input>
                       </Col>
                     </Row>
-                    <Row className="mt-2">
+                    <Row>
                       <Col>
                         {this.state.filterZone.length !== 0 ? (
-                          <ul className="zone-listing">
+                          <ul className="zone-listing mt-2">
                             {this.state.filterZone.map((zone) => (
                               <li
                                 className="trim-containt"

@@ -28,6 +28,7 @@ import { fetchApi } from "Utils/fetchAPI";
 import { commonBreadcrumb, parseSearchFilter } from "../../utils/XAUtils";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { Loader } from "../../components/CommonComponents";
+import CustomBreadcrumb from "../CustomBreadcrumb";
 
 function Permissions() {
   const [permissionslistData, setPermissions] = useState([]);
@@ -221,8 +222,10 @@ function Permissions() {
 
   return (
     <>
-      {commonBreadcrumb(["ModulePermissions"])}
-      <h3 className="wrap-header bold">Permissions</h3>
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">Permissions</h3>
+        <CustomBreadcrumb />
+      </div>
       <div className="wrap">
         {pageLoader ? (
           <Loader />

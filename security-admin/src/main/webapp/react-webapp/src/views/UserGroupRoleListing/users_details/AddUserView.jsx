@@ -20,11 +20,16 @@
 import React, { Component } from "react";
 import UserFormComp from "Views/UserGroupRoleListing/users_details/UserFormComp";
 import { commonBreadcrumb } from "../../../utils/XAUtils";
+
 class AddUserView extends Component {
   render() {
     return (
       <>
-        {commonBreadcrumb(["Users", "UserCreate"])}
+        {/* {commonBreadcrumb(["Users", "UserCreate"])} */}
+        <div className="header-wraper">
+          <h3 className="wrap-header bold">User Detail</h3>
+          {commonBreadcrumb(["Users", "UserCreate"])}
+        </div>
         <UserFormComp />
       </>
     );

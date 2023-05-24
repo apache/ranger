@@ -294,7 +294,26 @@ export const CustomPopoverOnClick = ({
   id
 }) => {
   const [show, setShow] = useState(false);
-
+  let isListenerAttached = false;
+  useEffect(() => {
+    if (!isListenerAttached) {
+      document?.addEventListener("mousedown", handleClickOutside);
+      isListenerAttached = true;
+      return;
+    }
+    return () => {
+      document?.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  const handleClickOutside = (e) => {
+    if (
+      document.getElementById(`popover-${placement}`)?.contains(e?.target) ==
+      false
+    ) {
+      setShow(false);
+    }
+    e?.stopPropagation();
+  };
   const handleClick = () => {
     setShow(!show);
   };
@@ -351,7 +370,26 @@ export const CustomPopoverTagOnClick = ({
   icon
 }) => {
   const [show, setShow] = useState(false);
-
+  let isListenerAttached = false;
+  useEffect(() => {
+    if (!isListenerAttached) {
+      document?.addEventListener("mousedown", handleClickOutside);
+      isListenerAttached = true;
+      return;
+    }
+    return () => {
+      document?.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  const handleClickOutside = (e) => {
+    if (
+      document.getElementById(`popover-${placement}`)?.contains(e?.target) ==
+      false
+    ) {
+      setShow(false);
+    }
+    e?.stopPropagation();
+  };
   const handleClick = () => {
     setShow(!show);
   };

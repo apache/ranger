@@ -330,6 +330,7 @@ class ServiceDefinition extends Component {
                             <i className="fa-fw fa fa-plus"></i>
                           </a>
                         )}
+
                         <a
                           className="text-decoration cursor-pointer"
                           onClick={this.showImportModal}
@@ -404,7 +405,7 @@ class ServiceDefinition extends Component {
                         {!this.props.isUserRole && (
                           <Button
                             variant="outline-dark"
-                            className="m-r-5   btn btn-mini"
+                            className="m-r-5 btn btn-mini"
                             title="View"
                             onClick={() => {
                               this.showViewModal(s.id);
@@ -429,7 +430,7 @@ class ServiceDefinition extends Component {
                               <Col sm={12}>
                                 <p className="form-header">Service Details :</p>
                                 <Table bordered size="sm">
-                                  <tbody>
+                                  <tbody className="service-details">
                                     <tr>
                                       <td>Service Name</td>
                                       <td>{s.name}</td>
@@ -476,7 +477,7 @@ class ServiceDefinition extends Component {
                                   Config Properties :
                                 </p>
                                 <Table bordered size="sm">
-                                  <tbody>
+                                  <tbody className="service-config">
                                     {s?.configs &&
                                       this.getServiceConfigs(
                                         this.state.serviceDef,
@@ -503,7 +504,7 @@ class ServiceDefinition extends Component {
                                         <th>Roles</th>
                                       </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody className="service-audit">
                                       {this.getAuditFilters(s.configs)}
                                     </tbody>
                                   </Table>
@@ -527,6 +528,7 @@ class ServiceDefinition extends Component {
                               className="btn btn-mini m-r-5"
                               title="Edit"
                               to={`/service/${this.state.serviceDef.id}/edit/${s.id}`}
+                              state={"services"}
                               data-id={s.id}
                               data-cy={s.id}
                             >

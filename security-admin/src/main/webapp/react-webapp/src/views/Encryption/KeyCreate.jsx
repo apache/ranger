@@ -202,13 +202,14 @@ function KeyCreate(props) {
       serviceDetails
     );
   };
-
   return loader ? (
     <Loader />
   ) : (
     <div>
-      {keyCreateBreadcrumb()}
-      <h4 className="wrap-header bold">Key Detail</h4>
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">Key Detail</h3>
+        {keyCreateBreadcrumb()}
+      </div>
       <Form
         onSubmit={handleSubmit}
         keepDirtyOnReinitialize={true}

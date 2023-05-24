@@ -36,6 +36,7 @@ import StructuredFilter from "../../components/structured-filter/react-typeahead
 import AsyncSelect from "react-select/async";
 import { isKeyAdmin, parseSearchFilter } from "../../utils/XAUtils";
 import { BlockUi } from "../../components/CommonComponents";
+import CustomBreadcrumb from "../CustomBreadcrumb";
 
 function init(props) {
   return {
@@ -563,8 +564,10 @@ const KeyManager = (props) => {
 
   return (
     <div>
-      {commonBreadcrumb(["Kms"])}
-      <h6 className="font-weight-bold">Key Management</h6>
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">Key Management</h3>
+        <CustomBreadcrumb />
+      </div>
 
       <div className="wrap">
         <BlockUi isUiBlock={blockUI} />

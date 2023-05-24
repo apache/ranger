@@ -25,10 +25,10 @@ import UserFormComp from "Views/UserGroupRoleListing/users_details/UserFormComp"
 import { Loader, scrollToError } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
 import { UserTypes, RegexValidation } from "Utils/XAEnums";
-import { commonBreadcrumb } from "../../../utils/XAUtils";
 import { toast } from "react-toastify";
 import withRouter from "Hooks/withRouter";
 import { useParams, useLocation, useNavigate } from "react-router-dom";
+import { commonBreadcrumb } from "../../../utils/XAUtils";
 
 const initialState = {
   userInfo: {},
@@ -144,7 +144,10 @@ function AddUserView(props) {
     <Loader />
   ) : userInfo.userSource == UserTypes.USER_EXTERNAL.value ? (
     <>
-      {commonBreadcrumb(["Users", "UserEdit"], params.userID)}
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">User Detail</h3>
+        {commonBreadcrumb(["Users", "UserEdit"], params.userID)}
+      </div>
       <UserFormComp
         isEditView={true}
         userID={params.userID}
@@ -153,7 +156,10 @@ function AddUserView(props) {
     </>
   ) : (
     <>
-      {commonBreadcrumb(["Users", "UserEdit"], params.userID)}
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">User Detail</h3>
+        {commonBreadcrumb(["Users", "UserEdit"], params.userID)}
+      </div>
       <div className="wrap">
         <Tab.Container transition={false} defaultActiveKey="edit-basic-info">
           <Nav variant="tabs">
