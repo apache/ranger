@@ -36,7 +36,7 @@ import { getUserProfile } from "Utils/appState";
 import _, { isEmpty, isUndefined } from "lodash";
 import { SyncSourceDetails } from "../SyncSourceDetails";
 import { BlockUi } from "../../../components/CommonComponents";
-import { InfoIcon } from "../../../utils/XAUtils";
+import { InfoIcon, commonBreadcrumb } from "../../../utils/XAUtils";
 import { RegexMessage, roleChngWarning } from "../../../utils/XAMessages";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import usePrompt from "Hooks/usePrompt";
@@ -139,11 +139,7 @@ function UserFormComp(props) {
           data: userFormData
         });
         let tblpageData = {};
-        if (
-          state &&
-          state !== null
-
-        ) {
+        if (state && state !== null) {
           tblpageData = state.tblpageData;
           if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
             tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
@@ -164,7 +160,6 @@ function UserFormComp(props) {
             addPageData: tblpageData
           }
         });
-
       } catch (error) {
         dispatch({
           type: "SET_BLOCK_UI",
@@ -386,8 +381,6 @@ function UserFormComp(props) {
 
   return (
     <>
-      <h4 className="wrap-header bold">User Detail</h4>
-
       <Form
         onSubmit={handleSubmit}
         keepDirtyOnReinitialize={true}
@@ -734,7 +727,9 @@ function UserFormComp(props) {
                           document.querySelector(
                             `input[id=${Object.keys(errors)[0]}]`
                           ) ||
-                          document.querySelector(`span[className="invalid-field"]`);
+                          document.querySelector(
+                            `span[className="invalid-field"]`
+                          );
 
                         scrollToError(selector);
                       }

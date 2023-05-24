@@ -136,7 +136,9 @@ class ImportPolicy extends Component {
       this.setState({
         fileJsonData: jsonParseFileData,
         sourceServicesMap: servicesJsonParseFile,
-        destServices:  this.props.isParentImport ? this.props.allServices : this.props.services,
+        destServices: this.props.isParentImport
+          ? this.props.allServices
+          : this.props.services,
         sourceZoneName: zoneNameJsonParseFile,
         initialFormFields: formFields,
         filterFormFields: formFields
@@ -249,7 +251,9 @@ class ImportPolicy extends Component {
       } else {
         this.setState({
           destZoneName: "",
-          destServices:  this.props.isParentImport ? this.props.allServices : this.props.services,
+          destServices: this.props.isParentImport
+            ? this.props.allServices
+            : this.props.services,
           filterFormFields: this.state.initialFormFields
         });
       }
@@ -274,17 +278,20 @@ class ImportPolicy extends Component {
       label: service.name
     }));
   };
-
   Theme = (theme) => {
     return {
       ...theme,
       colors: {
         ...theme.colors,
-        text: "#444444",
-        primary25: "#0b7fad;",
-        primary: "#0b7fad;"
+        primary: "#0081ab"
       }
     };
+  };
+  CustomStyles = {
+    option: (provided, state) => ({
+      ...provided,
+      color: state.isSelected ? "white" : "black"
+    })
   };
 
   requiredField = (value) =>
@@ -451,6 +458,7 @@ class ImportPolicy extends Component {
                                     IndicatorSeparator: () => null
                                   }}
                                   theme={this.Theme}
+                                  styles={this.CustomStyles}
                                   options={this.props.zones.map((zone) => {
                                     return {
                                       value: zone.id,
@@ -497,6 +505,8 @@ class ImportPolicy extends Component {
                                               options={this.getSourceServiceOptions()}
                                               menuPlacement="auto"
                                               placeholder="Enter service name"
+                                              theme={this.Theme}
+                                              styles={this.CustomStyles}
                                             />
                                             {meta.error && meta.touched && (
                                               <span className="invalid-field">
@@ -522,6 +532,8 @@ class ImportPolicy extends Component {
                                               options={this.getDestServiceOptions()}
                                               menuPlacement="auto"
                                               placeholder="Select service name"
+                                              theme={this.Theme}
+                                              styles={this.CustomStyles}
                                             />
                                             {meta.error && meta.touched && (
                                               <span className="invalid-field">
@@ -595,7 +607,7 @@ class ImportPolicy extends Component {
                   ) : (
                     <Button
                       variant="primary"
-                      className="btn-mini"
+                      size="sm"
                       onClick={this.props.onHide}
                     >
                       OK

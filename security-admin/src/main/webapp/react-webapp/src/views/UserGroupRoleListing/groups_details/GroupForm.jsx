@@ -231,11 +231,13 @@ function GroupForm(props) {
 
   return (
     <div>
-      {commonBreadcrumb(
-        ["Groups", params.groupID ? "GroupEdit" : "GroupCreate"],
-        params.groupID
-      )}
-      <h4 className="wrap-header bold">Group Detail</h4>
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">Group Detail</h3>
+        {commonBreadcrumb(
+          ["Groups", params.groupID ? "GroupEdit" : "GroupCreate"],
+          params.groupID
+        )}
+      </div>
       {loader ? (
         <Loader />
       ) : (

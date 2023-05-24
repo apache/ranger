@@ -84,7 +84,7 @@ class ZoneDisplay extends Component {
       <div className="row">
         <div className="col-sm-12">
           <div className="d-flex justify-content-between">
-            <div className="float-left d-flex align-items-start">
+            <div className="float-left d-flex align-items-center">
               <Button
                 variant="outline-secondary"
                 size="sm"
@@ -97,9 +97,9 @@ class ZoneDisplay extends Component {
               >
                 <i className="fa-fw fa fa-reorder"></i>
               </Button>
-              <h3 className="text-info d-inline zone-name">
+              <h5 className="text-info d-inline zone-name mb-0">
                 {this.props.zone.name}
-              </h3>
+              </h5>
             </div>
             {this.state.isAdminRole && (
               <div className="float-right d-flex align-items-start">
@@ -155,7 +155,6 @@ class ZoneDisplay extends Component {
           </div>
           <br />
           <p className="text-break">{this.props.zone.description}</p>
-          <br />
           <div>
             <Accordion defaultActiveKey="0">
               <Card>

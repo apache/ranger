@@ -63,6 +63,7 @@ const PromtDialog = (props) => {
 const SecurityZoneForm = (props) => {
   const navigate = useNavigate();
   const params = useParams();
+  const toastId = useRef(null);
   const [serviceDefs, setServiceDefs] = useState([]);
   const [services, setServices] = useState([]);
   const [zone, setZone] = useState({});
@@ -368,7 +369,10 @@ const SecurityZoneForm = (props) => {
         data: zoneData
       });
       setBlockUI(false);
-      toast.success(`Success! Service zone ${apiSuccess} successfully`);
+      toast.dismiss(toastId.current);
+      toast.current = toast.success(
+        `Success! Service zone ${apiSuccess} successfully`
+      );
       navigate(`/zones/zone/${zoneResp.data.id}`);
     } catch (error) {
       setBlockUI(false);
@@ -627,17 +631,19 @@ const SecurityZoneForm = (props) => {
 
   return (
     <React.Fragment>
-      {commonBreadcrumb(
-        [
-          "SecurityZone",
-          params.zoneId !== undefined ? "ZoneEdit" : "ZoneCreate"
-        ],
-        params.zoneId
-      )}
       <div className="clearfix">
-        <h4 className="wrap-header bold">
-          {params.zoneId !== undefined ? `Edit` : `Create`} Zone
-        </h4>
+        <div className="header-wraper">
+          <h3 className="wrap-header bold">
+            {params.zoneId !== undefined ? `Edit` : `Create`} Zone
+          </h3>
+          {commonBreadcrumb(
+            [
+              "SecurityZone",
+              params.zoneId !== undefined ? "ZoneEdit" : "ZoneCreate"
+            ],
+            params.zoneId
+          )}
+        </div>
       </div>
       {loader ? (
         <Loader />

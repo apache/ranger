@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useState, useContext } from "react";
+import React, { useState } from "react";
 import { Form as FormB, Modal, Button, Table, Badge } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import Select from "react-select";
@@ -33,13 +33,13 @@ import {
   difference
 } from "lodash";
 import { RangerPolicyType } from "Utils/XAEnums";
-import { Context } from "./AddUpdatePolicyForm";
+import { getServiceDef } from "../../utils/appState";
 
 export default function TagBasePermissionItem(props) {
+  const serviceDefs = getServiceDef();
   const { options, inputVal, formValues, serviceCompDetails, dataMaskIndex } =
     props;
   const [showTagPermissionItem, tagPermissionItem] = useState(false);
-  const context = useContext(Context);
 
   const msgStyles = {
     background: "white",
@@ -139,7 +139,7 @@ export default function TagBasePermissionItem(props) {
         (access) => {
           if (
             includes(
-              context?.serviceDefs
+              serviceDefs?.allServiceDefs
                 ?.map((servicedef) => {
                   if (
                     servicedef?.options?.enableDenyAndExceptionsInPolicies ==
@@ -221,11 +221,9 @@ export default function TagBasePermissionItem(props) {
   const tagAccessTypeDisplayVal = (val) => {
     return val.map((m, index) => {
       return (
-        <>
-          <h6 className="d-inline mr-1" key={index}>
-            <Badge variant="info">{m.serviceName.toUpperCase()}</Badge>
-          </h6>
-        </>
+        <h6 className="d-inline mr-1 mb-1" key={index}>
+          <Badge variant="info">{m.serviceName.toUpperCase()}</Badge>
+        </h6>
       );
     });
   };
@@ -240,11 +238,10 @@ export default function TagBasePermissionItem(props) {
       >
         {inputVal?.value?.tableList?.length > 0 ? (
           <div className="text-center">
-            <h6 className="d-inline mr-1 mb-1">
-              <span className="editable-edit-text">
-                {tagAccessTypeDisplayVal(inputVal?.value?.tableList)}
-              </span>
-            </h6>
+            <div className="editable-edit-text">
+              {tagAccessTypeDisplayVal(inputVal?.value?.tableList)}
+            </div>
+
             <Button
               className="mg-10 mx-auto d-block btn-mini"
               size="sm"
@@ -419,15 +416,11 @@ export default function TagBasePermissionItem(props) {
                 </Table>
               </Modal.Body>
               <Modal.Footer>
-                <Button
-                  variant="secondary"
-                  className="btn-mini"
-                  onClick={handleClose}
-                >
+                <Button variant="secondary" size="sm" onClick={handleClose}>
                   Close
                 </Button>
 
-                <Button title="Save" className="btn-mini" type="submit">
+                <Button title="Save" size="sm" type="submit">
                   Save
                 </Button>
               </Modal.Footer>
