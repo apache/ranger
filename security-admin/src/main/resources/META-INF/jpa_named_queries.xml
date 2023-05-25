@@ -24,6 +24,10 @@
 			   WHERE obj.extSessionId = :sessionId
 		</query>
 	</named-query>
+	<named-query name="XXAuthSession.deleteOlderThan">
+		<query>delete from XXAuthSession obj where obj.createTime &lt; :olderThan</query>
+	</named-query>
+
 	<named-query name="XXAuthSession.getRecentAuthFailureCountByLoginId">
 		<query>SELECT COUNT(1) FROM XXAuthSession obj
 			WHERE obj.loginId = :loginId
