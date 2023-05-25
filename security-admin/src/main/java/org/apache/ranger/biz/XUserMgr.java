@@ -66,7 +66,6 @@ import org.apache.ranger.db.XXResourceDao;
 import org.apache.ranger.db.XXUserDao;
 import org.apache.ranger.db.XXUserPermissionDao;
 import org.apache.ranger.entity.XXAuditMap;
-import org.apache.ranger.entity.XXAuthSession;
 import org.apache.ranger.entity.XXGroup;
 import org.apache.ranger.entity.XXGroupGroup;
 import org.apache.ranger.entity.XXGroupUser;

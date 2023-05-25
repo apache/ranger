@@ -896,4 +896,19 @@ public class PublicAPIsv2 {
 	public RESTResponse revokeRoleUsersAndRoles(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest revokeRoleRequest, @Context HttpServletRequest request) {
 		return roleREST.revokeRole(serviceName, revokeRoleRequest, request);
 	}
+
+	@DELETE
+	@Path("/api/server/purge/records")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void purgeRecords(@QueryParam("type") String recordType, @DefaultValue("180") @QueryParam("retentionDays") Integer olderThan, @Context HttpServletRequest request) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> PublicAPIsv2.purgeRecords(" + recordType + ", " + olderThan + ")");
+		}
+
+		serviceREST.purgeRecords(recordType, olderThan, request);
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== PublicAPIsv2.purgeRecords(" + recordType + ", " + olderThan + ")");
+		}
+	}
 }

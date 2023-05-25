@@ -3927,6 +3927,45 @@ public class ServiceREST {
 		}
 	}
 
+	@DELETE
+	@Path("/server/purge/records")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public void purgeRecords(@QueryParam("type") String recordType, @DefaultValue("180") @QueryParam("retentionDays") Integer olderThan, @Context HttpServletRequest request) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> ServiceREST.purgeRecords(" + recordType + ", " + olderThan + ")");
+		}
+
+		if (StringUtils.isEmpty(recordType) || !"login_records".equalsIgnoreCase(recordType)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Invalid record type - " + recordType, true);
+		}
+
+		if (olderThan < 1) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Retention days can't be lesser than 1", true);
+		}
+
+		RangerPerfTracer perf = null;
+
+		try {
+			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.purgeRecords(recordType=" + recordType + ", olderThan=" + olderThan + ")");
+			}
+
+			svcStore.removeAuthSessions(olderThan);
+
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("purgeRecords(" + recordType + ", " + olderThan + ") failed", excp);
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			RangerPerfTracer.log(perf);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== ServiceREST.purgeRecords(" + recordType + ", " + olderThan + ")");
+		}
+	}
+
 	private HashMap<String, Object> getCSRFPropertiesMap(HttpServletRequest request) {
 		HashMap<String, Object> map = new HashMap<String, Object>();
 		map.put(isCSRF_ENABLED, PropertiesUtil.getBooleanProperty(isCSRF_ENABLED, true));
