@@ -24,13 +24,14 @@ import XATableLayout from "Components/XATableLayout";
 import { AuditFilterEntries } from "Components/CommonComponents";
 import moment from "moment-timezone";
 import dateFormat from "dateformat";
-import { find, map, sortBy, filter } from "lodash";
+import { sortBy, filter } from "lodash";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { fetchApi } from "Utils/fetchAPI";
 import {
   getTableSortBy,
   getTableSortType,
   fetchSearchFilterParams,
+  parseSearchFilter,
   serverError,
   isKeyAdmin,
   isKMSAuditor
@@ -241,28 +242,16 @@ function Plugins() {
   );
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOptions, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
 
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("agent", JSON.stringify(searchParam));
-    if(typeof resetPage?.page === "function"){
+
+    if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
   };
@@ -339,8 +328,7 @@ function Plugins() {
                 key="plugin-log-search-filter"
                 placeholder="Search for your plugins..."
                 options={sortBy(searchFilterOptions, ["label"])}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </div>

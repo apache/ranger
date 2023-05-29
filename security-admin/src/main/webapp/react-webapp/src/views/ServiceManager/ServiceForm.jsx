@@ -324,7 +324,9 @@ class ServiceForm extends Component {
       auditFilters !== undefined &&
       this.props.params.serviceId === undefined
     ) {
-      auditFilters = JSON.parse(auditFilters.defaultValue.replace(/'/g, '"'));
+      auditFilters = isEmpty(auditFilters?.defaultValue)
+        ? []
+        : JSON.parse(auditFilters.defaultValue.replace(/'/g, '"'));
       serviceJson["isAuditFilter"] = auditFilters.length > 0 ? true : false;
 
       serviceJson["auditFilters"] = this.getAuditFilters(
@@ -401,7 +403,9 @@ class ServiceForm extends Component {
       editAuditFilters !== undefined &&
       this.props.params.serviceId !== undefined
     ) {
-      editAuditFilters = JSON.parse(editAuditFilters.replace(/'/g, '"'));
+      editAuditFilters = isEmpty(editAuditFilters)
+        ? []
+        : JSON.parse(editAuditFilters.replace(/'/g, '"'));
       serviceJson["isAuditFilter"] = editAuditFilters.length > 0 ? true : false;
       serviceJson["auditFilters"] = this.getAuditFilters(
         editAuditFilters,

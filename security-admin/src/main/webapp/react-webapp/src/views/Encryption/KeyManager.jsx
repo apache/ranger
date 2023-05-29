@@ -30,11 +30,11 @@ import { Row, Col, Button, Modal } from "react-bootstrap";
 import { fetchApi } from "Utils/fetchAPI";
 import dateFormat from "dateformat";
 import moment from "moment-timezone";
-import { find, map, sortBy, isUndefined, isEmpty } from "lodash";
+import { find, sortBy, isUndefined, isEmpty } from "lodash";
 import { commonBreadcrumb } from "../../utils/XAUtils";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import AsyncSelect from "react-select/async";
-import { isKeyAdmin } from "../../utils/XAUtils";
+import { isKeyAdmin, parseSearchFilter } from "../../utils/XAUtils";
 import { BlockUi } from "../../components/CommonComponents";
 
 function init(props) {
@@ -552,23 +552,11 @@ const KeyManager = (props) => {
   ];
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOptions, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
+
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
   };
@@ -606,8 +594,7 @@ const KeyManager = (props) => {
               key="key-search-filter"
               placeholder="Search for your keys..."
               options={sortBy(searchFilterOptions, ["label"])}
-              onTokenAdd={updateSearchFilter}
-              onTokenRemove={updateSearchFilter}
+              onChange={updateSearchFilter}
               defaultSelected={defaultSearchFilterParams}
             />
           </Col>

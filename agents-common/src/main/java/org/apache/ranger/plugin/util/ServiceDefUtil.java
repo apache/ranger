@@ -28,8 +28,10 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemRowFilterInfo;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
@@ -686,6 +688,20 @@ public class ServiceDefUtil {
                 String                        filterExpr          = rowFilterInfo != null ? rowFilterInfo.getFilterExpr() : "";
 
                 ret = RangerRequestExprResolver.hasUserGroupAttributeInExpression(filterExpr);
+            }
+
+            if (!ret && policyItem instanceof RangerDataMaskPolicyItem) {
+                RangerDataMaskPolicyItem     dataMaskPolicyItem = (RangerDataMaskPolicyItem) policyItem;
+                RangerPolicyItemDataMaskInfo dataMaskInfo       = dataMaskPolicyItem.getDataMaskInfo();
+                String                       maskedValue        = dataMaskInfo != null ? dataMaskInfo.getValueExpr() : null;
+
+                ret = RangerRequestExprResolver.hasUserGroupAttributeInExpression(maskedValue);
+
+                if (!ret) {
+                    String maskCondition = dataMaskInfo != null ? dataMaskInfo.getConditionExpr() : null;
+
+                    ret = RangerRequestExprResolver.hasUserGroupAttributeInExpression(maskCondition);
+                }
             }
         }
 

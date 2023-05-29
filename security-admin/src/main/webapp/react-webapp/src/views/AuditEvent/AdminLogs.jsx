@@ -28,12 +28,13 @@ import AdminModal from "./AdminModal";
 import { AuditFilterEntries } from "Components/CommonComponents";
 import OperationAdminModal from "./OperationAdminModal";
 import moment from "moment-timezone";
-import { capitalize, find, map, startCase, sortBy, toLower } from "lodash";
+import { capitalize, startCase, sortBy, toLower } from "lodash";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import {
   getTableSortBy,
   getTableSortType,
   fetchSearchFilterParams,
+  parseSearchFilter,
   serverError
 } from "../../utils/XAUtils";
 import { Loader } from "../../components/CommonComponents";
@@ -349,28 +350,16 @@ function Admin() {
   );
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOptions, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
 
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("admin", JSON.stringify(searchParam));
-    if(typeof resetPage?.page === "function"){
+
+    if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
   };
@@ -451,8 +440,7 @@ function Admin() {
                 key="admin-log-search-filter"
                 placeholder="Search for your access logs..."
                 options={sortBy(searchFilterOptions, ["label"])}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </div>

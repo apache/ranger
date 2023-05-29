@@ -18,7 +18,7 @@
  */
 
 import React, { useState } from "react";
-import { getUserProfile } from "Utils/appState";
+import { getUserProfile, setUserProfile } from "Utils/appState";
 import { UserRoles, PathAssociateWithModule, QueryParams } from "Utils/XAEnums";
 import {
   filter,
@@ -45,10 +45,11 @@ import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-toastify";
 import { RangerPolicyType } from "./XAEnums";
 import { policyInfoMessage } from "./XAMessages";
+import { fetchApi } from "Utils/fetchAPI";
 
 export const LoginUser = (role) => {
   const userProfile = getUserProfile();
-  const currentUserRoles = userProfile.userRoleList[0];
+  const currentUserRoles = userProfile?.userRoleList[0];
   if (!currentUserRoles && currentUserRoles == "") {
     return false;
   }
@@ -132,8 +133,8 @@ export const isObject = (value) => {
 
 export const hasAccessToTab = (tabName) => {
   const userProfile = getUserProfile();
-  let userModules = map(userProfile.userPermList, "moduleName");
-  let groupModules = map(userProfile.groupPermissions, "moduleName");
+  let userModules = map(userProfile?.userPermList, "moduleName");
+  let groupModules = map(userProfile?.groupPermissions, "moduleName");
   let moduleNames = union(userModules, groupModules);
   let returnFlag = includes(moduleNames, tabName);
   return returnFlag;
@@ -145,11 +146,12 @@ export const hasAccessToPath = (pathName) => {
   if (pathName == "/") {
     pathName = "/policymanager/resource";
   }
-  let userModules = map(userProfile.userPermList, "moduleName");
-  let groupModules = map(userProfile.groupPermissions, "moduleName");
+  let userModules = map(userProfile?.userPermList, "moduleName");
+  let groupModules = map(userProfile?.groupPermissions, "moduleName");
   let moduleNames = union(userModules, groupModules);
   moduleNames.push("Profile");
   moduleNames.push("KnoxSignOut");
+  moduleNames.push("localLogin");
   if (isSystemAdmin() || isAuditor()) {
     moduleNames.push("Permission");
   }
@@ -1156,7 +1158,9 @@ export const fetchSearchFilterParams = (
 
   // Get search filter params from localStorage
   if (isEmpty(searchFilterParam)) {
-    const localStorageParams = JSON.parse(localStorage.getItem(auditTabName));
+    const localStorageParams =
+      !isEmpty(localStorage.getItem(auditTabName)) &&
+      JSON.parse(localStorage.getItem(auditTabName));
     if (!isNull(localStorageParams) && !isEmpty(localStorageParams)) {
       for (const localParam in localStorageParams) {
         let searchFilterObj = find(searchFilterOptions, {
@@ -1191,6 +1195,39 @@ export const fetchSearchFilterParams = (
   return finalSearchFilterData;
 };
 
+export const parseSearchFilter = (filter, searchFilterOptions) => {
+  let finalSearchFilter = {};
+  let searchFilterParam = {};
+  let searchParam = {};
+
+  map(filter, function (obj) {
+    let searchFilterObj = find(searchFilterOptions, {
+      category: obj.category
+    });
+
+    if (searchFilterObj !== undefined) {
+      searchFilterParam[obj.category] = obj.value;
+
+      let urlLabelParam = searchFilterObj.urlLabel;
+
+      if (searchFilterObj.type == "textoptions") {
+        let textOptionObj = find(searchFilterObj.options(), {
+          value: obj.value
+        });
+        searchParam[urlLabelParam] =
+          textOptionObj !== undefined ? textOptionObj.label : obj.value;
+      } else {
+        searchParam[urlLabelParam] = obj.value;
+      }
+    }
+  });
+
+  finalSearchFilter["searchParam"] = searchParam;
+  finalSearchFilter["searchFilterParam"] = searchFilterParam;
+
+  return finalSearchFilter;
+};
+
 export const serverError = (error) => {
   if (error.response !== undefined && has(error.response, "data.msgDesc")) {
     toast.error(error.response.data.msgDesc);
@@ -1199,7 +1236,7 @@ export const serverError = (error) => {
   }
 };
 
-/* policyInfo for masking and row filter */
+/* PolicyInfo for masking and row filter */
 
 export const policyInfo = (policyType, serviceType) => {
   if (
@@ -1288,4 +1325,58 @@ export const drop = (e, fields, dragItem, dragOverItem) => {
 
   dragItem.current = null;
   dragOverItem.current = null;
+};
+
+/* Common code for logout */
+
+export const handleLogout = async (checkKnoxSSOVal, navigate) => {
+  let logoutResp = {};
+  try {
+    logoutResp = fetchApi({
+      url: "logout",
+      baseURL: "",
+      headers: {
+        "cache-control": "no-cache"
+      }
+    });
+    if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
+      if (checkKnoxSSOVal == false) {
+        window.location.replace("/locallogin");
+        window.localStorage.clear();
+      } else {
+        navigate("/knoxSSOWarning");
+      }
+    } else {
+      window.location.replace("login.jsp");
+    }
+  } catch (error) {
+    toast.error(`Error occurred while logout! ${error}`);
+  }
+};
+
+export const checkKnoxSSO = async (navigate) => {
+  const userProfile = getUserProfile();
+  let checkKnoxSSOresp;
+  try {
+    checkKnoxSSOresp = await fetchApi({
+      url: "plugins/checksso",
+      type: "GET",
+      headers: {
+        "cache-control": "no-cache"
+      }
+    });
+    if (
+      checkKnoxSSOresp.data == "true" &&
+      userProfile?.configProperties?.inactivityTimeout > 0
+    ) {
+      window.location.replace("index.html?action=timeout");
+    } else {
+      handleLogout(checkKnoxSSOresp.data, navigate);
+    }
+  } catch (error) {
+    if (checkKnoxSSOresp?.status == "419") {
+      window.location.replace("login.jsp");
+    }
+    console.error(`Error occurred while logout! ${error}`);
+  }
 };

@@ -74,9 +74,9 @@ function XATableLayout({
   const getLocalStorageVal = () => {
     let localStorageVal = [];
     if (localStorage.getItem("showHideTableCol") != null) {
-      localStorageVal = JSON.parse(
-        localStorage.getItem("showHideTableCol")
-      ).bigData;
+      localStorageVal =
+        !isEmpty(localStorage.getItem("showHideTableCol")) &&
+        JSON.parse(localStorage.getItem("showHideTableCol")).bigData;
     }
     let filterColVal = !isEmpty(localStorageVal)
       ? localStorageVal

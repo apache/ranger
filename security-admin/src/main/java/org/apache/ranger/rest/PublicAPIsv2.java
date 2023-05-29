@@ -32,6 +32,7 @@ import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
+import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerServiceTags;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
 import org.apache.ranger.plugin.util.ServiceTags;
@@ -646,6 +647,13 @@ public class PublicAPIsv2 {
 	public void importServiceTags(@PathParam("serviceName") String serviceName, RangerServiceTags svcTags) {
 		if (logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIsv2.importServiceTags()");
+		}
+
+		// overwrite serviceName with the one given in url
+		if (svcTags.getServiceResources() != null) {
+			for (RangerServiceResource svcResource : svcTags.getServiceResources()) {
+				svcResource.setServiceName(serviceName);
+			}
 		}
 
 		ServiceTags serviceTags = RangerServiceTags.toServiceTags(svcTags);

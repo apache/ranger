@@ -96,34 +96,37 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
               {reportdata
                 .filter((obj) => obj.attributeName == "Zone Services")
                 .map((key) => {
-                  return Object.keys(JSON.parse(key.newValue)).map((c) => {
-                    return (
-                      <tbody>
-                        <tr>
-                          <td className="table-warning align-middle">
-                            <strong> {c}</strong>
-                          </td>
-                          <td className="table-warning ">
-                            {Object.values(
-                              JSON.parse(key.newValue)[c].resources
-                            ).map((resource) => (
-                              <div className="zone-resource">
-                                {Object.keys(resource).map((policy) => {
-                                  return (
-                                    <>
-                                      <strong>{`${policy} : `}</strong>
-                                      {resource[policy].join(", ")}
-                                      <br />
-                                    </>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </td>
-                        </tr>
-                      </tbody>
-                    );
-                  });
+                  return (
+                    !isEmpty(key.newValue) &&
+                    Object.keys(JSON.parse(key.newValue)).map((c) => {
+                      return (
+                        <tbody>
+                          <tr>
+                            <td className="table-warning align-middle">
+                              <strong> {c}</strong>
+                            </td>
+                            <td className="table-warning ">
+                              {Object.values(
+                                JSON.parse(key.newValue)[c].resources
+                              ).map((resource) => (
+                                <div className="zone-resource">
+                                  {Object.keys(resource).map((policy) => {
+                                    return (
+                                      <>
+                                        <strong>{`${policy} : `}</strong>
+                                        {resource[policy].join(", ")}
+                                        <br />
+                                      </>
+                                    );
+                                  })}
+                                </div>
+                              ))}
+                            </td>
+                          </tr>
+                        </tbody>
+                      );
+                    })
+                  );
                 })}
             </Table>
           </div>
@@ -230,34 +233,37 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                 </tr>
               </thead>
               {updateZoneServices.map((key) => {
-                return Object.keys(JSON.parse(key.previousValue)).map((c) => {
-                  return (
-                    <tbody>
-                      <tr>
-                        <td className="old-value-bg">
-                          <strong> {c}</strong>
-                        </td>
-                        <td className="old-value-bg">
-                          {Object.values(
-                            JSON.parse(key.previousValue)[c].resources
-                          ).map((resource) => (
-                            <div className="zone-resource">
-                              {Object.keys(resource).map((policy) => {
-                                return (
-                                  <>
-                                    <strong>{`${policy} : `}</strong>
-                                    {resource[policy].join(", ")}
-                                    <br />
-                                  </>
-                                );
-                              })}
-                            </div>
-                          ))}
-                        </td>
-                      </tr>
-                    </tbody>
-                  );
-                });
+                return (
+                  !isEmpty(key.previousValue) &&
+                  Object.keys(JSON.parse(key.previousValue)).map((c) => {
+                    return (
+                      <tbody>
+                        <tr>
+                          <td className="old-value-bg">
+                            <strong> {c}</strong>
+                          </td>
+                          <td className="old-value-bg">
+                            {Object.values(
+                              JSON.parse(key.previousValue)[c].resources
+                            ).map((resource) => (
+                              <div className="zone-resource">
+                                {Object.keys(resource).map((policy) => {
+                                  return (
+                                    <>
+                                      <strong>{`${policy} : `}</strong>
+                                      {resource[policy].join(", ")}
+                                      <br />
+                                    </>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </td>
+                        </tr>
+                      </tbody>
+                    );
+                  })
+                );
               })}
             </Table>
           </div>
@@ -275,34 +281,37 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
                 </tr>
               </thead>
               {updateZoneServices.map((key) => {
-                return Object.keys(JSON.parse(key.newValue)).map((c) => {
-                  return (
-                    <tbody>
-                      <tr>
-                        <td className="table-warning align-middle">
-                          <strong> {c}</strong>
-                        </td>
-                        <td className="table-warning ">
-                          {Object.values(
-                            JSON.parse(key.newValue)[c].resources
-                          ).map((resource) => (
-                            <div className="zone-resource">
-                              {Object.keys(resource).map((policy) => {
-                                return (
-                                  <>
-                                    <strong>{`${policy} : `}</strong>
-                                    {resource[policy].join(", ")}
-                                    <br />
-                                  </>
-                                );
-                              })}
-                            </div>
-                          ))}
-                        </td>
-                      </tr>
-                    </tbody>
-                  );
-                });
+                return (
+                  !isEmpty(key.newValue) &&
+                  Object.keys(JSON.parse(key.newValue)).map((c) => {
+                    return (
+                      <tbody>
+                        <tr>
+                          <td className="table-warning align-middle">
+                            <strong> {c}</strong>
+                          </td>
+                          <td className="table-warning ">
+                            {Object.values(
+                              JSON.parse(key.newValue)[c].resources
+                            ).map((resource) => (
+                              <div className="zone-resource">
+                                {Object.keys(resource).map((policy) => {
+                                  return (
+                                    <>
+                                      <strong>{`${policy} : `}</strong>
+                                      {resource[policy].join(", ")}
+                                      <br />
+                                    </>
+                                  );
+                                })}
+                              </div>
+                            ))}
+                          </td>
+                        </tr>
+                      </tbody>
+                    );
+                  })
+                );
               })}
             </Table>
             <br />
@@ -364,34 +373,37 @@ export const SecurityZonelogs = ({ data, reportdata }) => {
               {reportdata
                 .filter((obj) => obj.attributeName == "Zone Services")
                 .map((key) => {
-                  return Object.keys(JSON.parse(key.previousValue)).map((c) => {
-                    return (
-                      <tbody>
-                        <tr>
-                          <td className="table-warning align-middle">
-                            <strong> {c}</strong>
-                          </td>
-                          <td className="table-warning">
-                            {Object.values(
-                              JSON.parse(key.previousValue)[c].resources
-                            ).map((resource) => (
-                              <div className="zone-resource">
-                                {Object.keys(resource).map((policy) => {
-                                  return (
-                                    <>
-                                      <strong>{`${policy} : `}</strong>
-                                      {resource[policy].join(", ")}
-                                      <br />
-                                    </>
-                                  );
-                                })}
-                              </div>
-                            ))}
-                          </td>
-                        </tr>
-                      </tbody>
-                    );
-                  });
+                  return (
+                    !isEmpty(key.previousValue) &&
+                    Object.keys(JSON.parse(key.previousValue)).map((c) => {
+                      return (
+                        <tbody>
+                          <tr>
+                            <td className="table-warning align-middle">
+                              <strong> {c}</strong>
+                            </td>
+                            <td className="table-warning">
+                              {Object.values(
+                                JSON.parse(key.previousValue)[c].resources
+                              ).map((resource) => (
+                                <div className="zone-resource">
+                                  {Object.keys(resource).map((policy) => {
+                                    return (
+                                      <>
+                                        <strong>{`${policy} : `}</strong>
+                                        {resource[policy].join(", ")}
+                                        <br />
+                                      </>
+                                    );
+                                  })}
+                                </div>
+                              ))}
+                            </td>
+                          </tr>
+                        </tbody>
+                      );
+                    })
+                  );
                 })}
             </Table>
           </div>

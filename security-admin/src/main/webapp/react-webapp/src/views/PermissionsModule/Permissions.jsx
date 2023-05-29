@@ -23,9 +23,9 @@ import { Link, useSearchParams } from "react-router-dom";
 import XATableLayout from "Components/XATableLayout";
 import { isSystemAdmin, isKeyAdmin } from "Utils/XAUtils";
 import { MoreLess } from "Components/CommonComponents";
-import { isEmpty, reject, find, isUndefined, map, sortBy } from "lodash";
+import { isEmpty, reject, find, isUndefined, sortBy } from "lodash";
 import { fetchApi } from "Utils/fetchAPI";
-import { commonBreadcrumb } from "../../utils/XAUtils";
+import { commonBreadcrumb, parseSearchFilter } from "../../utils/XAUtils";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import { Loader } from "../../components/CommonComponents";
 
@@ -51,7 +51,7 @@ function Permissions() {
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
     for (const param in currentParams) {
-      let searchFilterObj = find(searchFilterOption, {
+      let searchFilterObj = find(searchFilterOptions, {
         urlLabel: param
       });
 
@@ -188,7 +188,7 @@ function Permissions() {
     []
   );
 
-  const searchFilterOption = [
+  const searchFilterOptions = [
     {
       category: "groupName",
       label: "Group Name",
@@ -210,23 +210,11 @@ function Permissions() {
   ];
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOption, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
+
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
   };
@@ -245,9 +233,8 @@ function Permissions() {
                 <StructuredFilter
                   key="permission-listing-search-filter"
                   placeholder="Search for permissions..."
-                  options={sortBy(searchFilterOption, ["label"])}
-                  onTokenAdd={updateSearchFilter}
-                  onTokenRemove={updateSearchFilter}
+                  options={sortBy(searchFilterOptions, ["label"])}
+                  onChange={updateSearchFilter}
                   defaultSelected={defaultSearchFilterParams}
                 />
               </Col>

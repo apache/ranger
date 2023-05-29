@@ -46,7 +46,7 @@ var DateInput = createReactClass({
     switch (event.key) {
       case "Enter":
         event.preventDefault();
-        this.handleEnter(event);
+        this.props.handleEnter(event);
         break;
       case "Backspace":
         this.props.onKeyDown(event);
@@ -63,15 +63,17 @@ var DateInput = createReactClass({
       <input
         ref="entry"
         type="text"
+        readOnly
         onClick={this.handleClick}
         onKeyDown={this.handleKeyDown}
         onFocus={this.props.onFocus}
         className="datepicker__input"
         placeholder={this.props.placeholderText}
+        defaultValue={this.props.value}
+        style={{ width: 70 }}
       />
     );
   }
 });
 
-// module.exports = DateInput;
 export default DateInput;

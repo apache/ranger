@@ -20,6 +20,8 @@
 var React = require("react");
 import createReactClass from "create-react-class";
 import PropTypes from "prop-types";
+import Typeahead from "../typeahead";
+import { reject } from "lodash";
 
 /**
  * Encapsulates the rendering of an option that has been "selected" in a
@@ -29,12 +31,14 @@ var Token = createReactClass({
   propTypes: {
     children: PropTypes.object,
     onRemove: PropTypes.func,
-    categoryLabel: PropTypes.string
+    categoryLabel: PropTypes.string,
+    selectedCategory: PropTypes.string
   },
 
   getInitialState: function () {
     return {
-      isHovering: false
+      isHovering: false,
+      isEditView: false
     };
   },
 
@@ -50,22 +54,71 @@ var Token = createReactClass({
     });
   },
 
+  onValueClick: function () {
+    this.setState({
+      isEditView: true
+    });
+  },
+
+  _addTokenForValue: function (value) {
+    let editAllSelected = this.props.allSelected;
+    let obj = editAllSelected[this.props.index];
+    if (value !== obj.value) {
+      if (value === "") {
+        editAllSelected = reject(editAllSelected, obj);
+      } else {
+        obj.value = value;
+      }
+      this.props.setFiltersValue(editAllSelected);
+    } else {
+      this.setState({
+        isEditView: false
+      });
+    }
+    return;
+  },
+
+  _onKeyDown: function (e) {
+    return;
+  },
+
   render: function () {
+    const { selectedCategory, allSelected } = this.props;
     return (
       <div
         className={
-          this.state.isHovering
-            ? "typeahead-token typeahead-token-maybe-delete"
+          this.state.isEditView
+            ? "typeahead-token typeahead-token-is-edit"
             : "typeahead-token"
         }
       >
-        <span className="typeahead-token-label text-uppercase mr-2 font-weight-bold">
-          {this.props.categoryLabel}
-        </span>
-        <span className="typeahead-token-value">
-          {this.props.categoryValue}
-        </span>
         {this._makeCloseButton()}
+        <span className="typeahead-token-label ml-3 mr-1 text-uppercase font-weight-bold">
+          {this.props.categoryLabel} :
+        </span>
+        {this.state.isEditView ? (
+          <Typeahead
+            ref="typeaheadValue"
+            className="typehead-edit-view"
+            placeholder=""
+            customClasses={{ input: "token-edit-view" }}
+            currentCategory={selectedCategory}
+            fullOptions={this.props._getFullOptions}
+            options={this.props._getOptionsForTypeaheadValue(selectedCategory)}
+            optionsLabel={this.props._getValueOptionsLabel(selectedCategory)}
+            header="Value"
+            datatype={this.props._getInputType(selectedCategory)}
+            defaultValue={this.props.categoryValue}
+            onOptionSelected={this._addTokenForValue}
+            onKeyDown={this._onKeyDown}
+            focus={true}
+            allSelected={allSelected}
+          />
+        ) : (
+          <span className="typeahead-token-value" onClick={this.onValueClick}>
+            {this.props.categoryValue.replace(/ /g, "\u00A0")}
+          </span>
+        )}
       </div>
     );
   },
@@ -76,7 +129,7 @@ var Token = createReactClass({
     }
     return (
       <a
-        className="typeahead-token-close ml-1"
+        className="typeahead-token-close"
         href="#"
         onClick={function (event) {
           this.props.onRemove(this.props.children);

@@ -26,12 +26,13 @@ import AdminModal from "./AdminModal";
 import dateFormat from "dateformat";
 import { AuditFilterEntries } from "Components/CommonComponents";
 import moment from "moment-timezone";
-import { find, map, sortBy } from "lodash";
+import { sortBy } from "lodash";
 import StructuredFilter from "../../components/structured-filter/react-typeahead/tokenizer";
 import {
   getTableSortBy,
   getTableSortType,
   fetchSearchFilterParams,
+  parseSearchFilter,
   serverError
 } from "../../utils/XAUtils";
 import { Loader } from "../../components/CommonComponents";
@@ -286,28 +287,16 @@ function Login_Sessions() {
   );
 
   const updateSearchFilter = (filter) => {
-    let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOptions, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
 
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
     localStorage.setItem("loginSession", JSON.stringify(searchParam));
-    if(typeof resetPage?.page === "function"){
+
+    if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
   };
@@ -393,8 +382,7 @@ function Login_Sessions() {
                 key="login-session-search-filter"
                 placeholder="Search for your login sessions..."
                 options={sortBy(searchFilterOptions, ["label"])}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </div>
