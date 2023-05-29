@@ -425,7 +425,7 @@ public class TestPublicAPIs {
 		Mockito.when(xXPolicyDao.getById(Id)).thenReturn(xXPolicy);
 		Mockito.when(serviceREST.getServiceByName(vXPolicy.getRepositoryName())).thenReturn(service);
 		Mockito.when(serviceUtil.toRangerPolicy(vXPolicy,service)).thenReturn(policy);
-		Mockito.when(serviceREST.updatePolicy(policy)).thenReturn(policy);
+		Mockito.when(serviceREST.updatePolicy(policy, Id)).thenReturn(policy);
 		Mockito.when(serviceUtil.toVXPolicy(policy, service)).thenReturn(vXPolicy);
 		VXPolicy dbVXPolicy = publicAPIs.updatePolicy(vXPolicy, Id);
 		
@@ -435,7 +435,7 @@ public class TestPublicAPIs {
 				vXPolicy.getId());
 		Assert.assertEquals(dbVXPolicy.getRepositoryName(),
 				vXPolicy.getRepositoryName());
-		Mockito.verify(serviceREST).updatePolicy(policy);
+		Mockito.verify(serviceREST).updatePolicy(policy, Id);
 		Mockito.verify(serviceREST).getServiceByName(vXPolicy.getRepositoryName());
 		Mockito.verify(serviceUtil).toVXPolicy(policy, service);
 		Mockito.verify(serviceUtil).toRangerPolicy(vXPolicy,service);
@@ -508,6 +508,5 @@ public class TestPublicAPIs {
 		Mockito.verify(serviceUtil).rangerPolicyListToPublic(policyList,filter);
 		
 	}
-	
-	
+
 }

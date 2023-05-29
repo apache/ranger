@@ -1596,18 +1596,17 @@ public class TestXUserREST {
 	}
 	@Test
 	public void test90updateXGroupPermission() {
-	
+
 		VXGroupPermission testVXGroupPermission = createVXGroupPermission();
 		Mockito.doNothing().when(xUserMgr).checkAdminAccess();
 		Mockito.when(xUserMgr.updateXGroupPermission(testVXGroupPermission)).thenReturn(testVXGroupPermission);
-		VXGroupPermission retVXGroupPermission=xUserRest.updateXGroupPermission(testVXGroupPermission);
+		VXGroupPermission retVXGroupPermission=xUserRest.updateXGroupPermission(testVXGroupPermission.getId(), testVXGroupPermission);
 		Mockito.verify(xUserMgr).updateXGroupPermission(testVXGroupPermission);
 		Mockito.verify(xUserMgr).checkAdminAccess();
 		assertNotNull(retVXGroupPermission);
 		assertEquals(retVXGroupPermission.getId(), testVXGroupPermission.getId());
 		assertEquals(retVXGroupPermission.getClass(), testVXGroupPermission.getClass());
-	
-		
+
 	}
 	@Test
 	public void test91deleteXGroupPermission() {
@@ -2022,7 +2021,7 @@ public class TestXUserREST {
 		
 		xUserRest.searchXUsers(request);
 	}
-	
+
 	@SuppressWarnings({ "unchecked", "static-access" })
 	@Test
 	public void test114RoleUserWillGetOnlyHisOwnUserDetails() {
@@ -2075,6 +2074,38 @@ public class TestXUserREST {
 		assertEquals(gotVXUserList.getList().size(), 1);
 		assertEquals(gotVXUserList.getList().get(0).getId(), expectedUser.getId());
 		assertEquals(gotVXUserList.getList().get(0).getName(), expectedUser.getName());
+	}
+
+	@Test
+	public void test115updateXGroupPermissionWithInvalidPermissionId() {
+
+		VXGroupPermission testVXGroupPermission = createVXGroupPermission();
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		VXGroupPermission retVXGroupPermission=xUserRest.updateXGroupPermission(-1L, testVXGroupPermission);
+		Mockito.verify(xUserMgr).updateXGroupPermission(testVXGroupPermission);
+		Mockito.verify(xUserMgr).checkAdminAccess();
+		assertNotNull(retVXGroupPermission);
+		assertEquals(retVXGroupPermission.getId(), testVXGroupPermission.getId());
+		assertEquals(retVXGroupPermission.getClass(), testVXGroupPermission.getClass());
+
+	}
+
+	@Test
+	public void test116updateXGroupPermissionWithPermissionIdIsNull() {
+
+		VXGroupPermission testVXGroupPermission = createVXGroupPermission();
+		Long testVXGroupPermissionId = testVXGroupPermission.getId();
+		testVXGroupPermission.setId(null);
+		Mockito.doNothing().when(xUserMgr).checkAdminAccess();
+		Mockito.when(xUserMgr.updateXGroupPermission(testVXGroupPermission)).thenReturn(testVXGroupPermission);
+		VXGroupPermission retVXGroupPermission=xUserRest.updateXGroupPermission(testVXGroupPermissionId, testVXGroupPermission);
+		Mockito.verify(xUserMgr).updateXGroupPermission(testVXGroupPermission);
+		Mockito.verify(xUserMgr).checkAdminAccess();
+		assertNotNull(retVXGroupPermission);
+		assertEquals(retVXGroupPermission.getId(), testVXGroupPermission.getId());
+		assertEquals(retVXGroupPermission.getClass(), testVXGroupPermission.getClass());
+
 	}
 	
 	@After

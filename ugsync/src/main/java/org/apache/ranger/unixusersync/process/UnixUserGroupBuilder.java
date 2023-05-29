@@ -538,7 +538,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 			for (String group : groups) {
 				String command = String.format(groupCmd, group);
-				String[] cmd = new String[]{"bash", "-c", command + " '" + group + "'"};
+				String[] cmd = new String[]{"bash", "-c", command};
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Executing: " + Arrays.toString(cmd));
 				}

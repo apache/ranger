@@ -42,6 +42,8 @@ import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.collect.ImmutableList;
+
 import java.io.IOException;
 import java.net.URL;
 import java.security.Principal;
@@ -175,6 +177,11 @@ public class RangerSystemAccessControl
   }
 
   @Override
+  public List<ViewExpression> getRowFilters(SystemSecurityContext context, CatalogSchemaTableName tableName) {
+    return getRowFilter(context, tableName).map(ImmutableList::of).orElseGet(ImmutableList::of);
+  }
+
+  @Override
   public Optional<ViewExpression> getColumnMask(SystemSecurityContext context, CatalogSchemaTableName tableName, String columnName, Type type) {
     RangerTrinoAccessRequest request = createAccessRequest(
       createResource(tableName.getCatalogName(), tableName.getSchemaTableName().getSchemaName(),
@@ -221,6 +228,11 @@ public class RangerSystemAccessControl
     }
 
     return Optional.ofNullable(viewExpression);
+  }
+
+  @Override
+  public List<ViewExpression> getColumnMasks(SystemSecurityContext context, CatalogSchemaTableName tableName, String columnName, Type type) {
+    return getColumnMask(context, tableName, columnName, type).map(ImmutableList::of).orElseGet(ImmutableList::of);
   }
 
   @Override

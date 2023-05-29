@@ -1137,6 +1137,10 @@ public class RangerBasePlugin {
 		return baseACLs;
 	}
 
+	protected RangerPolicyEngine getPolicyEngine() {
+		return policyEngine;
+	}
+
 	private RangerAdminClient getAdminClient() throws Exception {
 		PolicyRefresher   refresher = this.refresher;
 		RangerAdminClient admin     = refresher == null ? null : refresher.getRangerAdminClient();

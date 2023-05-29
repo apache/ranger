@@ -47,6 +47,7 @@ public class RangerAccessRequestUtil {
 	public static final String KEY_CONTEXT_ACCESSTYPES = "ACCESSTYPES";
 	public static final String KEY_CONTEXT_IS_ANY_ACCESS = "ISANYACCESS";
 	public static final String KEY_CONTEXT_REQUEST       = "_REQUEST";
+	public static final String KEY_CONTEXT_IS_REQUEST_PREPROCESSED = "ISREQUESTPREPROCESSED";
 
 	public static void setRequestTagsInContext(Map<String, Object> context, Set<RangerTagForEval> tags) {
 		if(CollectionUtils.isEmpty(tags)) {
@@ -131,6 +132,9 @@ public class RangerAccessRequestUtil {
 			ret.remove(KEY_CONTEXT_TAG_OBJECT);
 			ret.remove(KEY_CONTEXT_RESOURCE);
 			ret.remove(KEY_CONTEXT_REQUEST);
+			ret.remove(KEY_CONTEXT_ACCESSTYPES);
+			ret.remove(KEY_CONTEXT_IS_ANY_ACCESS);
+			ret.remove(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
 			// don't remove REQUESTED_RESOURCES
 		}
 
@@ -198,8 +202,33 @@ public class RangerAccessRequestUtil {
 		context.put(KEY_CONTEXT_IS_ANY_ACCESS, value);
 	}
 
-	public static Boolean getIsAnyAccessInContext(Map<String, Object> context) {
-		return (Boolean)context.get(KEY_CONTEXT_IS_ANY_ACCESS);
+	public static boolean getIsAnyAccessInContext(Map<String, Object> context) {
+		Boolean value = (Boolean)context.get(KEY_CONTEXT_IS_ANY_ACCESS);
+		return value != null && value;
+	}
+
+	public static void setIsRequestPreprocessed(Map<String, Object> context, Boolean value) {
+		context.put(KEY_CONTEXT_IS_REQUEST_PREPROCESSED, value);
+	}
+
+	public static boolean getIsRequestPreprocessed(Map<String, Object> context) {
+		Boolean value = (Boolean)context.get(KEY_CONTEXT_IS_REQUEST_PREPROCESSED);
+		return value != null && value;
+	}
+
+	public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes) {
+		context.put(KEY_CONTEXT_ACCESSTYPES, accessTypes);
+	}
+
+        public static void setAllRequestedAccessTypes(Map<String, Object> context, Set<String> accessTypes, Boolean isAny) {
+                context.put(KEY_CONTEXT_ACCESSTYPES, accessTypes);
+				setIsAnyAccessInContext(context, isAny);
+        }
+
+	public static Set<String> getAllRequestedAccessTypes(RangerAccessRequest request) {
+		Set<String> ret = (Set<String>) request.getContext().get(KEY_CONTEXT_ACCESSTYPES);
+
+		return ret != null ? ret : Collections.singleton(request.getAccessType());
 	}
 
 	public static void setRequestInContext(RangerAccessRequest request) {

@@ -52,7 +52,7 @@ FROM ranger-kms AS ranger_mysql
 COPY ./downloads/mysql-connector-java-8.0.28.jar  /home/ranger/dist/
 COPY ./downloads/log4jdbc-1.2.jar                 /home/ranger/dist/
 RUN  mv /home/ranger/dist/mysql-connector-java-8.0.28.jar /usr/share/java/mysql-connector.jar && \
-     mv /home/ranger/dist/log4jdbc-1.2.jar ${RANGER_HOME}/admin/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
+     mv /home/ranger/dist/log4jdbc-1.2.jar ${RANGER_HOME}/kms/ews/webapp/WEB-INF/lib/log4jdbc-1.2.jar
 
 FROM ranger_${RANGER_DB_TYPE}
 

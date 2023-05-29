@@ -1,0 +1,634 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta http-equiv=Content-Type content="text/html; charset=utf-8">
+    <title>Apache Ranger Policy Model</title>
+    <style>
+     <!--
+      /* Font Definitions */
+      @font-face {font-family:Wingdings; panose-1:5 0 0 0 0 0 0 0 0 0;}
+      @font-face {font-family:"Cambria Math"; panose-1:2 4 5 3 5 4 6 3 2 4;}
+      @font-face {font-family:Calibri; panose-1:2 15 5 2 2 2 4 3 2 4;}
+      @font-face {font-family:"Calibri Light"; panose-1:2 15 3 2 2 2 4 3 2 4;}
+
+      /* Style Definitions */
+      p.MsoNormal, li.MsoNormal, div.MsoNormal
+             {margin:0in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+     h1
+             {mso-style-link:"Heading 1 Char"; margin-top:12.0pt; margin-right:0in; margin-bottom:0in; margin-left:0in; page-break-after:avoid; font-size:16.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}
+     h2
+             {mso-style-link:"Heading 1 Char"; margin-top:10.0pt; margin-right:0in; margin-bottom:0in; margin-left:0in; page-break-after:avoid; font-size:14.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}
+
+      p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      span.Heading1Char
+             {mso-style-name:"Heading 1 Char"; mso-style-link:"Heading 1"; font-family:"Calibri Light",sans-serif; color:#2F5496;}
+      span.FootnoteTextChar
+             {mso-style-name:"Footnote Text Char"; mso-style-link:"Footnote Text";}
+      .MsoChpDefault
+             {font-family:"Calibri",sans-serif;}
+
+      /* Page Definitions */
+      @page WordSection1
+             {size:8.5in 11.0in; margin:1.0in 1.0in 1.0in 1.0in;}
+      div.WordSection1
+             {page:WordSection1;}
+
+
+      /* List Definitions */
+      ol
+             {margin-bottom:0in;}
+      ul
+             {margin-bottom:0in;}
+     -->
+    </style>
+  </head>
+
+  <body lang=EN-US style='width:800px;word-wrap:break-word;align:center;margin:auto;border:ridge' >
+    <div style="margin-left:10pt;margin-right:10pt">
+      <h1 style="text-align:center">Apache Ranger Policy Model</h1>
+      <p class=MsoNormal style='font:5.0pt "Times New Roman"'>&nbsp;</p>
+      <div style="text-align:center">
+        <p class=MsoNormal>Madhan Neethiraj, Apache Ranger committer</p>
+        <p class=MsoNormal>Mar 08, 2022</p>
+      </div>
+      <p class=MsoNormal>&nbsp;</p>
+
+      <div class=WordSection>
+        <h1>Introduction</h1>
+
+        <p class=MsoNormal>
+          Apache Ranger is an extensible framework that enables enterprises to adopt a consistent approach to authorize
+          access to their resources across multiple services/applications/cloud. Apache Ranger framework also enables
+          enterprises to collect audit logs of access to their resources, to help meet various compliance requirements.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+          Apache Ranger is a central part of security in many large deployments in enterprises across various domains
+          like finance, retail, insurance, healthcare, services. Apache Ranger has out-of-the box support for a large
+          number of popular services and many more services are supported by commercial vendors. Apache Ranger is highly
+          optimized for performance, adds negligible overhead in authorizing access to resources. It has been very well
+          proven in very high throughput services like Apache Kafka, Apache HBase which perform thousands of
+          authorizations per second.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+          Apache Ranger provides an intuitive web user interface to manage authorization policies and audit logs for
+          access to resources across a large number of services. Apache Ranger also provides REST, Python, Java APIs for
+          programmatic integration with tools used by enterprises. Open framework provided by Apache Ranger enables
+          enterprises to extend Apache Ranger authorization to their own applications and services as well.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+          Here are few key points that make Apache Ranger a compelling option for enterprises looking to standardize
+          authorization of access to their resources:
+        </p>
+
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>out-of-the-box support for more than a dozen popular services like Apache Hive, Apache HBase, Apache Kafka, Apache Solr, Elasticsearch, Apache NiFi and Presto.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>support for services like Amazon EMR, AWS S3, ADLS-Gen2, GCS, Snowflake, Google BigQuery, Trino, Dremio, Starburst, Apache Impala, Postgres, MS-SQL and Amazon Redshift by commercial vendors.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>policies for access authorization, row-filters, data masking.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>resource-based, classification-based policies, role-based, attribute-based policies.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>5.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>delegated administration, deny and exceptions in policies, custom conditions.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>6.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>centralized audit logs of accesses to enterprise resources across multiple services, interactive user interface to view audit logs of accesses.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>7.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>intuitive policy management UI.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>8.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Java, Python, REST APIs for programmatic integration for policy management.</p>
+
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>9.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>open framework which enables enterprises to extend Apache Ranger authorization to their own applications and services.</p>
+
+        <h1>Policy Model</h1>
+
+        <p class=MsoNormal>
+          At the core of Apache Ranger authorization is its policy model. We will go through key aspects of the Apache
+          Ranger policy model in this section.
+        </p>
+
+        <h2>Resources</h2>
+        <p class=MsoNormal>
+          A resource is a fundamental element in the Apache Ranger policy model. Apache Ranger enables policies to
+          authorize access to resources. In this context, a resource is anything whose access needs to be authorized,
+          like a file/path, database, table, column, topic; but can also be a service – like Apache Knox topology.
+          Apache Ranger policy model captures details of resources of a service in a declarative way – details like
+          hierarchy, case-sensitivity, supports row-filter/data-masking, etc.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+          Type of resources vary across services/applications, as seen in the table below:
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 style='margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Service</b></p></td>
+            <td valign=top style='width:325pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Resources</b></p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Apache Hive</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>databases, tables, columns, udfs</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Apache Kafka</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>topics</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Apache Solr</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>collections</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>AWS S3</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>buckets, objects</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>ADLS-Gen2</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>storage-accounts, containers, objects</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Azure PowerBI</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>workspaces</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Google BigQuery</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>projects, datasets, tables, columns</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Snowflake</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>databases, schemas, tables, columns, warehouses</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Trino</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>catalogs, schemas, tables, columns, procedures</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>...</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal></p></td>
+          </tr>
+        </table>
+
+        <h2>Permissions</h2>
+        <p class=MsoNormal>
+          A permission is another fundamental element in the Apache Ranger policy model. A permission is an action
+          performed on a resource, like reading a file, creating a directory, querying a table, or publishing a message
+          to a topic. Apache Ranger policy model captures details of permissions of a service in a declarative way –
+          details like which permissions are applicable to specific resource types, implied permissions, etc.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+          Like resources, list of permissions varies across services/applications, as seen in the table below:
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 style='margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Service</b></p></td>
+            <td valign=top style='width:325pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Permissions</b></p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Apache Hive</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>create, alter, drop, select, insert, ..</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Apache Kafka</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>publish, consume, create, delete, describe, configure, ..</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Apache Solr</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>query, update, others, Solr admin</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>AWS S3</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>read, write, delete, ..</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>ADLS-Gen2</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>read, write, delete, ..</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Azure PowerBI</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>contributor, member, admin, none</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Google BigQuery</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>project-list, dataset-create, table-create, table-list, query, ..</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Snowflake</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>CreateSchema, CreateTable, Select, Insert, Update, ..</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Trino</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>create, alter, drop, select, insert, ..</p></td>
+          </tr>
+          <tr>
+            <td valign=top style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>...</p></td>
+            <td valign=top style='width:325pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal></p></td>
+          </tr>
+        </table>
+
+        <h2>Users, Groups, Roles</h2>
+        <p class=MsoNormal>
+          Apache Ranger enables authorization policies to be set up to allow/deny permissions to users, groups, and
+          roles. Users and groups are typically obtained from an enterprise directory like AD/LDAP. Apache Ranger
+          user-sync module handles details of bringing users and groups from sources like LDAP/AD/OS, and keeping up
+          with the changes in the sources - like addition of users and groups, addition/removal of a user from a group.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+          Apache Ranger user-sync supports retrieving attributes of users and groups as well. Such attributes, like
+          dept/location/site-id, can be used in authorization policies to allow/deny access to resources, and set up
+          row-filters that restrict users to access relevant subset of data. More on this later in this document.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+          In addition to users and groups, Apache Ranger supports roles to be used in authorization policies. A role in
+          Apache Ranger is a grouping of users, groups, and other roles. Roles can be managed using Apache Ranger UI and
+          REST APIs by authorized users. Role based authorization is widely used in enterprises and having support for
+          roles in Apache Ranger makes it possible to use well established enterprise security practices in Apache Ranger
+          authorization policies.
+        </p>
+
+        <h2>Delegated Admin</h2>
+        <p class=MsoNormal>
+          Apache Ranger enables decentralization of authorization policies management with support for delegated-admin
+          feature. A set of users, groups and roles can be granted permission, via an Apache Ranger policy (what else!),
+          to manage authorization policies for a subset of resources and permissions. For example, users in
+          <samp>finance-admin</samp> group can be granted permissions to manage authorization policies for contents of
+          Snowflake database named <samp>finance</samp>, and AWS S3 objects under <samp>s3://mybucket/dept/finance</samp>.
+          This offers a scalable approach to manage authorization in large deployments.
+        </p>
+
+        <h2>Security Zone</h2>
+        <p class=MsoNormal>
+          Apache Ranger supports security zones to enable multi-tenancy within an organization where admins from
+          different lines of businesses can manage security policies for their own resources. For example, data that
+          belongs to the sales team can be managed by administrators of the sales team, similarly data of marketing,
+          sales, operations teams can be managed by respective administrators.
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+          Also, security zones can be used to isolate resources based on purpose. For example, it is common for a data
+          lake to have distinct areas and authorization policies for test data, unprocessed/raw data, semi-processed
+          data, and production data. Apache Ranger makes it easier to manage security policies in such deployments with
+          use of security zones like:
+        </p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Test zone</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Landing zone</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Staging zone</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Production zone</p>
+        <p class=MsoNormal>
+          A security zone can contain resources from multiple services/applications, like AWS S3, ADLS-Gen2, GCS,
+          Snowflake, Amazon Redshift, Postgres, Apache Hadoop, Apache Hive, Apache HBase, Apache Kafka. This makes it
+          easier to set up consistent authorization policies across multiple services by a set of administrators
+          designated for each security zone.
+        </p>
+
+        <h2>Allow, Deny, Exceptions</h2>
+        <p class=MsoNormal>
+          In addition to authorization policies that can grant access to resources, Apache Ranger also enables policies
+          to be setup to:
+        </p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>deny access to users/groups/roles on resources</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>exclude a subset of users from accesses allowed/denied above</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>deny all access to specific resources other than the ones allowed in the policy</p>
+        <p class=MsoNormal>
+          This makes it easier to set up policies to protect sensitive resources.
+        </p>
+
+        <h2>Wildcards, macros, variables in resource names</h2>
+        <p class=MsoNormal>
+          Apache Ranger policies support use of wildcards, macros, and variables in resource names. This makes it
+          possible to use small number of policies for a large number of resources, as shown below:
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 valign=center style='margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Policy Resource</b></p></td>
+            <td style='width:450pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Description</b></p></td>
+          </tr>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><samp>test_<b>*</b></samp></p></td>
+            <td style='width:450pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>matches all resources having name that start with test_</p></td>
+          </tr>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><samp>/home/<b>{USER}</b></samp></p></td>
+            <td style='width:450pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>a path under /home having name of current user</p></td>
+          </tr>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><samp>/dept/<b>${{USER.dept}}</b></samp></p></td>
+            <td style='width:450pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>a path under /dept having name of current user’s department</p></td>
+          </tr>
+        </table>
+        <p class=MsoNormal></p>
+
+        <h2>Policy validity schedule</h2>
+        <p class=MsoNormal>
+          Apache Ranger enables policies to be effective only for specific time schedules. This feature can be used to
+          create policies that need to be effective at a future time, for example to allow access to revenue reports for
+          a wider audience only after a specific time. This feature can also be used to allow temporary access to
+          specific users/groups/roles, with a specific start and end times.
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <h1>Attribute based access control</h1>
+        <p class=MsoNormal>
+          Apache Ranger enables use of user, group, resource, classification, and the environment attributes in
+          authorization policies. ABAC makes it possible to express authorization policies without prior knowledge of
+          specific resources, specific users – which helps avoid the need for new policies as new resources or users are
+          introduced.
+        </p>
+        <br/>
+        <p class=MsoNormal>
+          For example:
+        </p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>allow each user to access all tables owned by them, using <b><i>{OWNER}</i></b> macro:</p>
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 valign=center style='margin-left:30pt;border-collapse:collapse;border:none'>
+          <tr style='border:solid'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><samp>resource</samp></p></td>
+            <td style='width:200pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>database=*, table=*</p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>users</p></td>
+            <td style='width:200pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><b>{OWNER}</b></p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>permissions</p></td>
+            <td style='width:200pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>all</p></td>
+          </tr>
+        </table>
+        <p></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>allow users to access their department data in AWS S3, by using user attribute <b><i>${{USER.dept}}</i></b>:</p>
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 valign=center style='margin-left:30pt;border-collapse:collapse;border:none'>
+          <tr style='border:solid'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><samp>resource</samp></p></td>
+            <td style='width:300pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>bucket=mycompany, object=/data/<b><i>${{USER.dept}}</i></b>/*</p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>users</p></td>
+            <td style='width:300pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><b>{USER}</b></p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>permissions</p></td>
+            <td style='width:300pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>read,write</p></td>
+          </tr>
+        </table>
+        <p></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>allow users in mktg group to access <samp>PII</samp> data of email type, by using tag attribute <b><i>TAG.piiType</i></b>:</p>
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 valign=center style='margin-left:30pt;border-collapse:collapse;border:none'>
+          <tr style='border:solid'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><samp>resource</samp></p></td>
+            <td style='width:200pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>tag=PII</p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>groups</p></td>
+            <td style='width:200pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>mktg</p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>condition</p></td>
+            <td style='width:200pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><b><i>TAG.piiType == 'email'</i></b></p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>permissions</p></td>
+            <td style='width:200pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>select</p></td>
+          </tr>
+        </table>
+        <p></p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>tables with <samp>SENSITIVE</samp> classification should be accessible only by users having privileges for that sensitive level</p>
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 valign=center style='margin-left:30pt;border-collapse:collapse;border:none'>
+          <tr style='border:solid'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><samp>resource</samp></p></td>
+            <td style='width:300pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>tag=SENSITIVE</p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>groups</p></td>
+            <td style='width:300pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>public</p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>condition</p></td>
+            <td style='width:300pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal><b><i>TAG.sensitiveLevel < USER.allowedSensitiveLevel</i></b></p></td>
+          </tr>
+          <tr style='border:solid;border-top:none'>
+            <td style='width:75pt;border-right:solid;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>permissions</p></td>
+            <td style='width:300pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>select</p></td>
+          </tr>
+        </table>
+
+        <h1>Resource based access control</h1>
+        <p class=MsoNormal>
+          Apache Ranger enables setting up policies to grant or deny permissions to users/group/roles based on specific
+          resource names, like:
+        </p>
+        <br/>
+
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 valign=center style='margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Service</b></p></td>
+            <td style='width:200pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Resource</b></p></td>
+            <td style='width:120pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Permission</b></p></td>
+          </tr>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Apache Hive</p></td>
+            <td style='width:200pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:left'>
+              <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 valign=center style='margin-left:3pt;margin-top:3pt;margin-bottom:3pt;border-collapse:collapse;border:none'>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'>database</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'>sales</td>
+                </tr>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>table</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>order_data</td>
+                </tr>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>column</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>order_amount</td>
+                </tr>
+              </table>
+            </td>
+            <td style='width:120pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>select</p></td>
+          </tr>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Apache Kafka</p></td>
+            <td style='width:200pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:left'>
+              <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 style='margin-left:3pt;margin-top:3pt;margin-bottom:3pt;border-collapse:collapse;border:none'>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'>topic</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'>finance</td>
+                </tr>
+              </table>
+            </td>
+            <td style='width:120pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>publish, consume</p></td>
+          </tr>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>AWS S3</p></td>
+            <td style='width:200pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:left'>
+              <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 style='margin-left:3pt;margin-top:3pt;margin-bottom:3pt;border-collapse:collapse;border:none'>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'>bucket</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'>mycompany</td>
+                </tr>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>path</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>/home/{USER}</td>
+                </tr>
+              </table>
+            </td>
+            <td style='width:120pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>read, write, delete</p></td>
+          </tr>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>ADLS-Gen2</p></td>
+            <td style='width:200pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:left'>
+              <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 valign=center style='margin-left:3pt;margin-top:3pt;margin-bottom:3pt;border-collapse:collapse;border:none'>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'>storage-account</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'>mycompany</td>
+                </tr>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>container</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>home</td>
+                </tr>
+                <tr>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>path</td>
+                  <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'>/{USER}</td>
+                </tr>
+              </table>
+            </td>
+            <td style='width:120pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>read, write, delete</p></td>
+          </tr>
+          <tr>
+            <td style='width:100pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>...</p></td>
+            <td style='width:200pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:left'></td>
+            <td style='width:120pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal></p></td>
+          </tr>
+        </table>
+
+        <h1>Tag based access control</h1>
+        <p class=MsoNormal>
+          In addition to authorization policies on resources, Apache Ranger enables policies to be set up on
+          classifications (tags) associated with resources. This feature enables enterprises to separate responsibility
+          of classification of resources (PII, PCI, PHI, credit card number, etc.) from setting up access-control
+          policies. Classifications created, by a team of data stewards and tools that scan data for sensitive
+          information, can be leveraged to drive authorization to access the resources.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>
+          Authorization policies on the classifications themselves, instead of directly on the resources, will ensure
+          that appropriate policies will automatically be applied as classifications are added, removed, and updated on
+          resources. Also, a single tag-based policy (for example on PII) can be used to authorize access to resources
+          across multiple services like AWS S3, ADLS-Gen2, Snowflake, Databricks SQL, Apache Hive, Apache HBase, Apache
+          Kafka. This can significantly reduce the complexity in managing authorization policies.
+        </p>
+
+        <h1>Data masking</h1>
+        <p class=MsoNormal>
+          Apache Ranger data-masking policies enable enterprises to allow access to sensitive data suitably masked
+          depending on the context in which a user accesses the data. Some users will need the data without masking,
+          while some other users can only be allowed to see partial or masked or transformed value. While authorization
+          policies can be used to either allow or deny access to certain data, data-masking policies enable dynamically
+          mask sensitive data as users access the data, for example to ensure that:
+        </p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>analysts have access to only specific part of birthday (year or month or day)</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>only last 4 digits of a national id are available to customer service representatives</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>only salary ranges of employees (i.e., not the salary) are available to analysts</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+          In addition to supporting data-masking policies on resources, like columns in Apache Hive/Snowflake/Databricks
+          SQL/Presto, Apache Ranger enables setting up data-masking policies based on classifications (tags) associated
+          with resources. This can significantly reduce the complexity in managing masking policies. In addition,
+          tag-based masking policies leverage classifications added to resources by data stewards and tools that scan
+          data for sensitive information.
+        </p>
+
+        <h1>Row-filter</h1>
+        <p class="MsoNormal">
+          Apache Ranger row-filter policies enable enterprises to allow users to access only a subset of data depending
+          upon the context in which a user accesses the data. When a table having a row-filter is accessed by the user,
+          only a subset of rows will be visible to the user – depending upon the filter setup in row-filter policy.
+          Row-filters can be used for example to ensure that:
+        </p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>data of customers residing in a country is available only to analysts authorized to access the country’s data</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>a store manager has access to only data relevant to the store she/he works in</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>analysts don’t have access to sensitive records</p>
+
+        <h1>Access audit logs</h1>
+        <p class=MsoNormal>
+          Apache Ranger generates audit logs of accesses to resources protected by Apache Ranger authorization. Apache
+          Ranger can be configured to store audit logs in multiple destinations, including Solr, HDFS, AWS S3, AWS
+          CloudWatch, ADLS-Gen2, Elasticsearch. Audit logs generated by Apache Ranger include following details, which
+          can help enterprises to satisfy various compliance requirements:
+        </p>
+        <p class=MsoNormal></p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>resource accessed; action performed; was access allowed</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>time of access, tags associated with the resource (PII, PCI, PHI, ..)</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>who performed the access, IP address from which the access was performed</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>ID of Apache Ranger policy that allowed or denied the access</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+          Apache Ranger provides an interactive user interface to view audit logs stored in Solr, Elasticsearch or AWS
+          CloudWatch, with search capabilities to look for access audits for specific resources, specific users, client
+          IP addresses, within a given time frame, specific classifications. Apache Ranger audit logs can be stored in
+          ORC or JSON formats, which can then be loaded into various tools for analysis.
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <h1>References</h1>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=61322361">Apache Ranger: tag-based policies</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=65868896">Apache Ranger: row-filter and data-masking policies</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://cwiki.apache.org/confluence/display/RANGER/Introduction+of+Security+Zones+in+Ranger">Apache Ranger: security zones</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://pypi.org/project/apache-ranger/">Apache Ranger: Python</a></p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://cwiki.apache.org/confluence/display/RANGER/Ranger+Client+Libraries">Apache Ranger: Java</a></p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span><a href="https://ranger.apache.org/apidocs/index.html">Apache Ranger: REST</a></p>
+      </div>
+    </div>
+  </body>
+
+  <footer>
+    <div align=center >
+      <a href="/blogs.html">Apache Ranger&#8482; blogs</a>
+    </div>
+  </footer>
+</html>

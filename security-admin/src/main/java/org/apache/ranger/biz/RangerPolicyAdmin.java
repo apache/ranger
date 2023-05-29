@@ -19,6 +19,7 @@
 
 package org.apache.ranger.biz;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,6 +57,8 @@ public interface RangerPolicyAdmin {
     RangerServiceDef getServiceDef();
 
     Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
+
+    Collection<String> getZoneNamesForResource(Map<String, ?> resource);
 
     String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest);
 

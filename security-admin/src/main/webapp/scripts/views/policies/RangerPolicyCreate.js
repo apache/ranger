@@ -35,6 +35,7 @@ define(function(require){
 	var RangerPolicycreateTmpl = require('hbs!tmpl/policies/RangerPolicyCreate_tmpl');
 	var RangerPolicyForm = require('views/policies/RangerPolicyForm');
 	var RangerServiceDef	= require('models/RangerServiceDef');
+	var RangerServiceDefList = require('collections/RangerServiceDefList');
 	var Vent			 = require('modules/Vent');
 
 	var RangerPolicyCreate = Backbone.Marionette.Layout.extend(
@@ -130,6 +131,7 @@ define(function(require){
 				model : this.model,
 				rangerServiceDefModel : this.rangerServiceDefModel,
 				rangerService : this.rangerService,
+				rangerServiceDefList: this.RangerServiceDefList
 			});
 
 			this.editPolicy = this.model.has('id') ? true : false;
@@ -137,13 +139,13 @@ define(function(require){
 			this.params = {};
 		},
 		initializeServiceDef : function(){
-			
-			this.rangerServiceDefModel	= new RangerServiceDef();
-			this.rangerServiceDefModel.url = XAUtil.getRangerServiceDef(this.rangerService.get('type'));
-			this.rangerServiceDefModel.fetch({
+			var that = this
+			this.RangerServiceDefList = new RangerServiceDefList();
+			this.RangerServiceDefList.fetch({
 				cache : false,
 				async : false
 			});
+			this.rangerServiceDefModel = this.RangerServiceDefList.findWhere({'name' : that.rangerService.get('type')})
 		},
 
 		/** all events binding here */

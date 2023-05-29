@@ -40,8 +40,8 @@ public class TestOzoneResourceMapper {
     private static final String SERVICE_NAME                = "cl1_ozone";
     private static final String VOLUME_NAME                 = "myvolume";
     private static final String BUCKET_NAME                 = "mybucket";
-    private static final String KEY_NAME                    = "/mykey.txt";
-    private static final String KEY_PATH                    = "/mykey/key1/";
+    private static final String KEY_NAME                    = "mykey.txt";
+    private static final String KEY_PATH                    = "mykey/key1/";
 
     AtlasOzoneResourceMapper resourceMapper = new AtlasOzoneResourceMapper();
 

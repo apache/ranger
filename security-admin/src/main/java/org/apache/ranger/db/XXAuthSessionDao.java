@@ -75,6 +75,19 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 				.setParameter("authWindowStartTime", authWindowStartTime)
 				.getSingleResult();
 	}
+	public List<Long> getAuthSessionIdsByUserId(Long userId) {
+		if(userId == null) {
+			return null;
+		}
 
+		return getEntityManager()
+			.createNamedQuery("XXAuthSession.findIdsByUserId", Long.class)
+			.setParameter("userId", userId)
+			.getResultList();
+	}
+
+	public void deleteAuthSessionsByIds(List<Long> ids){
+		batchDeleteByIds("XXAuthSession.deleteByIds", ids, "ids");
+	}
 }
 

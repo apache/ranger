@@ -7,6 +7,7 @@ services:
       args:
         - RANGER_VERSION=${RANGER_VERSION}
         - RANGER_DB_TYPE=${RANGER_DB_TYPE}
+        - RANGER_ADMIN_JAVA_VERSION=${RANGER_ADMIN_JAVA_VERSION}
     image: ranger:latest
     container_name: ranger
     hostname: ranger.example.com
@@ -33,6 +34,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-zk
+      args:
+        - ZK_VERSION=${ZK_VERSION}
     image: ranger-zk
     container_name: ranger-zk
     hostname: ranger-zk.example.com
@@ -45,6 +48,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-solr
+      args:
+        - SOLR_VERSION=${SOLR_VERSION}
     image: ranger-solr
     container_name: ranger-solr
     hostname: ranger-solr.example.com

@@ -17,17 +17,16 @@
 
 package org.apache.hadoop.crypto.key;
 
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.microsoft.aad.adal4j.AsymmetricKeyCredential;
 import com.microsoft.aad.adal4j.AuthenticationContext;
 import com.microsoft.aad.adal4j.AuthenticationResult;
 import com.microsoft.aad.adal4j.ClientCredential;
 import com.microsoft.azure.keyvault.KeyVaultClient;
 import com.microsoft.azure.keyvault.authentication.KeyVaultCredentials;
-import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.security.KeyStore;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
@@ -55,208 +54,264 @@ import org.bouncycastle.pkcs.PKCSException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+
 public class AzureKeyVaultClientAuthenticator extends KeyVaultCredentials {
-	static final Logger logger = LoggerFactory.getLogger(AzureKeyVaultClientAuthenticator.class);
-	
-	private String authClientID;
-    private String authClientSecret;
-    
+    private static final Logger logger = LoggerFactory.getLogger(AzureKeyVaultClientAuthenticator.class);
+
+    private final String authClientID;
+    private final String authClientSecret;
+
     public AzureKeyVaultClientAuthenticator(String clientID, String clientSecret) {
-        this.authClientID = clientID;
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> AzureKeyVaultClientAuthenticator({})", clientID);
+        }
+
+        this.authClientID     = clientID;
         this.authClientSecret = clientSecret;
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== AzureKeyVaultClientAuthenticator({})", clientID);
+        }
     }
-    
+
     public AzureKeyVaultClientAuthenticator(String clientID) {
-        this.authClientID = clientID;
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> AzureKeyVaultClientAuthenticator({})", clientID);
+        }
+
+        this.authClientID     = clientID;
+        this.authClientSecret = null;
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== AzureKeyVaultClientAuthenticator({})", clientID);
+        }
     }
-    
+
     /**
      * It does the authentication. This method will be called by the super
      * class.
-     * 
-     * @param request
-     *            The request being sent
-     * @param challenge
-     *            Information about the challenge from the service.
      */
     @Override
     public String doAuthenticate(String authorization, String resource, String scope) {
-        AuthenticationResult token = getAccessTokenFromClientCredentials(
-				        authorization, resource, authClientID, authClientSecret);
-        return token.getAccessToken();
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> doAuthenticate({}, {}, {})", authorization, resource, scope);
+        }
+
+        AuthenticationResult token = getAccessTokenFromClientCredentials(authorization, resource, authClientID, authClientSecret);
+        String               ret   = token.getAccessToken();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== doAuthenticate({}, {}, {}): ret={}", authorization, resource, scope, ret);
+        }
+
+        return ret;
     }
-    
-    private static AuthenticationResult getAccessTokenFromClientCredentials(
-            String authorization, String resource, String clientId, String clientKey) {
-        AuthenticationContext context = null;
-        AuthenticationResult result = null;
-        ExecutorService service = null;
+
+    /**
+     * Do certificate based authentication using pfx file
+     */
+    public KeyVaultClient getAuthentication(String path, String certPassword) throws Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> getAuthentication({})", path);
+        }
+
+        KeyVaultClient ret     = null;
+        KeyCert        keyCert = null;
+
+        if (path.endsWith(".pfx")) {
+            try {
+                keyCert = readPfx(path, certPassword);
+            } catch (Exception ex) {
+                throw new Exception("Error while parsing pfx certificate. Error : " + ex);
+            }
+        } else if(path.endsWith(".pem")) {
+            try {
+                keyCert = readPem(path, certPassword);
+            } catch (Exception ex) {
+                throw new Exception("Error while parsing pem certificate. Error : " + ex);
+            }
+        }
+
+        final KeyCert certificateKey = keyCert;
+
+        if (certificateKey != null) {
+            PrivateKey privateKey = certificateKey.getKey();
+
+            // Do certificate based authentication
+            ret = new KeyVaultClient(
+                    new KeyVaultCredentials() {
+                        @Override
+                        public String doAuthenticate(String authorization, String resource, String scope) {
+                            if (logger.isDebugEnabled()) {
+                                logger.debug("==> getAuthentication().doAuthenticate({}, {}, {})", authorization, resource, scope);
+                            }
+
+                            ExecutorService service = null;
+
+                            try {
+                                service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true)
+                                                                                                    .setNameFormat("kms-azure-akc_acquireToken_thread")
+                                                                                                    .build());
+                                AuthenticationContext   context                 = new AuthenticationContext(authorization, false, service);
+                                AsymmetricKeyCredential asymmetricKeyCredential = AsymmetricKeyCredential.create(authClientID, privateKey, certificateKey.getCertificate());
+                                AuthenticationResult    result                  = context.acquireToken(resource, asymmetricKeyCredential, null).get();
+                                String                  ret                     = result.getAccessToken();
+
+                                if (logger.isDebugEnabled()) {
+                                    logger.debug("<== getAuthentication().doAuthenticate({}, {}, {})", authorization, resource, scope);
+                                }
+
+                                return ret;
+                            } catch (Exception e) {
+                                throw new RuntimeException("Error while getting authenticated access token from azure key vault with certificate : " + e);
+                            } finally {
+                                if (service != null) {
+                                    service.shutdown();
+                                }
+                            }
+                        }
+                    });
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== getAuthentication({}): ret={}", path, ret);
+        }
+
+        return ret;
+    }
+
+        private static AuthenticationResult getAccessTokenFromClientCredentials(String authorization, String resource, String clientId, String clientKey) {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> getAccessTokenFromClientCredentials({}, {}, {})", authorization, resource, clientId);
+        }
+
+        AuthenticationResult  result;
+        ExecutorService       service = null;
+
         try {
-            service = Executors.newFixedThreadPool(1);
-            context = new AuthenticationContext(authorization, false, service);
-            ClientCredential credentials = new ClientCredential(clientId, clientKey);
-            Future<AuthenticationResult> future = context.acquireToken(
-                    resource, credentials, null);
+            service = Executors.newFixedThreadPool(1, new ThreadFactoryBuilder().setDaemon(true)
+                                                                                .setNameFormat("kms-azure-cc_acquireToken-thread")
+                                                                                .build());
+
+            AuthenticationContext        context     = new AuthenticationContext(authorization, false, service);
+            ClientCredential             credentials = new ClientCredential(clientId, clientKey);
+            Future<AuthenticationResult> future      = context.acquireToken(resource, credentials, null);
+
             result = future.get();
-		} catch (Exception e) {
-			throw new RuntimeException(
-					" Error while getting Access token for client id: "
-							+ clientId + " and client secret. Error : " + e);
-		} finally {
-            service.shutdown();
+        } catch (Exception e) {
+            throw new RuntimeException(" Error while getting Access token for client id: " + clientId + " and client secret. Error : " + e);
+        } finally {
+            if (service != null) {
+                service.shutdown();
+            }
         }
 
         if (result == null) {
             throw new RuntimeException("authentication result was null");
         }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== getAccessTokenFromClientCredentials({}, {}, {})", authorization, resource, clientId);
+        }
+
         return result;
     }
-    
-    /**
-	 * Do certificate based authentication using pfx file
-	 * 
-	 * @param path
-	 *            to pfx/pem file
-	 * @param pfxPassword
-	 *            the password to the pfx file, this can be empty if thats the value
-	 *            given when it was created
-	 * @param clientId
-	 *            also known as applicationId which is received after app
-	 *            registration
-     * @throws Exception 
-	 */
-	public KeyVaultClient getAuthentication(String path, String certPassword)
-			throws Exception {
-		KeyCert keyCert = null;
-		if(path.endsWith(".pfx")){
-			try {
-				keyCert = readPfx(path, certPassword);
-			} catch (Exception ex) {
-				throw new Exception(
-						"Error while parsing pfx certificate. Error : " + ex);
-			}
-		}else if(path.endsWith(".pem")){
-			try {
-				keyCert = readPem(path, certPassword);
-			} catch (Exception ex) {
-				throw new Exception(
-						"Error while parsing pem certificate. Error : " + ex);
-			}
-		}
-		final KeyCert certificateKey = keyCert;
-		if (certificateKey != null) {
-			PrivateKey privateKey = certificateKey.getKey();
 
-			// Do certificate based authentication
-			KeyVaultClient keyVaultClient = new KeyVaultClient(
-					new KeyVaultCredentials() {
+    private KeyCert readPem(String path, String password) throws IOException, CertificateException, OperatorCreationException, PKCSException {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> readPem({})", path);
+        }
 
-						@Override
-						public String doAuthenticate(String authorization,
-								String resource, String scope) {
-							AuthenticationContext context;
-							try {
-								context = new AuthenticationContext(
-										authorization, false, Executors
-												.newFixedThreadPool(1));
-								AsymmetricKeyCredential asymmetricKeyCredential = AsymmetricKeyCredential
-										.create(authClientID, privateKey,
-												certificateKey.getCertificate());
-								AuthenticationResult result = context
-										.acquireToken(resource,
-												asymmetricKeyCredential, null)
-										.get();
-								return result.getAccessToken();
-							} catch (Exception e) {
-								throw new RuntimeException("Error while getting authenticated access token from azure key vault with certificate : " + e);
-							}
-						}
-					});
-			return keyVaultClient;
-		}
-		return null;
-	}
-	
-	private KeyCert readPem(String path, String password) throws IOException, CertificateException, OperatorCreationException, PKCSException {
-		Security.addProvider(new BouncyCastleProvider());
-		PEMParser pemParser = new PEMParser(new FileReader(new File(path)));
-		PrivateKey privateKey = null;
-		X509Certificate cert = null;
-		Object object = pemParser.readObject();
-		
-		while (object != null) {
-			JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
-			if (object instanceof X509CertificateHolder) {
-				cert = new JcaX509CertificateConverter().getCertificate((X509CertificateHolder) object);
-			}
-			if (object instanceof PKCS8EncryptedPrivateKeyInfo) {
-				PKCS8EncryptedPrivateKeyInfo pinfo = (PKCS8EncryptedPrivateKeyInfo) object;
-				InputDecryptorProvider provider = new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
-				PrivateKeyInfo info = pinfo.decryptPrivateKeyInfo(provider);
-				privateKey = converter.getPrivateKey(info);
-			} 
-			if (object instanceof PrivateKeyInfo) {
-				privateKey = converter.getPrivateKey((PrivateKeyInfo) object);
-			}
-			object = pemParser.readObject();
-		}
-		KeyCert keycert = new KeyCert();
-		keycert.setCertificate(cert);
-		keycert.setKey(privateKey);
-		pemParser.close();
-		return keycert;
-	}
-	
-	private KeyCert readPfx(String path, String password) throws NoSuchProviderException, KeyStoreException,
-			IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
-		try (FileInputStream stream = new FileInputStream(path)) {
-			KeyCert keyCert = new KeyCert();
-			boolean isAliasWithPrivateKey = false;
-			final KeyStore store = KeyStore.getInstance("pkcs12", "SunJSSE");
-			store.load((InputStream) stream, password.toCharArray());
+        Security.addProvider(new BouncyCastleProvider());
 
-			// Iterate over all aliases to find the private key
-			Enumeration<String> aliases = store.aliases();
-			String alias = "";
-			while (aliases.hasMoreElements()) {
-				alias = aliases.nextElement();
-				// Break if alias refers to a private key because we want to use that
-				// certificate
-				if (isAliasWithPrivateKey = store.isKeyEntry(alias)) {
-					break;
-				}
-			}
-			if (isAliasWithPrivateKey) {
-				// Retrieves the certificate from the Java keystore
-				X509Certificate certificate = (X509Certificate) store.getCertificate(alias);
-				PrivateKey key = (PrivateKey) store.getKey(alias, password.toCharArray());
-				keyCert.setCertificate(certificate);
-				keyCert.setKey(key);
-			}
-			return keyCert;
-		}
-	}
+        PEMParser       pemParser  = new PEMParser(new FileReader(path));
+        PrivateKey      privateKey = null;
+        X509Certificate cert       = null;
+        Object          object     = pemParser.readObject();
 
-	static class KeyCert {
+        while (object != null) {
+            JcaPEMKeyConverter converter = new JcaPEMKeyConverter().setProvider("BC");
 
-		X509Certificate certificate;
-		PrivateKey key;
+            if (object instanceof X509CertificateHolder) {
+                cert = new JcaX509CertificateConverter().getCertificate((X509CertificateHolder) object);
+            } else if (object instanceof PKCS8EncryptedPrivateKeyInfo) {
+                PKCS8EncryptedPrivateKeyInfo pinfo    = (PKCS8EncryptedPrivateKeyInfo) object;
+                InputDecryptorProvider       provider = new JceOpenSSLPKCS8DecryptorProviderBuilder().build(password.toCharArray());
+                PrivateKeyInfo               info     = pinfo.decryptPrivateKeyInfo(provider);
 
-		public X509Certificate getCertificate() {
-			return certificate;
-		}
+                privateKey = converter.getPrivateKey(info);
+            } else if (object instanceof PrivateKeyInfo) {
+                privateKey = converter.getPrivateKey((PrivateKeyInfo) object);
+            }
 
-		public void setCertificate(X509Certificate certificate) {
-			this.certificate = certificate;
-		}
+            object = pemParser.readObject();
+        }
 
-		public PrivateKey getKey() {
-			return key;
-		}
+        KeyCert keycert = new KeyCert(cert, privateKey);
 
-		public void setKey(PrivateKey key) {
-			this.key = key;
-		}
-	}
+        pemParser.close();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== readPem({})", path);
+        }
+
+        return keycert;
+    }
+
+    private KeyCert readPfx(String path, String password) throws NoSuchProviderException, KeyStoreException, IOException, NoSuchAlgorithmException, CertificateException, UnrecoverableKeyException {
+        logger.debug("==> readPfx({})", path);
+
+        try (FileInputStream stream = new FileInputStream(path)) {
+            KeyCert  keyCert               = null;
+            boolean  isAliasWithPrivateKey = false;
+            KeyStore store                 = KeyStore.getInstance("pkcs12", "SunJSSE");
+
+            store.load(stream, password.toCharArray());
+
+            // Iterate over all aliases to find the private key
+            Enumeration<String> aliases = store.aliases();
+            String              alias   = "";
+
+            while (aliases.hasMoreElements()) {
+                alias = aliases.nextElement();
+                // Break if alias refers to a private key because we want to use that certificate
+                isAliasWithPrivateKey = store.isKeyEntry(alias);
+
+                if (isAliasWithPrivateKey) {
+                    break;
+                }
+            }
+
+            if (isAliasWithPrivateKey) {
+                // Retrieves the certificate from the Java keystore
+                X509Certificate certificate = (X509Certificate) store.getCertificate(alias);
+                PrivateKey      key         = (PrivateKey) store.getKey(alias, password.toCharArray());
+
+                keyCert = new KeyCert(certificate, key);
+            }
+
+            logger.debug("<== readPfx({})", path);
+
+            return keyCert;
+        }
+    }
+
+    private static class KeyCert {
+        private final X509Certificate certificate;
+        private final PrivateKey      key;
+
+        public KeyCert(X509Certificate certificate, PrivateKey key) {
+            this.certificate = certificate;
+            this.key         = key;
+        }
+
+        public X509Certificate getCertificate() {
+            return certificate;
+        }
+
+        public PrivateKey getKey() {
+            return key;
+        }
+    }
 }
 

@@ -80,12 +80,6 @@ public class RangerDefaultDataMaskPolicyItemEvaluator extends RangerDefaultPolic
 				result.setMaskCondition(dataMaskInfo.getConditionExpr());
 			}
 
-			result.setIsAccessDetermined(true);
-			result.setPolicyPriority(policyEvaluator.getPolicyPriority());
-			result.setPolicyId(policyEvaluator.getPolicyId());
-			result.setReason(getComments());
-			result.setPolicyVersion(policyEvaluator.getPolicy().getVersion());
-
 			policyEvaluator.updateAccessResult(result, matchType, true, getComments());
 		}
 	}

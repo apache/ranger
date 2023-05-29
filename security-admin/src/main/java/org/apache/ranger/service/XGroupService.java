@@ -281,4 +281,8 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	public Map<Long, String> getXXGroupIdNameMap() {
 		return daoManager.getXXGroup().getAllGroupIdNames();
 	}
+
+	public Long getAllGroupCount() {
+		return daoManager.getXXGroup().getAllCount();
+	}
 }

@@ -321,7 +321,7 @@ public class PublicAPIs {
 		if(policy != null) {
 			policy.setVersion(existing.getVersion());
 
-			RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy);
+			RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy, policy.getId());
 
 			ret = serviceUtil.toVXPolicy(updatedPolicy, service);
 		}

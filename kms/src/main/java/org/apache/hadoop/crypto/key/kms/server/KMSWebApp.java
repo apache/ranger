@@ -21,24 +21,25 @@ import com.codahale.metrics.JmxReporter;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.base.Preconditions;
-
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.CachingKeyProvider;
 import org.apache.hadoop.crypto.key.KeyProvider;
 import org.apache.hadoop.crypto.key.KeyProviderCryptoExtension;
 import org.apache.hadoop.crypto.key.KeyProviderFactory;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyACLs;
+import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.util.ReflectionUtils;
+import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.hadoop.util.VersionInfo;
+import org.apache.ranger.kms.metrics.KMSMetricWrapper;
+import org.apache.ranger.kms.metrics.collector.KMSMetricsCollector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import javax.servlet.ServletContextEvent;
 import javax.servlet.ServletContextListener;
-
 import java.io.IOException;
 import java.net.URI;
 import java.util.ServiceLoader;
@@ -63,8 +64,8 @@ public class KMSWebApp implements ServletContextListener {
   private static final String REENCRYPT_EEK_METER = METRICS_PREFIX +
       "reencrypt_eek.calls.meter";
   private static final String REENCRYPT_EEK_BATCH_METER = METRICS_PREFIX +
-        "reencrypt_eek_batch.calls.meter";
-
+           "reencrypt_eek_batch.calls.meter";
+  public static final String HADOOP_KMS_METRIC_COLLECTION_THREADSAFE = "hadoop.kms.metric.collection.threadsafe";
   private static Logger LOG;
   private static MetricRegistry metricRegistry;
 
@@ -82,6 +83,8 @@ public class KMSWebApp implements ServletContextListener {
   private static Meter invalidCallsMeter;
   private static KMSAudit kmsAudit;
   private static KeyProviderCryptoExtension keyProviderCryptoExtension;
+
+  private static KMSMetricsCollector kmsMetricsCollector;
 
   static {
     SLF4JBridgeHandler.removeHandlersForRootLogger();
@@ -130,7 +133,6 @@ public class KMSWebApp implements ServletContextListener {
       LOG.info("  KMS Hadoop Version: " + VersionInfo.getVersion());
       LOG.info("-------------------------------------------------------------");
 
-
       kmsAcls = getAcls(kmsConf.get(KMSConfiguration.KMS_SECURITY_AUTHORIZER));
       kmsAcls.startReloader();
 
@@ -156,6 +158,8 @@ public class KMSWebApp implements ServletContextListener {
 
       kmsAudit = new KMSAudit(kmsConf);
 
+      KMSMetricWrapper kmsMetricWrapper = KMSMetricWrapper.getInstance(isMetricCollectionThreadSafe());
+      kmsMetricsCollector = kmsMetricWrapper.getKmsMetricsCollector();
 
       // intializing the KeyProvider
       String providerString = kmsConf.get(KMSConfiguration.KEY_PROVIDER_URI);
@@ -207,6 +211,9 @@ public class KMSWebApp implements ServletContextListener {
               KeyProvider.DEFAULT_BITLENGTH);
       LOG.info("Default key bitlength is {}", defaultBitlength);
       LOG.info("Ranger KMS Started");
+
+      // Adding shutdown hook to flush in-memory metric to a file.
+      ShutdownHookManager.get().addShutdownHook(()-> KMSMetricWrapper.getInstance(isMetricCollectionThreadSafe()).writeJsonMetricsToFile(),10);
     } catch (Throwable ex) {
       System.out.println();
       System.out.println("ERROR: Hadoop KMS could not be started");
@@ -310,5 +317,15 @@ public class KMSWebApp implements ServletContextListener {
 
   public static KMSAudit getKMSAudit() {
     return kmsAudit;
+  }
+
+  public static boolean isMetricCollectionThreadSafe(){
+
+    return Boolean.valueOf(KMSWebApp.getConfiguration().get(HADOOP_KMS_METRIC_COLLECTION_THREADSAFE, "false"));
+  }
+
+  public static KMSMetricsCollector getKmsMetricsCollector(){
+
+    return kmsMetricsCollector;
   }
 }

@@ -1,0 +1,437 @@
+<!--
+  Licensed to the Apache Software Foundation (ASF) under one or more
+  contributor license agreements.  See the NOTICE file distributed with
+  this work for additional information regarding copyright ownership.
+  The ASF licenses this file to You under the Apache License, Version 2.0
+  (the "License"); you may not use this file except in compliance with
+  the License.  You may obtain a copy of the License at
+
+      http://www.apache.org/licenses/LICENSE-2.0
+
+  Unless required by applicable law or agreed to in writing, software
+  distributed under the License is distributed on an "AS IS" BASIS,
+  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  See the License for the specific language governing permissions and
+  limitations under the License.
+-->
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta http-equiv=Content-Type content="text/html; charset=utf-8">
+    <title>Adventures in ABAC - Part 1</title>
+    <style>
+     <!--
+      /* Font Definitions */
+      @font-face {font-family:Wingdings; panose-1:5 0 0 0 0 0 0 0 0 0;}
+      @font-face {font-family:"Cambria Math"; panose-1:2 4 5 3 5 4 6 3 2 4;}
+      @font-face {font-family:Calibri; panose-1:2 15 5 2 2 2 4 3 2 4;}
+      @font-face {font-family:"Calibri Light"; panose-1:2 15 3 2 2 2 4 3 2 4;}
+
+      /* Style Definitions */
+      p.MsoNormal, li.MsoNormal, div.MsoNormal
+             {margin:0in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+     h1
+             {mso-style-link:"Heading 1 Char"; margin-top:12.0pt; margin-right:0in; margin-bottom:0in; margin-left:0in; page-break-after:avoid; font-size:16.0pt; font-family:"Calibri Light",sans-serif; color:#2F5496; font-weight:normal;}
+
+      p.MsoFootnoteText, li.MsoFootnoteText, div.MsoFootnoteText
+             {mso-style-link:"Footnote Text Char"; margin:0in; font-size:10.0pt; font-family:"Calibri",sans-serif;}
+
+      p.MsoListParagraph, li.MsoListParagraph, div.MsoListParagraph
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpFirst, li.MsoListParagraphCxSpFirst, div.MsoListParagraphCxSpFirst
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpMiddle, li.MsoListParagraphCxSpMiddle, div.MsoListParagraphCxSpMiddle
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      p.MsoListParagraphCxSpLast, li.MsoListParagraphCxSpLast, div.MsoListParagraphCxSpLast
+             {margin-top:0in; margin-right:0in; margin-bottom:0in; margin-left:.5in; font-size:12.0pt; font-family:"Calibri",sans-serif;}
+      span.Heading1Char
+             {mso-style-name:"Heading 1 Char"; mso-style-link:"Heading 1"; font-family:"Calibri Light",sans-serif; color:#2F5496;}
+      span.FootnoteTextChar
+             {mso-style-name:"Footnote Text Char"; mso-style-link:"Footnote Text";}
+      .MsoChpDefault
+             {font-family:"Calibri",sans-serif;}
+
+      /* Page Definitions */
+      @page WordSection1
+             {size:8.5in 11.0in; margin:1.0in 1.0in 1.0in 1.0in;}
+      div.WordSection1
+             {page:WordSection1;}
+
+
+      /* List Definitions */
+      ol
+             {margin-bottom:0in;}
+      ul
+             {margin-bottom:0in;}
+     -->
+    </style>
+  </head>
+
+  <body lang=EN-US style='width:800px;word-wrap:break-word;align:center;margin:auto;border:ridge' >
+    <div style="margin-left:10pt;margin-right:10pt">
+      <h1 style="text-align:center">Adventures in attribute-based access control (ABAC) - Part 1</h1>
+      <p class=MsoNormal style='font:5.0pt "Times New Roman"'>&nbsp;</p>
+      <div style="text-align:center">
+        <p class=MsoNormal>Barbara Eckman, Ph.D., Distinguished Architect, Comcast</p>
+        <p class=MsoNormal>Apr 29, 2023</p>
+      </div>
+      <p class=MsoNormal>&nbsp;</p>
+
+      <div class=WordSection>
+        <h1>Introduction</h1>
+
+        <p class=MsoNormal>
+         Simply put, data access control enforces constraints on who is permitted to access the data. An access control policy
+         specifies 1) which data may be accessed by 2) which users and optionally 3) for how long
+         <a href="#_ftn1" name="_ftnref1" title=""><span style='font-size:12.0pt;font-family:"Calibri",sans-serif'>[1]</span></a>.
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>Data can be specified in access control policies in multiple ways:</p>
+
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Resource-based access control: data is specified by its logical identifier e.g., table name, column name, Kafka topic name, AWS S3 bucket name.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Tag-based access control (TBAC): data is specified by one or more of its properties, represented by a tag on its metadata, e.g., a Sales Region or Sensitivity Level.</p>
+
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>3.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Row access control: specifies rows/records that are visible to the user at run time by setting up filters based on the value of an attribute, e.g., Sales Region is "US”.</p>
+
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>4.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Masking access control: specifies if the data should be masked before making it available the user.
+         <a href="#_ftn2" name="_ftnref2" title=""><span style='font-size:12.0pt;font-family:"Calibri",sans-serif'>[2]</span></a>
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>Users can be specified in access control policies in multiple ways:</p>
+
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>by their individual IDs, or by their group IDs.</p>
+
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>by the roles the users belong to e.g., "USSalesPerson”. This approach is generally called Role-Based Access Control (RBAC).</p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>It’s generally acknowledged that RBAC and TBAC are more maintainable, easier to understand, and therefore less error-prone than resource-based access control and identifying users by their IDs or group IDs. However, these are not sufficient for even moderately complex access control constraints, as we will see.</p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>In this blog, we will consider various access control approaches for the following users in specified regions, having access to a given level of sensitive data. Users with access to Highly Sensitive data may also access Sensitive data.</p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 style='margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td width=90 valign=top style='width:67.25pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>User</b></p></td>
+            <td width=102 valign=top style='width:76.5pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Region</b></p></td>
+            <td width=132 valign=top style='width:99.0pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b>Access Level</b></p></td>
+          </tr>
+          <tr>
+            <td width=90 valign=top style='width:67.25pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Bob</p></td>
+            <td width=102 valign=top style='width:76.5pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>US</p></td>
+            <td width=132 valign=top style='width:99.0pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Highly Sensitive</p></td>
+          </tr>
+          <tr>
+           <td width=90 valign=top style='width:67.25pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Celestine</p></td>
+           <td width=102 valign=top style='width:76.5pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>EMEA</p></td>
+           <td width=132 valign=top style='width:99.0pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>Sensitive</p></td>
+          </tr>
+        </table>
+
+        <p class=MsoNormal><span style='font-size:16.0pt;font-family:"Calibri Light",sans-serif;color:#2F5496'>&nbsp;</span></p>
+
+        <h1>Resource and Identity-based Access Control: USSales</h1>
+        <p class=MsoNormal>Consider the following table containing data from the US sales region.</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+            <img width=700 height=140 id="Picture 6" src="adventures_in_abac_1.files/table_ussales.jpg" alt="Table USSales">
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Resource and identity-based access-control policies might include:</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Allow Bob to access all columns because he’s from the US and has access to Highly Sensitive data.</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Deny access to Celestine on the table because she’s from EMEA, i.e., not from US.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+          <img width=700 height=800 border=1 id="policy_table_ussales_rib" src="adventures_in_abac_1.files/fig01-policy_ussales_rib.jpg" alt="Fig 1. Apache Ranger&#8482; resource and identity-based access policy for table USSales">
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 1. Apache Ranger&#8482; resource and identity-based access policy for table USSales</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>This isn’t too onerous with two users, one table, and two Sales Regions.</p>
+
+        <p class=MsoNormal><span style='font-size:16.0pt;font-family:"Calibri Light",sans-serif;color:#2F5496'>&nbsp;</span></p>
+
+        <h1>Resource and Identity-based Access Control: GlobalSales</h1>
+        <p class=MsoNormal>Let’s add a bit of complexity. Consider the following table containing data from several sales regions, including US and EMEA.</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+            <img width=780 height=180 id="Picture 7" src="adventures_in_abac_1.files/table_globalsales.jpg" alt="Table: GlobalSales">
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Resource-based and identity-based access-control policy might include:</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Allow Bob to access all columns in rows having salesRegion=US because he’s from the US and has access to Highly Sensitive data.</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Allow Celestine to access columns c1-c10 in rows having salesRegion=EMEA because she’s from EMEA and has access to Sensitive data.</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'><span style='font-family:Symbol'>-<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</span></span>Deny users from non-matching regions any access to the table.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+            <img width=700 height=800 border=1 id="Picture 9" src="adventures_in_abac_1.files/fig02-policy_globalsales_highly_sensitive.jpg" alt="Fig 2. Apache Ranger&#8482; access policy for highly sensitive data in table GlobalSales">
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 2. Apache Ranger&#8482; access policy for highly sensitive data in table GlobalSales</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+            <img width=700 height=800 border=1 id="Picture 14" src="adventures_in_abac_1.files/fig03-policy_globalsales_sensitive.jpg" alt="Fig 3. Apache Ranger&#8482; access policy for sensitive data in table GlobalSales">
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 3. Apache Ranger&#8482; access policy for sensitive data in table GlobalSales</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+            <img width=700 height=800 border=1 id="Picture 22" src="adventures_in_abac_1.files/fig04-policy_globalsales_non_sensitive.jpg" alt="Fig 4. Apache Ranger&#8482; access policy for non-sensitive data in table GlobalSales">
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 4. Apache Ranger&#8482; access policy for non-sensitive data in table GlobalSales</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>
+            <img width=700 height=800 border=1 id="Picture 16" src="adventures_in_abac_1.files/fig05-policy_globalsales_row_filter_sales_region.jpg" alt="Fig 5. Apache Ranger&#8482; row-filter policy to restrict access to data in table GlobalSales based on sales region">
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 5. Apache Ranger&#8482; row-filter policy to restrict access to data in table GlobalSales based on sales region</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Note that the fact that Bob is from the US with access to highly sensitive data is not explicitly captured in the above policies. Nor are the sensitivity levels of the two sets of columns. This knowledge is implicit only, making the policies difficult to maintain over time as business rules change.</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <h1>Tag-based and Role-based Access Control: USSales</h1>
+        <p class=MsoNormal>In this section we will explore using tags and roles (TBAC and RBAC) to set up access control on the USSales table.</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Let’s use tags to capture metadata relevant to access control, and assign them to tables and columns as shown below:</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 width=511 style='width:383.4pt;margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Table/Columns</span></b></p></td>
+            <td width=113 valign=top style='width:84.8pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Tag</span></b></p></td>
+            <td width=194 valign=top style='width:145.15pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Tag Attribute</span></b></p></td>
+          </tr>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>USSales</p></td>
+            <td width=113 valign=top style='width:84.8pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>salesRegion</p></td>
+            <td width=194 valign=top style='width:145.15pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>value="US"</p></td>
+          </tr>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>c1, c2, c3, c4, c5</p></td>
+            <td width=113 valign=top style='width:84.8pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>sensitivityLevel</p></td>
+            <td width=194 valign=top style='width:145.15pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>value="sensitive"</p></td>
+          </tr>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>c6, c7, c8</p></td>
+            <td width=113 valign=top style='width:84.8pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>sensitivityLevel</p></td>
+            <td width=194 valign=top style='width:145.15pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>value="highlySensitive"</p></td>
+          </tr>
+        </table>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>Let’s use the following roles to capture users’ access scope by sensitivity level and region, and assign users as members of the appropriate roles:</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal align=center style='text-align:center'>
+          <img width=700 height=380 border=1 id="Picture 23" src="adventures_in_abac_1.files/fig06-roles_capturing_sl_sr.jpg" alt="Fig 6. Apache Ranger&#8482; roles to capture sensitivity level and sales region for users">
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 6. Apache Ranger&#8482; roles to capture sensitivity level and sales region for users</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>Tag-based and role-based access-control policies might include:</p>
+
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span>Tag: salesRegion</p>
+        <p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;
+      text-indent:-.25in'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Allow users in role salesRegion.US to access resources tagged with salesRegion.value = "US"</p>
+        <p class=MsoListParagraphCxSpLast style='margin-left:1.0in;
+      text-indent:-.25in'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Allow users in role salesRegion.EMEA to access resources tagged with salesRegion.value = "EMEA"</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal align=center style='text-align:center'>
+          <img width=700 height=800 border=1 id="Picture 24" src="adventures_in_abac_1.files/fig07-policy_ussales_tag_attribute_based.jpg" alt="Fig 7. Apache Ranger&#8482; tag attribute-based access policy for sales region">
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 7. Apache Ranger&#8482; tag attribute-based access policy for sales region</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span>Tag: sensitivityLevel</p>
+        <p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;text-indent:-.25in'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Allow users in role sensitivityLevel.sensitive to access resources tagged with sensitivityLevel.value = "sensitive", OR empty.</p>
+        <p class=MsoListParagraphCxSpLast style='margin-left:1.0in;
+      text-indent:-.25in'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Allow users in role sensitivityLevel.highlySensitive to access resources tagged with sensitivityLevel.value = "sensitive" OR "highlySensitive", OR empty.</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoListParagraph align=center style='margin-left:0in;text-align:center'>
+          <img width=700 height=800 border=1 id="Picture 25" src="adventures_in_abac_1.files/fig08-policy_tag_based_sl.jpg" alt="Fig 8. Apache Ranger&#8482; tag attribute-based access policy for sensitivity level">
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 8. Apache Ranger&#8482; tag attribute-based access policy for sensitivity level</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>Note that the knowledge needed for access control is now explicit: the columns’ metadata is tagged with an explicit sensitivity level, and the users are explicitly members of the appropriate salesRegion role. </p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal><span style='color:black'>Note that these tag policies can be used to handle an EMEASales table as well as the USSales table, depending on whether the value of the tag is ‘US’ or ‘EMEA’.</span></p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <h1>Tag-based and Role-based Access Control: GlobalSales</h1>
+
+        <p class=MsoNormal>In this section we return to the GlobalSales table. In this case we can’t use a simple salesRegion tag on the table, since the table contains data from multiple regions including US and EMEA. A row-filter is needed, as in the resource-based policy above. </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>As before, let’s use the following tags to capture metadata relevant to sensitivity access control, and have them assigned to columns as shown below:</p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 width=511 style='width:383.4pt;margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Columns</span></b></p></td>
+            <td width=113 valign=top style='width:84.8pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Tag</span></b></p></td>
+            <td width=194 valign=top style='width:145.15pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Tag Attribute</span></b></p></td>
+          </tr>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>c2, c3</p></td>
+            <td width=113 valign=top style='width:84.8pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>sensitivityLevel</p></td>
+            <td width=194 valign=top style='width:145.15pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>value="sensitive"</p></td>
+          </tr>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>c11, c12, c13, c14</p></td>
+            <td width=113 valign=top style='width:84.8pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>sensitivityLevel</p></td>
+            <td width=194 valign=top style='width:145.15pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>value="highlySensitive"</p></td>
+          </tr>
+        </table>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>Also, let’s use the same roles listed in the previous use case, Fig. 6</p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>Tag-based and role-based access-control policies might include:</p>
+
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span>Tag: sensitivityLevel: same policy as the previous use case, Fig. 8</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span>Row filter Policy:</p>
+        <p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;text-indent:-.25in'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Users in the salesRegion.US role have access to rows where salesRegion = "US"</p>
+        <p class=MsoListParagraphCxSpLast style='margin-left:1.0in;text-indent:-.25in'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Users in the salesRegion.EMEA role have access to rows where salesRegion = "EMEA"</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal align=center style='text-align:center'>
+            <img width=700 height=800 border=1 id="Picture 28" src="adventures_in_abac_1.files/fig09-policy_globalsales_row_filter_sr_roles.jpg" alt="Fig 9. Apache Ranger&#8482; row-filter policy to restrict access to data in table GlobalSales based on sales region and user roles">
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 9. Apache Ranger&#8482; row-filter policy to restrict access to data in table GlobalSales based on sales region and user roles</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>This policy controls access by any user who has been assigned to a salesRegion role, not simply bob or celestine. </p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <h1>Beyond Tag-based and Role-based Access Control: GlobalSalesPartners</h1>
+        <p class=MsoNormal>As our final level of complexity, in this section we will extend access control to a GlobalSalesPartners table that includes info on which business partner ("ABC" or "XYZ") produced the data.</p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>
+          <img width=780 height=180 id="Picture 8" src="adventures_in_abac_1.files/table_globalsalespartners.jpg" alt="Table GlobalSalesPartners">
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>The following additional conditions must be enforced for accessing data in this table:</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span>Bob can see only data from partner "ABC"</p>
+        <p class=MsoListParagraphCxSpLast style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span>Celestine can see data from both partners.</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>As before, let’s use the following tags to capture metadata relevant to sensitivity level, and have them assigned to columns as shown below:</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <table class=MsoTableGrid border=1 cellspacing=0 cellpadding=0 width=511 style='width:383.4pt;margin-left:30.35pt;border-collapse:collapse;border:none'>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Columns</span></b></p></td>
+            <td width=113 valign=top style='width:84.8pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Tag</span></b></p></td>
+            <td width=194 valign=top style='width:145.15pt;border:solid windowtext 1.0pt;border-left:none;padding:0in 5.4pt 0in 5.4pt;text-align:center'><p class=MsoNormal><b><span style='font-size:10.0pt'>Tag Attribute</span></b></p></td>
+          </tr>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>c2, c3</p></td>
+            <td width=113 valign=top style='width:84.8pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>sensitivityLevel</p></td>
+            <td width=194 valign=top style='width:145.15pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>value="sensitive"</p></td>
+          </tr>
+          <tr>
+            <td width=205 valign=top style='width:153.45pt;border:solid windowtext 1.0pt;border-top:none;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>c11, c12, c13, c14</p></td>
+            <td width=113 valign=top style='width:84.8pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>sensitivityLevel</p></td>
+            <td width=194 valign=top style='width:145.15pt;border-top:none;border-left:none;border-bottom:solid windowtext 1.0pt;border-right:solid windowtext 1.0pt;padding:0in 5.4pt 0in 5.4pt'><p class=MsoNormal>value="highlySensitive"</p></td>
+          </tr>
+        </table>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>Let’s use the following roles to capture the users’ access scope by sensitivity level, region, and sales partner, and assign our users as members of the appropriate roles:</p>
+
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal align=center style='text-align:center'>
+          <img width=700 height=380 border=1 id="Picture 29" src="adventures_in_abac_1.files/fig10-roles_capturing_sl_sr_sp.jpg" alt="Fig 10. Apache Ranger&#8482; roles to capture sensitivity level, sales region and sales partners for users">
+        </p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 10. Apache Ranger&#8482; roles to capture sensitivity level, sales region and sales partners for users</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>Tag-based and role-based access-control policies might include:</p>
+        <p class=MsoListParagraphCxSpFirst style='text-indent:-.25in'>1.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span>Tag: sensitivityLevel: same policy as earlier use case, Fig. 8</p>
+        <p class=MsoListParagraphCxSpMiddle style='text-indent:-.25in'>2.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp; </span>Row filter Policy:</p>
+        <p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;text-indent:-.25in'>a.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Users in salesRegion.US role have access to rows where salesRegion = "US"</p>
+        <p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;text-indent:-.25in'>b.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Users in salesRegion.EMEA role have access to rows where salesRegion = "EMEA"</p>
+        <p class=MsoListParagraphCxSpMiddle style='margin-left:1.0in;text-indent:-.25in'>c.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Users in salesPartner.ABC role have access to rows where salesPartner = "ABC"</p>
+        <p class=MsoListParagraphCxSpLast style='margin-left:1.0in;text-indent:-.25in'>d.<span style='font:7.0pt "Times New Roman"'>&nbsp;&nbsp;&nbsp;&nbsp;</span>Users in salesPartner.XYZ role has access to rows where salesPartner = "XYZ"</p>
+
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='margin-left:0in;text-align:center'>
+          <img width=700 height=800 border=1 id="Picture 36" src="adventures_in_abac_1.files/fig11-policy_globalsalespartners_row_filter_sr_sp.jpg" alt="Fig 11. Apache Ranger&#8482; row-filter policy to restrict access to data in table GlobalSalesPartners based on sales region and sales partner">
+        </p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal align=center style='text-align:center'>Fig 11. Apache Ranger&#8482; row-filter policy to restrict access to data in table GlobalSalesPartners based on sales region and sales partner</p>
+        <p class=MsoNormal>&nbsp;</p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>It is easy to see that as the numbers of salesRegions and salesPartners rise, the number of roles and row filter conditions increases combinatorially, and rapidly becomes difficult to manage. </p>
+        <p class=MsoNormal>&nbsp;</p>
+
+        <p class=MsoNormal>As I said before, built-in Apache Ranger&#8482; TBAC, RBAC, and row-filter based access policies are powerful, but they are not sufficient for complex access control constraints, like above. Join in to part 2 of this blog series to see how ABAC can answer these and other more complex constraint requirements, and do it…well, elegantly!</p>
+        <p class=MsoNormal>&nbsp;</p>
+      </div>
+
+      <div>
+        <br clear=all>
+        <hr align=left size=1 width="33%">
+        <div id=ftn1>
+          <p class=MsoNormal><a href="#_ftnref1" name="_ftn1" title=""><span style='font-size:12.0pt;font-family:"Calibri",sans-serif'>[1]</span></a>Specifying expiration dates for access control policies where relevant. This is not specific to ABAC and so we won’t discuss it further in this blog series.</p>
+          <p class=MsoFootnoteText>&nbsp;</p>
+        </div>
+
+        <div id=ftn2>
+          <p class=MsoNormal><a href="#_ftnref2" name="_ftn2" title=""><span style='font-size:12.0pt;font-family:"Calibri",sans-serif'>[2]</span></a>We will cover details of masking policies in a subsequent blog.</p>
+          <p class=MsoFootnoteText>&nbsp;</p>
+        </div>
+      </div>
+    </div>
+  </body>
+
+  <footer>
+    <div align=center >
+      <a href="/blogs.html">Apache Ranger&#8482; blogs</a>
+    </div>
+  </footer>
+</html>

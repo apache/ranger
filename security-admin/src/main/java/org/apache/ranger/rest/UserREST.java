@@ -307,8 +307,13 @@ public class UserREST {
 	@Produces({ "application/json" })
 	public VXResponse changePassword(@PathParam("userId") Long userId,
 			VXPasswordChange changePassword) {
-		if(changePassword==null || stringUtil.isEmpty(changePassword.getLoginId())){
+		if(changePassword==null || stringUtil.isEmpty(changePassword.getLoginId())) {
 			logger.warn("SECURITY:changePassword(): Invalid loginId provided. loginId was empty or null");
+			throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "");
+		} else if (changePassword.getId() == null) {
+			changePassword.setId(userId);
+		} else if (!changePassword.getId().equals(userId) ) {
+			logger.warn("SECURITY:changePassword(): userId mismatch");
 			throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null,"");
 		}
 
@@ -336,8 +341,13 @@ public class UserREST {
 	@Produces({ "application/json" })
 	public VXPortalUser changeEmailAddress(@PathParam("userId") Long userId,
 			VXPasswordChange changeEmail) {
-		if(changeEmail==null || stringUtil.isEmpty(changeEmail.getLoginId())){
+		if(changeEmail==null || stringUtil.isEmpty(changeEmail.getLoginId())) {
 			logger.warn("SECURITY:changeEmail(): Invalid loginId provided. loginId was empty or null");
+			throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "");
+		} else if (changeEmail.getId() == null) {
+			changeEmail.setId(userId);
+		} else if (!changeEmail.getId().equals(userId) ) {
+			logger.warn("SECURITY:changeEmail(): userId mismatch");
 			throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null,"");
 		}
 

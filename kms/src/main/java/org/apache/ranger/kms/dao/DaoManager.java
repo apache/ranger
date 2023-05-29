@@ -22,31 +22,30 @@ import javax.persistence.EntityManagerFactory;
 import javax.persistence.PersistenceContext;
 
 public class DaoManager extends DaoManagerBase {
+    private final ThreadLocal<EntityManager> entityManagers = new ThreadLocal<>();
 
-	@PersistenceContext
-	private EntityManagerFactory emf;
+    @PersistenceContext
+    private final EntityManagerFactory emf;
 
-	static ThreadLocal<EntityManager> sEntityManager;
+    public DaoManager(EntityManagerFactory emf) {
+        this.emf = emf;
+    }
 
-	public void setEntityManagerFactory(EntityManagerFactory emf) {
-		this.emf = emf;
-		sEntityManager = new ThreadLocal<EntityManager>();
-	}
+    @Override
+    public EntityManager getEntityManager() {
+        EntityManager        ret = null;
+        EntityManagerFactory emf = this.emf;
 
-	@Override
-	public EntityManager getEntityManager() {
-		EntityManager em = null;
+        if (emf != null) {
+            ret = entityManagers.get();
 
-		if(sEntityManager != null) {
-			em = sEntityManager.get();
+            if (ret == null) {
+                ret = emf.createEntityManager();
 
-			if(em == null && this.emf != null) {
-				em = this.emf.createEntityManager();
+                entityManagers.set(ret);
+            }
+        }
 
-				sEntityManager.set(em);
-			}
-		}
-
-		return em;
-	}
+        return ret;
+    }
 }

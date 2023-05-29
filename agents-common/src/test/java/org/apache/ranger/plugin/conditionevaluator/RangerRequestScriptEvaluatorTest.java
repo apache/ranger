@@ -135,6 +135,220 @@ public class RangerRequestScriptEvaluatorTest {
         Assert.assertFalse("test: HAS_TAG(notExists)", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_TAG('notExists')"));
         Assert.assertTrue("test: HAS_ANY_TAG", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_ANY_TAG"));
         Assert.assertFalse("test: HAS_NO_TAG", (Boolean) evaluator.evaluateScript(scriptEngine, "HAS_NO_TAG"));
+
+        Assert.assertEquals("GET_TAG_NAMES()",           "PCI,PII", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES()"));
+        Assert.assertEquals("GET_TAG_NAMES(null)",       "PCI,PII", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES(null)"));
+        Assert.assertEquals("GET_TAG_NAMES(null, '|')",  "PCI|PII", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES(null, '|')"));
+        Assert.assertEquals("GET_TAG_NAMES(null, null)", "PCIPII", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES(null, null)"));
+
+        Assert.assertEquals("GET_TAG_NAMES_Q()",                    "'PCI','PII'", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q()"));
+        Assert.assertEquals("GET_TAG_NAMES_Q(null)",                "'PCI','PII'", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q(null)"));
+        Assert.assertEquals("GET_TAG_NAMES_Q(null, '|')",           "'PCI'|'PII'", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q(null, '|')"));
+        Assert.assertEquals("GET_TAG_NAMES_Q(null, null)",          "'PCI''PII'",  evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q(null, null)"));
+        Assert.assertEquals("GET_TAG_NAMES_Q(null, '|', null)",     "PCI|PII",     evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q(null, '|', null)"));
+        Assert.assertEquals("GET_TAG_NAMES_Q(null, ',', '{', '}')", "{PCI},{PII}", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q(null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_TAG_ATTR_NAMES()",           "attr1", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES()"));
+        Assert.assertEquals("GET_TAG_ATTR_NAMES(null)",       "attr1", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES(null)"));
+        Assert.assertEquals("GET_TAG_ATTR_NAMES(null, '|',)", "attr1", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES(null, '|')"));
+        Assert.assertEquals("GET_TAG_ATTR_NAMES(null, null)", "attr1", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES(null, null)"));
+
+        Assert.assertEquals("GET_TAG_ATTR_NAMES_Q()",                    "'attr1'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES_Q()"));
+        Assert.assertEquals("GET_TAG_ATTR_NAMES_Q(null)",                "'attr1'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES_Q(null)"));
+        Assert.assertEquals("GET_TAG_ATTR_NAMES_Q(null, '|')",           "'attr1'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES_Q(null, '|')"));
+        Assert.assertEquals("GET_TAG_ATTR_NAMES_Q(null, null)",          "'attr1'",   evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES_Q(null, null)"));
+        Assert.assertEquals("GET_TAG_ATTR_NAMES_Q(null, '|', null)",     "attr1",   evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES_Q(null, '|', null)"));
+        Assert.assertEquals("GET_TAG_ATTR_NAMES_Q(null, ',', '{', '}')", "{attr1}", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_NAMES_Q(null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_TAG_ATTR('attr1')",            "PCI_value,PII_value", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('attr1')"));
+        Assert.assertEquals("GET_TAG_ATTR('attr1', null)",      "PCI_value,PII_value", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('attr1', null)"));
+        Assert.assertEquals("GET_TAG_ATTR('attr1', null, '|')", "PCI_value|PII_value", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('attr1', null, '|')"));
+        Assert.assertEquals("GET_TAG_ATTR('attr1', null, null)", "PCI_valuePII_value", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('attr1', null, null)"));
+
+        Assert.assertEquals("GET_TAG_ATTR_Q('attr1')",                      "'PCI_value','PII_value'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('attr1')"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('attr1', null)",                "'PCI_value','PII_value'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('attr1', null)"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('attr1', null, null)",          "'PCI_value''PII_value'",  evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('attr1', null, null)"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('attr1', null, '|')",           "'PCI_value'|'PII_value'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('attr1', null, '|')"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('attr1', null, ',', null)",     "PCI_value,PII_value",     evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('attr1', null, ',', null)"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('attr1', null, ',', '{', '}')", "{PCI_value},{PII_value}", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('attr1', null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_UG_NAMES()",           "test-group1,test-group2", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES()"));
+        Assert.assertEquals("GET_UG_NAMES(null)",       "test-group1,test-group2", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES(null)"));
+        Assert.assertEquals("GET_UG_NAMES(null, '|')",  "test-group1|test-group2", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES(null, '|')"));
+        Assert.assertEquals("GET_UG_NAMES(null, null)", "test-group1test-group2",  evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES(null, null)"));
+
+        Assert.assertEquals("GET_UG_NAMES_Q()",                    "'test-group1','test-group2'", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q()"));
+        Assert.assertEquals("GET_UG_NAMES_Q(null)",                "'test-group1','test-group2'", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q(null)"));
+        Assert.assertEquals("GET_UG_NAMES_Q(null, null)",          "'test-group1''test-group2'", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q(null, null)"));
+        Assert.assertEquals("GET_UG_NAMES_Q(null, '|')",           "'test-group1'|'test-group2'", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q(null, '|')"));
+        Assert.assertEquals("GET_UG_NAMES_Q(null, ',', null)",     "test-group1,test-group2",     evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q(null, ',', null)"));
+        Assert.assertEquals("GET_UG_NAMES_Q(null, ',', '{', '}')", "{test-group1},{test-group2}", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q(null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_UG_ATTR_NAMES()",           "dept,site", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES()"));
+        Assert.assertEquals("GET_UG_ATTR_NAMES(null)",       "dept,site", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES(null)"));
+        Assert.assertEquals("GET_UG_ATTR_NAMES(null, '|')",  "dept|site", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES(null, '|')"));
+        Assert.assertEquals("GET_UG_ATTR_NAMES(null, null)", "deptsite",  evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES(null, null)"));
+
+        Assert.assertEquals("GET_UG_ATTR_NAMES_Q()",                    "'dept','site'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES_Q()"));
+        Assert.assertEquals("GET_UG_ATTR_NAMES_Q(null)",                "'dept','site'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES_Q(null)"));
+        Assert.assertEquals("GET_UG_ATTR_NAMES_Q(null, null)",          "'dept''site'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES_Q(null, null)"));
+        Assert.assertEquals("GET_UG_ATTR_NAMES_Q(null, '|')",           "'dept'|'site'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES_Q(null, '|')"));
+        Assert.assertEquals("GET_UG_ATTR_NAMES_Q(null, ',', null)",     "dept,site",     evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES_Q(null, ',', null)"));
+        Assert.assertEquals("GET_UG_ATTR_NAMES_Q(null, ',', '{', '}')", "{dept},{site}", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_NAMES_Q(null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_UG_ATTR('dept')",             "ENGG,PROD", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('dept')"));
+        Assert.assertEquals("GET_UG_ATTR('dept', null)",       "ENGG,PROD", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('dept', null)"));
+        Assert.assertEquals("GET_UG_ATTR('dept', null, '|')",  "ENGG|PROD", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('dept', null, '|')"));
+        Assert.assertEquals("GET_UG_ATTR('dept', null, null)", "ENGGPROD",  evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('dept', null, null)"));
+
+        Assert.assertEquals("GET_UG_ATTR_Q('dept')",                      "'ENGG','PROD'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('dept')"));
+        Assert.assertEquals("GET_UG_ATTR_Q('dept', null)",                "'ENGG','PROD'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('dept', null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('dept', null, null)",          "'ENGG''PROD'",  evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('dept', null, null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('dept', null, '|')",           "'ENGG'|'PROD'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('dept', null, '|')"));
+        Assert.assertEquals("GET_UG_ATTR_Q('dept', null, ',', null)",     "ENGG,PROD",     evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('dept', null, ',', null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('dept', null, ',', '{', '}')", "{ENGG},{PROD}", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('dept', null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_UG_ATTR('site')",             "10,20", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('site')"));
+        Assert.assertEquals("GET_UG_ATTR('site', null)",       "10,20", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('site', null)"));
+        Assert.assertEquals("GET_UG_ATTR('site', null, '|')",  "10|20", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('site', null, '|')"));
+        Assert.assertEquals("GET_UG_ATTR('site', null, null)", "1020",  evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('site', null, null)"));
+
+        Assert.assertEquals("GET_UG_ATTR_Q('site')",                      "'10','20'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('site')"));
+        Assert.assertEquals("GET_UG_ATTR_Q('site', null)",                "'10','20'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('site', null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('site', null, null)",          "'10''20'",  evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('site', null, null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('site', null, '|')",           "'10'|'20'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('site', null, '|')"));
+        Assert.assertEquals("GET_UG_ATTR_Q('site', null, ',', null)",     "10,20",     evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('site', null, ',', null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('site', null, ',', '{', '}')", "{10},{20}", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('site', null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_UR_NAMES()",           "test-role1,test-role2", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES()"));
+        Assert.assertEquals("GET_UR_NAMES(null)",       "test-role1,test-role2", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES(null)"));
+        Assert.assertEquals("GET_UR_NAMES(null, '|')",  "test-role1|test-role2", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES(null, '|')"));
+        Assert.assertEquals("GET_UR_NAMES(null, null)", "test-role1test-role2",  evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES(null, null)"));
+
+        Assert.assertEquals("GET_UR_NAMES_Q()",                    "'test-role1','test-role2'", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q()"));
+        Assert.assertEquals("GET_UR_NAMES_Q(null)",                "'test-role1','test-role2'", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q(null)"));
+        Assert.assertEquals("GET_UR_NAMES_Q(null, null)",          "'test-role1''test-role2'", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q(null, null)"));
+        Assert.assertEquals("GET_UR_NAMES_Q(null, '|')",           "'test-role1'|'test-role2'", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q(null, '|')"));
+        Assert.assertEquals("GET_UR_NAMES_Q(null, ',', null)",     "test-role1,test-role2",     evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q(null, ',', null)"));
+        Assert.assertEquals("GET_UR_NAMES_Q(null, ',', '{', '}')", "{test-role1},{test-role2}", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q(null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_USER_ATTR_NAMES()",           "state", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES()"));
+        Assert.assertEquals("GET_USER_ATTR_NAMES(null)",       "state", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES(null)"));
+        Assert.assertEquals("GET_USER_ATTR_NAMES(null, '|')",  "state", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES(null, '|')"));
+        Assert.assertEquals("GET_USER_ATTR_NAMES(null, null)", "state",  evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES(null, null)"));
+
+        Assert.assertEquals("GET_USER_ATTR_NAMES_Q()",                    "'state'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES_Q()"));
+        Assert.assertEquals("GET_USER_ATTR_NAMES_Q(null)",                "'state'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES_Q(null)"));
+        Assert.assertEquals("GET_USER_ATTR_NAMES_Q(null, null)",          "'state'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES_Q(null, null)"));
+        Assert.assertEquals("GET_USER_ATTR_NAMES_Q(null, '|')",           "'state'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES_Q(null, '|')"));
+        Assert.assertEquals("GET_USER_ATTR_NAMES_Q(null, ',', null)",     "state",   evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES_Q(null, ',', null)"));
+        Assert.assertEquals("GET_USER_ATTR_NAMES_Q(null, ',', '{', '}')", "{state}", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_NAMES_Q(null, ',', '{', '}')"));
+
+        Assert.assertEquals("GET_USER_ATTR('state')",             "CA", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR('state')"));
+        Assert.assertEquals("GET_USER_ATTR('state', null)",       "CA", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR('state', null)"));
+        Assert.assertEquals("GET_USER_ATTR('state', null, '|')",  "CA", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR('state', null, '|')"));
+        Assert.assertEquals("GET_USER_ATTR('state', null, null)", "CA",  evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR('state', null, null)"));
+
+        Assert.assertEquals("GET_USER_ATTR_Q('state')",                      "'CA'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('state')"));
+        Assert.assertEquals("GET_USER_ATTR_Q('state', null)",                "'CA'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('state', null)"));
+        Assert.assertEquals("GET_USER_ATTR_Q('state', null, null)",          "'CA'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('state', null, null)"));
+        Assert.assertEquals("GET_USER_ATTR_Q('state', null, '|')",           "'CA'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('state', null, '|')"));
+        Assert.assertEquals("GET_USER_ATTR_Q('state', null, ',', null)",     "CA",   evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('state', null, ',', null)"));
+        Assert.assertEquals("GET_USER_ATTR_Q('state', null, ',', '{', '}')", "{CA}", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('state', null, ',', '{', '}')"));
+    }
+
+    @Test
+    public void testNonExistentValues() {
+        RangerAccessRequest          request   = createRequest("test-user", Collections.emptySet(), Collections.emptySet(), Collections.emptyList());
+        RangerRequestScriptEvaluator evaluator = new RangerRequestScriptEvaluator(request);
+
+        // empty TAG names
+        Assert.assertEquals("GET_TAG_NAMES()",              "",      evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES()"));
+        Assert.assertEquals("GET_TAG_NAMES(null)",          "",      evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES(null)"));
+        Assert.assertEquals("GET_TAG_NAMES('empty')",       "empty", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES('empty')"));
+        Assert.assertEquals("GET_TAG_NAMES('empty', '|')",  "empty", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES('empty', '|')"));
+        Assert.assertEquals("GET_TAG_NAMES('empty', null)", "empty", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES('empty', null)"));
+
+        // empty TAG names
+        Assert.assertEquals("GET_TAG_NAMES_Q()",                       "",        evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q()"));
+        Assert.assertEquals("GET_TAG_NAMES_Q(null)",                   "",        evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q(null)"));
+        Assert.assertEquals("GET_TAG_NAMES_Q('empty')",                "'empty'", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q('empty')"));
+        Assert.assertEquals("GET_TAG_NAMES_Q('empty', ',')",           "'empty'", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q('empty', ',')"));
+        Assert.assertEquals("GET_TAG_NAMES_Q('empty', '|', null)",     "'empty'", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q('empty', '|')"));
+        Assert.assertEquals("GET_TAG_NAMES_Q('empty', ',', '{', '}')", "{empty}", evaluator.evaluateScript(scriptEngine, "GET_TAG_NAMES_Q('empty', ',', '{', '}')"));
+
+        // empty UG names
+        Assert.assertEquals("GET_UG_NAMES()",              "",      evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES()"));
+        Assert.assertEquals("GET_UG_NAMES(null)",          "",      evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES(null)"));
+        Assert.assertEquals("GET_UG_NAMES('empty')",       "empty", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES('empty')"));
+        Assert.assertEquals("GET_UG_NAMES('empty', '|')",  "empty", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES('empty', '|')"));
+        Assert.assertEquals("GET_UG_NAMES('empty', null)", "empty", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES('empty', null)"));
+
+        // empty UG names
+        Assert.assertEquals("GET_UG_NAMES_Q()",                       "",        evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q()"));
+        Assert.assertEquals("GET_UG_NAMES_Q(null)",                   "",        evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q(null)"));
+        Assert.assertEquals("GET_UG_NAMES_Q('empty')",                "'empty'", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q('empty')"));
+        Assert.assertEquals("GET_UG_NAMES_Q('empty', ',')",           "'empty'", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q('empty', ',')"));
+        Assert.assertEquals("GET_UG_NAMES_Q('empty', '|', null)",     "'empty'", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q('empty', '|')"));
+        Assert.assertEquals("GET_UG_NAMES_Q('empty', ',', '{', '}')", "{empty}", evaluator.evaluateScript(scriptEngine, "GET_UG_NAMES_Q('empty', ',', '{', '}')"));
+
+        // empty UR names
+        Assert.assertEquals("GET_UR_NAMES()",              "",      evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES()"));
+        Assert.assertEquals("GET_UR_NAMES(null)",          "",      evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES(null)"));
+        Assert.assertEquals("GET_UR_NAMES('empty')",       "empty", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES('empty')"));
+        Assert.assertEquals("GET_UR_NAMES('empty', '|')",  "empty", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES('empty', '|')"));
+        Assert.assertEquals("GET_UR_NAMES('empty', null)", "empty", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES('empty', null)"));
+
+        // empty UR names
+        Assert.assertEquals("GET_UR_NAMES_Q()",                       "",        evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q()"));
+        Assert.assertEquals("GET_UR_NAMES_Q(null)",                   "",        evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q(null)"));
+        Assert.assertEquals("GET_UR_NAMES_Q('empty')",                "'empty'", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q('empty')"));
+        Assert.assertEquals("GET_UR_NAMES_Q('empty', ',')",           "'empty'", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q('empty', ',')"));
+        Assert.assertEquals("GET_UR_NAMES_Q('empty', '|', null)",     "'empty'", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q('empty', '|')"));
+        Assert.assertEquals("GET_UR_NAMES_Q('empty', ',', '{', '}')", "{empty}", evaluator.evaluateScript(scriptEngine, "GET_UR_NAMES_Q('empty', ',', '{', '}')"));
+
+        // non-existent attribute
+        Assert.assertEquals("GET_TAG_ATTR('noattr')",                "",      evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('noattr')"));
+        Assert.assertEquals("GET_TAG_ATTR('noattr', null)",          "",      evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('noattr', null)"));
+        Assert.assertEquals("GET_TAG_ATTR('noattr', 'empty')",       "empty", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('noattr', 'empty')"));
+        Assert.assertEquals("GET_TAG_ATTR('noattr', 'empty', '|')",  "empty", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('noattr', 'empty', '|')"));
+        Assert.assertEquals("GET_TAG_ATTR('noattr', 'empty', null)", "empty", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR('noattr', 'empty', null)"));
+
+        // non-existent attribute
+        Assert.assertEquals("GET_TAG_ATTR_Q('noattr')",                         "",        evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('noattr')"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('noattr', null)",                   "",        evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('noattr', null)"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('noattr', 'empty')",                "'empty'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('noattr', 'empty')"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('noattr', 'empty', ',')",           "'empty'", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('noattr', 'empty', ',')"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('noattr', 'empty', '|', null)",     "empty",   evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('noattr', 'empty', '|', null)"));
+        Assert.assertEquals("GET_TAG_ATTR_Q('noattr', 'empty', ',', '{', '}')", "{empty}", evaluator.evaluateScript(scriptEngine, "GET_TAG_ATTR_Q('noattr', 'empty', ',', '{', '}')"));
+
+        // non-existent attribute
+        Assert.assertEquals("GET_UG_ATTR('noattr')",             "", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('noattr')"));
+        Assert.assertEquals("GET_UG_ATTR('noattr', null)",       "", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('noattr', null)"));
+        Assert.assertEquals("GET_UG_ATTR('noattr', 'empty', '|')",  "empty", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('noattr', 'empty', '|')"));
+        Assert.assertEquals("GET_UG_ATTR('noattr', 'empty', null)", "empty",  evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR('noattr', 'empty', null)"));
+
+        // non-existent attribute
+        Assert.assertEquals("GET_UG_ATTR_Q('noattr')",                         "",        evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('noattr')"));
+        Assert.assertEquals("GET_UG_ATTR_Q('noattr', null)",                   "",        evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('noattr', null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('noattr', 'empty', null)",          "'empty'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('noattr', 'empty', null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('noattr', 'empty', '|')",           "'empty'", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('noattr', 'empty', '|')"));
+        Assert.assertEquals("GET_UG_ATTR_Q('noattr', 'empty', ',', null)",     "empty",   evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('noattr', 'empty', ',', null)"));
+        Assert.assertEquals("GET_UG_ATTR_Q('noattr', 'empty', ',', '{', '}')", "{empty}", evaluator.evaluateScript(scriptEngine, "GET_UG_ATTR_Q('noattr', 'empty', ',', '{', '}')"));
+
+        // non-existent attribute
+        Assert.assertEquals("GET_USER_ATTR('noattr')",                "",      evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR('noattr')"));
+        Assert.assertEquals("GET_USER_ATTR('noattr', null)",          "",      evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR('noattr', null)"));
+        Assert.assertEquals("GET_USER_ATTR('noattr', 'empty', '|')",  "empty", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR('noattr', 'empty', '|')"));
+        Assert.assertEquals("GET_USER_ATTR('noattr', 'empty', null)", "empty", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR('noattr', 'empty', null)"));
+
+        // non-existent attribute
+        Assert.assertEquals("GET_USER_ATTR_Q('noattr')",                         "",        evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('noattr')"));
+        Assert.assertEquals("GET_USER_ATTR_Q('noattr', null)",                   "",        evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('noattr', null)"));
+        Assert.assertEquals("GET_USER_ATTR_Q('noattr', 'empty', null)",          "'empty'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('noattr', 'empty', null)"));
+        Assert.assertEquals("GET_USER_ATTR_Q('noattr', 'empty', '|')",           "'empty'", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('noattr', 'empty', '|')"));
+        Assert.assertEquals("GET_USER_ATTR_Q('noattr', 'empty', ',', null)",     "empty",   evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('noattr', 'empty', ',', null)"));
+        Assert.assertEquals("GET_USER_ATTR_Q('noattr', 'empty', ',', '{', '}')", "{empty}", evaluator.evaluateScript(scriptEngine, "GET_USER_ATTR_Q('noattr', 'empty', ',', '{', '}')"));
     }
 
     @Test

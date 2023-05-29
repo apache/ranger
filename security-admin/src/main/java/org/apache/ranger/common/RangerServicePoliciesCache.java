@@ -322,9 +322,14 @@ public class RangerServicePoliciesCache {
 				if (dbLoadTime > longestDbLoadTimeInMs) {
 					longestDbLoadTimeInMs = dbLoadTime;
 				}
+
 				updateTime = new Date();
 
 				if (servicePoliciesFromDb != null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("loading servicePolicies from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
+					}
+
 					if (dedupStrings) {
 						servicePoliciesFromDb.dedupStrings();
 					}
@@ -351,12 +356,12 @@ public class RangerServicePoliciesCache {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Retrieved policy-deltas from database. These will be applied on top of ServicePolicy version:[" + cachedServicePoliciesVersion +"], policy-deltas:[" + servicePoliciesFromDb.getPolicyDeltas() + "]");
 						}
-						servicePolicies.setPolicyVersion(servicePoliciesFromDb.getPolicyVersion());
 
 						final List<RangerPolicy> policies = servicePolicies.getPolicies() == null ? new ArrayList<>() : servicePolicies.getPolicies();
 						final List<RangerPolicy> newPolicies = RangerPolicyDeltaUtil.applyDeltas(policies, servicePoliciesFromDb.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
 
 						servicePolicies.setPolicies(newPolicies);
+						servicePolicies.setPolicyVersion(servicePoliciesFromDb.getPolicyVersion());
 
 						checkCacheSanity(serviceName, serviceStore, false);
 

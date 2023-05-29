@@ -41,6 +41,8 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher.OPTION_WILD_CARD;
+
 public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceMatcher {
     private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultPolicyResourceMatcher.class);
 
@@ -56,6 +58,16 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
     private List<RangerResourceDef>             validResourceHierarchy;
     private boolean                             isInitialized = false;
     private RangerServiceDefHelper              serviceDefHelper;
+
+    private final boolean forceEnableWildcardMatch;
+
+    public RangerDefaultPolicyResourceMatcher() {
+        this.forceEnableWildcardMatch = false;
+    }
+
+    public RangerDefaultPolicyResourceMatcher(boolean forceEnableWildcardMatch) {
+        this.forceEnableWildcardMatch = forceEnableWildcardMatch;
+    }
 
     @Override
     public void setServiceDef(RangerServiceDef serviceDef) {
@@ -760,7 +772,7 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
         return ret;
     }
 
-    private static RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource resource) {
+    private RangerResourceMatcher createResourceMatcher(RangerResourceDef resourceDef, RangerPolicyResource resource) {
         if(LOG.isDebugEnabled()) {
             LOG.debug("==> RangerDefaultPolicyResourceMatcher.createResourceMatcher(" + resourceDef + ", " + resource + ")");
         }
@@ -785,6 +797,10 @@ public class RangerDefaultPolicyResourceMatcher implements RangerPolicyResourceM
 
             if (ret == null) {
                 ret = new RangerDefaultResourceMatcher();
+            }
+
+            if (forceEnableWildcardMatch && !Boolean.parseBoolean(resourceDef.getMatcherOptions().get(OPTION_WILD_CARD))) {
+                resourceDef = serviceDefHelper.getWildcardEnabledResourceDef(resourceDef.getName(), policyType);
             }
 
             ret.setResourceDef(resourceDef);
