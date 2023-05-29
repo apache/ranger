@@ -268,7 +268,7 @@ public class ServiceSolrClient {
 					+ " resourceMap: " + resourceMap);
 		}
 
-		if (userInput != null && resource != null) {
+		if (StringUtils.isNotBlank(userInput) && resource != null) {
 			if (resourceMap != null && !resourceMap.isEmpty()) {
 				collectionList = resourceMap.get(RangerSolrConstants.COLLECTION_KEY);
 				fieldList = resourceMap.get(RangerSolrConstants.FIELD_KEY);
@@ -294,7 +294,7 @@ public class ServiceSolrClient {
 				break;
 			}
 		}
-		if (userInput != null) {
+		if (StringUtils.isNotBlank(userInput)) {
 			try {
 				Callable<List<String>> callableObj = null;
 				final String userInputFinal = userInput;
