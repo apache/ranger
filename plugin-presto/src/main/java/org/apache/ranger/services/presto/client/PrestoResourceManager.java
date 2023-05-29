@@ -18,6 +18,7 @@
  */
 package org.apache.ranger.services.presto.client;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
 import org.slf4j.Logger;
@@ -78,7 +79,7 @@ public class PrestoResourceManager {
       LOG.debug("<== PrestoResourceMgr.getPrestoResources() UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
     }
 
-    if (userInput != null && resource != null) {
+    if (StringUtils.isNotBlank(userInput) && resource != null) {
       if (resourceMap != null && !resourceMap.isEmpty()) {
         catalogList = resourceMap.get(CATALOG);
         schemaList = resourceMap.get(SCHEMA);
@@ -102,7 +103,7 @@ public class PrestoResourceManager {
       }
     }
 
-    if (serviceName != null && userInput != null) {
+    if (serviceName != null && StringUtils.isNotBlank(userInput)) {
       try {
 
         if (LOG.isDebugEnabled()) {

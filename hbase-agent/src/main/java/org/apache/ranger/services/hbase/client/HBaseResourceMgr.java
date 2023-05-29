@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
@@ -33,16 +34,16 @@ import org.slf4j.LoggerFactory;
 public class HBaseResourceMgr {
 
 	private static final Logger LOG = LoggerFactory.getLogger(HBaseResourceMgr.class);
-	
+
 	private static final String TABLE 		 		    = "table";
 	private static final String COLUMNFAMILY 		    = "column-family";
-		
+
 	public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
 		Map<String, Object> ret = null;
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HBaseResourceMgr.connectionTest() ServiceName: "+ serviceName + "Configs" + configs );
-		}	
-		
+		}
+
 		try {
 			ret = HBaseClient.connectionTest(serviceName, configs);
 		} catch (HadoopException e) {
@@ -51,12 +52,12 @@ public class HBaseResourceMgr {
 		}
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HBaseResourceMgr.connectionTest() Result: "+ ret  );
-		}	
+		}
 		return ret;
 	}
-	
+
 	public static List<String> getHBaseResource(String serviceName, String serviceType, Map<String, String> configs,ResourceLookupContext context) throws Exception{
-		
+
 		String 					  userInput 		= context.getUserInput();
 		String 					  resource		    = context.getResourceName();
 		Map<String, List<String>> resourceMap  		= context.getResources();
@@ -65,12 +66,12 @@ public class HBaseResourceMgr {
 		String  				  columnFamilies   	= null;
 		List<String> 		  	  tableList			= null;
 		List<String> 		      columnFamilyList  = null;
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \""+ userInput  + "\" resource : " + resource + " resourceMap: "  + resourceMap);
-		}	
-		
-		if ( userInput != null && resource != null) {
+		}
+
+		if (StringUtils.isNoneBlank(userInput) && resource != null) {
 			if ( resourceMap != null && !resourceMap.isEmpty() ) {
 				tableList 		 = resourceMap.get(TABLE);
 				columnFamilyList = resourceMap.get(COLUMNFAMILY);
@@ -87,17 +88,17 @@ public class HBaseResourceMgr {
 			}
 		}
 
-		if (serviceName != null && userInput != null) {
+		if (serviceName != null && StringUtils.isNoneBlank(userInput)) {
 			final List<String> finaltableList 		 = tableList;
 			final List<String> finalcolumnFamilyList = columnFamilyList;
-			
+
 			try {
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("<== HBaseResourceMgr.getHBaseResource UserInput: \""+ userInput  + "\" configs: " + configs + " context: "  + context);
 				}
 				final HBaseClient hBaseClient = new HBaseConnectionMgr().getHBaseConnection(serviceName,serviceType,configs);
 				Callable<List<String>> callableObj = null;
-				
+
 				if ( hBaseClient != null) {
 					if ( tableName != null && !tableName.isEmpty()) {
 						final String finalTableName;
@@ -141,18 +142,18 @@ public class HBaseResourceMgr {
 									TimeUnit.SECONDS);
 						}
 					}
-					
+
 				}
 			} catch (Exception e) {
 				LOG.error("Unable to get hbase resources.", e);
 				throw e;
 			}
 		}
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HBaseResourceMgr.getHBaseResource() Result :" + resultList);
 		}
-		
+
 		return resultList;
 	}
 }
