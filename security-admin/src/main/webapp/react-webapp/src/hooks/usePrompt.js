@@ -30,7 +30,6 @@ const useBlocker = (blocker, when = true) => {
       const autoUnblockingTx = {
         ...tx,
         retry() {
-          console.log("tst");
           unblock();
           setTimeout(() => {
             tx.retry();

@@ -70,6 +70,9 @@ var DatePicker = createReactClass({
           <Calendar
             onSelect={this.handleSelect}
             hideCalendar={this.hideCalendar}
+            value={this.props.value}
+            allSelected={this.props.allSelected}
+            currentCategory={this.props.currentCategory}
           />
         </Popover>
       );
@@ -89,6 +92,7 @@ var DatePicker = createReactClass({
           setSelected={this.setSelected}
           hideCalendar={this.hideCalendar}
           placeholderText={this.props.placeholderText}
+          value={this.props.value}
         />
         {this.calendar()}
       </div>

@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
+import javax.persistence.OptimisticLockException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.Consumes;
@@ -81,6 +82,7 @@ import com.google.common.collect.Sets;
 public class SecurityZoneREST {
     private static final Logger LOG                                    = LoggerFactory.getLogger(SecurityZoneREST.class);
     private static final String STR_USER_NOT_AUTHORIZED_TO_ACCESS_ZONE = "User is not authorized to access zone(s).";
+    private static final String ERR_ANOTHER_SEC_ZONE_OPER_IN_PROGRESS  = "Another security zone operation is already in progress";
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -129,6 +131,10 @@ public class SecurityZoneREST {
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
             validator.validate(securityZone, RangerValidator.Action.CREATE);
             ret = securityZoneStore.createSecurityZone(securityZone);
+        } catch (OptimisticLockException | org.eclipse.persistence.exceptions.OptimisticLockException excp) {
+            LOG.error("createSecurityZone(" + securityZone + ") failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_CONFLICT, ERR_ANOTHER_SEC_ZONE_OPER_IN_PROGRESS, true);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -168,6 +174,10 @@ public class SecurityZoneREST {
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
             validator.validate(securityZone, RangerValidator.Action.UPDATE);
             ret = securityZoneStore.updateSecurityZoneById(securityZone);
+        } catch (OptimisticLockException | org.eclipse.persistence.exceptions.OptimisticLockException excp) {
+            LOG.error("updateSecurityZone(" + securityZone + ") failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_CONFLICT, ERR_ANOTHER_SEC_ZONE_OPER_IN_PROGRESS, true);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -192,6 +202,10 @@ public class SecurityZoneREST {
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
             validator.validate(zoneName, RangerValidator.Action.DELETE);
             securityZoneStore.deleteSecurityZoneByName(zoneName);
+        } catch (OptimisticLockException | org.eclipse.persistence.exceptions.OptimisticLockException excp) {
+            LOG.error("deleteSecurityZone(" + zoneName + ") failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_CONFLICT, ERR_ANOTHER_SEC_ZONE_OPER_IN_PROGRESS, true);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -218,6 +232,10 @@ public class SecurityZoneREST {
             RangerSecurityZoneValidator validator = validatorFactory.getSecurityZoneValidator(svcStore, securityZoneStore);
             validator.validate(zoneId, RangerValidator.Action.DELETE);
             securityZoneStore.deleteSecurityZoneById(zoneId);
+        } catch (OptimisticLockException | org.eclipse.persistence.exceptions.OptimisticLockException excp) {
+            LOG.error("deleteSecurityZone(" + zoneId + ") failed", excp);
+
+            throw restErrorUtil.createRESTException(HttpServletResponse.SC_CONFLICT, ERR_ANOTHER_SEC_ZONE_OPER_IN_PROGRESS, true);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {

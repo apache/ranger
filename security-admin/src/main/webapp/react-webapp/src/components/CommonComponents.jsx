@@ -156,13 +156,11 @@ export class AccessMoreLess extends Component {
       <div className="tags-set-height-groups">
         {this?.state?.data?.map((key, index) => {
           return (
-            <>
-              <h6>
-                <span className="item" key={index}>
-                  {key} {index < this?.state?.data.length - 1 && ", "}
-                </span>
-              </h6>
-            </>
+            <div className="mb-1">
+              <span className="tag-item" key={index}>
+                {key} {index < this?.state?.data.length - 1 && ", "}
+              </span>
+            </div>
           );
         })}
         <a

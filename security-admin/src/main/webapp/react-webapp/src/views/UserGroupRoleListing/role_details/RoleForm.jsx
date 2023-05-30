@@ -181,9 +181,9 @@ function RoleForm() {
       !isEmpty(selectedRole)
     ) {
       toast.dismiss(toastId.current);
-      return  toastId.current = toast.warning(
+      return (toastId.current = toast.warning(
         `Please add selected user/group/roles to there respective table else user/group/roles will not be added.`
-      );
+      ));
     }
 
     dispatch({
@@ -287,7 +287,7 @@ function RoleForm() {
   const handleUserAdd = (push) => {
     if (selectedUser.length == 0) {
       toast.dismiss(toastId.current);
-      toastId.current =  toast.warning("Please select atleast one user!!");;
+      toastId.current = toast.warning("Please select atleast one user!!");
     } else {
       let usr = selectedUser.map(({ value }) => ({
         name: value,
@@ -307,7 +307,7 @@ function RoleForm() {
   const handleGroupAdd = (push) => {
     if (selectedGroup.length == 0) {
       toast.dismiss(toastId.current);
-      toastId.current =  toast.warning("Please select atleast one group!!");
+      toastId.current = toast.warning("Please select atleast one group!!");
     } else {
       let grp = selectedGroup.map(({ value }) => ({
         name: value,
@@ -347,7 +347,7 @@ function RoleForm() {
   const handleRoleAdd = (push) => {
     if (selectedRole.length == 0) {
       toast.dismiss(toastId.current);
-      toastId.current =  toast.warning("Please select atleast one role!!");
+      toastId.current = toast.warning("Please select atleast one role!!");
     } else {
       let rol = selectedRole.map(({ value }) => ({
         name: value,

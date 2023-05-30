@@ -36,9 +36,10 @@ import {
   isKeyAdmin,
   isAuditor,
   isKMSAuditor,
-  serverError
+  serverError,
+  parseSearchFilter
 } from "Utils/XAUtils";
-import { isUndefined, map } from "lodash";
+import { isUndefined } from "lodash";
 import StructuredFilter from "../../../components/structured-filter/react-typeahead/tokenizer";
 import { Loader } from "../../../components/CommonComponents";
 import { BlockUi } from "../../../components/CommonComponents";
@@ -85,7 +86,7 @@ function Roles() {
     // Get Search Filter Params from current search params
     const currentParams = Object.fromEntries([...searchParams]);
     for (const param in currentParams) {
-      let searchFilterObj = find(searchFilterOption, {
+      let searchFilterObj = find(searchFilterOptions, {
         urlLabel: param
       });
 
@@ -225,7 +226,7 @@ function Roles() {
             roleListingData.length == selectedRows.current.length) &&
           currentpageIndex > 1
         ) {
-          if(typeof resetPage?.page === "function"){
+          if (typeof resetPage?.page === "function") {
             resetPage.page(0);
           }
         } else {
@@ -258,7 +259,7 @@ function Roles() {
             );
           }
           return "--";
-        },
+        }
       },
       {
         Header: "Users",
@@ -305,7 +306,7 @@ function Roles() {
     navigate("/roles/create", { state: { tblpageData: tblpageData } });
   };
 
-  const searchFilterOption = [
+  const searchFilterOptions = [
     {
       category: "groupNamePartial",
       label: "Group Name",
@@ -327,26 +328,14 @@ function Roles() {
   ];
 
   const updateSearchFilter = (filter) => {
-  let searchFilterParam = {};
-    let searchParam = {};
-    map(filter, function (obj) {
-      searchFilterParam[obj.category] = obj.value;
-      let searchFilterObj = find(searchFilterOption, {
-        category: obj.category
-      });
-      let urlLabelParam = searchFilterObj.urlLabel;
-      if (searchFilterObj.type == "textoptions") {
-        let textOptionObj = find(searchFilterObj.options(), {
-          value: obj.value
-        });
-        searchParam[urlLabelParam] = textOptionObj.label;
-      } else {
-        searchParam[urlLabelParam] = obj.value;
-      }
-    });
+    let { searchFilterParam, searchParam } = parseSearchFilter(
+      filter,
+      searchFilterOptions
+    );
     setSearchFilterParams(searchFilterParam);
     setSearchParams(searchParam);
-    if(typeof resetPage?.page === "function"){
+
+    if (typeof resetPage?.page === "function") {
       resetPage.page(0);
     }
   };
@@ -364,9 +353,8 @@ function Roles() {
               <StructuredFilter
                 key="role-listing-search-filter"
                 placeholder="Search for your roles..."
-                options={searchFilterOption}
-                onTokenAdd={updateSearchFilter}
-                onTokenRemove={updateSearchFilter}
+                options={searchFilterOptions}
+                onChange={updateSearchFilter}
                 defaultSelected={defaultSearchFilterParams}
               />
             </Col>
