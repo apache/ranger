@@ -31,6 +31,7 @@ import org.apache.ranger.db.XXServiceDao;
 import org.apache.ranger.db.XXServiceResourceDao;
 import org.apache.ranger.db.XXServiceVersionInfoDao;
 import org.apache.ranger.db.XXTagDao;
+import org.apache.ranger.db.XXTagDefDao;
 import org.apache.ranger.db.XXTagResourceMapDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceResource;
@@ -852,14 +853,18 @@ public class TestTagDBStore {
     @Test
     public void testGetServiceTagsIfUpdated() throws Exception {
         XXServiceVersionInfo    serviceVersionInfoDbObj = createXXServiceVersionInfo();
+        XXTagDefDao             xxTagDefDao             =  Mockito.mock(XXTagDefDao.class);
         XXServiceVersionInfoDao xxServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
         XXServiceDao            xxServiceDao            = Mockito.mock(XXServiceDao.class);
+        XXServiceResourceDao    xxServiceResourceDao    = Mockito.mock(XXServiceResourceDao.class);
         XXService               xxService               = createXXService();
         RangerServiceDef        rangerServiceDef        = createRangerServiceDef();
 
         Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
         Mockito.when(xxServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(serviceVersionInfoDbObj);
+        Mockito.when(daoManager.getXXTagDef()).thenReturn(xxTagDefDao);
         Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+        Mockito.when(daoManager.getXXServiceResource()).thenReturn(xxServiceResourceDao);
         Mockito.when(xxServiceDao.findIdByName(serviceName)).thenReturn(id);
         Mockito.when(xxServiceDao.findByName(serviceName)).thenReturn(xxService);
         Mockito.when(svcStore.getServiceDef(Mockito.any())).thenReturn(rangerServiceDef);
@@ -874,14 +879,18 @@ public class TestTagDBStore {
     @Test
     public void testGetServiceTags() throws Exception {
         XXServiceVersionInfo    serviceVersionInfoDbObj = createXXServiceVersionInfo();
+        XXTagDefDao             xxTagDefDao             =  Mockito.mock(XXTagDefDao.class);
         XXServiceVersionInfoDao xxServiceVersionInfoDao = Mockito.mock(XXServiceVersionInfoDao.class);
         XXServiceDao            xxServiceDao            = Mockito.mock(XXServiceDao.class);
+        XXServiceResourceDao    xxServiceResourceDao    = Mockito.mock(XXServiceResourceDao.class);
         XXService               xxService               = createXXService();
         RangerServiceDef        rangerServiceDef        = createRangerServiceDef();
 
         Mockito.when(daoManager.getXXServiceVersionInfo()).thenReturn(xxServiceVersionInfoDao);
         Mockito.when(xxServiceVersionInfoDao.findByServiceName(serviceName)).thenReturn(serviceVersionInfoDbObj);
+        Mockito.when(daoManager.getXXTagDef()).thenReturn(xxTagDefDao);
         Mockito.when(daoManager.getXXService()).thenReturn(xxServiceDao);
+        Mockito.when(daoManager.getXXServiceResource()).thenReturn(xxServiceResourceDao);
         Mockito.when(xxServiceDao.findByName(serviceName)).thenReturn(xxService);
         Mockito.when(svcStore.getServiceDef(Mockito.any())).thenReturn(rangerServiceDef);
 
