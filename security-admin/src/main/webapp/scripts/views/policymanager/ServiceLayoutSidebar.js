@@ -249,6 +249,7 @@ define(function(require){
         componentListing: function(type) {
             this.collection = new RangerServiceDefList();
             this.collection.queryParams.sortBy = 'serviceTypeId';
+            this.collection.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             if(type == 'tag'){
                 var tagServiceDef    = new RangerServiceDef();
                 tagServiceDef.url    = XAUtil.getRangerServiceDef(XAEnums.ServiceType.SERVICE_TAG.label)
@@ -278,7 +279,7 @@ define(function(require){
 
         initializeServices : function(){
             this.services = new RangerServiceList();
-            this.services.setPageSize(200);
+            this.services.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             this.services.fetch({
                cache : false,
                async : false

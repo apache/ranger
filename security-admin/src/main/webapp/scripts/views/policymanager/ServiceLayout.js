@@ -27,6 +27,8 @@ define(function(require){
 	var XAUtil				= require('utils/XAUtils');
 	var SessionMgr 			= require('mgrs/SessionMgr');
 	var localization	= require('utils/XALangSupport');
+	var XAGlobals 		= require('utils/XAGlobals');
+	
 	var RangerServiceList 	= require('collections/RangerServiceList');
 	var RangerService 		= require('models/RangerService');
 	var ServicemanagerlayoutTmpl = require('hbs!tmpl/common/ServiceManagerLayout_tmpl');
@@ -147,7 +149,7 @@ define(function(require){
 		},
 
 		initializeServices : function(){
-			this.services.setPageSize(200);
+			this.services.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
 			this.services.fetch({
 			   cache : false,
 			   async : false

@@ -139,6 +139,7 @@ define(function(require) {'use strict';
 		initializeServiceDef : function() {
 			var that = this;
 			this.serviceDefList = new RangerServiceDefList();
+			this.serviceDefList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
 			this.serviceDefList.fetch({
 				cache : false,
 				async:false
