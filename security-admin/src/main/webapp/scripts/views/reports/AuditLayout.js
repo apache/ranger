@@ -181,13 +181,14 @@ define(function(require) {
 
 		initializeServiceDefColl : function() {
 			this.serviceDefList	= new RangerServiceDefList();
+			this.serviceDefList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
 			this.serviceDefList.fetch({ 
 				cache : false,
 				async:false,
 				data :{'pageSource':'Audit'}
 			});
             this.serviceList = new RangerServiceList();
-            this.serviceList.setPageSize(200)
+            this.serviceList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE)
             this.serviceList.fetch({
                 cache : false,
                 async:false,

@@ -30,6 +30,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XAUtil			= require('utils/XAUtils');
 	var XALinks 		= require('modules/XALinks');
+	var XAGlobals 		= require('utils/XAGlobals');
 	var localization	= require('utils/XALangSupport');
 	
 	var RangerPolicycreateTmpl = require('hbs!tmpl/policies/RangerPolicyCreate_tmpl');
@@ -141,6 +142,7 @@ define(function(require){
 		initializeServiceDef : function(){
 			var that = this
 			this.RangerServiceDefList = new RangerServiceDefList();
+			this.RangerServiceDefList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
 			this.RangerServiceDefList.fetch({
 				cache : false,
 				async : false

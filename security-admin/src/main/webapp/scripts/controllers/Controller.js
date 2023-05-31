@@ -128,6 +128,7 @@ define(function(require) {
             var VXAccessAuditList = require('collections/VXAccessAuditList');
             var RangerServiceDefList = require('collections/RangerServiceDefList');
             var serviceDefList = new RangerServiceDefList();
+            serviceDefList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             serviceDefList.fetch({
                 cache : false,
                 async:false,
@@ -305,6 +306,7 @@ define(function(require) {
             var rangerZoneList = new RangerZoneList();
 
             var collection = new RangerServiceDefList();
+            collection.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             collection.queryParams.sortBy = 'serviceTypeId';
             if (type == 'tag') {
                 var tagServiceDef = new RangerServiceDef();
@@ -562,11 +564,12 @@ define(function(require) {
             var RangerZoneList = require('collections/RangerZoneList');
             var rangerServiceList = new RangerServiceList();
             var rangerZoneList = new RangerZoneList();
-            rangerServiceList.setPageSize(200);
+            rangerServiceList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             rangerServiceList.fetch({
                 cache: false,
                 async: false
             });
+            rangerZoneList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             rangerZoneList.fetch({
                 cache: false,
                 async: false,
@@ -588,7 +591,7 @@ define(function(require) {
             var RangerZoneList = require('collections/RangerZoneList');
             var zoneSerivesColl = new RangerZoneList();
             var rangerServiceList = new RangerServiceList();
-            rangerServiceList.setPageSize(200);
+            rangerServiceList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             rangerServiceList.fetch({
                 cache: false,
             }).done(function() {
@@ -616,7 +619,7 @@ define(function(require) {
                 id: zoneId
             })
             var zoneSerivesColl = new RangerZoneList();
-            rangerServiceList.setPageSize(200);
+            rangerServiceList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             rangerServiceList.fetch({
                 cache: false,
                 async: false,
