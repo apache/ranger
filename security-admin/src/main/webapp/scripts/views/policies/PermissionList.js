@@ -1035,7 +1035,7 @@ define(function(require) {
 				this.collection.add(new Backbone.Model())
 			}
 			this.storeResourceRef = [];
-			var resourceDefByPolicyType = this.getResourceDefByPolicyType();
+			var resourceDefByPolicyType = _.sortBy(this.getResourceDefByPolicyType(), 'itemId');
 			if(!this.model.isNew()){
 				_.each(_.union([this.model.get('resources')], this.model.get('additionalResources')), function(obj, index){
 					var resourceNames = Object.keys(obj);
