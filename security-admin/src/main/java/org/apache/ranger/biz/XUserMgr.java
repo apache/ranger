@@ -2214,7 +2214,6 @@ public class XUserMgr extends XUserMgrBase {
 				groupsDeleted += 1;
 			} catch (Throwable ex) {
 				logger.error("forceDeleteGroups(): Failed to delete group id: " + groupId + " ", ex);
-				throw new RuntimeException(ex);
 			}
 		}
 		if (groupsDeleted > 0) {
@@ -2443,7 +2442,6 @@ public class XUserMgr extends XUserMgrBase {
 				usersDeleted += 1;
 			} catch (Throwable ex) {
 				logger.error("forceDeleteUsers(): Failed to delete user id: " + userId + " ", ex);
-				throw new RuntimeException(ex);
 			}
 		}
 		if (usersDeleted > 0) {
