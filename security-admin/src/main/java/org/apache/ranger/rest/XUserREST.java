@@ -19,11 +19,12 @@
 
 package org.apache.ranger.rest;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
-import java.util.ArrayList;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Collections;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -891,14 +892,21 @@ public class XUserREST {
 		searchUtil.extractRoleString(
 				request, searchCriteria, "userRole", "Role", null);
 
+		// for invalid params
+		if(Collections.list(request.getAttributeNames()).size() > 0 && searchCriteria.getParamList().size() == 0){
+			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params").build();
+		}
+
 		// only for external users
 		searchCriteria.addParam("userSource", USER_EXTERNAL);
 
 		List<Long> userIds = xUserService.searchXUsersForIds(searchCriteria);
 		long usersDeleted = xUserMgr.forceDeleteExternalUsers(userIds);
 		String response = "No users were deleted!";
-		if (usersDeleted > 0){
-			response = usersDeleted + " users deleted successfully";
+		if (usersDeleted == 1) {
+			response = "1 user deleted successfully.";
+		} else if (usersDeleted > 0) {
+			response = String.format("%d users deleted successfully.", usersDeleted);
 		}
 		return Response.ok(response).build();
 	}
@@ -919,14 +927,22 @@ public class XUserREST {
 				request, searchCriteria, "isVisible", "Group Visibility");
 		searchUtil.extractString(
 				request, searchCriteria, "syncSource", "Sync Source", null);
+
+		// for invalid params
+		if(Collections.list(request.getAttributeNames()).size() > 0 && searchCriteria.getParamList().size() == 0){
+			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params").build();
+		}
+
 		// only for external groups
 		searchCriteria.addParam("groupSource", GROUP_EXTERNAL);
 
 		List<Long> groupIds = xGroupService.searchXGroupsForIds(searchCriteria);
 		long groupsDeleted = xUserMgr.forceDeleteExternalGroups(groupIds);
 		String response = "No groups were deleted!";
-		if (groupsDeleted > 0){
-			response = groupsDeleted + " groups deleted successfully";
+		if (groupsDeleted == 1) {
+			response = "1 group deleted successfully.";
+		} else if (groupsDeleted > 0) {
+			response = String.format("%d groups deleted successfully.", groupsDeleted);
 		}
 		return Response.ok(response).build();
 	}

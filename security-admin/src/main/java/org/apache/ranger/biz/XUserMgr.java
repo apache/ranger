@@ -2199,6 +2199,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public long forceDeleteExternalGroups(List<Long> groupIds){
 		long groupsDeleted = 0;
+		long failedDeletes = 0;
 		long startTime = Time.now();
 		for(Long groupId: groupIds){
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
@@ -2213,12 +2214,19 @@ public class XUserMgr extends XUserMgrBase {
 				});
 				groupsDeleted += 1;
 			} catch (Throwable ex) {
-				logger.error("forceDeleteGroups(): Failed to delete group id: " + groupId + " ", ex);
+				logger.error("forceDeleteExternalGroups(): Failed to delete group id: {}", groupId, ex);
+				failedDeletes += 1;
 			}
 		}
-		if (groupsDeleted > 0) {
-			logger.info(String.format("Force Deletion of %d groups took %d milliseconds",
-					groupIds.size(), (Time.now() - startTime)));
+		if (failedDeletes == 1) {
+			logger.error("Failed to delete 1 group");
+		} else if (failedDeletes > 1) {
+			logger.error("Failed to delete {} groups", failedDeletes);
+		}
+		if (groupIds.size() == 1) {
+			logger.info("Force Deletion of 1 group took {} milliseconds", (Time.now() - startTime));
+		} else if (groupIds.size() > 1) {
+			logger.info("Force Deletion of {} groups took {} milliseconds", groupIds.size(), (Time.now() - startTime));
 		}
 		return groupsDeleted;
 	}
@@ -2427,6 +2435,7 @@ public class XUserMgr extends XUserMgrBase {
 
 	public long forceDeleteExternalUsers(List<Long> userIds){
 		long usersDeleted = 0;
+		long failedDeletes = 0;
 		long startTime = Time.now();
 		for(Long userId: userIds){
 			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
@@ -2441,12 +2450,19 @@ public class XUserMgr extends XUserMgrBase {
 				});
 				usersDeleted += 1;
 			} catch (Throwable ex) {
-				logger.error("forceDeleteUsers(): Failed to delete user id: " + userId + " ", ex);
+				logger.error("forceDeleteExternalUsers(): Failed to delete user id: {}", userId, ex);
+				failedDeletes += 1;
 			}
 		}
-		if (usersDeleted > 0) {
-			logger.info(String.format("Force Deletion of %d users took %d milliseconds",
-					userIds.size(), (Time.now() - startTime)));
+		if (failedDeletes == 1){
+			logger.error("Failed to delete 1 user");
+		} else if (failedDeletes > 1) {
+			logger.error("Failed to delete {} users", failedDeletes);
+		}
+		if (userIds.size() == 1) {
+			logger.info("Force Deletion of 1 user took {} milliseconds", (Time.now() - startTime));
+		} else if (userIds.size() > 1) {
+			logger.info("Force Deletion of {} users took {} milliseconds", userIds.size(), (Time.now() - startTime));
 		}
 		return usersDeleted;
 	}
