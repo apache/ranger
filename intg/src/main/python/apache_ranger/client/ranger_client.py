@@ -571,7 +571,7 @@ class RangerClientPrivate:
         :param filter:
         :return:
         """
-        self.client_http.call_api(RangerClientPrivate.FORCE_DELETE_EXTERNAL_USERS, filter)
+        return self.client_http.call_api(RangerClientPrivate.FORCE_DELETE_EXTERNAL_USERS, filter).decode('utf-8')
 
     def force_delete_external_groups(self, filter=None):
         """
@@ -582,5 +582,5 @@ class RangerClientPrivate:
         :param filter:
         :return:
         """
-        self.client_http.call_api(RangerClientPrivate.FORCE_DELETE_EXTERNAL_GROUPS, filter)
+        return self.client_http.call_api(RangerClientPrivate.FORCE_DELETE_EXTERNAL_GROUPS, filter).decode('utf-8')
 

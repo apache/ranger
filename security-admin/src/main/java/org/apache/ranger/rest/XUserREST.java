@@ -893,8 +893,8 @@ public class XUserREST {
 				request, searchCriteria, "userRole", "Role", null);
 
 		// for invalid params
-		if(Collections.list(request.getAttributeNames()).size() > 0 && searchCriteria.getParamList().size() == 0){
-			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params").build();
+		if(request.getQueryString() != null && searchCriteria.getParamList().size() == 0){
+			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params!").build();
 		}
 
 		// only for external users
@@ -929,8 +929,8 @@ public class XUserREST {
 				request, searchCriteria, "syncSource", "Sync Source", null);
 
 		// for invalid params
-		if(Collections.list(request.getAttributeNames()).size() > 0 && searchCriteria.getParamList().size() == 0){
-			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params").build();
+		if(request.getQueryString() != null && searchCriteria.getParamList().size() == 0){
+			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params!").build();
 		}
 
 		// only for external groups
