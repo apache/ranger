@@ -184,9 +184,12 @@ public class AtlasTagSource extends AbstractTagSource {
 			}
 
 			while (true) {
-
-				try {
-					List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
+				if (TagSyncConfig.isTagSyncServiceActive()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("==> ConsumerRunnable.run() is running as server is active");
+					}
+					try {
+						List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
 
 					if (newMessages.size() == 0) {
 						if (LOG.isDebugEnabled()) {
@@ -251,6 +254,7 @@ public class AtlasTagSource extends AbstractTagSource {
 						return;
 					}
 				}
+			  }
 			}
 		}
 

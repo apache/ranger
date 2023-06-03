@@ -288,6 +288,10 @@
             <artifactId>jackson-annotations</artifactId>
             <version>${atlas.jackson.version}</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.ranger</groupId>
+            <artifactId>ranger-common-ha</artifactId>
+            <version>${project.version}</version>
+        </dependency>
     </dependencies>
 </project>
