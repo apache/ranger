@@ -22,6 +22,7 @@ package org.apache.ranger.tagsync.process;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.apache.ranger.tagsync.ha.TagSyncHAInitializerImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -43,6 +44,7 @@ import org.apache.ranger.plugin.util.RangerCommonConstants;
 public class TagSyncConfig extends Configuration {
 	private static final Logger LOG = LoggerFactory.getLogger(TagSyncConfig.class);
 
+	private static TagSyncConfig instance = null;
 	private static final String CONFIG_FILE = "ranger-tagsync-site.xml";
 
 	private static final String DEFAULT_CONFIG_FILE = "ranger-tagsync-default.xml";
@@ -122,7 +124,7 @@ public class TagSyncConfig extends Configuration {
 	private static final String  TAGSYNC_SINK_MAX_BATCH_SIZE_PROP    = "ranger.tagsync.dest.ranger.max.batch.size";
 
 	private static final String TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = "ranger.tagsync.source.atlasrest.entities.batch.size";
-
+	public static final String TAGSYNC_SERVER_HA_ENABLED_PARAM = "ranger-tagsync.server.ha.enabled";
 
 	private Properties props;
 
@@ -135,7 +137,14 @@ public class TagSyncConfig extends Configuration {
 	}
 	
 	public static TagSyncConfig getInstance() {
-		return new TagSyncConfig();
+		if(instance == null ){
+			synchronized (TagSyncConfig.class){
+				if(instance == null ){
+					instance = new TagSyncConfig();
+				}
+			}
+		}
+		return instance;
 	}
 
 	public Properties getProperties() {
@@ -213,6 +222,10 @@ public class TagSyncConfig extends Configuration {
 		}
 
 		return ret;
+	}
+
+	synchronized static public boolean isTagSyncServiceActive() {
+		return TagSyncHAInitializerImpl.getInstance(TagSyncConfig.getInstance()).isActive();
 	}
 
 	@Override
