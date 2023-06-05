@@ -27,6 +27,7 @@ services:
     environment:
       - RANGER_VERSION
       - RANGER_DB_TYPE
+      - DEBUG_ADMIN=${DEBUG_ADMIN:-false}
     command:
       - /home/ranger/scripts/ranger.sh
 
