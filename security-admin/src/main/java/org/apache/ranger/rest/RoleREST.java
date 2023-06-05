@@ -286,11 +286,14 @@ public class RoleREST {
     @Produces({ "application/json" })
     public RangerRole getRole(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String execUser, @PathParam("name") String roleName) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> getRole(name=" + roleName + ")");
+            LOG.debug("==> getRole(name=" + roleName + ", execUser=" + execUser + ")");
         }
         RangerRole ret;
+
         try {
-            ret = getRoleIfAccessible(roleName, serviceName, execUser, userMgr.getGroupsForUser(execUser));
+            Set<String> userGroups = StringUtils.isNotEmpty(execUser) ? userMgr.getGroupsForUser(execUser) : new HashSet<>();
+
+            ret = getRoleIfAccessible(roleName, serviceName, execUser, userGroups);
             if (ret == null) {
                 throw restErrorUtil.createRESTException("User doesn't have permissions to get details for " + roleName);
             }
@@ -298,12 +301,11 @@ public class RoleREST {
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
-            LOG.error("getRole(" + roleName + ") failed", excp);
-
+            LOG.error("getRole(name=" + roleName + ", execUser=" + execUser + ") failed", excp);
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getRole(name=" + roleName + "):" + ret);
+            LOG.debug("<== getRole(name=" + roleName + ", execUser=" + execUser + "):" + ret);
         }
         return ret;
     }

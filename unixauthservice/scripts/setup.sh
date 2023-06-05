@@ -38,3 +38,10 @@ then
   xmlstarlet ed -L -u "//property[name='ranger.usersync.source.impl.class']/value" -v "org.apache.ranger.unixusersync.process.FileSourceUserGroupBuilder" ranger-ugsync-site.xml
   xmlstarlet ed -L -s "//configuration" -t elem -n "property" -s "//property[last()]" -t elem -n "name" -v "ranger.usersync.filesource.file" -s "//property[last()]" -t elem -n "value" -v "${RANGER_SCRIPTS}/ugsync-file-source.csv" ranger-ugsync-site.xml
 fi
+
+if [ "${DEBUG_USERSYNC}" == "true" ]
+then
+  # shellcheck disable=SC2164
+  cd "${RANGER_HOME}"/usersync/conf
+  xmlstarlet ed -L -u "//root/@level" -v "debug" logback.xml
+fi
