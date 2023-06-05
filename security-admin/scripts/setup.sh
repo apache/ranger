@@ -1705,4 +1705,12 @@ then
 else
 	exit 1
 fi
+
+if [ "${DEBUG_ADMIN}" == "true" ]
+then
+  # shellcheck disable=SC2164
+  cd "${RANGER_HOME}"/admin/conf
+  xmlstarlet ed -L -u "//root/@level" -v "debug" logback.xml
+fi
+
 echo "Installation of Ranger PolicyManager Web Application is completed."
