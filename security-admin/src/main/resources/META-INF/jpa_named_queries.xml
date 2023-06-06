@@ -1646,6 +1646,24 @@
         </query>
     </named-query>
 
+	<named-query name="XXSecurityZoneRefRole.findByZoneId">
+		<query>
+			select obj from XXSecurityZoneRefRole obj where obj.zoneId = :zoneId
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZoneRefRole.findByRoleId">
+		<query>
+			select obj from XXSecurityZoneRefRole obj where obj.roleId = :roleId
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZoneRefRole.findRoleRefZoneCount">
+		<query>
+			select count(obj.zoneId) from XXSecurityZoneRefRole obj where obj.roleName = :roleName
+		</query>
+	</named-query>
+
 	<named-query name="XXSecurityZoneRefResource.findByZoneId">
         <query>
             select obj from XXSecurityZoneRefResource obj where obj.zoneId = :zoneId

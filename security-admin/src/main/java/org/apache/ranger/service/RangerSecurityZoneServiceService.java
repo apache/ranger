@@ -117,8 +117,10 @@ public class RangerSecurityZoneServiceService extends RangerSecurityZoneServiceB
                 ret.setServices(zoneFromJsonData.getServices());
                 ret.setAdminUsers(zoneFromJsonData.getAdminUsers());
                 ret.setAdminUserGroups(zoneFromJsonData.getAdminUserGroups());
+                ret.setAdminRoles(zoneFromJsonData.getAdminRoles());
                 ret.setAuditUsers(zoneFromJsonData.getAuditUsers());
                 ret.setAuditUserGroups(zoneFromJsonData.getAuditUserGroups());
+                ret.setAuditRoles(zoneFromJsonData.getAuditRoles());
                 ret.setTagServices(zoneFromJsonData.getTagServices());
             }
         } else {

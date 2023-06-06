@@ -233,18 +233,18 @@ public class RangerSecurityZoneValidator extends RangerValidator {
             failures.add(new ValidationFailureDetailsBuilder().becauseOf("security zone services").isMissing().field("services").errorCode(error.getErrorCode()).becauseOf(error.getMessage(securityZone.getName())).build());
             ret = false;
         }
-        // both admin users and user-groups collections can't be empty
-        if (CollectionUtils.isEmpty(securityZone.getAdminUsers()) && CollectionUtils.isEmpty(securityZone.getAdminUserGroups())) {
-            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS;
+        // admin users, user-groups and roles collections can't be empty
+        if (CollectionUtils.isEmpty(securityZone.getAdminUsers()) && CollectionUtils.isEmpty(securityZone.getAdminUserGroups()) && CollectionUtils.isEmpty(securityZone.getAdminRoles())) {
+            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS_AND_ROLES;
 
-            failures.add(new ValidationFailureDetailsBuilder().field("security zone admin users/user-groups").isMissing().becauseOf(error.getMessage()).errorCode(error.getErrorCode()).build());
+            failures.add(new ValidationFailureDetailsBuilder().field("security zone admin users/user-groups/roles").isMissing().becauseOf(error.getMessage()).errorCode(error.getErrorCode()).build());
             ret = false;
         }
-        // both audit users and user-groups collections can't be empty
-        if (CollectionUtils.isEmpty(securityZone.getAuditUsers()) && CollectionUtils.isEmpty(securityZone.getAuditUserGroups())) {
-            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS;
+        // audit users, user-groups and roles collections can't be empty
+        if (CollectionUtils.isEmpty(securityZone.getAuditUsers()) && CollectionUtils.isEmpty(securityZone.getAuditUserGroups()) && CollectionUtils.isEmpty(securityZone.getAuditRoles())) {
+            ValidationErrorCode error = ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS_AND_ROLES;
 
-            failures.add(new ValidationFailureDetailsBuilder().field("security zone audit users/user-groups").isMissing().becauseOf(error.getMessage()).errorCode(error.getErrorCode()).build());
+            failures.add(new ValidationFailureDetailsBuilder().field("security zone audit users/user-groups/roles").isMissing().becauseOf(error.getMessage()).errorCode(error.getErrorCode()).build());
             ret = false;
         }
 

@@ -47,8 +47,10 @@ class RangerSecurityZone(RangerBaseModelObject):
         self.tagServices     = attrs.get('tagServices')
         self.adminUsers      = attrs.get('adminUsers')
         self.adminUserGroups = attrs.get('adminUserGroups')
+        self.adminRoles      = attrs.get('adminRoles')
         self.auditUsers      = attrs.get('auditUsers')
         self.auditUserGroups = attrs.get('auditUserGroups')
+        self.auditRoles      = attrs.get('auditRoles')
         self.description     = attrs.get('description')
 
     def type_coerce_attrs(self):

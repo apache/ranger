@@ -23,10 +23,13 @@ import java.io.File;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
@@ -46,6 +49,8 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerRolesUtil;
 import org.apache.ranger.service.RangerServiceService;
 import org.apache.ranger.services.tag.RangerServiceTag;
 import org.apache.ranger.view.VXMessage;
@@ -80,6 +85,9 @@ public class ServiceMgr {
 	
 	@Autowired
 	TagDBStore tagStore;
+
+	@Autowired
+	RoleDBStore rolesStore;
 
 	@Autowired
 	TimedExecutor timedExecutor;
@@ -224,9 +232,14 @@ public class ServiceMgr {
 
 			if (securityZone.getAdminUsers() != null && securityZone.getAdminUsers().contains(userId)) {
 				isZoneAdmin = true;
-			} else if (securityZone.getAdminUserGroups() != null) {
+			}
+
+			Set<String> loggedInUsersGroups = Collections.emptySet();
+
+			if (!isZoneAdmin && securityZone.getAdminUserGroups() != null) {
 				List<XXGroupUser> groupUsers          = groupUserDao.findByUserId(rangerBizUtil.getXUserId());
-				List<String>      loggedInUsersGroups = new ArrayList<>();
+
+				loggedInUsersGroups = new HashSet<>();
 
 				loggedInUsersGroups.add(GROUP_PUBLIC);
 
@@ -237,6 +250,10 @@ public class ServiceMgr {
 				}
 
 				isZoneAdmin = CollectionUtils.containsAny(securityZone.getAdminUserGroups(), loggedInUsersGroups);
+			}
+
+			if (!isZoneAdmin && securityZone.getAdminRoles() != null) {
+				isZoneAdmin = isUserOrUserGroupsInRole(userId, loggedInUsersGroups, securityZone.getAdminRoles());
 			}
 		}
 
@@ -258,9 +275,14 @@ public class ServiceMgr {
 
 			if (securityZone.getAuditUsers() != null && securityZone.getAuditUsers().contains(userId)) {
 				isZoneAuditor = true;
-			} else if (securityZone.getAuditUserGroups() != null) {
+			}
+
+			Set<String> loggedInUsersGroups = Collections.emptySet();
+
+			if (!isZoneAuditor && securityZone.getAuditUserGroups() != null) {
 				List<XXGroupUser> groupUsers          = groupUserDao.findByUserId(rangerBizUtil.getXUserId());
-				List<String>      loggedInUsersGroups = new ArrayList<>();
+
+				loggedInUsersGroups = new HashSet<>();
 
 				loggedInUsersGroups.add(GROUP_PUBLIC);
 
@@ -271,6 +293,10 @@ public class ServiceMgr {
 				}
 
 				isZoneAuditor = CollectionUtils.containsAny(securityZone.getAuditUserGroups(), loggedInUsersGroups);
+			}
+
+			if (!isZoneAuditor && securityZone.getAuditRoles() != null) {
+				isZoneAuditor = isUserOrUserGroupsInRole(userId, loggedInUsersGroups, securityZone.getAuditRoles());
 			}
 		}
 
@@ -511,7 +537,36 @@ public class ServiceMgr {
 		vXResponse.setStatusCode(statusCode);
 		return vXResponse;
 	}
-	
+
+	private boolean isUserOrUserGroupsInRole(String userId, Set<String> userGroups, List<String> roles) {
+		boolean      ret         = false;
+		RangerRoles  rangerRoles = null;
+
+		try {
+			rangerRoles = rolesStore.getRoles("", -1L);
+		} catch (Exception excp) {
+			LOG.error("Unexpected error when fetching roles from database", excp);
+		}
+
+		if (rangerRoles != null) {
+			RangerRolesUtil rolesUtil = new RangerRolesUtil(rangerRoles);
+
+			ret = CollectionUtils.containsAny(roles, rolesUtil.getUserRoleMapping().get(userId));
+
+			if (!ret && userGroups != null) {
+				for (String userGroup : userGroups) {
+					ret = CollectionUtils.containsAny(roles, rolesUtil.getGroupRoleMapping().get(userGroup));
+
+					if (ret) {
+						break;
+					}
+				}
+			}
+		}
+
+		return ret;
+	}
+
 	static final long _DefaultTimeoutValue_Lookp = 1000; // 1 s
 	static final long _DefaultTimeoutValue_ValidateConfig = 10000; // 10 s
 
