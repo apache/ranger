@@ -415,6 +415,9 @@ public class SecurityZoneREST {
 					} else if (!Objects.equals(securityZone.getAdminUsers(), existingSecurityZone.getAdminUsers())) {
 						throwRestError("User : " + userName
 								+ " is not allowed to edit zone Admin User of zone : " + existingSecurityZone.getName());
+                    } else if (!Objects.equals(securityZone.getAdminRoles(), existingSecurityZone.getAdminRoles())) {
+                        throwRestError("User : " + userName
+                                + " is not allowed to edit zone Admin Roles of zone : " + existingSecurityZone.getName());
 					} else if (!Objects.equals(securityZone.getAuditUsers(), existingSecurityZone.getAuditUsers())) {
 						throwRestError("User : " + userName
 								+ " is not allowed to edit zone Audit User of zone : " + existingSecurityZone.getName());
@@ -422,6 +425,10 @@ public class SecurityZoneREST {
 						throwRestError("User : "
 								+ userName
 								+ " is not allowed to edit zone Audit User Group of zone : " + existingSecurityZone.getName());
+                    } else if (!Objects.equals(securityZone.getAuditRoles(), existingSecurityZone.getAuditRoles())) {
+                        throwRestError("User : "
+                                + userName
+                                + " is not allowed to edit zone Audit Roles of zone : " + existingSecurityZone.getName());
 					}
 				}
 				
@@ -560,8 +567,10 @@ public class SecurityZoneREST {
                 bizUtil.removeEmptyStrings(securityZone.getTagServices());
 		bizUtil.removeEmptyStrings(securityZone.getAdminUsers());
 		bizUtil.removeEmptyStrings(securityZone.getAdminUserGroups());
+        bizUtil.removeEmptyStrings(securityZone.getAdminRoles());
 		bizUtil.removeEmptyStrings(securityZone.getAuditUsers());
 		bizUtil.removeEmptyStrings(securityZone.getAuditUserGroups());
+        bizUtil.removeEmptyStrings(securityZone.getAdminRoles());
 		Map<String, RangerSecurityZoneService> serviceResouceMap=securityZone.getServices();
 		if(serviceResouceMap!=null) {
 			Set<Map.Entry<String, RangerSecurityZoneService>> serviceResouceMapEntries = serviceResouceMap.entrySet();

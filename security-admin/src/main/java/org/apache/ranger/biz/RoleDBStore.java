@@ -185,6 +185,12 @@ public class RoleDBStore implements RoleStore {
 			throw new Exception("Rolename for '" + roleName
 					+ "' can not be updated as it is referenced in one or more other roles");
 		}
+
+		boolean rleNotInZone = ensureRoleNotInZone(roleName);
+
+		if(!rleNotInZone) {
+			throw new Exception("Rolename for '"+ roleName + "' can not be updated as it is referenced in one or more security zones");
+		}
 	}
 
 	@Override
@@ -236,6 +242,12 @@ public class RoleDBStore implements RoleStore {
         if(!roleNotInOtherRole) {
             throw new Exception("Role '"+ roleName + "' can not be deleted as it is referenced in one or more other roles");
         }
+
+        boolean rleNotInZone = ensureRoleNotInZone(roleName);
+
+        if(!rleNotInZone) {
+            throw new Exception("Role '"+ roleName + "' can not be deleted as it is referenced in one or more security zones");
+        }
     }
 
 	private boolean ensureRoleNotInPolicy(String roleName) {
@@ -249,6 +261,12 @@ public class RoleDBStore implements RoleStore {
 
 		return roleRefRoleCount < 1;
 	}
+
+    private boolean ensureRoleNotInZone(String roleName) {
+        Long roleRefZoneCount = daoMgr.getXXSecurityZoneRefRole().findRoleRefZoneCount(roleName);
+
+        return roleRefZoneCount < 1;
+    }
 
     @Override
     public RangerRole getRole(Long id) throws Exception {
