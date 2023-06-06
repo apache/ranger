@@ -248,7 +248,7 @@
         <hppc.version>0.8.0</hppc.version>
         <joda.time.version>2.10.6</joda.time.version>
         <nimbus-jose-jwt.version>9.31</nimbus-jose-jwt.version>
-        <aws-java-sdk.version>1.12.125</aws-java-sdk.version>
+        <aws-java-sdk.version>1.12.481</aws-java-sdk.version>
 
         <!-- GCP HSM -->
         <google.cloud.kms>2.3.0</google.cloud.kms>
