@@ -224,15 +224,11 @@ export default function PolicyConditionsComp(props) {
                   })}
               </Modal.Body>
               <Modal.Footer>
-                <Button
-                  variant="secondary"
-                  className="btn-mini"
-                  onClick={handleClose}
-                >
+                <Button variant="secondary" size="sm" onClick={handleClose}>
                   Close
                 </Button>
 
-                <Button title="Save" className="btn-mini" type="submit">
+                <Button title="Save" size="sm" type="submit">
                   Save
                 </Button>
               </Modal.Footer>

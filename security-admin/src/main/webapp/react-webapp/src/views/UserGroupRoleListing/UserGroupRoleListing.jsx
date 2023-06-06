@@ -18,13 +18,10 @@
  */
 
 import React, { Component } from "react";
-import { Tab, Tabs, Breadcrumb } from "react-bootstrap";
-import Users from "./users_details/UserListing";
-import Groups from "./groups_details/GroupListing";
-import Roles from "./role_details/RoleListing";
+import { Tab, Tabs } from "react-bootstrap";
 import withRouter from "Hooks/withRouter";
 import { Outlet } from "react-router-dom";
-import { commonBreadcrumb } from "../../utils/XAUtils";
+import CustomBreadcrumb from "../CustomBreadcrumb";
 
 class UserGroupRoleListing extends Component {
   constructor(props) {
@@ -37,6 +34,13 @@ class UserGroupRoleListing extends Component {
     this.setState({ activeKey: tabName });
     this.props.navigate(`/users/${tabName}`, { replace: true });
   };
+  componentDidUpdate(nextProps, prevState) {
+    let activeTabVal = this.activeTab();
+
+    if (prevState.activeKey !== activeTabVal) {
+      this.setState({ activeKey: this.activeTab() });
+    }
+  }
   activeTab = () => {
     let activeTabVal;
     if (this.props.location.pathname) {
@@ -53,7 +57,10 @@ class UserGroupRoleListing extends Component {
   render() {
     return (
       <React.Fragment>
-        {commonBreadcrumb(["Users"])}
+        <div className="header-wraper">
+          <h3 className="wrap-header bold">User/Groups/Roles</h3>
+          <CustomBreadcrumb />
+        </div>
         <div className="usrGrpRoleListing">
           <Tabs
             id="userGroupRoleListing"

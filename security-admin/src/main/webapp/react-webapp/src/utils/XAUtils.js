@@ -1021,7 +1021,7 @@ var links = {
 
 export const commonBreadcrumb = (type, options) => {
   let data = [];
-  type.map((obj) => {
+  type?.map((obj) => {
     if (typeof links[obj] == "function") {
       let filterdata = {};
       filterdata[obj] = links[obj](options);
@@ -1327,7 +1327,18 @@ export const drop = (e, fields, dragItem, dragOverItem) => {
   dragOverItem.current = null;
 };
 
-/* Common code for logout */
+// TODO : Remove below code once different router path is used to distinguish between tag and resource service/policy
+export const updateTagActive = (isTagView) => {
+  if (isTagView) {
+    document
+      .getElementById("resourcesButton")
+      ?.classList?.remove("navbar-active");
+    document.getElementById("tagButton")?.classList?.add("navbar-active");
+  } else if (!isTagView) {
+    document.getElementById("tagButton")?.classList?.remove("navbar-active");
+    document.getElementById("resourcesButton")?.classList?.add("navbar-active");
+  }
+};
 
 export const handleLogout = async (checkKnoxSSOVal, navigate) => {
   let logoutResp = {};

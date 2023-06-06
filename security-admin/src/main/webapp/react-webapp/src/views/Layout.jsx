@@ -17,15 +17,16 @@
  * under the License.
  */
 
-import React, { lazy, useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { Button, Modal } from "react-bootstrap";
 import { useLocation, Outlet, Navigate, useNavigate } from "react-router-dom";
 import ErrorPage from "./ErrorPage";
 import { hasAccessToPath, checkKnoxSSO } from "Utils/XAUtils";
 import { useIdleTimer } from "react-idle-timer";
 import { getUserProfile } from "Utils/appState";
-
-const HeaderComp = lazy(() => import("Views/Header"));
+import SideBar from "./SideBar/SideBar";
+import { Loader } from "../components/CommonComponents";
+import { Suspense } from "react";
 
 const Layout = () => {
   let location = useLocation();
@@ -33,6 +34,7 @@ const Layout = () => {
   const userProfile = getUserProfile();
   const [open, setOpen] = useState(false);
   const [timer, setTimer] = useState(0);
+
   const timeout =
     1000 *
     (userProfile?.configProperties?.inactivityTimeout > 0
@@ -90,7 +92,7 @@ const Layout = () => {
   }, [getRemainingTime, isPrompted]);
 
   return (
-    <>
+    <React.Fragment>
       <Modal show={open}>
         <Modal.Header className="pd-10">
           <h6>
@@ -113,36 +115,41 @@ const Layout = () => {
           </Button>
         </Modal.Footer>
       </Modal>
-      <HeaderComp />
-      {location.pathname === "/" &&
-        window.location.pathname != "/locallogin" && (
-          <Navigate to="/policymanager/resource" replace={true} />
-        )}
-      <section className="container-fluid" style={{ minHeight: "80vh" }}>
-        <div id="ranger-content">
-          {hasAccessToPath(location.pathname) ? (
-            <Outlet />
-          ) : (
-            <ErrorPage errorCode="401" />
+      <React.Fragment>
+        <div className="wrapper">
+          <SideBar />
+        </div>
+        {location.pathname === "/" &&
+          window.location.pathname !== "/locallogin" && (
+            <Navigate to="/policymanager/resource" replace={true} />
           )}
-        </div>
-      </section>
-      <footer>
-        <div className="main-footer">
-          <div className="pull-left copy-right-text">
-            <p className="text-left">
-              <a
-                target="_blank"
-                href="http://www.apache.org/licenses/LICENSE-2.0"
-                rel="noopener noreferrer"
-              >
-                Licensed under the Apache License, Version 2.0
-              </a>
-            </p>
+        <div id="content" className="content-body">
+          <div id="ranger-content">
+            {hasAccessToPath(location.pathname) ? (
+              <Suspense fallback={<Loader />}>
+                <Outlet />
+              </Suspense>
+            ) : (
+              <ErrorPage errorCode="401" />
+            )}
           </div>
+
+          <footer>
+            <div className="main-footer">
+              <p className="text-left">
+                <a
+                  target="_blank"
+                  href="http://www.apache.org/licenses/LICENSE-2.0"
+                  rel="noopener noreferrer"
+                >
+                  Licensed under the Apache License, Version 2.0
+                </a>
+              </p>
+            </div>
+          </footer>
         </div>
-      </footer>
-    </>
+      </React.Fragment>
+    </React.Fragment>
   );
 };
 

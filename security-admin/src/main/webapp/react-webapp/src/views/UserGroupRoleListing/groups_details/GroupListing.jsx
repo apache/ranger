@@ -552,7 +552,6 @@ function Groups() {
 
   return (
     <div className="wrap">
-      <h4 className="wrap-header font-weight-bold">Group List</h4>
       {pageLoader ? (
         <Loader />
       ) : (

@@ -18,7 +18,7 @@
  */
 
 import React from "react";
-import ReactDOMClient from 'react-dom/client';
+import ReactDOMClient from "react-dom/client";
 import App from "./App";
 
 import "bootstrap/dist/css/bootstrap.css";
@@ -27,7 +27,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "react-datetime/css/react-datetime.css";
 import "./styles/style.css";
 
-const container = document.getElementById('app');
+const container = document.getElementById("app");
 
 // Create a root.
 const root = ReactDOMClient.createRoot(container);

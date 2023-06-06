@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -56,6 +57,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private boolean isAccessTypeAny;
 	private boolean isAccessTypeDelegatedAdmin;
 	private ResourceMatchingScope resourceMatchingScope = ResourceMatchingScope.SELF;
+	private Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes = Collections.emptyMap();
 
 	public RangerAccessRequestImpl() {
 		this(null, null, null, null, null);
@@ -96,6 +98,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setContext(request.getContext());
 		setClusterName(request.getClusterName());
 		setResourceMatchingScope(request.getResourceMatchingScope());
+		setResourceElementMatchingScopes(request.getResourceElementMatchingScopes());
 		setClientIPAddress(request.getClientIPAddress());
 		setClusterType(request.getClusterType());
 	}
@@ -170,6 +173,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	public ResourceMatchingScope getResourceMatchingScope() {
 		return resourceMatchingScope;
 	}
+
+	@Override
+	public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() { return this.resourceElementMatchingScopes; }
 
 	@Override
 	public boolean isAccessTypeAny() {
@@ -265,6 +271,10 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		}
 	}
 
+	public void setResourceElementMatchingScopes(Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes) {
+		this.resourceElementMatchingScopes = resourceElementMatchingScopes == null ? Collections.emptyMap() : resourceElementMatchingScopes;
+	}
+
 	public void setContext(Map<String, Object> context) {
 		if (context == null) {
 			this.context = new HashMap<>();
@@ -358,6 +368,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("requestData={").append(requestData).append("} ");
 		sb.append("sessionId={").append(sessionId).append("} ");
 		sb.append("resourceMatchingScope={").append(resourceMatchingScope).append("} ");
+		sb.append("resourceElementMatchingScopes={").append(resourceElementMatchingScopes).append("} ");
 		sb.append("clusterName={").append(clusterName).append("} ");
 		sb.append("clusterType={").append(clusterType).append("} ");
 

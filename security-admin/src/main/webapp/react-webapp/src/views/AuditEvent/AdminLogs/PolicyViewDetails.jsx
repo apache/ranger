@@ -26,11 +26,14 @@ import { toast } from "react-toastify";
 import { find, isEmpty, sortBy } from "lodash";
 import { serverError } from "../../../utils/XAUtils";
 import { ModalLoader } from "../../../components/CommonComponents";
+import { getServiceDef } from "../../../utils/appState";
 
 export function PolicyViewDetails(props) {
   const [access, setAccess] = useState([]);
   const [loader, SetLoader] = useState(true);
-  const { serviceDef, updateServices } = props;
+  const [serviceDef, setServiceDef] = useState({});
+  const { updateServices } = props;
+  let { allServiceDefs } = getServiceDef();
 
   useEffect(() => {
     if (props.paramsData.isRevert) {
@@ -61,6 +64,7 @@ export function PolicyViewDetails(props) {
           versionNo: paramsData.policyVersion
         }
       : "";
+    let accessLogsServiceDef;
 
     try {
       accesslogs = await fetchApi({
@@ -72,8 +76,11 @@ export function PolicyViewDetails(props) {
     } catch (error) {
       console.error(`eventTime can not be undefined ${error}`);
     }
-
+    accessLogsServiceDef = allServiceDefs.find((servicedef) => {
+      return servicedef.name == accesslogs.data.serviceType;
+    });
     setAccess(accesslogs.data);
+    setServiceDef(accessLogsServiceDef);
     SetLoader(false);
   };
 

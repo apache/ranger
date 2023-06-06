@@ -98,7 +98,6 @@ function XATableLayout({
     setPageSize,
     canPreviousPage,
     allColumns,
-    getToggleHideAllColumnsProps,
     canNextPage,
     pageOptions,
     state: { pageIndex, pageSize, sortBy },
@@ -163,6 +162,7 @@ function XATableLayout({
   );
   const currentPageValRef = useRef();
   const [currentPageVal, setCurrentPageVal] = useState("");
+
   useEffect(() => {
     fetchData({ pageIndex, pageSize, gotoPage, sortBy });
   }, [fetchData, pageIndex, pageSize, gotoPage, !clientSideSorting && sortBy]);
@@ -172,6 +172,10 @@ function XATableLayout({
       rowSelectOp.selectedRows.current = selectedFlatRows;
     }
   }, [selectedFlatRows]);
+
+  useEffect(() => {
+    setCurrentPageVal(pageIndex + 1);
+  }, [pageIndex]);
 
   const validatePageNumber = (pageVal, pageOptions) => {
     let error = "";
@@ -188,6 +192,7 @@ function XATableLayout({
       </span>
     );
   };
+
   let columnShowHide = [];
   return (
     // apply the table props
@@ -337,71 +342,11 @@ function XATableLayout({
           {totalCount > 25 && (
             <div className="row mt-2">
               <div className="col-md-12 m-b-sm">
-                <div className="text-center d-flex justify-content-center align-items-center pb-4">
-                  <button
-                    title="First"
-                    onClick={() => {
-                      gotoPage(0);
-                      currentPageValRef.current.value = 1;
-                      setCurrentPageVal(1);
-                    }}
-                    disabled={!canPreviousPage}
-                    className="pagination-btn-first btn btn-outline-dark btn-sm mr-1"
-                  >
-                    {"<<"}
-                  </button>
-                  <button
-                    title="Previous"
-                    onClick={() => {
-                      currentPageValRef.current.value = pageIndex;
-                      previousPage();
-                      setCurrentPageVal(pageIndex);
-                    }}
-                    disabled={!canPreviousPage}
-                    className="pagination-btn-previous btn btn-outline-dark btn-sm"
-                  >
-                    {"< "}{" "}
-                  </button>
-                  <span className="mr-1">
-                    <span className="mr-1"> </span>
-                    Page{" "}
-                    <strong>
-                      {pageIndex + 1} of {pageOptions.length}
-                    </strong>{" "}
-                  </span>
-                  <span className="mr-1"> | </span>
-                  Go to page:{" "}
-                  <div className="position-relative">
-                    <input
-                      className="pagination-input"
-                      type="number"
-                      ref={currentPageValRef}
-                      defaultValue={pageIndex + 1}
-                      onChange={(e) => {
-                        let currPage = e.target.value;
-                        setCurrentPageVal(currPage);
-                        if (
-                          currPage < 1 ||
-                          currPage > pageOptions.length ||
-                          !Number.isInteger(Number(currPage))
-                        ) {
-                          return (currPage = currPage);
-                        } else {
-                          const page = currPage ? Number(currPage) - 1 : 0;
-                          gotoPage(page);
-                        }
-                      }}
-                    />
-                    {currentPageVal !== "" &&
-                      (currentPageVal < 1 ||
-                        currentPageVal > pageOptions.length ||
-                        !Number.isInteger(Number(currentPageVal))) &&
-                      validatePageNumber(currentPageVal, pageOptions)}
-                    <span className="mr-1"> </span>
-                  </div>
+                <div className="text-center d-flex justify-content-end align-items-center pb-2">
                   <span>
+                    Records per page
                     <select
-                      className="select-pagesize"
+                      className="select-pagesize ml-2"
                       value={pageSize}
                       onChange={(e) => {
                         gotoPage(0);
@@ -412,10 +357,73 @@ function XATableLayout({
                     >
                       {[25, 50, 75, 100].map((pageSize) => (
                         <option key={pageSize} value={pageSize}>
-                          Show {pageSize}
+                          {pageSize}
                         </option>
                       ))}
                     </select>
+                  </span>
+                  <button
+                    title="First"
+                    onClick={() => {
+                      gotoPage(0);
+                      currentPageValRef.current.value = 1;
+                      setCurrentPageVal(1);
+                    }}
+                    disabled={!canPreviousPage}
+                    className="pagination-btn-last btn btn-outline-dark btn-sm mr-1"
+                  >
+                    <i
+                      className="fa fa-angle-double-left"
+                      aria-hidden="true"
+                    ></i>
+                  </button>
+                  <button
+                    title="Previous"
+                    onClick={() => {
+                      currentPageValRef.current.value = pageIndex;
+                      previousPage();
+                      setCurrentPageVal(pageIndex);
+                    }}
+                    disabled={!canPreviousPage}
+                    className="pagination-btn-previous btn btn-outline-dark btn-sm mr-2"
+                  >
+                    <i className="fa fa-angle-left" aria-hidden="true"></i>
+                  </button>
+                  Page{" "}
+                  <div className="position-relative ml-1">
+                    <input
+                      className="pagination-input"
+                      type="number"
+                      ref={currentPageValRef}
+                      key={pageIndex + 1}
+                      defaultValue={pageIndex + 1}
+                      onChange={(e) => {
+                        setTimeout(() => {
+                          let currPage = e.target.value;
+                          setCurrentPageVal(currPage);
+                          if (
+                            currPage < 1 ||
+                            currPage > pageOptions.length ||
+                            !Number.isInteger(Number(currPage))
+                          ) {
+                            return (currPage = currPage);
+                          } else {
+                            const page = currPage ? Number(currPage) - 1 : 0;
+                            gotoPage(page);
+                          }
+                        }, 2000);
+                      }}
+                    />
+                    {currentPageVal !== "" &&
+                      (currentPageVal < 1 ||
+                        currentPageVal > pageOptions.length ||
+                        !Number.isInteger(Number(currentPageVal))) &&
+                      validatePageNumber(currentPageVal, pageOptions)}
+                    <span className="mr-1"> </span>
+                  </div>
+                  <span className="mr-1">
+                    <span className="mr-1"> </span>
+                    of {pageOptions.length}
                   </span>
                   <span className="mr-1"> </span>
                   <button
@@ -427,7 +435,7 @@ function XATableLayout({
                     className="pagination-btn-previous mr-1 btn btn-outline-dark btn-sm lh-1"
                     disabled={!canNextPage}
                   >
-                    {">"}
+                    <i className="fa fa-angle-right" aria-hidden="true"></i>
                   </button>
                   <button
                     onClick={() => {
@@ -438,7 +446,10 @@ function XATableLayout({
                     className="pagination-btn-last btn btn-outline btn-sm"
                     disabled={!canNextPage}
                   >
-                    {">>"}
+                    <i
+                      className="fa fa-angle-double-right"
+                      aria-hidden="true"
+                    ></i>
                   </button>
                 </div>
               </div>

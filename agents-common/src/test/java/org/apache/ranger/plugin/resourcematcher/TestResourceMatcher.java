@@ -28,6 +28,7 @@ import java.util.Map;
 
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase;
 import org.apache.ranger.plugin.resourcematcher.TestResourceMatcher.ResourceMatcherTestCases.TestCase.OneTest;
 import org.junit.After;
@@ -112,7 +113,7 @@ public class TestResourceMatcher {
 				}
 
 				boolean expected = oneTest.result;
-				boolean result   = matcher.isMatch(oneTest.input, oneTest.evalContext);
+				boolean result   = matcher.isMatch(oneTest.input, ResourceElementMatchingScope.SELF, oneTest.evalContext);
 
 				assertEquals("isMatch() failed! " + testCase.name + ":" + oneTest.name + ": input=" + oneTest.input, expected, result);
 			}

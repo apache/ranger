@@ -22,13 +22,14 @@ import { Button, Nav, Tab, Row, Col } from "react-bootstrap";
 import { Form, Field } from "react-final-form";
 import { toast } from "react-toastify";
 import { getUserProfile, setUserProfile } from "Utils/appState";
-import { commonBreadcrumb, InfoIcon } from "../utils/XAUtils";
+import { InfoIcon } from "../utils/XAUtils";
 import { BlockUi, scrollToError } from "../components/CommonComponents";
 import withRouter from "Hooks/withRouter";
 import { UserTypes, RegexValidation } from "Utils/XAEnums";
 import { has, isEmpty, isUndefined } from "lodash";
 import { RegexMessage } from "../utils/XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
+import CustomBreadcrumb from "./CustomBreadcrumb";
 class UserProfile extends Component {
   constructor(props) {
     super(props);
@@ -143,8 +144,10 @@ class UserProfile extends Component {
     const userProps = getUserProfile();
     return (
       <div>
-        {commonBreadcrumb(["UserProfile"])}
-        <h4 className="wrap-header bold">User Profile</h4>
+        <div className="header-wraper">
+          <h3 className="wrap-header bold">User Profile</h3>
+          <CustomBreadcrumb />
+        </div>
         <div className="wrap">
           <BlockUi isUiBlock={this.state.blockUI} />
           <Tab.Container transition={false} defaultActiveKey="edit-basic-info">

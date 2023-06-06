@@ -21,7 +21,7 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerResourceTrie;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.slf4j.Logger;
@@ -39,14 +39,18 @@ public class RangerResourceEvaluatorsRetriever {
     private static final Logger LOG = LoggerFactory.getLogger(RangerResourceEvaluatorsRetriever.class);
 
     public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource) {
-        return getEvaluators(resourceTrie, resource, RangerAccessRequest.ResourceMatchingScope.SELF);
+        return getEvaluators(resourceTrie, resource, null);
     }
 
-    public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, RangerAccessRequest.ResourceMatchingScope scope) {
+    public static <T  extends RangerResourceEvaluator> Collection<T> getEvaluators(Map<String, RangerResourceTrie<T>> resourceTrie, Map<String, ?> resource, Map<String, ResourceElementMatchingScope> scopes) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerPolicyResourceEvaluatorsRetriever.getEvaluators(" + resource + ")");
         }
         Set<T> ret = null;
+
+        if (scopes == null) {
+            scopes = Collections.emptyMap();
+        }
 
         if (MapUtils.isNotEmpty(resourceTrie) && MapUtils.isNotEmpty(resource)) {
             Set<String> resourceKeys = resource.keySet();
@@ -63,7 +67,7 @@ public class RangerResourceEvaluatorsRetriever {
                 Object resourceValues = resource.get(resourceDefName);
 
                 Set<T> inheritedMatchers   = trie.getInheritedEvaluators();
-                Set<T> matchersForResource = trie.getEvaluatorsForResource(resourceValues, scope);
+                Set<T> matchersForResource = trie.getEvaluatorsForResource(resourceValues, scopes.get(resourceDefName));
 
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("ResourceDefName:[" + resourceDefName + "], values:[" + resourceValues + "], resource-matchers:[" + matchersForResource + "], inherited-matchers:[" + inheritedMatchers + "]");

@@ -295,9 +295,11 @@ export default SearchPolicyTable;
 function PolicyConditionData(props) {
   const getPolicyData = (policyItem) => {
     let tableRow = [];
+    let access = [];
 
     if (!isEmpty(policyItem)) {
       tableRow = policyItem?.map((items, index) => {
+        access = items.accesses?.map((obj) => obj.type);
         return (
           <tr key={index}>
             <td>
@@ -321,16 +323,29 @@ function PolicyConditionData(props) {
                 <div className="text-center">--</div>
               )}
             </td>
+            {!isEmpty(props?.serviceDef?.policyConditions) && (
+              <td className="text-center">
+                {!isEmpty(items.conditions)
+                  ? items.conditions.map((obj, index) => {
+                      return (
+                        <h6 className="d-inline mr-1" key={index}>
+                          <Badge
+                            variant="info"
+                            className="d-inline mr-1"
+                            key={obj.values}
+                          >{`${obj.type}: ${obj.values.join(", ")}`}</Badge>
+                        </h6>
+                      );
+                    })
+                  : "--"}
+              </td>
+            )}
             <td>
-              {!isEmpty(items.accesses)
-                ? items.accesses?.map((obj) => (
-                    <h6 className="d-inline mr-1">
-                      <Badge variant="info" className="mr-1" key={obj.type}>
-                        {obj.type}
-                      </Badge>
-                    </h6>
-                  ))
-                : "--"}
+              {!isEmpty(access) ? (
+                <MoreLess data={access} />
+              ) : (
+                <div className="text-center">--</div>
+              )}
             </td>
           </tr>
         );
@@ -338,7 +353,10 @@ function PolicyConditionData(props) {
     } else {
       tableRow.push(
         <tr key="no-data">
-          <td className="text-center" colSpan="4">
+          <td
+            className="text-center"
+            colSpan={!isEmpty(props?.serviceDef?.policyConditions) ? "5" : "4"}
+          >
             <span className="text-muted">"No data to show!!"</span>
           </td>
         </tr>
@@ -349,9 +367,10 @@ function PolicyConditionData(props) {
 
   const getMaskingPolicyData = (policyItem) => {
     let tableRow = [];
-
+    let access = [];
     if (!isEmpty(policyItem)) {
       tableRow = policyItem?.map((items, index) => {
+        access = items.accesses?.map((obj) => obj.type);
         return (
           <tr key={index}>
             <td>
@@ -375,16 +394,29 @@ function PolicyConditionData(props) {
                 <div className="text-center">--</div>
               )}
             </td>
+            {!isEmpty(props?.serviceDef?.policyConditions) && (
+              <td className="text-center">
+                {!isEmpty(items.conditions)
+                  ? items.conditions.map((obj, index) => {
+                      return (
+                        <h6 className="d-inline mr-1" key={index}>
+                          <Badge
+                            variant="info"
+                            className="d-inline mr-1"
+                            key={obj.values}
+                          >{`${obj.type}: ${obj.values.join(", ")}`}</Badge>
+                        </h6>
+                      );
+                    })
+                  : "--"}
+              </td>
+            )}
             <td>
-              {!isEmpty(items.accesses)
-                ? items?.accesses?.map((obj) => (
-                    <h6 className="d-inline">
-                      <Badge variant="info" className="mr-1" key={obj.type}>
-                        {obj.type}
-                      </Badge>
-                    </h6>
-                  ))
-                : "--"}
+              {!isEmpty(access) ? (
+                <MoreLess data={access} />
+              ) : (
+                <div className="text-center">--</div>
+              )}
             </td>
             <td>
               {!isEmpty(items.dataMaskInfo) ? (
@@ -403,7 +435,10 @@ function PolicyConditionData(props) {
     } else {
       tableRow.push(
         <tr key="no-data">
-          <td className="text-center" colSpan="4">
+          <td
+            className="text-center"
+            colSpan={!isEmpty(props?.serviceDef?.policyConditions) ? "5" : "4"}
+          >
             <span className="text-muted">"No data to show!!"</span>
           </td>
         </tr>
@@ -414,9 +449,10 @@ function PolicyConditionData(props) {
 
   const getRowLevelPolicyData = (policyItem) => {
     let tableRow = [];
-
+    let access = [];
     if (!isEmpty(policyItem)) {
       tableRow = policyItem?.map((items, index) => {
+        access = items.accesses?.map((obj) => obj.type);
         return (
           <tr key={index}>
             <td>
@@ -441,15 +477,11 @@ function PolicyConditionData(props) {
               )}
             </td>
             <td>
-              {!isEmpty(items.accesses)
-                ? items?.accesses?.map((obj) => (
-                    <h6 className="d-inline mr-1">
-                      <Badge variant="info" className="mr-1" key={obj.type}>
-                        {obj.type}
-                      </Badge>
-                    </h6>
-                  ))
-                : "--"}
+              {!isEmpty(access) ? (
+                <MoreLess data={access} />
+              ) : (
+                <div className="text-center">--</div>
+              )}
             </td>
             <td>
               {!isEmpty(items.rowFilterInfo) ? (
@@ -482,72 +514,106 @@ function PolicyConditionData(props) {
       {props.policyData.policyType == 0 && (
         <>
           <p className="form-header">Allow Conditions</p>
-          <Table
-            bordered
-            size="sm"
-            className="mb-3 table-audit-filter-ready-only"
-          >
-            <thead>
-              <tr>
-                <th>Roles</th>
-                <th>Groups</th>
-                <th>Users</th>
-                <th>Accesses</th>
-              </tr>
-            </thead>
-            <tbody>{getPolicyData(props.policyData.policyItems)}</tbody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table
+              bordered
+              size="sm"
+              className="mb-3 table-audit-filter-ready-only"
+            >
+              <thead>
+                <tr>
+                  <th>Roles</th>
+                  <th>Groups</th>
+                  <th>Users</th>
+                  {!isEmpty(props?.serviceDef?.policyConditions) && (
+                    <th className="text-center text-nowrap">
+                      Policy Conditions
+                    </th>
+                  )}
+                  <th>Accesses</th>
+                </tr>
+              </thead>
+              <tbody>{getPolicyData(props.policyData.policyItems)}</tbody>
+            </Table>
+          </div>
           {props.serviceDef?.options?.enableDenyAndExceptionsInPolicies ==
             "true" && (
             <>
               <p className="form-header">Allow Exclude</p>
-              <Table
-                bordered
-                size="sm"
-                className="mb-3 table-audit-filter-ready-only"
-              >
-                <thead>
-                  <tr>
-                    <th>Roles</th>
-                    <th>Groups</th>
-                    <th>Users</th>
-                    <th>Accesses</th>
-                  </tr>
-                </thead>
-                <tbody>{getPolicyData(props.policyData.allowExceptions)}</tbody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table
+                  bordered
+                  size="sm"
+                  className="mb-3 table-audit-filter-ready-only"
+                >
+                  <thead>
+                    <tr>
+                      <th>Roles</th>
+                      <th>Groups</th>
+                      <th>Users</th>
+                      {!isEmpty(props?.serviceDef?.policyConditions) && (
+                        <th className="text-center text-nowrap">
+                          Policy Conditions
+                        </th>
+                      )}
+                      <th>Accesses</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getPolicyData(props.policyData.allowExceptions)}
+                  </tbody>
+                </Table>
+              </div>
               <p className="form-header">Deny Conditions</p>
-              <Table
-                bordered
-                size="sm"
-                className="mb-3 table-audit-filter-ready-only"
-              >
-                <thead>
-                  <tr>
-                    <th>Roles</th>
-                    <th>Groups</th>
-                    <th>Users</th>
-                    <th>Accesses</th>
-                  </tr>
-                </thead>
-                <tbody>{getPolicyData(props.policyData.denyPolicyItems)}</tbody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table
+                  bordered
+                  size="sm"
+                  className="mb-3 table-audit-filter-ready-only"
+                >
+                  <thead>
+                    <tr>
+                      <th>Roles</th>
+                      <th>Groups</th>
+                      <th>Users</th>
+                      {!isEmpty(props?.serviceDef?.policyConditions) && (
+                        <th className="text-center text-nowrap">
+                          Policy Conditions
+                        </th>
+                      )}
+                      <th>Accesses</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getPolicyData(props.policyData.denyPolicyItems)}
+                  </tbody>
+                </Table>
+              </div>
               <p className="form-header">Deny Exclude</p>
-              <Table
-                bordered
-                size="sm"
-                className="mb-3 table-audit-filter-ready-only"
-              >
-                <thead>
-                  <tr>
-                    <th>Roles</th>
-                    <th>Groups</th>
-                    <th>Users</th>
-                    <th>Accesses</th>
-                  </tr>
-                </thead>
-                <tbody>{getPolicyData(props.policyData.denyExceptions)}</tbody>
-              </Table>
+              <div className="overflow-x-auto">
+                <Table
+                  bordered
+                  size="sm"
+                  className="mb-3 table-audit-filter-ready-only"
+                >
+                  <thead>
+                    <tr>
+                      <th>Roles</th>
+                      <th>Groups</th>
+                      <th>Users</th>
+                      {!isEmpty(props?.serviceDef?.policyConditions) && (
+                        <th className="text-center text-nowrap">
+                          Policy Conditions
+                        </th>
+                      )}
+                      <th>Accesses</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {getPolicyData(props.policyData.denyExceptions)}
+                  </tbody>
+                </Table>
+              </div>
             </>
           )}
         </>
@@ -555,49 +621,58 @@ function PolicyConditionData(props) {
 
       {props.policyData.policyType == 1 && (
         <>
-          <p className="form-header">Masking Conditions</p>
-          <Table
-            bordered
-            size="sm"
-            className="mb-3 table-audit-filter-ready-only"
-          >
-            <thead>
-              <tr>
-                <th>Roles</th>
-                <th>Groups</th>
-                <th>Users</th>
-                <th>Accesses</th>
-                <th>Masking Condition</th>
-              </tr>
-            </thead>
-            <tbody>
-              {getMaskingPolicyData(props.policyData.dataMaskPolicyItems)}
-            </tbody>
-          </Table>
+          <p className="form-header ">Masking Conditions</p>
+          <div className="overflow-x-auto">
+            <Table
+              bordered
+              size="sm"
+              className="mb-3 table-audit-filter-ready-only"
+            >
+              <thead>
+                <tr>
+                  <th>Roles</th>
+                  <th>Groups</th>
+                  <th>Users</th>
+                  {!isEmpty(props?.serviceDef?.policyConditions) && (
+                    <th className="text-center text-nowrap">
+                      Policy Conditions
+                    </th>
+                  )}
+                  <th>Accesses</th>
+                  <th>Masking Condition</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getMaskingPolicyData(props.policyData.dataMaskPolicyItems)}
+              </tbody>
+            </Table>
+          </div>
         </>
       )}
 
       {props.policyData.policyType == 2 && (
         <>
           <p className="form-header">Row Level Conditions</p>
-          <Table
-            bordered
-            size="sm"
-            className="mb-3 table-audit-filter-ready-only"
-          >
-            <thead>
-              <tr>
-                <th>Roles</th>
-                <th>Groups</th>
-                <th>Users</th>
-                <th>Accesses</th>
-                <th>Row Level Filter</th>
-              </tr>
-            </thead>
-            <tbody>
-              {getRowLevelPolicyData(props.policyData.rowFilterPolicyItems)}
-            </tbody>
-          </Table>
+          <div className="overflow-x-auto">
+            <Table
+              bordered
+              size="sm"
+              className="mb-3 table-audit-filter-ready-only"
+            >
+              <thead>
+                <tr>
+                  <th>Roles</th>
+                  <th>Groups</th>
+                  <th>Users</th>
+                  <th>Accesses</th>
+                  <th>Row Level Filter</th>
+                </tr>
+              </thead>
+              <tbody>
+                {getRowLevelPolicyData(props.policyData.rowFilterPolicyItems)}
+              </tbody>
+            </Table>
+          </div>
         </>
       )}
     </React.Fragment>

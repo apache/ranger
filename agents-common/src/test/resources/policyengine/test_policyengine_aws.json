@@ -108,14 +108,14 @@
   "tests":[
     {"name":"ALLOW 'write /tmp/scott' for u=scott for scope SELF_OR_CHILD",
       "request":{
-        "resource":{"elements":{"path":"/tmp/scott"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/tmp/scott"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"write","user":"scott","userGroups":[],"requestData":"write /tmp/scott"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId": 200}
     },
     {"name":"DENY 'ANY /tmp/scott' for u=joe for scope SELF_OR_CHILD",
       "request":{
-        "resource":{"elements":{"path":"/tmp/scott"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/tmp/scott"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"joe","userGroups":[],"requestData":"ANY /tmp/scott"
       },
       "result":{"isAudited":false,"isAllowed":false,"policyId": -1}
@@ -136,7 +136,7 @@
     },
     {"name":"ALLOW 'write /user/dir' for u=scott for scope SELF_OR_CHILD",
       "request":{
-        "resource":{"elements":{"path":"/user/dir"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/user/dir"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"write","user":"scott","userGroups":[],"requestData":"write /user/dir"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId": 400}
@@ -150,14 +150,14 @@
     },
     {"name":"DENY 'ANY /user/dir' for u=joe for scope SELF_OR_CHILD",
       "request":{
-        "resource":{"elements":{"path":"/user/dir"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/user/dir"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"joe","userGroups":[],"requestData":"ANY /user/dir"
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId": -1}
     },
     {"name":"ALLOW 'read /user/scott' for u=scott for scope SELF_OR_CHILD",
       "request":{
-        "resource":{"elements":{"path":"/user/scott"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/user/scott"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"read","user":"scott","userGroups":[],"requestData":"read /tmp/scott"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId": 500}
@@ -171,7 +171,7 @@
     },
     {"name":"ALLOW 'ANY /' for u=user1",
       "request":{
-        "resource":{"elements":{"path":"/"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"user1","userGroups":[],"requestData":"ANY /"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":20}
@@ -179,7 +179,7 @@
   ,
     {"name":"ALLOW 'ANY /tmp' for u=user1",
       "request":{
-        "resource":{"elements":{"path":"/tmp"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/tmp"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"user1","userGroups":[],"requestData":"ANY /tmp"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":40}
@@ -187,7 +187,7 @@
   ,
     {"name":"ALLOW 'ANY /tmp/' for u=user1",
       "request":{
-        "resource":{"elements":{"path":"/tmp/"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/tmp/"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"user1","userGroups":[],"requestData":"ANY /tmp/"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":40}
@@ -195,7 +195,7 @@
   ,
     {"name":"ALLOW 'ANY /tmp/a' for u=user1",
       "request":{
-        "resource":{"elements":{"path":"/tmp/a"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/tmp/a"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"user1","userGroups":[],"requestData":"ANY /tmp/a"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":50}
@@ -203,7 +203,7 @@
   ,
     {"name":"DENY 'ANY /tmp/ac' for u=user1",
       "request":{
-        "resource":{"elements":{"path":"/tmp/ac"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/tmp/ac"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"user1","userGroups":[],"requestData":"ANY /tmp/ac"
       },
       "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
@@ -211,7 +211,7 @@
   ,
     {"name":"DENY 'ANY /tmp/ac/d' for u=user1",
       "request":{
-        "resource":{"elements":{"path":"/tmp/ac/d"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/tmp/ac/d"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"user1","userGroups":[],"requestData":"ANY /tmp/ac/d"
       },
       "result":{"isAudited":false,"isAllowed":false,"policyId":-1}
@@ -219,7 +219,7 @@
   ,
     {"name":"ALLOW 'ANY /tmp/ac/d/e' for u=user1",
       "request":{
-        "resource":{"elements":{"path":"/tmp/ac/d/e"}}, "resourceMatchingScope": "SELF_OR_CHILD",
+        "resource":{"elements":{"path":"/tmp/ac/d/e"}}, "resourceElementMatchingScopes": { "path": "SELF_OR_CHILD" },
         "accessType":"","user":"user1","userGroups":[],"requestData":"ANY /tmp/ac/d/e"
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":10}

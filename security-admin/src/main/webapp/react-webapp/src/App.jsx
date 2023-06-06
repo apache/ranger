@@ -28,6 +28,8 @@ import { CommonScrollButton, Loader } from "../src/components/CommonComponents";
 import history from "Utils/history";
 import { getUserProfile, setUserProfile } from "Utils/appState";
 import LayoutComp from "Views/Layout";
+import { getServiceDef, setServiceDef } from "./utils/appState";
+import { filter, sortBy } from "lodash";
 const HomeComp = lazy(() => import("Views/Home"));
 const ServiceFormComp = lazy(() => import("Views/ServiceManager/ServiceForm"));
 const UserProfileComp = lazy(() => import("Views/UserProfile"));
@@ -89,6 +91,7 @@ const AccesLogDetailComp = lazy(() =>
 const UserAccessLayoutComp = lazy(() =>
   import("Views/Reports/UserAccessLayout")
 );
+
 export default class App extends Component {
   constructor(props) {
     super(props);
@@ -132,17 +135,50 @@ export default class App extends Component {
   }
 
   fetchUserProfile = async () => {
+    let getServiceDefData = [];
+    let resourceServiceDef = [];
+    let tagServiceDef = [];
     try {
       const { fetchApi, fetchCSRFConf } = await import("Utils/fetchAPI");
+      fetchCSRFConf();
       const profResp = await fetchApi({
         url: "users/profile"
       });
-      await fetchCSRFConf();
+
       setUserProfile(profResp.data);
     } catch (error) {
       setUserProfile(null);
       console.error(
         `Error occurred while fetching profile or CSRF headers! ${error}`
+      );
+    }
+    try {
+      const { fetchApi } = await import("Utils/fetchAPI");
+      getServiceDefData = await fetchApi({
+        url: `plugins/definitions`
+      });
+
+      tagServiceDef = sortBy(
+        filter(getServiceDefData.data.serviceDefs, ["name", "tag"]),
+        "id"
+      );
+
+      resourceServiceDef = sortBy(
+        filter(
+          getServiceDefData.data.serviceDefs,
+          (serviceDef) => serviceDef.name !== "tag"
+        ),
+        "id"
+      );
+
+      setServiceDef(
+        resourceServiceDef,
+        tagServiceDef,
+        getServiceDefData.data.serviceDefs
+      );
+    } catch (error) {
+      console.error(
+        `Error occurred while fetching serviceDef details ! ${error}`
       );
     }
     this.setState({
@@ -151,8 +187,6 @@ export default class App extends Component {
   };
 
   render() {
-    const userProfile = getUserProfile();
-    const defaultProps = { userProfile };
     return (
       <ErrorBoundary history={history}>
         <Suspense fallback={<Loader />}>

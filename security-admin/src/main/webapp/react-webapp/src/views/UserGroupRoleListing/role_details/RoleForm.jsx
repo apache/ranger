@@ -33,6 +33,7 @@ import { fetchApi } from "Utils/fetchAPI";
 import usePrompt from "Hooks/usePrompt";
 import { RegexValidation } from "../../../utils/XAEnums";
 import { BlockUi } from "../../../components/CommonComponents";
+import CustomBreadcrumb from "../../CustomBreadcrumb";
 
 const initialState = {
   loader: true,
@@ -230,7 +231,7 @@ function RoleForm() {
         let tblpageData = {};
         if (state && state != null) {
           tblpageData = state.tblpageData;
-          if (state.tblpageData.pageRecords %  state.tblpageData.pageSize == 0) {
+          if (state.tblpageData.pageRecords % state.tblpageData.pageSize == 0) {
             tblpageData["totalPage"] = state.tblpageData.totalPage + 1;
           } else {
             if (tblpageData !== undefined) {
@@ -426,11 +427,14 @@ function RoleForm() {
 
   return (
     <>
-      {commonBreadcrumb(
-        ["Roles", params.roleID ? "RoleEdit" : "RoleCreate"],
-        params.roleID
-      )}
-      <h4 className="wrap-header bold">Role Detail</h4>
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">Role Detail</h3>
+        {commonBreadcrumb(
+          ["Roles", params.roleID ? "RoleEdit" : "RoleCreate"],
+          params.roleID
+        )}
+      </div>
+
       {loader ? (
         <Loader />
       ) : (

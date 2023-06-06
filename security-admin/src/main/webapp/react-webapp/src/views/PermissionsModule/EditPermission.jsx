@@ -26,7 +26,7 @@ import {
   Table,
   Spinner
 } from "react-bootstrap";
-import React, { useEffect, useReducer, useRef} from "react";
+import React, { useEffect, useReducer, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Loader } from "Components/CommonComponents";
 import { fetchApi } from "Utils/fetchAPI";
@@ -34,7 +34,11 @@ import AsyncSelect from "react-select/async";
 import { toast } from "react-toastify";
 import { cloneDeep, find, findIndex, reverse } from "lodash";
 import { AccessResult } from "Utils/XAEnums";
-import { commonBreadcrumb, CustomInfinteScroll, serverError } from "../../utils/XAUtils";
+import {
+  CustomInfinteScroll,
+  commonBreadcrumb,
+  serverError
+} from "../../utils/XAUtils";
 import { BlockUi } from "../../components/CommonComponents";
 
 const initialState = {
@@ -164,7 +168,9 @@ const EditPermission = (props) => {
       });
       navigate("/permissions/models");
       toast.dismiss(toastId.current);
-      toastId.current = toast.success("Success! Module Permissions updated successfully");
+      toastId.current = toast.success(
+        "Success! Module Permissions updated successfully"
+      );
     } catch (error) {
       dispatch({
         type: "SET_BLOCK_UI",
@@ -297,11 +303,13 @@ const EditPermission = (props) => {
     <Loader />
   ) : (
     <div>
-      {commonBreadcrumb(
-        ["ModulePermissions", "ModulePermissionEdit"],
-        permissionData
-      )}
-      <h3 className="wrap-header bold">Edit Permission</h3>
+      <div className="header-wraper">
+        <h3 className="wrap-header bold">Edit Permission</h3>
+        {commonBreadcrumb(
+          ["ModulePermissions", "ModulePermissionEdit"],
+          permissionData
+        )}
+      </div>
       <div className="wrap non-collapsible">
         <Form
           id="myform2"
@@ -443,7 +451,9 @@ const EditPermission = (props) => {
                                             values.selectuser.length === 0
                                           ) {
                                             toast.dismiss(toastId.current);
-                                            toastId.current = toast.error("Please select user!!");
+                                            toastId.current = toast.error(
+                                              "Please select user!!"
+                                            );
                                             return false;
                                           }
                                           addInSelectedUsr(values, input);

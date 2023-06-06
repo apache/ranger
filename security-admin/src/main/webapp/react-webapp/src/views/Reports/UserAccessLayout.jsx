@@ -49,12 +49,8 @@ import { toast } from "react-toastify";
 import { fetchApi } from "Utils/fetchAPI";
 import { useQuery } from "../../components/CommonComponents";
 import SearchPolicyTable from "./SearchPolicyTable";
-import {
-  commonBreadcrumb,
-  getBaseUrl,
-  isKeyAdmin,
-  isKMSAuditor
-} from "../../utils/XAUtils";
+import { getBaseUrl, isKeyAdmin, isKMSAuditor } from "../../utils/XAUtils";
+import CustomBreadcrumb from "../CustomBreadcrumb";
 
 function UserAccessLayout(props) {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
@@ -488,9 +484,11 @@ function UserAccessLayout(props) {
 
   return (
     <React.Fragment>
-      {commonBreadcrumb(["UserAccessReport"])}
       <div className="clearfix">
-        <h4 className="wrap-header bold">Reports</h4>
+        <div className="header-wraper">
+          <h3 className="wrap-header bold">Reports</h3>
+          <CustomBreadcrumb />
+        </div>
       </div>
       <div className="wrap report-page">
         <Row>

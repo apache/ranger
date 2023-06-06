@@ -19,6 +19,7 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.junit.Test;
 
 import java.util.Map;
@@ -42,7 +43,7 @@ public class RangerAbstractResourceMatcherTest {
     static class AbstractMatcherWrapper extends RangerAbstractResourceMatcher {
 
         @Override
-        public boolean isMatch(Object resource, Map<String, Object> evalContext) {
+        public boolean isMatch(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
             fail("This method is not expected to be used by test!");
             return false;
         }

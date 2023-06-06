@@ -25,6 +25,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 
@@ -50,13 +51,23 @@ public interface RangerPolicyResourceMatcher {
 
 	boolean isMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 
+	boolean isMatch(RangerAccessResource resource, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext);
+
 	boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, Object> evalContext);
+
+	boolean isMatch(Map<String, RangerPolicyResource> resources, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext);
 
 	boolean isMatch(RangerAccessResource resource, MatchScope scope, Map<String, Object> evalContext);
 
+	boolean isMatch(RangerAccessResource resource, Map<String, ResourceElementMatchingScope> scopes, MatchScope scope, Map<String, Object> evalContext);
+
 	boolean isMatch(RangerPolicy policy, MatchScope scope, Map<String, Object> evalContext);
 
+	boolean isMatch(RangerPolicy policy, Map<String, ResourceElementMatchingScope> scopes, MatchScope scope, Map<String, Object> evalContext);
+
 	MatchType getMatchType(RangerAccessResource resource, Map<String, Object> evalContext);
+
+	MatchType getMatchType(RangerAccessResource resource, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext);
 
 	boolean isCompleteMatch(RangerAccessResource resource, Map<String, Object> evalContext);
 

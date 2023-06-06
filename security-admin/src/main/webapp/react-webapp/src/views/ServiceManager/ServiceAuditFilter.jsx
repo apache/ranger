@@ -42,18 +42,25 @@ export default function ServiceAuditFilter(props) {
   } = props;
   const dragItem = useRef();
   const dragOverItem = useRef();
+  const [defaultUserOptions, setDefaultUserOptions] = useState([]);
+  const [defaultGroupOptions, setDefaultGroupOptions] = useState([]);
+  const [defaultRoleOptions, setDefaultRoleOptions] = useState([]);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [userLoading, setUserLoading] = useState(false);
   const [modelState, setModalstate] = useState({
     showModalResource: false,
     resourceInput: null,
     data: {}
   });
 
-  const handleClose = () =>
+  const handleClose = () => {
     setModalstate({
       showModalResource: false,
       resourceInput: null,
       data: {}
     });
+  };
 
   const renderResourcesModal = (input) => {
     setModalstate({
@@ -182,6 +189,31 @@ export default function ServiceAuditFilter(props) {
   const handleSelectChange = (value, input) => {
     input.onChange(value);
   };
+
+  const onFocusRoleSelect = () => {
+    setRoleLoading(true);
+    fetchRolesData().then((opts) => {
+      setDefaultRoleOptions(opts);
+      setRoleLoading(false);
+    });
+  };
+
+  const onFocusGroupSelect = () => {
+    setGroupLoading(true);
+    fetchGroupsData().then((opts) => {
+      setDefaultGroupOptions(opts);
+      setGroupLoading(false);
+    });
+  };
+
+  const onFocusUserSelect = () => {
+    setUserLoading(true);
+    fetchUsersData().then((opts) => {
+      setDefaultUserOptions(opts);
+      setUserLoading(false);
+    });
+  };
+
   return (
     <div className="table-responsive">
       <Table
@@ -336,24 +368,10 @@ export default function ServiceAuditFilter(props) {
                               className="form-control"
                               name={`${name}.accessTypes`}
                               render={({ input }) => (
-                                <div style={{ minWidth: "100px" }}>
-                                  <span className="d-inline mr-1 ">
-                                    <h6 className="editable-edit-text">
-                                      {input.value.tableList !== undefined &&
-                                      input.value.tableList.length > 0 ? (
-                                        getTagAccessType(input.value.tableList)
-                                      ) : (
-                                        <></>
-                                      )}
-                                    </h6>
-                                    <div>
-                                      <TagBasePermissionItem
-                                        options={getAccessTypeOptions()}
-                                        inputVal={input}
-                                      />
-                                    </div>
-                                  </span>
-                                </div>
+                                <TagBasePermissionItem
+                                  options={getAccessTypeOptions()}
+                                  inputVal={input}
+                                />
                               )}
                             />
                           </td>
@@ -404,9 +422,15 @@ export default function ServiceAuditFilter(props) {
                                     IndicatorSeparator: () => null
                                   }}
                                   loadOptions={fetchRolesData}
+                                  onFocus={() => {
+                                    onFocusRoleSelect();
+                                  }}
+                                  defaultOptions={defaultRoleOptions}
                                   isClearable={false}
+                                  noOptionsMessage={() =>
+                                    roleLoading ? "Loading..." : "No options"
+                                  }
                                   menuPlacement="auto"
-                                  defaultOptions
                                   cacheOptions
                                   isMulti
                                 />
@@ -436,9 +460,15 @@ export default function ServiceAuditFilter(props) {
                                     IndicatorSeparator: () => null
                                   }}
                                   loadOptions={fetchGroupsData}
+                                  onFocus={() => {
+                                    onFocusGroupSelect();
+                                  }}
+                                  defaultOptions={defaultGroupOptions}
                                   isClearable={false}
                                   menuPlacement="auto"
-                                  defaultOptions
+                                  noOptionsMessage={() =>
+                                    groupLoading ? "Loading..." : "No options"
+                                  }
                                   cacheOptions
                                   isMulti
                                 />
@@ -463,15 +493,22 @@ export default function ServiceAuditFilter(props) {
                               >
                                 <AsyncSelect
                                   {...input}
+                                  key={input.name}
                                   menuPortalTarget={document.body}
                                   components={{
                                     IndicatorSeparator: () => null
                                   }}
                                   loadOptions={fetchUsersData}
+                                  onFocus={() => {
+                                    onFocusUserSelect();
+                                  }}
+                                  defaultOptions={defaultUserOptions}
                                   isClearable={false}
                                   menuPlacement="auto"
-                                  defaultOptions
                                   cacheOptions
+                                  noOptionsMessage={() =>
+                                    userLoading ? "Loading..." : "No options"
+                                  }
                                   isMulti
                                 />
                               </div>

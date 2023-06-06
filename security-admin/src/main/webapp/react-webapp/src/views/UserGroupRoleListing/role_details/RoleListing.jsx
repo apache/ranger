@@ -342,7 +342,6 @@ function Roles() {
 
   return (
     <div className="wrap">
-      <h4 className="wrap-header font-weight-bold">Role List</h4>
       {pageLoader ? (
         <Loader />
       ) : (

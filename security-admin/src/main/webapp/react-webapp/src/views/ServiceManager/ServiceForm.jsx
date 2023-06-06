@@ -29,7 +29,11 @@ import { RegexValidation } from "Utils/XAEnums";
 import { fetchApi } from "Utils/fetchAPI";
 import ServiceAuditFilter from "./ServiceAuditFilter";
 import TestConnection from "./TestConnection";
-import { commonBreadcrumb, serverError } from "../../utils/XAUtils";
+import {
+  commonBreadcrumb,
+  serverError,
+  updateTagActive
+} from "../../utils/XAUtils";
 import {
   BlockUi,
   Condition,
@@ -54,10 +58,13 @@ import {
   maxBy
 } from "lodash";
 import withRouter from "Hooks/withRouter";
+import { RangerPolicyType } from "../../utils/XAEnums";
+import { getServiceDef } from "../../utils/appState";
 
 class ServiceForm extends Component {
   constructor(props) {
     super(props);
+    this.serviceDefData = getServiceDef();
     this.configsJson = {};
     this.initialValuesObj = {
       isEnabled: "true",
@@ -75,7 +82,9 @@ class ServiceForm extends Component {
       rolesDataRef: null,
       showDelete: false,
       loader: true,
-      blockUI: false
+      blockUI: false,
+      defaultTagOptions: [],
+      loadingOptions: false
     };
   }
 
@@ -89,10 +98,6 @@ class ServiceForm extends Component {
 
   componentDidMount() {
     this.fetchServiceDef();
-    this.fetchTagService();
-    this.fetchUsers();
-    this.fetchGroups();
-    this.fetchRoles();
   }
 
   onSubmit = async (values) => {
@@ -124,11 +129,25 @@ class ServiceForm extends Component {
       });
       this.setState({ blockUI: false });
       toast.success(`Successfully ${apiSuccess} the service`);
-      this.props.navigate(
-        this.state.serviceDef.name === "tag"
-          ? "/policymanager/tag"
-          : "/policymanager/resource"
-      );
+      if (this.props?.location?.state != "services") {
+        if (this?.props?.params?.serviceId !== undefined) {
+          this.props.navigate(
+            `/service/${this.props.params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`
+          );
+        } else {
+          return this.props.navigate(
+            this.state?.serviceDef?.name === "tag"
+              ? "/policymanager/tag"
+              : "/policymanager/resource"
+          );
+        }
+      } else {
+        this.props.navigate(
+          this.state?.serviceDef?.name === "tag"
+            ? "/policymanager/tag"
+            : "/policymanager/resource"
+        );
+      }
     } catch (error) {
       this.setState({ blockUI: false });
       serverError(error);
@@ -283,23 +302,19 @@ class ServiceForm extends Component {
     return JSON.stringify(auditFiltersArray).replace(/"/g, "'");
   };
 
-  fetchServiceDef = async () => {
+  fetchServiceDef = () => {
     const serviceJson = this.initialValuesObj;
-    let serviceDefResp;
     let serviceDef;
     let serviceDefId = this.props.params.serviceDefId;
-
-    try {
-      serviceDefResp = await fetchApi({
-        url: `plugins/definitions/${serviceDefId}`
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definition or CSRF headers! ${error}`
-      );
-    }
-
-    serviceDef = serviceDefResp.data;
+    let isTagView = false;
+    serviceDef = this.serviceDefData.allServiceDefs.find((servicedef) => {
+      return servicedef.id == serviceDefId;
+    });
+    isTagView =
+      serviceDef?.name !== undefined && serviceDef?.name === "tag"
+        ? true
+        : false;
+    updateTagActive(isTagView);
 
     if (serviceDef.resources !== undefined) {
       for (const obj of serviceDef.resources) {
@@ -420,24 +435,31 @@ class ServiceForm extends Component {
     });
   };
 
-  fetchTagService = async () => {
-    let tagServiceResp;
-    try {
-      tagServiceResp = await fetchApi({
-        url: `plugins/services?serviceNamePartial=&serviceType=tag`
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service of type tag or CSRF headers! ${error}`
-      );
-    }
+  fetchTagService = async (inputValue) => {
+    let params = { serviceNamePartial: inputValue || "" };
+    let op = [];
 
-    this.setState({
-      tagService: tagServiceResp.data.services
+    const tagServiceResp = await fetchApi({
+      url: `plugins/services?serviceType=tag`,
+      params: params
     });
+    op = tagServiceResp.data.services;
+
+    return op.map((obj) => ({
+      label: obj.displayName,
+      value: obj.displayName
+    }));
   };
 
+  onFocusTagService = () => {
+    this.setState({ loadingOptions: true });
+    this.fetchTagService().then((opts) => {
+      this.setState({ defaultTagOptions: opts, loadingOptions: false });
+    });
+  };
   deleteService = async (serviceId) => {
+    let localStorageZoneDetails = localStorage.getItem("zoneDetails");
+    let zonesResp = [];
     this.hideDeleteModal();
     try {
       this.setState({ blockUI: true });
@@ -445,9 +467,27 @@ class ServiceForm extends Component {
         url: `plugins/services/${serviceId}`,
         method: "delete"
       });
+      if (
+        localStorageZoneDetails !== undefined &&
+        localStorageZoneDetails !== null
+      ) {
+        zonesResp = await fetchApi({
+          url: `public/v2/api/zones/${
+            JSON.parse(localStorageZoneDetails)?.value
+          }/service-headers`
+        });
+
+        if (isEmpty(zonesResp?.data)) {
+          localStorage.removeItem("zoneDetails");
+        }
+      }
       this.setState({ blockUI: false });
       toast.success("Successfully deleted the service");
-      this.props.navigate("/policymanager/resource");
+      this.props.navigate(
+        this.state?.serviceDef?.name === "tag"
+          ? "/policymanager/tag"
+          : "/policymanager/resource"
+      );
     } catch (error) {
       this.setState({ blockUI: false });
       serverError(error);
@@ -871,24 +911,17 @@ class ServiceForm extends Component {
   );
 
   AsyncSelectField = ({ input, ...rest }) => (
-    <AsyncSelect {...input} {...rest} cacheOptions isMulti />
+    <AsyncSelect {...input} {...rest} cacheOptions />
   );
 
   fetchUsers = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    if (this.state.usersDataRef === null || inputValue) {
-      const userResp = await fetchApi({
-        url: "xusers/lookup/users",
-        params: params
-      });
-      op = userResp.data.vXStrings;
-      if (!inputValue) {
-        this.state.usersDataRef = op;
-      }
-    } else {
-      op = this.state.usersDataRef;
-    }
+    const userResp = await fetchApi({
+      url: "xusers/lookup/users",
+      params: params
+    });
+    op = userResp.data.vXStrings;
 
     return op.map((obj) => ({
       label: obj.value,
@@ -899,17 +932,13 @@ class ServiceForm extends Component {
   fetchGroups = async (inputValue) => {
     let params = { name: inputValue || "", isVisible: 1 };
     let op = [];
-    if (this.state.groupsDataRef === null || inputValue) {
-      const userResp = await fetchApi({
-        url: "xusers/lookup/groups",
-        params: params
-      });
-      op = userResp.data.vXStrings;
-      if (!inputValue) {
-        this.state.groupsDataRef = op;
-      }
-    } else {
-      op = this.state.groupsDataRef;
+    const userResp = await fetchApi({
+      url: "xusers/lookup/groups",
+      params: params
+    });
+    op = userResp.data.vXStrings;
+    if (!inputValue) {
+      this.state.groupsDataRef = op;
     }
 
     return op.map((obj) => ({
@@ -921,17 +950,13 @@ class ServiceForm extends Component {
   fetchRoles = async (inputValue) => {
     let params = { roleNamePartial: inputValue || "", isVisible: 1 };
     let op = [];
-    if (this.state.rolesDataRef === null || inputValue) {
-      const roleResp = await fetchApi({
-        url: "roles/roles",
-        params: params
-      });
-      op = roleResp.data.roles;
-      if (!inputValue) {
-        this.state.rolesDataRef = op;
-      }
-    } else {
-      op = this.state.rolesDataRef;
+    const roleResp = await fetchApi({
+      url: "roles/roles",
+      params: params
+    });
+    op = roleResp.data.roles;
+    if (!inputValue) {
+      this.state.rolesDataRef = op;
     }
 
     return op.map((obj) => ({
@@ -939,7 +964,6 @@ class ServiceForm extends Component {
       value: obj.name
     }));
   };
-
   ServiceDefnBreadcrumb = () => {
     let serviceDetails = {};
     serviceDetails["serviceDefId"] = this.state.serviceDef.id;
@@ -966,16 +990,17 @@ class ServiceForm extends Component {
       );
     }
   };
-
   render() {
     return (
       <React.Fragment>
-        {this.ServiceDefnBreadcrumb()}
         <div className="clearfix">
-          <h4 className="wrap-header bold">
-            {this.props.params.serviceId !== undefined ? `Edit` : `Create`}{" "}
-            Service
-          </h4>
+          <div className="header-wraper">
+            <h3 className="wrap-header bold">
+              {this.props.params.serviceId !== undefined ? `Edit` : `Create`}{" "}
+              Service
+            </h3>
+            {this.ServiceDefnBreadcrumb()}
+          </div>
         </div>
         {this.state.loader ? (
           <Loader />
@@ -1179,15 +1204,16 @@ class ServiceForm extends Component {
                               <Col xs={4}>
                                 <Field
                                   name="tagService"
-                                  component={this.SelectField}
-                                  options={this.state.tagService.map((s) => {
-                                    return {
-                                      value: s.name,
-                                      label: s.name
-                                    };
-                                  })}
+                                  component={this.AsyncSelectField}
+                                  loadOptions={this.fetchTagService}
+                                  onFocus={() => {
+                                    this.onFocusTagService();
+                                  }}
+                                  defaultOptions={this.state.defaultTagOptions}
                                   placeholder="Select Tag Service"
+                                  isLoading={this.state.loadingOptions}
                                   isClearable={true}
+                                  cacheOptions
                                 />
                               </Col>
                             </Row>
@@ -1341,13 +1367,29 @@ class ServiceForm extends Component {
                             type="button"
                             className="btn-sm"
                             size="sm"
-                            onClick={() =>
-                              this.props.navigate(
-                                this.state.serviceDef.name === "tag"
-                                  ? "/policymanager/tag"
-                                  : "/policymanager/resource"
-                              )
-                            }
+                            onClick={() => {
+                              if (this.props?.location?.state != "services") {
+                                if (
+                                  this?.props?.params?.serviceId !== undefined
+                                ) {
+                                  return this.props.navigate(
+                                    `/service/${this.props.params.serviceId}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`
+                                  );
+                                } else {
+                                  return this.props.navigate(
+                                    this.state?.serviceDef?.name === "tag"
+                                      ? "/policymanager/tag"
+                                      : "/policymanager/resource"
+                                  );
+                                }
+                              } else {
+                                return this.props.navigate(
+                                  this.state?.serviceDef?.name === "tag"
+                                    ? "/policymanager/tag"
+                                    : "/policymanager/resource"
+                                );
+                              }
+                            }}
                             data-id="cancel"
                             data-cy="cancel"
                           >

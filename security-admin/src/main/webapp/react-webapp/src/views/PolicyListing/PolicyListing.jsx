@@ -72,7 +72,8 @@ import {
 } from "../../components/CommonComponents";
 
 function PolicyListing(props) {
-  const { serviceDef } = props;
+  //const { serviceDef, serviceData } = props;
+  const { serviceDef, serviceData, serviceZone } = props;
   const { state } = useLocation();
   const [policyListingData, setPolicyData] = useState([]);
   const [loader, setLoader] = useState(true);
@@ -192,10 +193,9 @@ function PolicyListing(props) {
           params["sortBy"] = getTableSortBy(sortBy);
           params["sortType"] = getTableSortType(sortBy);
         }
-        if (localStorage.getItem("zoneDetails") != null) {
-          params["zoneName"] = JSON.parse(
-            localStorage.getItem("zoneDetails")
-          ).label;
+
+        if (serviceZone !== null) {
+          params["zoneName"] = serviceZone.label;
         }
         try {
           policyResp = await fetchApi({
@@ -214,7 +214,7 @@ function PolicyListing(props) {
         setPolicyData(policyData);
         setTblPageData({
           totalPage: totalPageCount,
-          pageRecords: policyResp.data.totalCount,
+          pageRecords: policyResp?.data?.totalCount,
           pageSize: 25
         });
         setTotalCount(totalCount);
@@ -232,7 +232,7 @@ function PolicyListing(props) {
       }
       localStorage.removeItem("newDataAdded");
     },
-    [updateTable, searchFilterParams]
+    [updateTable, searchFilterParams, serviceData]
   );
 
   const toggleConfirmModalForDelete = (policyID, policyName) => {
@@ -441,7 +441,7 @@ function PolicyListing(props) {
           return !isEmpty(rawValue.value) ? (
             <MoreLess data={rawValue.value} />
           ) : (
-            <div>--</div>
+            <div className="text-center">--</div>
           );
         },
         width: 130,
@@ -839,7 +839,6 @@ function PolicyListing(props) {
             <Modal.Body>
               <PolicyViewDetails
                 paramsData={policyParamsData}
-                serviceDef={serviceDef}
                 policyInfo={fetchPolicyInfo}
                 totalCount={totalCount}
                 policyView={true}

@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useMemo, useRef } from "react";
+import React, { useMemo, useRef, useState } from "react";
 import { Table, Button, Badge, Form } from "react-bootstrap";
 import { FieldArray } from "react-final-form-arrays";
 import { Col } from "react-bootstrap";
@@ -28,7 +28,7 @@ import { toast } from "react-toastify";
 import Editable from "Components/Editable";
 import { RangerPolicyType } from "Utils/XAEnums";
 import TagBasePermissionItem from "./TagBasePermissionItem";
-import {dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
+import { dragStart, dragEnter, drop, dragOver } from "../../utils/XAUtils";
 
 const noneOptions = {
   label: "None",
@@ -43,15 +43,22 @@ export default function PolicyPermissionItem(props) {
     fetchUsersData,
     fetchGroupsData,
     fetchRolesData,
-    formValues,
-    form
+    formValues
   } = props;
   const dragItem = useRef();
   const dragOverItem = useRef();
   const toastId = React.useRef(null);
+  const [defaultRoleOptions, setDefaultRoleOptions] = useState([]);
+  const [defaultGroupOptions, setDefaultGroupOptions] = useState([]);
+  const [defaultUserOptions, setDefaultUserOptions] = useState([]);
+  const [roleLoading, setRoleLoading] = useState(false);
+  const [groupLoading, setGroupLoading] = useState(false);
+  const [userLoading, setUserLoading] = useState(false);
+
   let { values, errors, change, error, ...args } = useFormState();
 
   const permList = ["Select Roles", "Select Groups", "Select Users"];
+
   if (serviceCompDetails?.policyConditions?.length > 0) {
     permList.push("Policy Conditions");
   }
@@ -132,6 +139,7 @@ export default function PolicyPermissionItem(props) {
       value
     }));
   };
+
   const getMaskingAccessTypeOptions = (index) => {
     if (serviceCompDetails?.dataMaskDef?.maskTypes?.length > 0) {
       if (
@@ -160,7 +168,9 @@ export default function PolicyPermissionItem(props) {
       }
     }
   };
+
   const required = (value) => (value ? undefined : "Required");
+
   const requiredForPermission = (fieldVals, index) => {
     if (fieldVals && !isEmpty(fieldVals[index])) {
       let error, accTypes;
@@ -201,6 +211,7 @@ export default function PolicyPermissionItem(props) {
       return error;
     }
   };
+
   const requiredForDeleGateAdmin = (fieldVals, index) => {
     if (
       !isEmpty(fieldVals?.[index]) &&
@@ -220,24 +231,36 @@ export default function PolicyPermissionItem(props) {
     }
   };
 
-  const tagAccessTypeDisplayVal = (val) => {
-    return val.map((m, index) => {
-      return (
-        <>
-          <h6 className="d-inline mr-1" key={index}>
-            <Badge variant="info">{m.serviceName.toUpperCase()}</Badge>
-          </h6>
-        </>
-      );
-    });
-  };
-
   const customStyles = {
-    control: base => ({
+    control: (base) => ({
       ...base,
       width: 200,
       whiteSpace: "nowrap"
-    }),
+    })
+  };
+
+  const onFocusRoleSelect = () => {
+    setRoleLoading(true);
+    fetchRolesData().then((opts) => {
+      setDefaultRoleOptions(opts);
+      setRoleLoading(false);
+    });
+  };
+
+  const onFocusGroupSelect = () => {
+    setGroupLoading(true);
+    fetchGroupsData().then((opts) => {
+      setDefaultGroupOptions(opts);
+      setGroupLoading(false);
+    });
+  };
+
+  const onFocusUserSelect = () => {
+    setUserLoading(true);
+    fetchUsersData().then((opts) => {
+      setDefaultUserOptions(opts);
+      setUserLoading(false);
+    });
   };
 
   return (
@@ -263,7 +286,7 @@ export default function PolicyPermissionItem(props) {
                       key={name}
                       onDragStart={(e) => dragStart(e, index, dragItem)}
                       onDragEnter={(e) => dragEnter(e, index, dragOverItem)}
-                      onDragEnd={(e) => drop(e, fields , dragItem, dragOverItem)}
+                      onDragEnd={(e) => drop(e, fields, dragItem, dragOverItem)}
                       onDragOver={(e) => dragOver(e)}
                       draggable
                       id={index}
@@ -281,7 +304,15 @@ export default function PolicyPermissionItem(props) {
                                       {...input}
                                       menuPortalTarget={document.body}
                                       loadOptions={fetchRolesData}
-                                      defaultOptions
+                                      onFocus={() => {
+                                        onFocusRoleSelect();
+                                      }}
+                                      defaultOptions={defaultRoleOptions}
+                                      noOptionsMessage={() =>
+                                        roleLoading
+                                          ? "Loading..."
+                                          : "No options"
+                                      }
                                       styles={customStyles}
                                       cacheOptions
                                       isMulti
@@ -304,8 +335,16 @@ export default function PolicyPermissionItem(props) {
                                       {...input}
                                       menuPortalTarget={document.body}
                                       loadOptions={fetchGroupsData}
+                                      onFocus={() => {
+                                        onFocusGroupSelect();
+                                      }}
+                                      defaultOptions={defaultGroupOptions}
+                                      noOptionsMessage={() =>
+                                        groupLoading
+                                          ? "Loading..."
+                                          : "No options"
+                                      }
                                       styles={customStyles}
-                                      defaultOptions
                                       cacheOptions
                                       isMulti
                                     />
@@ -327,8 +366,16 @@ export default function PolicyPermissionItem(props) {
                                       {...input}
                                       menuPortalTarget={document.body}
                                       loadOptions={fetchUsersData}
+                                      onFocus={() => {
+                                        onFocusUserSelect();
+                                      }}
+                                      defaultOptions={defaultUserOptions}
+                                      noOptionsMessage={() =>
+                                        userLoading
+                                          ? "Loading..."
+                                          : "No options"
+                                      }
                                       styles={customStyles}
-                                      defaultOptions
                                       cacheOptions
                                       isMulti
                                     />
@@ -502,9 +549,10 @@ export default function PolicyPermissionItem(props) {
                                           type="button"
                                           onClick={() => {
                                             toast.dismiss(toastId.current);
-                                            return toast.current =toast.warning(
-                                              "Please select access type first to enable add masking options."
-                                            );
+                                            return (toast.current =
+                                              toast.warning(
+                                                "Please select access type first to enable add masking options."
+                                              ));
                                           }}
                                         >
                                           <i className="fa-fw fa fa-plus"></i>

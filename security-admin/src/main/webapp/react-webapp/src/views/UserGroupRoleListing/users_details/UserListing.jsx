@@ -617,7 +617,6 @@ function Users() {
 
   return (
     <div className="wrap">
-      <h4 className="wrap-header font-weight-bold">User List</h4>
       {pageLoader ? (
         <Loader />
       ) : (

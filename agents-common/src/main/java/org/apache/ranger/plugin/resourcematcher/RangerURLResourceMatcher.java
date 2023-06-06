@@ -234,10 +234,10 @@ public class RangerURLResourceMatcher extends RangerDefaultResourceMatcher {
     }
 }
 
-final class CaseSensitiveURLRecursiveWildcardMatcher extends ResourceMatcher {
+final class CaseSensitiveURLRecursiveWildcardMatcher extends AbstractStringResourceMatcher {
     private final char levelSeparatorChar;
     CaseSensitiveURLRecursiveWildcardMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options);
+        super(value, options, true);
         this.levelSeparatorChar = levelSeparatorChar;
     }
 
@@ -248,10 +248,10 @@ final class CaseSensitiveURLRecursiveWildcardMatcher extends ResourceMatcher {
     int getPriority() { return 7 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
 }
 
-final class CaseInsensitiveURLRecursiveWildcardMatcher extends ResourceMatcher {
+final class CaseInsensitiveURLRecursiveWildcardMatcher extends AbstractStringResourceMatcher {
     private final char levelSeparatorChar;
     CaseInsensitiveURLRecursiveWildcardMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options);
+        super(value, options, false);
         this.levelSeparatorChar = levelSeparatorChar;
     }
 
@@ -263,13 +263,13 @@ final class CaseInsensitiveURLRecursiveWildcardMatcher extends ResourceMatcher {
 
 }
 
-abstract class RecursiveMatcher extends ResourceMatcher {
+abstract class RecursiveMatcher extends AbstractStringResourceMatcher {
     final char levelSeparatorChar;
     String valueWithoutSeparator;
     String valueWithSeparator;
 
-    RecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options);
+    RecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar, boolean isCaseSensitive) {
+        super(value, options, isCaseSensitive);
         this.levelSeparatorChar = levelSeparatorChar;
     }
 
@@ -284,7 +284,7 @@ abstract class RecursiveMatcher extends ResourceMatcher {
 
 final class CaseSensitiveURLRecursiveMatcher extends RecursiveMatcher {
     CaseSensitiveURLRecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options, levelSeparatorChar);
+        super(value, options, levelSeparatorChar, true);
     }
 
     @Override
@@ -316,7 +316,7 @@ final class CaseSensitiveURLRecursiveMatcher extends RecursiveMatcher {
 
 final class CaseInsensitiveURLRecursiveMatcher extends RecursiveMatcher {
     CaseInsensitiveURLRecursiveMatcher(String value, Map<String, String> options, char levelSeparatorChar) {
-        super(value, options, levelSeparatorChar);
+        super(value, options, levelSeparatorChar, false);
     }
 
     @Override
