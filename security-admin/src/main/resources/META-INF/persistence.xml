@@ -86,15 +86,5 @@
 			<property name="eclipselink.jdbc.batch-writing" value="jdbc"/>
 		</properties>
 	</persistence-unit>
-	<persistence-unit name="loggingPU">
-		<mapping-file>META-INF/jpa_named_queries.xml</mapping-file>
-        <class>org.apache.ranger.entity.XXAccessAudit</class>
-        <shared-cache-mode>NONE</shared-cache-mode>
-
-		<properties>
-			<property name="eclipselink.logging.level" value="WARNING"/>
-			<property name="eclipselink.jdbc.batch-writing" value="jdbc"/>
-		</properties>
-	</persistence-unit>
 
 </persistence>
