@@ -547,13 +547,40 @@ class RangerClientPrivate:
     # URLs
     URI_DELETE_USER  = "service/xusers/secure/users/{name}"
     URI_DELETE_GROUP = "service/xusers/secure/groups/{name}"
+    URI_FORCE_DELETE_EXTERNAL_USERS = "service/xusers/delete/external/users"
+    URI_FORCE_DELETE_EXTERNAL_GROUPS = "service/xusers/delete/external/groups"
 
     # APIs
     DELETE_USER  = API(URI_DELETE_USER, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
     DELETE_GROUP = API(URI_DELETE_GROUP, HttpMethod.DELETE, HTTPStatus.NO_CONTENT)
+    FORCE_DELETE_EXTERNAL_USERS = API(URI_FORCE_DELETE_EXTERNAL_USERS, HttpMethod.DELETE, HTTPStatus.OK)
+    FORCE_DELETE_EXTERNAL_GROUPS = API(URI_FORCE_DELETE_EXTERNAL_GROUPS, HttpMethod.DELETE, HTTPStatus.OK)
 
     def delete_user(self, userName, execUser, isForceDelete='true'):
         self.client_http.call_api(RangerClientPrivate.DELETE_USER.format_path({ 'name': userName }), { 'execUser': execUser, 'forceDelete': isForceDelete })
 
     def delete_group(self, groupName, execUser, isForceDelete='true'):
         self.client_http.call_api(RangerClientPrivate.DELETE_GROUP.format_path({ 'name': groupName }), { 'execUser': execUser, 'forceDelete': isForceDelete })
+
+    def force_delete_external_users(self, filter=None):
+        """
+        Proceed with <tt>caution</tt>.
+        Force deletes external users from ranger db.
+        Optionally, Query Params may be specified using the param 'filter'
+        to delete specific external users.
+        :param filter:
+        :return:
+        """
+        return self.client_http.call_api(RangerClientPrivate.FORCE_DELETE_EXTERNAL_USERS, filter).decode('utf-8')
+
+    def force_delete_external_groups(self, filter=None):
+        """
+        Proceed with <tt>caution</tt>.
+        Force deletes external groups from ranger db.
+        Optionally, Query Params may be specified using the param 'filter'
+        to delete specific external groups.
+        :param filter:
+        :return:
+        """
+        return self.client_http.call_api(RangerClientPrivate.FORCE_DELETE_EXTERNAL_GROUPS, filter).decode('utf-8')
+

@@ -270,6 +270,10 @@ public abstract class BaseDao<T> {
 		return rtrnList;
 	}
 
+	public List<Long> getIds(Query query) {
+		return (List<Long>) query.getResultList();
+	}
+
 	public Long executeCountQueryInSecurityContext(Class<T> clazz, Query query) { //NOPMD
 		return (Long) query.getSingleResult();
 	}
