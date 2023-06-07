@@ -33,6 +33,7 @@ import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.hadoop.util.Time;
 import org.apache.ranger.biz.ServiceDBStore.REMOVE_REF_TYPE;
 import org.apache.ranger.common.*;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
@@ -2196,6 +2197,40 @@ public class XUserMgr extends XUserMgrBase {
 		}
 	}
 
+	public long forceDeleteExternalGroups(List<Long> groupIds){
+		long groupsDeleted = 0;
+		long failedDeletes = 0;
+		long startTime = Time.now();
+		for(Long groupId: groupIds){
+			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+			try {
+				txTemplate.execute(new TransactionCallback<Object>() {
+					@Override
+					public Object doInTransaction(TransactionStatus status) {
+						deleteXGroup(groupId, true);
+						return null;
+					}
+				});
+				groupsDeleted += 1;
+			} catch (Throwable ex) {
+				logger.error("forceDeleteExternalGroups(): Failed to delete group id: {}", groupId, ex);
+				failedDeletes += 1;
+			}
+		}
+		if (failedDeletes == 1) {
+			logger.error("Failed to delete 1 group");
+		} else if (failedDeletes > 1) {
+			logger.error("Failed to delete {} groups", failedDeletes);
+		}
+		if (groupIds.size() == 1) {
+			logger.info("Force Deletion of 1 group took {} milliseconds", (Time.now() - startTime));
+		} else if (groupIds.size() > 1) {
+			logger.info("Force Deletion of {} groups took {} milliseconds", groupIds.size(), (Time.now() - startTime));
+		}
+		return groupsDeleted;
+	}
+
 	private void blockIfZoneGroup(Long grpId) {
 		List<XXSecurityZoneRefGroup> zoneRefGrpList = daoManager.getXXSecurityZoneRefGroup().findByGroupId(grpId);
 		if (CollectionUtils.isNotEmpty(zoneRefGrpList)) {
@@ -2396,6 +2431,40 @@ public class XUserMgr extends XUserMgrBase {
 				xaBizUtil.createTrxLog(trxLogList);
 			}
 		}
+	}
+
+	public long forceDeleteExternalUsers(List<Long> userIds){
+		long usersDeleted = 0;
+		long failedDeletes = 0;
+		long startTime = Time.now();
+		for(Long userId: userIds){
+			TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+			txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+			try {
+				txTemplate.execute(new TransactionCallback<Object>() {
+					@Override
+					public Object doInTransaction(TransactionStatus status) {
+						deleteXUser(userId, true);
+						return null;
+					}
+				});
+				usersDeleted += 1;
+			} catch (Throwable ex) {
+				logger.error("forceDeleteExternalUsers(): Failed to delete user id: {}", userId, ex);
+				failedDeletes += 1;
+			}
+		}
+		if (failedDeletes == 1){
+			logger.error("Failed to delete 1 user");
+		} else if (failedDeletes > 1) {
+			logger.error("Failed to delete {} users", failedDeletes);
+		}
+		if (userIds.size() == 1) {
+			logger.info("Force Deletion of 1 user took {} milliseconds", (Time.now() - startTime));
+		} else if (userIds.size() > 1) {
+			logger.info("Force Deletion of {} users took {} milliseconds", userIds.size(), (Time.now() - startTime));
+		}
+		return usersDeleted;
 	}
 
 	private void blockIfZoneUser(Long id) {
