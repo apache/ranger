@@ -87,7 +87,7 @@
         <atlas.jettison.version>1.3.7</atlas.jettison.version>
         <atlas.commons.logging.version>1.1.3</atlas.commons.logging.version>
         <bouncycastle.version>1.70</bouncycastle.version>
-        <c3p0.version>0.9.5.5</c3p0.version>
+        <HikariCP.version>4.0.3</HikariCP.version>
         <cglib.version>2.2.0-b23</cglib.version>
         <checkstyle.plugin.version>3.1.0</checkstyle.plugin.version>
         <checkstyle.version>8.29</checkstyle.version>
@@ -177,7 +177,7 @@
         <metrics.core.version>3.0.2</metrics.core.version>
         <mockito.version>3.0.0</mockito.version>
         <mockito.all.version>1.10.19</mockito.all.version>
-        <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
+        <mysql-connector-java.version>5.1.49</mysql-connector-java.version>
         <netty-all.version>4.1.85.Final</netty-all.version>
         <noggit.version>0.8</noggit.version>
         <orc.core.version>1.6.7</orc.core.version>

@@ -38,9 +38,6 @@ public class RangerDaoManager extends RangerDaoManagerBase {
 	@PersistenceContext(unitName = "defaultPU")
 	private EntityManager em;
 
-	@PersistenceContext(unitName = "loggingPU")
-	private EntityManager loggingEM;
-
 	@Autowired
 	StringUtil stringUtil;
 
@@ -57,9 +54,6 @@ public class RangerDaoManager extends RangerDaoManagerBase {
 			logger.debug("RangerDaoManager.getEntityManager(" + persistenceContextUnit + ")");
 		}
 
-		if ("loggingPU".equalsIgnoreCase(persistenceContextUnit)) {
-			return loggingEM;
-		}
 		return getEntityManager();
 	}
 
