@@ -24,6 +24,10 @@
 			   WHERE obj.extSessionId = :sessionId
 		</query>
 	</named-query>
+	<named-query name="XXAuthSession.deleteOlderThan">
+		<query>delete from XXAuthSession obj where obj.createTime &lt; :olderThan</query>
+	</named-query>
+
 	<named-query name="XXAuthSession.getRecentAuthFailureCountByLoginId">
 		<query>SELECT COUNT(1) FROM XXAuthSession obj
 			WHERE obj.loginId = :loginId
@@ -1655,6 +1659,24 @@
             select obj from XXSecurityZoneRefGroup obj where obj.zoneId = :zoneId and obj.groupType = :groupType
         </query>
     </named-query>
+
+	<named-query name="XXSecurityZoneRefRole.findByZoneId">
+		<query>
+			select obj from XXSecurityZoneRefRole obj where obj.zoneId = :zoneId
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZoneRefRole.findByRoleId">
+		<query>
+			select obj from XXSecurityZoneRefRole obj where obj.roleId = :roleId
+		</query>
+	</named-query>
+
+	<named-query name="XXSecurityZoneRefRole.findRoleRefZoneCount">
+		<query>
+			select count(obj.zoneId) from XXSecurityZoneRefRole obj where obj.roleName = :roleName
+		</query>
+	</named-query>
 
 	<named-query name="XXSecurityZoneRefResource.findByZoneId">
         <query>

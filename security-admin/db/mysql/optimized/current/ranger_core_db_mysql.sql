@@ -67,6 +67,7 @@ DROP TABLE IF EXISTS `x_service_config_def`;
 DROP TABLE IF EXISTS `x_policy`;
 DROP TABLE IF EXISTS `x_security_zone_ref_group`;
 DROP TABLE IF EXISTS `x_security_zone_ref_user`;
+DROP TABLE IF EXISTS `x_security_zone_ref_role`;
 DROP TABLE IF EXISTS `x_security_zone_ref_tag_srvc`;
 DROP TABLE IF EXISTS `x_security_zone_ref_service`;
 DROP TABLE IF EXISTS `x_ranger_global_state`;
@@ -1548,6 +1549,22 @@ CREATE TABLE IF NOT EXISTS `x_role_ref_role`(
  CONSTRAINT `x_role_ref_role_FK_role_ref_id` FOREIGN KEY (`role_ref_id`) REFERENCES `x_role` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
+CREATE TABLE IF NOT EXISTS `x_security_zone_ref_role`(
+`id` bigint(20) NOT NULL AUTO_INCREMENT,
+`create_time` datetime NULL DEFAULT NULL,
+`update_time` datetime NULL DEFAULT NULL,
+`added_by_id` bigint(20) NULL DEFAULT NULL,
+`upd_by_id` bigint(20) NULL DEFAULT NULL,
+`zone_id` bigint(20) NULL DEFAULT NULL,
+`role_id` bigint(20) NULL DEFAULT NULL,
+`role_name` varchar(255) NULL DEFAULT NULL,
+ PRIMARY KEY (`id`),
+ CONSTRAINT `x_sz_ref_role_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_role_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
+ CONSTRAINT `x_sz_ref_role_FK_zone_id` FOREIGN KEY (`zone_id`) REFERENCES `x_security_zone` (`id`),
+ CONSTRAINT `x_sz_ref_role_FK_role_id` FOREIGN KEY (`role_id`) REFERENCES `x_role` (`id`)
+ )ROW_FORMAT=DYNAMIC;
+
 CREATE TABLE IF NOT EXISTS `x_tag_change_log` (
 `id` bigint(20) NOT NULL AUTO_INCREMENT,
 `create_time` datetime NULL DEFAULT NULL,
@@ -1985,6 +2002,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',UTC_TIMESTAMP(),'Ranger 3.0.0',UTC_TIMESTAMP(),'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');
 
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10001',UTC_TIMESTAMP(),'Ranger 1.0.0',UTC_TIMESTAMP(),'localhost','Y');

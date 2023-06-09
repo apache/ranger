@@ -385,4 +385,12 @@
 			<name>ranger.admin.cookie.name</name>
 			<value>RANGERADMINSESSIONID</value>
 		</property>
+		<property>
+			<name>ranger.admin.init.purge.login_records</name>
+			<value>false</value>
+		</property>
+		<property>
+			<name>ranger.admin.init.purge.login_records.retention.days</name>
+			<value>0</value>
+		</property>
 </configuration>

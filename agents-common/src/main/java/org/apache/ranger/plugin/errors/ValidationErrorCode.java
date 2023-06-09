@@ -111,7 +111,7 @@ public enum ValidationErrorCode {
     SECURITY_ZONE_VALIDATION_ERR_MISSING_FIELD(3035, "Internal error: missing field[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_ZONE_NAME_CONFLICT(3036, "Another security zone already exists for this name: zone-id=[{0}]]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_ZONE_ID(3037, "No security zone found for [{0}]"),
-    SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS(3038, "both users and user-groups collections for the security zone were null/empty"),
+    SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS_AND_ROLES(3038, "users, user-groups and roles collections for the security zone were null/empty"),
     SECURITY_ZONE_VALIDATION_ERR_MISSING_RESOURCES(3039, "No resources specified for service [{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_NAME(3040, "Invalid service [{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_TYPE(3041, "Invalid service-type [{0}]"),

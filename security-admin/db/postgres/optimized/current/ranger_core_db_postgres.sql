@@ -66,6 +66,7 @@ DROP TABLE IF EXISTS x_service_config_def CASCADE;
 DROP TABLE IF EXISTS x_policy CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_group CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_user CASCADE;
+DROP TABLE IF EXISTS x_security_zone_ref_role CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_tag_srvc CASCADE;
 DROP TABLE IF EXISTS x_security_zone_ref_service CASCADE;
 DROP TABLE IF EXISTS x_ranger_global_state CASCADE;
@@ -98,6 +99,7 @@ DROP TABLE IF EXISTS x_gds_dataset_in_project CASCADE;
 
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_group_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_user_seq;
+DROP SEQUENCE IF EXISTS x_sec_zone_ref_role_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_resource_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_service_seq;
 DROP SEQUENCE IF EXISTS x_sec_zone_ref_tag_srvc_SEQ;
@@ -1585,6 +1587,24 @@ priv_type INT DEFAULT NULL NULL,
 );
 commit;
 
+CREATE SEQUENCE x_sec_zone_ref_role_seq;
+CREATE TABLE x_security_zone_ref_role (
+id BIGINT DEFAULT nextval('x_sec_zone_ref_role_seq'::regclass),
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+zone_id BIGINT DEFAULT NULL NULL,
+role_id BIGINT DEFAULT NULL NULL,
+role_name varchar(255) NULL DEFAULT NULL::character varying,
+primary key (id),
+CONSTRAINT x_sz_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_ref_role_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
+CONSTRAINT x_sz_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id)
+);
+commit;
+
 CREATE SEQUENCE x_tag_change_log_seq;
 
 CREATE TABLE x_tag_change_log (
@@ -2087,6 +2107,7 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('075',current_timestamp,'Ranger 3.0.0',current_timestamp,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',current_timestamp,'Ranger 1.0.0',current_timestamp,'localhost','Y');
 
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES

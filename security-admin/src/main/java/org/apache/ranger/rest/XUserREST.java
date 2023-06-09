@@ -19,11 +19,11 @@
 
 package org.apache.ranger.rest;
 
-import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
-import java.util.ArrayList;
 import java.util.Map;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -39,6 +39,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -89,6 +90,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.apache.ranger.common.RangerCommonEnums.GROUP_EXTERNAL;
+import static org.apache.ranger.common.RangerCommonEnums.USER_EXTERNAL;
 
 
 @Path("xusers")
@@ -861,6 +865,85 @@ public class XUserREST {
 		}
 		VXUser vxUser = xUserService.getXUserByUserName(userName);
 		xUserMgr.deleteXUser(vxUser.getId(), forceDelete);
+	}
+
+
+	/**
+	 * Proceed with <tt>caution</tt>: Force deletes users from the ranger db,
+	 * <tt>Delete</tt> happens one at a time with immediate commit on the transaction.
+	 */
+	@DELETE
+	@Path("/delete/external/users")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Produces({ "application/json" })
+	public Response forceDeleteExternalUsers(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchUtil.extractString(
+				request, searchCriteria, "name", "User name",null);
+		searchUtil.extractString(
+				request, searchCriteria, "emailAddress", "Email Address", null);
+		searchUtil.extractInt(
+				request, searchCriteria, "isVisible", "User Visibility");
+		searchUtil.extractInt(
+				request, searchCriteria, "status", "User Status");
+		searchUtil.extractString(
+				request, searchCriteria, "syncSource", "Sync Source", null);
+		searchUtil.extractRoleString(
+				request, searchCriteria, "userRole", "Role", null);
+
+		// for invalid params
+		if(request.getQueryString() != null && searchCriteria.getParamList().size() == 0){
+			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params!").build();
+		}
+
+		// only for external users
+		searchCriteria.addParam("userSource", USER_EXTERNAL);
+
+		List<Long> userIds = xUserService.searchXUsersForIds(searchCriteria);
+		long usersDeleted = xUserMgr.forceDeleteExternalUsers(userIds);
+		String response = "No users were deleted!";
+		if (usersDeleted == 1) {
+			response = "1 user deleted successfully.";
+		} else if (usersDeleted > 0) {
+			response = String.format("%d users deleted successfully.", usersDeleted);
+		}
+		return Response.ok(response).build();
+	}
+
+	/**
+	 * Proceed with <tt>caution</tt>: Force deletes groups from the ranger db,
+	 * <tt>Delete</tt> happens one at a time with immediate commit on the transaction.
+	 */
+	@DELETE
+	@Path("/delete/external/groups")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Produces({ "application/json" })
+	public Response forceDeleteExternalGroups(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchUtil.extractString(
+				request, searchCriteria, "name", "Group Name",null);
+		searchUtil.extractInt(
+				request, searchCriteria, "isVisible", "Group Visibility");
+		searchUtil.extractString(
+				request, searchCriteria, "syncSource", "Sync Source", null);
+
+		// for invalid params
+		if(request.getQueryString() != null && searchCriteria.getParamList().size() == 0){
+			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params!").build();
+		}
+
+		// only for external groups
+		searchCriteria.addParam("groupSource", GROUP_EXTERNAL);
+
+		List<Long> groupIds = xGroupService.searchXGroupsForIds(searchCriteria);
+		long groupsDeleted = xUserMgr.forceDeleteExternalGroups(groupIds);
+		String response = "No groups were deleted!";
+		if (groupsDeleted == 1) {
+			response = "1 group deleted successfully.";
+		} else if (groupsDeleted > 0) {
+			response = String.format("%d groups deleted successfully.", groupsDeleted);
+		}
+		return Response.ok(response).build();
 	}
 
 	@DELETE
