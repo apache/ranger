@@ -42,11 +42,13 @@ public class RangerZoneResourceMatcher implements RangerResourceEvaluator {
     private RangerServiceDef.RangerResourceDef                   leafResourceDef;
 
     public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDef serviceDef) {
+        this(securityZoneName, policyResource, new RangerServiceDefHelper(serviceDef));
+    }
 
-        RangerServiceDefHelper             serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-        final Collection<String>           resourceKeys     = policyResource.keySet();
-
-        RangerDefaultPolicyResourceMatcher matcher          = new RangerDefaultPolicyResourceMatcher();
+    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDefHelper serviceDefHelper) {
+        final RangerServiceDef                   serviceDef   = serviceDefHelper.getServiceDef();
+        final Collection<String>                 resourceKeys = policyResource.keySet();
+        final RangerDefaultPolicyResourceMatcher matcher      = new RangerDefaultPolicyResourceMatcher();
 
         matcher.setServiceDef(serviceDef);
         matcher.setServiceDefHelper(serviceDefHelper);
