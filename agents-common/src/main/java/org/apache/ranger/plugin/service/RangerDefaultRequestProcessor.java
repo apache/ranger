@@ -131,7 +131,9 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
                 RangerPerfTracer.log(perf);
             }
         } else {
-            LOG.info("No context-enrichers!!!");
+            if (LOG.isDebugEnabled()){
+                LOG.debug("No context-enrichers!!!");
+            }
         }
     }
 
