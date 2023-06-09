@@ -163,7 +163,7 @@ public class RangerSecurityZoneValidatorTest {
 		} catch (Exception ex) {
 			Assert.assertEquals(
 					ex.getMessage(),
-					"(0) Validation failure: error code[3044], reason[No services specified for security-zone:[MyZone]], field[services], subfield[null], type[missing] (1) Validation failure: error code[3038], reason[both users and user-groups collections for the security zone were null/empty], field[security zone admin users/user-groups], subfield[null], type[missing] (2) Validation failure: error code[3038], reason[both users and user-groups collections for the security zone were null/empty], field[security zone audit users/user-groups], subfield[null], type[missing] ");
+					"(0) Validation failure: error code[3044], reason[No services specified for security-zone:[MyZone]], field[services], subfield[null], type[missing] (1) Validation failure: error code[3038], reason[users, user-groups and roles collections for the security zone were null/empty], field[security zone admin users/user-groups/roles], subfield[null], type[missing] (2) Validation failure: error code[3038], reason[users, user-groups and roles collections for the security zone were null/empty], field[security zone audit users/user-groups/roles], subfield[null], type[missing] ");
 		}
 	}
 

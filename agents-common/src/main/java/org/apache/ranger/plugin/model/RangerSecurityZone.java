@@ -55,7 +55,7 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
     }
 
     public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services,List<String> tagServices, List<String> adminUsers, List<String> adminUserGroups, List<String> auditUsers, List<String> auditUserGroups, String description) {
-        this(name, services, tagServices, adminUsers, adminUserGroups, null, adminUsers, adminUserGroups, null, description);
+        this(name, services, tagServices, adminUsers, adminUserGroups, null, auditUsers, auditUserGroups, null, description);
     }
 
     public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services,List<String> tagServices, List<String> adminUsers, List<String> adminUserGroups, List<String> adminRoles, List<String> auditUsers, List<String> auditUserGroups, List<String> auditRoles, String description) {
