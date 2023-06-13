@@ -23,7 +23,7 @@
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <hbase.jetty.version>9.3.27.v20190418</hbase.jetty.version>
+        <hbase.jetty.version>9.4.51.v20230217</hbase.jetty.version>
         <hadoop.version>3.1.1</hadoop.version>
     </properties>
     <parent>
