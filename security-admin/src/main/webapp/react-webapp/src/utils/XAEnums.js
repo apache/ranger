@@ -621,7 +621,11 @@ export const PathAssociateWithModule = {
   Permission: ["/permissions/models", "/permissions/:permissionId/edit"],
   Profile: ["/userprofile"],
   KnoxSignOut: ["/knoxSSOWarning"],
-  localLogin: ["/locallogin"]
+  DataNotFound: ["/dataNotFound"],
+  PageNotFound: ["/pageNotFound"],
+  localLogin: ["/locallogin"],
+  slashPath: ["/"],
+  Forbidden: ["/forbidden"]
 };
 
 /* Access */

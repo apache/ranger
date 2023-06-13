@@ -19,19 +19,28 @@
 
 import React, { useState, useEffect } from "react";
 import { Button, Modal } from "react-bootstrap";
-import { useLocation, Outlet, Navigate, useNavigate } from "react-router-dom";
+import {
+  useLocation,
+  Outlet,
+  Navigate,
+  useNavigate,
+  matchRoutes
+} from "react-router-dom";
 import ErrorPage from "./ErrorPage";
-import { hasAccessToPath, checkKnoxSSO } from "Utils/XAUtils";
+import { hasAccessToPath, checkKnoxSSO, navigateTo } from "Utils/XAUtils";
 import { useIdleTimer } from "react-idle-timer";
 import { getUserProfile } from "Utils/appState";
 import SideBar from "./SideBar/SideBar";
 import { Loader } from "../components/CommonComponents";
 import { Suspense } from "react";
+import { PathAssociateWithModule } from "../utils/XAEnums";
+import { flatMap, includes, values } from "lodash";
 
 const Layout = () => {
   let location = useLocation();
   const navigate = useNavigate();
   const userProfile = getUserProfile();
+  navigateTo.navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [timer, setTimer] = useState(0);
 
@@ -120,17 +129,29 @@ const Layout = () => {
           <SideBar />
         </div>
         {location.pathname === "/" &&
-          window.location.pathname !== "/locallogin" && (
+          window.location.pathname !== "/locallogin" &&
+          window.location.pathname != "/dataNotFound" &&
+          window.location.pathname != "/pageNotFound" &&
+          window.location.pathname != "/forbidden" && (
             <Navigate to="/policymanager/resource" replace={true} />
           )}
         <div id="content" className="content-body">
           <div id="ranger-content">
-            {hasAccessToPath(location.pathname) ? (
-              <Suspense fallback={<Loader />}>
-                <Outlet />
-              </Suspense>
+            {matchRoutes(
+              flatMap(values(PathAssociateWithModule)).map((val) => ({
+                path: val
+              })),
+              location.pathname
+            ) ? (
+              hasAccessToPath(location.pathname) ? (
+                <Suspense fallback={<Loader />}>
+                  <Outlet />
+                </Suspense>
+              ) : (
+                <ErrorPage errorCode="401" />
+              )
             ) : (
-              <ErrorPage errorCode="401" />
+              <ErrorPage errorCode="404" />
             )}
           </div>
 

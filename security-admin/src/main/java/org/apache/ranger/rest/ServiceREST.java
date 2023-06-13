@@ -33,6 +33,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.stream.IntStream;
 import java.util.Objects;
 
 import javax.annotation.Nonnull;
@@ -59,6 +60,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -446,15 +448,18 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServiceDef(serviceDefId=" + id + ")");
 			}
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(id);
-			if(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(xServiceDef.getName())) {
-				if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_TAG_BASED_POLICIES)) {
-					throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN, "User is not having permissions on the tag module.", true);
+			if (xServiceDef != null) {
+				if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(xServiceDef.getName())) {
+					if (!bizUtil.hasModuleAccess(RangerConstants.MODULE_TAG_BASED_POLICIES)) {
+						throw restErrorUtil.createRESTException(HttpServletResponse.SC_FORBIDDEN,
+								"User is not having permissions on the tag module.", true);
+					}
 				}
-			}
-			if (!bizUtil.hasAccess(xServiceDef, null)) {
-				throw restErrorUtil.createRESTException(
-						"User is not allowed to access service-def, id: " + xServiceDef.getId(),
-						MessageEnums.OPER_NO_PERMISSION);
+				if (!bizUtil.hasAccess(xServiceDef, null)) {
+					throw restErrorUtil.createRESTException(
+							"User is not allowed to access service-def, id: " + xServiceDef.getId(),
+							MessageEnums.OPER_NO_PERMISSION);
+				}
 			}
 
 			ret = svcStore.getServiceDef(id);
@@ -2995,6 +3000,13 @@ public class ServiceREST {
 		try {
 			if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.getServicePolicies(serviceId=" + serviceId + ")");
+			}
+
+			String policyTypeStr = filter.getParam(SearchFilter.POLICY_TYPE);
+			if (policyTypeStr != null && !IntStream.of(RangerPolicy.POLICY_TYPES).anyMatch(x -> x == Integer.parseInt(policyTypeStr))) {
+				throw restErrorUtil.createRESTException("policyTypes with id: " + policyTypeStr + " does not exist",
+						MessageEnums.DATA_NOT_FOUND, Long.parseLong(policyTypeStr), null,
+						"readResource : No Object found with given id.");
 			}
 
 			// get all policies from the store; pick the page to return after applying filter

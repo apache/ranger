@@ -91,7 +91,7 @@ export default function ServiceAuditFilter(props) {
   const getResourceData = (resourceData) => {
     let dataStructure = [];
 
-    let levels = uniq(map(serviceDefDetails.resources, "level"));
+    let levels = uniq(map(serviceDefDetails?.resources, "level"));
 
     dataStructure = levels.map((level, index) => {
       if (
@@ -151,8 +151,8 @@ export default function ServiceAuditFilter(props) {
 
   const getAccessTypeOptions = () => {
     let srcOp = [];
-    srcOp = serviceDefDetails.accessTypes;
-    return srcOp.map(({ label, name: value }) => ({
+    srcOp = serviceDefDetails?.accessTypes;
+    return srcOp?.map(({ label, name: value }) => ({
       label,
       value
     }));
@@ -358,7 +358,7 @@ export default function ServiceAuditFilter(props) {
                       );
                     }
                     if (colName == "Permissions") {
-                      if (serviceDefDetails.name == "tag") {
+                      if (serviceDefDetails?.name == "tag") {
                         return (
                           <td
                             key={`${name}.accessTypes`}

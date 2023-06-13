@@ -17,7 +17,6 @@
  * under the License.
  */
 import axios from "axios";
-import history from "./history";
 import ErrorPage from "../views/ErrorPage";
 import {
   RANGER_REST_CSRF_ENABLED,
@@ -26,6 +25,7 @@ import {
   CSRFToken
 } from "./appConstants";
 import { toast } from "react-toastify";
+import { navigateTo } from "./XAUtils";
 
 let csrfEnabled = false;
 let restCsrfCustomHeader = null;
@@ -87,6 +87,21 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
         isSessionActive = false;
         window.location.replace("login.jsp?sessionTimeout=true");
       }
+    }
+    if (
+      error?.response?.status === 400 &&
+      (error?.response?.data?.messageList?.[0]?.name == "DATA_NOT_FOUND" ||
+        error?.response?.data?.messageList?.[0]?.name == "INVALID_INPUT_DATA")
+    ) {
+      navigateTo.navigate("/dataNotFound", { replace: true });
+    }
+    if (error?.response?.status === 404) {
+      navigateTo.navigate("/pageNotFound", { replace: true });
+      return;
+    }
+    if (error?.response?.status === 403) {
+      navigateTo.navigate("/forbidden", { replace: true });
+      return;
     }
     throw error;
   }

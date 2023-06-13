@@ -151,6 +151,10 @@ export const hasAccessToPath = (pathName) => {
   let moduleNames = union(userModules, groupModules);
   moduleNames.push("Profile");
   moduleNames.push("KnoxSignOut");
+  moduleNames.push("DataNotFound");
+  moduleNames.push("PageNotFound");
+  moduleNames.push("Forbidden");
+
   moduleNames.push("localLogin");
   if (isSystemAdmin() || isAuditor()) {
     moduleNames.push("Permission");
@@ -1390,4 +1394,8 @@ export const checkKnoxSSO = async (navigate) => {
     }
     console.error(`Error occurred while logout! ${error}`);
   }
+};
+
+export const navigateTo = {
+  navigate: null
 };
