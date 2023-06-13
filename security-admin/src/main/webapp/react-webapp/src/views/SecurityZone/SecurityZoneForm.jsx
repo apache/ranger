@@ -207,7 +207,7 @@ const SecurityZoneForm = (props) => {
         );
         toast.error(error.response.data.msgDesc);
       }
-      setZone(zoneResp.data);
+      setZone(zoneResp?.data);
     }
 
     setLoader(false);
@@ -467,7 +467,7 @@ const SecurityZoneForm = (props) => {
           sortBy(filterServiceDef.resources, "itemId"),
           ["parent", lastResourceLevel.name]
         );
-        if (setLastResources) {
+        if (setLastResources && setLastResources?.isValidLeaf) {
           serviceResource[`resourceName-${setLastResources.level}`] = {
             label: "None",
             value: "none"

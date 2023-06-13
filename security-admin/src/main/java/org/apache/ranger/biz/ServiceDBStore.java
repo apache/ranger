@@ -1917,6 +1917,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 		// TODO: As of now we are allowing SYS_ADMIN to read all the
 		// services including KMS
 
+		if (xService == null) {
+			throw restErrorUtil.createRESTException("Data Not Found for given Id",
+					MessageEnums.DATA_NOT_FOUND, id, null, "readResource : No Object found with given id.");
+		}
 		if (!bizUtil.hasAccess(xService, null)) {
 			throw restErrorUtil.createRESTException("Logged in user is not allowed to read service, id: " + id,
 					MessageEnums.OPER_NO_PERMISSION);

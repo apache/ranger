@@ -628,6 +628,12 @@ define(function(require) {
 			} else {
 				window.location = 'login.jsp?sessionTimeout=true';
 			}
+		}else if(error.status == 400 && error.responseJSON && error.responseJSON.messageList && error.responseJSON.messageList[0].name) {
+			if(error.responseJSON.messageList[0].name == "DATA_NOT_FOUND" || error.responseJSON.messageList[0].name == "INVALID_INPUT_DATA"){
+				App.rContent.show(new vError({
+					status : error.status
+				}));
+			}
 		}
 	};
 	XAUtils.select2Focus = function(event) {

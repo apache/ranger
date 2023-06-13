@@ -101,6 +101,9 @@ define(function(require){
 			this.rangerServiceDefModel.fetch({
 			   cache : false,
 			   async : false
+			}).fail(function(e){
+				e.stopPropagation()
+				return
 			});
 		},
 		setupModel : function(){

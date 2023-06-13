@@ -30,6 +30,7 @@ import { getUserProfile, setUserProfile } from "Utils/appState";
 import LayoutComp from "Views/Layout";
 import { getServiceDef, setServiceDef } from "./utils/appState";
 import { filter, sortBy } from "lodash";
+
 const HomeComp = lazy(() => import("Views/Home"));
 const ServiceFormComp = lazy(() => import("Views/ServiceManager/ServiceForm"));
 const UserProfileComp = lazy(() => import("Views/UserProfile"));
@@ -324,6 +325,19 @@ export default class App extends Component {
                   <Route
                     path="/knoxSSOWarning"
                     element={<ErrorPage errorCode="checkSSOTrue" />}
+                  />
+                  {/*DATA NOT FOUND PAGE*/}
+                  <Route
+                    path="/dataNotFound"
+                    element={<ErrorPage errorCode="400" />}
+                  />
+                  <Route
+                    path="/pageNotFound"
+                    element={<ErrorPage errorCode="404" />}
+                  />
+                  <Route
+                    path="/forbidden"
+                    element={<ErrorPage errorCode="403" />}
                   />
                   <Route path="/locallogin" element={<Loader />} />
                   {/* NOT FOUND ROUTE */}
