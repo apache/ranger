@@ -78,11 +78,7 @@ function reducer(state, action) {
         ...state,
         selectedServiceDef: action.selectedServiceDef
       };
-    case "SERVICE_TYPES_OPTIONS":
-      return {
-        ...state,
-        serviceTypesOptions: action.serviceTypesOptions
-      };
+
     default:
       throw new Error();
   }
@@ -187,6 +183,7 @@ export const SideBar = () => {
           (service) => service.type !== "tag" && service.type !== "kms"
         );
       }
+
       dispatch({
         type: "SERVICES_DATA",
         allServiceData: servicesResp.data.services,
