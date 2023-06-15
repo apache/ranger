@@ -550,12 +550,15 @@ public class ServiceMgr {
 
 		if (rangerRoles != null) {
 			RangerRolesUtil rolesUtil = new RangerRolesUtil(rangerRoles);
+			Set<String>     userRoles = rolesUtil.getUserRoleMapping().get(userId);
 
-			ret = CollectionUtils.containsAny(roles, rolesUtil.getUserRoleMapping().get(userId));
+			ret = userRoles != null && CollectionUtils.containsAny(roles, userRoles);
 
 			if (!ret && userGroups != null) {
 				for (String userGroup : userGroups) {
-					ret = CollectionUtils.containsAny(roles, rolesUtil.getGroupRoleMapping().get(userGroup));
+					Set<String> groupRoles = rolesUtil.getGroupRoleMapping().get(userGroup);
+
+					ret = groupRoles != null && CollectionUtils.containsAny(roles, groupRoles);
 
 					if (ret) {
 						break;
