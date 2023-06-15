@@ -32,18 +32,22 @@ define(function(require) {
         var resourcePath = _.isUndefined(model.get('resourcePath')) ? undefined : model.get('resourcePath');
         var resourceType = _.isUndefined(model.get('resourceType')) ? undefined : model.get('resourceType');
         if((model.get('serviceType') === XAEnums.ServiceType.Service_HIVE.label || model.get('serviceType') === XAEnums.ServiceType.Service_HBASE.label || model.get('serviceType') === XAEnums.ServiceType.Service_SOLR.label || model.get('serviceType') === XAEnums.ServiceType.Service_HDFS.label)
-            && model.get('aclEnforcer') === "ranger-acl"
             && model.get('requestData')){
             if(resourcePath && !_.isEmpty(model.get('requestData'))) {
-                return '<div class="clearfix">\
-                            <div class="pull-left resourceText" title="'+ _.escape(resourcePath)+'">'+_.escape(resourcePath)+'</div>\
-                            <div class="pull-right">\
-                                <div class="queryInfo btn btn-sm link-tag query-icon" title="Query Info" data-name = "queryInfo" data-id ="'+model.get('id')+'">\
-                                    <i class="fa-fw fa fa-table" ></i>\
+                if((model.get('serviceType') === XAEnums.ServiceType.Service_HDFS.label && model.get('aclEnforcer') === "hadoop-acl") || model.get('aclEnforcer') === "ranger-acl"){
+                    return '<div class="clearfix">\
+                                <div class="pull-left resourceText" title="'+ _.escape(resourcePath)+'">'+_.escape(resourcePath)+'</div>\
+                                <div class="pull-right">\
+                                    <div class="queryInfo btn btn-sm link-tag query-icon" title="Query Info" data-name = "queryInfo" data-id ="'+model.get('id')+'">\
+                                        <i class="fa-fw fa fa-table" ></i>\
+                                    </div>\
                                 </div>\
                             </div>\
-                        </div>\
-                        <div title="'+_.escape(resourceType)+'" class="border-top-1">'+_.escape(resourceType)+'</div>';
+                            <div title="'+_.escape(resourceType)+'" class="border-top-1">'+_.escape(resourceType)+'</div>';
+                } else {
+                    return '<div class ="resourceText" title="'+_.escape(resourcePath)+'">'+_.escape(resourcePath)+'</div>\
+                            <div title="'+_.escape(resourceType)+'" class="border-top-1">'+_.escape(resourceType)+'</div>';
+                }
             }else{
                 return '<div class="clearfix">\
                             <div class="pull-left">--</div>\
@@ -66,34 +70,36 @@ define(function(require) {
 
     XAViewUtil.showQueryPopup = function(model, that){
         if((model.get('serviceType') === XAEnums.ServiceType.Service_HIVE.label || model.get('serviceType') === XAEnums.ServiceType.Service_HBASE.label || model.get('serviceType') === XAEnums.ServiceType.Service_SOLR.label || model.get('serviceType') === XAEnums.ServiceType.Service_HDFS.label)
-            && model.get('aclEnforcer') === "ranger-acl"
             && model.get('requestData') && !_.isEmpty(model.get('requestData'))){
-            var titleMap = {};
-            titleMap[XAEnums.ServiceType.Service_HIVE.label] = 'Hive Query';
-            titleMap[XAEnums.ServiceType.Service_HBASE.label] = 'HBase Audit Data';
-            titleMap[XAEnums.ServiceType.Service_SOLR.label] = 'Solr Query';
-            titleMap[XAEnums.ServiceType.Service_HDFS.label] = 'HDFS Operation Name';
-            var msg = '<div class="pull-right link-tag query-icon copyQuery btn btn-sm" title="Copy Query"><i class="fa-fw fa fa-copy"></i></div><div class="query-content">'+model.get('requestData')+'</div>';
-            var $elements = that.$el.find('table [data-name = "queryInfo"][data-id = "'+model.id+'"]');
-            $elements.popover({
-                html: true,
-                title: '<b class="custom-title">'+ (titleMap[model.get('serviceType')] || 'Request Data') +'</b><a href="javascript:void(0)" class="close popoverClose">&times;</a>',
-                content: msg,
-                selector : true,
-                container:'body',
-                placement: 'top'
-            }).on("click", function(e){
-                e.stopPropagation();
-                $('.popoverClose').on("click", function(){
-                    $(this).parents(".popover").popover('hide');
+            if((model.get('serviceType') === XAEnums.ServiceType.Service_HDFS.label && model.get('aclEnforcer') === "hadoop-acl") || model.get('aclEnforcer') === "ranger-acl"){
+                var titleMap = {};
+                titleMap[XAEnums.ServiceType.Service_HIVE.label] = 'Hive Query';
+                titleMap[XAEnums.ServiceType.Service_HBASE.label] = 'HBase Audit Data';
+                titleMap[XAEnums.ServiceType.Service_SOLR.label] = 'Solr Query';
+                titleMap[XAEnums.ServiceType.Service_HDFS.label] = 'HDFS Operation Name';
+                var msg = '<div class="pull-right link-tag query-icon copyQuery btn btn-sm" title="Copy Query"><i class="fa-fw fa fa-copy"></i></div><div class="query-content">'+model.get('requestData')+'</div>';
+                var $elements = that.$el.find('table [data-name = "queryInfo"][data-id = "'+model.id+'"]');
+                $elements.popover({
+                    html: true,
+                    title: '<b class="custom-title">'+ (titleMap[model.get('serviceType')] || 'Request Data') +'</b><a href="javascript:void(0)" class="close popoverClose">&times;</a>',
+                    content: msg,
+                    selector : true,
+                    container:'body',
+                    placement: 'top'
+                }).on("click", function(e){
+                    e.stopPropagation();
+                    $('.popoverClose').on("click", function(){
+                        $(this).parents(".popover").popover('hide');
+                    });
+                    if($(e.target).data('toggle') !== 'popover' && $(e.target).parents('.popover.in').length === 0){
+                        $('.queryInfo').not(this).popover('hide');
+                        $('.copyQuery').on("click", function(e){
+                            XAUtils.copyToClipboard(e , model.get('requestData'));
+                        })
+                    }
                 });
-                if($(e.target).data('toggle') !== 'popover' && $(e.target).parents('.popover.in').length === 0){
-                    $('.queryInfo').not(this).popover('hide');
-                    $('.copyQuery').on("click", function(e){
-                        XAUtils.copyToClipboard(e , model.get('requestData'));
-                    })
-                }
-            });
+
+            }
         }
     };
 

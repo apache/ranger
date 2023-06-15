@@ -43,7 +43,7 @@ import CustomBreadcrumb from "../views/CustomBreadcrumb";
 import { CustomTooltip } from "../components/CommonComponents";
 import InfiniteScroll from "react-infinite-scroll-component";
 import { toast } from "react-toastify";
-import { RangerPolicyType } from "./XAEnums";
+import { RangerPolicyType, ServiceType } from "./XAEnums";
 import { policyInfoMessage } from "./XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
 
@@ -1398,4 +1398,21 @@ export const checkKnoxSSO = async (navigate) => {
 
 export const navigateTo = {
   navigate: null
+};
+
+export const requestDataTitle = (serviceType) => {
+  let title = "";
+  if (serviceType == ServiceType.Service_HIVE.label) {
+    title = `Hive Query`;
+  }
+  if (serviceType == ServiceType.Service_HBASE.label) {
+    title = `HBase Audit Data`;
+  }
+  if (serviceType == ServiceType.Service_HDFS.label) {
+    title = `HDFS Operation Name`;
+  }
+  if (serviceType == ServiceType.Service_SOLR.label) {
+    title = "Solr Query";
+  }
+  return title;
 };

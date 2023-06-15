@@ -53,11 +53,15 @@ import {
   getTableSortBy,
   getTableSortType,
   serverError,
+  requestDataTitle,
   fetchSearchFilterParams,
   parseSearchFilter
 } from "../../utils/XAUtils";
 import { CustomTooltip, Loader } from "../../components/CommonComponents";
-import { ServiceType } from "../../utils/XAEnums";
+import {
+  ServiceRequestDataRangerAcl,
+  ServiceRequestDataHadoopAcl
+} from "../../utils/XAEnums";
 
 function Access() {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
@@ -281,7 +285,7 @@ function Access() {
     setUpdateTable(moment.now());
   };
 
-  const rsrcContent = (requestData) => {
+  const requestDataContent = (requestData) => {
     const copyText = (val) => {
       !isEmpty(val) && toast.success("Copied succesfully!!");
       return val;
@@ -334,24 +338,42 @@ function Access() {
     );
   };
 
-  const rsrctitle = (title) => {
-    let filterTitle = "";
-    if (title == ServiceType.Service_HIVE.label) {
-      filterTitle = `Hive Query`;
+  const showQueryPopup = (rowId, aclEnforcer, serviceType, requestData) => {
+    if (!isEmpty(requestData)) {
+      if (
+        aclEnforcer === "ranger-acl" &&
+        ServiceRequestDataRangerAcl.includes(serviceType)
+      ) {
+        return queryPopupContent(rowId, serviceType, requestData);
+      } else if (
+        aclEnforcer === "hadoop-acl" &&
+        ServiceRequestDataHadoopAcl.includes(serviceType)
+      ) {
+        return queryPopupContent(rowId, serviceType, requestData);
+      } else {
+        return "";
+      }
     }
-    if (title == ServiceType.Service_HBASE.label) {
-      filterTitle = `HBase Audit Data`;
-    }
-    if (title == ServiceType.Service_HDFS.label) {
-      filterTitle = `HDFS Operation Name`;
-    }
-    if (title == ServiceType.Service_SOLR.label) {
-      filterTitle = "Solr Query";
-    }
-    return <strong>{filterTitle}</strong>;
   };
 
-  const previousVer = (e) => {
+  const queryPopupContent = (rowId, serviceType, requestData) => {
+    return (
+      <div className="pull-right">
+        <div className="queryInfo btn btn-sm link-tag query-icon">
+          <CustomPopoverOnClick
+            icon="fa-fw fa fa-table"
+            title={requestDataTitle(serviceType)}
+            content={requestDataContent(requestData)}
+            placement="left"
+            trigger={["click", "focus"]}
+            id={rowId}
+          ></CustomPopoverOnClick>
+        </div>
+      </div>
+    );
+  };
+
+  const previousVersion = (e) => {
     if (e.currentTarget.classList.contains("active")) {
       let curr = policyParamsData && policyParamsData.policyVersion;
       let policyVersionList = currentPage;
@@ -367,7 +389,7 @@ function Access() {
     setPolicyParamsData(prevVal);
   };
 
-  const nextVer = (e) => {
+  const nextVersion = (e) => {
     if (e.currentTarget.classList.contains("active")) {
       let curr = policyParamsData && policyParamsData.policyVersion;
       let policyVersionList = currentPage;
@@ -455,10 +477,13 @@ function Access() {
         Header: "Service (Name / Type)",
         accessor: (s) => (
           <div>
-            <div className="text-left" title={s.repoDisplayName}>
+            <div className="text-left lht-2 mb-1" title={s.repoDisplayName}>
               {s.repoDisplayName}
             </div>
-            <div className="bt-1 text-left" title={s.serviceTypeDisplayName}>
+            <div
+              className="bt-1 text-left lht-2 mb-0"
+              title={s.serviceTypeDisplayName}
+            >
               {s.serviceTypeDisplayName}
             </div>
           </div>
@@ -471,96 +496,34 @@ function Access() {
         Header: "Resource (Name / Type)",
         accessor: "resourceType",
         Cell: (r) => {
+          let rowId = r.row.original.id;
           let resourcePath = r.row.original.resourcePath;
           let resourceType = r.row.original.resourceType;
           let serviceType = r.row.original.serviceType;
           let aclEnforcer = r.row.original.aclEnforcer;
           let requestData = r.row.original.requestData;
-          let id = r.row.original.id;
-          if (
-            (serviceType == ServiceType.Service_HIVE.label ||
-              serviceType == ServiceType.Service_HBASE.label ||
-              serviceType == ServiceType.Service_HDFS.label ||
-              serviceType == ServiceType.Service_SOLR.label) &&
-            aclEnforcer === "ranger-acl" &&
-            !isEmpty(requestData)
-          ) {
-            if (!isUndefined(resourcePath) && !isEmpty(requestData)) {
-              return (
-                <>
+
+          if (!isUndefined(resourcePath)) {
+            let resourcePathText = isEmpty(resourcePath) ? "--" : resourcePath;
+            let resourceTypeText = isEmpty(resourceType) ? "--" : resourceType;
+            return (
+              <React.Fragment>
+                <div className="clearfix d-flex flex-nowrap m-0">
                   <div
-                    className="clearfix"
-                    style={{ display: "flex", flexWrap: "nowrap", margin: "0" }}
+                    className="pull-left resource-text lht-2 mb-1"
+                    title={resourcePathText}
                   >
-                    <div
-                      className="pull-left resource-text"
-                      title={resourcePath}
-                    >
-                      {resourcePath}
-                    </div>
-                    <div className="pull-right">
-                      <div className="queryInfo btn btn-sm link-tag query-icon">
-                        <CustomPopoverOnClick
-                          icon="fa-fw fa fa-table"
-                          title={rsrctitle(serviceType)}
-                          content={rsrcContent(requestData)}
-                          placement="left"
-                          trigger={["click", "focus"]}
-                          id={id}
-                        ></CustomPopoverOnClick>
-                      </div>
-                    </div>
+                    {resourcePathText}
                   </div>
-                  <div className="bt-1" title={resourceType}>
-                    {resourceType}
-                  </div>
-                </>
-              );
-            } else {
-              return (
-                <div
-                  className="clearfix"
-                  style={{ display: "flex", flexWrap: "nowrap", margin: "0" }}
-                >
-                  <div className="pull-left resource-text">--</div>
-                  <div className="pull-right">
-                    <div className="queryInfo btn btn-sm link-tag query-icon">
-                      <CustomPopoverOnClick
-                        icon="fa-fw fa fa-table"
-                        title={rsrctitle(serviceType)}
-                        content={rsrcContent(requestData)}
-                        placement="left"
-                        trigger={["click", "focus"]}
-                        id={id}
-                      ></CustomPopoverOnClick>
-                    </div>
-                  </div>
+                  {showQueryPopup(rowId, aclEnforcer, serviceType, requestData)}
                 </div>
-              );
-            }
+                <div className="bt-1 lht-2 mb-0" title={resourceTypeText}>
+                  {resourceTypeText}
+                </div>
+              </React.Fragment>
+            );
           } else {
-            if (!isUndefined(resourcePath)) {
-              return (
-                <>
-                  <div
-                    className="clearfix"
-                    style={{ display: "flex", flexWrap: "nowrap", margin: "0" }}
-                  >
-                    <div
-                      className="pull-left resource-text"
-                      title={resourcePath}
-                    >
-                      {resourcePath}
-                    </div>
-                  </div>
-                  <div className="bt-1" title={resourceType}>
-                    {resourceType}
-                  </div>
-                </>
-              );
-            } else {
-              return <div className="text-center">--</div>;
-            }
+            return <div className="text-center">--</div>;
           }
         },
         minWidth: 180
@@ -1051,7 +1014,8 @@ function Access() {
                     : "fa-fw fa fa-chevron-left"
                 }
                 onClick={(e) =>
-                  e.currentTarget.classList.contains("active") && previousVer(e)
+                  e.currentTarget.classList.contains("active") &&
+                  previousVersion(e)
                 }
               ></i>
               <span>{`Version ${
@@ -1071,7 +1035,7 @@ function Access() {
                     : "fa-fw fa fa-chevron-right"
                 }
                 onClick={(e) =>
-                  e.currentTarget.classList.contains("active") && nextVer(e)
+                  e.currentTarget.classList.contains("active") && nextVersion(e)
                 }
               ></i>
             </div>

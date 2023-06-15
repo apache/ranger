@@ -671,13 +671,6 @@ table.no-bg-color thead tr th:first-child {
   border-top: 1px solid #ddd;
 }
 
-.resource-text {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  flex: 1;
-  padding-right: 12px;
-}
-
 /* Edit Permission */
 .show-more-less {
   color: #0b7fad;
@@ -1673,11 +1666,28 @@ header {
   color: #000;
   text-shadow: 0 1px 0 #fff;
   opacity: 0.5;
+  cursor: pointer;
+}
+
+.resource-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex: 1;
+  padding-right: 12px;
 }
 
 .query-icon {
-  padding: 0 4px;
-  margin-top: 9px;
+  padding: 5px;
+  margin: 0;
+}
+
+.query-icon i {
+  display: block;
+  width: 14px;
+}
+
+.lht-2 {
+  line-height: 2;
 }
 
 /* Policy expire icon */
