@@ -135,6 +135,45 @@
                     </td>
                 </tr>
             {{/if}}
+            {{#if hbaseAudit}}
+                <tr>
+                    <td>
+                        {{tt 'lbl.hbaseAudit'}}
+                    </td>
+                    <td>
+                        <span class="pull-right link-tag query-icon copyQuery btn btn-sm" data-name="copyQuery" title="Copy Query">
+                            <i class="fa-fw fa fa-copy"></i>
+                        </span>
+                        <span>{{auditaccessDetail.requestData}}</span>
+                    </td>
+                </tr>
+            {{/if}}
+            {{#if solrQuery}}
+                <tr>
+                    <td>
+                        {{tt 'lbl.solrQuery'}}
+                    </td>
+                    <td>
+                        <span class="pull-right link-tag query-icon copyQuery btn btn-sm" data-name="copyQuery" title="Copy Query">
+                            <i class="fa-fw fa fa-copy"></i>
+                        </span>
+                        <span>{{auditaccessDetail.requestData}}</span>
+                    </td>
+                </tr>
+            {{/if}}
+            {{#if hdfsOperation}}
+                <tr>
+                    <td>
+                        {{tt 'lbl.hdfsOperation'}}
+                    </td>
+                    <td>
+                        <span class="pull-right link-tag query-icon copyQuery btn btn-sm" data-name="copyQuery" title="Copy Query">
+                            <i class="fa-fw fa fa-copy"></i>
+                        </span>
+                        <span>{{auditaccessDetail.requestData}}</span>
+                    </td>
+                </tr>
+            {{/if}}
             <tr>
                 <td>
                     {{tt 'lbl.accessType'}}

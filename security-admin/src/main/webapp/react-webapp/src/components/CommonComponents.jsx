@@ -332,7 +332,7 @@ export const CustomPopoverOnClick = ({
             <Popover.Title>
               {title}
               <i
-                className="pull-right close"
+                className="pull-right close ml-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClick();
