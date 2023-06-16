@@ -152,9 +152,9 @@ public class RangerHiveAuditHandler extends RangerDefaultAuditHandler {
 		int                  policyType = result.getPolicyType();
 
 		if (policyType == RangerPolicy.POLICY_TYPE_DATAMASK && result.isMaskEnabled()) {
-		    ret = createAuditEvent(result, result.getMaskType(), resourcePath);
-        } else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER) {
-            ret = createAuditEvent(result, ACCESS_TYPE_ROWFILTER, resourcePath);
+			ret = createAuditEvent(result, result.getMaskType(), resourcePath);
+		} else if (policyType == RangerPolicy.POLICY_TYPE_ROWFILTER && result.isRowFilterEnabled()) {
+			ret = createAuditEvent(result, ACCESS_TYPE_ROWFILTER, resourcePath );
 		} else if (policyType == RangerPolicy.POLICY_TYPE_ACCESS) {
 			String accessType = null;
 
