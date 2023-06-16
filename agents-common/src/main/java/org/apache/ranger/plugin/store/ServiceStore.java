@@ -105,7 +105,7 @@ public interface ServiceStore {
 
 	ServicePolicies getServicePolicyDeltasOrPolicies(String serviceName, Long lastKnownVersion) throws Exception;
 
-	ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception;
+	ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion, Long cachedPolicyVersion) throws Exception;
 
 	ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion) throws Exception;
 
