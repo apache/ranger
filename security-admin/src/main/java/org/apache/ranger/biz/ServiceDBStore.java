@@ -2937,18 +2937,18 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Support for incremental policy updates enabled using \"ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA + "\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS +"]");
 		}
-		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, SUPPORTS_POLICY_DELTAS);
+		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, SUPPORTS_POLICY_DELTAS, Long.MAX_VALUE);
 	}
 
 	@Override
-	public ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception {
+	public ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion, Long cachedPolicyVersion) throws Exception {
 		ServicePolicies ret = null;
 
 		if (SUPPORTS_POLICY_DELTAS) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Support for incremental policy updates enabled using \"ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_POLICY_DELTA + "\" configuation parameter :[" + SUPPORTS_POLICY_DELTAS + "]");
 			}
-			ret = getServicePolicies(serviceName, lastKnownVersion, true, SUPPORTS_POLICY_DELTAS);
+			ret = getServicePolicies(serviceName, lastKnownVersion, true, SUPPORTS_POLICY_DELTAS, cachedPolicyVersion);
 		}
 
 		return ret;
@@ -2957,10 +2957,10 @@ public class ServiceDBStore extends AbstractServiceStore {
 	@Override
 	public ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion) throws Exception {
 		boolean getOnlyDeltas = false;
-		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, false);
+		return getServicePolicies(serviceName, lastKnownVersion, getOnlyDeltas, false, Long.MAX_VALUE);
 	}
 
-	private ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion, boolean getOnlyDeltas, boolean isDeltaEnabled) throws Exception {
+	private ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion, boolean getOnlyDeltas, boolean isDeltaEnabled, Long maxNeededVersion) throws Exception {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceDBStore.getServicePolicies(" + serviceName  + ", " + lastKnownVersion + ")");
 		}
@@ -3013,7 +3013,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		}
 
 		if (isDeltaEnabled) {
-			ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, lastKnownVersion);
+			ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, lastKnownVersion, maxNeededVersion);
 		}
 
 		if (ret != null) {
@@ -3203,10 +3203,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 				if (policyDeltasForPolicy != null) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Processed multiple deltas for policy:[" + entry.getKey() + "], compressed-deltas:[" + policyDeltasForPolicy + "]");
-					}
-					if (policyDeltasForPolicy.size() > 1) {
-						LOG.error("More than one Compressed-deltas for policy:[" + entry.getKey() + "], compressed-deltas:[" + policyDeltasForPolicy + "].. Should not have come here!!");
+						LOG.debug("Processed deltas for policy:[" + entry.getKey() + "], compressed-deltas:[" + policyDeltasForPolicy + "]");
 					}
 					ret.addAll(policyDeltasForPolicy);
 				} else {
@@ -3225,7 +3222,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	}
 
-	ServicePolicies getServicePoliciesWithDeltas(RangerServiceDef serviceDef, XXService service, RangerServiceDef tagServiceDef, XXService tagService, Long lastKnownVersion) {
+	ServicePolicies getServicePoliciesWithDeltas(RangerServiceDef serviceDef, XXService service, RangerServiceDef tagServiceDef, XXService tagService, Long lastKnownVersion, Long maxNeededVersion) {
 		ServicePolicies ret = null;
 
 		// if lastKnownVersion != -1L : try and get deltas. Get delta for serviceName first. Find id of the delta
@@ -3245,7 +3242,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 			boolean isValid;
 
-			resourcePolicyDeltas = daoMgr.getXXPolicyChangeLog().findLaterThan(lastKnownVersion, service.getId());
+			resourcePolicyDeltas = daoMgr.getXXPolicyChangeLog().findLaterThan(lastKnownVersion, maxNeededVersion, service.getId());
 			if (CollectionUtils.isNotEmpty(resourcePolicyDeltas)) {
 				isValid = RangerPolicyDeltaUtil.isValidDeltas(resourcePolicyDeltas, componentServiceType);
 
@@ -3257,7 +3254,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 				if (isValid && tagService != null) {
 					Long id = resourcePolicyDeltas.get(0).getId();
-					tagPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(id, tagService.getId());
+					tagPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(id, maxNeededVersion, tagService.getId());
 
 
 					if (CollectionUtils.isNotEmpty(tagPolicyDeltas)) {

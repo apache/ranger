@@ -56,12 +56,13 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
         super(daoManager);
     }
 
-    public List<RangerPolicyDelta> findLaterThan(Long version, Long serviceId) {
+    public List<RangerPolicyDelta> findLaterThan(Long version, Long maxVersion, Long serviceId) {
         final List<RangerPolicyDelta> ret;
         if (version != null) {
             List<Object[]> logs = getEntityManager()
                     .createNamedQuery("XXPolicyChangeLog.findSinceVersion", Object[].class)
                     .setParameter("version", version)
+                    .setParameter("maxVersion", maxVersion)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
 
@@ -94,12 +95,13 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
         return ret;
     }
 
-    public List<RangerPolicyDelta> findGreaterThan(Long id, Long serviceId) {
+    public List<RangerPolicyDelta> findGreaterThan(Long id, Long maxVersion, Long serviceId) {
         final List<RangerPolicyDelta> ret;
         if (id != null) {
             List<Object[]> logs = getEntityManager()
                     .createNamedQuery("XXPolicyChangeLog.findGreaterThan", Object[].class)
                     .setParameter("id", id)
+                    .setParameter("maxVersion", maxVersion)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
             ret = convert(logs);

@@ -28,6 +28,7 @@ import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
@@ -404,21 +405,30 @@ public class PolicyRefresher extends Thread {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
 		}
+		boolean doPreserveDeltas = plugIn.getConfig().getBoolean(plugIn.getConfig().getPropertyPrefix() + ".preserve.deltas", false);
 
 		if(policies != null) {
 			File cacheFile = null;
+			File backupCacheFile = null;
 			if (cacheDir != null) {
+				String realCacheDirName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? cacheDir + File.separator + "deltas" : cacheDir;
+				String backupCacheFileName = cacheFileName + "_" + policies.getPolicyVersion();
+				String realCacheFileName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? backupCacheFileName : cacheFileName;
+
 				// Create the cacheDir if it doesn't already exist
-				File cacheDirTmp = new File(cacheDir);
+				File cacheDirTmp = new File(realCacheDirName);
 				if (cacheDirTmp.exists()) {
-					cacheFile =  new File(cacheDir + File.separator + cacheFileName);
+					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 				} else {
 					try {
 						cacheDirTmp.mkdirs();
-						cacheFile =  new File(cacheDir + File.separator + cacheFileName);
+						cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 					} catch (SecurityException ex) {
 						LOG.error("Cannot create cache directory", ex);
 					}
+				}
+				if (CollectionUtils.isEmpty(policies.getPolicyDeltas())) {
+					backupCacheFile = new File(realCacheDirName + File.separator + backupCacheFileName);
 				}
 			}
 			
@@ -451,6 +461,26 @@ public class PolicyRefresher extends Thread {
 				RangerPerfTracer.log(perf);
 
 	    	}
+
+			if (doPreserveDeltas) {
+				if (backupCacheFile != null) {
+
+					RangerPerfTracer perf = null;
+
+					if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
+					}
+
+					try (Writer writer = new FileWriter(backupCacheFile)) {
+						gson.toJson(policies, writer);
+					} catch (Exception excp) {
+						LOG.error("failed to save policies to cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
+					}
+
+					RangerPerfTracer.log(perf);
+
+				}
+			}
 		} else {
 			LOG.info("policies is null. Nothing to save in cache");
 		}

@@ -19,6 +19,8 @@
 
 package org.apache.ranger.common;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
@@ -30,6 +32,9 @@ import org.apache.ranger.plugin.util.ServicePolicies;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.Writer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -49,6 +54,7 @@ public class RangerServicePoliciesCache {
 
 	private final int     waitTimeInSeconds;
 	private final boolean dedupStrings;
+	private Gson gson;
 
 	private final Map<String, ServicePoliciesWrapper> servicePoliciesMap = new HashMap<>();
 
@@ -68,6 +74,11 @@ public class RangerServicePoliciesCache {
 
 		waitTimeInSeconds = config.getInt("ranger.admin.policy.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
 		dedupStrings      = config.getBoolean("ranger.admin.policy.dedup.strings", Boolean.TRUE);
+		try {
+			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
+		} catch(Throwable excp) {
+			LOG.error("PolicyRefresher(): failed to create GsonBuilder object", excp);
+		}
 	}
 
 	public void dump() {
@@ -130,7 +141,6 @@ public class RangerServicePoliciesCache {
 				LOG.error("getServicePolicies(" + serviceName + "): failed to get latest policies as service-store is null! Returning cached servicePolicies!");
 				ret = servicePoliciesWrapper.getServicePolicies();
 			}
-
 		} else {
 			LOG.error("getServicePolicies() failed to get policies as serviceName is null or blank and/or serviceId is null!");
 		}
@@ -186,6 +196,58 @@ public class RangerServicePoliciesCache {
         return ret;
     }
 
+	public void saveToCache(ServicePolicies policies) {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServicePoliciesCache(serviceName=" + policies.getServiceName() + ").saveToCache()");
+		}
+		if (policies != null) {
+			RangerAdminConfig config = RangerAdminConfig.getInstance();
+			boolean doSaveToDisk = config.getBoolean("ranger.admin.policy.save.to.disk", false);
+
+			if (doSaveToDisk) {
+				File cacheFile = null;
+
+				String cacheDir = config.get("ranger.admin.policy.cache.dir");
+				if (cacheDir != null) {
+					String appId = policies.getServiceDef().getName();
+					String serviceName = policies.getServiceName();
+					String cacheFileName = String.format("%s_%s.json", appId, serviceName);
+
+					cacheFileName = cacheFileName.replace(File.separatorChar, '_');
+					cacheFileName = cacheFileName.replace(File.pathSeparatorChar, '_');
+					cacheFileName = cacheFileName + "_" + policies.getPolicyVersion();
+
+					// Create the cacheDir if it doesn't already exist
+					File cacheDirTmp = new File(cacheDir);
+					if (cacheDirTmp.exists()) {
+						cacheFile = new File(cacheDir + File.separator + cacheFileName);
+					} else {
+						try {
+							cacheDirTmp.mkdirs();
+							cacheFile = new File(cacheDir + File.separator + cacheFileName);
+						} catch (SecurityException ex) {
+							LOG.error("Cannot create cache directory", ex);
+						}
+					}
+				}
+
+				if (cacheFile != null) {
+					try (Writer writer = new FileWriter(cacheFile)) {
+						gson.toJson(policies, writer);
+					} catch (Exception excp) {
+						LOG.error("failed to save policies to cache file '" + cacheFile.getAbsolutePath() + "'", excp);
+					}
+				}
+			}
+		} else {
+			LOG.error("ServicePolicies is null object!!");
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServicePoliciesCache(serviceName=" + policies.getServiceName() + ").saveToCache()");
+		}
+	}
+
 	private class ServicePoliciesWrapper {
 		final Long          serviceId;
 		ServicePolicies     servicePolicies;
@@ -229,6 +291,7 @@ public class RangerServicePoliciesCache {
 			}
 			ServicePolicies ret        = null;
 			boolean         lockResult = false;
+			boolean         doSaveToCache = false;
 
 			try {
 				final boolean isCacheReloadedByDQEvent;
@@ -238,49 +301,61 @@ public class RangerServicePoliciesCache {
 				if (lockResult) {
 					isCacheReloadedByDQEvent = getLatest(serviceName, serviceStore, lastKnownVersion);
 
-					if (isCacheReloadedByDQEvent) {
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("ServicePolicies cache was completely loaded from database because of a disqualifying event - such as service-definition change!");
-						}
-					}
-
-					if (needsBackwardCompatibility || isCacheReloadedByDQEvent
-						|| lastKnownVersion == -1L || lastKnownVersion.equals(servicePolicies.getPolicyVersion())) {
-						// Looking for all policies, or Some disqualifying change encountered
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("All policies were requested, returning cached ServicePolicies");
-						}
-						ret = this.servicePolicies;
-					} else {
-						boolean         isDeltaCacheReinitialized = false;
-						ServicePolicies servicePoliciesForDeltas  = this.deltaCache != null ? this.deltaCache.getServicePolicyDeltasFromVersion(lastKnownVersion) : null;
-
-						if (servicePoliciesForDeltas == null) {
-							servicePoliciesForDeltas  = serviceStore.getServicePolicyDeltas(serviceName, lastKnownVersion);
-							isDeltaCacheReinitialized = true;
-						}
-						if (servicePoliciesForDeltas != null && servicePoliciesForDeltas.getPolicyDeltas() != null) {
+					if (this.servicePolicies != null) {
+						if (isCacheReloadedByDQEvent) {
 							if (LOG.isDebugEnabled()) {
-								LOG.debug("Deltas were requested. Returning deltas from lastKnownVersion:[" + lastKnownVersion + "]");
+								LOG.debug("ServicePolicies cache was completely loaded from database because of a disqualifying event - such as service-definition change!");
 							}
-							if (isDeltaCacheReinitialized) {
-								this.deltaCache = new ServicePolicyDeltasCache(lastKnownVersion, servicePoliciesForDeltas);
-							}
-							ret = servicePoliciesForDeltas;
-						} else {
-							LOG.warn("Deltas were requested for service:[" + serviceName + "], but could not get them!! lastKnownVersion:[" + lastKnownVersion + "]; Returning cached ServicePolicies:[" + (servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L) + "]");
-
-							this.deltaCache = null;
-							ret = this.servicePolicies;
 						}
+						if (!lastKnownVersion.equals(servicePolicies.getPolicyVersion()) || isCacheReloadedByDQEvent) {
+							doSaveToCache = true;
+						}
+
+						if (needsBackwardCompatibility || isCacheReloadedByDQEvent
+								|| lastKnownVersion == -1L || lastKnownVersion.equals(servicePolicies.getPolicyVersion())) {
+							// Looking for all policies, or Some disqualifying change encountered
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("All policies were requested, returning cached ServicePolicies");
+							}
+							ret = this.servicePolicies;
+						} else {
+							boolean isDeltaCacheReinitialized = false;
+							ServicePolicies servicePoliciesForDeltas = this.deltaCache != null ? this.deltaCache.getServicePolicyDeltasFromVersion(lastKnownVersion) : null;
+
+							if (servicePoliciesForDeltas == null) {
+								servicePoliciesForDeltas = serviceStore.getServicePolicyDeltas(serviceName, lastKnownVersion, servicePolicies.getPolicyVersion());
+								isDeltaCacheReinitialized = true;
+							}
+							if (servicePoliciesForDeltas != null && servicePoliciesForDeltas.getPolicyDeltas() != null) {
+								if (LOG.isDebugEnabled()) {
+									LOG.debug("Deltas were requested. Returning deltas from lastKnownVersion:[" + lastKnownVersion + "]");
+								}
+								if (isDeltaCacheReinitialized) {
+									this.deltaCache = new ServicePolicyDeltasCache(lastKnownVersion, servicePoliciesForDeltas);
+								}
+								ret = servicePoliciesForDeltas;
+							} else {
+								LOG.warn("Deltas were requested for service:[" + serviceName + "], but could not get them!! lastKnownVersion:[" + lastKnownVersion + "]; Returning cached ServicePolicies:[" + (servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L) + "]");
+
+								this.deltaCache = null;
+								ret = this.servicePolicies;
+							}
+						}
+					} else {
+						LOG.error("ServicePolicies object is null!");
 					}
 				} else {
 					LOG.error("Could not get lock in [" + waitTimeInSeconds + "] seconds, returning cached ServicePolicies and wait Queue Length:[" +lock.getQueueLength() + "], servicePolicies version:[" + (servicePolicies != null ? servicePolicies.getPolicyVersion() : -1L) + "]");
 					ret = this.servicePolicies;
+					doSaveToCache = true;
 				}
 			} catch (InterruptedException exception) {
 				LOG.error("getLatestOrCached:lock got interrupted..", exception);
 			} finally {
+				// Dump cached policies to disk
+				if (doSaveToCache) {
+					saveToCache(this.servicePolicies);
+				}
 				if (lockResult) {
 					lock.unlock();
 				}
