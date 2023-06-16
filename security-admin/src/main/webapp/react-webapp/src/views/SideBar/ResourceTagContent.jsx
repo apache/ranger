@@ -19,12 +19,21 @@
 
 import React, { useEffect } from "react";
 import { NavLink } from "react-router-dom";
-import { sortBy, capitalize } from "lodash";
+import { sortBy, capitalize, groupBy, isEmpty } from "lodash";
 import { RangerPolicyType } from "../../utils/XAEnums";
 import Spinner from "react-bootstrap/Spinner";
 
 export const ResourceTagContent = (props) => {
-  const { serviceDefData, serviceData, closeCollapse, loader } = props;
+  const { serviceDefsData, servicesData, closeCollapse, loader } = props;
+
+  let filterServiceDef = [];
+  serviceDefsData?.filter((servicedefData) => {
+    return Object.keys(groupBy(servicesData, "type"))?.map((servicedef) => {
+      if (servicedefData.name == servicedef) {
+        return filterServiceDef.push(servicedefData);
+      }
+    });
+  });
 
   const handleCloseCollapse = () => {
     localStorage.removeItem("zoneDetails");
@@ -43,37 +52,59 @@ export const ResourceTagContent = (props) => {
       }}
       role="status"
     ></Spinner>
-  ) : (
+  ) : !isEmpty(servicesData) ? (
     <ul className="list-group list-group-flush overflow-y-auto">
-      {serviceDefData?.map((servicedef, index) => {
+      {filterServiceDef?.map((servicedef, index) => {
         let filterService = sortBy(
-          serviceData?.filter((service) => service?.type === servicedef?.name),
+          servicesData?.filter((service) => service?.type === servicedef?.name),
           "name"
         );
 
         return (
           <React.Fragment key={index}>
-            <li className="list-servicedef-title">
-              {capitalize(servicedef?.displayName)}
-            </li>
-            {filterService?.map((service, index) => {
-              return (
-                <React.Fragment key={index}>
-                  <li className="list-group-item">
-                    <NavLink
-                      onClick={handleCloseCollapse}
-                      to={`/service/${service.id}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`}
+            <div className="list-grid-wrapper">
+              {" "}
+              <li className="list-servicedef-title  service-def">
+                {capitalize(servicedef?.displayName)}
+              </li>
+              {filterService?.map((service, index) => {
+                return (
+                  <React.Fragment key={index}>
+                    <li
                       className="list-group-item"
+                      title={service?.displayName ?? service?.name}
                     >
-                      {service?.displayName ?? service?.name}
-                    </NavLink>
-                  </li>
-                </React.Fragment>
-              );
-            })}
+                      <NavLink
+                        onClick={handleCloseCollapse}
+                        to={`/service/${service.id}/policies/${RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value}`}
+                        className="list-group-item"
+                      >
+                        {service?.displayName ?? service?.name}
+                      </NavLink>
+                    </li>
+                  </React.Fragment>
+                );
+              })}
+            </div>
           </React.Fragment>
         );
       })}
+    </ul>
+  ) : (
+    <ul className="list-group list-group-flush overflow-y-auto">
+      <h6 className="p-3 mb-1">No Services Found!</h6>
+      <p className="px-3">
+        Please create a service by visiting the{" "}
+        <NavLink
+          onClick={closeCollapse}
+          to={`/policymanager/resource`}
+          style={{ textDecoration: "underline" }}
+          className={"text-white"}
+        >
+          Service Manager
+        </NavLink>{" "}
+        page.
+      </p>
     </ul>
   );
 };

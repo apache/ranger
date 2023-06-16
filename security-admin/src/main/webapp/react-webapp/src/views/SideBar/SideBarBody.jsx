@@ -26,7 +26,8 @@ import {
   isEmpty,
   map,
   uniq,
-  upperCase
+  upperCase,
+  groupBy
 } from "lodash";
 import closeIcon from "Images/close.svg";
 import { RangerPolicyType } from "../../utils/XAEnums";
@@ -51,11 +52,6 @@ function reducer(state, action) {
         ...state,
         selectedServiceDef: action.selectedServiceDef
       };
-    case "SERVICE_TYPES_OPTIONS":
-      return {
-        ...state,
-        serviceTypesOptions: action.serviceTypesOptions
-      };
     default:
       throw new Error();
   }
@@ -75,16 +71,11 @@ export const SideBarBody = (props) => {
     tagServicesData,
     sideBarDispatch
   } = props;
-
   const [keyState, dispatch] = useReducer(reducer, {
-    selectedServiceDef: [],
-    serviceTypesOptions: sortBy(
-      filter(allServicesDefData, (serviceDef) => serviceDef.name !== "tag"),
-      "name"
-    )
+    selectedServiceDef: []
   });
 
-  const { selectedServiceDef, serviceTypesOptions } = keyState;
+  const { selectedServiceDef } = keyState;
 
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
   const navigate = useNavigate();
@@ -110,46 +101,62 @@ export const SideBarBody = (props) => {
     })
   };
 
-  const handleServiceDefChange = (
-    value,
-    allSelectedServiceDefs,
-    allSelectedServices
-  ) => {
+  const getCurrentServiceDefs = (value) => {
+    let filterServiceDef = [];
+    value.filter((servicedefData) => {
+      return Object.keys(groupBy(servicesData, "type"))?.map((servicedef) => {
+        if (servicedefData.value == servicedef) {
+          return filterServiceDef.push(servicedefData);
+        }
+      });
+    });
+    if (filterServiceDef?.length == 0 && value?.length > 0) {
+      handleServiceDefChange(filterServiceDef);
+    } else {
+      return filterServiceDef;
+    }
+  };
+
+  const serviceDefOptions = () => {
+    let filterServiceDef = [];
+    allServicesDefData?.filter((servicedefData) => {
+      return Object.keys(groupBy(servicesData, "type"))?.map((servicedef) => {
+        if (servicedefData.name == servicedef) {
+          return filterServiceDef.push(servicedefData);
+        }
+      });
+    });
+    return sortBy(
+      map(filterServiceDef, function (serviceDef) {
+        return {
+          value: serviceDef.name,
+          label: upperCase(serviceDef.name)
+        };
+      }),
+      "value"
+    );
+  };
+
+  const handleServiceDefChange = (value) => {
     if (value.length !== 0) {
       let selectedServiceDefs = [];
       let selectedService = [];
       let filterSelectedService = [];
 
       value.map((serviceDef) => {
-        if (allSelectedServiceDefs == undefined) {
-          allServicesDefData?.filter((servicedefs) => {
-            if (servicedefs.name === serviceDef.value) {
-              selectedServiceDefs.push(servicedefs);
-            }
-          });
-        } else {
-          allSelectedServiceDefs.filter((servicedefs) => {
-            if (servicedefs.name === serviceDef.value) {
-              selectedServiceDefs.push(servicedefs);
-            }
-          });
-        }
+        allServicesDefData?.filter((servicedefs) => {
+          if (servicedefs.name === serviceDef.value) {
+            selectedServiceDefs.push(servicedefs);
+          }
+        });
       });
 
       value.map((serviceDef) => {
-        if (allSelectedServices == undefined) {
-          allServicesData.filter((services) => {
-            if (services.type === serviceDef.value) {
-              selectedService.push(services);
-            }
-          });
-        } else {
-          allSelectedServices.filter((services) => {
-            if (services.type === serviceDef.value) {
-              selectedService.push(services);
-            }
-          });
-        }
+        allServicesData.filter((services) => {
+          if (services.type === serviceDef.value) {
+            selectedService.push(services);
+          }
+        });
       });
 
       if (isKMSRole) {
@@ -299,39 +306,36 @@ export const SideBarBody = (props) => {
                 />
               </span>
             </div>
-            <Select
-              isMulti
-              isClearable={false}
-              placeholder="Select Service Types"
-              menuPlacement="auto"
-              className={`select-nav-drawer ${loader ? "not-allowed" : ""}`}
-              styles={serviceSelectCustomStyle}
-              theme={serviceSelectThemes}
-              isDisabled={loader ? true : false}
-              value={selectedServiceDef}
-              onChange={(e) => handleServiceDefChange(e)}
-              options={sortBy(
-                map(serviceTypesOptions, function (serviceDef) {
-                  return {
-                    value: serviceDef.name ?? serviceDef.value,
-                    label: upperCase(serviceDef.name ?? serviceDef.value)
-                  };
-                }),
-                "name"
-              )}
-              components={{
-                DropdownIndicator: () => null,
-                IndicatorSeparator: () => null
-              }}
-            />
+            <div
+              title={`${isEmpty(servicesData) ? "Create Service first" : ""} `}
+            >
+              <Select
+                isMulti
+                isClearable={false}
+                placeholder="Select Service Types"
+                menuPlacement="auto"
+                className={`select-nav-drawer ${loader ? "not-allowed" : ""}`}
+                styles={serviceSelectCustomStyle}
+                theme={serviceSelectThemes}
+                isDisabled={loader || isEmpty(servicesData) ? true : false}
+                isLoading={loader ? true : false}
+                value={!loader ? getCurrentServiceDefs(selectedServiceDef) : ""}
+                onChange={(e) => handleServiceDefChange(e)}
+                options={serviceDefOptions()}
+                components={{
+                  DropdownIndicator: () => null,
+                  IndicatorSeparator: () => null
+                }}
+              />
+            </div>
             <ResourceTagContent
-              serviceDefData={sortBy(
+              serviceDefsData={sortBy(
                 servicesDefData?.filter(Boolean)?.filter((serviceDef) => {
                   return serviceDef.name !== "tag";
                 }),
                 "name"
               )}
-              serviceData={sortBy(
+              servicesData={sortBy(
                 servicesData?.filter(Boolean)?.filter((serviceDef) => {
                   return serviceDef.name !== "tag";
                 }),
@@ -362,12 +366,12 @@ export const SideBarBody = (props) => {
               </span>
             </div>
             <ResourceTagContent
-              serviceDefData={tagServicesDefData
+              serviceDefsData={tagServicesDefData
                 ?.filter(Boolean)
                 .filter((serviceDef) => {
                   return serviceDef.name == "tag";
                 })}
-              serviceData={sortBy(
+              servicesData={sortBy(
                 tagServicesData.filter(Boolean)?.filter((serviceDef) => {
                   return serviceDef.type === "tag";
                 }),

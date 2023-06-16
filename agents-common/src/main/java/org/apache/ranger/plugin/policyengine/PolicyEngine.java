@@ -680,8 +680,10 @@ public class PolicyEngine {
                 LOG.debug("Built matchers for all Zones");
             }
 
+            RangerPolicyEngineOptions options = pluginContext.getConfig().getPolicyEngineOptions();
+
             for (RangerServiceDef.RangerResourceDef resourceDef : serviceDef.getResources()) {
-                resourceZoneTrie.put(resourceDef.getName(), new RangerResourceTrie<>(resourceDef, matchers));
+                resourceZoneTrie.put(resourceDef.getName(), new RangerResourceTrie<>(resourceDef, matchers, options.optimizeTrieForSpace, options.optimizeTrieForRetrieval, pluginContext));
             }
         }
 

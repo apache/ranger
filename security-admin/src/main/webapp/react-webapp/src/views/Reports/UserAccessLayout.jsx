@@ -60,6 +60,7 @@ function UserAccessLayout(props) {
   const [filterServiceDefs, setFilterServiceDefs] = useState([]);
   const [serviceDefOpts, setServiceDefOpts] = useState([]);
   const [services, setServices] = useState([]);
+  const [zones, setZones] = useState([]);
   const [zoneNameOpts, setZoneNameOpts] = useState([]);
   const [searchParamsObj, setSearchParamsObj] = useState({});
   const navigate = useNavigate();
@@ -165,6 +166,7 @@ function UserAccessLayout(props) {
       }
     );
 
+    setZones(zonesResp?.data?.securityZones || []);
     setZoneNameOpts(zonesList);
   };
 
@@ -229,6 +231,8 @@ function UserAccessLayout(props) {
     if (values.zoneName !== undefined && values.zoneName) {
       urlSearchParams = `${urlSearchParams}&zoneName=${values.zoneName.value}`;
       searchFields.zoneName = values.zoneName.value;
+
+      setZoneDetails(values.zoneName.value);
     }
 
     if (values.searchByValue !== undefined && values.searchByValue) {
@@ -382,6 +386,7 @@ function UserAccessLayout(props) {
 
     if (searchParams.get("zoneName")) {
       searchFields.zoneName = searchParams.get("zoneName");
+      setZoneDetails(searchParams.get("zoneName"));
     }
 
     if (searchParams.get("user")) {
@@ -419,6 +424,17 @@ function UserAccessLayout(props) {
           replace: true
         });
       }
+    }
+  };
+
+  const setZoneDetails = (zoneName) => {
+    let zoneDetails = {};
+    let zone = find(zones, { name: zoneName });
+
+    if (zone) {
+      zoneDetails["label"] = zoneName;
+      zoneDetails["value"] = zone.id;
+      localStorage.setItem("zoneDetails", JSON.stringify(zoneDetails));
     }
   };
 

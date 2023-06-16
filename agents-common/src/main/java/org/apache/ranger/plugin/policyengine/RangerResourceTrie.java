@@ -87,10 +87,12 @@ public class RangerResourceTrie<T extends RangerResourceEvaluator> {
         this.optWildcard             = other.optWildcard;
         this.wildcardChars           = other.wildcardChars;
         this.isOptimizedForSpace     = other.isOptimizedForSpace;
-        this.isOptimizedForRetrieval = false;
+        this.isOptimizedForRetrieval = other.isOptimizedForRetrieval;
         this.separatorChar           = other.separatorChar;
         this.inheritedEvaluators     = other.inheritedEvaluators != null ? new HashSet<>(other.inheritedEvaluators) : null;
         this.root                    = copyTrieSubtree(other.root, null);
+
+        wrapUpUpdate();
 
         RangerPerfTracer.logAlways(perf);
 

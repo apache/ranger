@@ -19,7 +19,7 @@
 
 import React, { useReducer } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button, Modal } from "react-bootstrap";
+import { Button, Dropdown, DropdownButton, Modal } from "react-bootstrap";
 import { isEmpty, upperCase } from "lodash";
 import Select from "react-select";
 import ServiceViewDetails from "../ServiceManager/ServiceViewDetails";
@@ -239,15 +239,22 @@ export const TopNavBar = (props) => {
           </React.Fragment>
         )}
       </div>
-      <div className="collapse navbar-collapse" id="navbarText">
-        <ul className="navbar-nav ml-auto">
-          {!isUserRole && (
-            <li className="nav-item" title="Service View">
-              <Button
-                variant="outline-dark"
-                className={`${
-                  policyLoader ? "not-allowed" : ""
-                } btn btn-sm m-r-5`}
+      <div
+        className="collapse navbar-collapse justify-content-end"
+        id="navbarText"
+      >
+        {(!isUserRole || isAdminRole) && (
+          <DropdownButton
+            id="dropdown-item-button"
+            title="Manage Service"
+            size="sm"
+            className="manage-service"
+            disabled={policyLoader ? true : false}
+          >
+            {!isUserRole && (
+              <Dropdown.Item
+                as="button"
+                className={`${policyLoader ? "not-allowed" : ""}`}
                 onClick={() => {
                   showViewModal(serviceData?.id);
                 }}
@@ -256,34 +263,32 @@ export const TopNavBar = (props) => {
                 data-id={serviceData?.id}
                 data-cy={serviceData?.id}
               >
-                <i className="fa-fw fa fa-eye fa-fw fa fa-large"></i>
-              </Button>
-            </li>
-          )}
-          {isAdminRole && (
-            <li className="nav-item" title="Service Edit">
-              <Link
-                to={`/service/${serviceDefData.id}/edit/${serviceData?.id}`}
-                onClick={(e) => policyLoader && e.preventDefault()}
-                state={allServicesData[0]?.id}
+                <i className="fa-fw fa fa-eye fa-fw fa fa-large"></i> View
+                Service
+              </Dropdown.Item>
+            )}
+            {isAdminRole && (
+              <Dropdown.ItemText>
+                <Link
+                  to={`/service/${serviceDefData.id}/edit/${serviceData?.id}`}
+                  onClick={(e) => policyLoader && e.preventDefault()}
+                  state={allServicesData[0]?.id}
+                  disabled={policyLoader ? true : false}
+                  className={`${policyLoader ? "not-allowed" : ""}`}
+                  data-name="editService"
+                  data-id={serviceData?.id}
+                  data-cy={serviceData?.id}
+                >
+                  <i className="fa-fw fa fa-edit fa-fw fa fa-large"></i> Edit
+                  Service
+                </Link>
+              </Dropdown.ItemText>
+            )}
+            {isAdminRole && (
+              <Dropdown.Item
+                as="button"
                 disabled={policyLoader ? true : false}
-                className={`${
-                  policyLoader ? "not-allowed" : ""
-                } btn btn-sm m-r-5`}
-                data-name="editService"
-                data-id={serviceData?.id}
-                data-cy={serviceData?.id}
-              >
-                <i className="fa-fw fa fa-edit fa-fw fa fa-large"></i>
-              </Link>
-            </li>
-          )}
-          {isAdminRole && (
-            <li className="nav-item" title="Service Delete">
-              <Button
-                variant="danger"
-                disabled={policyLoader ? true : false}
-                className={`${policyLoader ? "not-allowed" : ""} btn-sm`}
+                className={`${policyLoader ? "not-allowed" : ""}`}
                 onClick={() => {
                   showDeleteModal();
                 }}
@@ -291,11 +296,13 @@ export const TopNavBar = (props) => {
                 data-id={serviceData?.id}
                 data-cy={serviceData?.id}
               >
-                <i className="fa-fw fa fa-trash fa-fw fa fa-large"></i>
-              </Button>
-            </li>
-          )}
-        </ul>
+                <i className="fa-fw fa fa-trash fa-fw fa fa-large"></i> Delete
+                Service
+              </Dropdown.Item>
+            )}
+          </DropdownButton>
+        )}
+
         {(!isUserRole || isAdminRole) && <span className="pipe"></span>}
         <span className="navbar-text last-response-time">
           <strong>Last Response Time</strong>
