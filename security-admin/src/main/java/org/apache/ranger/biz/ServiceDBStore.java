@@ -1690,6 +1690,43 @@ public class ServiceDBStore extends AbstractServiceStore {
 			hasTagServiceValueChanged = true;
 		}
 
+		boolean hasGdsServiceValueChanged = false;
+		Long    existingGdsServiceId      = existing.getGdsService();
+		String  newGdsServiceName         = service.getGdsService(); // null/empty for old clients; blank string to remove existing association
+		Long    newGdsServiceId           = null;
+
+		if (StringUtils.isEmpty(newGdsServiceName)) { // old client; don't update existing gdsService
+			if (existingGdsServiceId != null) {
+				newGdsServiceName = getServiceName(existingGdsServiceId);
+
+				service.setGdsService(newGdsServiceName);
+
+				LOG.info("ServiceDBStore.updateService(id=" + service.getId() + "; name=" + service.getName() + "): gdsService is null; using existing gdsService '" + newGdsServiceName + "'");
+			}
+		}
+
+		if (StringUtils.isNotBlank(newGdsServiceName)) {
+			RangerService tmp = getServiceByName(newGdsServiceName);
+
+			if (tmp == null || !EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME.equals(tmp.getType())) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("ServiceDBStore.updateService() - " + newGdsServiceName + " does not refer to a valid gds service.(" + service + ")");
+				}
+
+				throw restErrorUtil.createRESTException("Invalid gds service name " + newGdsServiceName, MessageEnums.ERROR_CREATING_OBJECT);
+			} else {
+				newGdsServiceId = tmp.getId();
+			}
+		}
+
+		if (existingGdsServiceId == null) {
+			if (newGdsServiceId != null) {
+				hasGdsServiceValueChanged = true;
+			}
+		} else if (!existingGdsServiceId.equals(newGdsServiceId)) {
+			hasGdsServiceValueChanged = true;
+		}
+
 		boolean hasIsEnabledChanged = !existing.getIsenabled().equals(service.getIsEnabled());
 
 		List<XXServiceConfigMap> dbConfigMaps = daoMgr.getXXServiceConfigMap().findByServiceId(service.getId());
@@ -1707,7 +1744,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			service.setVersion(existing.getVersion());
 			service = svcService.update(service);
 
-			if (hasTagServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
+			if (hasTagServiceValueChanged || hasGdsServiceValueChanged || hasIsEnabledChanged || hasServiceConfigForPluginChanged) {
 				updatePolicyVersion(service, RangerPolicyDelta.CHANGE_TYPE_SERVICE_CHANGE, null,false);
 			}
 		}
@@ -3684,11 +3721,13 @@ public class ServiceDBStore extends AbstractServiceStore {
 				serviceVersionInfoDbObj = new XXServiceVersionInfo();
 				serviceVersionInfoDbObj.setServiceId(service.getId());
 				serviceVersionInfoDbObj.setPolicyVersion(nextVersion);
-				serviceVersionInfoDbObj.setPolicyUpdateTime(new Date());
+				serviceVersionInfoDbObj.setPolicyUpdateTime(now);
 				serviceVersionInfoDbObj.setTagVersion(nextVersion);
-				serviceVersionInfoDbObj.setTagUpdateTime(new Date());
+				serviceVersionInfoDbObj.setTagUpdateTime(now);
 				serviceVersionInfoDbObj.setRoleVersion(nextVersion);
-				serviceVersionInfoDbObj.setRoleUpdateTime(new Date());
+				serviceVersionInfoDbObj.setRoleUpdateTime(now);
+				serviceVersionInfoDbObj.setGdsVersion(nextVersion);
+				serviceVersionInfoDbObj.setGdsUpdateTime(now);
 
 				serviceVersionUpdater.version = nextVersion;
 				serviceVersionInfoDao.create(serviceVersionInfoDbObj);

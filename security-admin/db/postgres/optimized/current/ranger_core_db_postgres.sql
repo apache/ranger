@@ -575,12 +575,14 @@ is_enabled BOOLEAN DEFAULT '0' NOT NULL,
 tag_service BIGINT DEFAULT NULL NULL,
 tag_version BIGINT DEFAULT 0 NOT NULL,
 tag_update_time TIMESTAMP DEFAULT NULL NULL,
+gds_service NUMBER(20) DEFAULT NULL NULL,
 primary key(id),
 CONSTRAINT x_service_name UNIQUE(name),
 CONSTRAINT x_service_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_service_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES x_portal_user(id),
 CONSTRAINT x_service_FK_type FOREIGN KEY(type) REFERENCES x_service_def(id),
-CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id)
+CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id),
+CONSTRAINT x_service_FK_gds_service FOREIGN KEY (gds_service) REFERENCES x_service(id)
 );
 
 CREATE SEQUENCE x_security_zone_seq;
@@ -1194,6 +1196,8 @@ tag_version bigint NOT NULL DEFAULT '0',
 tag_update_time TIMESTAMP DEFAULT NULL,
 role_version bigint NOT NULL DEFAULT '0',
 role_update_time TIMESTAMP DEFAULT NULL,
+gds_version bigint NOT NULL DEFAULT '0',
+gds_update_time TIMESTAMP DEFAULT NULL,
 version bigint NOT NULL DEFAULT '1',
 primary key (id),
 CONSTRAINT x_service_version_info_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)

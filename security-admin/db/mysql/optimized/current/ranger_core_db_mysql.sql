@@ -563,6 +563,7 @@ CREATE TABLE `x_service` (
 `tag_service` BIGINT DEFAULT NULL NULL,
 `tag_version` BIGINT DEFAULT 0 NOT NULL,
 `tag_update_time` DATETIME DEFAULT NULL NULL,
+`gds_service` BIGINT DEFAULT NULL NULL,
 primary key (`id`),
 UNIQUE KEY `X_service_name` (`name`),
 KEY `x_service_added_by_id` (`added_by_id`),
@@ -573,7 +574,8 @@ KEY `x_service_type` (`type`),
 CONSTRAINT `x_service_FK_added_by_id` FOREIGN KEY (`added_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_FK_upd_by_id` FOREIGN KEY (`upd_by_id`) REFERENCES `x_portal_user` (`id`),
 CONSTRAINT `x_service_FK_type` FOREIGN KEY (`type`) REFERENCES `x_service_def` (`id`),
-CONSTRAINT `x_service_FK_tag_service` FOREIGN KEY (`tag_service`) REFERENCES `x_service` (`id`)
+CONSTRAINT `x_service_FK_tag_service` FOREIGN KEY (`tag_service`) REFERENCES `x_service` (`id`),
+CONSTRAINT `x_service_FK_gds_service` FOREIGN KEY (`gds_service`) REFERENCES `x_service` (`id`)
 )ROW_FORMAT=DYNAMIC;
 
 CREATE TABLE IF NOT EXISTS `x_security_zone`(
@@ -1246,6 +1248,8 @@ CREATE TABLE `x_service_version_info` (
 `tag_update_time` datetime NULL DEFAULT NULL,
 `role_version` bigint(20) NOT NULL DEFAULT 0,
 `role_update_time` datetime NULL DEFAULT NULL,
+`gds_version` bigint(20) DEFAULT 0 NOT NULL,
+`gds_update_time` datetime DEFAULT NULL NULL,
 `version` bigint(20) NOT NULL DEFAULT '1',
 primary key (`id`),
 CONSTRAINT `x_service_version_info_FK_service_id` FOREIGN KEY (`service_id`) REFERENCES `x_service` (`id`)

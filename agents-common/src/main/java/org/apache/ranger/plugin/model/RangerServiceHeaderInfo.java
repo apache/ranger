@@ -34,19 +34,22 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
 
     private String  name;
     private Boolean isTagService;
+    private Boolean isGdsService;
 
     public RangerServiceHeaderInfo() {
-        super();
-        setId(-1L);
-        setName("");
-        setIsTagService(false);
+        this(-1L, "", false, false);
     }
 
     public RangerServiceHeaderInfo(Long id, String name, boolean isTagService) {
+        this(id, name, isTagService, false);
+    }
+
+    public RangerServiceHeaderInfo(Long id, String name, boolean isTagService, boolean isGdsService) {
         super();
         setId(id);
         setName(name);
         setIsTagService(isTagService);
+        setIsGdsService(isGdsService);
     }
 
     public String getName() {
@@ -63,5 +66,13 @@ public class RangerServiceHeaderInfo extends RangerBaseModelObject implements ja
 
     public void setIsTagService(Boolean isTagService) {
         this.isTagService = isTagService;
+    }
+
+    public Boolean getIsGdsService() {
+        return isGdsService;
+    }
+
+    public void setIsGdsService(Boolean isGdsService) {
+        this.isGdsService = isGdsService;
     }
 }

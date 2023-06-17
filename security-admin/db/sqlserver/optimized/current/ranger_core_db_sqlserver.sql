@@ -1403,6 +1403,7 @@ CREATE TABLE [dbo].[x_service] (
         [tag_service] [bigint] DEFAULT NULL NULL,
         [tag_version] [bigint] DEFAULT 0 NOT NULL,
         [tag_update_time] [datetime2] DEFAULT NULL NULL,
+        [gds_service] [bigint] DEFAULT NULL NULL,
 PRIMARY KEY CLUSTERED
 (
         [id] ASC
@@ -2083,6 +2084,8 @@ CREATE TABLE [dbo].[x_service_version_info](
         [tag_update_time] [datetime2] DEFAULT NULL NULL,
         [role_version] [bigint] NOT NULL DEFAULT 0,
         [role_update_time] [datetime2] DEFAULT NULL NULL,
+        [gds_version] [bigint] NOT NULL DEFAULT 0,
+        [gds_update_time] [datetime2] DEFAULT NULL NULL,
         [version] [bigint] NOT NULL DEFAULT 1,
         PRIMARY KEY CLUSTERED
 (
@@ -2842,6 +2845,8 @@ ALTER TABLE [dbo].[x_service]  WITH CHECK ADD  CONSTRAINT [x_service_FK_type] FO
 REFERENCES [dbo].[x_service_def] ([id])
 ALTER TABLE [dbo].[x_service] CHECK CONSTRAINT [x_service_FK_type]
 ALTER TABLE [dbo].[x_service]  WITH CHECK ADD  CONSTRAINT [x_service_FK_tag_service] FOREIGN KEY([tag_service])
+REFERENCES [dbo].[x_service] ([id])
+ALTER TABLE [dbo].[x_service]  WITH CHECK ADD  CONSTRAINT [x_service_FK_gds_service] FOREIGN KEY([gds_service])
 REFERENCES [dbo].[x_service] ([id])
 ALTER TABLE [dbo].[x_policy]  WITH CHECK ADD  CONSTRAINT [x_policy_FK_added_by_id] FOREIGN KEY([added_by_id])
 REFERENCES [dbo].[x_portal_user] ([id])

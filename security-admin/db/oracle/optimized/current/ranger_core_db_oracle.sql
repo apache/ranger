@@ -662,12 +662,14 @@ is_enabled NUMBER(1) DEFAULT '0' NOT NULL,
 tag_service NUMBER(20) DEFAULT NULL NULL,
 tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
+gds_service NUMBER(20) DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_service_name UNIQUE (name),
 CONSTRAINT x_service_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
 CONSTRAINT x_service_FK_type FOREIGN KEY (type) REFERENCES x_service_def (id),
-CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id)
+CONSTRAINT x_service_FK_tag_service FOREIGN KEY (tag_service) REFERENCES x_service(id),
+CONSTRAINT x_service_FK_gds_service FOREIGN KEY (gds_service) REFERENCES x_service(id)
 );
 
 CREATE TABLE x_security_zone (
@@ -1325,6 +1327,8 @@ tag_version NUMBER(20) DEFAULT 0 NOT NULL,
 tag_update_time DATE DEFAULT NULL NULL,
 role_version NUMBER(20) DEFAULT 0 NOT NULL,
 role_update_time DATE DEFAULT NULL NULL,
+gds_version NUMBER(20) DEFAULT 0 NOT NULL,
+gds_update_time DATE DEFAULT NULL NULL,
 version NUMBER(20) DEFAULT 1 NOT NULL,
 primary key (id),
 CONSTRAINT x_svc_ver_info_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service(id)

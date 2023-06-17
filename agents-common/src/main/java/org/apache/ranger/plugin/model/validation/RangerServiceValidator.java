@@ -268,38 +268,94 @@ public class RangerServiceValidator extends RangerValidator {
 				}
 			}
 			String tagServiceName = service.getTagService();
+			String gdsServiceName = service.getGdsService();
 
-			if (StringUtils.isNotBlank(tagServiceName) && StringUtils.equals(type, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-				failures.add(new ValidationFailureDetailsBuilder()
-						.field("tag_service")
-						.isSemanticallyIncorrect()
-						.becauseOf("tag service cannot be part of any other service")
-						.build());
-				valid = false;
+			if (StringUtils.equals(type, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
+				if (StringUtils.isNotBlank(tagServiceName)) {
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("tag_service")
+							.isSemanticallyIncorrect()
+							.becauseOf("tag service cannot be part of a tag service")
+							.build());
+					valid = false;
+				}
+
+				if (StringUtils.isNotBlank(gdsServiceName)) {
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("gds_service")
+							.isSemanticallyIncorrect()
+							.becauseOf("tag service cannot be part of a gds service")
+							.build());
+					valid = false;
+				}
 			}
 
-			boolean needToEnsureServiceType = false;
+			if (StringUtils.equals(type, EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+				if (StringUtils.isNotBlank(tagServiceName)) {
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("tag_service")
+							.isSemanticallyIncorrect()
+							.becauseOf("gds service cannot be linked to a tag service")
+							.build());
+					valid = false;
+				}
+
+				if (StringUtils.isNotBlank(gdsServiceName)) {
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("gds_service")
+							.isSemanticallyIncorrect()
+							.becauseOf("gds service cannot be linked to a gds service")
+							.build());
+					valid = false;
+				}
+			}
+
+			boolean needToEnsureTagServiceType = false;
+			boolean needToEnsureGdsServiceType = false;
 			if (action == Action.UPDATE) {
 				RangerService otherService = getService(name);
 				String otherTagServiceName = otherService == null ? null : otherService.getTagService();
+				String otherGdsServiceName = otherService == null ? null : otherService.getGdsService();
 
 				if (StringUtils.isNotBlank(tagServiceName)) {
 					if (!StringUtils.equals(tagServiceName, otherTagServiceName)) {
-						needToEnsureServiceType = true;
+						needToEnsureTagServiceType = true;
+					}
+				}
+
+				if (StringUtils.isNotBlank(gdsServiceName)) {
+					if (!StringUtils.equals(gdsServiceName, otherGdsServiceName)) {
+						needToEnsureGdsServiceType = true;
 					}
 				}
 			} else {    // action == Action.CREATE
 				if (StringUtils.isNotBlank(tagServiceName)) {
-					needToEnsureServiceType = true;
+					needToEnsureTagServiceType = true;
+				}
+
+				if (StringUtils.isNotBlank(gdsServiceName)) {
+					needToEnsureGdsServiceType = true;
 				}
 			}
-			if (needToEnsureServiceType) {
+			if (needToEnsureTagServiceType) {
 				RangerService maybeTagService = getService(tagServiceName);
 				if (maybeTagService == null || !StringUtils.equals(maybeTagService.getType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
 					failures.add(new ValidationFailureDetailsBuilder()
 							.field("tag_service")
 							.isSemanticallyIncorrect()
 							.becauseOf("tag service name does not refer to existing tag service:" + tagServiceName)
+							.build());
+					valid = false;
+				}
+			}
+
+			if (needToEnsureGdsServiceType) {
+				RangerService gdsService = getService(gdsServiceName);
+				if (gdsService == null || !StringUtils.equals(gdsService.getType(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME)) {
+					failures.add(new ValidationFailureDetailsBuilder()
+							.field("gds_service")
+							.isSemanticallyIncorrect()
+							.becauseOf("gds service name does not refer to existing gds service:" + gdsServiceName)
 							.build());
 					valid = false;
 				}

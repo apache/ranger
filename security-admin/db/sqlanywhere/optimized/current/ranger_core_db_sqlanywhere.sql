@@ -525,6 +525,7 @@ create table dbo.x_service (
 	tag_service bigint DEFAULT NULL NULL,
 	tag_version bigint DEFAULT 0 NOT NULL,
 	tag_update_time datetime DEFAULT NULL NULL,
+	gds_service bigint DEFAULT NULL NULL,
 	CONSTRAINT x_service_def_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_service_UK_name UNIQUE NONCLUSTERED (name)
 )
@@ -1021,6 +1022,8 @@ CREATE TABLE dbo.x_service_version_info(
 	tag_update_time datetime DEFAULT NULL NULL,
 	role_version bigint NOT NULL DEFAULT 0,
 	role_update_time datetime DEFAULT NULL NULL,
+	gds_version bigint NOT NULL DEFAULT 0,
+	gds_update_time datetime DEFAULT NULL NULL,
 	version bigint NOT NULL DEFAULT 1,
 	CONSTRAINT x_service_version_info_PK_id PRIMARY KEY CLUSTERED(id)
 )
@@ -1582,6 +1585,8 @@ GO
 ALTER TABLE dbo.x_tag_resource_map ADD CONSTRAINT x_tag_res_map_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
 GO
 ALTER TABLE dbo.x_service ADD CONSTRAINT x_service_FK_tag_service FOREIGN KEY(tag_service) REFERENCES dbo.x_service (id)
+GO
+ALTER TABLE dbo.x_service ADD CONSTRAINT x_service_FK_gds_service FOREIGN KEY(gds_service) REFERENCES dbo.x_service (id)
 GO
 ALTER TABLE dbo.x_datamask_type_def ADD CONSTRAINT x_datamask_type_def_FK_def_id FOREIGN KEY(def_id) REFERENCES dbo.x_service_def (id)
 GO

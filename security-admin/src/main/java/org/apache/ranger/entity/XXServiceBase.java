@@ -18,6 +18,7 @@
 package org.apache.ranger.entity;
 
 import java.util.Date;
+import java.util.Objects;
 
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
@@ -85,6 +86,9 @@ public abstract class XXServiceBase extends XXDBBase {
 	 */
 	@Column(name = "tag_service")
 	protected Long tagService;
+
+	@Column(name = "gds_service")
+	protected Long gdsService;
 
 	/**
 	 * policyVersion of the XXService
@@ -245,6 +249,24 @@ public abstract class XXServiceBase extends XXDBBase {
 	}
 
 	/**
+	 * This method sets the value to the member attribute <b> gdsService</b> .
+	 *
+	 * @param gdsService - Value to set member attribute <b> gdsService</b>
+	 */
+	public void setGdsService(Long gdsService) {
+		this.gdsService = gdsService;
+	}
+
+	/**
+	 * Returns the value for the member attribute <b>gdsService</b>
+	 *
+	 * @return Long - value of member attribute <b>gdsService</b> .
+	 */
+	public Long getGdsService() {
+		return this.gdsService;
+	}
+
+	/**
 	 * This method sets the value to the member attribute <b> policyVersion</b>
 	 * . You cannot set null to the attribute.
 	 *
@@ -371,94 +393,31 @@ public abstract class XXServiceBase extends XXDBBase {
 	 */
 	@Override
 	public boolean equals(Object obj) {
-		if (!super.equals(obj)) {
-			return false;
-		}
+		final boolean ret;
+
 		if (this == obj) {
-			return true;
+			ret = true;
+		} else if (obj == null || getClass() != obj.getClass()) {
+			ret = false;
+		} else {
+			XXServiceBase other = (XXServiceBase) obj;
+
+			ret = super.equals(obj) &&
+				  Objects.equals(description, other.description) &&
+				  Objects.equals(isEnabled, other.isEnabled) &&
+				  Objects.equals(name, other.name) &&
+				  Objects.equals(policyUpdateTime, other.policyUpdateTime) &&
+				  Objects.equals(policyVersion, other.policyVersion) &&
+				  Objects.equals(tagService, other.tagService) &&
+				  Objects.equals(tagVersion, other.tagVersion) &&
+				  Objects.equals(tagUpdateTime, other.tagUpdateTime) &&
+				  Objects.equals(gdsService, other.gdsService) &&
+				  Objects.equals(type, other.type) &&
+				  Objects.equals(version, other.version) &&
+				  Objects.equals(guid, other.guid);
 		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		XXServiceBase other = (XXServiceBase) obj;
-		if (description == null) {
-			if (other.description != null) {
-				return false;
-			}
-		} else if (!description.equals(other.description)) {
-			return false;
-		}
-		if (isEnabled == null) {
-			if (other.isEnabled != null) {
-				return false;
-			}
-		} else if (!isEnabled.equals(other.isEnabled)) {
-			return false;
-		}
-		if (name == null) {
-			if (other.name != null) {
-				return false;
-			}
-		} else if (!name.equals(other.name)) {
-			return false;
-		}
-		if (tagService == null) {
-			if (other.tagService != null) {
-				return false;
-			}
-		} else if (!tagService.equals(other.tagService)) {
-			return false;
-		}
-		if (policyUpdateTime == null) {
-			if (other.policyUpdateTime != null) {
-				return false;
-			}
-		} else if (!policyUpdateTime.equals(other.policyUpdateTime)) {
-			return false;
-		}
-		if (policyVersion == null) {
-			if (other.policyVersion != null) {
-				return false;
-			}
-		} else if (!policyVersion.equals(other.policyVersion)) {
-			return false;
-		}
-		if (tagUpdateTime == null) {
-			if (other.tagUpdateTime != null) {
-				return false;
-			}
-		} else if (!tagUpdateTime.equals(other.tagUpdateTime)) {
-			return false;
-		}
-		if (tagVersion == null) {
-			if (other.tagVersion != null) {
-				return false;
-			}
-		} else if (!tagVersion.equals(other.tagVersion)) {
-			return false;
-		}
-		if (type == null) {
-			if (other.type != null) {
-				return false;
-			}
-		} else if (!type.equals(other.type)) {
-			return false;
-		}
-		if (version == null) {
-			if (other.version != null) {
-				return false;
-			}
-		} else if (!version.equals(other.version)) {
-			return false;
-		}
-		if (guid == null) {
-			if (other.guid != null) {
-				return false;
-			}
-		} else if (!guid.equals(other.guid)) {
-			return false;
-		}
-		return true;
+
+		return ret;
 	}
 
 	/*
@@ -469,7 +428,7 @@ public abstract class XXServiceBase extends XXDBBase {
 	@Override
 	public String toString() {
 		return "XXServiceBase [" + super.toString() + " guid=" + guid + ", version=" + version + ", type=" + type
-				+ ", name=" + name +", displayName=" + displayName + ", tagService=" + tagService + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
+				+ ", name=" + name +", displayName=" + displayName + ", tagService=" + tagService + ", gdsService=" + gdsService + ", policyVersion=" + policyVersion + ", policyUpdateTime=" + policyUpdateTime
 				+ ", tagVersion=" + tagVersion + ", tagUpdateTime=" + tagUpdateTime
 				+ ", description=" + description + ", isEnabled=" + isEnabled + "]";
 	}

@@ -91,6 +91,7 @@ public class AbstractPredicateUtil {
 		addPredicateForIsEnabled(filter.getParam(SearchFilter.IS_ENABLED), predicates);
 		addPredicateForIsRecursive(filter.getParam(SearchFilter.IS_RECURSIVE), predicates);
 		addPredicateForTagServiceName(filter.getParam(SearchFilter.TAG_SERVICE_NAME), predicates);
+		addPredicateForGdsServiceName(filter.getParam(SearchFilter.GDS_SERVICE_NAME), predicates);
 		// addPredicateForTagServiceId(filter.getParam(SearchFilter.TAG_SERVICE_ID), predicates); // not supported
 		addPredicateForUserName(filter.getParam(SearchFilter.USER), predicates);
 		addPredicateForGroupName(filter.getParam(SearchFilter.GROUP), predicates);
@@ -842,6 +843,39 @@ public class AbstractPredicateUtil {
 					RangerService service = (RangerService)object;
 
 					ret = StringUtils.equals(tagServiceName, service.getTagService());
+				} else {
+					ret = true;
+				}
+
+				return ret;
+			}
+		};
+
+		if(ret != null) {
+			predicates.add(ret);
+		}
+
+		return ret;
+	}
+
+	private Predicate addPredicateForGdsServiceName(final String gdsServiceName, List<Predicate> predicates) {
+		if(StringUtils.isEmpty(gdsServiceName)) {
+			return null;
+		}
+
+		Predicate ret = new Predicate() {
+			@Override
+			public boolean evaluate(Object object) {
+				if(object == null) {
+					return false;
+				}
+
+				boolean ret = false;
+
+				if(object instanceof RangerService) {
+					RangerService service = (RangerService)object;
+
+					ret = StringUtils.equals(gdsServiceName, service.getGdsService());
 				} else {
 					ret = true;
 				}

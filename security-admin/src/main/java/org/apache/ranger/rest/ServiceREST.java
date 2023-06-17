@@ -768,14 +768,12 @@ public class ServiceREST {
 			}
                          bizUtil.blockAuditorRoleUser();
 
-			if (StringUtils.isBlank(service.getTagService())
-					&& xxServiceDef != null
-					&& !StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, xxServiceDef.getName())
-					&& !StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME , xxServiceDef.getName())) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Tag service may need to be created and linked with this service:[" + service.getName() + "]");
-				}
-				createOrGetTagService(service);
+			String serviceType = xxServiceDef != null ? xxServiceDef.getName() : null;
+
+			if (!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME, serviceType) &&
+				!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME, serviceType) &&
+				!StringUtils.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME , serviceType)) {
+				createOrGetLinkedServices(service);
 			}
 
 			ret = svcStore.createService(service);
@@ -4210,155 +4208,158 @@ public class ServiceREST {
 		}
 	}
 
-	private void createOrGetTagService(RangerService resourceService) {
+	private void createOrGetLinkedServices(RangerService resourceService) {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> createOrGetTagService(resourceService=" + resourceService.getName() + ")");
+			LOG.debug("==> createOrGetLinkedServices(resourceService=" + resourceService.getName() + ")");
 		}
-		final boolean isAutoCreateTagService = config.getBoolean("ranger.tagservice.auto.create", true);
 
-		if (isAutoCreateTagService) {
+		Runnable createAndLinkTagServiceTask = new Runnable() {
+			@Override
+			public void run() {
+				final LinkedServiceCreator creator = new LinkedServiceCreator(resourceService.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
 
-			String tagServiceName = config.get("ranger.tagservice.auto.name");
-
-			if (StringUtils.isBlank(tagServiceName)) {
-				tagServiceName = getGeneratedTagServiceName(resourceService.getName());
+				creator.doCreateAndLinkService();
 			}
+		};
 
-			if (StringUtils.isNotBlank(tagServiceName)) {
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Attempting to get/create and possibly link to tag-service:[" + tagServiceName + "]");
-				}
+		Runnable createAndLinkGdsServiceTask = new Runnable() {
+			@Override
+			public void run() {
+				final LinkedServiceCreator creator = new LinkedServiceCreator(resourceService.getName(), EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME);
 
-				final boolean isAutoLinkTagService = config.getBoolean("ranger.tagservice.auto.link", true);
-				RangerService tagService = null;
-
-				try {
-					tagService = svcStore.getServiceByName(tagServiceName);
-				} catch (Exception e) {
-					LOG.info("failed to retrieve tag-service [" + tagServiceName + "]. Will attempt to create.", e);
-				}
-
-				if (tagService == null) {
-					final TagServiceOperationContext context = new TagServiceOperationContext(tagServiceName, resourceService.getName(), isAutoLinkTagService);
-
-					Runnable createAndLinkTagServiceTask = new Runnable() {
-						@Override
-						public void run() {
-							doCreateAndLinkTagService(context);
-						}
-					};
-
-					rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkTagServiceTask);
-
-				} else if (isAutoLinkTagService) {
-					resourceService.setTagService(tagServiceName);
-				}
+				creator.doCreateAndLinkService();
 			}
-		}
+		};
+
+		rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkTagServiceTask);
+		rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(createAndLinkGdsServiceTask);
+
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== createOrGetTagService(resourceService=" + resourceService.getName() + ")");
 		}
 	}
 
-	private String getGeneratedTagServiceName(String resourceServiceName) {
-		int lastIndexOfMarker = StringUtils.lastIndexOf(resourceServiceName, '_');
-		if (lastIndexOfMarker != -1) {
-			return resourceServiceName.substring(0, lastIndexOfMarker) + "_tag";
-		} else {
-			return null;
-		}
-	}
+	private final class LinkedServiceCreator {
+		static final char SEP = '_';
 
-	private final class TagServiceOperationContext {
-		final String tagServiceName;
-		final String resourceServiceName;
-		final boolean isAutoLinkTagService;
+		final String  resourceServiceName;
+		final String  linkedServiceType;
+		final String  linkedServiceName;
+		final boolean isAutoCreate;
+		final boolean isAutoLink;
 
-		TagServiceOperationContext(@Nonnull String tagserviceName, @Nonnull String resourceServiceName, boolean isAutoLinkTagService) {
-			this.tagServiceName = tagserviceName;
+		LinkedServiceCreator(@Nonnull String resourceServiceName, @Nonnull String linkedServiceType) {
 			this.resourceServiceName = resourceServiceName;
-			this.isAutoLinkTagService = isAutoLinkTagService;
+			this.linkedServiceType   = linkedServiceType;
+			this.linkedServiceName   = computeLinkedServiceName();
+			this.isAutoCreate        = config.getBoolean("ranger." + linkedServiceType + "service.auto.create", true);
+			this.isAutoLink          = config.getBoolean("ranger." + linkedServiceType + "service.auto.link", true);
+		}
+
+		void doCreateAndLinkService() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> doCreateAndLinkService()");
+			}
+
+			RangerService resourceService = null;
+
+			try {
+				resourceService = svcStore.getServiceByName(resourceServiceName);
+				LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
+			} catch (Exception e) {
+				LOG.error("Resource-service:[" + resourceServiceName + "] cannot be retrieved");
+			}
+
+			if (resourceService != null) {
+				try {
+					RangerService linkedService = svcStore.getServiceByName(linkedServiceName);
+
+					if (linkedService == null && isAutoCreate) {
+						linkedService = new RangerService();
+
+						linkedService.setName(linkedServiceName);
+						linkedService.setDisplayName(linkedServiceName); //set DEFAULT display name
+						linkedService.setType(linkedServiceType);
+
+						LOG.info("creating service [" + linkedServiceName + "]");
+
+						svcStore.createService(linkedService);
+					}
+				} catch (Exception e) {
+					throw new RuntimeException(e);
+				}
+
+				if (isAutoLink) {
+					doLinkService();
+				}
+
+			} else {
+				LOG.info("Resource service :[" + resourceServiceName + "] not found! Returning without linking " + linkedServiceType + " service!!");
+			}
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== doCreateAndLinkService()");
+			}
+		}
+
+		private String computeLinkedServiceName() {
+			String ret = config.get("ranger." + linkedServiceType + "service.auto.name");
+
+			if (StringUtils.isBlank(ret)) {
+				final int lastIndexOfSep = StringUtils.lastIndexOf(resourceServiceName, SEP);
+
+				ret = (lastIndexOfSep != -1) ? resourceServiceName.substring(0, lastIndexOfSep) + SEP + linkedServiceType : null;
+			}
+
+			return ret;
+		}
+
+		private void doLinkService() {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("==> doLinkTagService()");
+			}
+
+			try {
+				RangerService resourceService = svcStore.getServiceByName(resourceServiceName);
+				LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
+
+				RangerService linkedService = svcStore.getServiceByName(linkedServiceName);
+				LOG.info("Successfully retrieved service:[" + linkedService.getName() + "]");
+
+				if (linkedService == null) {
+					LOG.error("Failed to link service[" + resourceServiceName + "] with service [" + linkedServiceName + "]: " + linkedServiceName + " not found");
+				} else if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME.equals(linkedServiceType)) {
+					if (!StringUtils.equals(linkedService.getName(), resourceService.getTagService())) {
+						resourceService.setTagService(linkedService.getName());
+
+						LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + linkedService.getName() + "]");
+
+						RangerService service = svcStore.updateService(resourceService, null);
+
+						LOG.info("Updated resource-service:[" + service.getName() + "]");
+					}
+				} else if (EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_GDS_NAME.equals(linkedServiceType)) {
+					if (!StringUtils.equals(linkedService.getName(), resourceService.getGdsService())) {
+						resourceService.setGdsService(linkedService.getName());
+
+						LOG.info("Linking resource-service[" + resourceService.getName() + "] with gds-service [" + linkedService.getName() + "]");
+
+						RangerService service = svcStore.updateService(resourceService, null);
+
+						LOG.info("Updated resource-service:[" + service.getName() + "]");
+					}
+				}
+			} catch (Exception e) {
+				LOG.error("Failed to link service[" + resourceServiceName + "] with service [" + linkedServiceName + "]");
+			}
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== doLinkTagService()");
+			}
 		}
 
 		@Override
 		public String toString() {
-			return "{tagServiceName=" + tagServiceName + ", resourceServiceName=" + resourceServiceName + ", isAutoLinkTagService=" + isAutoLinkTagService + "}";
-		}
-	}
-
-	private void doCreateAndLinkTagService(final TagServiceOperationContext context) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> doCreateAndLinkTagService(context=" + context + ")");
-		}
-
-		RangerService resourceService = null;
-
-		try {
-			resourceService = svcStore.getServiceByName(context.resourceServiceName);
-			LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
-		} catch (Exception e) {
-			LOG.error("Resource-service:[" + context.resourceServiceName + "] cannot be retrieved");
-		}
-
-		if (resourceService != null) {
-			try {
-				String tagServiceName = context.tagServiceName;
-
-				RangerService tagService = svcStore.getServiceByName(tagServiceName);
-
-				if (tagService == null) {
-					tagService = new RangerService();
-
-					tagService.setName(context.tagServiceName);
-					tagService.setDisplayName(context.tagServiceName);//set DEFAULT display name
-					tagService.setType(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME);
-
-					LOG.info("creating tag-service [" + context.tagServiceName + "]");
-
-					svcStore.createService(tagService);
-				}
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-
-			if (context.isAutoLinkTagService) {
-				doLinkTagService(context);
-			}
-
-		} else {
-			LOG.info("Resource service :[" + context.resourceServiceName + "] not found! Returning without linking tag service!!");
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== doCreateAndLinkTagService(context=" + context + ")");
-		}
-	}
-
-	private void doLinkTagService(final TagServiceOperationContext context) {
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> doLinkTagService(context=" + context + ")");
-		}
-		try {
-			RangerService resourceService = svcStore.getServiceByName(context.resourceServiceName);
-			LOG.info("Successfully retrieved resource-service:[" + resourceService.getName() + "]");
-
-			RangerService tagService = svcStore.getServiceByName(context.tagServiceName);
-			LOG.info("Successfully retrieved tag-service:[" + tagService.getName() + "]");
-
-			if (!StringUtils.equals(tagService.getName(), resourceService.getTagService())) {
-				resourceService.setTagService(tagService.getName());
-
-				LOG.info("Linking resource-service[" + resourceService.getName() + "] with tag-service [" + tagService.getName() + "]");
-
-				RangerService service = svcStore.updateService(resourceService, null);
-
-				LOG.info("Updated resource-service:[" + service.getName() + "]");
-			}
-		} catch (Exception e) {
-			LOG.error("Failed to link service[" + context.resourceServiceName + "] with tag-service [" + context.tagServiceName + "]");
-		}
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("<== doLinkTagService(context=" + context + ")");
+			return "{resourceServiceName=" + resourceServiceName + ", linkedServiceType=" + linkedServiceType + ", isAutoCreate=" + isAutoCreate + ", isAutoLink=" + isAutoLink + "}";
 		}
 	}
 

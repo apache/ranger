@@ -38,6 +38,8 @@ public class SearchFilter {
 	public static final String IS_RECURSIVE    = "isRecursive";   // search
 	public static final String TAG_SERVICE_NAME = "tagServiceName";  // search
 	public static final String TAG_SERVICE_ID  = "tagServiceId";  // search
+	public static final String GDS_SERVICE_NAME = "gdsServiceName";  // search
+	public static final String GDS_SERVICE_ID   = "gdsServiceId";  // search
 	public static final String USER            = "user";          // search
 	public static final String GROUP           = "group";         // search
 	public static final String ROLE            = "role";         // search
