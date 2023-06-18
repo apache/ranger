@@ -18,6 +18,7 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.NoResultException;
@@ -110,6 +111,32 @@ public class XXServiceDao extends BaseDao<XXService> {
 		} catch (NoResultException e) {
 			return new ArrayList<XXService>();
 		}
+	}
+
+	public List<Long> findIdsByTagServiceId(Long tagServiceId) {
+		List<Long> ret = null;
+
+		try {
+			ret =  getEntityManager().createNamedQuery("XXService.findIdsByTagServiceId", Long.class)
+					.setParameter("tagServiceId", tagServiceId).getResultList();
+		} catch (NoResultException e) {
+			// ignre
+		}
+
+		return ret != null ? ret : Collections.emptyList();
+	}
+
+	public List<Long> findIdsByGdsServiceId(Long gdsServiceId) {
+		List<Long> ret = null;
+
+		try {
+			ret =  getEntityManager().createNamedQuery("XXService.findIdsByGdsServiceId", Long.class)
+					.setParameter("gdsServiceId", gdsServiceId).getResultList();
+		} catch (NoResultException e) {
+			// ignre
+		}
+
+		return ret != null ? ret : Collections.emptyList();
 	}
 
 	public XXService findAssociatedTagService(String serviceName) {

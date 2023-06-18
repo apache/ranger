@@ -3641,25 +3641,25 @@ public class ServiceDBStore extends AbstractServiceStore {
 		final RangerDaoManager daoManager  = daoMgr;
 		final Long 			   serviceId   = serviceDbObj.getId();
 
-		// if this is a tag service, update all services that refer to this tag service
-		// so that next policy-download from plugins will get updated tag policies
+		// if this is a tag/gds service, update all services that refer to this service
+		// so that next policy-download from plugins will get updated tag/gds policies
 		boolean isTagService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getTagServiceDefId();
-		if(isTagService) {
-			List<XXService> referringServices = serviceDao.findByTagServiceId(serviceId);
+		boolean isGdsService = serviceDbObj.getType() == EmbeddedServiceDefsUtil.instance().getGdsServiceDefId();
 
-			if(CollectionUtils.isNotEmpty(referringServices)) {
-				for(XXService referringService : referringServices) {
-					final Long 		    referringServiceId 	  = referringService.getId();
-					final VERSION_TYPE  tagServiceversionType = VERSION_TYPE.POLICY_VERSION;
+		if (isTagService || isGdsService) {
+			List<Long> referringServiceIds = isTagService ? serviceDao.findIdsByTagServiceId(serviceId) : serviceDao.findIdsByGdsServiceId(serviceId);
 
-					Runnable tagServiceVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, tagServiceversionType, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
-					transactionSynchronizationAdapter.executeOnTransactionCommit(tagServiceVersionUpdater);
+			for (Long referringServiceId : referringServiceIds) {
+				Runnable policyVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VERSION_TYPE.POLICY_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
+				transactionSynchronizationAdapter.executeOnTransactionCommit(policyVersionUpdater);
 
+				if (updateServiceInfoRoleVersion) {
 					Runnable roleVersionUpdater = new ServiceVersionUpdater(daoManager, referringServiceId, VERSION_TYPE.ROLE_VERSION, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);
 					transactionSynchronizationAdapter.executeOnTransactionCommit(roleVersionUpdater);
 				}
 			}
 		}
+
 		final VERSION_TYPE     versionType = VERSION_TYPE.POLICY_VERSION;
 
 		Runnable serviceVersionUpdater = new ServiceVersionUpdater(daoManager, serviceId, versionType, policy != null ? policy.getZoneName() : null, policyDeltaType, policy);

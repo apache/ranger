@@ -664,6 +664,14 @@
 		<query>select obj from XXService obj where obj.tagService = :tagServiceId</query>
 	</named-query>
 
+	<named-query name="XXService.findIdsByTagServiceId">
+		<query>select obj.id from XXService obj where obj.tagService = :tagServiceId</query>
+	</named-query>
+
+	<named-query name="XXService.findIdsByGdsServiceId">
+		<query>select obj.id from XXService obj where obj.gdsService = :gdsServiceId</query>
+	</named-query>
+
 	<named-query name="XXService.findAssociatedTagService">
 		<query>select obj from XXService obj
 			where obj.name = :serviceName
