@@ -63,6 +63,7 @@ public class ServicePolicies implements java.io.Serializable {
 	private RangerServiceDef   serviceDef;
 	private String             auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
 	private TagPolicies        tagPolicies;
+	private GdsPolicies        gdsPolicies;
 	private Map<String, SecurityZoneInfo> securityZones;
 	private List<RangerPolicyDelta> policyDeltas;
 	private Map<String, String> serviceConfig;
@@ -168,6 +169,19 @@ public class ServicePolicies implements java.io.Serializable {
 		this.tagPolicies = tagPolicies;
 	}
 
+	/**
+	 * @return the gdsPolicies
+	 */
+	public ServicePolicies.GdsPolicies getGdsPolicies() {
+		return gdsPolicies;
+	}
+	/**
+	 * @param gdsPolicies the gdsPolicies to set
+	 */
+	public void setGdsPolicies(ServicePolicies.GdsPolicies gdsPolicies) {
+		this.gdsPolicies = gdsPolicies;
+	}
+
 	public Map<String, SecurityZoneInfo> getSecurityZones() { return securityZones; }
 
 	public void setSecurityZones(Map<String, SecurityZoneInfo> securityZones) {
@@ -195,6 +209,10 @@ public class ServicePolicies implements java.io.Serializable {
 			tagPolicies.dedupStrings(strTbl);
 		}
 
+		if (gdsPolicies != null) {
+			gdsPolicies.dedupStrings(strTbl);
+		}
+
 		if (securityZones != null) {
 			for (SecurityZoneInfo securityZoneInfo : securityZones.values()) {
 				securityZoneInfo.dedupStrings(strTbl);
@@ -216,6 +234,7 @@ public class ServicePolicies implements java.io.Serializable {
 			 	+ "policyUpdateTime=" + policyUpdateTime + ", "
 			 	+ "policies=" + policies + ", "
 			 	+ "tagPolicies=" + tagPolicies + ", "
+				+ "gdsPolicies=" + gdsPolicies + ", "
 			 	+ "policyDeltas=" + policyDeltas + ", "
 			 	+ "serviceDef=" + serviceDef + ", "
 			 	+ "auditMode=" + auditMode + ", "
@@ -241,6 +260,142 @@ public class ServicePolicies implements java.io.Serializable {
 		private List<RangerPolicy> policies;
 		private RangerServiceDef   serviceDef;
 		private String             auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
+		private Map<String, String> serviceConfig;
+
+		/**
+		 * @return the serviceName
+		 */
+		public String getServiceName() {
+			return serviceName;
+		}
+		/**
+		 * @param serviceName the serviceName to set
+		 */
+		public void setServiceName(String serviceName) {
+			this.serviceName = serviceName;
+		}
+		/**
+		 * @return the serviceId
+		 */
+		public Long getServiceId() {
+			return serviceId;
+		}
+		/**
+		 * @param serviceId the serviceId to set
+		 */
+		public void setServiceId(Long serviceId) {
+			this.serviceId = serviceId;
+		}
+		/**
+		 * @return the policyVersion
+		 */
+		public Long getPolicyVersion() {
+			return policyVersion;
+		}
+		/**
+		 * @param policyVersion the policyVersion to set
+		 */
+		public void setPolicyVersion(Long policyVersion) {
+			this.policyVersion = policyVersion;
+		}
+		/**
+		 * @return the policyUpdateTime
+		 */
+		public Date getPolicyUpdateTime() {
+			return policyUpdateTime;
+		}
+		/**
+		 * @param policyUpdateTime the policyUpdateTime to set
+		 */
+		public void setPolicyUpdateTime(Date policyUpdateTime) {
+			this.policyUpdateTime = policyUpdateTime;
+		}
+		/**
+		 * @return the policies
+		 */
+		public List<RangerPolicy> getPolicies() {
+			return policies;
+		}
+		/**
+		 * @param policies the policies to set
+		 */
+		public void setPolicies(List<RangerPolicy> policies) {
+			this.policies = policies;
+		}
+		/**
+		 * @return the serviceDef
+		 */
+		public RangerServiceDef getServiceDef() {
+			return serviceDef;
+		}
+		/**
+		 * @param serviceDef the serviceDef to set
+		 */
+		public void setServiceDef(RangerServiceDef serviceDef) {
+			this.serviceDef = serviceDef;
+		}
+
+		public String getAuditMode() {
+			return auditMode;
+		}
+
+		public void setAuditMode(String auditMode) {
+			this.auditMode = auditMode;
+		}
+
+		public Map<String, String> getServiceConfig() {
+			return serviceConfig;
+		}
+
+		public void setServiceConfig(Map<String, String> serviceConfig) {
+			this.serviceConfig = serviceConfig;
+		}
+
+		public void dedupStrings(Map<String, String> strTbl) {
+			serviceName   = StringUtil.dedupString(serviceName, strTbl);
+			auditMode     = StringUtil.dedupString(auditMode, strTbl);
+			serviceConfig = StringUtil.dedupStringsMap(serviceConfig, strTbl);
+
+			if (policies != null) {
+				for (RangerPolicy policy : policies) {
+					policy.dedupStrings(strTbl);
+				}
+			}
+
+			if (serviceDef != null) {
+				serviceDef.dedupStrings(strTbl);
+			}
+		}
+
+		@Override
+		public String toString() {
+			return "serviceName=" + serviceName + ", "
+					+ "serviceId=" + serviceId + ", "
+					+ "policyVersion=" + policyVersion + ", "
+					+ "policyUpdateTime=" + policyUpdateTime + ", "
+					+ "policies=" + policies + ", "
+					+ "serviceDef=" + serviceDef + ", "
+					+ "auditMode=" + auditMode
+					+ "serviceConfig=" + serviceConfig
+					;
+		}
+	}
+
+	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
+	@JsonIgnoreProperties(ignoreUnknown=true)
+	@XmlRootElement
+	@XmlAccessorType(XmlAccessType.FIELD)
+	public static class GdsPolicies implements java.io.Serializable {
+		private static final long serialVersionUID = 1L;
+
+		private String              serviceName;
+		private Long                serviceId;
+		private Long                policyVersion;
+		private Date                policyUpdateTime;
+		private List<RangerPolicy>  policies;
+		private RangerServiceDef    serviceDef;
+		private String              auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
 		private Map<String, String> serviceConfig;
 
 		/**
@@ -460,6 +615,10 @@ public class ServicePolicies implements java.io.Serializable {
 			TagPolicies tagPolicies = copyHeader(source.getTagPolicies(), source.getServiceDef().getName());
 			ret.setTagPolicies(tagPolicies);
 		}
+		if (source.getGdsPolicies() != null) {
+			GdsPolicies gdsPolicies = copyHeader(source.getGdsPolicies(), source.getServiceDef().getName());
+			ret.setGdsPolicies(gdsPolicies);
+		}
 
 		return ret;
 	}
@@ -478,11 +637,26 @@ public class ServicePolicies implements java.io.Serializable {
 		return ret;
 	}
 
+	static public GdsPolicies copyHeader(GdsPolicies source, String componentServiceName) {
+		GdsPolicies ret = new GdsPolicies();
+
+		ret.setServiceName(source.getServiceName());
+		ret.setServiceId(source.getServiceId());
+		ret.setPolicyVersion(source.getPolicyVersion());
+		ret.setAuditMode(source.getAuditMode());
+		ret.setServiceDef(ServiceDefUtil.normalizeAccessTypeDefs(source.getServiceDef(), componentServiceName));
+		ret.setPolicyUpdateTime(source.getPolicyUpdateTime());
+		ret.setPolicies(Collections.emptyList());
+
+		return ret;
+	}
+
 	public static ServicePolicies applyDelta(final ServicePolicies servicePolicies, RangerPolicyEngineImpl policyEngine) {
 		ServicePolicies ret = copyHeader(servicePolicies);
 
 		List<RangerPolicy> oldResourcePolicies = policyEngine.getResourcePolicies();
 		List<RangerPolicy> oldTagPolicies      = policyEngine.getTagPolicies();
+		List<RangerPolicy> oldGdsPolicies      = policyEngine.getGdsPolicies();
 
 		List<RangerPolicy> newResourcePolicies = RangerPolicyDeltaUtil.applyDeltas(oldResourcePolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
 
@@ -505,8 +679,27 @@ public class ServicePolicies implements java.io.Serializable {
 			LOG.debug("New tag policies:[" + Arrays.toString(newTagPolicies.toArray()) + "]");
 		}
 
+		final List<RangerPolicy> newGdsPolicies;
+		if (servicePolicies.getGdsPolicies() != null) {
+			LOG.debug("applyingDeltas for gds policies");
+
+			newGdsPolicies = RangerPolicyDeltaUtil.applyDeltas(oldGdsPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getGdsPolicies().getServiceDef().getName());
+		} else {
+			LOG.debug("No need to apply deltas for gds policies");
+
+			newGdsPolicies = oldGdsPolicies;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("New gds policies:[" + Arrays.toString(newGdsPolicies.toArray()) + "]");
+		}
+
 		if (ret.getTagPolicies() != null) {
 			ret.getTagPolicies().setPolicies(newTagPolicies);
+		}
+
+		if (ret.getGdsPolicies() != null) {
+			ret.getGdsPolicies().setPolicies(newGdsPolicies);
 		}
 
 		if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {

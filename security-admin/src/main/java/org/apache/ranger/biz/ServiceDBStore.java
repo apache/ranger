@@ -2454,22 +2454,39 @@ public class ServiceDBStore extends AbstractServiceStore {
 	}
 
 	private List<RangerPolicy> searchRangerTagPoliciesOnBasisOfServiceName(List<RangerPolicy> allExceptTagPolicies) throws Exception {
-		Set<String> rangerServiceNames = new HashSet<String>();
+		List<RangerPolicy> ret          = new ArrayList<>();
+		Set<String>        serviceNames = new HashSet<>();
+		Map<String, Long>  tagServices  = new HashMap<>();
+
 		for(RangerPolicy pol : allExceptTagPolicies) {
-			rangerServiceNames.add(pol.getService());
+			serviceNames.add(pol.getService());
 		}
-		List<RangerPolicy> retPolicies = new ArrayList<RangerPolicy>();
-		for(String eachRangerService : rangerServiceNames) {
-			List<RangerPolicy> policies = new ArrayList<RangerPolicy>();
-				RangerService rangerServiceObj = getServiceByName(eachRangerService);
-				RangerService rangerTagService = getServiceByName(rangerServiceObj.getTagService());
-				if(rangerTagService != null) {
-					ServicePolicies servicePolicies = RangerServicePoliciesCache.getInstance().getServicePolicies(rangerTagService.getName(),rangerTagService.getId(), -1L, true, this);
-					policies = servicePolicies != null ? servicePolicies.getPolicies() : null;
-					retPolicies.addAll(policies);
+
+		for(String serviceName : serviceNames) {
+			RangerService service = getServiceByName(serviceName);
+
+			if (StringUtils.isNotBlank(service.getTagService())) {
+				RangerService tagService = getServiceByName(service.getTagService());
+
+				if (tagService != null) {
+					tagServices.put(tagService.getName(), tagService.getId());
 				}
 			}
-		return retPolicies;
+		}
+
+		for (Map.Entry<String, Long> entry : tagServices.entrySet()) {
+			String tagServiceName = entry.getKey();
+			Long   tagServiceId   = entry.getValue();
+
+			ServicePolicies    tagServicePolicies = RangerServicePoliciesCache.getInstance().getServicePolicies(tagServiceName, tagServiceId, -1L, true, this);
+			List<RangerPolicy> policies           = tagServicePolicies != null ? tagServicePolicies.getPolicies() : null;
+
+			if (policies != null) {
+				ret.addAll(policies);
+			}
+		}
+
+		return ret;
 	}
 
 	@Override
@@ -2897,37 +2914,30 @@ public class ServiceDBStore extends AbstractServiceStore {
 			if (!serviceDbObj.getIsenabled()) {
 				ret = ServicePolicies.copyHeader(ret);
 				ret.setTagPolicies(null);
+				ret.setGdsPolicies(null);
 			} else {
-				boolean isTagServiceActive = true;
+				String  tagServiceName     = ret.getTagPolicies() != null ? ret.getTagPolicies().getServiceName() : null;
+				String  gdsServiceName     = ret.getGdsPolicies() != null ? ret.getGdsPolicies().getServiceName() : null;
+				boolean isTagServiceActive = isServiceActive(tagServiceName);
+				boolean isGdsServiceActive = isServiceActive(gdsServiceName);
 
-				if (ret.getTagPolicies() != null) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Checking if tag-service:[" + ret.getTagPolicies().getServiceName() + "] is disabled");
-					}
-					String tagServiceName = ret.getTagPolicies().getServiceName();
-
-					if (StringUtils.isNotEmpty(tagServiceName)) {
-						XXService tagService = daoMgr.getXXService().findByName(tagServiceName);
-						if (tagService == null || !tagService.getIsenabled()) {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("tag-service:[" + tagServiceName + "] is disabled");
-							}
-							isTagServiceActive = false;
-						}
-					} else {
-						isTagServiceActive = false;
-					}
-				} else {
-					isTagServiceActive = false;
-				}
-
-				if (!isTagServiceActive) {
+				if (!isTagServiceActive || !isGdsServiceActive) {
 					ServicePolicies copy = ServicePolicies.copyHeader(ret);
-					copy.setTagPolicies(null);
-					List<RangerPolicy> copyPolicies = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
+
+					if (!isTagServiceActive) {
+						copy.setTagPolicies(null);
+					}
+
+					if (!isGdsServiceActive) {
+						copy.setGdsPolicies(null);
+					}
+
+					List<RangerPolicy>     copyPolicies      = ret.getPolicies() != null ? new ArrayList<>(ret.getPolicies()) : null;
 					List<RangerPolicyDelta> copyPolicyDeltas = ret.getPolicyDeltas() != null ? new ArrayList<>(ret.getPolicyDeltas()) : null;
+
 					copy.setPolicies(copyPolicies);
 					copy.setPolicyDeltas(copyPolicyDeltas);
+
 					ret = copy;
 				}
 			}
@@ -3025,12 +3035,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		String auditMode = getAuditMode(serviceType, serviceName);
 
-		XXService tagServiceDbObj = null;
-		RangerServiceDef tagServiceDef = null;
+		XXService            tagServiceDbObj = null;
+		RangerServiceDef     tagServiceDef = null;
 		XXServiceVersionInfo tagServiceVersionInfoDbObj= null;
+		XXService            gdsServiceDbObj = null;
+		RangerServiceDef     gdsServiceDef = null;
+		XXServiceVersionInfo gdsServiceVersionInfoDbObj= null;
 
 		if (serviceDbObj.getTagService() != null) {
 			tagServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getTagService());
+		}
+
+		if (serviceDbObj.getGdsService() != null) {
+			gdsServiceDbObj = daoMgr.getXXService().getById(serviceDbObj.getGdsService());
 		}
 
 		if (tagServiceDbObj != null) {
@@ -3049,8 +3066,24 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 
+		if (gdsServiceDbObj != null) {
+			gdsServiceDef = getServiceDef(gdsServiceDbObj.getType());
+
+			if (gdsServiceDef == null) {
+				throw new Exception("service-def does not exist. id=" + gdsServiceDbObj.getType());
+			}
+
+			ServiceDefUtil.normalizeAccessTypeDefs(gdsServiceDef, serviceType);
+
+			gdsServiceVersionInfoDbObj = daoMgr.getXXServiceVersionInfo().findByServiceId(serviceDbObj.getGdsService());
+
+			if (gdsServiceVersionInfoDbObj == null) {
+				LOG.warn("serviceVersionInfo does not exist. name=" + gdsServiceDbObj.getName());
+			}
+		}
+
 		if (isDeltaEnabled) {
-			ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, lastKnownVersion, maxNeededVersion);
+			ret = getServicePoliciesWithDeltas(serviceDef, serviceDbObj, tagServiceDef, tagServiceDbObj, gdsServiceDef, gdsServiceDbObj, lastKnownVersion, maxNeededVersion);
 		}
 
 		if (ret != null) {
@@ -3060,11 +3093,15 @@ public class ServiceDBStore extends AbstractServiceStore {
 				ret.getTagPolicies().setPolicyUpdateTime(tagServiceVersionInfoDbObj == null ? null : tagServiceVersionInfoDbObj.getPolicyUpdateTime());
 				ret.getTagPolicies().setAuditMode(auditMode);
 			}
+			if (ret.getGdsPolicies() != null) {
+				ret.getGdsPolicies().setPolicyUpdateTime(gdsServiceVersionInfoDbObj == null ? null : gdsServiceVersionInfoDbObj.getPolicyUpdateTime());
+				ret.getGdsPolicies().setAuditMode(auditMode);
+			}
 		} else if (!getOnlyDeltas) {
 			ServicePolicies.TagPolicies tagPolicies = null;
+			ServicePolicies.GdsPolicies gdsPolicies = null;
 
 			if (tagServiceDbObj != null) {
-
 				tagPolicies = new ServicePolicies.TagPolicies();
 
 				tagPolicies.setServiceId(tagServiceDbObj.getId());
@@ -3075,6 +3112,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 				tagPolicies.setServiceDef(tagServiceDef);
 				tagPolicies.setAuditMode(auditMode);
 			}
+
+			if (gdsServiceDbObj != null) {
+				gdsPolicies = new ServicePolicies.GdsPolicies();
+
+				gdsPolicies.setServiceId(gdsServiceDbObj.getId());
+				gdsPolicies.setServiceName(gdsServiceDbObj.getName());
+				gdsPolicies.setPolicyVersion(gdsServiceVersionInfoDbObj == null ? null : gdsServiceVersionInfoDbObj.getPolicyVersion());
+				gdsPolicies.setPolicyUpdateTime(gdsServiceVersionInfoDbObj == null ? null : gdsServiceVersionInfoDbObj.getPolicyUpdateTime());
+				gdsPolicies.setPolicies(getServicePoliciesFromDb(gdsServiceDbObj));
+				gdsPolicies.setServiceDef(gdsServiceDef);
+				gdsPolicies.setAuditMode(auditMode);
+			}
+
 			List<RangerPolicy> policies = getServicePoliciesFromDb(serviceDbObj);
 
 			ret = new ServicePolicies();
@@ -3087,6 +3137,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			ret.setServiceDef(serviceDef);
 			ret.setAuditMode(auditMode);
 			ret.setTagPolicies(tagPolicies);
+			ret.setGdsPolicies(gdsPolicies);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -3259,7 +3310,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 	}
 
-	ServicePolicies getServicePoliciesWithDeltas(RangerServiceDef serviceDef, XXService service, RangerServiceDef tagServiceDef, XXService tagService, Long lastKnownVersion, Long maxNeededVersion) {
+	ServicePolicies getServicePoliciesWithDeltas(RangerServiceDef serviceDef, XXService service, RangerServiceDef tagServiceDef, XXService tagService, RangerServiceDef gdsServiceDef, XXService gdsService, Long lastKnownVersion, Long maxNeededVersion) {
 		ServicePolicies ret = null;
 
 		// if lastKnownVersion != -1L : try and get deltas. Get delta for serviceName first. Find id of the delta
@@ -3271,9 +3322,11 @@ public class ServiceDBStore extends AbstractServiceStore {
 		if (lastKnownVersion != -1L) {
 
 			List<RangerPolicyDelta> resourcePolicyDeltas;
-			List<RangerPolicyDelta> tagPolicyDeltas = null;
-			Long                    retrievedPolicyVersion = null;
+			List<RangerPolicyDelta> tagPolicyDeltas           = null;
+			List<RangerPolicyDelta> gdsPolicyDeltas           = null;
+			Long                    retrievedPolicyVersion    = null;
 			Long                    retrievedTagPolicyVersion = null;
+			Long                    retrievedGdsPolicyVersion = null;
 
 			String componentServiceType = serviceDef.getName();
 
@@ -3293,7 +3346,6 @@ public class ServiceDBStore extends AbstractServiceStore {
 					Long id = resourcePolicyDeltas.get(0).getId();
 					tagPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(id, maxNeededVersion, tagService.getId());
 
-
 					if (CollectionUtils.isNotEmpty(tagPolicyDeltas)) {
 						String tagServiceType = tagServiceDef.getName();
 
@@ -3303,6 +3355,23 @@ public class ServiceDBStore extends AbstractServiceStore {
 							retrievedTagPolicyVersion = tagPolicyDeltas.get(tagPolicyDeltas.size() - 1).getPoliciesVersion();
 						} else {
 							LOG.warn("Tag policy-Deltas :[" + tagPolicyDeltas + "] for service-version :[" + lastKnownVersion + "] and delta-id :[" + id + "] are not valid");
+						}
+					}
+				}
+
+				if (isValid && gdsService != null) {
+					Long id = resourcePolicyDeltas.get(0).getId();
+					gdsPolicyDeltas = daoMgr.getXXPolicyChangeLog().findGreaterThan(id, maxNeededVersion, gdsService.getId());
+
+					if (CollectionUtils.isNotEmpty(gdsPolicyDeltas)) {
+						String gdsServiceType = gdsServiceDef.getName();
+
+						isValid = RangerPolicyDeltaUtil.isValidDeltas(gdsPolicyDeltas, gdsServiceType);
+
+						if (isValid) {
+							retrievedGdsPolicyVersion = gdsPolicyDeltas.get(gdsPolicyDeltas.size() - 1).getPoliciesVersion();
+						} else {
+							LOG.warn("Gds policy-Deltas :[" + gdsPolicyDeltas + "] for service-version :[" + lastKnownVersion + "] and delta-id :[" + id + "] are not valid");
 						}
 					}
 				}
@@ -3334,6 +3403,16 @@ public class ServiceDBStore extends AbstractServiceStore {
 							tagPolicies.setPolicies(null);
 							tagPolicies.setPolicyVersion(retrievedTagPolicyVersion);
 							ret.setTagPolicies(tagPolicies);
+						}
+
+						if (gdsServiceDef != null && gdsService != null) {
+							ServicePolicies.GdsPolicies gdsPolicies = new ServicePolicies.GdsPolicies();
+							gdsPolicies.setServiceDef(gdsServiceDef);
+							gdsPolicies.setServiceId(gdsService.getId());
+							gdsPolicies.setServiceName(gdsService.getName());
+							gdsPolicies.setPolicies(null);
+							gdsPolicies.setPolicyVersion(retrievedGdsPolicyVersion);
+							ret.setGdsPolicies(gdsPolicies);
 						}
 					} else {
 						LOG.warn("Deltas :[" + resourcePolicyDeltas + "] from version :[" + lastKnownVersion + "] after compressing are null!");
@@ -6072,6 +6151,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 			ret.setPolicyVersion(servicePolicies.getPolicyVersion());
 			ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
 			ret.setTagPolicies(servicePolicies.getTagPolicies());
+			ret.setGdsPolicies(servicePolicies.getGdsPolicies());
 
 			Map<String, ServicePolicies.SecurityZoneInfo> securityZonesInfo = new HashMap<>();
 
@@ -6183,6 +6263,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 		ServicePolicies ret = null;
 		boolean containsDisabledResourcePolicies = false;
 		boolean containsDisabledTagPolicies = false;
+		boolean containsDisabledGdsPolicies = false;
 
 		if (servicePolicies != null) {
 			List<RangerPolicy> policies = null;
@@ -6209,7 +6290,19 @@ public class ServiceDBStore extends AbstractServiceStore {
 				}
 			}
 
-			if (!containsDisabledResourcePolicies && !containsDisabledTagPolicies) {
+			if (servicePolicies.getGdsPolicies() != null) {
+				policies = servicePolicies.getGdsPolicies().getPolicies();
+				if (CollectionUtils.isNotEmpty(policies)) {
+					for (RangerPolicy policy : policies) {
+						if (!policy.getIsEnabled()) {
+							containsDisabledGdsPolicies = true;
+							break;
+						}
+					}
+				}
+			}
+
+			if (!containsDisabledResourcePolicies && !containsDisabledTagPolicies && !containsDisabledGdsPolicies) {
 				ret = servicePolicies;
 			} else {
 				ret = new ServicePolicies();
@@ -6221,6 +6314,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 				ret.setPolicyUpdateTime(servicePolicies.getPolicyUpdateTime());
 				ret.setPolicies(servicePolicies.getPolicies());
 				ret.setTagPolicies(servicePolicies.getTagPolicies());
+				ret.setGdsPolicies(servicePolicies.getGdsPolicies());
 				ret.setSecurityZones(servicePolicies.getSecurityZones());
 
 				if (containsDisabledResourcePolicies) {
@@ -6251,6 +6345,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 					tagPolicies.setPolicies(filteredPolicies);
 
 					ret.setTagPolicies(tagPolicies);
+				}
+
+				if (containsDisabledGdsPolicies) {
+					ServicePolicies.GdsPolicies gdsPolicies = new ServicePolicies.GdsPolicies();
+
+					gdsPolicies.setServiceDef(servicePolicies.getGdsPolicies().getServiceDef());
+					gdsPolicies.setServiceId(servicePolicies.getGdsPolicies().getServiceId());
+					gdsPolicies.setServiceName(servicePolicies.getGdsPolicies().getServiceName());
+					gdsPolicies.setPolicyVersion(servicePolicies.getGdsPolicies().getPolicyVersion());
+					gdsPolicies.setPolicyUpdateTime(servicePolicies.getGdsPolicies().getPolicyUpdateTime());
+
+					List<RangerPolicy> filteredPolicies = new ArrayList<>();
+					for (RangerPolicy policy : servicePolicies.getGdsPolicies().getPolicies()) {
+						if (policy.getIsEnabled()) {
+							filteredPolicies.add(policy);
+						}
+					}
+					gdsPolicies.setPolicies(filteredPolicies);
+
+					ret.setGdsPolicies(gdsPolicies);
 				}
 			}
 		}
@@ -6408,5 +6522,21 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 		return roleNames;
+	}
+
+	private boolean isServiceActive(String serviceName) {
+		boolean ret = false;
+
+		if (StringUtils.isNotBlank(serviceName)) {
+			XXService service = daoMgr.getXXService().findByName(serviceName);
+
+			ret = (service != null && service.getIsenabled());
+
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("isServiceActive(" + serviceName + "): " + ret);
+			}
+		}
+
+		return ret;
 	}
 }
