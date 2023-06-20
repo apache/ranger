@@ -21,7 +21,6 @@ package org.apache.ranger.plugin.util;
 
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -32,19 +31,15 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlRootElement;
 
-import org.apache.commons.collections.MapUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
-import org.apache.ranger.plugin.policyengine.RangerPolicyEngineImpl;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
@@ -53,7 +48,6 @@ import org.slf4j.LoggerFactory;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class ServicePolicies implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
-	private static final Logger LOG = LoggerFactory.getLogger(ServicePolicies.class);
 
 	private String             serviceName;
 	private Long               serviceId;
@@ -647,92 +641,6 @@ public class ServicePolicies implements java.io.Serializable {
 		ret.setServiceDef(ServiceDefUtil.normalizeAccessTypeDefs(source.getServiceDef(), componentServiceName));
 		ret.setPolicyUpdateTime(source.getPolicyUpdateTime());
 		ret.setPolicies(Collections.emptyList());
-
-		return ret;
-	}
-
-	public static ServicePolicies applyDelta(final ServicePolicies servicePolicies, RangerPolicyEngineImpl policyEngine) {
-		ServicePolicies ret = copyHeader(servicePolicies);
-
-		List<RangerPolicy> oldResourcePolicies = policyEngine.getResourcePolicies();
-		List<RangerPolicy> oldTagPolicies      = policyEngine.getTagPolicies();
-		List<RangerPolicy> oldGdsPolicies      = policyEngine.getGdsPolicies();
-
-		List<RangerPolicy> newResourcePolicies = RangerPolicyDeltaUtil.applyDeltas(oldResourcePolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
-
-		ret.setPolicies(newResourcePolicies);
-
-		final List<RangerPolicy> newTagPolicies;
-		if (servicePolicies.getTagPolicies() != null) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("applyingDeltas for tag policies");
-			}
-			newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(oldTagPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getTagPolicies().getServiceDef().getName());
-		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("No need to apply deltas for tag policies");
-			}
-			newTagPolicies = oldTagPolicies;
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("New tag policies:[" + Arrays.toString(newTagPolicies.toArray()) + "]");
-		}
-
-		final List<RangerPolicy> newGdsPolicies;
-		if (servicePolicies.getGdsPolicies() != null) {
-			LOG.debug("applyingDeltas for gds policies");
-
-			newGdsPolicies = RangerPolicyDeltaUtil.applyDeltas(oldGdsPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getGdsPolicies().getServiceDef().getName());
-		} else {
-			LOG.debug("No need to apply deltas for gds policies");
-
-			newGdsPolicies = oldGdsPolicies;
-		}
-
-		if (LOG.isDebugEnabled()) {
-			LOG.debug("New gds policies:[" + Arrays.toString(newGdsPolicies.toArray()) + "]");
-		}
-
-		if (ret.getTagPolicies() != null) {
-			ret.getTagPolicies().setPolicies(newTagPolicies);
-		}
-
-		if (ret.getGdsPolicies() != null) {
-			ret.getGdsPolicies().setPolicies(newGdsPolicies);
-		}
-
-		if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
-			Map<String, SecurityZoneInfo> newSecurityZones = new HashMap<>();
-
-			for (Map.Entry<String, SecurityZoneInfo> entry : servicePolicies.getSecurityZones().entrySet()) {
-				String 			 zoneName = entry.getKey();
-				SecurityZoneInfo zoneInfo = entry.getValue();
-
-				List<RangerPolicy> zoneResourcePolicies = policyEngine.getResourcePolicies(zoneName);
-				// There are no separate tag-policy-repositories for each zone
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("Applying deltas for security-zone:[" + zoneName + "]");
-				}
-
-				final List<RangerPolicy> newZonePolicies = RangerPolicyDeltaUtil.applyDeltas(zoneResourcePolicies, zoneInfo.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
-
-				if (LOG.isDebugEnabled()) {
-					LOG.debug("New resource policies for security-zone:[" + zoneName + "], zoneResourcePolicies:[" + Arrays.toString(newZonePolicies.toArray())+ "]");
-				}
-
-				SecurityZoneInfo newZoneInfo = new SecurityZoneInfo();
-
-				newZoneInfo.setZoneName(zoneName);
-				newZoneInfo.setResources(zoneInfo.getResources());
-				newZoneInfo.setPolicies(newZonePolicies);
-
-				newSecurityZones.put(zoneName, newZoneInfo);
-			}
-
-			ret.setSecurityZones(newSecurityZones);
-		}
 
 		return ret;
 	}
