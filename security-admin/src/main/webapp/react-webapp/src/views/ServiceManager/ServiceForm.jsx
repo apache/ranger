@@ -31,6 +31,7 @@ import ServiceAuditFilter from "./ServiceAuditFilter";
 import TestConnection from "./TestConnection";
 import {
   commonBreadcrumb,
+  navigateTo,
   serverError,
   updateTagActive
 } from "../../utils/XAUtils";
@@ -97,6 +98,15 @@ class ServiceForm extends Component {
   };
 
   componentDidMount() {
+    let servicedefs;
+
+    servicedefs = this.serviceDefData.allServiceDefs.find((id) => {
+      return id.id == this.props.params.serviceDefId;
+    });
+
+    if (servicedefs == undefined) {
+      return navigateTo.navigate("/pageNotFound", { replace: true });
+    }
     this.fetchServiceDef();
   }
 
@@ -162,31 +172,31 @@ class ServiceForm extends Component {
       serviceJson["id"] = this.props.params.serviceId;
     }
 
-    serviceJson["name"] = values.name;
-    serviceJson["displayName"] = values.displayName;
-    serviceJson["description"] = values.description;
-    serviceJson["type"] = this.state.serviceDef.name;
+    serviceJson["name"] = values?.name;
+    serviceJson["displayName"] = values?.displayName;
+    serviceJson["description"] = values?.description;
+    serviceJson["type"] = this.state?.serviceDef?.name;
     serviceJson["tagService"] =
-      values.tagService == null ? "" : values.tagService.value;
-    serviceJson["isEnabled"] = values.isEnabled === "true";
+      values?.tagService == null ? "" : values.tagService.value;
+    serviceJson["isEnabled"] = values?.isEnabled === "true";
 
     serviceJson["configs"] = {};
-    for (const config in values.configs) {
+    for (const config in values?.configs) {
       for (const jsonConfig in this.configsJson) {
         if (config === this.configsJson[jsonConfig]) {
-          serviceJson["configs"][jsonConfig] = values.configs[config];
+          serviceJson["configs"][jsonConfig] = values?.configs[config];
         }
       }
     }
 
-    if (values.customConfigs !== undefined) {
-      values.customConfigs.map((config) => {
+    if (values?.customConfigs !== undefined) {
+      values.customConfigs?.map((config) => {
         config !== undefined &&
           (serviceJson["configs"][config.name] = config.value);
       });
     }
 
-    if (values.isAuditFilter) {
+    if (values?.isAuditFilter) {
       serviceJson["configs"]["ranger.plugin.audit.filters"] =
         this.getAuditFiltersToSave(values.auditFilters);
     } else {
@@ -316,7 +326,7 @@ class ServiceForm extends Component {
         : false;
     updateTagActive(isTagView);
 
-    if (serviceDef.resources !== undefined) {
+    if (serviceDef?.resources !== undefined) {
       for (const obj of serviceDef.resources) {
         if (
           this.props.params.serviceId === undefined &&
@@ -328,7 +338,7 @@ class ServiceForm extends Component {
       }
     }
 
-    let auditFilters = find(serviceDef.configs, {
+    let auditFilters = find(serviceDef?.configs, {
       name: "ranger.plugin.audit.filters"
     });
 
@@ -375,24 +385,24 @@ class ServiceForm extends Component {
     }
 
     const serviceJson = {};
-    serviceJson["name"] = serviceResp.data.name;
-    serviceJson["displayName"] = serviceResp.data.displayName;
-    serviceJson["description"] = serviceResp.data.description;
-    serviceJson["isEnabled"] = JSON.stringify(serviceResp.data.isEnabled);
+    serviceJson["name"] = serviceResp?.data?.name;
+    serviceJson["displayName"] = serviceResp?.data?.displayName;
+    serviceJson["description"] = serviceResp?.data?.description;
+    serviceJson["isEnabled"] = JSON.stringify(serviceResp?.data?.isEnabled);
 
     serviceJson["tagService"] =
-      serviceResp.data.tagService !== undefined
+      serviceResp?.data?.tagService !== undefined
         ? {
-            value: serviceResp.data.tagService,
-            label: serviceResp.data.tagService
+            value: serviceResp?.data?.tagService,
+            label: serviceResp?.data?.tagService
           }
         : null;
 
     serviceJson["configs"] = {};
 
-    let serviceDefConfigs = map(this.state.serviceDef.configs, "name");
+    let serviceDefConfigs = map(this.state?.serviceDef?.configs, "name");
     let serviceCustomConfigs = without(
-      difference(keys(serviceResp.data.configs), serviceDefConfigs),
+      difference(keys(serviceResp?.data?.configs), serviceDefConfigs),
       "ranger.plugin.audit.filters"
     );
 
@@ -402,7 +412,7 @@ class ServiceForm extends Component {
     });
 
     let editCustomConfigs = serviceCustomConfigs.map((config) => {
-      return { name: config, value: serviceResp.data.configs[config] };
+      return { name: config, value: serviceResp?.data?.configs[config] };
     });
 
     serviceJson["customConfigs"] =
@@ -429,7 +439,7 @@ class ServiceForm extends Component {
     }
 
     this.setState({
-      service: serviceResp.data,
+      service: serviceResp?.data,
       editInitialValues: serviceJson,
       loader: false
     });
@@ -443,9 +453,9 @@ class ServiceForm extends Component {
       url: `plugins/services?serviceType=tag`,
       params: params
     });
-    op = tagServiceResp.data.services;
+    op = tagServiceResp?.data?.services;
 
-    return op.map((obj) => ({
+    return op?.map((obj) => ({
       label: obj.displayName,
       value: obj.displayName
     }));
@@ -515,32 +525,32 @@ class ServiceForm extends Component {
           obj.resources = {};
           let lastResourceLevel = [];
 
-          Object.entries(item.resources).map(([key, value]) => {
-            let setResources = find(serviceDef.resources, ["name", key]);
-            obj.resources[`resourceName-${setResources.level}`] = setResources;
-            obj.resources[`value-${setResources.level}`] = value.values.map(
+          Object.entries(item.resources)?.map(([key, value]) => {
+            let setResources = find(serviceDef?.resources, ["name", key]);
+            obj.resources[`resourceName-${setResources?.level}`] = setResources;
+            obj.resources[`value-${setResources?.level}`] = value.values?.map(
               (m) => {
                 return { label: m, value: m };
               }
             );
-            if (setResources.excludesSupported) {
+            if (setResources?.excludesSupported) {
               obj.resources[`isExcludesSupport-${setResources.level}`] =
                 value?.isExcludes != false;
             }
-            if (setResources.recursiveSupported) {
+            if (setResources?.recursiveSupported) {
               obj.resources[`isRecursiveSupport-${setResources.level}`] =
                 value.isRecursive != false;
             }
             lastResourceLevel.push({
-              level: setResources.level,
-              name: setResources.name
+              level: setResources?.level,
+              name: setResources?.name
             });
           });
 
           lastResourceLevel = maxBy(lastResourceLevel, "level");
-          let setLastResources = find(serviceDef.resources, [
+          let setLastResources = find(serviceDef?.resources, [
             "parent",
-            lastResourceLevel.name
+            lastResourceLevel?.name
           ]);
 
           if (setLastResources) {
@@ -616,7 +626,7 @@ class ServiceForm extends Component {
   };
 
   getServiceConfigs = (serviceDef) => {
-    if (serviceDef.configs !== undefined) {
+    if (serviceDef?.configs !== undefined) {
       let formField = [];
       const filterServiceConfigs = reject(serviceDef.configs, {
         name: "ranger.plugin.audit.filters"
@@ -921,9 +931,9 @@ class ServiceForm extends Component {
       url: "xusers/lookup/users",
       params: params
     });
-    op = userResp.data.vXStrings;
+    op = userResp?.data?.vXStrings;
 
-    return op.map((obj) => ({
+    return op?.map((obj) => ({
       label: obj.value,
       value: obj.value
     }));
@@ -936,12 +946,12 @@ class ServiceForm extends Component {
       url: "xusers/lookup/groups",
       params: params
     });
-    op = userResp.data.vXStrings;
+    op = userResp?.data?.vXStrings;
     if (!inputValue) {
       this.state.groupsDataRef = op;
     }
 
-    return op.map((obj) => ({
+    return op?.map((obj) => ({
       label: obj.value,
       value: obj.value
     }));
@@ -966,9 +976,9 @@ class ServiceForm extends Component {
   };
   ServiceDefnBreadcrumb = () => {
     let serviceDetails = {};
-    serviceDetails["serviceDefId"] = this.state.serviceDef.id;
+    serviceDetails["serviceDefId"] = this.state.serviceDef?.id;
     serviceDetails["serviceId"] = this.props.params.serviceId;
-    if (this.state.serviceDef.name === "tag") {
+    if (this.state.serviceDef?.name === "tag") {
       return commonBreadcrumb(
         [
           "TagBasedServiceManager",
@@ -1194,7 +1204,7 @@ class ServiceForm extends Component {
                               </span>
                             </Col>
                           </Row>
-                          {this.state.serviceDef.name !== "tag" && (
+                          {this.state?.serviceDef?.name !== "tag" && (
                             <Row className="form-group">
                               <Col xs={3}>
                                 <label className="form-label pull-right">

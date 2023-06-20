@@ -84,7 +84,7 @@ function AddUserView(props) {
     }
     dispatch({
       type: "SET_USER_DATA",
-      userInfo: userRespData.data,
+      userInfo: userRespData?.data,
       loader: false
     });
   };

@@ -165,7 +165,7 @@ function RoleForm() {
     }
     dispatch({
       type: "SET_ROLE_DATA",
-      roleInfo: roleRespData.data,
+      roleInfo: roleRespData?.data,
       loader: false
     });
   };

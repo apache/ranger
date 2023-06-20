@@ -85,6 +85,9 @@ define(function(require){
 			} else if(this.status == "checkSSOTrue"){
 				msg = 'Sign Out Is Not Complete!'
 				moreInfo = localization.tt("msg.signOutIsNotComplete");
+			} else if(this.status == 400){
+				msg = 'Data Not Found (400).'
+				moreInfo = localization.tt("msg.dataNotFound");
 			} else {
 				msg = 'Page not found (404).'
 				moreInfo = localization.tt("msg.pageNotFound");

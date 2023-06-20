@@ -190,20 +190,20 @@ const EditPermission = (props) => {
         url: `xusers/permission/${permissionId}`,
         params: {}
       });
-      data = permissionResp.data;
+      data = permissionResp?.data;
     } catch (error) {
       console.error(`Error occurred while fetching Permissions ! ${error}`);
     }
-    groups = reverse(data.groupPermList);
-    users = reverse(data.userPermList);
+    groups = reverse(data?.groupPermList);
+    users = reverse(data?.userPermList);
     dispatch({
       type: "SET_DATA",
       data,
-      grpData: groups.map((obj) => ({
+      grpData: groups?.map((obj) => ({
         label: obj.groupName,
         value: obj.groupId
       })),
-      usrData: users.map((obj) => ({
+      usrData: users?.map((obj) => ({
         label: obj.userName,
         value: obj.userId
       }))

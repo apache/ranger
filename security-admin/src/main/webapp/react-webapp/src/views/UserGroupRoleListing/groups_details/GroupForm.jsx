@@ -109,8 +109,8 @@ function GroupForm(props) {
     }
     dispatch({
       type: "SET_GROUP_DATA",
-      groupInfo: groupRespData.data,
-      groupType: groupRespData.data.groupType,
+      groupInfo: groupRespData?.data,
+      groupType: groupRespData?.data?.groupType,
       loader: false
     });
   };

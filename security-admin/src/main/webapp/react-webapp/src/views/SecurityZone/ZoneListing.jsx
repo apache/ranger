@@ -80,7 +80,9 @@ class ZoneListing extends Component {
 
     zoneList = sortBy(zoneList, ["name"]);
     if (zoneId !== undefined) {
-      selectedZone = zoneList.find((obj) => obj.id === +zoneId) || null;
+      selectedZone =
+        zoneList.find((obj) => obj.id === +zoneId) ||
+        this.props.navigate("/dataNotFound");
     } else {
       if (zoneList.length > 0) {
         selectedZone = zoneList[0];

@@ -99,10 +99,10 @@ export const PolicyListingTabView = () => {
         url: `plugins/services/${params.serviceId}`
       });
       getAllServicesData = await fetchApi({
-        url: `plugins/services?serviceType=${getServiceData.data.type}`
+        url: `plugins/services?serviceType=${getServiceData?.data?.type}`
       });
       getServiceDefData = serviceDefs?.allServiceDefs?.find((serviceDef) => {
-        return serviceDef.name == getServiceData.data.type;
+        return serviceDef.name == getServiceData?.data?.type;
       });
 
       isTagView =
@@ -123,8 +123,8 @@ export const PolicyListingTabView = () => {
 
       dispatch({
         type: "SERVICES_DATA",
-        allServicesData: getAllServicesData.data.services,
-        serviceData: getServiceData.data,
+        allServicesData: getAllServicesData?.data?.services,
+        serviceData: getServiceData?.data,
         serviceDefData: getServiceDefData
       });
 
@@ -315,8 +315,9 @@ export const PolicyListingTabView = () => {
       />
       {loader ? (
         <Loader />
-      ) : isRenderMasking(serviceDefData.dataMaskDef) ||
-        isRenderRowFilter(serviceDefData.rowFilterDef) ? (
+      ) : (isRenderMasking(serviceDefData.dataMaskDef) ||
+          isRenderRowFilter(serviceDefData.rowFilterDef)) &&
+        params.policyType < 3 ? (
         <Tabs
           id="PolicyListing"
           activeKey={params.policyType}

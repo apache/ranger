@@ -95,7 +95,7 @@ function reducer(state, action) {
         loader: false,
         serviceDetails: action.serviceDetails,
         serviceCompDetails: action.serviceCompDetails,
-        policyData: action.policyData,
+        policyData: action?.policyData,
         formData: action.formData
       };
     default:
@@ -219,6 +219,21 @@ export default function AddUpdatePolicyForm(props) {
     let serviceCompData = serviceDefs?.allServiceDefs?.find((servicedef) => {
       return servicedef.name == serviceData.type;
     });
+    if (serviceCompData) {
+      let serviceDefPolicyType = 0;
+      if (
+        serviceCompData?.dataMaskDef &&
+        Object.keys(serviceCompData.dataMaskDef).length != 0
+      )
+        serviceDefPolicyType++;
+      if (
+        serviceCompData?.rowFilterDef &&
+        Object.keys(serviceCompData.rowFilterDef).length != 0
+      )
+        serviceDefPolicyType++;
+      if (+policyType > serviceDefPolicyType)
+        navigate("/pageNotFound", { replace: true });
+    }
     let policyData = null;
     if (policyId) {
       policyData = await fetchPolicyData();
@@ -287,63 +302,63 @@ export default function AddUpdatePolicyForm(props) {
     data.policyItems =
       policyId && policyData?.policyItems?.length > 0
         ? setPolicyItemVal(
-            policyData.policyItems,
-            serviceCompData.accessTypes,
+            policyData?.policyItems,
+            serviceCompData?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name
           )
         : [{}];
     data.allowExceptions =
       policyId && policyData?.allowExceptions?.length > 0
         ? setPolicyItemVal(
-            policyData.allowExceptions,
-            serviceCompData.accessTypes,
+            policyData?.allowExceptions,
+            serviceCompData?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name
           )
         : [{}];
     data.denyPolicyItems =
       policyId && policyData?.denyPolicyItems?.length > 0
         ? setPolicyItemVal(
-            policyData.denyPolicyItems,
-            serviceCompData.accessTypes,
+            policyData?.denyPolicyItems,
+            serviceCompData?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name
           )
         : [{}];
     data.denyExceptions =
       policyId && policyData?.denyExceptions?.length > 0
         ? setPolicyItemVal(
             policyData.denyExceptions,
-            serviceCompData.accessTypes,
+            serviceCompData?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name
           )
         : [{}];
     data.dataMaskPolicyItems =
       policyId && policyData?.dataMaskPolicyItems?.length > 0
         ? setPolicyItemVal(
             policyData.dataMaskPolicyItems,
-            serviceCompData.dataMaskDef.accessTypes,
-            serviceCompData.dataMaskDef.maskTypes,
-            serviceCompData.name
+            serviceCompData?.dataMaskDef?.accessTypes,
+            serviceCompData?.dataMaskDef?.maskTypes,
+            serviceCompData?.name
           )
         : [{}];
     data.rowFilterPolicyItems =
       policyId && policyData?.rowFilterPolicyItems?.length > 0
         ? setPolicyItemVal(
             policyData.rowFilterPolicyItems,
-            serviceCompData.rowFilterDef.accessTypes,
+            serviceCompData?.rowFilterDef?.accessTypes,
             null,
-            serviceCompData.name
+            serviceCompData?.name
           )
         : [{}];
     if (policyId) {
-      data.policyName = policyData.name;
-      data.isEnabled = policyData.isEnabled;
-      data.policyPriority = policyData.policyPriority == 0 ? false : true;
-      data.description = policyData.description;
-      data.isAuditEnabled = policyData.isAuditEnabled;
+      data.policyName = policyData?.name;
+      data.isEnabled = policyData?.isEnabled;
+      data.policyPriority = policyData?.policyPriority == 0 ? false : true;
+      data.description = policyData?.description;
+      data.isAuditEnabled = policyData?.isAuditEnabled;
       data.policyLabel =
         policyData &&
         policyData?.policyLabels?.map((val) => {
@@ -352,32 +367,32 @@ export default function AddUpdatePolicyForm(props) {
       let serviceCompResourcesDetails;
       if (
         RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value ==
-        policyData.policyType
+        policyData?.policyType
       ) {
-        serviceCompResourcesDetails = serviceCompData.dataMaskDef.resources;
+        serviceCompResourcesDetails = serviceCompData?.dataMaskDef?.resources;
       } else if (
         RangerPolicyType.RANGER_ROW_FILTER_POLICY_TYPE.value ==
-        policyData.policyType
+        policyData?.policyType
       ) {
-        serviceCompResourcesDetails = serviceCompData.rowFilterDef.resources;
+        serviceCompResourcesDetails = serviceCompData?.rowFilterDef?.resources;
       } else {
-        serviceCompResourcesDetails = serviceCompData.resources;
+        serviceCompResourcesDetails = serviceCompData?.resources;
       }
-      if (policyData.resources) {
+      if (policyData?.resources) {
         let lastResourceLevel = [];
-        Object.entries(policyData.resources).map(([key, value]) => {
+        Object.entries(policyData?.resources).map(([key, value]) => {
           let setResources = find(serviceCompResourcesDetails, ["name", key]);
-          data[`resourceName-${setResources.level}`] = setResources;
-          data[`value-${setResources.level}`] = value.values.map((m) => {
+          data[`resourceName-${setResources?.level}`] = setResources;
+          data[`value-${setResources?.level}`] = value.values.map((m) => {
             return { label: m, value: m };
           });
-          if (setResources.excludesSupported) {
-            data[`isExcludesSupport-${setResources.level}`] =
+          if (setResources?.excludesSupported) {
+            data[`isExcludesSupport-${setResources?.level}`] =
               value.isExcludes == false;
           }
-          if (setResources.recursiveSupported) {
-            data[`isRecursiveSupport-${setResources.level}`] =
-              value.isRecursive;
+          if (setResources?.recursiveSupported) {
+            data[`isRecursiveSupport-${setResources?.level}`] =
+              value?.isRecursive;
           }
           lastResourceLevel.push({
             level: setResources.level,
@@ -389,16 +404,16 @@ export default function AddUpdatePolicyForm(props) {
           "parent",
           lastResourceLevel.name
         ]);
-        if (setLastResources) {
+        if (setLastResources && setLastResources?.isValidLeaf) {
           data[`resourceName-${setLastResources.level}`] = {
             label: "None",
             value: "none"
           };
         }
       }
-      if (policyData.validitySchedules) {
+      if (policyData?.validitySchedules) {
         data["validitySchedules"] = [];
-        policyData.validitySchedules.filter((val) => {
+        policyData?.validitySchedules.filter((val) => {
           let obj = {};
           if (val.endTime) {
             obj["endTime"] = moment(val.endTime, "YYYY/MM/DD HH:mm:ss");
@@ -1084,7 +1099,7 @@ export default function AddUpdatePolicyForm(props) {
                                         getEnumElementByValue(
                                           RangerPolicyType,
                                           +input.value
-                                        ).label
+                                        )?.label
                                       }
                                     </Badge>
                                   </h6>

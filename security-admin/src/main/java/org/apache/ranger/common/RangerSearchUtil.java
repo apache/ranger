@@ -193,6 +193,13 @@ public class RangerSearchUtil extends SearchUtil {
 				MessageEnums.INVALID_INPUT_DATA, null, SearchFilter.PAGE_SIZE);
 		ret.setMaxRows(validatePageSize(pageSize));
 
+		if (request.getParameter(SearchFilter.POLICY_TYPE) != null) {
+			int policyType = restErrorUtil.parseInt(request.getParameter(SearchFilter.POLICY_TYPE), 0,
+					"Invalid value for parameter policyType", MessageEnums.INVALID_INPUT_DATA, null,
+					SearchFilter.POLICY_TYPE);
+			ret.setParam(SearchFilter.POLICY_TYPE, Integer.toString(policyType));
+		}
+
 		ret.setGetCount(restErrorUtil.parseBoolean(request.getParameter("getCount"), true));
 		String sortBy = restErrorUtil.validateString(request.getParameter(SearchFilter.SORT_BY),
 				StringUtil.VALIDATION_ALPHA, "Invalid value for parameter sortBy", MessageEnums.INVALID_INPUT_DATA,
