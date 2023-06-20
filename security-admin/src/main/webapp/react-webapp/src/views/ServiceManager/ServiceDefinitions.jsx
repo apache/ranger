@@ -297,7 +297,11 @@ class ServiceDefinitions extends Component {
       }
     };
   };
-
+  formatOptionLabel = ({ label }) => (
+    <div title={label} className="text-truncate">
+      {label}
+    </div>
+  );
   render() {
     const {
       filterServiceDefs,
@@ -326,6 +330,7 @@ class ServiceDefinitions extends Component {
         paddingTop: "0px"
       })
     };
+
     return (
       <React.Fragment>
         <div>
@@ -366,6 +371,7 @@ class ServiceDefinitions extends Component {
                         }
                   }
                   //isDisabled={true}
+                  formatOptionLabel={this.formatOptionLabel}
                   isDisabled={isEmpty(zones) ? true : false}
                   onChange={this.getSelectedZone}
                   isClearable
