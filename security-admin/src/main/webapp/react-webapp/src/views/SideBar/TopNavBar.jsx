@@ -199,7 +199,11 @@ export const TopNavBar = (props) => {
       );
     }
   };
-
+  const formatOptionLabel = ({ label }) => (
+    <div title={label} className="text-truncate">
+      {label}
+    </div>
+  );
   return (
     <nav className="navbar navbar-expand-lg navbar-light bg-light content-top-nav">
       <div className="top-nav-title-wrapper">
@@ -216,6 +220,7 @@ export const TopNavBar = (props) => {
             localStorageZoneDetails != null ? zoneServicesData : allServicesData
           )} */
           options={getServices(allServicesData)}
+          formatOptionLabel={formatOptionLabel}
           onChange={(e) => handleServiceChange(e)}
           value={!policyLoader ? getCurrentService(serviceData) : ""}
           menuPlacement="auto"
@@ -232,6 +237,7 @@ export const TopNavBar = (props) => {
               options={getZones(allZonesData)}
               onChange={(e) => handleZoneChange(e)}
               value={!policyLoader ? getCurrentZone(currentServiceZone) : ""}
+              formatOptionLabel={formatOptionLabel}
               menuPlacement="auto"
               placeholder="Select Zone Name"
               isClearable
