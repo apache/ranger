@@ -183,6 +183,7 @@ import org.apache.ranger.service.XGroupService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.RangerExportPolicyList;
+import org.apache.ranger.view.RangerExportRoleList;
 import org.apache.ranger.view.RangerPolicyList;
 import org.apache.ranger.view.RangerServiceDefList;
 import org.apache.ranger.view.RangerServiceList;
@@ -234,6 +235,7 @@ public class ServiceDBStore extends AbstractServiceStore {
 	private static final String USER_NAME      = "Exported by";
 	private static final String RANGER_VERSION = "Ranger apache version";
 	private static final String TIMESTAMP      = "Export time";
+	private static final String EXPORT_COUNT   = "Exported count";
 
     private static final String SERVICE_CHECK_USER = "service.check.user";
     private static final String AMBARI_SERVICE_CHECK_USER = "ambari.service.check.user";
@@ -2491,15 +2493,26 @@ public class ServiceDBStore extends AbstractServiceStore {
 			}
 		}
 	}
-	
-	public void getPoliciesInJson(List<RangerPolicy> policies,
-			HttpServletResponse response) throws Exception {
+
+	public enum JSON_FILE_NAME_TYPE { POLICY, ROLE }
+	public <T> void getObjectInJson(List<T> objList,
+			HttpServletResponse response, JSON_FILE_NAME_TYPE type) throws Exception {
 		if (LOG.isDebugEnabled()) {
-			LOG.debug("==> ServiceDBStore.getPoliciesInJson()");
+			LOG.debug("==> ServiceDBStore.getObjectInJson()");
 		}
 		String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss").format(new Date());
-		String jsonFileName = "Ranger_Policies_" + timeStamp + ".json";
-		writeJson(policies, jsonFileName, response);
+		String jsonFileName;
+		switch(type) {
+		case POLICY :
+			jsonFileName = "Ranger_Policies_" + timeStamp + ".json";
+			break;
+		case ROLE :
+			jsonFileName = "Ranger_Roles_" + timeStamp + ".json";
+			break;
+		default :
+			throw restErrorUtil.createRESTException("Invalid type "+type);
+		}
+		writeJson(objList, jsonFileName, response, type);
 	}
 
 	public PList<RangerPolicy> getPaginatedPolicies(SearchFilter filter) throws Exception {
@@ -4494,30 +4507,47 @@ public class ServiceDBStore extends AbstractServiceStore {
                 csvBuffer.append(COMMA_DELIMITER);
                 csvBuffer.append(LINE_SEPARATOR);
         }
-	
-	public void putMetaDataInfo(RangerExportPolicyList rangerExportPolicyList){
+
+	public Map<String, Object> getMetaDataInfo() {
 		Map<String, Object> metaDataInfo = new LinkedHashMap<String, Object>();
 		UserSessionBase usb = ContextUtil.getCurrentUserSession();
 		String userId = usb!=null ? usb.getLoginId() : null;
-		
+
 		metaDataInfo.put(HOSTNAME, LOCAL_HOSTNAME);
 		metaDataInfo.put(USER_NAME, userId);
 		metaDataInfo.put(TIMESTAMP, MiscUtil.getUTCDateForLocalDate(new Date()));
 		metaDataInfo.put(RANGER_VERSION, RangerVersionInfo.getVersion());
-		
-		rangerExportPolicyList.setMetaDataInfo(metaDataInfo);
+
+		return metaDataInfo;
 	}
-	
-	private void writeJson(List<RangerPolicy> policies, String jsonFileName,
-			HttpServletResponse response) throws JSONException, IOException {
+
+	private <T> void writeJson(List<T> objList, String jsonFileName,
+			HttpServletResponse response, JSON_FILE_NAME_TYPE type) throws JSONException, IOException {
 		response.setContentType("text/json");
 		response.setHeader("Content-Disposition", "attachment; filename="+ jsonFileName);
 		ServletOutputStream out = null;
-		RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-		putMetaDataInfo(rangerExportPolicyList);
-		rangerExportPolicyList.setPolicies(policies);
+
 		Gson gson = new GsonBuilder().setPrettyPrinting().create();
-		String json = gson.toJson(rangerExportPolicyList, RangerExportPolicyList.class);
+		String json = null;
+
+		switch(type) {
+		case POLICY :
+			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
+			rangerExportPolicyList.setGenericPolicies(objList);
+			rangerExportPolicyList.setMetaDataInfo(getMetaDataInfo());
+			json = gson.toJson(rangerExportPolicyList, RangerExportPolicyList.class);
+			break;
+		case ROLE :
+			RangerExportRoleList rangerExportRoleList = new RangerExportRoleList();
+			rangerExportRoleList.setGenericRoleList(objList);
+			Map<String, Object> metaDataInfo = getMetaDataInfo();
+			metaDataInfo.put(EXPORT_COUNT,rangerExportRoleList.getListSize());
+			rangerExportRoleList.setMetaDataInfo(metaDataInfo);
+			json = gson.toJson(rangerExportRoleList, RangerExportRoleList.class);
+			break;
+		default :
+			throw restErrorUtil.createRESTException("Invalid type "+type);
+		}
 		try {
 			out = response.getOutputStream();
 			response.setStatus(HttpServletResponse.SC_OK);
