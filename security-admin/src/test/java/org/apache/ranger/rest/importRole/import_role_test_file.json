@@ -1,0 +1,120 @@
+{
+  "metaDataInfo": {
+    "Host name": "dhaval-Vostro-15-3568",
+    "Exported by": "admin",
+    "Export time": "Jun 6, 2023 12:08:14 PM",
+    "Ranger apache version": "3.0.0-SNAPSHOT",
+    "Exported count": 7
+  },
+  "roles": [
+    {
+      "name": "testrole1",
+      "description": "",
+      "options": {},
+      "users": [
+        {
+          "name": "testuser1",
+          "isAdmin": false
+        }
+      ],
+      "groups": [],
+      "roles": [],
+      "id": 1,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin"
+    },
+    {
+      "name": "testrole2",
+      "description": "",
+      "options": {},
+      "users": [],
+      "groups": [],
+      "roles": [],
+      "id": 2,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin"
+    },
+    {
+      "name": "testrole3",
+      "description": "",
+      "options": {},
+      "users": [
+        {
+          "name": "testuser2",
+          "isAdmin": true
+        }
+      ],
+      "groups": [],
+      "roles": [],
+      "id": 3,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin"
+    },
+    {
+      "name": "testrole4",
+      "description": "",
+      "options": {},
+      "users": [
+        {
+          "name": "testuser3",
+          "isAdmin": false
+        }
+      ],
+      "groups": [],
+      "roles": [],
+      "id": 4,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin"
+    },
+    {
+      "name": "testrole5",
+      "description": "",
+      "options": {},
+      "users": [],
+      "groups": [],
+      "roles": [],
+      "id": 5,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin"
+    },
+    {
+      "name": "testrole6",
+      "description": "",
+      "options": {},
+      "users": [],
+      "groups": [],
+      "roles": [],
+      "id": 6,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin"
+    },
+    {
+      "name": "admin",
+      "description": "",
+      "options": {},
+      "users": [
+        {
+          "name": "testuser5",
+          "isAdmin": false
+        }
+      ],
+      "groups": [],
+      "roles": [],
+      "id": 7,
+      "isEnabled": true,
+      "createdBy": "Admin",
+      "updatedBy": "Admin"
+    }
+  ],
+  "startIndex": 0,
+  "pageSize": 0,
+  "totalCount": 0,
+  "resultSize": 0,
+  "queryTimeMS": 1686053294837
+}
