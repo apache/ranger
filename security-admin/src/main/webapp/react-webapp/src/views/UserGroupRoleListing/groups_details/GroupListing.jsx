@@ -627,18 +627,21 @@ function Groups() {
           />
 
           <Modal show={showModal} onHide={toggleConfirmModal}>
-            <Modal.Body>
-              Are you sure you want to delete&nbsp;
-              {selectedRows.current.length === 1 ? (
-                <span>
-                  <b>"{selectedRows.current[0].original.name}"</b> group ?
-                </span>
-              ) : (
-                <span>
-                  <b>"{selectedRows.current.length}"</b> groups ?
-                </span>
-              )}
-            </Modal.Body>
+            <Modal.Header closeButton>
+              <span className="text-word-break">
+                {" "}
+                Are you sure you want to delete group&nbsp;
+                {selectedRows.current.length === 1 ? (
+                  <>
+                    "<b>{selectedRows.current[0].original.name}</b>" ?
+                  </>
+                ) : (
+                  <>
+                    "<b>{selectedRows.current.length}</b>" ?
+                  </>
+                )}
+              </span>
+            </Modal.Header>
             <Modal.Footer>
               <Button
                 variant="secondary"
@@ -687,7 +690,10 @@ function Groups() {
               <Modal.Title>
                 <div className="d-flex">
                   User's List :
-                  <div className="pl-2 more-less-width">
+                  <div
+                    className="pl-2 more-less-width text-truncate"
+                    title={showAssociateUserModal?.groupName}
+                  >
                     {showAssociateUserModal.groupName}
                   </div>
                 </div>
