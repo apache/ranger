@@ -52,13 +52,19 @@ export const CustomBreadcrumb = (props) => {
                   >
                     {isEmpty(link) ? (
                       <Link to="#" onClick={(e) => e.preventDefault()}>
-                        <p className="" title={data[index][obj].text}>
+                        <p
+                          className="trim-containt-breadcrumb"
+                          title={data[index][obj].text}
+                        >
                           {data[index][obj].text}
                         </p>
                       </Link>
                     ) : (
                       <Link to={link}>
-                        <p className="" title={data[index][obj].text}>
+                        <p
+                          className="trim-containt-breadcrumb"
+                          title={data[index][obj].text}
+                        >
                           {data[index][obj].text}
                         </p>
                       </Link>
