@@ -322,17 +322,16 @@ public class RangerSecurityZoneValidator extends RangerValidator {
             LOG.debug(String.format("==> RangerSecurityZoneValidator.validateZoneServiceInAllZones(%s, %s, %s, %s)", zones, serviceName, serviceDef, failures));
         }
 
-        boolean ret = true;
+        boolean                         ret              = true;
+        RangerServiceDefHelper          serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+        List<RangerZoneResourceMatcher> matchers         = new ArrayList<>();
+        Set<String>                     resourceNames    = new HashSet<>();
 
         // For each zone, get list-of-resources corresponding to serviceName.
         //    For each list-of-resources:
         //       get one resource (this is a map of <String, List<String>>); convert it into map of <String, RangerPolicyResource>. excludes is always false, recursive true only for HDFS
         //       build a subclass of RangerPolicyResourceEvaluator with id of zone, zoneName as a member, and RangerDefaultResourceMatcher as matcher.
         //       add this to list-of-evaluators
-
-        Map<String, List<RangerZoneResourceMatcher>> matchersForResourceDef = new HashMap<>();
-        RangerServiceDefHelper                       serviceDefHelper       = new RangerServiceDefHelper(serviceDef);
-
         for (RangerSecurityZone zone : zones) {
             Map<String, RangerSecurityZoneService> zoneServices = zone.getServices();
             RangerSecurityZoneService              zoneService  = zoneServices != null ? zoneServices.get(serviceName) : null;
@@ -352,17 +351,12 @@ public class RangerSecurityZoneValidator extends RangerValidator {
                     RangerPolicyResource policyResource = new RangerPolicyResource(resourceValues, false, EmbeddedServiceDefsUtil.isRecursiveEnabled(serviceDef, resourceDefName));
 
                     policyResources.put(resourceDefName, policyResource);
-
-                    if (matchersForResourceDef.get(resourceDefName) == null) {
-                        matchersForResourceDef.put(resourceDefName, new ArrayList<>());
-                    }
                 }
 
                 RangerZoneResourceMatcher matcher = new RangerZoneResourceMatcher(zone.getName(), policyResources, serviceDefHelper);
 
-                for (String resourceDefName : resource.keySet()) {
-                    matchersForResourceDef.get(resourceDefName).add(matcher);
-                }
+                matchers.add(matcher);
+                resourceNames.addAll(policyResources.keySet());
             }
         }
 
@@ -370,12 +364,10 @@ public class RangerSecurityZoneValidator extends RangerValidator {
 
         Map<String, RangerResourceTrie<RangerZoneResourceMatcher>> trieMap = new HashMap<>();
 
-        for (Map.Entry<String, List<RangerZoneResourceMatcher>> entry : matchersForResourceDef.entrySet()) {
-            String                          resourceDefName = entry.getKey();
-            List<RangerZoneResourceMatcher> matchers        = entry.getValue();
-            RangerResourceDef               resourceDef     = ServiceDefUtil.getResourceDef(serviceDef, resourceDefName);
+        for (String resourceName : resourceNames) {
+            RangerResourceDef resourceDef = ServiceDefUtil.getResourceDef(serviceDef, resourceName);
 
-            trieMap.put(resourceDefName, new RangerResourceTrie<>(resourceDef, matchers));
+            trieMap.put(resourceName, new RangerResourceTrie<>(resourceDef, matchers));
         }
 
         // For each zone, get list-of-resources corresponding to serviceName
