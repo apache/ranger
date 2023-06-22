@@ -895,7 +895,7 @@ function Access() {
     },
     {
       category: "requestUser",
-      label: "Users",
+      label: "User",
       urlLabel: "user",
       type: "text"
     },
