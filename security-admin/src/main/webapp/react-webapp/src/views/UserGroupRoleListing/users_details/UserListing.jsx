@@ -693,18 +693,21 @@ function Users() {
           />
 
           <Modal show={showModal} onHide={toggleConfirmModal}>
-            <Modal.Body>
-              Are you sure you want to delete&nbsp;
-              {selectedRows.current.length === 1 ? (
-                <span>
-                  <b>"{selectedRows.current[0].original.name}"</b> user ?
-                </span>
-              ) : (
-                <span>
-                  <b>"{selectedRows.current.length}"</b> users ?
-                </span>
-              )}
-            </Modal.Body>
+            <Modal.Header closeButton>
+              <span className="text-word-break">
+                {" "}
+                Are you sure you want to delete user&nbsp;
+                {selectedRows.current.length === 1 ? (
+                  <>
+                    "<b>{selectedRows.current[0].original.name}</b>" ?
+                  </>
+                ) : (
+                  <>
+                    "<b>{selectedRows.current.length}</b>" ?
+                  </>
+                )}
+              </span>
+            </Modal.Header>
             <Modal.Footer>
               <Button
                 variant="secondary"

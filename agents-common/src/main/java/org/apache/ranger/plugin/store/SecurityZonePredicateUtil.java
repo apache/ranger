@@ -27,7 +27,6 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import java.util.List;
 
 public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
-
     public SecurityZonePredicateUtil() {
         super();
     }
@@ -107,6 +106,9 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForMatchingZoneName(final String zoneName, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(zoneName)) {
+            return null;
+        }
 
         Predicate ret = new Predicate() {
             @Override
@@ -137,6 +139,9 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
     }
 
     private Predicate addPredicateForNonMatchingZoneName(final String zoneName, List<Predicate> predicates) {
+        if (StringUtils.isEmpty(zoneName)) {
+            return null;
+        }
 
         Predicate ret = new Predicate() {
             @Override
@@ -150,7 +155,7 @@ public class SecurityZonePredicateUtil extends AbstractPredicateUtil {
                 if(object instanceof RangerSecurityZone) {
                     RangerSecurityZone securityZone = (RangerSecurityZone) object;
 
-                    if (StringUtils.isEmpty(zoneName) || !StringUtils.equals(zoneName, securityZone.getName())) {
+                    if (!StringUtils.equals(zoneName, securityZone.getName())) {
                         ret = true;
                     }
                 }

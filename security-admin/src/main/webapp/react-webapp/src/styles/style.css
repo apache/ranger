@@ -1708,7 +1708,7 @@ header {
 }
 
 .more-less-width {
-  max-width: 200px;
+  max-width: 28rem;
 }
 
 .fixed-headertable thead tr {
@@ -2495,4 +2495,7 @@ li.list-group-item:hover {
 }
 .manage-service .dropdown-toggle::after {
   vertical-align: 0.125em;
+}
+.text-word-break {
+  word-break: break-all;
 }

@@ -443,6 +443,44 @@ public class RangerSecurityZoneValidatorTest {
 		}
 	}
 
+	@Test
+	public void test2ValidateHiveResourceInMultipleSecurityZones() throws Exception {
+		List<HashMap<String, List<String>>> zone1Resources = new ArrayList<>();
+		List<HashMap<String, List<String>>> zone2Resources = new ArrayList<>();
+
+		zone1Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("*")); }});
+		zone2Resources.add(new HashMap<String, List<String>>() {{ put("database", Arrays.asList("db1")); put("table", Arrays.asList("tbl1")); }});
+
+		RangerServiceDef          svcDef       = getHiveServiceDef();
+		RangerService             svc          = getHiveService();
+		RangerSecurityZoneService zone1HiveSvc = new RangerSecurityZoneService(zone1Resources);
+		RangerSecurityZoneService zone2HiveSvc = new RangerSecurityZoneService(zone2Resources);
+
+		RangerSecurityZone zone1 = new RangerSecurityZone("zone1", Collections.singletonMap(svc.getName(), zone1HiveSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+		RangerSecurityZone zone2 = new RangerSecurityZone("zone2", Collections.singletonMap(svc.getName(), zone2HiveSvc), null, Arrays.asList("admin"), null, Arrays.asList("auditor"), null, "Zone 1");
+
+		zone1.setId(1L);
+		zone2.setId(2L);
+
+		List<RangerSecurityZone> zones = new ArrayList<RangerSecurityZone>() {{ add(zone1); }};
+
+		Mockito.when(_store.getServiceByName(svc.getName())).thenReturn(svc);
+		Mockito.when(_store.getServiceDefByName(svc.getType())).thenReturn(svcDef);
+		Mockito.when(_store.getSecurityZone(2L)).thenReturn(zone2);
+		Mockito.when(_securityZoneStore.getSecurityZones(Mockito.any())).thenReturn(zones);
+
+		try {
+			rangerSecurityZoneValidator.validate(zone2, RangerValidator.Action.UPDATE);
+
+			Assert.assertFalse("security-zone update should have failed in validation", true);
+		} catch (Exception excp) {
+			String  failureMessage           = excp.getMessage();
+			boolean hasResourceConflictError = StringUtils.contains(failureMessage, ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT.getErrorCode() + "");
+
+			Assert.assertTrue("validation failure message didn't include expected error code " + ValidationErrorCode.SECURITY_ZONE_VALIDATION_ERR_ZONE_RESOURCE_CONFLICT.getErrorCode() + ". Failure message: " + excp.getMessage(), hasResourceConflictError);
+		}
+	}
+
 	private RangerService getRangerService() {
 		Map<String, String> configs = new HashMap<String, String>();
 		configs.put("username", "servicemgr");
