@@ -550,7 +550,10 @@ class ServiceDefinition extends Component {
                               onHide={this.hideDeleteModal}
                             >
                               <Modal.Header closeButton>
-                                {`Are you sure want to delete ?`}
+                                <span className="text-word-break">
+                                  Are you sure want to delete service&nbsp;"
+                                  <b>{`${s?.displayName}`}</b>" ?
+                                </span>
                               </Modal.Header>
                               <Modal.Footer>
                                 <Button
