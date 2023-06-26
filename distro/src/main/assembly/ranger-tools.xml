@@ -135,6 +135,12 @@
       <fileMode>755</fileMode>
     </file>
     <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/ranger-mem-sizing.sh</source>
+      <outputDirectory></outputDirectory>
+      <destName>ranger-mem-sizing.sh</destName>
+      <fileMode>755</fileMode>
+    </file>
+    <file>
       <source>${project.parent.basedir}/ranger-tools/scripts/README.txt</source>
       <outputDirectory></outputDirectory>
       <destName>README.txt</destName>
