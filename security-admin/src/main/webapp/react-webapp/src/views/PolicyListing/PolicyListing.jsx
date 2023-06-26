@@ -815,7 +815,12 @@ function PolicyListing(props) {
           </div>
 
           <Modal show={deletePolicyModal.showPopup} onHide={toggleClose}>
-            <Modal.Body>Are you sure you want to delete</Modal.Body>
+            <Modal.Header closeButton>
+              <span className="text-word-break">
+                Are you sure you want to delete policy&nbsp;"
+                <b>{deletePolicyModal?.policyDetails?.policyName}</b>" ?
+              </span>
+            </Modal.Header>
             <Modal.Footer>
               <Button variant="secondary" size="sm" onClick={toggleClose}>
                 Close

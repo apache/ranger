@@ -1672,7 +1672,10 @@ export default function AddUpdatePolicyForm(props) {
                       {policyId !== undefined && (
                         <Modal show={showDelete} onHide={hideDeleteModal}>
                           <Modal.Header closeButton>
-                            {`Are you sure want to delete ?`}
+                            <span className="text-word-break">
+                              Are you sure want to delete policy&nbsp;"
+                              <b>{`${values?.policyName}`}</b>" ?
+                            </span>
                           </Modal.Header>
 
                           <Modal.Footer>

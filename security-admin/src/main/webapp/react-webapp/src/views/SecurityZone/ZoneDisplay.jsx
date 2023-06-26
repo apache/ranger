@@ -128,9 +128,12 @@ class ZoneDisplay extends Component {
                   onHide={this.closeZoneModal}
                   backdrop="static"
                 >
-                  <Modal.Header
-                    closeButton
-                  >{`Are you sure you want to delete ?`}</Modal.Header>
+                  <Modal.Header closeButton>
+                    <span className="text-word-break">
+                      Are you sure want to delete zone&nbsp;"
+                      <b>{`${this.props.zone.name}`}</b>" ?
+                    </span>
+                  </Modal.Header>
                   <Modal.Footer>
                     <Button
                       variant="secondary"
