@@ -696,7 +696,9 @@ export default function AddUpdatePolicyForm(props) {
           isRecursive:
             defObj.recursiveSupported &&
             !(values[`isRecursiveSupport-${level}`] === false),
-          values: values[`value-${level}`]?.map(({ value }) => value)
+          values: isArray(values[`value-${level}`])
+            ? values[`value-${level}`]?.map(({ value }) => value)
+            : [values[`value-${level}`].value]
         };
       }
     }
