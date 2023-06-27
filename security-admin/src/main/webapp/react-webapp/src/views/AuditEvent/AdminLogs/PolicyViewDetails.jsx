@@ -143,7 +143,8 @@ export function PolicyViewDetails(props) {
     updateTime,
     createdBy,
     createTime,
-    validitySchedules
+    validitySchedules,
+    zoneName
   } = access;
 
   const getPolicyDetails = () => {
@@ -325,7 +326,7 @@ export function PolicyViewDetails(props) {
         {getPolicyResources(policyType, resources)}
         <tr>
           <td className="text-nowrap">Description</td>
-          <td>{description}</td>
+          <td>{!isEmpty(description) ? description : "--"}</td>
         </tr>
         <tr>
           <td className="text-nowrap">Audit Logging </td>
@@ -337,6 +338,16 @@ export function PolicyViewDetails(props) {
             </h6>
           </td>
         </tr>
+        {!isEmpty(zoneName) && (
+          <tr>
+            <td className="text-nowrap">Zone Name </td>
+            <td>
+              <h6 className="d-inline mr-1">
+                <Badge variant="dark">{zoneName}</Badge>
+              </h6>
+            </td>
+          </tr>
+        )}
       </>
     );
   };
