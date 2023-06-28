@@ -651,7 +651,7 @@ function Access() {
         Cell: (rawValue) => {
           let Tags = [];
           if (!isEmpty(rawValue.value)) {
-            Tags = JSON.parse(rawValue.value).map((tag) => {
+            Tags = sortBy(JSON.parse(rawValue.value), "type")?.map((tag) => {
               if (tag.attributes && !isEmpty(tag.attributes)) {
                 return (
                   <CustomPopoverTagOnClick
@@ -670,9 +670,9 @@ function Access() {
           } else {
             return <div className="text-center">--</div>;
           }
-          return <AccessMoreLess Data={sortBy(Tags)} />;
+          return <AccessMoreLess Data={Tags} />;
         },
-        width: 100,
+        width: 140,
         disableResizing: true,
         disableSortBy: true,
         getResizerProps: () => {}
@@ -999,9 +999,6 @@ function Access() {
           <Modal.Body>
             <PolicyViewDetails
               paramsData={policyParamsData}
-              serviceDef={serviceDefs.find((servicedef) => {
-                return servicedef.name == policyDetails.serviceType;
-              })}
               policyView={false}
             />
           </Modal.Body>

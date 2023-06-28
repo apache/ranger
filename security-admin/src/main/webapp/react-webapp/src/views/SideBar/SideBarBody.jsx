@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import React, { useEffect, useReducer } from "react";
+import React, { useEffect, useReducer, useState } from "react";
 import { NavLink, useNavigate } from "react-router-dom";
 import {
   sortBy,
@@ -33,7 +33,7 @@ import closeIcon from "Images/close.svg";
 import { RangerPolicyType } from "../../utils/XAEnums";
 import { getUserProfile, setUserProfile } from "Utils/appState";
 import { fetchApi } from "Utils/fetchAPI";
-import Select from "react-select";
+import Select, { components } from "react-select";
 import {
   hasAccessToTab,
   isAuditor,
@@ -44,6 +44,7 @@ import {
 } from "Utils/XAUtils";
 import { getServiceDef } from "../../utils/appState";
 import ResourceTagContent from "./ResourceTagContent";
+import { Button } from "react-bootstrap";
 
 function reducer(state, action) {
   switch (action.type) {
@@ -307,14 +308,17 @@ export const SideBarBody = (props) => {
               </span>
             </div>
             <div
-              title={`${isEmpty(servicesData) ? "Create Service first" : ""} `}
+              title={`${isEmpty(servicesData) ? "Create Service first" : ""}`}
+              className="position-relative"
             >
               <Select
                 isMulti
-                isClearable={false}
+                isClearable={true}
                 placeholder="Select Service Types"
                 menuPlacement="auto"
-                className={`select-nav-drawer ${loader ? "not-allowed" : ""}`}
+                className={`select-nav-drawer custom-nav-search  ${
+                  loader ? "not-allowed" : ""
+                }`}
                 styles={serviceSelectCustomStyle}
                 theme={serviceSelectThemes}
                 isDisabled={loader || isEmpty(servicesData) ? true : false}
@@ -327,6 +331,17 @@ export const SideBarBody = (props) => {
                   IndicatorSeparator: () => null
                 }}
               />
+              {selectedServiceDef?.length > 0 && (
+                <button
+                  className={`custom-clear-btn ${loader ? "not-allowed" : ""}`}
+                  disabled={loader ? true : false}
+                  onClick={() => {
+                    handleServiceDefChange([]);
+                  }}
+                >
+                  X
+                </button>
+              )}
             </div>
             <ResourceTagContent
               serviceDefsData={sortBy(
