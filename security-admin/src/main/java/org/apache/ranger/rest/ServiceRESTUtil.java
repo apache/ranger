@@ -95,6 +95,31 @@ public class ServiceRESTUtil {
 		// remove all existing privileges for users and groups
 		if (revokeRequest.getReplaceExistingPermissions()) {
 			policyUpdated = removeUsersGroupsAndRolesFromPolicy(existingRangerPolicy, revokeRequest.getUsers(), revokeRequest.getGroups(), revokeRequest.getRoles());
+
+			// handling hbase shell revoke access for users
+			if (CollectionUtils.isNotEmpty(revokeRequest.getUsers()) || CollectionUtils.isNotEmpty(revokeRequest.getGroups())
+					|| CollectionUtils.isNotEmpty(revokeRequest.getRoles())) {
+				RangerPolicy appliedPolicy = new RangerPolicy();
+				RangerPolicy.RangerPolicyItem deniedRangerPolicyItem = new RangerPolicy.RangerPolicyItem();
+
+				deniedRangerPolicyItem.setDelegateAdmin(false);
+				deniedRangerPolicyItem.getUsers().addAll(revokeRequest.getUsers());
+				deniedRangerPolicyItem.getGroups().addAll(revokeRequest.getGroups());
+				deniedRangerPolicyItem.getRoles().addAll(revokeRequest.getRoles());
+
+				List<RangerPolicy.RangerPolicyItemAccess> deniedRangerPolicyItemAccess = new ArrayList<RangerPolicy.RangerPolicyItemAccess>();
+
+				Set<String> deniedPolicyItemAccessType = revokeRequest.getAccessTypes();
+				for (String accessType : deniedPolicyItemAccessType) {
+					deniedRangerPolicyItemAccess.add(new RangerPolicy.RangerPolicyItemAccess(accessType, true));
+				}
+
+				deniedRangerPolicyItem.setAccesses(deniedRangerPolicyItemAccess);
+
+				appliedPolicy.getDenyPolicyItems().add(deniedRangerPolicyItem);
+				processApplyPolicy(existingRangerPolicy, appliedPolicy);
+				policyUpdated = true;
+			}
 		} else {
 			//Build a policy and set up policyItem in it to mimic revoke request
 			RangerPolicy appliedRangerPolicy = new RangerPolicy();
@@ -1061,6 +1086,7 @@ public class ServiceRESTUtil {
 		boolean policyUpdated = false;
 
 		List<RangerPolicy.RangerPolicyItem> policyItems = policy.getPolicyItems();
+		List<RangerPolicy.RangerPolicyItem> denyPolicyItems = policy.getDenyPolicyItems();
 
 		int numOfItems = policyItems.size();
 
@@ -1087,6 +1113,37 @@ public class ServiceRESTUtil {
 
 			if(CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups()) && CollectionUtils.isEmpty(policyItem.getRoles())) {
 				policyItems.remove(i);
+				numOfItems--;
+				i--;
+
+				policyUpdated = true;
+			}
+		}
+
+		for (int i = 0; i < denyPolicyItems.size(); i++) {
+			RangerPolicy.RangerPolicyItem policyItem = denyPolicyItems.get(i);
+
+			if (CollectionUtils.containsAny(policyItem.getUsers(), users)) {
+				policyItem.getUsers().removeAll(users);
+
+				policyUpdated = true;
+			}
+
+			if (CollectionUtils.containsAny(policyItem.getGroups(), groups)) {
+				policyItem.getGroups().removeAll(groups);
+
+				policyUpdated = true;
+			}
+
+			if (CollectionUtils.containsAny(policyItem.getRoles(), roles)) {
+				policyItem.getRoles().removeAll(roles);
+
+				policyUpdated = true;
+			}
+
+			if (CollectionUtils.isEmpty(policyItem.getUsers()) && CollectionUtils.isEmpty(policyItem.getGroups())
+					&& CollectionUtils.isEmpty(policyItem.getRoles())) {
+				denyPolicyItems.remove(i);
 				numOfItems--;
 				i--;
 
