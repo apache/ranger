@@ -184,6 +184,7 @@
                     <include>com.squareup.okhttp:okhttp</include>
                     <!-- ranger common metrics module-->
                             <include>org.apache.ranger:ranger-metrics</include>
+                            <include>dnsjava:dnsjava:jar:${dnsjava.version}</include>
                         </includes>
                     </dependencySet>
                 </dependencySets>

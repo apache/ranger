@@ -231,6 +231,7 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
+          <include>dnsjava:dnsjava:jar:${dnsjava.version}</include>
           <include>org.apache.tomcat.embed:tomcat-embed*</include>
           <include>org.apache.tomcat:tomcat-annotations-api*</include>
           <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>

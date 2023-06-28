@@ -201,6 +201,11 @@
             <artifactId>ranger-common-ha</artifactId>
             <version>${project.version}</version>
         </dependency>
+        <dependency>
+            <groupId>dnsjava</groupId>
+            <artifactId>dnsjava</artifactId>
+            <version>${dnsjava.version}</version>
+        </dependency>
     </dependencies>
 
     <build>

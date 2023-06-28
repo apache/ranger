@@ -88,6 +88,7 @@
 							<include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
 							<include>org.slf4j:log4j-over-slf4j:jar:${${slf4j.version}}</include>
 							<include>ch.qos.logback:logback-core:jar:${logback.version}</include>
+							<include>dnsjava:dnsjava:jar:${dnsjava.version}</include>
 						</includes>
 					</dependencySet>
 					<dependencySet>
