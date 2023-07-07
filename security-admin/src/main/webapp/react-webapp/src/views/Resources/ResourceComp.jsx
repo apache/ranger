@@ -17,17 +17,16 @@
  * under the License.
  */
 
-import React, { useEffect, useReducer, useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { Form as FormB, Row, Col } from "react-bootstrap";
 import { Field } from "react-final-form";
 import Select from "react-select";
 import BootstrapSwitchButton from "bootstrap-switch-button-react";
-import CreatableSelect from "react-select/creatable";
-import { debounce, filter, groupBy, some, sortBy } from "lodash";
+import { filter, groupBy, some, sortBy } from "lodash";
 import { toast } from "react-toastify";
 import { udfResourceWarning } from "../../utils/XAMessages";
-import { fetchApi } from "Utils/fetchAPI";
 import { RangerPolicyType } from "Utils/XAEnums";
+import ResourceSelectComp from "./ResourceSelectComp";
 
 const noneOptions = {
   label: "None",
@@ -44,8 +43,6 @@ export default function ResourceComp(props) {
     policyId
   } = props;
   const [rsrcState, setLoader] = useState({ loader: false, resourceKey: -1 });
-  const [options, setOptions] = useState([]);
-  const [isLoading, setIsLoading] = useState(false);
   const toastId = useRef(null);
 
   let resources = sortBy(serviceCompDetails.resources, "itemId");
@@ -72,52 +69,6 @@ export default function ResourceComp(props) {
     grpResourcesKeys.push(+resourceKey);
   }
   grpResourcesKeys = grpResourcesKeys.sort();
-
-  const fetchResourceLookup = async (
-    inputValue,
-    resourceObj,
-    selectedValues
-  ) => {
-    let resourceName = resourceObj.name;
-    let data = {
-      resourceName,
-      resources: {
-        [resourceName]: selectedValues?.map?.(({ value }) => value) || []
-      }
-    };
-    if (inputValue) {
-      data["userInput"] = inputValue || "";
-    }
-
-    let op = [];
-    try {
-      if (resourceObj.lookupSupported) {
-        const resourceResp = await fetchApi({
-          url: `plugins/services/lookupResource/${serviceDetails.name}`,
-          method: "POST",
-          data
-        });
-        op =
-          resourceResp.data?.map?.((name) => ({
-            label: name,
-            value: name
-          })) || [];
-      }
-    } catch (error) {
-      toast.dismiss(toastId.current);
-      if (error?.response?.data?.msgDesc) {
-        toastId.current = toast.error(error.response.data.msgDesc);
-      } else {
-        toastId.current = toast.error(
-          "Resouce lookup failed for current resource"
-        );
-      }
-    }
-
-    setOptions(op);
-  };
-
-  const fetchDelayResourceLookup = debounce(fetchResourceLookup, 1000);
 
   const getResourceLabelOp = (levelKey, index) => {
     let op = grpResources[levelKey];
@@ -150,10 +101,7 @@ export default function ResourceComp(props) {
     if (index !== 0) {
       levelOp = getResourceLabelOp(levelKey, index);
     }
-    if (
-      levelOp.length === 1 &&
-      !formValues[resourceKey].hasOwnProperty("parent")
-    ) {
+    if (levelOp.length === 1 && !formValues[resourceKey]?.parent?.length > 0) {
       renderLabel = true;
     } else {
       if (index !== 0) {
@@ -236,34 +184,6 @@ export default function ResourceComp(props) {
     }
   };
 
-  const required = (val, formVal) => {
-    if (!val || val.length == 0) {
-      return "Required";
-    }
-    if (formVal?.validationRegEx && val?.length > 0) {
-      var regex = new RegExp(formVal.validationRegEx);
-      if (formVal.validationRegEx == "^\\*$") {
-        if (regex.test(val[val.length - 1].value) == false)
-          return 'Only "*" value is allowed';
-      }
-      if (formVal.validationRegEx == "^[/*]$|^/.*?[^/]$") {
-        if (regex.test(val[val.length - 1].value) == false)
-          return "Relative Path start with slash and must not end with a slash";
-      }
-    }
-  };
-
-  const onLookupChange = (object, resourceObj, selectedValues, { action }) => {
-    switch (action) {
-      case "input-change":
-        if (object)
-          fetchDelayResourceLookup(object, resourceObj, selectedValues);
-        return;
-      default:
-        return;
-    }
-  };
-
   return grpResourcesKeys.map((levelKey, index) => {
     const resourceKey = `resourceName-${levelKey}`;
     if (index !== 0) {
@@ -282,10 +202,6 @@ export default function ResourceComp(props) {
         display: "inline-block",
         float: "right"
       })
-    };
-
-    const rcsValidation = (m) => {
-      return required(m, formValues[`resourceName-${levelKey}`]);
     };
 
     return (
@@ -329,62 +245,18 @@ export default function ResourceComp(props) {
             }
           />
         </Col>
+
         {formValues[`resourceName-${levelKey}`] && (
-          <Col sm={5}>
-            <Field
-              key={formValues[`resourceName-${levelKey}`].name}
-              className="form-control"
-              name={`value-${levelKey}`}
-              validate={
-                formValues &&
-                formValues[`resourceName-${levelKey}`]?.mandatory &&
-                rcsValidation
-              }
-              render={({ input, meta }) => (
-                <>
-                  <CreatableSelect
-                    {...input}
-                    id={
-                      formValues &&
-                      formValues[`resourceName-${levelKey}`]?.mandatory &&
-                      meta.error &&
-                      meta.touched
-                        ? "isError"
-                        : `value-${levelKey}`
-                    }
-                    isMulti
-                    isDisabled={
-                      formValues[`resourceName-${levelKey}`].value ===
-                      noneOptions.value
-                    }
-                    options={options}
-                    onFocus={() => {
-                      fetchResourceLookup(
-                        "",
-                        formValues[`resourceName-${levelKey}`],
-                        input.value
-                      );
-                    }}
-                    onInputChange={(inputVal, action) => {
-                      onLookupChange(
-                        inputVal,
-                        formValues[`resourceName-${levelKey}`],
-                        input.value,
-                        action
-                      );
-                    }}
-                    isLoading={isLoading}
-                  />
-                  {formValues &&
-                    formValues[`resourceName-${levelKey}`]?.mandatory &&
-                    meta.touched &&
-                    meta.error && (
-                      <span className="invalid-field">{meta.error}</span>
-                    )}
-                </>
-              )}
-            />
-          </Col>
+          <>
+            <Col sm={5}>
+              <ResourceSelectComp
+                levelKey={levelKey}
+                formValues={formValues}
+                grpResourcesKeys={grpResourcesKeys}
+                serviceDetails={serviceDetails}
+              />
+            </Col>
+          </>
         )}
         {formValues[`resourceName-${levelKey}`] && (
           <Col sm={4}>

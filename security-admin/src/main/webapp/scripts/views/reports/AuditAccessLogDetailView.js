@@ -54,9 +54,10 @@ define(function(require) {
                     auditaccessDetail : this.auditaccessDetail,
                     eventTime : Globalize.format(new Date(this.auditaccessDetail.eventTime),  "MM/dd/yyyy hh:mm:ss tt"),
                     result : result[0].label,
-                    hiveQuery : ((this.auditaccessDetail.serviceType === XAEnums.ServiceType.Service_HIVE.label || this.auditaccessDetail.serviceType === XAEnums.ServiceType.Service_HBASE.label) &&
-                                this.auditaccessDetail.aclEnforcer === "ranger-acl" && this.auditaccessDetail.requestData) ? true : false,
-
+                    hiveQuery : (this.auditaccessDetail.serviceType === XAEnums.ServiceType.Service_HIVE.label && this.auditaccessDetail.aclEnforcer === "ranger-acl" && this.auditaccessDetail.requestData) ? true : false,
+                    hbaseAudit: (this.auditaccessDetail.serviceType === XAEnums.ServiceType.Service_HBASE.label && this.auditaccessDetail.aclEnforcer === "ranger-acl" && this.auditaccessDetail.requestData) ? true : false,
+                    solrQuery: (this.auditaccessDetail.serviceType === XAEnums.ServiceType.Service_SOLR.label && this.auditaccessDetail.aclEnforcer === "ranger-acl" && this.auditaccessDetail.requestData) ? true : false,
+                    hdfsOperation : (this.auditaccessDetail.serviceType === XAEnums.ServiceType.Service_HDFS.label && this.auditaccessDetail.requestData) ? true : false,
                     tag : this.tags ? this.tags.join() : undefined,
                     auditAccessView : this.auditAccessView,
                     policyDetailsView : (this.auditAccessView && this.auditaccessDetail.policyId !== -1) ? true : false,

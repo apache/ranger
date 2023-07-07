@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { isEmpty } from "lodash";
+import { isEmpty, isObject } from "lodash";
 import moment from "moment-timezone";
 import React, { Component, useEffect, useMemo, useState } from "react";
 import {
@@ -153,10 +153,17 @@ export class AccessMoreLess extends Component {
 
   render() {
     return (
-      <div className="tags-set-height-groups">
+      <div
+        className={`tags-set-height-groups ${
+          !this?.state?.show && "tags-oflow"
+        }`}
+      >
         {this?.state?.data?.map((key, index) => {
           return (
-            <div className="mb-1">
+            <div
+              className="text-truncate cursor-pointer"
+              title={isObject(key) ? key?.props?.data : key}
+            >
               <span className="tag-item" key={index}>
                 {key} {index < this?.state?.data.length - 1 && ", "}
               </span>
@@ -172,15 +179,11 @@ export class AccessMoreLess extends Component {
           {this?.props?.Data?.length > 4 ? (
             this?.state?.show ? (
               <span className="float-left-margin-1">
-                <h6>
-                  <code className="show-more-less"> + More..</code>
-                </h6>
+                <code className="show-more-less"> + More..</code>
               </span>
             ) : (
               <span className="float-left-margin-1">
-                <h6>
-                  <code className="show-more-less"> - Less..</code>
-                </h6>
+                <code className="show-more-less"> - Less..</code>
               </span>
             )
           ) : null}
@@ -332,7 +335,7 @@ export const CustomPopoverOnClick = ({
             <Popover.Title>
               {title}
               <i
-                className="pull-right close"
+                className="pull-right close ml-2"
                 onClick={(e) => {
                   e.stopPropagation();
                   handleClick();

@@ -696,7 +696,9 @@ export default function AddUpdatePolicyForm(props) {
           isRecursive:
             defObj.recursiveSupported &&
             !(values[`isRecursiveSupport-${level}`] === false),
-          values: values[`value-${level}`]?.map(({ value }) => value)
+          values: isArray(values[`value-${level}`])
+            ? values[`value-${level}`]?.map(({ value }) => value)
+            : [values[`value-${level}`].value]
         };
       }
     }
@@ -1672,7 +1674,10 @@ export default function AddUpdatePolicyForm(props) {
                       {policyId !== undefined && (
                         <Modal show={showDelete} onHide={hideDeleteModal}>
                           <Modal.Header closeButton>
-                            {`Are you sure want to delete ?`}
+                            <span className="text-word-break">
+                              Are you sure want to delete policy&nbsp;"
+                              <b>{`${values?.policyName}`}</b>" ?
+                            </span>
                           </Modal.Header>
 
                           <Modal.Footer>

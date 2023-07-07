@@ -51,6 +51,7 @@ import { useQuery } from "../../components/CommonComponents";
 import SearchPolicyTable from "./SearchPolicyTable";
 import { getBaseUrl, isKeyAdmin, isKMSAuditor } from "../../utils/XAUtils";
 import CustomBreadcrumb from "../CustomBreadcrumb";
+import moment from "moment-timezone";
 
 function UserAccessLayout(props) {
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
@@ -451,12 +452,14 @@ function UserAccessLayout(props) {
     try {
       exportResp = await fetchApi({
         url: exportApiUrl,
-        params: searchParamsObj
+        params: searchParamsObj,
+        responseType: "blob"
       });
 
       if (exportResp.status === 200) {
         downloadFile({
-          apiUrl: exportApiUrl
+          exportType: exportType,
+          apiResponse: exportResp.data
         });
       } else {
         toast.warning("No policies found to export");
@@ -466,11 +469,27 @@ function UserAccessLayout(props) {
     }
   };
 
-  const downloadFile = ({ apiUrl }) => {
-    let downloadUrl = getBaseUrl() + "service" + apiUrl + location.search;
+  const downloadFile = ({ exportType, apiResponse }) => {
+    let fileExtension;
 
+    if (exportType === "downloadExcel") {
+      fileExtension = ".xls";
+    } else if (exportType === "csv") {
+      fileExtension = ".csv";
+    } else {
+      fileExtension = ".json";
+    }
+
+    const fileName =
+      "Ranger_Policies_" +
+      moment(moment()).format("YYYYMMDD_hhmmss") +
+      fileExtension;
+
+    const downloadUrl = window.URL.createObjectURL(apiResponse);
     const link = document.createElement("a");
+
     link.href = downloadUrl;
+    link.download = fileName;
 
     const clickEvt = new MouseEvent("click", {
       view: window,
@@ -738,6 +757,7 @@ function UserAccessLayout(props) {
               key="left"
               drop="left"
               size="sm"
+              className="manage-export"
               title="Export all below policies"
             >
               <Dropdown.Toggle

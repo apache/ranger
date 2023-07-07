@@ -338,7 +338,10 @@ export const TopNavBar = (props) => {
       </Modal>
       <Modal show={showDelete} onHide={hideDeleteModal}>
         <Modal.Header closeButton>
-          {`Are you sure want to delete ?`}
+          <span className="text-word-break">
+            Are you sure want to delete service&nbsp;"
+            <b>{`${serviceData?.displayName}`}</b>" ?
+          </span>
         </Modal.Header>
         <Modal.Footer>
           <Button

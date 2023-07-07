@@ -113,7 +113,9 @@ export const SideBar = () => {
   } = keyState;
 
   const userProps = getUserProfile();
-  const loginId = <span className="login-id">{userProps?.loginId}</span>;
+  const loginId = (
+    <span className="login-id user-name">{userProps?.loginId}</span>
+  );
 
   let location = useLocation();
   let isListenerAttached = false;
@@ -423,7 +425,7 @@ export const SideBar = () => {
               }}
             >
               <img src={accountIcon} />
-              <span>{loginId}</span>
+              <span title={userProps?.loginId}>{loginId}</span>
             </Button>
           </li>
         </ul>

@@ -1,0 +1,235 @@
+{
+  "serviceName": "cl1_hive",
+  "roleVersion": 1,
+  "rangerRoles": [
+    {
+      "name":          "r_hrt-1",
+      "description":   "r_hrt-1",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_1", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_1", "isAdmin": false }
+      ],
+      "roles": [
+      ]
+    },
+    {
+      "name":          "r_hrt-2",
+      "description":   "r_hrt-2",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_2", "isAdmin": false },
+        { "name": "hrt_3", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_2", "isAdmin": false },
+        { "name": "g_hrt_3", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_1", "isAdmin": false }
+      ]
+    },
+    {
+      "name":          "r_hrt-3",
+      "description":   "r_hrt-3",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_4", "isAdmin": false },
+        { "name": "hrt_5", "isAdmin": false },
+        { "name": "hrt_6", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_4", "isAdmin": false },
+        { "name": "g_hrt_5", "isAdmin": false },
+        { "name": "g_hrt_6", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_2", "isAdmin": false }
+      ]
+    },
+    {
+      "name":          "r_hrt-4",
+      "description":   "r_hrt-4",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_7", "isAdmin": false },
+        { "name": "hrt_8", "isAdmin": false },
+        { "name": "hrt_9", "isAdmin": false },
+        { "name": "hrt_10", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_7", "isAdmin": false },
+        { "name": "g_hrt_8", "isAdmin": false },
+        { "name": "g_hrt_9", "isAdmin": false },
+        { "name": "g_hrt_10", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_3", "isAdmin": false }
+      ]
+    },
+    {
+      "name":          "r_hrt-5",
+      "description":   "r_hrt-5",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_11", "isAdmin": false },
+        { "name": "hrt_12", "isAdmin": false },
+        { "name": "hrt_13", "isAdmin": false },
+        { "name": "hrt_14", "isAdmin": false },
+        { "name": "hrt_15", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_11", "isAdmin": false },
+        { "name": "g_hrt_12", "isAdmin": false },
+        { "name": "g_hrt_13", "isAdmin": false },
+        { "name": "g_hrt_14", "isAdmin": false },
+        { "name": "g_hrt_15", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_4", "isAdmin": false }
+      ]
+    },
+    {
+      "name":          "r_hrt-6",
+      "description":   "r_hrt-6",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_16", "isAdmin": false },
+        { "name": "hrt_17", "isAdmin": false },
+        { "name": "hrt_18", "isAdmin": false },
+        { "name": "hrt_19", "isAdmin": false },
+        { "name": "hrt_20", "isAdmin": false },
+        { "name": "hrt_21", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_16", "isAdmin": false },
+        { "name": "g_hrt_17", "isAdmin": false },
+        { "name": "g_hrt_18", "isAdmin": false },
+        { "name": "g_hrt_19", "isAdmin": false },
+        { "name": "g_hrt_20", "isAdmin": false },
+        { "name": "g_hrt_21", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_5", "isAdmin": false }
+      ]
+    },
+    {
+      "name":          "r_hrt-7",
+      "description":   "r_hrt-7",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_22", "isAdmin": false },
+        { "name": "hrt_23", "isAdmin": false },
+        { "name": "hrt_24", "isAdmin": false },
+        { "name": "hrt_25", "isAdmin": false },
+        { "name": "hrt_26", "isAdmin": false },
+        { "name": "hrt_27", "isAdmin": false },
+        { "name": "hrt_28", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_22", "isAdmin": false },
+        { "name": "g_hrt_23", "isAdmin": false },
+        { "name": "g_hrt_24", "isAdmin": false },
+        { "name": "g_hrt_25", "isAdmin": false },
+        { "name": "g_hrt_26", "isAdmin": false },
+        { "name": "g_hrt_27", "isAdmin": false },
+        { "name": "g_hrt_28", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_6", "isAdmin": false }
+      ]
+    },
+    {
+      "name":          "r_hrt-8",
+      "description":   "r_hrt-8",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_29", "isAdmin": false },
+        { "name": "hrt_30", "isAdmin": false },
+        { "name": "hrt_31", "isAdmin": false },
+        { "name": "hrt_32", "isAdmin": false },
+        { "name": "hrt_33", "isAdmin": false },
+        { "name": "hrt_34", "isAdmin": false },
+        { "name": "hrt_35", "isAdmin": false },
+        { "name": "hrt_36", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_29", "isAdmin": false },
+        { "name": "g_hrt_30", "isAdmin": false },
+        { "name": "g_hrt_31", "isAdmin": false },
+        { "name": "g_hrt_32", "isAdmin": false },
+        { "name": "g_hrt_33", "isAdmin": false },
+        { "name": "g_hrt_34", "isAdmin": false },
+        { "name": "g_hrt_35", "isAdmin": false },
+        { "name": "g_hrt_36", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_7", "isAdmin": false }
+      ]
+    },
+    {
+      "name":          "r_hrt-9",
+      "description":   "r_hrt-9",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_37", "isAdmin": false },
+        { "name": "hrt_38", "isAdmin": false },
+        { "name": "hrt_39", "isAdmin": false },
+        { "name": "hrt_40", "isAdmin": false },
+        { "name": "hrt_41", "isAdmin": false },
+        { "name": "hrt_42", "isAdmin": false },
+        { "name": "hrt_43", "isAdmin": false },
+        { "name": "hrt_44", "isAdmin": false },
+        { "name": "hrt_45", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_37", "isAdmin": false },
+        { "name": "g_hrt_38", "isAdmin": false },
+        { "name": "g_hrt_39", "isAdmin": false },
+        { "name": "g_hrt_40", "isAdmin": false },
+        { "name": "g_hrt_41", "isAdmin": false },
+        { "name": "g_hrt_42", "isAdmin": false },
+        { "name": "g_hrt_43", "isAdmin": false },
+        { "name": "g_hrt_44", "isAdmin": false },
+        { "name": "g_hrt_45", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_8", "isAdmin": false }
+      ]
+    },
+    {
+      "name":          "r_hrt-10",
+      "description":   "r_hrt-10",
+      "createdByUser": "admin",
+      "users": [
+        { "name": "hrt_46", "isAdmin": false },
+        { "name": "hrt_47", "isAdmin": false },
+        { "name": "hrt_48", "isAdmin": false },
+        { "name": "hrt_49", "isAdmin": false },
+        { "name": "hrt_50", "isAdmin": false },
+        { "name": "hrt_51", "isAdmin": false },
+        { "name": "hrt_52", "isAdmin": false },
+        { "name": "hrt_53", "isAdmin": false },
+        { "name": "hrt_54", "isAdmin": false },
+        { "name": "hrt_55", "isAdmin": false }
+      ],
+      "groups": [
+        { "name": "g_hrt_46", "isAdmin": false },
+        { "name": "g_hrt_47", "isAdmin": false },
+        { "name": "g_hrt_48", "isAdmin": false },
+        { "name": "g_hrt_49", "isAdmin": false },
+        { "name": "g_hrt_50", "isAdmin": false },
+        { "name": "g_hrt_51", "isAdmin": false },
+        { "name": "g_hrt_52", "isAdmin": false },
+        { "name": "g_hrt_53", "isAdmin": false },
+        { "name": "g_hrt_54", "isAdmin": false },
+        { "name": "g_hrt_55", "isAdmin": false }
+      ],
+      "roles": [
+        { "name": "r_hrt_9", "isAdmin": false }
+      ]
+    }
+  ]
+}

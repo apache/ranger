@@ -799,3 +799,12 @@ export const ResourcesOverrideInfoMsg = {
   project: "Kylin Project Level.",
   "nifi-resource": "NiFi Resource Identifier."
 };
+
+export const ServiceRequestDataRangerAcl = [
+  ServiceType.Service_HIVE.label,
+  ServiceType.Service_HBASE.label,
+  ServiceType.Service_HDFS.label,
+  ServiceType.Service_SOLR.label
+];
+
+export const ServiceRequestDataHadoopAcl = [ServiceType.Service_HDFS.label];
