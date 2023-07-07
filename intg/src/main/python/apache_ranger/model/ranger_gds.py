@@ -80,15 +80,13 @@ class RangerDataset(RangerGdsBaseModelObject):
         RangerGdsBaseModelObject.__init__(self, attrs)
 
         self.name       = attrs.get('name')
-        self.admins     = attrs.get('admins')
         self.acl        = attrs.get('acl')
         self.termsOfUse = attrs.get('termsOfUse')
 
     def type_coerce_attrs(self):
         super(RangerDataset, self).type_coerce_attrs()
 
-        self.admins = type_coerce_list(self.admins, RangerPrincipal)
-        self.acl    = type_coerce_dict(self.acl, RangerGdsObjectACL)
+        self.acl = type_coerce_dict(self.acl, RangerGdsObjectACL)
 
 
 class RangerProject(RangerGdsBaseModelObject):
@@ -99,15 +97,13 @@ class RangerProject(RangerGdsBaseModelObject):
         RangerGdsBaseModelObject.__init__(self, attrs)
 
         self.name       = attrs.get('name')
-        self.admins     = attrs.get('admins')
         self.acl        = attrs.get('acl')
         self.termsOfUse = attrs.get('termsOfUse')
 
     def type_coerce_attrs(self):
         super(RangerProject, self).type_coerce_attrs()
 
-        self.admins = type_coerce_list(self.admins, RangerPrincipal)
-        self.acl    = type_coerce_dict(self.acl, RangerGdsObjectACL)
+        self.acl = type_coerce_dict(self.acl, RangerGdsObjectACL)
 
 
 class RangerDataShare(RangerGdsBaseModelObject):
@@ -118,7 +114,7 @@ class RangerDataShare(RangerGdsBaseModelObject):
         RangerGdsBaseModelObject.__init__(self, attrs)
 
         self.name               = attrs.get('name')
-        self.admins             = attrs.get('admins')
+        self.acl                = attrs.get('acl')
         self.service            = attrs.get('service')
         self.zone               = attrs.get('zone')
         self.conditionExpr      = attrs.get('conditionExpr')
@@ -129,7 +125,7 @@ class RangerDataShare(RangerGdsBaseModelObject):
     def type_coerce_attrs(self):
         super(RangerDataShare, self).type_coerce_attrs()
 
-        self.admins       = type_coerce_list(self.admins, RangerPrincipal)
+        self.acl          = type_coerce_dict(self.acl, RangerGdsObjectACL)
         self.defaultMasks = type_coerce_dict(self.defaultMasks, RangerPolicyItemDataMaskInfo)
 
 

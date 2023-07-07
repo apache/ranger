@@ -61,8 +61,8 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
     @Column(name = "description")
     protected String description;
 
-    @Column(name = "admins")
-    protected String admins;
+    @Column(name = "acl")
+    protected String acl;
 
     @Column(name = "condition_expr")
     protected String conditionExpr;
@@ -117,9 +117,9 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
 
     public void setDescription(String description) { this.description = description; }
 
-    public String getAdmins() { return admins; }
+    public String getAcl() { return acl; }
 
-    public void setAdmins(String admins) { this.admins = admins; }
+    public void setAcl(String acl) { this.acl = acl; }
 
     public String getConditionExpr() { return conditionExpr; }
 
@@ -150,7 +150,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
 
     @Override
     public int hashCode() {
-        return Objects.hash(id, guid, version, isEnabled, serviceId, zoneId, name, description, admins, conditionExpr, defaultAccessTypes, defaultMasks, termsOfUse, options, additionalInfo);
+        return Objects.hash(id, guid, version, isEnabled, serviceId, zoneId, name, description, acl, conditionExpr, defaultAccessTypes, defaultMasks, termsOfUse, options, additionalInfo);
     }
 
     @Override
@@ -173,7 +173,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
                Objects.equals(zoneId, other.zoneId) &&
                Objects.equals(name, other.name) &&
                Objects.equals(description, other.description) &&
-               Objects.equals(admins, other.admins) &&
+               Objects.equals(acl, other.acl) &&
                Objects.equals(conditionExpr, other.conditionExpr) &&
                Objects.equals(defaultAccessTypes, other.defaultAccessTypes) &&
                Objects.equals(defaultMasks, other.defaultMasks) &&
@@ -198,7 +198,7 @@ public class XXGdsDataShare extends XXDBBase implements Serializable {
           .append("zoneId={").append(zoneId).append("} ")
           .append("name={").append(name).append("} ")
           .append("description={").append(description).append("} ")
-          .append("admins={").append(admins).append("} ")
+          .append("acl={").append(acl).append("} ")
           .append("conditionExpr={").append(conditionExpr).append("} ")
           .append("defaultAccessTypes={").append(defaultAccessTypes).append("} ")
           .append("defaultMasks={").append(defaultMasks).append("} ")

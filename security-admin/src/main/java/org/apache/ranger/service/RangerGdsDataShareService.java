@@ -28,6 +28,7 @@ import org.apache.ranger.common.SortField;
 import org.apache.ranger.entity.XXGdsDataShare;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXService;
+import org.apache.ranger.plugin.model.RangerGds;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -221,7 +222,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         xObj.setIsEnabled(vObj.getIsEnabled());
         xObj.setName(vObj.getName());
         xObj.setDescription(vObj.getDescription());
-        xObj.setAdmins(JsonUtils.listToJson(vObj.getAdmins()));
+        xObj.setAcl(JsonUtils.objectToJson(vObj.getAcl()));
         xObj.setServiceId(xService.getId());
         xObj.setZoneId(zoneId);
         xObj.setConditionExpr(vObj.getConditionExpr());
@@ -247,7 +248,7 @@ public class RangerGdsDataShareService extends RangerGdsBaseModelService<XXGdsDa
         vObj.setVersion(xObj.getVersion());
         vObj.setName(xObj.getName());
         vObj.setDescription(xObj.getDescription());
-        vObj.setAdmins(JsonUtils.jsonToRangerPrincipalList(xObj.getAdmins()));
+        vObj.setAcl(JsonUtils.jsonToObject(xObj.getAcl(), RangerGds.RangerGdsObjectACL.class));
         vObj.setService(serviceName);
         vObj.setZone(zoneName);
         vObj.setConditionExpr(xObj.getConditionExpr());

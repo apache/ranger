@@ -1712,7 +1712,6 @@ CREATE TABLE `x_gds_dataset` (
   , `is_enabled`      TINYINT(1)   NOT NULL DEFAULT '1'
   , `name`            VARCHAR(512) NOT NULL
   , `description`     TEXT         NULL     DEFAULT NULL
-  , `admins`          TEXT         NOT NULL
   , `acl`             TEXT         NULL     DEFAULT NULL
   , `terms_of_use`    TEXT         NULL     DEFAULT NULL
   , `options`         TEXT         NULL     DEFAULT NULL
@@ -1735,7 +1734,6 @@ CREATE TABLE `x_gds_project` (
   , `is_enabled`      TINYINT(1)   NOT NULL DEFAULT '1'
   , `name`            VARCHAR(512) NOT NULL
   , `description`     TEXT         NULL     DEFAULT NULL
-  , `admins`          TEXT         NOT NULL
   , `acl`             TEXT         NULL     DEFAULT NULL
   , `terms_of_use`    TEXT         NULL     DEFAULT NULL
   , `options`         TEXT         NULL     DEFAULT NULL
@@ -1758,7 +1756,7 @@ CREATE TABLE `x_gds_data_share`(
   , `is_enabled`           TINYINT(1)   NOT NULL DEFAULT '1'
   , `name`                 VARCHAR(512) NOT NULL
   , `description`          TEXT         NULL     DEFAULT NULL
-  , `admins`               TEXT         NOT NULL
+  , `acl`                  TEXT         NOT NULL
   , `service_id`           BIGINT(20)   NOT NULL
   , `zone_id`              BIGINT(20)   NOT NULL
   , `condition_expr`       TEXT         NULL
