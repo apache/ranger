@@ -17,7 +17,7 @@
  * under the License.
  */
 
-import { isEmpty, isObject } from "lodash";
+import { isEmpty, isObject, lastIndexOf } from "lodash";
 import moment from "moment-timezone";
 import React, { Component, useEffect, useMemo, useState } from "react";
 import {
@@ -505,10 +505,13 @@ export const selectCustomStyles = {
   }
 };
 
-export const scrollToNewData = (usrData, resultSize) => {
+export const scrollToNewData = (usrData) => {
   let newRowAdded;
-  newRowAdded = document.getElementById(usrData[resultSize - 1].id);
+  let lastIndex = lastIndexOf(usrData);
+  newRowAdded = document.getElementById(usrData?.[lastIndex - 1]?.id);
+
   if (newRowAdded) {
+    localStorage.removeItem("newDataAdded");
     newRowAdded.scrollIntoView({
       behavior: "smooth",
       block: "center",

@@ -140,7 +140,11 @@ function Users() {
     setPageLoader(false);
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
-
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(userListingData);
+    }
+  }, [totalCount]);
   const fetchUserInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
       setLoader(true);
@@ -199,14 +203,7 @@ function Users() {
         setCurrentPageSize(pageSize);
         setResetPage({ page: gotoPage });
         setLoader(false);
-        if (
-          page == totalPageCount - 1 &&
-          localStorage.getItem("newDataAdded") == "true"
-        ) {
-          scrollToNewData(userData, userResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams]
   );
@@ -300,7 +297,7 @@ function Users() {
         if (
           (userListingData.length == 1 ||
             userListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 1
+          currentpageIndex > 0
         ) {
           if (typeof resetPage?.page === "function") {
             resetPage.page(0);
