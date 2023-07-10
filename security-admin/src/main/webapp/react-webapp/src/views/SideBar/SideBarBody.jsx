@@ -331,7 +331,7 @@ export const SideBarBody = (props) => {
                   IndicatorSeparator: () => null
                 }}
               />
-              {selectedServiceDef?.length > 0 && (
+              {selectedServiceDef?.length > 0 && !loader && (
                 <button
                   className={`custom-clear-btn ${loader ? "not-allowed" : ""}`}
                   disabled={loader ? true : false}
