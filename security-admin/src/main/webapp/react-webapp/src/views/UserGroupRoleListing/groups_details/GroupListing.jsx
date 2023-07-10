@@ -139,7 +139,11 @@ function Groups() {
     setPageLoader(false);
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
-
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(groupListingData);
+    }
+  }, [totalCount]);
   const fetchGroupInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
       setLoader(true);
@@ -187,14 +191,7 @@ function Groups() {
         setCurrentPageSize(pageSize);
         setResetPage({ page: gotoPage });
         setLoader(false);
-        if (
-          page == totalPageCount - 1 &&
-          localStorage.getItem("newDataAdded") == "true"
-        ) {
-          scrollToNewData(groupData, groupResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams]
   );
@@ -252,7 +249,7 @@ function Groups() {
         if (
           (groupListingData.length == 1 ||
             groupListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 1
+          currentpageIndex > 0
         ) {
           if (typeof resetPage?.page === "function") {
             resetPage.page(0);

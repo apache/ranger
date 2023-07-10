@@ -155,7 +155,11 @@ function PolicyListing(props) {
     setPageLoader(false);
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
-
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(policyListingData);
+    }
+  }, [totalCount]);
   const getTableSortBy = (sortArr = []) => {
     return sortArr
       .map(({ id }) => {
@@ -223,14 +227,7 @@ function PolicyListing(props) {
         setCurrentPageSize(pageSize);
         setResetpage({ page: gotoPage });
         setLoader(false);
-        if (
-          page == totalPageCount - 1 &&
-          localStorage.getItem("newDataAdded") == "true"
-        ) {
-          scrollToNewData(policyData, policyResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams, serviceData]
   );
@@ -299,7 +296,7 @@ function PolicyListing(props) {
       toast.error(errorMsg);
       console.error("Error occurred during deleting policy : " + error);
     }
-    if (policyListingData.length == 1 && currentpageIndex > 1) {
+    if (policyListingData.length == 1 && currentpageIndex > 0) {
       let page = currentpageIndex - currentpageIndex;
       if (typeof resetPage?.page === "function") {
         resetPage.page(page);
