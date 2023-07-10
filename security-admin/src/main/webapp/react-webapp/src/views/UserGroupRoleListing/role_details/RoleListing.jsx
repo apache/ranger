@@ -121,6 +121,12 @@ function Roles() {
     localStorage.setItem("newDataAdded", state && state.showLastPage);
   }, [searchParams]);
 
+  useEffect(() => {
+    if (localStorage.getItem("newDataAdded") == "true") {
+      scrollToNewData(roleListingData);
+    }
+  }, [totalCount]);
+
   const fetchRoleInfo = useCallback(
     async ({ pageSize, pageIndex, gotoPage }) => {
       setLoader(true);
@@ -168,11 +174,7 @@ function Roles() {
         setCurrentPageSize(pageSize);
         setResetPage({ page: gotoPage });
         setLoader(false);
-        if (localStorage.getItem("newDataAdded") == "true") {
-          scrollToNewData(roleData, roleResp.data.resultSize);
-        }
       }
-      localStorage.removeItem("newDataAdded");
     },
     [updateTable, searchFilterParams]
   );
@@ -224,7 +226,7 @@ function Roles() {
         if (
           (roleListingData.length == 1 ||
             roleListingData.length == selectedRows.current.length) &&
-          currentpageIndex > 1
+          currentpageIndex > 0
         ) {
           if (typeof resetPage?.page === "function") {
             resetPage.page(0);
