@@ -2477,7 +2477,7 @@ li.list-group-item:hover {
   margin-top: 5px;
   margin-bottom: 5px;
 }
-.custom-nav-search [class$="-IndicatorsContainer"] {
+.custom-nav-search [class$="-indicatorContainer"] {
   visibility: hidden;
 }
 /* Access Audit Tags */
