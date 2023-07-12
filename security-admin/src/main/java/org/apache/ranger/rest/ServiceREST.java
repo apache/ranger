@@ -4569,7 +4569,10 @@ public class ServiceREST {
 					svcStore.deleteService(id);
 				} else {
 					LOG.error("Cannot retrieve service:[" + id + "] for deletion");
-					throw new Exception("deleteService(" + id + ") failed");
+					throw restErrorUtil.createRESTException(
+							"Data Not Found for given Id",
+							MessageEnums.DATA_NOT_FOUND, id, null,
+							"readResource : No Object found with given id.");
 				}
 			} else {
 				LOG.error("Cannot retrieve user session.");

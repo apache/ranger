@@ -1867,7 +1867,9 @@ export const PolicyLogs = ({ data, reportdata }) => {
               </Badge>
             </div>
             <div className="font-weight-bolder">Policy Name: {objectName}</div>
-            <div className="font-weight-bolder">Service Name: {owner}</div>
+            <div className="font-weight-bolder">
+              Service Name: {parentObjectName}
+            </div>
             <div className="font-weight-bolder">
               Created Date: {dateFormat(createDate, "mm/dd/yyyy hh:MM:ss TT ")}
               India Standard Time
