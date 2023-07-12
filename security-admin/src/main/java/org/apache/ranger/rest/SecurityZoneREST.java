@@ -241,7 +241,10 @@ public class SecurityZoneREST {
         } catch(Throwable excp) {
             LOG.error("deleteSecurityZone(" + zoneId + ") failed", excp);
 
-            throw restErrorUtil.createRESTException(excp.getMessage());
+            throw restErrorUtil.createRESTException(
+					"Data Not Found for given Id",
+					MessageEnums.DATA_NOT_FOUND, zoneId, null,
+					"readResource : No Object found with given id.");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== deleteSecurityZone(id=" + zoneId + ")");

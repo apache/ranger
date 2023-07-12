@@ -53,6 +53,7 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
@@ -287,7 +288,10 @@ public class RoleREST {
         } catch(Throwable excp) {
             LOG.error("deleteRole(" + roleId + ") failed", excp);
 
-            throw restErrorUtil.createRESTException(excp.getMessage());
+            throw restErrorUtil.createRESTException(
+					"Data Not Found for given Id",
+					MessageEnums.DATA_NOT_FOUND, roleId, null,
+					"readResource : No Object found with given id.");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== deleteRole(id=" + roleId + ")");

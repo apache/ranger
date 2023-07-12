@@ -76,10 +76,10 @@ export function PolicyViewDetails(props) {
     } catch (error) {
       console.error(`eventTime can not be undefined ${error}`);
     }
-    accessLogsServiceDef = allServiceDefs.find((servicedef) => {
-      return servicedef.name == accesslogs.data.serviceType;
+    accessLogsServiceDef = allServiceDefs?.find((servicedef) => {
+      return servicedef.name == accesslogs?.data?.serviceType;
     });
-    setAccess(accesslogs.data);
+    setAccess(accesslogs?.data);
     setServiceDef(accessLogsServiceDef);
     SetLoader(false);
   };
@@ -95,7 +95,7 @@ export function PolicyViewDetails(props) {
     } catch (error) {
       console.error(`versionNo can not be undefined ${error}`);
     }
-    setAccess(accesslogs.data);
+    setAccess(accesslogs?.data);
   };
 
   const fetchPolicyVersions = async () => {
@@ -115,7 +115,7 @@ export function PolicyViewDetails(props) {
       );
       serverError(error);
     }
-    setAccess(accesslogs && accesslogs.data);
+    setAccess(accesslogs?.data);
   };
 
   const {

@@ -97,11 +97,9 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
     }
     if (error?.response?.status === 404) {
       navigateTo.navigate("/pageNotFound", { replace: true });
-      return;
     }
     if (error?.response?.status === 403) {
       navigateTo.navigate("/forbidden", { replace: true });
-      return;
     }
     throw error;
   }
