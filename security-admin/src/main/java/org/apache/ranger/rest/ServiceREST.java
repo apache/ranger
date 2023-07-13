@@ -72,6 +72,7 @@ import org.apache.ranger.biz.RangerPolicyAdminCacheForEngineOptions;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.SecurityZoneDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
 import org.apache.ranger.biz.ServiceMgr;
 import org.apache.ranger.biz.TagDBStore;
 import org.apache.ranger.biz.XUserMgr;
@@ -2099,11 +2100,11 @@ public class ServiceREST {
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 				LOG.error("No policies found to download!");
 			}
-			
+
 			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-			svcStore.putMetaDataInfo(rangerExportPolicyList);
+			rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
-			
+
 			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 			XXTrxLog xxTrxLog = new XXTrxLog();
 			xxTrxLog.setAction("EXPORT EXCEL");
@@ -2152,11 +2153,11 @@ public class ServiceREST {
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 				LOG.error("No policies found to download!");
 			}
-			
+
 			RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-			svcStore.putMetaDataInfo(rangerExportPolicyList);
+			rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 			String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
-			
+
 			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 			XXTrxLog xxTrxLog = new XXTrxLog();
 			xxTrxLog.setAction("EXPORT CSV");
@@ -2206,18 +2207,18 @@ public class ServiceREST {
 					}
 				}
 				bizUtil.blockAuditorRoleUser();
-				svcStore.getPoliciesInJson(policyLists, response);
+				svcStore.getObjectInJson(policyLists, response, JSON_FILE_NAME_TYPE.POLICY);
 			} else {
 				checkPoliciesExists = true;
 				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
 				LOG.error("There is no Policy to Export!!");
 			}
-                        
+
 			if(!checkPoliciesExists){
 				RangerExportPolicyList rangerExportPolicyList = new RangerExportPolicyList();
-				svcStore.putMetaDataInfo(rangerExportPolicyList);
+				rangerExportPolicyList.setMetaDataInfo(svcStore.getMetaDataInfo());
 				String metaDataInfo = JsonUtilsV2.mapToJson(rangerExportPolicyList.getMetaDataInfo());
-							
+
 				List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
 				XXTrxLog xxTrxLog = new XXTrxLog();
 				xxTrxLog.setAction("EXPORT JSON");

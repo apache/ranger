@@ -57,6 +57,10 @@ public class RangerRoleList extends VList{
         this.roles = roles;
     }
 
+    public <T> void setGenericRoleList(List<T> roles) {
+        this.roles = (List<RangerRole>) roles;
+    }
+
     @Override
     public int getListSize() {
         if (roles != null) {

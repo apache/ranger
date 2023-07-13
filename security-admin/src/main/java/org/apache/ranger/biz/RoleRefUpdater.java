@@ -73,11 +73,14 @@ public class RoleRefUpdater {
     RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
 
 	@Autowired
+	RoleDBStore roleStore;
+
+	@Autowired
 	RangerBizUtil xaBizUtil;
 	public RangerDaoManager getRangerDaoManager() {
 		return daoMgr;
 	}
-	public void createNewRoleMappingForRefTable(RangerRole rangerRole, Boolean createNonExistUserGroup) {
+	public void createNewRoleMappingForRefTable(RangerRole rangerRole, Boolean createNonExistUserGroupRole) {
 		if (rangerRole == null) {
 			return;
 		}
@@ -99,7 +102,7 @@ public class RoleRefUpdater {
 			roleRoles.add(role.getName());
 		}
 
-		final boolean isCreateNonExistentUGs = createNonExistUserGroup && xaBizUtil.checkAdminAccess();
+		final boolean isCreateNonExistentUGRs = createNonExistUserGroupRole && xaBizUtil.checkAdminAccess();
 
 		if (CollectionUtils.isNotEmpty(roleUsers)) {
 			for (String roleUser : roleUsers) {
@@ -110,7 +113,7 @@ public class RoleRefUpdater {
 				RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.USER, roleUser, roleId);
 
 				if (!associator.doAssociate(false)) {
-					if (isCreateNonExistentUGs) {
+					if (isCreateNonExistentUGRs) {
 						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 					} else {
 						throw restErrorUtil.createRESTException("user with name: " + roleUser + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
@@ -128,7 +131,7 @@ public class RoleRefUpdater {
 				RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.GROUP, roleGroup, roleId);
 
 				if (!associator.doAssociate(false)) {
-					if (isCreateNonExistentUGs) {
+					if (isCreateNonExistentUGRs) {
 						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
 					} else {
 						throw restErrorUtil.createRESTException("Group with name: " + roleGroup + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
@@ -147,7 +150,11 @@ public class RoleRefUpdater {
 				RolePrincipalAssociator associator = new RolePrincipalAssociator(PolicyRefUpdater.PRINCIPAL_TYPE.ROLE, roleRole, roleId);
 
 				if (!associator.doAssociate(false)) {
-					throw restErrorUtil.createRESTException("Role with name: " + roleRole + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+					if (isCreateNonExistentUGRs) {
+						rangerTransactionSynchronizationAdapter.executeOnTransactionCommit(associator);
+					} else {
+						throw restErrorUtil.createRESTException("Role with name: " + roleRole + " does not exist ", MessageEnums.INVALID_INPUT_DATA);
+					}
 				}
 			}
 		}
@@ -273,7 +280,7 @@ public class RoleRefUpdater {
 		}
 
 		private Long createPrincipal(String user) {
-			LOG.warn("User specified in role does not exist in ranger admin, creating new user, Type: " + type.name() + ", name = " + user);
+			LOG.warn(type.name()+" specified in role does not exist in ranger admin, creating new "+type.name()+", Type: " + type.name() + ", name = " + user);
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("===> RolePrincipalAssociator.createPrincipal(type=" + type.name() +", name=" + name + ")");
@@ -309,6 +316,17 @@ public class RoleRefUpdater {
 						List<XXTrxLog> trxLogList = xGroupService.getTransactionLog(vXGroup, "create");
 						xaBizUtil.createTrxLog(trxLogList);
 						ret = vXGroup.getId();
+					}
+				}
+				break;
+				case ROLE: {
+					// Create role
+					try {
+						RangerRole rRole = new RangerRole(name, null, null, null, null);
+						RangerRole createdRole = roleStore.createRole(rRole, false);
+						ret = createdRole.getId();
+					} catch (Exception e) {
+						LOG.error("Failed to create Role "+ type.name());
 					}
 				}
 				break;
