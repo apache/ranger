@@ -43,7 +43,7 @@ class GdsShareStatus(StrEnum):
   NONE      = 'NONE'
   REQUESTED = 'REQUESTED'
   GRANTED   = 'GRANTED'
-  ACCEPTED  = 'ACCEPTED'
+  DENIED    = 'DENIED'
   ACTIVE    = 'ACTIVE'
 
   @classmethod

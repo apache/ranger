@@ -38,7 +38,7 @@ public class RangerGds {
 
     public enum GdsPermission { NONE, LIST, VIEW, AUDIT, POLICY_ADMIN, ADMIN }
 
-    public enum GdsShareStatus { NONE, REQUESTED, GRANTED, ACCEPTED }
+    public enum GdsShareStatus { NONE, REQUESTED, GRANTED, DENIED, ACTIVE }
 
     @JsonAutoDetect(fieldVisibility = JsonAutoDetect.Visibility.ANY)
     @JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
@@ -248,7 +248,6 @@ public class RangerGds {
         private Long                                      dataShareId;
         private Map<String, RangerPolicyResource>         resource;
         private List<String>                              subResourceNames;
-        private String                                    resourceSignature;
         private String                                    conditionExpr;
         private Set<String>                               accessTypes;
         private RangerPolicyItemRowFilterInfo             rowFilter;
@@ -272,10 +271,6 @@ public class RangerGds {
         public List<String> getSubResourceNames() { return subResourceNames; }
 
         public void setSubResourceNames(List<String> subResourceNames) { this.subResourceNames = subResourceNames; }
-
-        public String getResourceSignature() { return resourceSignature; }
-
-        public void setResourceSignature(String resourceSignature) { this.resourceSignature = resourceSignature; }
 
         public String getConditionExpr() { return conditionExpr; }
 
@@ -310,7 +305,6 @@ public class RangerGds {
               .append("dataShareId={").append(dataShareId).append("} ")
               .append("resource={").append(resource).append("} ")
               .append("subResourceNames={").append(subResourceNames).append("} ")
-              .append("resourceSignature={").append(resourceSignature).append("} ")
               .append("conditionExpr={").append(conditionExpr).append("} ")
               .append("accessTypes={").append(accessTypes).append("} ")
               .append("rowFilterInfo={").append(rowFilter).append("} ")
