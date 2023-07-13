@@ -35,24 +35,32 @@ import static org.junit.Assert.assertEquals;
 public class RangerPathResourceMatcherTest {
 
     Object[][] data = {
-            // { resource, policy, optWildcard, recursive, result
-            { "/app/hive/test.db",    "/",                 true, false, false, "user" },
-            { "/app/hive/test.db",    "/",                 true, true,  true, "user" },
-            { "/app/hive/test.db",    "/*",                true, false, true, "user" },
-            { "/app/hbase/test.tbl",  "/*",                true, false, true, "user" },
-            { "/app/hive/test.db",    "/app",              true, false, false, "user" },
-            { "/app/hive/test.db",    "/app/",             true, false, false, "user" },
-            { "/app/hive/test.db",    "/app/",             true, true,  true, "user" },
-            { "/app/hive/test.db",    "/app/*",            true, false, true, "user" },
-            { "/app/hbase/test.tbl",  "/app/*",            true, false, true, "user" },
-            { "/app/hive/test.db",    "/app/hive/*",       true, false, true, "user" },
-            { "/app/hbase/test.tbl",  "/app/hive/*",       true, false, false, "user" },
-            { "/app/hive/test.db",    "/app/hive/test*",   true, false, true, "user" },
-            { "/app/hbase/test.tbl",  "/app/hive/test*",   true, false, false, "user" },
-            { "/app/hive/test.db",    "/app/hive/test.db", true, false, true, "user" },
-            { "/app/hbase/test.tbl",  "/app/hive/test.db", true, false, false, "user" },
-            { "app/hive/*",           "app/hive/*",        false, false, true, "user" },  // simple string match
-            { "app/hive/test.db",     "app/hive/*",        false, false, false, "user" }, // simple string match
+            // resource               policy               wildcard  recursive  result user
+            { "/app/hive/test.db",    "/",                 true,     false,     false, "user" },
+            { "/app/hive/test.db",    "/",                 true,     true,      true,  "user" },
+            { "/app/hive/test.db",    "/*",                true,     false,     true,  "user" },
+            { "/app/hbase/test.tbl",  "/*",                true,     false,     true,  "user" },
+            { "/app/hive/test.db",    "/app",              true,     false,     false, "user" },
+            { "/app/hive/test.db",    "/app/",             true,     false,     false, "user" },
+            { "/app/hive/test.db",    "/app/",             true,     true,      true,  "user" },
+            { "/app/hive/test.db",    "/app/*",            true,     false,     true,  "user" },
+            { "/app/hbase/test.tbl",  "/app/*",            true,     false,     true,  "user" },
+            { "/app/hive/test.db",    "/app/hive/*",       true,     false,     true,  "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/*",       true,     false,     false, "user" },
+            { "/app/hive/test.db",    "/app/hive/test*",   true,     false,     true,  "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/test*",   true,     false,     false, "user" },
+            { "/app/hive/test.db",    "/app/hive/test.db", true,     false,     true,  "user" },
+            { "/app/hbase/test.tbl",  "/app/hive/test.db", true,     false,     false, "user" },
+            { "app/hive/*",           "app/hive/*",        false,    false,     true,  "user" },  // simple string match
+            { "app/hive/test.db",     "app/hive/*",        false,    false,     false, "user" }, // simple string match
+            { "/app/",                "/app/",             true,     true,      true,  "user" },
+            { "/app/",                "/app/",             true,     false,     true,  "user" },
+            { "/app",                 "/app/",             true,     true,      false, "user" },
+            { "/app",                 "/app/",             true,     false,     false, "user" },
+            { "/app/",                "/app/*",            true,     true,      true,  "user" },
+            { "/app/",                "/app/*",            true,     false,     true,  "user" },
+            { "/app",                 "/app/*",            true,     true,      false, "user" },
+            { "/app",                 "/app/*",            true,     false,     false, "user" },
     };
 
     Object[][] dataForSelfOrChildScope = {
