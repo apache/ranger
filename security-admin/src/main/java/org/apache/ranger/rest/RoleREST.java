@@ -70,7 +70,6 @@ import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.security.context.RangerAdminOpContext;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
@@ -429,9 +428,8 @@ public class RoleREST {
 		}
 		RESTResponse ret = new RESTResponse();
 
-		RangerAdminOpContext opContext = new RangerAdminOpContext();
-		opContext.setBulkModeContext(true);
-		RangerContextHolder.setOpContext(opContext);
+		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(true);
+
 		String metaDataInfo = null;
 		List<XXTrxLog> trxLogListError = new ArrayList<XXTrxLog>();
 		XXTrxLog xxTrxLogError = new XXTrxLog();

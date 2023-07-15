@@ -48,6 +48,18 @@ public class RangerContextHolder {
 		return operationContextThreadLocal.get();
 	}
 
+	public static RangerAdminOpContext getOrCreateOpContext() {
+		RangerAdminOpContext ret = operationContextThreadLocal.get();
+
+		if (ret == null) {
+			ret = new RangerAdminOpContext();
+
+			operationContextThreadLocal.set(ret);
+		}
+
+		return ret;
+	}
+
 	public static void setOpContext(RangerAdminOpContext context) {
 		operationContextThreadLocal.set(context);
 	}
