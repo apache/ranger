@@ -23,6 +23,7 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
@@ -32,35 +33,35 @@ import org.slf4j.LoggerFactory;
 public class HiveResourceMgr {
 
 	private static final Logger LOG = LoggerFactory.getLogger(HiveResourceMgr.class);
-	
+
 	private static final String  DATABASE 	  = "database";
 	private static final String  TABLE	 	  = "table";
 	private static final String  COLUMN	 	  = "column";
 
-	
+
 	public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {
 		Map<String, Object> ret = null;
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> HiveResourceMgr.connectionTest ServiceName: "+ serviceName + "Configs" + configs );
-		}	
-		
+		}
+
 		try {
 			ret = HiveClient.connectionTest(serviceName, configs);
 		} catch (HadoopException e) {
 			LOG.error("<== HiveResourceMgr.connectionTest Error: " + e);
 		  throw e;
 		}
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HiveResourceMgr.connectionTest Result : "+ ret  );
-		}	
-		
+		}
+
 		return ret;
 	}
 
 	public static List<String> getHiveResources(String serviceName, String serviceType, Map<String, String> configs,ResourceLookupContext context) throws Exception  {
-		
+
 		String 					  	userInput    = context.getUserInput();
 		String 					  	resource	 = context.getResourceName();
 		Map<String, List<String>> 	resourceMap  = context.getResources();
@@ -72,12 +73,12 @@ public class HiveResourceMgr {
 		String  					tableName	 = null;
 		String  					columnName	 = null;
 
-		
+
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("<== HiveResourceMgr.getHiveResources()  UserInput: \""+ userInput  + "\" resource : " + resource + " resourceMap: "  + resourceMap);
-		}	
-		
-		if ( userInput != null && resource != null) {
+		}
+
+		if (StringUtils.isNoneBlank(userInput) && resource != null) {
 			if ( resourceMap != null  && !resourceMap.isEmpty() ) {
 				databaseList = resourceMap.get(DATABASE);
 				tableList = resourceMap.get(TABLE);
@@ -97,27 +98,27 @@ public class HiveResourceMgr {
 						break;
 				}
 		}
-		
-		if (serviceName != null && userInput != null) {
+
+		if (serviceName != null && StringUtils.isNoneBlank(userInput)) {
 			try {
-				
+
 				if(LOG.isDebugEnabled()) {
 					LOG.debug("==> HiveResourceMgr.getHiveResources() UserInput: "+ userInput  + " configs: " + configs + " databaseList: "  + databaseList + " tableList: "
 																				  + tableList + " columnList: " + columnList );
 				}
-				
+
 				final HiveClient hiveClient = new HiveConnectionMgr().getHiveConnection(serviceName, serviceType, configs);
-				
+
 				Callable<List<String>> callableObj = null;
 				final String finalDbName;
 				final String finalColName;
 				final String finalTableName;
-				
+
 				final List<String> finaldatabaseList = databaseList;
 				final List<String> finaltableList 	 = tableList;
 				final List<String> finalcolumnList   = columnList;
-				
-				
+
+
 				if ( hiveClient != null) {
 					if ( databaseName != null
 							&& !databaseName.isEmpty()){
@@ -133,7 +134,7 @@ public class HiveResourceMgr {
 							};
 					} else if ( tableName != null
 								&& !tableName.isEmpty()) {
-								// get  ColumnList for given Input	
+								// get  ColumnList for given Input
 								tableName += "*";
 								finalTableName = tableName;
 								callableObj = new Callable<List<String>>() {
@@ -184,7 +185,7 @@ public class HiveResourceMgr {
 
 		}
 		return resultList;
-	
+
 	}
-	
+
 }
