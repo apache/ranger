@@ -24,7 +24,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -189,8 +188,12 @@ public class RangerPathResourceMatcher extends RangerDefaultResourceMatcher {
 					sb.append(pathSeparatorChar);
 					pathElementIndex++;
 				}
-				if (useStringMatching && pathElements.length == wildcardPathElements.length) { // Loop finished normally and all sub-paths string-matched..
-					ret = true;
+				if (useStringMatching) {
+					if (pathElements.length == wildcardPathElements.length) { // Loop finished normally and all sub-paths string-matched..
+						ret = true;
+					} else if (pathToCheck.charAt(pathToCheck.length() - 1) == pathSeparatorChar) { // pathToCheck ends with separator, like /home/
+						ret = pathElements.length == (wildcardPathElements.length - 1) && WILDCARD_ASTERISK.equals(wildcardPathElements[wildcardPathElements.length - 1]);
+					}
 				}
 
 				sb = null;

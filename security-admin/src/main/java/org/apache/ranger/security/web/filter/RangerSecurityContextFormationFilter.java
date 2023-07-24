@@ -40,7 +40,6 @@ import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RequestContext;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.entity.XXAuthSession;
-import org.apache.ranger.security.context.RangerAdminOpContext;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.context.RangerSecurityContext;
 import org.apache.ranger.util.RestUtil;
@@ -156,15 +155,7 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 		Object attrCreatePrincipalsIfAbsent = request.getParameter("createPrincipalsIfAbsent");
 
 		if (attrCreatePrincipalsIfAbsent != null) {
-			RangerAdminOpContext opContext = RangerContextHolder.getOpContext();
-
-			if (opContext == null) {
-				opContext = new RangerAdminOpContext();
-
-				RangerContextHolder.setOpContext(opContext);
-			}
-
-			opContext.setCreatePrincipalsIfAbsent(Boolean.parseBoolean(attrCreatePrincipalsIfAbsent.toString()));
+			RangerContextHolder.getOrCreateOpContext().setCreatePrincipalsIfAbsent(Boolean.parseBoolean(attrCreatePrincipalsIfAbsent.toString()));
 		}
 	}
 

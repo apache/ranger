@@ -2032,6 +2032,10 @@ public class XUserMgr extends XUserMgrBase {
 		xaBizUtil.blockAuditorRoleUser();
 		XXGroupDao xXGroupDao = daoManager.getXXGroup();
 		XXGroup xXGroup = xXGroupDao.getById(id);
+		if (xXGroup == null) {
+			throw restErrorUtil.create404RESTException("Data Not Found for given Id", MessageEnums.DATA_NOT_FOUND, id,
+					null, "readResource : No Object found with given id.");
+		}
 		VXGroup vXGroup = xGroupService.populateViewBean(xXGroup);
 		if (vXGroup == null || StringUtils.isEmpty(vXGroup.getName())) {
 			throw restErrorUtil.createRESTException("Group ID doesn't exist.", MessageEnums.INVALID_INPUT_DATA);
@@ -2250,6 +2254,10 @@ public class XUserMgr extends XUserMgrBase {
 		xaBizUtil.blockAuditorRoleUser();
 		XXUserDao xXUserDao = daoManager.getXXUser();
 		XXUser xXUser =	xXUserDao.getById(id);
+		if (xXUser == null) {
+			throw restErrorUtil.create404RESTException("Data Not Found for given Id", MessageEnums.DATA_NOT_FOUND, id,
+					null, "readResource : No Object found with given id.");
+		}
 		VXUser vXUser =	xUserService.populateViewBean(xXUser);
 		if(vXUser==null || StringUtils.isEmpty(vXUser.getName())){
 			throw restErrorUtil.createRESTException("No user found with id=" + id);

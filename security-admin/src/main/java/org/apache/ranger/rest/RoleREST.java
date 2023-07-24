@@ -53,6 +53,7 @@ import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
@@ -69,7 +70,6 @@ import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
-import org.apache.ranger.security.context.RangerAdminOpContext;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
@@ -287,7 +287,10 @@ public class RoleREST {
         } catch(Throwable excp) {
             LOG.error("deleteRole(" + roleId + ") failed", excp);
 
-            throw restErrorUtil.createRESTException(excp.getMessage());
+            throw restErrorUtil.createRESTException(
+					"Data Not Found for given Id",
+					MessageEnums.DATA_NOT_FOUND, roleId, null,
+					"readResource : No Object found with given id.");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== deleteRole(id=" + roleId + ")");
@@ -425,9 +428,8 @@ public class RoleREST {
 		}
 		RESTResponse ret = new RESTResponse();
 
-		RangerAdminOpContext opContext = new RangerAdminOpContext();
-		opContext.setBulkModeContext(true);
-		RangerContextHolder.setOpContext(opContext);
+		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(true);
+
 		String metaDataInfo = null;
 		List<XXTrxLog> trxLogListError = new ArrayList<XXTrxLog>();
 		XXTrxLog xxTrxLogError = new XXTrxLog();

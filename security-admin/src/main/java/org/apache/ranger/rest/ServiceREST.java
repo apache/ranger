@@ -60,7 +60,6 @@ import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.RandomStringUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.StringUtil;
@@ -128,7 +127,6 @@ import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.security.context.RangerAPIList;
-import org.apache.ranger.security.context.RangerAdminOpContext;
 import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.security.web.filter.RangerCSRFPreventionFilter;
 import org.apache.ranger.service.RangerPluginInfoService;
@@ -2262,9 +2260,9 @@ public class ServiceREST {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> ServiceREST.importPoliciesFromFile()");
 		}
-		RangerAdminOpContext opContext = new RangerAdminOpContext();
-		opContext.setBulkModeContext(true);
-		RangerContextHolder.setOpContext(opContext);
+
+		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(true);
+
 		RangerPerfTracer perf = null;
 		String metaDataInfo = null;
 		List<XXTrxLog> trxLogListError = new ArrayList<XXTrxLog>();
@@ -4520,9 +4518,7 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.deleteServiceById( " + id + ")");
 		}
 
-		RangerAdminOpContext opContext = new RangerAdminOpContext();
-		opContext.setBulkModeContext(true);
-		RangerContextHolder.setOpContext(opContext);
+		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(true);
 
 		RangerPerfTracer perf     = null;
 		String deletedServiceName = null;
@@ -4570,7 +4566,10 @@ public class ServiceREST {
 					svcStore.deleteService(id);
 				} else {
 					LOG.error("Cannot retrieve service:[" + id + "] for deletion");
-					throw new Exception("deleteService(" + id + ") failed");
+					throw restErrorUtil.createRESTException(
+							"Data Not Found for given Id",
+							MessageEnums.DATA_NOT_FOUND, id, null,
+							"readResource : No Object found with given id.");
 				}
 			} else {
 				LOG.error("Cannot retrieve user session.");

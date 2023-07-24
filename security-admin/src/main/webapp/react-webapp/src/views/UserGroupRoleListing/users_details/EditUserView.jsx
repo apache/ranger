@@ -79,7 +79,7 @@ function AddUserView(props) {
       });
     } catch (error) {
       console.error(
-        `Error occurred while fetching Zones or CSRF headers! ${error}`
+        `Error occurred while fetching Users or CSRF headers! ${error}`
       );
     }
     dispatch({

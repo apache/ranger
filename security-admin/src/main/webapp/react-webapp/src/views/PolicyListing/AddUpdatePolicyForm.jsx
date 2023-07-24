@@ -256,7 +256,7 @@ export default function AddUpdatePolicyForm(props) {
       });
       data = resp.data || null;
     } catch (error) {
-      console.error(`Error occurred while fetching service details ! ${error}`);
+      console.error(`Error occurred while fetching policy details ! ${error}`);
     }
     return data;
   };
