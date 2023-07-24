@@ -30,15 +30,18 @@ import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import static org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType.*;
 
 public abstract class RangerAbstractResourceMatcher implements RangerResourceMatcher {
 	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractResourceMatcher.class);
 
-	public final static String WILDCARD_ASTERISK = "*";
+	public final static String WILDCARD_ASTERISK      = "*";
+	public final static String WILDCARD_QUESTION_MARK = "?";
 
 	public final static String OPTION_IGNORE_CASE             = "ignoreCase";
 	public final static String OPTION_QUOTED_CASE_SENSITIVE   = "quotedCaseSensitive";
@@ -324,6 +327,12 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 		return !resultWithoutExcludes;                                         // all other cases flip it
 	}
 
+	public ResourceElementMatchType applyExcludes(boolean allValuesRequested, ResourceElementMatchType resultWithoutExcludes) {
+		if (!policyIsExcludes) return resultWithoutExcludes;                   // not an excludes policy!
+		if (allValuesRequested && !isMatchAny)  return resultWithoutExcludes;  // one case where excludes has no effect
+		return resultWithoutExcludes == NONE ? SELF : NONE;                    // all other cases flip it
+	}
+
 	ResourceMatcher getMatcher(String policyValue) {
 		final int len = policyValue != null ? policyValue.length() : 0;
 
@@ -391,18 +400,8 @@ public abstract class RangerAbstractResourceMatcher implements RangerResourceMat
 }
 
 abstract class AbstractStringResourceMatcher extends ResourceMatcher {
-	private final boolean isCaseSensitive;
-
-	protected AbstractStringResourceMatcher(String value, Map<String, String> options, boolean isCaseSensitive) {
+	protected AbstractStringResourceMatcher(String value, Map<String, String> options) {
 		super(value, options);
-
-		this.isCaseSensitive = isCaseSensitive;
-	}
-
-	@Override
-	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
-		return isCaseSensitive ? StringUtils.startsWith(getExpandedValue(evalContext), resourceValue)
-				               : StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
 	}
 
 	@Override
@@ -413,23 +412,35 @@ abstract class AbstractStringResourceMatcher extends ResourceMatcher {
 
 final class CaseSensitiveStringMatcher extends AbstractStringResourceMatcher {
 	CaseSensitiveStringMatcher(String value, Map<String, String> options) {
-		super(value, options, true);
+		super(value, options);
 	}
 
 	@Override
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return StringUtils.equals(resourceValue, getExpandedValue(evalContext));
 	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return StringUtils.startsWith(getExpandedValue(evalContext), resourceValue);
+	}
+
 	int getPriority() { return 1 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
 }
 
 final class CaseInsensitiveStringMatcher extends AbstractStringResourceMatcher {
-	CaseInsensitiveStringMatcher(String value, Map<String, String> options) { super(value, options, false); }
+	CaseInsensitiveStringMatcher(String value, Map<String, String> options) { super(value, options); }
 
 	@Override
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return StringUtils.equalsIgnoreCase(resourceValue, getExpandedValue(evalContext));
 	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
+	}
+
 	int getPriority() {return 2 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
@@ -437,7 +448,7 @@ final class QuotedCaseSensitiveStringMatcher extends AbstractStringResourceMatch
 	private final String quoteChars;
 
 	QuotedCaseSensitiveStringMatcher(String value, Map<String, String> options, String quoteChars) {
-		super(value, options, true);
+		super(value, options);
 
 		this.quoteChars = quoteChars;
 	}
@@ -451,28 +462,49 @@ final class QuotedCaseSensitiveStringMatcher extends AbstractStringResourceMatch
 		}
 	}
 
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		if (startsWithAnyChar(resourceValue, quoteChars)) {
+			return StringUtils.startsWith(getExpandedValue(evalContext), resourceValue);
+		} else {
+			return StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
+		}
+	}
+
 	int getPriority() {return 2 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
 final class CaseSensitiveStartsWithMatcher extends AbstractStringResourceMatcher {
 	CaseSensitiveStartsWithMatcher(String value, Map<String, String> options) {
-		super(value, options, true);
+		super(value, options);
 	}
 
 	@Override
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return StringUtils.startsWith(resourceValue, getExpandedValue(evalContext));
 	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return StringUtils.startsWith(getExpandedValue(evalContext), resourceValue);
+	}
+
 	int getPriority() { return 3 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0);}
 }
 
 final class CaseInsensitiveStartsWithMatcher extends AbstractStringResourceMatcher {
-	CaseInsensitiveStartsWithMatcher(String value, Map<String, String> options) { super(value, options, false); }
+	CaseInsensitiveStartsWithMatcher(String value, Map<String, String> options) { super(value, options); }
 
 	@Override
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return StringUtils.startsWithIgnoreCase(resourceValue, getExpandedValue(evalContext));
 	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
+	}
+
 	int getPriority() { return 4 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
@@ -480,7 +512,7 @@ final class QuotedCaseSensitiveStartsWithMatcher extends AbstractStringResourceM
 	private final String quoteChars;
 
 	QuotedCaseSensitiveStartsWithMatcher(String value, Map<String, String> options, String quoteChars) {
-		super(value, options, true);
+		super(value, options);
 
 		this.quoteChars = quoteChars;
 	}
@@ -494,30 +526,51 @@ final class QuotedCaseSensitiveStartsWithMatcher extends AbstractStringResourceM
 		}
 	}
 
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		if (startsWithAnyChar(resourceValue, quoteChars)) {
+			return StringUtils.startsWith(getExpandedValue(evalContext), resourceValue);
+		} else {
+			return StringUtils.startsWithIgnoreCase(getExpandedValue(evalContext), resourceValue);
+		}
+	}
+
 	int getPriority() { return 4 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
 final class CaseSensitiveEndsWithMatcher extends AbstractStringResourceMatcher {
 	CaseSensitiveEndsWithMatcher(String value, Map<String, String> options) {
-		super(value, options, true);
+		super(value, options);
 	}
 
 	@Override
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return StringUtils.endsWith(resourceValue, getExpandedValue(evalContext));
 	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return true; // isPrefixMatch() is always true for endsWith
+	}
+
 	int getPriority() { return 3 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
 final class CaseInsensitiveEndsWithMatcher extends AbstractStringResourceMatcher {
 	CaseInsensitiveEndsWithMatcher(String value, Map<String, String> options) {
-		super(value, options, false);
+		super(value, options);
 	}
 
 	@Override
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return StringUtils.endsWithIgnoreCase(resourceValue, getExpandedValue(evalContext));
 	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return true; // isPrefixMatch() is always true for endsWith
+	}
+
 	int getPriority() { return 4 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
@@ -525,7 +578,7 @@ final class QuotedCaseSensitiveEndsWithMatcher extends AbstractStringResourceMat
 	private final String quoteChars;
 
 	QuotedCaseSensitiveEndsWithMatcher(String value, Map<String, String> options, String quoteChars) {
-		super(value, options, true);
+		super(value, options);
 
 		this.quoteChars = quoteChars;
 	}
@@ -539,31 +592,48 @@ final class QuotedCaseSensitiveEndsWithMatcher extends AbstractStringResourceMat
 		}
 	}
 
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return true; // isPrefixMatch() is always true for endsWith
+	}
+
 	int getPriority() { return 4 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
 final class CaseSensitiveWildcardMatcher extends AbstractStringResourceMatcher {
 	CaseSensitiveWildcardMatcher(String value, Map<String, String> options) {
-		super(value, options, true);
+		super(value, options);
 	}
 
 	@Override
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return FilenameUtils.wildcardMatch(resourceValue, getExpandedValue(evalContext), IOCase.SENSITIVE);
 	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), IOCase.SENSITIVE);
+	}
+
 	int getPriority() { return 5 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
 
 final class CaseInsensitiveWildcardMatcher extends AbstractStringResourceMatcher {
 	CaseInsensitiveWildcardMatcher(String value, Map<String, String> options) {
-		super(value, options, false);
+		super(value, options);
 	}
 
 	@Override
 	boolean isMatch(String resourceValue, Map<String, Object> evalContext) {
 		return FilenameUtils.wildcardMatch(resourceValue, getExpandedValue(evalContext), IOCase.INSENSITIVE);
 	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), IOCase.INSENSITIVE);
+	}
+
 	int getPriority() {return 6 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
 }
 
@@ -571,7 +641,7 @@ final class QuotedCaseSensitiveWildcardMatcher extends AbstractStringResourceMat
 	private final String quoteChars;
 
 	QuotedCaseSensitiveWildcardMatcher(String value, Map<String, String> options, String quoteChars) {
-		super(value, options, true);
+		super(value, options);
 
 		this.quoteChars = quoteChars;
 	}
@@ -581,6 +651,13 @@ final class QuotedCaseSensitiveWildcardMatcher extends AbstractStringResourceMat
 		IOCase caseSensitivity = startsWithAnyChar(resourceValue, quoteChars) ? IOCase.SENSITIVE : IOCase.INSENSITIVE;
 
 		return FilenameUtils.wildcardMatch(resourceValue, getExpandedValue(evalContext), caseSensitivity);
+	}
+
+	@Override
+	public boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext) {
+		IOCase caseSensitivity = startsWithAnyChar(resourceValue, quoteChars) ? IOCase.SENSITIVE : IOCase.INSENSITIVE;
+
+		return ResourceMatcher.wildcardPrefixMatch(resourceValue, getExpandedValue(evalContext), caseSensitivity);
 	}
 
 	int getPriority() {return 6 + (getNeedsDynamicEval() ? DYNAMIC_EVALUATION_PENALTY : 0); }
