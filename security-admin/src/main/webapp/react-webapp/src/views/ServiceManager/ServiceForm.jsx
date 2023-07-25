@@ -191,7 +191,8 @@ class ServiceForm extends Component {
 
     if (values?.customConfigs !== undefined) {
       values.customConfigs?.map((config) => {
-        config !== undefined &&
+        config?.name !== undefined &&
+          config?.value !== undefined &&
           (serviceJson["configs"][config.name] = config.value);
       });
     }

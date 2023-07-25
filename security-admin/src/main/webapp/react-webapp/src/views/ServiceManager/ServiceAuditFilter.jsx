@@ -277,7 +277,8 @@ export default function ServiceAuditFilter(props) {
                                 <Select
                                   {...input}
                                   menuPortalTarget={document.body}
-                                  isClearable={false}
+                                  isClearable={true}
+                                  isSearchable={false}
                                   options={[
                                     { value: "DENIED", label: "DENIED" },
                                     { value: "ALLOWED", label: "ALLOWED" },
