@@ -255,7 +255,7 @@ public class TestAuditQueue {
 		int batchSize = messageToSend / 3;
 		int expectedBatchSize = batchSize
 				+ (batchSize * 3 < messageToSend ? 1 : 0);
-		int queueSize = messageToSend * 2;
+		int queueSize = batchSize * 2;
 		int intervalMS = messageToSend * 100; // Deliberately big interval
 		Properties props = new Properties();
 		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""
