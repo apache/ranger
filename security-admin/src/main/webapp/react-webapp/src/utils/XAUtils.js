@@ -1162,10 +1162,11 @@ export const fetchSearchFilterParams = (
 
   // Get search filter params from localStorage
   if (isEmpty(searchFilterParam)) {
-    const localStorageParams =
-      !isEmpty(localStorage.getItem(auditTabName)) &&
-      JSON.parse(localStorage.getItem(auditTabName));
-    if (!isNull(localStorageParams) && !isEmpty(localStorageParams)) {
+    if (!isNull(localStorage.getItem(auditTabName))) {
+      const localStorageParams =
+        !isEmpty(localStorage.getItem(auditTabName)) &&
+        JSON.parse(localStorage.getItem(auditTabName));
+
       for (const localParam in localStorageParams) {
         let searchFilterObj = find(searchFilterOptions, {
           urlLabel: localParam
@@ -1187,7 +1188,7 @@ export const fetchSearchFilterParams = (
             category: category,
             value: value
           });
-          searchParam[localParam] = value;
+          searchParam[localParam] = localStorageParams[localParam];
         }
       }
     }

@@ -18,7 +18,7 @@
  */
 
 import React, { useState, useCallback, useEffect, useRef } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useOutletContext } from "react-router-dom";
 import { Badge, Button, Row, Col, Table, Modal } from "react-bootstrap";
 import XATableLayout from "Components/XATableLayout";
 import dateFormat from "dateformat";
@@ -40,7 +40,8 @@ import {
   toString,
   toUpper,
   has,
-  filter
+  filter,
+  isNull
 } from "lodash";
 import { toast } from "react-toastify";
 import { Link } from "react-router-dom";
@@ -62,12 +63,15 @@ import {
   ServiceRequestDataRangerAcl,
   ServiceRequestDataHadoopAcl
 } from "../../utils/XAEnums";
+import { getServiceDef } from "../../utils/appState";
 
 function Access() {
+  const context = useOutletContext();
+  const services = context.services;
+  const servicesAvailable = context.servicesAvailable;
   const isKMSRole = isKeyAdmin() || isKMSAuditor();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [accessListingData, setAccessLogs] = useState([]);
-  const [serviceDefs, setServiceDefs] = useState([]);
-  const [services, setServices] = useState([]);
   const [zones, setZones] = useState([]);
   const [loader, setLoader] = useState(true);
   const [pageCount, setPageCount] = React.useState(0);
@@ -77,73 +81,88 @@ function Access() {
   const [policyviewmodal, setPolicyViewModal] = useState(false);
   const [policyParamsData, setPolicyParamsData] = useState(null);
   const [rowdata, setRowData] = useState([]);
-  const [checked, setChecked] = useState(false);
+  const [checked, setChecked] = useState(() => {
+    let urlParam = Object.fromEntries([...searchParams]);
+    if (urlParam?.excludeServiceUser) {
+      return urlParam.excludeServiceUser == "true" ? true : false;
+    } else {
+      return localStorage?.excludeServiceUser == "true" ? true : false;
+    }
+  });
   const [currentPage, setCurrentPage] = useState(1);
   const fetchIdRef = useRef(0);
   const [contentLoader, setContentLoader] = useState(true);
   const [searchFilterParams, setSearchFilterParams] = useState([]);
-  const [searchParams, setSearchParams] = useSearchParams();
   const [defaultSearchFilterParams, setDefaultSearchFilterParams] = useState(
     []
   );
   const [resetPage, setResetpage] = useState({ page: 0 });
   const [policyDetails, setPolicyDetails] = useState({});
+  const { allServiceDefs } = getServiceDef();
 
   useEffect(() => {
-    if (isEmpty(serviceDefs)) {
-      fetchServiceDefs(), fetchServices();
-
-      if (!isKMSRole) {
-        fetchZones();
-      }
+    if (!isKMSRole) {
+      fetchZones();
     }
 
-    if (!isEmpty(serviceDefs)) {
-      let currentDate = moment(moment()).format("MM/DD/YYYY");
+    let currentDate = moment(moment()).format("MM/DD/YYYY");
+    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
+      fetchSearchFilterParams("bigData", searchParams, searchFilterOptions);
+
+    if (
+      !has(searchFilterParam, "startDate") &&
+      !has(searchFilterParam, "endDate")
+    ) {
+      searchParam["startDate"] = currentDate;
+      searchFilterParam["startDate"] = currentDate;
+      defaultSearchFilterParam.push({
+        category: "startDate",
+        value: currentDate
+      });
+    }
+
+    // Updating the states for search params, search filter, default search filter and localStorage
+    if (localStorage?.excludeServiceUser) {
+      searchParam["excludeServiceUser"] = checked;
+    }
+    setSearchParams(searchParam);
+    setSearchFilterParams(searchFilterParam);
+    setDefaultSearchFilterParams(defaultSearchFilterParam);
+    localStorage.setItem("bigData", JSON.stringify(searchParam));
+  }, []);
+
+  useEffect(() => {
+    if (servicesAvailable !== null) {
       let { searchFilterParam, defaultSearchFilterParam, searchParam } =
         fetchSearchFilterParams("bigData", searchParams, searchFilterOptions);
 
-      if (
-        !has(searchFilterParam, "startDate") &&
-        !has(searchFilterParam, "endDate")
-      ) {
-        searchParam["startDate"] = currentDate;
-        searchFilterParam["startDate"] = currentDate;
-        defaultSearchFilterParam.push({
-          category: "startDate",
-          value: currentDate
-        });
-      }
-
       // Updating the states for search params, search filter, default search filter and localStorage
+      if (localStorage?.excludeServiceUser || searchParam?.excludeServiceUser) {
+        if (searchParam?.excludeServiceUser) {
+          setChecked(searchParam?.excludeServiceUser == "true" ? true : false);
+          localStorage.setItem(
+            "excludeServiceUser",
+            searchParam?.excludeServiceUser
+          );
+        }
+        searchParam["excludeServiceUser"] = localStorage?.excludeServiceUser;
+      }
       setSearchParams(searchParam);
-      setSearchFilterParams(searchFilterParam);
+      if (
+        JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
+      ) {
+        setSearchFilterParams(searchFilterParam);
+      }
       setDefaultSearchFilterParams(defaultSearchFilterParam);
       localStorage.setItem("bigData", JSON.stringify(searchParam));
       setContentLoader(false);
     }
-  }, [serviceDefs]);
-
-  useEffect(() => {
-    let { searchFilterParam, defaultSearchFilterParam, searchParam } =
-      fetchSearchFilterParams("bigData", searchParams, searchFilterOptions);
-
-    // Updating the states for search params, search filter, default search filter and localStorage
-    setSearchParams(searchParam);
-    if (
-      JSON.stringify(searchFilterParams) !== JSON.stringify(searchFilterParam)
-    ) {
-      setSearchFilterParams(searchFilterParam);
-    }
-    setDefaultSearchFilterParams(defaultSearchFilterParam);
-    localStorage.setItem("bigData", JSON.stringify(searchParam));
-    setContentLoader(false);
-  }, [searchParams]);
+  }, [searchParams, servicesAvailable]);
 
   const fetchAccessLogsInfo = useCallback(
     async ({ pageSize, pageIndex, sortBy, gotoPage }) => {
       setLoader(true);
-      if (!isEmpty(serviceDefs)) {
+      if (servicesAvailable !== null) {
         let logsResp = [];
         let logs = [];
         let totalCount = 0;
@@ -152,7 +171,15 @@ function Access() {
         if (fetchId === fetchIdRef.current) {
           params["pageSize"] = pageSize;
           params["startIndex"] = pageIndex * pageSize;
-          params["excludeServiceUser"] = checked ? true : false;
+          if (Object.fromEntries([...searchParams])?.excludeServiceUser) {
+            params["excludeServiceUser"] =
+              Object.fromEntries([...searchParams])?.excludeServiceUser ==
+              "true"
+                ? true
+                : false;
+          } else {
+            params["excludeServiceUser"] = checked;
+          }
           if (sortBy.length > 0) {
             params["sortBy"] = getTableSortBy(sortBy);
             params["sortType"] = getTableSortType(sortBy);
@@ -178,40 +205,8 @@ function Access() {
         }
       }
     },
-    [updateTable, searchFilterParams]
+    [updateTable, checked, searchFilterParams, servicesAvailable]
   );
-
-  const fetchServiceDefs = async () => {
-    let serviceDefsResp = [];
-    try {
-      serviceDefsResp = await fetchApi({
-        url: "plugins/definitions"
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Service Definitions or CSRF headers! ${error}`
-      );
-    }
-
-    setServiceDefs(serviceDefsResp.data.serviceDefs);
-    setContentLoader(false);
-  };
-
-  const fetchServices = async () => {
-    let servicesResp = [];
-    try {
-      servicesResp = await fetchApi({
-        url: "plugins/services"
-      });
-    } catch (error) {
-      console.error(
-        `Error occurred while fetching Services or CSRF headers! ${error}`
-      );
-    }
-
-    setServices(servicesResp.data.services);
-    setContentLoader(false);
-  };
 
   const fetchZones = async () => {
     let zonesResp;
@@ -224,16 +219,18 @@ function Access() {
     }
 
     setZones(sortBy(zonesResp.data.securityZones, ["name"]));
-    setContentLoader(false);
   };
 
-  const toggleChange = () => {
+  const toggleChange = (chkVal) => {
     let currentParams = Object.fromEntries([...searchParams]);
-    currentParams["excludeServiceUser"] = !checked;
-    localStorage.setItem("excludeServiceUser", JSON.stringify(!checked));
+    currentParams["excludeServiceUser"] = chkVal?.target?.checked;
+    localStorage.setItem(
+      "excludeServiceUser",
+      JSON.stringify(chkVal?.target?.checked)
+    );
     setSearchParams(currentParams);
     setAccessLogs([]);
-    setChecked(!checked);
+    setChecked(chkVal?.target?.checked);
     setLoader(true);
     setUpdateTable(moment.now());
   };
@@ -693,7 +690,7 @@ function Access() {
 
   const getServiceDefType = () => {
     let serviceDefType = [];
-    serviceDefType = filter(serviceDefs, function (serviceDef) {
+    serviceDefType = filter(allServiceDefs, function (serviceDef) {
       return serviceDef.name !== "tag";
     });
 
@@ -935,10 +932,8 @@ function Access() {
             <input
               type="checkbox"
               className="align-middle"
-              defaultChecked={checked}
-              onChange={() => {
-                toggleChange();
-              }}
+              checked={checked}
+              onChange={toggleChange}
               data-id="serviceUsersExclude"
               data-cy="serviceUsersExclude"
             />

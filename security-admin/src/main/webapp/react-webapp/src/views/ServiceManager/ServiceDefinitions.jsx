@@ -72,7 +72,9 @@ class ServiceDefinitions extends Component {
 
   initialFetchResp = async () => {
     await this.fetchServices();
-    await this.fetchZones();
+    if (!this.state.isKMSRole) {
+      await this.fetchZones();
+    }
   };
 
   showExportModal = () => {
