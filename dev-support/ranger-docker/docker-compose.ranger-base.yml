@@ -10,7 +10,6 @@ services:
       - ranger
     environment:
       - RANGER_VERSION
-      - TARGETARCH=${TARGETARCH}
 
 networks:
   ranger:
