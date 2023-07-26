@@ -40,6 +40,7 @@ Docker files in this folder create docker images and run them to build Apache Ra
    export DOCKER_BUILDKIT=1
    export COMPOSE_DOCKER_CLI_BUILD=1
    export RANGER_DB_TYPE=postgres
+   export TARGETARCH=arm64
    ~~~
 
 6. Build Apache Ranger in containers using docker-compose
