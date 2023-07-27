@@ -56,8 +56,13 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 	 */
 	@Override
 	public boolean log(AuditEventBase event) {
+		logStatusIfRequired();
+
+		addTotalCount(1);
+
 		// Add to the queue and return ASAP
 		if (queue.size() >= getMaxQueueSize()) {
+			addFailedCount(1);
 			return false;
 		}
 		queue.add(event);
@@ -134,6 +139,17 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 		}
 	}
 
+	@Override
+	public void logStatus() {
+		super.logStatus();
+
+		if (isStatusLogEnabled()) {
+			logger.info("AuditAsyncQueue.log(name={}): totalCount={}, currentQueueLength={}", getName(), getTotalCount(), queue.size());
+		}
+	}
+
+	public int size() { return queue.size(); }
+
 	public void runLogAudit() {
 		while (true) {
 			try {
@@ -150,6 +166,8 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 					eventList.add(event);
 					queue.drainTo(eventList, MAX_DRAIN - 1);
 					consumer.log(eventList);
+
+					logStatusIfRequired();
 				}
 			} catch (InterruptedException e) {
 				logger.info("Caught exception in consumer thread. Shutdown might be in progress");
