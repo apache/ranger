@@ -2535,6 +2535,15 @@ li.list-group-item:hover {
   border-color: #0062cc;
   box-shadow: 0 0 0 0.2rem rgb(38 143 255 / 50%);
 }
+.Toastify__toast {
+  word-break: break-word;
+}
+.Toastify__toast-container {
+  width: 384px;
+}
+.Toastify__toast-icon {
+  width: 16px;
+}
 .manage-service .dropdown-toggle::after {
   vertical-align: 0.125em;
 }
