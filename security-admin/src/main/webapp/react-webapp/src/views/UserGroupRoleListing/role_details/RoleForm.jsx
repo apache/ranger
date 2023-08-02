@@ -734,7 +734,7 @@ function RoleForm() {
                             data-name="groupsAddBtn"
                             data-cy="groupsAddBtn"
                           >
-                            Add Group
+                            Add Groups
                           </Button>
                         </div>
                       </div>
@@ -841,7 +841,7 @@ function RoleForm() {
                             data-cy="rolesAddBtn"
                             s
                           >
-                            Add Role
+                            Add Roles
                           </Button>
                         </div>
                       </div>
