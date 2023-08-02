@@ -520,7 +520,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      User
+                      Users
                     </NavLink>
                   </li>
 
@@ -532,7 +532,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      Group
+                      Groups
                     </NavLink>
                   </li>
 
@@ -544,7 +544,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      Role
+                      Roles
                     </NavLink>
                   </li>
                 </React.Fragment>
@@ -558,7 +558,7 @@ export const SideBarBody = (props) => {
                     }}
                     className="list-group-item"
                   >
-                    Permission
+                    Permissions
                   </NavLink>
                 </li>
               )}

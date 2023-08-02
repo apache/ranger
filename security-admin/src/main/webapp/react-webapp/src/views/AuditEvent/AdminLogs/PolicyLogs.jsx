@@ -1621,7 +1621,11 @@ export const PolicyLogs = ({ data, reportdata }) => {
         <>
           <tr key={index}>
             <td className="table-warning">{key}</td>
-            <td className="table-warning"> {keynew[key].values}</td>
+            <td className="table-warning">
+               {!isEmpty(keynew[key].values)
+                 ? keynew[key].values.join(", ")
+                 : "--"}
+            </td>
           </tr>
           <tr>
             <td className="table-warning">{key + " " + "exclude"}</td>

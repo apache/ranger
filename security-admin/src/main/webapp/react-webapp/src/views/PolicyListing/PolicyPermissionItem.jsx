@@ -68,7 +68,7 @@ export default function PolicyPermissionItem(props) {
       formValues?.policyType &&
     serviceCompDetails.name !== "tag"
   ) {
-    permList.push("Deligate Admin");
+    permList.push("Delegate Admin");
   }
   if (
     RangerPolicyType.RANGER_MASKING_POLICY_TYPE.value == formValues?.policyType
@@ -633,7 +633,7 @@ export default function PolicyPermissionItem(props) {
                           );
                         }
                         if (
-                          colName == "Deligate Admin" &&
+                          colName == "Delegate Admin" &&
                           serviceCompDetails?.name !== "tag"
                         ) {
                           return (
