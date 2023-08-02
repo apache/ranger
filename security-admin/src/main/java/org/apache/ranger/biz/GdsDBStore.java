@@ -37,7 +37,6 @@ import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDatasetInProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
-import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.store.AbstractGdsStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
@@ -508,9 +507,6 @@ public class GdsDBStore extends AbstractGdsStore {
 
         validator.validateCreate(resource);
 
-        // TODO: enforce RangerSharedResource.acl
-        resource.setResourceSignature(RangerPolicyResourceSignature.toSignatureString(resource.getResource()));
-
         if (StringUtils.isBlank(resource.getGuid())) {
             resource.setGuid(guidUtil.genGUID());
         }
@@ -537,8 +533,6 @@ public class GdsDBStore extends AbstractGdsStore {
         }
 
         validator.validateUpdate(resource, existing);
-
-        resource.setResourceSignature(RangerPolicyResourceSignature.toSignatureString(resource.getResource()));
 
         RangerSharedResource ret = sharedResourceService.update(resource);
 

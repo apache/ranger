@@ -193,7 +193,6 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         xObj.setDataShareId(vObj.getDataShareId());
         xObj.setResource(JsonUtils.mapToJson(vObj.getResource()));
         xObj.setSubResourceNames(JsonUtils.listToJson(vObj.getSubResourceNames()));
-        xObj.setResourceSignature(vObj.getResourceSignature());
         xObj.setConditionExpr(vObj.getConditionExpr());
         xObj.setAccessTypes(JsonUtils.objectToJson(vObj.getAccessTypes()));
         xObj.setRowFilter(JsonUtils.objectToJson(vObj.getRowFilter()));
@@ -215,7 +214,6 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         vObj.setDataShareId(xObj.getDataShareId());
         vObj.setResource(JsonUtils.jsonToMapPolicyResource(xObj.getResource()));
         vObj.setSubResourceNames(JsonUtils.jsonToListString(xObj.getSubResourceNames()));
-        vObj.setResourceSignature(xObj.getResourceSignature());
         vObj.setConditionExpr(xObj.getConditionExpr());
         vObj.setAccessTypes(JsonUtils.jsonToSetString(xObj.getAccessTypes()));
         vObj.setRowFilter(JsonUtils.jsonToObject(xObj.getRowFilter(), RangerPolicy.RangerPolicyItemRowFilterInfo.class));

@@ -32,7 +32,6 @@ import org.apache.ranger.plugin.model.RangerGds.RangerGdsObjectACL;
 import org.apache.ranger.plugin.model.RangerGds.RangerProject;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemDataMaskInfo;
-import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -396,9 +395,9 @@ public class RangerGdsValidator {
                         case NONE:
                             if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.REQUESTED) {
                                 requireDatasetAdmin = true;
-                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.GRANTED) {
+                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.GRANTED || dshInDataset.getStatus() == RangerGds.GdsShareStatus.DENIED) {
                                 requireDataShareAdmin = true;
-                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACCEPTED) {
+                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACTIVE) {
                                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE, "status", existing.getStatus(), dshInDataset.getStatus()));
                             }
                             break;
@@ -406,20 +405,21 @@ public class RangerGdsValidator {
                         case REQUESTED:
                             if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.NONE) {
                                 requireDatasetAdmin = true;
-                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.GRANTED) {
+                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.GRANTED || dshInDataset.getStatus() == RangerGds.GdsShareStatus.DENIED) {
                                 requireDataShareAdmin = true;
-                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACCEPTED) {
+                            } else if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACTIVE) {
                                 result.addValidationFailure(new ValidationFailureDetails(ValidationErrorCode.GDS_VALIDATION_ERR_INVALID_STATUS_CHANGE, "status", existing.getStatus(), dshInDataset.getStatus()));
                             }
                             break;
 
                         case GRANTED:
-                            if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACCEPTED) {
+                            if (dshInDataset.getStatus() == RangerGds.GdsShareStatus.ACTIVE) {
                                 requireDatasetAdmin = true;
                             }
                             break;
 
-                        case ACCEPTED:
+                        case ACTIVE:
+                        case DENIED:
                         default:
                             break;
                     }
@@ -517,27 +517,6 @@ public class RangerGdsValidator {
         }
 
         LOG.debug("<== validateDelete(dsInProjectId={}, existing={})", dsInProjectId, existing);
-    }
-
-
-    private void validatePrincipals(List<RangerPrincipal> principals, String fieldName, ValidationResult result) {
-        if (principals != null) {
-            for (RangerPrincipal principal : principals) {
-                switch (principal.getType()) {
-                    case USER:
-                        validateUser(principal.getName(), fieldName, result);
-                    break;
-
-                    case GROUP:
-                        validateGroup(principal.getName(), fieldName, result);
-                    break;
-
-                    case ROLE:
-                        validateRole(principal.getName(), fieldName, result);
-                    break;
-                }
-            }
-        }
     }
 
     private void validateAcl(RangerGdsObjectACL acl, String fieldName, ValidationResult result) {
