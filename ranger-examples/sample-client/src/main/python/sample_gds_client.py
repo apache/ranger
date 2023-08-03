@@ -121,7 +121,7 @@ dshid_2 = gds.add_data_share_in_dataset(dshid_2)
 print(f'  created data_share_in_dataset: {dshid_2}')
 
 print(f'Updating data_share_in_dataset: id={dshid_1.id}')
-dshid_1.status = GdsShareStatus.ACCEPTED
+dshid_1.status = GdsShareStatus.ACTIVE
 dshid_1 = gds.update_data_share_in_dataset(dshid_1.id, dshid_1)
 print(f'  updated data_share_in_dataset: {dshid_1}')
 

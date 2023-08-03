@@ -140,7 +140,6 @@ class RangerSharedResource(RangerBaseModelObject):
         self.dataShareId       = attrs.get('dataShareId')
         self.resource          = attrs.get('resource')
         self.subResourceNames  = attrs.get('subResourceNames')
-        self.resourceSignature = attrs.get('resourceSignature')
         self.conditionExpr     = attrs.get('conditionExpr')
         self.accessTypes       = attrs.get('accessTypes')
         self.rowFilter         = attrs.get('rowFilter')

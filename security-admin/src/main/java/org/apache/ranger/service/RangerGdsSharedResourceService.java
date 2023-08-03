@@ -29,6 +29,7 @@ import org.apache.ranger.entity.XXGdsDataShare;
 import org.apache.ranger.entity.XXGdsSharedResource;
 import org.apache.ranger.plugin.model.RangerGds.RangerSharedResource;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicyResourceSignature;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.view.RangerGdsVList.RangerSharedResourceList;
 import org.apache.ranger.view.VXMessage;
@@ -193,6 +194,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         xObj.setDataShareId(vObj.getDataShareId());
         xObj.setResource(JsonUtils.mapToJson(vObj.getResource()));
         xObj.setSubResourceNames(JsonUtils.listToJson(vObj.getSubResourceNames()));
+        xObj.setResourceSignature(RangerPolicyResourceSignature.toSignatureString(vObj.getResource()));
         xObj.setConditionExpr(vObj.getConditionExpr());
         xObj.setAccessTypes(JsonUtils.objectToJson(vObj.getAccessTypes()));
         xObj.setRowFilter(JsonUtils.objectToJson(vObj.getRowFilter()));
