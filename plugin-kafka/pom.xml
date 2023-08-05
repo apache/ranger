@@ -141,6 +141,11 @@
             <version>2.10.4</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>dnsjava</groupId>
+            <artifactId>dnsjava</artifactId>
+            <version>${dnsjava.version}</version>
+        </dependency>
     </dependencies>
     <build>
         <testResources>
