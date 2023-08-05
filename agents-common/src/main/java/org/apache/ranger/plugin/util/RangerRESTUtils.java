@@ -26,7 +26,6 @@ import java.net.UnknownHostException;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.kstruct.gethostname4j.Hostname;
 
 /**
  * Since this class does not retain any state.  It isn't a singleton for testability.
@@ -91,7 +90,7 @@ public class RangerRESTUtils {
 
 	static {
 		try {
-			hostname = Hostname.getHostname();
+			hostname = InetAddress.getLocalHost().getHostName();
 		}
 		catch(Exception e) {
 			LOG.error("ERROR: Unable to find hostname for the agent ", e);

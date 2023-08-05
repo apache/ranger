@@ -255,9 +255,6 @@
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
           <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
-          <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-          <include>net.java.dev.jna:jna:jar:${jna.version}</include>
-          <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
           <include>org.apache.ranger:credentialbuilder</include>
           <include>org.elasticsearch.client:elasticsearch-rest-client</include>
           <include>org.elasticsearch.client:elasticsearch-rest-high-level-client</include>

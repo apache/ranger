@@ -68,9 +68,6 @@
           <include>org.codehaus.jackson:jackson-core-asl:jar:${codehaus.jackson.version}</include>
           <include>org.codehaus.jackson:jackson-mapper-asl:jar:${codehaus.jackson.version}</include>
           <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
-          <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
-          <include>net.java.dev.jna:jna:jar:${jna.version}</include>
-          <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
           <include>org.elasticsearch:elasticsearch</include>
           <include>org.elasticsearch:elasticsearch-core</include>
           <include>org.elasticsearch:elasticsearch-x-content</include>
