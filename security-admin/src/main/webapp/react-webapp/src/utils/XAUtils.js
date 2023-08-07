@@ -1348,7 +1348,7 @@ export const updateTagActive = (isTagView) => {
 export const handleLogout = async (checkKnoxSSOVal, navigate) => {
   let logoutResp = {};
   try {
-    logoutResp = fetchApi({
+    logoutResp = await fetchApi({
       url: "logout",
       baseURL: "",
       headers: {
@@ -1356,7 +1356,7 @@ export const handleLogout = async (checkKnoxSSOVal, navigate) => {
       }
     });
     if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
-      if (checkKnoxSSOVal == false) {
+      if (checkKnoxSSOVal?.toString() == "false") {
         window.location.replace("/locallogin");
         window.localStorage.clear();
       } else {
@@ -1372,7 +1372,7 @@ export const handleLogout = async (checkKnoxSSOVal, navigate) => {
 
 export const checkKnoxSSO = async (navigate) => {
   const userProfile = getUserProfile();
-  let checkKnoxSSOresp;
+  let checkKnoxSSOresp = {};
   try {
     checkKnoxSSOresp = await fetchApi({
       url: "plugins/checksso",
@@ -1382,12 +1382,12 @@ export const checkKnoxSSO = async (navigate) => {
       }
     });
     if (
-      checkKnoxSSOresp.data == "true" &&
+      checkKnoxSSOresp?.data?.toString() == "true" &&
       userProfile?.configProperties?.inactivityTimeout > 0
     ) {
       window.location.replace("index.html?action=timeout");
     } else {
-      handleLogout(checkKnoxSSOresp.data, navigate);
+      handleLogout(checkKnoxSSOresp?.data, navigate);
     }
   } catch (error) {
     if (checkKnoxSSOresp?.status == "419") {
