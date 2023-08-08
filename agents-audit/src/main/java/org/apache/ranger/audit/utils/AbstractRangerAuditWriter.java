@@ -66,6 +66,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     public boolean                rollOverByDuration               = false;
     public volatile FSDataOutputStream ostream                     = null;   // output stream wrapped in logWriter
     private boolean               isHFlushCapableStream            = false;
+    private boolean               reUseLastLogFile                 = false;
 
     @Override
     public void init(Properties props, String propPrefix, String auditProviderName, Map<String,String> auditConfigs) {
@@ -262,10 +263,14 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         }
 
         if (logWriter == null) {
-            // Create the file to write
-            logger.info("Creating new log file. auditPath=" + fullPath);
-            createFileSystemFolders();
-            ostream               = fileSystem.create(auditPath);
+            if (reUseLastLogFile){
+                ostream = fileSystem.append(auditPath);
+            } else {
+                // Create the file to write
+                logger.info("Creating new log file. auditPath=" + fullPath);
+                createFileSystemFolders();
+                ostream = fileSystem.create(auditPath);
+            }
             logWriter             = new PrintWriter(ostream);
             isHFlushCapableStream = ostream.hasCapability(StreamCapabilities.HFLUSH);
         }
@@ -275,6 +280,23 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         }
 
         return logWriter;
+    }
+
+    /**
+     * Closes the writer because of errors encountered while writing audits to hdfs
+     **/
+    public void closeWriter() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> AbstractRangerAuditWriter.closeWriter()");
+        }
+
+        logWriter = null;
+        ostream = null;
+        reUseLastLogFile = true;
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== AbstractRangerAuditWriter.closeWriter()");
+        }
     }
 
     @Override

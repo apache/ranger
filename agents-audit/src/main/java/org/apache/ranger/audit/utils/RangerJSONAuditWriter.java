@@ -111,12 +111,14 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
                 // However, in practice, since client does buffer-ing, either all or none would succeed.
                 out.close();
                 logger.error("Stream encountered errors while writing audits to HDFS!");
+                closeWriter();
                 return ret;
             }
         } catch (Exception e) {
             if (out != null) {
                 out.close();
             }
+            closeWriter();
             logger.error("Exception encountered while writing audits to HDFS!");
             return ret;
         } finally {
