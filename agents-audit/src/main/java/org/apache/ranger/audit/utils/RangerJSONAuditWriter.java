@@ -108,16 +108,16 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             // flush and check the stream for errors
             if (out.checkError()) {
                 // In theory, this count may NOT be accurate as part of the messages may have been successfully written.
-                // However, in practice, since client does buffering, either all of none would succeed.
+                // However, in practice, since client does buffer-ing, either all or none would succeed.
                 out.close();
-                closeWriter();
+                logger.error("Stream encountered errors while writing audits to HDFS!");
                 return ret;
             }
         } catch (Exception e) {
             if (out != null) {
                 out.close();
             }
-            closeWriter();
+            logger.error("Exception encountered while writing audits to HDFS!");
             return ret;
         } finally {
             ret = true;
@@ -166,8 +166,7 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             // close the file inline with audit logging.
             closeFileIfNeeded();
         }
-        // Either there are no open log file or the previous one has been rolled
-        // over
+        // Either there are no open log file or the previous one has been rolled over
         PrintWriter logWriter = createWriter();
         return logWriter;
     }

@@ -277,19 +277,6 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         return logWriter;
     }
 
-    public void closeWriter() {
-        if (logger.isDebugEnabled()) {
-            logger.debug("==> AbstractRangerAuditWriter.closeWriter()");
-        }
-
-        logWriter = null;
-        ostream = null;
-
-        if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.closeWriter()");
-        }
-    }
-
     @Override
     public void flush() {
         if (logger.isDebugEnabled()) {
