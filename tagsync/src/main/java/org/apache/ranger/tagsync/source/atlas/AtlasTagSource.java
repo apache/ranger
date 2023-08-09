@@ -316,7 +316,7 @@ public class AtlasTagSource extends AbstractTagSource {
 			int  partitionId   = messageToCommit.getPartition();
 
 			if (offsetOfLastMessageCommittedToKafka < messageOffset) {
-				TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", partitionId);
+				TopicPartition partition = new TopicPartition(messageToCommit.getTopic(), partitionId);
 				try {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Committing message with offset:[" + messageOffset + "] to Kafka");
