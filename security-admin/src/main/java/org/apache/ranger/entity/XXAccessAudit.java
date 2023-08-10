@@ -27,11 +27,9 @@
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Table(name="xa_access_audit")
-@XmlRootElement
 public class XXAccessAudit extends XXAccessAuditBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 

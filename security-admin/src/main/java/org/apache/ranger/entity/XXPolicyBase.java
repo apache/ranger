@@ -20,10 +20,8 @@ package org.apache.ranger.entity;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @MappedSuperclass
-@XmlRootElement
 public abstract class XXPolicyBase extends XXDBBase {
 	private static final long serialVersionUID = 1L;
 

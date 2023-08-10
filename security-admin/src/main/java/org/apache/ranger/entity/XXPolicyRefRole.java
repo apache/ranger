@@ -30,7 +30,6 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 
 /**
@@ -39,7 +38,6 @@ import javax.xml.bind.annotation.XmlRootElement;
  */
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name="x_policy_ref_role")
 public class XXPolicyRefRole extends XXDBBase implements Serializable {
 

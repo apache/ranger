@@ -28,9 +28,6 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -246,8 +243,6 @@ public class RangerResourceACLs {
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class AccessResult {
 		private int     result;
 		private boolean isFinal;
@@ -317,8 +312,6 @@ public class RangerResourceACLs {
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class DataMaskResult implements Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -434,8 +427,6 @@ public class RangerResourceACLs {
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RowFilterResult implements Serializable {
 		private static final long serialVersionUID = 1L;
 
