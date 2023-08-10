@@ -30,12 +30,10 @@ import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Cacheable
 @Table(name="x_rms_service_resource")
-@XmlRootElement
 public class XXRMSServiceResource extends XXDBBase {
 	private static final long serialVersionUID = 1L;
 

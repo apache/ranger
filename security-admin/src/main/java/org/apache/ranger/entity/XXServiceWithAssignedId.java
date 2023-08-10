@@ -22,11 +22,9 @@ import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_service")
 public class XXServiceWithAssignedId extends XXServiceBase {
 	private static final long serialVersionUID = 1L;

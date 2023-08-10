@@ -19,11 +19,9 @@
 package org.apache.ranger.entity;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_policy_item_user_perm")
 public class XXPolicyItemUserPerm extends XXDBBase implements
 		java.io.Serializable {

@@ -24,15 +24,12 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RangerCommonEnums;
 
 @Entity
 @Table(name="x_group_module_perm")
-@XmlRootElement
-
 public class XXGroupPermission extends XXDBBase implements java.io.Serializable {
 
 	private static final long serialVersionUID = 1L;

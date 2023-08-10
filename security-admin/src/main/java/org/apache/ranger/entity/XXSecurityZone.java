@@ -25,12 +25,10 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Objects;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_security_zone")
 public class XXSecurityZone extends XXSecurityZoneBase implements java.io.Serializable {
     private static final long serialVersionUID = 1L;

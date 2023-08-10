@@ -17,8 +17,6 @@
 
 package org.apache.ranger.view;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.AppConstants;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
@@ -28,7 +26,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-@XmlRootElement
 public class VXUserPermission extends VXDataObject implements
 		java.io.Serializable {
 

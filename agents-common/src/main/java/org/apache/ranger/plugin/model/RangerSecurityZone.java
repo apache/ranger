@@ -23,9 +23,6 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,8 +31,6 @@ import java.util.Map;
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class RangerSecurityZone extends RangerBaseModelObject implements java.io.Serializable {
     public static final long RANGER_UNZONED_SECURITY_ZONE_ID = 1L;
 	private static final long serialVersionUID = 1L;
@@ -150,8 +145,6 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerSecurityZoneService implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
         private List<HashMap<String, List<String>>> resources;

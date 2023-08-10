@@ -22,10 +22,8 @@ import java.io.Serializable;
 import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @MappedSuperclass
-@XmlRootElement
 public abstract class XXServiceDefBase extends XXDBBase implements Serializable {
 	private static final long serialVersionUID = 1L;
 
