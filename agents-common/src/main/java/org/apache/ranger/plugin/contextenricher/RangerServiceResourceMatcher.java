@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.contextenricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
@@ -70,8 +71,8 @@ public class RangerServiceResourceMatcher implements RangerResourceEvaluator {
 		return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
 	}
 
-	public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, Object> evalContext) {
-		return policyResourceMatcher != null ?  policyResourceMatcher.getMatchType(requestedResource, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;
+	public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext) {
+		return policyResourceMatcher != null ? policyResourceMatcher.getMatchType(requestedResource, scopes, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;
 	}
 
 	static class IdComparator implements Comparator<RangerServiceResourceMatcher>, Serializable {

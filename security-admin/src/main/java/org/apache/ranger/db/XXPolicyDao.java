@@ -25,6 +25,7 @@ import java.util.Map;
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -288,29 +289,44 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 	}
 
 	public XXPolicy findPolicyByGUIDAndServiceNameAndZoneName(String guid, String serviceName, String zoneName) {
-		if (guid == null || serviceName == null) {
+		if (guid == null) {
 			return null;
 		}
 
 		try {
-			if (zoneName == null || zoneName.trim().isEmpty()) {
-				return getEntityManager().createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndServiceName", tClass)
-						.setParameter("guid", guid)
-						.setParameter("serviceName", serviceName)
-						.setParameter("zoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
-						.getSingleResult();
-			} else {
-				return getEntityManager()
+			if (StringUtils.isNotBlank(serviceName)) {
+				if (StringUtils.isNotBlank(zoneName)) {
+					return getEntityManager()
 						.createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndServiceNameAndZoneName", tClass)
 						.setParameter("guid", guid)
 						.setParameter("serviceName", serviceName)
 						.setParameter("zoneName", zoneName)
 						.getSingleResult();
+				} else {
+					return getEntityManager().createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndServiceName", tClass)
+						.setParameter("guid", guid)
+						.setParameter("serviceName", serviceName)
+						.setParameter("zoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+						.getSingleResult();
+				}
+			} else {
+				if (StringUtils.isNotBlank(zoneName)) {
+					return getEntityManager()
+						.createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndZoneName", tClass)
+						.setParameter("guid", guid)
+						.setParameter("zoneName", zoneName)
+						.getSingleResult();
+				} else {
+					return getEntityManager()
+						.createNamedQuery("XXPolicy.findPolicyByPolicyGUID", tClass)
+						.setParameter("guid", guid)
+						.setParameter("zoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+						.getSingleResult();
+				}
 			}
 		} catch (NoResultException e) {
 			return null;
 		}
-
 	}
 
 	public List<XXPolicy> findByPolicyStatus(Boolean isPolicyEnabled) {

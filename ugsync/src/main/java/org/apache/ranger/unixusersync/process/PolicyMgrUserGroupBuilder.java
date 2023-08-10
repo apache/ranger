@@ -83,9 +83,8 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 	public static final String PM_UPDATE_USERS_ROLES_URI  = "/service/xusers/users/roleassignments";	// PUT
 
-	private static final String PM_UPDATE_DELETED_GROUPS_URI = "/service/xusers/ugsync/groups/visibility";	// POST
-
 	private static final String PM_UPDATE_DELETED_USERS_URI = "/service/xusers/ugsync/users/visibility";	// POST
+	private static final String PM_UPDATE_DELETED_GROUPS_URI = "/service/xusers/ugsync/groups/visibility";	// POST
 	private static final Pattern USER_OR_GROUP_NAME_VALIDATION_REGEX =
 			Pattern.compile("^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s,._\\-+/@= ]|[\u00C0-\u017F])+$", Pattern.CASE_INSENSITIVE);
 
@@ -135,6 +134,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	private String currentSyncSource;
 	private String ldapUrl;
 	private boolean isUserSyncNameValidationEnabled = false;
+	private boolean isSyncSourceValidationEnabled = false;
 
 	private String authenticationType = null;
 	String principal;
@@ -148,6 +148,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 	private boolean isRangerCookieEnabled;
 	private String rangerCookieName;
+	private static String errMsgForInactiveServer = "This userGroupSync server is not in active state. Cannot commit transaction!";
 	static {
 		try {
 			LOCAL_HOSTNAME = java.net.InetAddress.getLocalHost().getCanonicalHostName();
@@ -188,6 +189,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 	synchronized public void init() throws Throwable {
 		isUserSyncNameValidationEnabled = config.isUserSyncNameValidationEnabled();
+		isSyncSourceValidationEnabled = config.isSyncSourceValidationEnabled();
 		recordsToPullPerCall = config.getMaxRecordsPerAPICall();
 		policyMgrBaseUrl = config.getPolicyManagerBaseURL();
 		isMockRun = config.isMockRunEnabled();
@@ -283,6 +285,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 
 		if (!isMockRun) {
+			checkStatus();
 			addUserGroupAuditInfo(ugsyncAuditInfo);
 		}
 
@@ -293,6 +296,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 									   Map<String, Map<String, String>> sourceUsers,
 									   Map<String, Set<String>> sourceGroupUsers,
 									   boolean computeDeletes) throws Throwable {
+		checkStatus();
 
 		noOfNewUsers = 0;
 		noOfNewGroups = 0;
@@ -441,7 +445,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int totalCount = 100;
 		int retrievedCount = 0;
-		String relativeUrl = PM_GROUP_LIST_URI;
 
 		while (retrievedCount < totalCount) {
 			String response = null;
@@ -453,10 +456,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 			Gson gson = new GsonBuilder().create();
 			if (isRangerCookieEnabled) {
-				response = cookieBasedGetEntity(relativeUrl, retrievedCount);
+				response = cookieBasedGetEntity(PM_GROUP_LIST_URI, retrievedCount);
 			} else {
 				try {
-					clientResp = ldapUgSyncClient.get(relativeUrl, queryParams);
+					clientResp = ldapUgSyncClient.get(PM_GROUP_LIST_URI, queryParams);
 					if (clientResp != null) {
 						response = clientResp.getEntity(String.class);
 					}
@@ -496,7 +499,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int totalCount = 100;
 		int retrievedCount = 0;
-		String relativeUrl = PM_USER_LIST_URI;
 
 		while (retrievedCount < totalCount) {
 			String response = null;
@@ -508,10 +510,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 
 			Gson gson = new GsonBuilder().create();
 			if (isRangerCookieEnabled) {
-				response = cookieBasedGetEntity(relativeUrl, retrievedCount);
+				response = cookieBasedGetEntity(PM_USER_LIST_URI, retrievedCount);
 			} else {
 				try {
-					clientResp = ldapUgSyncClient.get(relativeUrl, queryParams);
+					clientResp = ldapUgSyncClient.get(PM_USER_LIST_URI, queryParams);
 					if (clientResp != null) {
 						response = clientResp.getEntity(String.class);
 					}
@@ -548,17 +550,16 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.buildGroupUserLinkList()");
 		}
-		String relativeUrl = PM_GET_ALL_GROUP_USER_MAP_LIST_URI;
 
 		String response = null;
 		ClientResponse clientResp = null;
 
 		Gson gson = new GsonBuilder().create();
 		if (isRangerCookieEnabled) {
-			response = cookieBasedGetEntity(relativeUrl, 0);
+			response = cookieBasedGetEntity(PM_GET_ALL_GROUP_USER_MAP_LIST_URI, 0);
 		} else {
 			try {
-				clientResp = ldapUgSyncClient.get(relativeUrl, null);
+				clientResp = ldapUgSyncClient.get(PM_GET_ALL_GROUP_USER_MAP_LIST_URI, null);
 				if (clientResp != null) {
 					response = clientResp.getEntity(String.class);
 				}
@@ -635,6 +636,25 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 	}
 
+	private <T> T setOtherAttributes(T UGInfo, String syncSource, Map<String, String> otherAttrsMap, String otherAttributes) {
+
+		if (UGInfo instanceof XUserInfo){
+			XUserInfo xUserInfo = ((XUserInfo) UGInfo);
+			xUserInfo.setSyncSource(syncSource);
+			xUserInfo.setOtherAttrsMap(otherAttrsMap);
+			xUserInfo.setOtherAttributes(otherAttributes);
+			return ((T) xUserInfo);
+		} else if (UGInfo instanceof XGroupInfo ){
+			XGroupInfo xGroupInfo = ((XGroupInfo) UGInfo);
+			xGroupInfo.setSyncSource(syncSource);
+			xGroupInfo.setOtherAttrsMap(otherAttrsMap);
+			xGroupInfo.setOtherAttributes(otherAttributes);
+			return ((T) xGroupInfo);
+		} else {
+			return null;
+		}
+	}
+
 	private void computeGroupDelta(Map<String, Map<String, String>> sourceGroups) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("PolicyMgrUserGroupBuilder.computeGroupDelta(" + sourceGroups.keySet() + ")");
@@ -662,52 +682,58 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				noOfNewGroups++;
 				groupNameMap.put(groupDN, groupName);
 			} else {
-				XGroupInfo oldGroup                = groupCache.get(groupName);
-				String oldSyncSource               = oldGroup.getSyncSource();
-				String oldGroupAttrsStr            = oldGroup.getOtherAttributes();
-				Map<String, String> oldGroupAttrs  = oldGroup.getOtherAttrsMap();
-				String oldGroupDN                  = MapUtils.isEmpty(oldGroupAttrs) ? groupName : oldGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
+				XGroupInfo curGroup                = groupCache.get(groupName);
+				String curSyncSource               = curGroup.getSyncSource();
+				String curGroupAttrsStr            = curGroup.getOtherAttributes();
+				Map<String, String> curGroupAttrs  = curGroup.getOtherAttrsMap();
+				String curGroupDN                  = MapUtils.isEmpty(curGroupAttrs) ? groupName : curGroupAttrs.get(UgsyncCommonConstants.FULL_NAME);
 				String newSyncSource               = newGroupAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
 
-				if (MapUtils.isNotEmpty(oldGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, oldGroupDN)) { // don't update
+				if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Skipping update for " + groupName + " as same group with different DN already exists");
-						LOG.debug("old group DN = " + oldGroupDN + " and new group DN = " + groupDN);
+						LOG.debug("[" + groupName + "]: SyncSource updated to " + newSyncSource + ", previous value: " + curSyncSource);
 					}
-
-					if (StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)) {
-						groupNameMap.put(groupDN, groupName);
-					}
-					continue;
-				}
-
-				if (StringUtils.isEmpty(oldSyncSource) || (!StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)
-						&& StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource))) { // update
-					if (LOG.isDebugEnabled()) {
-						if (StringUtils.isEmpty(oldSyncSource)) {
-							LOG.debug("Sync Source has changed to " + newSyncSource);
-						} else {
-							LOG.debug("Other Attributes changed");
-						}
-						LOG.debug("Updating " + groupName + " ...");
-					}
-					oldGroup.setOtherAttributes(newGroupAttrsStr);
-					oldGroup.setSyncSource(newSyncSource);
-					oldGroup.setOtherAttrsMap(newGroupAttrs);
-					deltaGroups.put(groupName, oldGroup);
+					curGroup = setOtherAttributes(curGroup, newSyncSource, newGroupAttrs, newGroupAttrsStr);
+					deltaGroups.put(groupName, curGroup);
 					noOfModifiedGroups++;
 					groupNameMap.put(groupDN, groupName);
+				} else {
+					if (MapUtils.isNotEmpty(curGroupAttrs) && !StringUtils.equalsIgnoreCase(groupDN, curGroupDN)) { // skip update
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("[" + groupName + "]: SyncSource update skipped, current group DN = " + curGroupDN + " new user DN  = " + groupDN );
+						}
 
-				} else if (LOG.isDebugEnabled()) {
-					if (!StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource)) {
-						LOG.debug("Skipping update for " + groupName + " as same group with different sync source already exists");
-					} else {
-						LOG.debug("Skipping update for " + groupName + " as there is no change");
+						if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
+							groupNameMap.put(groupDN, groupName);
+						}
+						continue;
 					}
-				}
 
-				if (StringUtils.equalsIgnoreCase(oldGroupAttrsStr, newGroupAttrsStr)) {
-					groupNameMap.put(groupDN, groupName);
+					if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)
+							&& StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) { // update
+						if (LOG.isDebugEnabled()) {
+							if (StringUtils.isEmpty(curSyncSource)) {
+								LOG.debug("[" + groupName + "]: SyncSource updated to " + newSyncSource + ", previously empty");
+							} else {
+								LOG.debug("[" + groupName + "]: Other Attributes updated!");
+							}
+						}
+						curGroup = setOtherAttributes(curGroup, newSyncSource, newGroupAttrs, newGroupAttrsStr);
+						deltaGroups.put(groupName, curGroup);
+						noOfModifiedGroups++;
+						groupNameMap.put(groupDN, groupName);
+
+					} else if (LOG.isDebugEnabled()) {
+						if (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
+							LOG.debug("[" + groupName + "]: Different sync source exists, update skipped!");
+						} else {
+							LOG.debug("[" + groupName + "]: No change, update skipped!");
+						}
+					}
+
+					if (StringUtils.equalsIgnoreCase(curGroupAttrsStr, newGroupAttrsStr)) {
+						groupNameMap.put(groupDN, groupName);
+					}
 				}
 			}
 		}
@@ -746,57 +772,63 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 				// no updates allowed for rangerusersync and admin
 				if (StringUtils.equalsIgnoreCase(policyMgrUserName, userName) || StringUtils.equalsIgnoreCase("admin", userName)) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Skipping update for " + userName);
+						LOG.debug("[" + userName + "]: SyncSource update skipped!");
 					}
 					continue;
 				}
 
-				XUserInfo oldUser                = userCache.get(userName);
-				String oldSyncSource             = oldUser.getSyncSource();
-				String oldUserAttrsStr           = oldUser.getOtherAttributes();
-				Map<String, String> oldUserAttrs = oldUser.getOtherAttrsMap();
-				String oldUserDN                 = MapUtils.isEmpty(oldUserAttrs) ? userName : oldUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
+				XUserInfo curUser                = userCache.get(userName);
+				String curSyncSource             = curUser.getSyncSource();
+				String curUserAttrsStr           = curUser.getOtherAttributes();
+				Map<String, String> curUserAttrs = curUser.getOtherAttrsMap();
+				String curUserDN                 = MapUtils.isEmpty(curUserAttrs) ? userName : curUserAttrs.get(UgsyncCommonConstants.FULL_NAME);
 				String newSyncSource             = newUserAttrs.get(UgsyncCommonConstants.SYNC_SOURCE);
-
-				if (MapUtils.isNotEmpty(oldUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, oldUserDN)){ // don't update
+				if (isStartupFlag && !isSyncSourceValidationEnabled && (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) {
 					if (LOG.isDebugEnabled()) {
-						LOG.debug("Skipping update for " + userName + " as same username with different DN already exists");
-						LOG.debug("old user DN = " + oldUserDN + " and new user DN = " + userDN);
+						LOG.debug("[" + userName + "]: SyncSource updated to " + newSyncSource + ", previous value: " + curSyncSource);
+					}
+					curUser = setOtherAttributes(curUser, newSyncSource, newUserAttrs, newUserAttrsStr);
+					curUser.setUserSource(SOURCE_EXTERNAL);
+					deltaUsers.put(userName, curUser);
+					noOfModifiedGroups++;
+					userNameMap.put(userDN, userName);
+				} else {
+					if (MapUtils.isNotEmpty(curUserAttrs) && !StringUtils.equalsIgnoreCase(userDN, curUserDN)) { // skip update
+						if (LOG.isDebugEnabled()) { // Same username with different DN already exists
+							LOG.debug("[" + userName + "]: SyncSource update skipped, current user DN = " + curUserDN + " new user DN  = " + userDN );
+						}
+
+						if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
+							userNameMap.put(userDN, userName);
+						}
+						continue;
 					}
 
-					if (StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)) {
+					if (StringUtils.isEmpty(curSyncSource) || (!StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)
+							&& StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource))) { // update
+						if (LOG.isDebugEnabled()) {
+							if (StringUtils.isEmpty(curSyncSource)) {
+								LOG.debug("[" + userName + "]: SyncSource updated to " + newSyncSource + ", previously empty");
+							} else {
+								LOG.debug("[" + userName + "]: Other Attributes updated!");
+							}
+						}
+						curUser = setOtherAttributes(curUser, newSyncSource, newUserAttrs, newUserAttrsStr);
+						curUser.setUserSource(SOURCE_EXTERNAL);
+						deltaUsers.put(userName, curUser);
+						noOfModifiedUsers++;
+						userNameMap.put(userDN, userName);
+					} else if (LOG.isDebugEnabled()) {
+						if (!StringUtils.equalsIgnoreCase(curSyncSource, newSyncSource)) {
+							LOG.debug("[" + userName + "]: Different sync source exists, update skipped!");
+						} else {
+							LOG.debug("[" + userName + "]: No change, update skipped!");
+						}
+					}
+
+					if (StringUtils.equalsIgnoreCase(curUserAttrsStr, newUserAttrsStr)) {
 						userNameMap.put(userDN, userName);
 					}
-					continue;
-				}
-
-				if (StringUtils.isEmpty(oldSyncSource) || (!StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)
-						&& StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource))) { // update
-					if (LOG.isDebugEnabled()) {
-						if (StringUtils.isEmpty(oldSyncSource)) {
-							LOG.debug("Sync Source has changed to " + newSyncSource);
-						} else {
-							LOG.debug("Other Attributes changed");
-						}
-						LOG.debug("Updating " + userName + " ...");
-					}
-					oldUser.setOtherAttributes(newUserAttrsStr);
-					oldUser.setSyncSource(newSyncSource);
-					oldUser.setOtherAttrsMap(newUserAttrs);
-					oldUser.setUserSource(SOURCE_EXTERNAL);
-					deltaUsers.put(userName, oldUser);
-					noOfModifiedUsers++;
-					userNameMap.put(userDN, userName);
-				} else if (LOG.isDebugEnabled()) {
-					if (!StringUtils.equalsIgnoreCase(oldSyncSource, newSyncSource)) {
-						LOG.debug("Skipping to update " + userName + " as same username with different sync source already exists");
-					} else {
-						LOG.debug("Skipping to update " + userName + " as there is no change");
-					}
-				}
-
-				if (StringUtils.equalsIgnoreCase(oldUserAttrsStr, newUserAttrsStr)) {
-					userNameMap.put(userDN, userName);
 				}
 			}
 		}
@@ -882,6 +914,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	private XUserInfo addXUserInfo(String aUserName, Map<String, String> otherAttrsMap, String otherAttributes) {
 		XUserInfo xuserInfo = new XUserInfo();
 		xuserInfo.setName(aUserName);
+		xuserInfo.setFirstName(aUserName);
 		xuserInfo.setDescription(aUserName + " - add from Unix box");
 		xuserInfo.setUserSource(SOURCE_EXTERNAL);
 		xuserInfo.setStatus(STATUS_ENABLED);
@@ -966,15 +999,15 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int ret = 0;
 		int totalCount = xUserList.getTotalCount();
-		int uploadedCount = -1;
+		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
+			checkStatus();
 			String response = null;
 			ClientResponse clientRes = null;
-			String relativeUrl = PM_ADD_USERS_URI;
 			GetXUserListResponse pagedXUserList = new GetXUserListResponse();
 			int pagedXUserListLen = uploadedCount+pageSize;
-			pagedXUserList.setXuserInfoList(xUserList.getXuserInfoList().subList(uploadedCount+1,
+			pagedXUserList.setXuserInfoList(xUserList.getXuserInfoList().subList(uploadedCount,
 					pagedXUserListLen>totalCount?totalCount:pagedXUserListLen));
 			pagedXUserList.setTotalCount(pageSize);
 			if (pagedXUserList.getXuserInfoList().size() == 0) {
@@ -983,10 +1016,10 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 			}
 
 			if (isRangerCookieEnabled) {
-				response = cookieBasedUploadEntity(pagedXUserList, relativeUrl);
+				response = cookieBasedUploadEntity(pagedXUserList, PM_ADD_USERS_URI);
 			} else {
 				try {
-					clientRes = ldapUgSyncClient.post(relativeUrl, null, pagedXUserList);
+					clientRes = ldapUgSyncClient.post(PM_ADD_USERS_URI, null, pagedXUserList);
 					if (clientRes != null) {
 						response = clientRes.getEntity(String.class);
 					}
@@ -1066,25 +1099,26 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getGroups()");
 		}
+
 		int ret = 0;
 		int totalCount = xGroupList.getTotalCount();
-		int uploadedCount = -1;
+		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
+			checkStatus();
 			String response = null;
 			ClientResponse clientRes = null;
-			String relativeUrl = PM_ADD_GROUPS_URI;
 			GetXGroupListResponse pagedXGroupList = new GetXGroupListResponse();
 			int pagedXGroupListLen = uploadedCount+pageSize;
-			pagedXGroupList.setXgroupInfoList(xGroupList.getXgroupInfoList().subList(uploadedCount+1,
+			pagedXGroupList.setXgroupInfoList(xGroupList.getXgroupInfoList().subList(uploadedCount,
 					pagedXGroupListLen>totalCount?totalCount:pagedXGroupListLen));
 			pagedXGroupList.setTotalCount(pageSize);
 
 			if (isRangerCookieEnabled) {
-				response = cookieBasedUploadEntity(pagedXGroupList, relativeUrl);
+				response = cookieBasedUploadEntity(pagedXGroupList, PM_ADD_GROUPS_URI);
 			} else {
 				try {
-					clientRes = ldapUgSyncClient.post(relativeUrl, null, pagedXGroupList);
+					clientRes = ldapUgSyncClient.post(PM_ADD_GROUPS_URI, null, pagedXGroupList);
 					if (clientRes != null) {
 						response = clientRes.getEntity(String.class);
 					}
@@ -1162,22 +1196,22 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		int ret = 0;
 		int totalCount = groupUserInfoList.size();
-		int uploadedCount = -1;
+		int uploadedCount = 0;
 		int pageSize = Integer.valueOf(recordsToPullPerCall);
 		while (uploadedCount < totalCount) {
+			checkStatus();
 			String response = null;
 			ClientResponse clientRes = null;
-			String relativeUrl = PM_ADD_GROUP_USER_LIST_URI;
 
 			int pagedGroupUserInfoListLen = uploadedCount+pageSize;
-			List<GroupUserInfo> pagedGroupUserInfoList = groupUserInfoList.subList(uploadedCount+1,
+			List<GroupUserInfo> pagedGroupUserInfoList = groupUserInfoList.subList(uploadedCount,
 					pagedGroupUserInfoListLen>totalCount?totalCount:pagedGroupUserInfoListLen);
 
 			if (isRangerCookieEnabled) {
-				response = cookieBasedUploadEntity(pagedGroupUserInfoList, relativeUrl);
+				response = cookieBasedUploadEntity(pagedGroupUserInfoList, PM_ADD_GROUP_USER_LIST_URI);
 			} else {
 				try {
-					clientRes = ldapUgSyncClient.post(relativeUrl, null, pagedGroupUserInfoList);
+					clientRes = ldapUgSyncClient.post(PM_ADD_GROUP_USER_LIST_URI, null, pagedGroupUserInfoList);
 					if (clientRes != null) {
 						response = clientRes.getEntity(String.class);
 					}
@@ -1248,12 +1282,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		List<String> ret = null;
 		try {
 			int totalCount = ugRoleAssignments.getUsers().size();
-			int uploadedCount = -1;
+			int uploadedCount = 0;
 			int pageSize = Integer.valueOf(recordsToPullPerCall);
 			while (uploadedCount < totalCount) {
+				checkStatus();
 				int pagedUgRoleAssignmentsListLen = uploadedCount + pageSize;
 				UsersGroupRoleAssignments pagedUgRoleAssignmentsList = new UsersGroupRoleAssignments();
-				pagedUgRoleAssignmentsList.setUsers(ugRoleAssignments.getUsers().subList(uploadedCount + 1,
+				pagedUgRoleAssignmentsList.setUsers(ugRoleAssignments.getUsers().subList(uploadedCount,
 						pagedUgRoleAssignmentsListLen > totalCount ? totalCount : pagedUgRoleAssignmentsListLen));
 				pagedUgRoleAssignmentsList.setGroupRoleAssignments(ugRoleAssignments.getGroupRoleAssignments());
 				pagedUgRoleAssignmentsList.setUserRoleAssignments(ugRoleAssignments.getUserRoleAssignments());
@@ -1301,7 +1336,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		return ret;
 	}
 
-	private void addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) {
+	private void addUserGroupAuditInfo(UgsyncAuditInfo auditInfo) throws Throwable{
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyMgrUserGroupBuilder.addAuditInfo(" + auditInfo.getNoOfNewUsers() + ", " + auditInfo.getNoOfNewGroups() +
 					", " + auditInfo.getNoOfModifiedUsers() + ", " + auditInfo.getNoOfModifiedGroups() +
@@ -1320,7 +1355,7 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 					public Void run() {
 						try {
 							getUserGroupAuditInfo(auditInfoFinal);
-						} catch (Exception e) {
+						} catch (Throwable e) {
 							LOG.error("Failed to add User : ", e);
 						}
 						return null;
@@ -1337,21 +1372,21 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	}
 
 
-	private void getUserGroupAuditInfo(UgsyncAuditInfo userInfo) {
+	private void getUserGroupAuditInfo(UgsyncAuditInfo userInfo) throws Throwable{
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getUserGroupAuditInfo()");
 		}
+		checkStatus();
 		String response = null;
 		ClientResponse clientRes = null;
 		Gson gson = new GsonBuilder().create();
-		String relativeUrl = PM_AUDIT_INFO_URI;
 
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(userInfo, relativeUrl);
+			response = cookieBasedUploadEntity(userInfo, PM_AUDIT_INFO_URI);
 		}
 		else {
 			try {
-				clientRes = ldapUgSyncClient.post(relativeUrl, null, userInfo);
+				clientRes = ldapUgSyncClient.post(PM_AUDIT_INFO_URI, null, userInfo);
 				if (clientRes != null) {
 					response = clientRes.getEntity(String.class);
 				}
@@ -1411,7 +1446,6 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		}
 		String response = null;
 		ClientResponse clientResp = null;
-
 		try {
 			clientResp = ldapUgSyncClient.post(apiURL, null, obj, sessionId);
 		}
@@ -1807,17 +1841,17 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getDeletedGroups()");
 		}
+		checkStatus();
 		int ret = 0;
 		String response = null;
 		ClientResponse clientRes = null;
-		String relativeUrl = PM_UPDATE_DELETED_GROUPS_URI;
 
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(deletedGroups.keySet(), relativeUrl);
+			response = cookieBasedUploadEntity(deletedGroups.keySet(), PM_UPDATE_DELETED_GROUPS_URI);
 		}
 		else {
 			try {
-				clientRes = ldapUgSyncClient.post(relativeUrl, null, deletedGroups.keySet());
+				clientRes = ldapUgSyncClient.post(PM_UPDATE_DELETED_GROUPS_URI, null, deletedGroups.keySet());
 				if (clientRes != null) {
 					response = clientRes.getEntity(String.class);
 				}
@@ -1928,17 +1962,17 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 		if(LOG.isDebugEnabled()){
 			LOG.debug("==> PolicyMgrUserGroupBuilder.getDeletedUsers()");
 		}
+		checkStatus();
 		int ret = 0;
 		String response = null;
 		ClientResponse clientRes = null;
-		String relativeUrl = PM_UPDATE_DELETED_USERS_URI;
 
 		if(isRangerCookieEnabled){
-			response = cookieBasedUploadEntity(deletedUsers.keySet(), relativeUrl);
+			response = cookieBasedUploadEntity(deletedUsers.keySet(), PM_UPDATE_DELETED_USERS_URI);
 		}
 		else {
 			try {
-				clientRes = ldapUgSyncClient.post(relativeUrl, null, deletedUsers.keySet());
+				clientRes = ldapUgSyncClient.post(PM_UPDATE_DELETED_USERS_URI, null, deletedUsers.keySet());
 				if (clientRes != null) {
 					response = clientRes.getEntity(String.class);
 				}
@@ -1973,5 +2007,13 @@ public class PolicyMgrUserGroupBuilder extends AbstractUserGroupSource implement
 	protected void setUserSyncNameValidationEnabled(String isNameValidationEnabled) {
 		config.setProperty(UserGroupSyncConfig.UGSYNC_NAME_VALIDATION_ENABLED, isNameValidationEnabled);
 		this.isUserSyncNameValidationEnabled = config.isUserSyncNameValidationEnabled();
+	}
+
+	// This will throw RuntimeException if Server is not Active
+	private void checkStatus() throws Exception {
+		if(!UserGroupSyncConfig.isUgsyncServiceActive()) {
+			LOG.error(errMsgForInactiveServer);
+			throw new RuntimeException(errMsgForInactiveServer);
+		}
 	}
 }

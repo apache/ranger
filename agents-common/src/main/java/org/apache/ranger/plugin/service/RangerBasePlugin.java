@@ -421,7 +421,17 @@ public class RangerBasePlugin {
 					}
 
 					if (this.refresher != null) {
-						this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);
+						boolean doPreserveDeltas = pluginConfig.getBoolean (pluginConfig.getPropertyPrefix() + ".preserve.deltas", false);
+						if (!doPreserveDeltas) {
+							this.refresher.saveToCache(usePolicyDeltas ? servicePolicies : policies);
+						} else {
+							// Save both deltas and all policies to cache for verification
+							this.refresher.saveToCache(policies);
+
+							if (usePolicyDeltas) {
+								this.refresher.saveToCache(servicePolicies);
+							}
+						}
 					}
 				}
 
@@ -1135,6 +1145,10 @@ public class RangerBasePlugin {
 			LOG.debug("<== RangerBasePlugin.getMergedResourceACLs() : ret:[" + baseACLs + "]");
 		}
 		return baseACLs;
+	}
+
+	protected RangerPolicyEngine getPolicyEngine() {
+		return policyEngine;
 	}
 
 	private RangerAdminClient getAdminClient() throws Exception {

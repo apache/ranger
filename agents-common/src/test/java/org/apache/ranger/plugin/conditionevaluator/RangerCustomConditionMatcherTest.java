@@ -56,13 +56,13 @@ public class RangerCustomConditionMatcherTest {
 	public void testScriptConditionEvaluator() {
 		RangerAccessRequest request = createRequest(Arrays.asList("PCI", "PII"));
 
-		RangerScriptConditionEvaluator resourceDbCondition     = createScriptConditionEvaluator("_ctx.request.resource.database.equals('db1')");
-		RangerScriptConditionEvaluator resourceDbCondition2    = createScriptConditionEvaluator("!_ctx.request.resource.database.equals('db2')");
-		RangerScriptConditionEvaluator resourceTblCondition    = createScriptConditionEvaluator("_ctx.request.resource.table.equals('tbl1')");
-		RangerScriptConditionEvaluator resourceColCondition    = createScriptConditionEvaluator("_ctx.request.resource.column.equals('col1')");
-		RangerScriptConditionEvaluator accessTypeCondition     = createScriptConditionEvaluator("_ctx.request.accessType.equals('select')");
-		RangerScriptConditionEvaluator actionCondition         = createScriptConditionEvaluator("_ctx.request.action.equals('query')");
-		RangerScriptConditionEvaluator userCondition           = createScriptConditionEvaluator("_ctx.request.user.equals('test-user')");
+		RangerScriptConditionEvaluator resourceDbCondition     = createScriptConditionEvaluator("_ctx.request.resource.database == 'db1'");
+		RangerScriptConditionEvaluator resourceDbCondition2    = createScriptConditionEvaluator("_ctx.request.resource.database != 'db2'");
+		RangerScriptConditionEvaluator resourceTblCondition    = createScriptConditionEvaluator("_ctx.request.resource.table == 'tbl1'");
+		RangerScriptConditionEvaluator resourceColCondition    = createScriptConditionEvaluator("_ctx.request.resource.column == 'col1'");
+		RangerScriptConditionEvaluator accessTypeCondition     = createScriptConditionEvaluator("_ctx.request.accessType == 'select'");
+		RangerScriptConditionEvaluator actionCondition         = createScriptConditionEvaluator("_ctx.request.action == 'query'");
+		RangerScriptConditionEvaluator userCondition           = createScriptConditionEvaluator("_ctx.request.user == 'test-user'");
 		RangerScriptConditionEvaluator userGroupsLenCondition  = createScriptConditionEvaluator("_ctx.request.userGroups.length == 2");
 		RangerScriptConditionEvaluator userGroupsHas1Condition = createScriptConditionEvaluator("_ctx.request.userGroups.indexOf('test-group1') != -1");
 		RangerScriptConditionEvaluator userGroupsHas2Condition = createScriptConditionEvaluator("_ctx.request.userGroups.indexOf('test-group2') != -1");
@@ -70,17 +70,17 @@ public class RangerCustomConditionMatcherTest {
 		RangerScriptConditionEvaluator userRolesHas1Condition  = createScriptConditionEvaluator("_ctx.request.userRoles.indexOf('test-role1') != -1");
 		RangerScriptConditionEvaluator userRolesHas2Condition  = createScriptConditionEvaluator("_ctx.request.userRoles.indexOf('test-role2') != -1");
 		RangerScriptConditionEvaluator userAttrLenCondition    = createScriptConditionEvaluator("Object.keys(_ctx.request.userAttributes).length == 3");
-		RangerScriptConditionEvaluator userAttr1Condition      = createScriptConditionEvaluator("_ctx.request.userAttributes['attr1'].equals('test-user-value1')");
-		RangerScriptConditionEvaluator userAttr2Condition      = createScriptConditionEvaluator("_ctx.request.userAttributes['attr2'].equals('test-user-value2')");
-		RangerScriptConditionEvaluator userGroup1Attr1Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group1']['attr1'].equals('test-group1-value1')");
-		RangerScriptConditionEvaluator userGroup1Attr2Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group1']['attr2'].equals('test-group1-value2')");
-		RangerScriptConditionEvaluator userGroup2Attr1Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group2']['attr1'].equals('test-group2-value1')");
-		RangerScriptConditionEvaluator userGroup2Attr2Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group2']['attr2'].equals('test-group2-value2')");
+		RangerScriptConditionEvaluator userAttr1Condition      = createScriptConditionEvaluator("_ctx.request.userAttributes['attr1'] == 'test-user-value1'");
+		RangerScriptConditionEvaluator userAttr2Condition      = createScriptConditionEvaluator("_ctx.request.userAttributes['attr2'] == 'test-user-value2'");
+		RangerScriptConditionEvaluator userGroup1Attr1Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group1']['attr1'] == 'test-group1-value1'");
+		RangerScriptConditionEvaluator userGroup1Attr2Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group1']['attr2'] == 'test-group1-value2'");
+		RangerScriptConditionEvaluator userGroup2Attr1Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group2']['attr1'] == 'test-group2-value1'");
+		RangerScriptConditionEvaluator userGroup2Attr2Condition = createScriptConditionEvaluator("_ctx.request.userGroupAttributes['test-group2']['attr2'] == 'test-group2-value2'");
 		RangerScriptConditionEvaluator tagsLengthCondition     = createScriptConditionEvaluator("Object.keys(_ctx.tags).length == 2");
-		RangerScriptConditionEvaluator tagTypeCondition        = createScriptConditionEvaluator("_ctx.tag._type.equals('PCI')");
-		RangerScriptConditionEvaluator tagAttributesCondition  = createScriptConditionEvaluator("_ctx.tag.attr1.equals('PCI_value')");
+		RangerScriptConditionEvaluator tagTypeCondition        = createScriptConditionEvaluator("_ctx.tag._type == 'PCI'");
+		RangerScriptConditionEvaluator tagAttributesCondition  = createScriptConditionEvaluator("_ctx.tag.attr1 == 'PCI_value'");
 		RangerScriptConditionEvaluator tagsTypeCondition       = createScriptConditionEvaluator("_ctx.tags['PII']._type == 'PII' && _ctx.tags['PCI']._type == 'PCI'");
-		RangerScriptConditionEvaluator tagsAttributesCondition = createScriptConditionEvaluator("_ctx.tags['PII'].attr1.equals('PII_value') && _ctx.tags['PCI'].attr1.equals('PCI_value')");
+		RangerScriptConditionEvaluator tagsAttributesCondition = createScriptConditionEvaluator("_ctx.tags['PII'].attr1 == 'PII_value' && _ctx.tags['PCI'].attr1 == 'PCI_value'");
 
 		Assert.assertTrue("request.resource.database should be db1", resourceDbCondition.isMatched(request));
 		Assert.assertTrue("request.resource.database should not be db2", resourceDbCondition2.isMatched(request));

@@ -545,6 +545,23 @@ IF (OBJECT_ID('x_sz_ref_user_FK_user_name') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_security_zone_ref_user] DROP CONSTRAINT x_sz_ref_user_FK_user_name
 END
+IF (OBJECT_ID('x_sz_ref_admin_role_FK_added_by_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_role] DROP CONSTRAINT x_sz_ref_role_FK_added_by_id
+END
+IF (OBJECT_ID('x_sz_ref_role_FK_upd_by_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_role] DROP CONSTRAINT x_sz_ref_role_FK_upd_by_id
+END
+IF (OBJECT_ID('x_sz_ref_role_FK_zone_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_role] DROP CONSTRAINT x_sz_ref_role_FK_zone_id
+END
+IF (OBJECT_ID('x_sz_ref_role_FK_role_id') IS NOT NULL)
+BEGIN
+    ALTER TABLE [dbo].[x_security_zone_ref_role] DROP CONSTRAINT x_sz_ref_role_FK_role_id
+END
+
 IF (OBJECT_ID('x_sz_ref_resource_FK_added_by_id') IS NOT NULL)
 BEGIN
     ALTER TABLE [dbo].[x_security_zone_ref_resource] DROP CONSTRAINT x_sz_ref_resource_FK_added_by_id
@@ -836,6 +853,10 @@ END
 IF (OBJECT_ID('x_security_zone_ref_user') IS NOT NULL)
 BEGIN
     DROP TABLE [dbo].[x_security_zone_ref_user]
+END
+IF (OBJECT_ID('x_security_zone_ref_role') IS NOT NULL)
+BEGIN
+    DROP TABLE [dbo].[x_security_zone_ref_role]
 END
 IF (OBJECT_ID('x_security_zone_ref_tag_srvc') IS NOT NULL)
 BEGIN
@@ -2600,6 +2621,33 @@ GO
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
 SET ANSI_PADDING ON
+CREATE TABLE [dbo].[x_security_zone_ref_role](
+        [id] [bigint] IDENTITY(1,1) NOT NULL,
+        [create_time] [datetime2] DEFAULT NULL NULL,
+        [update_time] [datetime2] DEFAULT NULL NULL,
+        [added_by_id] [bigint] DEFAULT NULL NULL,
+        [upd_by_id] [bigint] DEFAULT NULL NULL,
+        [zone_id] [bigint] DEFAULT NULL NULL,
+        [role_id] [bigint] DEFAULT NULL NULL,
+        [role_name] [nvarchar](767) DEFAULT NULL NULL
+        PRIMARY KEY CLUSTERED
+(
+        [id] ASC
+)WITH (PAD_INDEX = OFF, STATISTICS_NORECOMPUTE = OFF, IGNORE_DUP_KEY = OFF, ALLOW_ROW_LOCKS = ON, ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+) ON [PRIMARY]
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_role] WITH CHECK ADD CONSTRAINT [x_sz_ref_role_FK_added_by_id] FOREIGN KEY([added_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_role] WITH CHECK ADD CONSTRAINT [x_sz_ref_role_FK_upd_by_id] FOREIGN KEY([upd_by_id]) REFERENCES [dbo].[x_portal_user] ([id])
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_role] WITH CHECK ADD CONSTRAINT [x_sz_ref_role_FK_zone_id] FOREIGN KEY([zone_id]) REFERENCES [dbo].[x_security_zone] ([id])
+GO
+ALTER TABLE [dbo].[x_security_zone_ref_role] WITH CHECK ADD CONSTRAINT [x_sz_ref_role_FK_role_id] FOREIGN KEY([role_id]) REFERENCES [dbo].[x_role] ([id])
+GO
+
+SET ANSI_NULLS ON
+SET QUOTED_IDENTIFIER ON
+SET ANSI_PADDING ON
 
 CREATE TABLE [dbo].[x_tag_change_log] (
 [id] [bigint] IDENTITY(1,1) NOT NULL,
@@ -3923,6 +3971,10 @@ CREATE TABLE [dbo].[x_rms_service_resource](
 CONSTRAINT [x_rms_service_resource$x_service_res_UK_guid] UNIQUE NONCLUSTERED
 (
         [guid] ASC
+)WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY],
+CONSTRAINT [x_rms_service_resource_UK_resource_signature] UNIQUE NONCLUSTERED
+(
+        [resource_signature] ASC
 )WITH (PAD_INDEX = OFF,STATISTICS_NORECOMPUTE = OFF,IGNORE_DUP_KEY = OFF,ALLOW_ROW_LOCKS = ON,ALLOW_PAGE_LOCKS = ON) ON [PRIMARY]
 ) ON [PRIMARY]
 GO
@@ -3934,13 +3986,6 @@ CREATE NONCLUSTERED INDEX [x_rms_service_resource_IDX_service_id] ON [x_rms_serv
 )
 WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
 GO
-CREATE NONCLUSTERED INDEX [x_rms_service_resource_IDX_resource_signature] ON [x_rms_service_resource]
-(
-   [resource_signature] ASC
-)
-WITH (SORT_IN_TEMPDB = OFF, DROP_EXISTING = OFF, IGNORE_DUP_KEY = OFF, ONLINE = OFF) ON [PRIMARY]
-GO
-
 
 SET ANSI_NULLS ON
 SET QUOTED_IDENTIFIER ON
@@ -4115,6 +4160,8 @@ INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('066',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Reports'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);
 INSERT INTO x_user_module_perm (user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (dbo.getXportalUIdByLoginId('admin'),dbo.getModulesIdByName('Resource Based Policies'),CURRENT_TIMESTAMP,CURRENT_TIMESTAMP,dbo.getXportalUIdByLoginId('admin'),dbo.getXportalUIdByLoginId('admin'),1);

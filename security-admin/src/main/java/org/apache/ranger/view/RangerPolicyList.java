@@ -56,6 +56,10 @@ public class RangerPolicyList extends VList {
 		this.policies = policies;
 	}
 
+	public <T> void setGenericPolicies(List<T> policies) {
+		this.policies = (List<RangerPolicy>) policies;
+	}
+
 	@Override
 	public int getListSize() {
 		if (policies != null) {

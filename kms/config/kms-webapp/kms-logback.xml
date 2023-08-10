@@ -47,7 +47,7 @@
     <File>${kms.log.dir}/ranger-kms-${hostname}-${user}.log</File>
     <Append>true</Append>
     <encoder>
-      <pattern>%d{ISO8601} %-5p %c{1} - %m%n</pattern>
+      <pattern>%d{ISO8601} %-5p [%t] %c{1} \(%F:%L\) - %m%n</pattern>
     </encoder>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <fileNamePattern>${kms.log.dir}/ranger-kms-${hostname}-${user}.log.%d{yyyy-MM-dd}</fileNamePattern>

@@ -20,69 +20,140 @@
 package org.apache.ranger.plugin.util;
 
 
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.script.ScriptEngine;
-import javax.script.ScriptEngineFactory;
-import javax.script.ScriptEngineManager;
-import java.util.List;
+
 
 public class ScriptEngineUtil {
     private static final Logger LOG = LoggerFactory.getLogger(RangerScriptConditionEvaluator.class);
 
+    private static volatile ScriptEngineCreator SCRIPT_ENGINE_CREATOR             = null;
+    private static volatile boolean             SCRIPT_ENGINE_CREATOR_INITIALIZED = false;
 
+    // for backward compatibility with any plugin that might use this API
     public static ScriptEngine createScriptEngine(String engineName, String serviceType) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + ")");
+            LOG.debug("ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + "): engineName ignored");
         }
-        ScriptEngine ret = null;
 
-        try {
-            ScriptEngineManager manager = new ScriptEngineManager();
+        return createScriptEngine(serviceType);
+    }
 
-            if (LOG.isDebugEnabled()) {
-                List<ScriptEngineFactory> factories = manager.getEngineFactories();
+    public static ScriptEngine createScriptEngine(String serviceType) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> ScriptEngineUtil.createScriptEngine(serviceType=" + serviceType + ")");
+        }
 
-                if (CollectionUtils.isEmpty(factories)) {
-                    LOG.debug("List of scriptEngineFactories is empty!!");
-                } else {
-                    for (ScriptEngineFactory factory : factories) {
-                        LOG.debug("engineName=" + factory.getEngineName() + ", language=" + factory.getLanguageName());
+        ScriptEngine        ret     = null;
+        ScriptEngineCreator creator = getScriptEngineCreator(serviceType);
+
+        if (creator != null) {
+            ret = creator.getScriptEngine(null);
+
+            if (ret == null) {
+                ClassLoader pluginClsLoader = getPrevActiveClassLoader(serviceType);
+
+                if (pluginClsLoader != null) {
+                    ret = creator.getScriptEngine(pluginClsLoader);
+                }
+            }
+        } else {
+            LOG.info("createScriptEngine(serviceType={}): no engine creator found", serviceType);
+        }
+
+        if (ret == null) {
+            LOG.warn("createScriptEngine(serviceType={}): failed to create script engine", serviceType);
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== ScriptEngineUtil.createScriptEngine(serviceType={}): ret={}", serviceType, ret);
+        }
+
+        return ret;
+    }
+
+    private static ScriptEngineCreator getScriptEngineCreator(String serviceType) {
+        boolean isInitialized = SCRIPT_ENGINE_CREATOR_INITIALIZED;
+
+        if (!isInitialized) {
+            synchronized (ScriptEngineUtil.class) {
+                isInitialized = SCRIPT_ENGINE_CREATOR_INITIALIZED;
+
+                if (!isInitialized) {
+                    initScriptEngineCreator(serviceType);
+                }
+
+                SCRIPT_ENGINE_CREATOR_INITIALIZED = true;
+            }
+        }
+
+        return SCRIPT_ENGINE_CREATOR;
+    }
+
+    private static void initScriptEngineCreator(String serviceType) {
+        String[] engineCreators = new String[] { "org.apache.ranger.plugin.util.NashornScriptEngineCreator",
+                                                 "org.apache.ranger.plugin.util.GraalScriptEngineCreator",
+                                                 "org.apache.ranger.plugin.util.JavaScriptEngineCreator"
+                                               };
+
+        for (String creatorClsName : engineCreators) {
+            ScriptEngineCreator creator = null;
+
+            try {
+                Class<ScriptEngineCreator> creatorClass = (Class<ScriptEngineCreator>) Class.forName(creatorClsName);
+
+                creator = creatorClass.newInstance();
+            } catch (Throwable t) {
+                LOG.warn("initScriptEngineCreator(): failed to instantiate engine creator {}", creatorClsName, t);
+            }
+
+            if (creator == null) {
+                continue;
+            }
+
+            ScriptEngine engine = creator.getScriptEngine(null);
+
+            if (engine == null) {
+                ClassLoader prevActiveClassLoader = getPrevActiveClassLoader(serviceType);
+
+                if (prevActiveClassLoader != null) {
+                    LOG.debug("initScriptEngineCreator(): trying to create engine using plugin-class-loader for service-type {}", serviceType);
+
+                    engine = creator.getScriptEngine(prevActiveClassLoader);
+
+                    if (engine == null) {
+                        LOG.warn("initScriptEngineCreator(): failed to create engine using plugin-class-loader by creator {}", creatorClsName);
                     }
                 }
             }
 
-            ret = manager.getEngineByName(engineName);
-        } catch (Throwable exp) {
-            LOG.error("RangerScriptConditionEvaluator.init() failed", exp);
-        }
+            if (engine != null) {
+                SCRIPT_ENGINE_CREATOR = creator;
 
-        LOG.debug((ret == null ? " Failed to create " : " Created ") + "Script Engine '" + engineName + "' in a default manner.");
-
-        if (ret == null) {
-            LOG.warn("Will try to get script-engine from plugin-class-loader for service-type:[" + serviceType + "]");
-
-            RangerPluginClassLoader pluginClassLoader;
-
-            try {
-                pluginClassLoader = RangerPluginClassLoader.getInstance(serviceType, null);
-
-                if (pluginClassLoader != null) {
-                    ret = pluginClassLoader.getScriptEngine(engineName);
-                } else {
-                    LOG.error("Cannot get script-engine from null pluginClassLoader");
-                }
-            } catch (Throwable exp) {
-                LOG.error("RangerScriptConditionEvaluator.init() failed", exp);
+                break;
             }
         }
-        if (LOG.isDebugEnabled()) {
-            LOG.debug("<== ScriptEngineUtil.createScriptEngine(engineName=" + engineName + ", serviceType=" + serviceType + ") : ret=" + ret);
+    }
+
+    private static ClassLoader getPrevActiveClassLoader(String serviceType) {
+        ClassLoader ret = null;
+
+        try {
+            RangerPluginClassLoader pluginClassLoader = RangerPluginClassLoader.getInstance(serviceType, null);
+
+            if (pluginClassLoader != null) {
+                ret = pluginClassLoader.getPrevActiveClassLoader();
+            } else {
+                LOG.debug("Cannot get plugin-class-loader for serviceType {}", serviceType);
+            }
+        } catch (Throwable excp) {
+            LOG.debug("Failed to get plugin-class-loader for serviceType {}", serviceType, excp);
         }
+
         return ret;
     }
 }

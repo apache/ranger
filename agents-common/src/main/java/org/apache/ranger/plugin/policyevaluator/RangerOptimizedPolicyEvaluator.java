@@ -257,6 +257,12 @@ public class RangerOptimizedPolicyEvaluator extends RangerDefaultPolicyEvaluator
                 ret = true;
             } else {
                ret = accessPerms.contains(request.getAccessType());
+
+               if (!ret) {
+                   Set<String> allRequestedAccesses = RangerAccessRequestUtil.getAllRequestedAccessTypes(request);
+                   ret = CollectionUtils.containsAny(accessPerms, allRequestedAccesses);
+               }
+
                if (!ret) {
                    if (request.isAccessTypeDelegatedAdmin()) {
                        ret = delegateAdmin;

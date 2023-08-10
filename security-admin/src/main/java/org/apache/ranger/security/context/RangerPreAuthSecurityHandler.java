@@ -123,4 +123,15 @@ public class RangerPreAuthSecurityHandler {
         gjResponse.setMsgDesc("User is not allowed to access the API");
         throw restErrorUtil.generateRESTException(gjResponse);
 	}
+
+	public boolean isAdminRole(){
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		if (userSession != null && userSession.isUserAdmin()) {
+			return true;
+		}
+		VXResponse gjResponse = new VXResponse();
+		gjResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN); // assert user is authenticated.
+		gjResponse.setMsgDesc("User is not allowed to access the API");
+		throw restErrorUtil.generateRESTException(gjResponse);
+	}
 }

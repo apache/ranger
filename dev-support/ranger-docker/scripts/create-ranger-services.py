@@ -7,12 +7,10 @@ ranger_client = RangerClient('http://ranger:6080', ('admin', 'rangerR0cks!'))
 
 def service_not_exists(service):
     try:
-        res = ranger_client.get_service(service.name)
-        if res is None:
-            return 1
+        svc = ranger_client.get_service(service.name)
     except JSONDecodeError:
         return 1
-    return 0
+    return 0 if svc is not None else 1
 
 
 hdfs = RangerService({'name': 'dev_hdfs', 'type': 'hdfs',
@@ -24,7 +22,7 @@ hdfs = RangerService({'name': 'dev_hdfs', 'type': 'hdfs',
 hive = RangerService({'name': 'dev_hive', 'type': 'hive',
                       'configs': {'username': 'hive', 'password': 'hive',
                                   'jdbc.driverClassName': 'org.apache.hive.jdbc.HiveDriver',
-                                  'jdbc.url': 'jdfb:hive2://ranger-hadoop:10000',
+                                  'jdbc.url': 'jdbc:hive2://ranger-hive:10000',
                                   'hadoop.security.authorization': 'true'}})
 
 kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
@@ -32,7 +30,7 @@ kafka = RangerService({'name': 'dev_kafka', 'type': 'kafka',
                                    'zookeeper.connect': 'ranger-zk.example.com:2181'}})
 
 knox = RangerService({'name': 'dev_knox', 'type': 'knox',
-                      'configs': {'username': 'knox', 'password': 'knox', 'knox.url': 'http://ranger-hadoop:8088'}})
+                      'configs': {'username': 'knox', 'password': 'knox', 'knox.url': 'https://ranger-knox:8443'}})
 
 yarn = RangerService({'name': 'dev_yarn', 'type': 'yarn',
                       'configs': {'username': 'yarn', 'password': 'yarn',
@@ -43,9 +41,13 @@ hbase = RangerService({'name': 'dev_hbase', 'type': 'hbase',
                                    'hadoop.security.authentication': 'simple',
                                    'hbase.security.authentication': 'simple',
                                    'hadoop.security.authorization': 'true',
-                                   'hbase.zookeeper.property.clientPort': '16181',
-                                   'hbase.zookeeper.quorum': 'ranger-hbase',
+                                   'hbase.zookeeper.property.clientPort': '2181',
+                                   'hbase.zookeeper.quorum': 'ranger-zk',
                                    'zookeeper.znode.parent': '/hbase'}})
+
+kms = RangerService({'name': 'dev_kms', 'type': 'kms',
+                      'configs': {'username': 'keyadmin', 'password': 'rangerR0cks!',
+                                  'provider': 'http://ranger-kms:9292'}})
 
 if service_not_exists(hdfs):
     ranger_client.create_service(hdfs)
@@ -65,3 +67,6 @@ if service_not_exists(kafka):
 if service_not_exists(knox):
     ranger_client.create_service(knox)
     print('Knox service created!')
+if service_not_exists(kms):
+    ranger_client.create_service(kms)
+    print('KMS service created!')

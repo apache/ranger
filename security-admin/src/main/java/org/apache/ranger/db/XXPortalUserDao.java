@@ -21,6 +21,10 @@ package org.apache.ranger.db;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.Objects;
 
 import javax.persistence.NoResultException;
 
@@ -174,5 +178,21 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 		} catch (NoResultException e) {
 			return new ArrayList<>();
 		}
-	}
+  }
+
+  @SuppressWarnings("unchecked")
+	public Map<String, Long> getCountByUserRole() {
+		Map<String, Long> ret = Collections.emptyMap();
+		List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXPortalUser.getCountByUserRole").getResultList();
+		if (rows != null) {
+			ret = new HashMap<>();
+			for (Object[] row : rows) {
+				if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
+					// since group by query will not return empty count field, no need to check
+					ret.put((String) row[0], (Long) row[1]);
+				}
+			}
+		}
+		return ret;
+
 }

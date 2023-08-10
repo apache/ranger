@@ -38,6 +38,11 @@ public abstract class BaseAuditHandler implements AuditHandler {
 
 	static final String AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP = "xasecure.audit.log.failure.report.min.interval.ms";
 
+	static final String  AUDIT_LOG_STATUS_LOG_ENABLED              = "xasecure.audit.log.status.log.enabled";
+	static final String  AUDIT_LOG_STATUS_LOG_INTERVAL_SEC         = "xasecure.audit.log.status.log.interval.sec";
+	static final boolean DEFAULT_AUDIT_LOG_STATUS_LOG_ENABLED      = false;
+	static final long    DEFAULT_AUDIT_LOG_STATUS_LOG_INTERVAL_SEC = 5 * 60; // 5 minutes
+
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE                  = "xasecure.policymgr.clientssl.keystore";
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_TYPE             = "xasecure.policymgr.clientssl.keystore.type";
 	public static final String RANGER_POLICYMGR_CLIENT_KEY_FILE_CREDENTIAL       = "xasecure.policymgr.clientssl.keystore.credential.file";
@@ -52,7 +57,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE					 = KeyManagerFactory.getDefaultAlgorithm();
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE				 = TrustManagerFactory.getDefaultAlgorithm();
-	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE					     = "TLS";
+	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE					     = "TLSv1.2";
 
 	public static final String PROP_CONFIG = "config";
 
@@ -90,8 +95,10 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	long lastStashedCount = 0;
 	long lastDeferredCount = 0;
 
-	long lastStatusLogTime = System.currentTimeMillis();
-	long statusLogIntervalMS = 1 * 60 * 1000;
+	boolean statusLogEnabled    = DEFAULT_AUDIT_LOG_STATUS_LOG_ENABLED;
+	long    statusLogIntervalMS = DEFAULT_AUDIT_LOG_STATUS_LOG_INTERVAL_SEC * 1000;
+	long    lastStatusLogTime   = System.currentTimeMillis();
+	long    nextStatusLogTime   = lastStatusLogTime + statusLogIntervalMS;
 
 	protected Properties props = null;
 	protected Map<String, String> configProps = new HashMap<String, String>();
@@ -137,6 +144,19 @@ public abstract class BaseAuditHandler implements AuditHandler {
 
 		mLogFailureReportMinIntervalInMs = MiscUtil.getIntProperty(props,
 				AUDIT_LOG_FAILURE_REPORT_MIN_INTERVAL_PROP, 60 * 1000);
+
+		boolean globalStatusLogEnabled     = MiscUtil.getBooleanProperty(props, AUDIT_LOG_STATUS_LOG_ENABLED, DEFAULT_AUDIT_LOG_STATUS_LOG_ENABLED);
+		long    globalStatusLogIntervalSec = MiscUtil.getLongProperty(props, AUDIT_LOG_STATUS_LOG_INTERVAL_SEC, DEFAULT_AUDIT_LOG_STATUS_LOG_INTERVAL_SEC);
+
+		statusLogEnabled    = MiscUtil.getBooleanProperty(props, basePropertyName + ".status.log.enabled", globalStatusLogEnabled);
+		statusLogIntervalMS = MiscUtil.getLongProperty(props, basePropertyName + ".status.log.interval.sec", globalStatusLogIntervalSec) * 1000;
+
+		nextStatusLogTime = lastStatusLogTime + statusLogIntervalMS;
+
+		LOG.info(AUDIT_LOG_STATUS_LOG_ENABLED + "=" + globalStatusLogEnabled);
+		LOG.info(AUDIT_LOG_STATUS_LOG_INTERVAL_SEC + "=" + globalStatusLogIntervalSec);
+		LOG.info(basePropertyName + ".status.log.enabled=" + statusLogEnabled);
+		LOG.info(basePropertyName + ".status.log.interval.sec=" + (statusLogIntervalMS / 1000));
 
 		String configPropsNamePrefix = propPrefix + "." + PROP_CONFIG + ".";
 		for (Object propNameObj : props.keySet()) {
@@ -275,9 +295,10 @@ public abstract class BaseAuditHandler implements AuditHandler {
 		return lastDeferredCount;
 	}
 
+	public boolean isStatusLogEnabled() { return statusLogEnabled; }
+
 	public void logStatusIfRequired() {
-		long currTime = System.currentTimeMillis();
-		if ((currTime - lastStatusLogTime) > statusLogIntervalMS) {
+		if (System.currentTimeMillis() > nextStatusLogTime) {
 			logStatus();
 		}
 	}
@@ -285,9 +306,10 @@ public abstract class BaseAuditHandler implements AuditHandler {
 	public void logStatus() {
 		try {
 			long currTime = System.currentTimeMillis();
-
 			long diffTime = currTime - lastStatusLogTime;
+
 			lastStatusLogTime = currTime;
+			nextStatusLogTime = currTime + statusLogIntervalMS;
 
 			long diffCount = totalCount - lastIntervalCount;
 			long diffSuccess = totalSuccessCount - lastIntervalSuccessCount;
@@ -306,7 +328,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 			lastStashedCount = totalStashedCount;
 			lastDeferredCount = totalDeferredCount;
 
-			if (LOG.isDebugEnabled()) {
+			if (statusLogEnabled) {
 				String finalPath = "";
 				String tFinalPath = getFinalPath();
 				if (!getName().equals(tFinalPath)) {
@@ -336,7 +358,7 @@ public abstract class BaseAuditHandler implements AuditHandler {
 						: "")
 						+ (totalDeferredCount > 0 ? (", totalDeferredCount=" + totalDeferredCount)
 						: "");
-				LOG.debug(msg);
+				LOG.info(msg);
 			}
 		} catch (Throwable t) {
 			LOG.error("Error while printing stats. auditProvider=" + getName());

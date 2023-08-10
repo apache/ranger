@@ -31,6 +31,7 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
+import org.apache.ranger.tagsync.ha.TagSyncHAInitializerImpl;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.model.TagSource;
 import org.slf4j.Logger;
@@ -52,6 +53,7 @@ public class TagSynchronizer {
 
 	private final Object shutdownNotifier = new Object();
 	private volatile boolean isShutdownInProgress = false;
+	private TagSyncHAInitializerImpl tagSyncHAinitializerImpl = null;
 
 	public static void main(String[] args) {
 		TagSynchronizer tagSynchronizer = new TagSynchronizer();
@@ -63,16 +65,23 @@ public class TagSynchronizer {
 		tagSynchronizer.setProperties(props);
 
 		boolean tagSynchronizerInitialized = tagSynchronizer.initialize();
+		tagSynchronizer.tagSyncHAinitializerImpl = TagSyncHAInitializerImpl.getInstance(config);
 
 		if (tagSynchronizerInitialized) {
 			try {
 				tagSynchronizer.run();
 			} catch (Throwable t) {
 				LOG.error("main thread caught exception..:", t);
+				if (tagSynchronizer.tagSyncHAinitializerImpl != null) {
+					tagSynchronizer.tagSyncHAinitializerImpl.stop();
+				}
 				System.exit(1);
 			}
 		} else {
 			LOG.error("TagSynchronizer failed to initialize correctly, exiting..");
+			if (tagSynchronizer.tagSyncHAinitializerImpl != null) {
+				tagSynchronizer.tagSyncHAinitializerImpl.stop();
+			}
 			System.exit(1);
 		}
 

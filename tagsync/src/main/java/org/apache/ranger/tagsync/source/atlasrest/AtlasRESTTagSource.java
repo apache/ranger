@@ -189,15 +189,23 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> AtlasRESTTagSource.run()");
         }
-        while (true) {
-            try {
-                synchUp();
+            while (true) {
+                try {
+                    if (TagSyncConfig.isTagSyncServiceActive()) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("==> AtlasRESTTagSource.run() is running as server is Active");
+                        }
+                        synchUp();
+                    }else{
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("==> This server is running passive mode");
+                        }
+                    }
+                    LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
 
-                LOG.debug("Sleeping for [" + sleepTimeBetweenCycleInMillis + "] milliSeconds");
+                    Thread.sleep(sleepTimeBetweenCycleInMillis);
 
-                Thread.sleep(sleepTimeBetweenCycleInMillis);
-
-            } catch (InterruptedException exception) {
+                } catch (InterruptedException exception) {
                 LOG.error("Interrupted..: ", exception);
                 return;
             } catch (Exception e) {
@@ -208,7 +216,6 @@ public class AtlasRESTTagSource extends AbstractTagSource implements Runnable {
     }
 
 	public void synchUp() throws Exception {
-
 		List<RangerAtlasEntityWithTags> rangerAtlasEntities = getAtlasActiveEntities();
 
 		if (CollectionUtils.isNotEmpty(rangerAtlasEntities)) {

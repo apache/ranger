@@ -135,5 +135,61 @@
         <value>cl2_hdfs</value>
     </property>
     -->
-
+	<!-- HA property -->
+	<property>
+		<name>ranger.service.name</name>
+		<value>ranger-tagsync</value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.enabled</name>
+		<value>false</value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.zookeeper.zkroot</name>
+		<value>/ranger-tagsync</value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.zookeeper.connect</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.ids</name>
+		<value>id1,id2</value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.address.id1</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.address.id2</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.zookeeper.retry.sleeptime.ms</name>
+		<value>1000</value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.zookeeper.session.timeout.ms</name>
+		<value>20000</value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.zookeeper.num.retries</name>
+		<value>3</value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.zookeeper.acl</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.zookeeper.auth</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.http.port</name>
+		<value></value>
+	</property>
+	<property>
+		<name>ranger-tagsync.server.ha.https.port</name>
+		<value></value>
+	</property>
 </configuration>

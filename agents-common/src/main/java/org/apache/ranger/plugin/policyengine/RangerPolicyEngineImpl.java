@@ -318,7 +318,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 						for (RangerPolicyResourceEvaluator resourceEvaluator : evaluator.getResourceEvaluators()) {
 							RangerPolicyResourceMatcher matcher = resourceEvaluator.getPolicyResourceMatcher();
 
-							matchType = matcher.getMatchType(request.getResource(), request.getContext());
+							matchType = matcher.getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
 							isMatched = isMatch(matchType, request.getResourceMatchingScope());
 
 							if (isMatched) {
@@ -326,7 +326,7 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 
 								break;
 							} else if (matcher.getNeedsDynamicEval() && !isConditionalMatch) {
-								MatchType dynWildCardMatch = resourceEvaluator.getMacrosReplaceWithWildcardMatcher(policyEngine).getMatchType(request.getResource(), request.getContext());
+								MatchType dynWildCardMatch = resourceEvaluator.getMacrosReplaceWithWildcardMatcher(policyEngine).getMatchType(request.getResource(), request.getResourceElementMatchingScopes(), request.getContext());
 
 								isConditionalMatch = isMatch(dynWildCardMatch, request.getResourceMatchingScope());
 							}
@@ -599,8 +599,12 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		return ret;
 	}
 
-	PolicyEngine getPolicyEngine() {
+	public PolicyEngine getPolicyEngine() {
 		return policyEngine;
+	}
+
+	public RangerAccessRequestProcessor getRequestProcessor() {
+		return requestProcessor;
 	}
 
 	private RangerPolicyEngineImpl(final PolicyEngine policyEngine, RangerPolicyEngineImpl other) {
@@ -692,41 +696,17 @@ public class RangerPolicyEngineImpl implements RangerPolicyEngine {
 		final RangerAccessResult ret;
 
 		if (request.isAccessTypeAny()) {
-			RangerAccessResult denyResult  = null;
-			RangerAccessResult allowResult = null;
-
-			ret = createAccessResult(request, policyType);
-
 			List<RangerServiceDef.RangerAccessTypeDef> allAccessDefs = getServiceDef().getAccessTypes();
 
+			Set<String> allRequestedAccesses = new HashSet<>();
 			for (RangerServiceDef.RangerAccessTypeDef accessTypeDef : allAccessDefs) {
-				RangerAccessRequestImpl requestForOneAccessType = new RangerAccessRequestImpl(request);
-				RangerAccessRequestUtil.setIsAnyAccessInContext(requestForOneAccessType.getContext(), Boolean.TRUE);
-
-				requestForOneAccessType.setAccessType(accessTypeDef.getName());
-
-				RangerAccessResult resultForOneAccessType = evaluatePoliciesForOneAccessTypeNoAudit(requestForOneAccessType, policyType, zoneName, policyRepository, tagPolicyRepository);
-
-				ret.setAuditResultFrom(resultForOneAccessType);
-
-				if (resultForOneAccessType.getIsAccessDetermined()) {
-					if (resultForOneAccessType.getIsAllowed()) {
-						allowResult = resultForOneAccessType;
-						break;
-					} else if (denyResult == null) {
-						denyResult = resultForOneAccessType;
-					}
-				}
+				String requestedAccess = accessTypeDef.getName();
+				allRequestedAccesses.add(requestedAccess);
 			}
-
-			if (allowResult != null) {
-				ret.setAccessResultFrom(allowResult);
-			} else if (denyResult != null) {
-				ret.setAccessResultFrom(denyResult);
-			}
-		} else {
-			ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
+			RangerAccessRequestUtil.setAllRequestedAccessTypes(request.getContext(), allRequestedAccesses, Boolean.TRUE);
 		}
+
+		ret = evaluatePoliciesForOneAccessTypeNoAudit(request, policyType, zoneName, policyRepository, tagPolicyRepository);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== RangerPolicyEngineImpl.evaluatePoliciesNoAudit(" + request + ", policyType =" + policyType + ", zoneName=" + zoneName + "): " + ret);

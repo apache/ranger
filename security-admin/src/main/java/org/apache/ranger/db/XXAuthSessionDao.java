@@ -19,18 +19,23 @@
 
  package org.apache.ranger.db;
 
-import java.util.Date;
-import java.util.List;
+ import java.util.Date;
+ import java.util.List;
+ import java.util.concurrent.TimeUnit;
 
 import javax.persistence.NoResultException;
 
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXAuthSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
+
+	private static final Logger LOG = LoggerFactory.getLogger(XXAuthSessionDao.class);
 
     public XXAuthSessionDao( RangerDaoManagerBase daoManager ) {
 		super(daoManager);
@@ -75,6 +80,29 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 				.setParameter("authWindowStartTime", authWindowStartTime)
 				.getSingleResult();
 	}
+	public List<Long> getAuthSessionIdsByUserId(Long userId) {
+		if(userId == null) {
+			return null;
+		}
 
+		return getEntityManager()
+			.createNamedQuery("XXAuthSession.findIdsByUserId", Long.class)
+			.setParameter("userId", userId)
+			.getResultList();
+	}
+
+	public void deleteAuthSessionsByIds(List<Long> ids){
+		batchDeleteByIds("XXAuthSession.deleteByIds", ids, "ids");
+	}
+
+    public long deleteOlderThan(int olderThanInDays) {
+        Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanInDays));
+        LOG.info("Deleting x_auth_sess records that are older than " + olderThanInDays + " days, that is, older than " + since);
+
+        long ret = getEntityManager().createNamedQuery("XXAuthSession.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
+
+        LOG.info("Deleted " + ret + " x_auth_sess records");
+        return ret;
+    }
 }
 

@@ -37,7 +37,10 @@ define(function(require){
 		 */
 		initialize: function() {
 			this.modelName = 'RangerServiceDef';
-			this.bindErrorEvents();
+			this.bind("error", function(e, error){
+				var XAUtils = require('utils/XAUtils');
+				XAUtils.defaultErrorHandler(undefined, error, e);
+			});
 		},
 		/**
 		 * @function schema

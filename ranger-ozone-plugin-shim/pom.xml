@@ -78,8 +78,13 @@
             <version>${httpcomponents.httpcore.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-ozone-common</artifactId>
+            <groupId>org.bouncycastle</groupId>
+            <artifactId>bcpkix-jdk15on</artifactId>
+            <version>${org.bouncycastle.bcpkix-jdk15on}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.ozone</groupId>
+            <artifactId>ozone-common</artifactId>
 	        <version>${ozone.version}</version>
 	        <exclusions>
                 <exclusion>
@@ -89,10 +94,14 @@
             </exclusions>
         </dependency>
         <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-hdds-common</artifactId>
+            <groupId>org.apache.ozone</groupId>
+            <artifactId>hdds-common</artifactId>
 	    <version>${ozone.version}</version>
             <exclusions>
+                <exclusion>
+                    <groupId>org.bouncycastle</groupId>
+                    <artifactId>*</artifactId>
+                </exclusion>
                 <exclusion>
                     <groupId>org.apache.logging.log4j</groupId>
                     <artifactId>*</artifactId>

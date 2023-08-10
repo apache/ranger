@@ -257,6 +257,7 @@ call spdroptable('x_service_config_def');
 call spdroptable('x_policy');
 call spdroptable('x_security_zone_ref_group');
 call spdroptable('x_security_zone_ref_user');
+call spdroptable('x_security_zone_ref_role');
 call spdroptable('x_security_zone_ref_tag_srvc');
 call spdroptable('x_security_zone_ref_service');
 call spdroptable('x_ranger_global_state');
@@ -1641,6 +1642,23 @@ CONSTRAINT x_sz_ref_res_FK_res_def_id FOREIGN KEY (resource_def_id) REFERENCES x
 );
 commit;
 
+CREATE TABLE x_security_zone_ref_role (
+id NUMBER(20) NOT NULL,
+create_time DATE DEFAULT NULL NULL,
+update_time DATE DEFAULT NULL NULL,
+added_by_id NUMBER(20) DEFAULT NULL NULL,
+upd_by_id NUMBER(20) DEFAULT NULL NULL,
+zone_id NUMBER(20)  DEFAULT NULL NULL,
+role_id NUMBER(20)  DEFAULT NULL NULL,
+role_name varchar(255) DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_sz_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_ref_role_FK_upd_by_id FOREIGN KEY (upd_by_id) REFERENCES x_portal_user (id),
+CONSTRAINT x_sz_ref_role_FK_zone_id FOREIGN KEY (zone_id) REFERENCES x_security_zone (id),
+CONSTRAINT x_sz_ref_role_FK_role_id FOREIGN KEY (role_id) REFERENCES x_role (id)
+);
+commit;
+
 CREATE VIEW vx_trx_log AS select x_trx_log.id AS id,x_trx_log.create_time AS create_time,x_trx_log.update_time AS update_time,x_trx_log.added_by_id AS added_by_id,x_trx_log.upd_by_id AS upd_by_id,x_trx_log.class_type AS class_type,x_trx_log.object_id AS object_id,x_trx_log.parent_object_id AS parent_object_id,x_trx_log.parent_object_class_type AS parent_object_class_type,x_trx_log.attr_name AS attr_name,x_trx_log.parent_object_name AS parent_object_name,x_trx_log.object_name AS object_name,x_trx_log.prev_val AS prev_val,x_trx_log.new_val AS new_val,x_trx_log.trx_id AS trx_id,x_trx_log.action AS action,x_trx_log.sess_id AS sess_id,x_trx_log.req_id AS req_id,x_trx_log.sess_type AS sess_type from x_trx_log  where id in(select min(x_trx_log.id) from x_trx_log group by x_trx_log.trx_id);
 commit;
 
@@ -1841,11 +1859,11 @@ is_enabled NUMBER(1) DEFAULT '1' NOT NULL,
 service_resource_elements_text CLOB DEFAULT NULL NULL,
 primary key (id),
 CONSTRAINT x_rms_service_res_UK_guid UNIQUE (guid),
+CONSTRAINT x_rms_svc_res_UK_res_sign UNIQUE (resource_signature),
 CONSTRAINT x_rms_svc_res_FK_service_id FOREIGN KEY (service_id) REFERENCES x_service (id)
 );
 
 CREATE INDEX x_rms_svc_res_IDX_service_id ON x_rms_service_resource(service_id);
-CREATE INDEX x_rms_svc_res_IDX_res_sign ON x_rms_service_resource(resource_signature);
 
 CREATE TABLE x_rms_notification (
 id NUMBER(20) NOT NULL,
@@ -1973,6 +1991,8 @@ INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,act
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '058',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '059',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '060',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '065',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
+INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, '066',sys_extract_utc(systimestamp),'Ranger 3.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 INSERT INTO x_db_version_h (id,version,inst_at,inst_by,updated_at,updated_by,active) VALUES (X_DB_VERSION_H_SEQ.nextval, 'DB_PATCHES',sys_extract_utc(systimestamp),'Ranger 1.0.0',sys_extract_utc(systimestamp),'localhost','Y');
 
 INSERT INTO x_user_module_perm (id,user_id,module_id,create_time,update_time,added_by_id,upd_by_id,is_allowed) VALUES (X_USER_MODULE_PERM_SEQ.nextval,getXportalUIdByLoginId('admin'),getModulesIdByName('Reports'),sys_extract_utc(systimestamp),sys_extract_utc(systimestamp),getXportalUIdByLoginId('admin'),getXportalUIdByLoginId('admin'),1);

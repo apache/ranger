@@ -47,6 +47,8 @@ import org.apache.ranger.view.VXUserList;
 
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import javax.persistence.Query;
+
 
 public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 		extends AbstractBaseResourceService<T, V> {
@@ -227,6 +229,22 @@ public abstract class XUserServiceBase<T extends XXUser, V extends VXUser>
 
 		returnList.setVXUsers(xUserList);
 		return returnList;
+	}
+
+	/**
+	 * Searches the XUser table and gets the user ids matching the search criteria.
+	 */
+	public List<Long> searchXUsersForIds(SearchCriteria searchCriteria){
+		// construct the sort clause
+		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
+
+		// get only the column id from the table
+		String q = "SELECT obj.id FROM " + className + " obj ";
+
+		// construct the query object for retrieving the data
+		Query query = createQuery(q, sortClause, searchCriteria, searchFields, false);
+
+		return getDao().getIds(query);
 	}
 
 	public List<UserInfo> getUsers() {

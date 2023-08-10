@@ -52,9 +52,9 @@ public class AtlasTagSource extends AbstractTagSource {
 
 	public static final String TAGSYNC_ATLAS_PROPERTIES_FILE_NAME = "atlas-application.properties";
 
-	public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS = "atlas.kafka.bootstrap.servers";
-	public static final String TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT = "atlas.kafka.zookeeper.connect";
-	public static final String TAGSYNC_ATLAS_CONSUMER_GROUP = "atlas.kafka.entities.group.id";
+	public static final String TAGSYNC_ATLAS_KAFKA_ENDPOINTS      = "atlas.kafka.bootstrap.servers";
+	public static final String TAGSYNC_ATLAS_ZOOKEEPER_ENDPOINT   = "atlas.kafka.zookeeper.connect";
+	public static final String TAGSYNC_ATLAS_CONSUMER_GROUP       = "atlas.kafka.entities.group.id";
 
 	public static final int    MAX_WAIT_TIME_IN_MILLIS = 1000;
 
@@ -87,7 +87,7 @@ public class AtlasTagSource extends AbstractTagSource {
 					try {
 						inputStream.close();
 					} catch (IOException ioException) {
-						LOG.error("Cannot close Atlas application properties file, file-name:\" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME", ioException);
+						LOG.error("Cannot close Atlas application properties file, file-name:" + TAGSYNC_ATLAS_PROPERTIES_FILE_NAME, ioException);
 					}
 				}
 			} else {
@@ -168,11 +168,10 @@ public class AtlasTagSource extends AbstractTagSource {
 
 		private final List<RangerAtlasEntityWithTags>             atlasEntitiesWithTags = new ArrayList<>();
 		private final List<AtlasKafkaMessage<EntityNotification>> messages              = new ArrayList<>();
+		private       AtlasKafkaMessage<EntityNotification>       lastUnhandledMessage  = null;
 
-		private long    offsetOfLastMessageDeliveredToRanger = -1L;
 		private long    offsetOfLastMessageCommittedToKafka  = -1L;
-
-		private boolean isHandlingDeleteOps   = false;
+		private boolean isHandlingDeleteOps                  = false;
 
 		private ConsumerRunnable(NotificationConsumer<EntityNotification> consumer) {
 			this.consumer = consumer;
@@ -185,9 +184,12 @@ public class AtlasTagSource extends AbstractTagSource {
 			}
 
 			while (true) {
-
-				try {
-					List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
+				if (TagSyncConfig.isTagSyncServiceActive()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("==> ConsumerRunnable.run() is running as server is active");
+					}
+					try {
+						List<AtlasKafkaMessage<EntityNotification>> newMessages = consumer.receive(MAX_WAIT_TIME_IN_MILLIS);
 
 					if (newMessages.size() == 0) {
 						if (LOG.isDebugEnabled()) {
@@ -214,19 +216,19 @@ public class AtlasTagSource extends AbstractTagSource {
 
 									if (AtlasNotificationMapper.isNotificationHandled(notificationWrapper)) {
 
-										RangerAtlasEntityWithTags entityWithTags = new RangerAtlasEntityWithTags(notificationWrapper);
-
 										if ((notificationWrapper.getIsEntityDeleteOp() && !isHandlingDeleteOps) || (!notificationWrapper.getIsEntityDeleteOp() && isHandlingDeleteOps)) {
-											buildAndUploadServiceTags();
+											if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags)) {
+												buildAndUploadServiceTags();
+											}
 											isHandlingDeleteOps = !isHandlingDeleteOps;
 										}
 
-										atlasEntitiesWithTags.add(entityWithTags);
+										atlasEntitiesWithTags.add(new RangerAtlasEntityWithTags(notificationWrapper));
+										messages.add(message);
 									} else {
 										AtlasNotificationMapper.logUnhandledEntityNotification(notificationWrapper);
+										lastUnhandledMessage = message;
 									}
-
-									messages.add(message);
 								}
 							} else {
 								LOG.error("Null entityNotification received from Kafka!! Ignoring..");
@@ -235,6 +237,10 @@ public class AtlasTagSource extends AbstractTagSource {
 						if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags) && atlasEntitiesWithTags.size() >= maxBatchSize) {
 							buildAndUploadServiceTags();
 						}
+					}
+					if (lastUnhandledMessage != null) {
+						commitToKafka(lastUnhandledMessage);
+						lastUnhandledMessage = null;
 					}
 
 				} catch (Exception exception) {
@@ -248,6 +254,7 @@ public class AtlasTagSource extends AbstractTagSource {
 						return;
 					}
 				}
+			  }
 			}
 		}
 
@@ -256,77 +263,73 @@ public class AtlasTagSource extends AbstractTagSource {
 				LOG.debug("==> buildAndUploadServiceTags()");
 			}
 
-			commitToKafka();
+			if (CollectionUtils.isNotEmpty(atlasEntitiesWithTags) && CollectionUtils.isNotEmpty(messages)) {
 
-			Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processAtlasEntities(atlasEntitiesWithTags);
+				Map<String, ServiceTags> serviceTagsMap = AtlasNotificationMapper.processAtlasEntities(atlasEntitiesWithTags);
 
-			if (MapUtils.isNotEmpty(serviceTagsMap)) {
-				if (serviceTagsMap.size() != 1) {
-					LOG.warn("Unexpected!! Notifications for more than one service received by AtlasTagSource.. Service-Names:[" + serviceTagsMap.keySet() + "]");
-				}
-				for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
-					if (isHandlingDeleteOps) {
-						entry.getValue().setOp(ServiceTags.OP_DELETE);
-						entry.getValue().setTagDefinitions(Collections.EMPTY_MAP);
-						entry.getValue().setTags(Collections.EMPTY_MAP);
-					} else {
-						entry.getValue().setOp(ServiceTags.OP_ADD_OR_UPDATE);
+				if (MapUtils.isNotEmpty(serviceTagsMap)) {
+					if (serviceTagsMap.size() != 1) {
+						LOG.warn("Unexpected!! Notifications for more than one service received by AtlasTagSource.. Service-Names:[" + serviceTagsMap.keySet() + "]");
 					}
+					for (Map.Entry<String, ServiceTags> entry : serviceTagsMap.entrySet()) {
+						if (isHandlingDeleteOps) {
+							entry.getValue().setOp(ServiceTags.OP_DELETE);
+							entry.getValue().setTagDefinitions(Collections.EMPTY_MAP);
+							entry.getValue().setTags(Collections.EMPTY_MAP);
+						} else {
+							entry.getValue().setOp(ServiceTags.OP_ADD_OR_UPDATE);
+						}
 
-					if (LOG.isDebugEnabled()) {
-						Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
-						String serviceTagsString = gsonBuilder.toJson(entry.getValue());
+						if (LOG.isDebugEnabled()) {
+							Gson gsonBuilder = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").setPrettyPrinting().create();
+							String serviceTagsString = gsonBuilder.toJson(entry.getValue());
 
-						LOG.debug("serviceTags=" + serviceTagsString);
+							LOG.debug("serviceTags=" + serviceTagsString);
+						}
+						updateSink(entry.getValue());
 					}
-					updateSink(entry.getValue());
 				}
+
+				AtlasKafkaMessage<EntityNotification> latestMessageDeliveredToRanger       = messages.get(messages.size() - 1);
+				commitToKafka(latestMessageDeliveredToRanger);
+
+				atlasEntitiesWithTags.clear();
+				messages.clear();
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Completed processing batch of messages of size:[" + messages.size() + "] received from NotificationConsumer");
+				}
+
 			}
-
-			offsetOfLastMessageDeliveredToRanger = messages.get(messages.size()-1).getOffset();
-
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Completed processing batch of messages of size:[" + messages.size() + "] received from NotificationConsumer");
-			}
-
-			commitToKafka();
-
-			atlasEntitiesWithTags.clear();
-			messages.clear();
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("<== buildAndUploadServiceTags()");
 			}
 		}
 
-		private void commitToKafka() {
+		private void commitToKafka(AtlasKafkaMessage<EntityNotification> messageToCommit) {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("==> commitToKafka()");
+				LOG.debug("==> commitToKafka(" + messageToCommit + ")");
 			}
 
-			for (AtlasKafkaMessage<EntityNotification> message : messages) {
-				if (message.getOffset() > offsetOfLastMessageCommittedToKafka) {
-					if (message.getOffset() <= offsetOfLastMessageDeliveredToRanger) {
-						// Already delivered to Ranger
-						TopicPartition partition = new TopicPartition("ATLAS_ENTITIES", message.getPartition());
-						try {
-							if (LOG.isDebugEnabled()) {
-								LOG.debug("Committing message with offset:[" + message.getOffset() + "] to Kafka");
-							}
-							consumer.commit(partition, message.getOffset());
-							offsetOfLastMessageCommittedToKafka = message.getOffset();
-						} catch (Exception commitException) {
-							LOG.warn("Ranger tagsync already processed message at offset " + message.getOffset() + ". Ignoring failure in committing this message and continuing to process next message", commitException);
-							LOG.warn("This will cause Kafka to deliver this message:[" + message.getOffset() + "] repeatedly!! This may be unrecoverable error!!");
-						}
-					} else {
-						break;
+			long messageOffset = messageToCommit.getOffset();
+			int  partitionId   = messageToCommit.getPartition();
+
+			if (offsetOfLastMessageCommittedToKafka < messageOffset) {
+				TopicPartition partition = new TopicPartition(messageToCommit.getTopic(), partitionId);
+				try {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("Committing message with offset:[" + messageOffset + "] to Kafka");
 					}
+					consumer.commit(partition, messageOffset);
+					offsetOfLastMessageCommittedToKafka = messageOffset;
+				} catch (Exception commitException) {
+					LOG.warn("Ranger tagsync already processed message at offset " + messageOffset + ". Ignoring failure in committing message:[" + messageToCommit + "]", commitException);
 				}
 			}
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== commitToKafka()");
+				LOG.debug("<== commitToKafka(" + messageToCommit + ")");
 			}
 		}
 	}

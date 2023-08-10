@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.ranger-mysql
+      args:
+        - MARIADB_VERSION=${MARIADB_VERSION}
     image: ranger-mysql
     command: --default-authentication-plugin=mysql_native_password
     container_name: ranger-mysql

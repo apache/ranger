@@ -36,6 +36,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
+import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.ServiceUtil;
@@ -84,7 +85,9 @@ import org.apache.ranger.view.VXTrxLog;
 import org.apache.ranger.view.VXTrxLogList;
 import org.junit.Assert;
 import org.junit.FixMethodOrder;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
 import org.mockito.InjectMocks;
@@ -105,8 +108,8 @@ public class TestAssetREST {
 	@Mock
 	RangerSearchUtil searchUtil;
 
-        @Mock
-        RangerBizUtil xaBizUtil;
+	@Mock
+	RangerBizUtil xaBizUtil;
 
 	@Mock
 	XAssetService xAssetService;
@@ -142,6 +145,11 @@ public class TestAssetREST {
 
 	@InjectMocks
 	AssetREST assetREST = new AssetREST();
+
+	@Rule public ExpectedException thrown = ExpectedException.none();
+	@Mock RESTErrorUtil restErrorUtil;
+	@Mock WebApplicationException webApplicationException;
+
 
 	public void TestAssetRest() {
 
@@ -202,6 +210,7 @@ public class TestAssetREST {
 	private VXResource vxResource(Long id) {
 		VXResource vXResource = new VXResource();
 		vXResource.setName("HDFS_1-1-20150316062453");
+		vXResource.setId(id);
 		vXResource.setAssetId(id);
 		return vXResource;
 	}
@@ -453,14 +462,49 @@ public class TestAssetREST {
 		RangerPolicy rangerPolicy = rangerPolicy(Id);
 		RangerService rangerService = rangerService(Id);
 		Mockito.when(serviceREST.getService(vxResource.getAssetId())).thenReturn(rangerService);
-		Mockito.when(serviceREST.updatePolicy(rangerPolicy)).thenReturn(rangerPolicy);
+		Mockito.when(serviceREST.updatePolicy(rangerPolicy, Id)).thenReturn(rangerPolicy);
 		Mockito.when(serviceUtil.toRangerPolicy(vxResource, rangerService)).thenReturn(rangerPolicy);
 		Mockito.when(serviceUtil.toVXResource(rangerPolicy, rangerService)).thenReturn(vxResource);
-		VXResource actualvxResource = assetREST.updateXResource(vxResource);
+		VXResource actualvxResource = assetREST.updateXResource(vxResource, Id);
 		Assert.assertNotNull(actualvxResource);
 		Assert.assertEquals(vxResource, actualvxResource);
 		Mockito.verify(serviceREST).getService(vxResource.getAssetId());
-		Mockito.verify(serviceREST).updatePolicy(rangerPolicy);
+		Mockito.verify(serviceREST).updatePolicy(rangerPolicy, Id);
+		Mockito.verify(serviceUtil).toRangerPolicy(vxResource, rangerService);
+		Mockito.verify(serviceUtil).toVXResource(rangerPolicy, rangerService);
+	}
+
+	@Test
+	public void testUpdateXResourceForInvalidResourceId() {
+		VXResource vxResource = vxResource(Id);
+		RangerPolicy rangerPolicy = rangerPolicy(Id);
+		RangerService rangerService = rangerService(Id);
+		Mockito.when(restErrorUtil.createRESTException(Mockito.anyInt(), Mockito.anyString(), Mockito.anyBoolean())).thenThrow(new WebApplicationException());
+		thrown.expect(WebApplicationException.class);
+		VXResource actualvxResource = assetREST.updateXResource(vxResource, -11L);
+		Assert.assertNotNull(actualvxResource);
+		Assert.assertEquals(vxResource, actualvxResource);
+		Mockito.verify(serviceREST).getService(vxResource.getAssetId());
+		Mockito.verify(serviceREST).updatePolicy(rangerPolicy, Id);
+		Mockito.verify(serviceUtil).toRangerPolicy(vxResource, rangerService);
+		Mockito.verify(serviceUtil).toVXResource(rangerPolicy, rangerService);
+	}
+
+	@Test
+	public void testUpdateXResourceWhenResourceIdIsNull() {
+		VXResource vxResource = vxResource(Id);
+		vxResource.setId(null);
+		RangerPolicy rangerPolicy = rangerPolicy(Id);
+		RangerService rangerService = rangerService(Id);
+		Mockito.when(serviceREST.getService(vxResource.getAssetId())).thenReturn(rangerService);
+		Mockito.when(serviceREST.updatePolicy(rangerPolicy, Id)).thenReturn(rangerPolicy);
+		Mockito.when(serviceUtil.toRangerPolicy(vxResource, rangerService)).thenReturn(rangerPolicy);
+		Mockito.when(serviceUtil.toVXResource(rangerPolicy, rangerService)).thenReturn(vxResource);
+		VXResource actualvxResource = assetREST.updateXResource(vxResource, Id);
+		Assert.assertNotNull(actualvxResource);
+		Assert.assertEquals(vxResource, actualvxResource);
+		Mockito.verify(serviceREST).getService(vxResource.getAssetId());
+		Mockito.verify(serviceREST).updatePolicy(rangerPolicy, Id);
 		Mockito.verify(serviceUtil).toRangerPolicy(vxResource, rangerService);
 		Mockito.verify(serviceUtil).toVXResource(rangerPolicy, rangerService);
 	}

@@ -35,6 +35,8 @@ import org.apache.ranger.plugin.model.GroupInfo;
 import org.apache.ranger.view.VXGroup;
 import org.apache.ranger.view.VXGroupList;
 
+import javax.persistence.Query;
+
 public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 		extends AbstractBaseResourceService<T, V> {
 	public static final String NAME = "XGroup";
@@ -87,6 +89,22 @@ public abstract class XGroupServiceBase<T extends XXGroup, V extends VXGroup>
 
 		returnList.setVXGroups(xGroupList);
 		return returnList;
+	}
+
+	/**
+	 * Searches the XGroup table and gets the group ids matching the search criteria.
+	 */
+	public List<Long> searchXGroupsForIds(SearchCriteria searchCriteria){
+		// construct the sort clause
+		String sortClause = searchUtil.constructSortClause(searchCriteria, sortFields);
+
+		// get only the column id from the table
+		String q = "SELECT obj.id FROM " + className + " obj ";
+
+		// construct the query object for retrieving the data
+		Query query = createQuery(q, sortClause, searchCriteria, searchFields, false);
+
+		return getDao().getIds(query);
 	}
 
 	public List<GroupInfo> getGroups() {

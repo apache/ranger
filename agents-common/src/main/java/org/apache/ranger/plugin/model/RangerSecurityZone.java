@@ -44,21 +44,29 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
     private List<String>  							tagServices;
     private List<String>                            adminUsers;
     private List<String>                            adminUserGroups;
+    private List<String>                            adminRoles;
     private List<String>                            auditUsers;
     private List<String>                            auditUserGroups;
+    private List<String>                            auditRoles;
     private String                                  description;
 
     public RangerSecurityZone() {
-        this(null, null, null, null, null, null, null,null);
+        this(null, null, null, null, null, null, null,null, null, null);
     }
 
     public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services,List<String> tagServices, List<String> adminUsers, List<String> adminUserGroups, List<String> auditUsers, List<String> auditUserGroups, String description) {
+        this(name, services, tagServices, adminUsers, adminUserGroups, null, auditUsers, auditUserGroups, null, description);
+    }
+
+    public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services,List<String> tagServices, List<String> adminUsers, List<String> adminUserGroups, List<String> adminRoles, List<String> auditUsers, List<String> auditUserGroups, List<String> auditRoles, String description) {
         setName(name);
         setServices(services);
         setAdminUsers(adminUsers);
         setAdminUserGroups(adminUserGroups);
+        setAdminRoles(adminRoles);
         setAuditUsers(auditUsers);
         setAuditUserGroups(auditUserGroups);
+        setAuditRoles(auditRoles);
         setDescription(description);
         setTagServices(tagServices);
     }
@@ -92,6 +100,12 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
         this.adminUserGroups = adminUserGroups == null ? new ArrayList<>() : adminUserGroups;
     }
 
+    public List<String> getAdminRoles() { return adminRoles; }
+
+    public void setAdminRoles(List<String> adminRoles) {
+        this.adminRoles = adminRoles == null ? new ArrayList<>() : adminRoles;
+    }
+
     public List<String> getAuditUsers() { return auditUsers; }
 
     public void setAuditUsers(List<String> auditUsers) {
@@ -102,6 +116,12 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
 
     public void setAuditUserGroups(List<String> auditUserGroups) {
         this.auditUserGroups = auditUserGroups == null ? new ArrayList<>() : auditUserGroups;
+    }
+
+    public List<String> getAuditRoles() { return auditRoles; }
+
+    public void setAuditRoles(List<String> auditRoles) {
+        this.auditRoles = auditRoles == null ? new ArrayList<>() : auditRoles;
     }
 
     public List<String> getTagServices() {
@@ -119,8 +139,10 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
                 + ", tagServices=" + tagServices
                 + ", adminUsers=" + adminUsers
                 + ", adminUserGroups=" + adminUserGroups
+                + ", adminRoles=" + adminRoles
                 + ", auditUsers=" + auditUsers
                 + ", auditUserGroups=" + auditUserGroups
+                + ", auditRoles=" + auditRoles
                 + ", description="+ description
                 +"}";
     }

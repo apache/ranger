@@ -22,6 +22,7 @@ package org.apache.ranger.plugin.resourcematcher;
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.junit.Test;
 
@@ -66,7 +67,7 @@ public class RangerURLResourceMatcherTest {
             RangerAccessRequestUtil.setCurrentUserInContext(evalContext, user);
 
             MatcherWrapper matcher = new MatcherWrapper(policyValue, optWildcard, isRecursive);
-            assertEquals(getMessage(row), result, matcher.isMatch(resource, evalContext));
+            assertEquals(getMessage(row), result, matcher.isMatch(resource, ResourceElementMatchingScope.SELF, evalContext));
         }
     }
 

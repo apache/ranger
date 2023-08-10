@@ -29,18 +29,25 @@ class RangerBase(dict):
         return self.get(attr)
 
     def __setattr__(self, key, value):
-        self.__setitem__(key, value)
+        if value is None:
+            self.__delitem__(key)
+        else:
+            self.__setitem__(key, value)
 
     def __setitem__(self, key, value):
-        super(RangerBase, self).__setitem__(key, value)
-        self.__dict__.update({key: value})
+        if value is None:
+            self.__delitem__(key)
+        else:
+            super(RangerBase, self).__setitem__(key, value)
+            self.__dict__.update({key: value})
 
     def __delattr__(self, item):
         self.__delitem__(item)
 
     def __delitem__(self, key):
-        super(RangerBase, self).__delitem__(key)
-        del self.__dict__[key]
+        if key in self.__dict__:
+            super(RangerBase, self).__delitem__(key)
+            del self.__dict__[key]
 
     def __repr__(self):
         return json.dumps(self)

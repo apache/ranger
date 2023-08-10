@@ -21,6 +21,8 @@ package org.apache.ranger.plugin.resourcematcher;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestExprResolver;
 import org.apache.ranger.plugin.util.StringTokenReplacer;
@@ -28,7 +30,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
-import java.util.Collection;
 import java.util.Comparator;
 import java.util.Map;
 
@@ -52,24 +53,54 @@ abstract class ResourceMatcher {
     }
 
     abstract boolean isMatch(String resourceValue, Map<String, Object> evalContext);
+
+    abstract boolean isPrefixMatch(String resourceValue, Map<String, Object> evalContext);
+
+    abstract boolean isChildMatch(String resourceValue, Map<String, Object> evalContext);
+
+    final boolean isMatch(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        final ResourceElementMatchType matchType = getMatchType(resourceValue, matchingScope, evalContext);
+        final boolean                  ret;
+
+        if (matchType == ResourceElementMatchType.SELF) {
+            ret = true;
+        } else if (matchType == ResourceElementMatchType.PREFIX) {
+            ret = matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX;
+        } else if (matchType == ResourceElementMatchType.CHILD) {
+            ret = matchingScope == ResourceElementMatchingScope.SELF_OR_CHILD;
+        } else {
+            ret = false;
+        }
+
+        return ret;
+    }
+
+    final ResourceElementMatchType getMatchType(String resourceValue, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+        ResourceElementMatchType ret = ResourceElementMatchType.NONE;
+
+        if (isMatch(resourceValue, evalContext)) {
+            ret = ResourceElementMatchType.SELF;
+        } else {
+            if (matchingScope == ResourceElementMatchingScope.SELF_OR_PREFIX) {
+                if (isPrefixMatch(resourceValue, evalContext)) {
+                    ret = ResourceElementMatchType.PREFIX;
+                }
+            } else if (matchingScope == ResourceElementMatchingScope.SELF_OR_CHILD) {
+                if (isChildMatch(resourceValue, evalContext)) {
+                    ret = ResourceElementMatchType.CHILD;
+                }
+            }
+        }
+
+        return ret;
+    }
+
     abstract int getPriority();
 
     boolean isMatchAny() { return value != null && value.length() == 0; }
 
     boolean getNeedsDynamicEval() {
         return exprResolver != null || tokenReplacer != null;
-    }
-
-    public boolean isMatchAny(Collection<String> resourceValues, Map<String, Object> evalContext) {
-        if (resourceValues != null) {
-            for (String resourceValue : resourceValues) {
-                if (isMatch(resourceValue, evalContext)) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     @Override
