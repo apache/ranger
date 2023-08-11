@@ -226,7 +226,8 @@ export const SideBarBody = (props) => {
 
   const checkKnoxSSO = async (e) => {
     e.preventDefault();
-    let checkKnoxSSOresp;
+    const userProfile = getUserProfile();
+    let checkKnoxSSOresp = {};
     try {
       checkKnoxSSOresp = await fetchApi({
         url: "plugins/checksso",
@@ -236,12 +237,12 @@ export const SideBarBody = (props) => {
         }
       });
       if (
-        checkKnoxSSOresp.data == "true" &&
-        userProps?.configProperties?.inactivityTimeout > 0
+        checkKnoxSSOresp?.data?.toString() == "true" &&
+        userProfile?.configProperties?.inactivityTimeout > 0
       ) {
         window.location.replace("index.html?action=timeout");
       } else {
-        handleLogout(checkKnoxSSOresp.data);
+        handleLogout(checkKnoxSSOresp?.data);
       }
     } catch (error) {
       if (checkKnoxSSOresp?.status == "419") {
@@ -253,8 +254,9 @@ export const SideBarBody = (props) => {
   };
 
   const handleLogout = async (checkKnoxSSOVal) => {
+    let logoutResp = {};
     try {
-      let logoutResp = await fetchApi({
+      logoutResp = await fetchApi({
         url: "logout",
         baseURL: "",
         headers: {
@@ -262,7 +264,7 @@ export const SideBarBody = (props) => {
         }
       });
       if (checkKnoxSSOVal !== undefined || checkKnoxSSOVal !== null) {
-        if (checkKnoxSSOVal == false) {
+        if (checkKnoxSSOVal?.toString() == "false") {
           window.location.replace("locallogin");
           window.localStorage.clear();
           setUserProfile(null);
@@ -520,7 +522,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      User
+                      Users
                     </NavLink>
                   </li>
 
@@ -532,7 +534,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      Group
+                      Groups
                     </NavLink>
                   </li>
 
@@ -544,7 +546,7 @@ export const SideBarBody = (props) => {
                       }}
                       className="list-group-item"
                     >
-                      Role
+                      Roles
                     </NavLink>
                   </li>
                 </React.Fragment>
@@ -558,7 +560,7 @@ export const SideBarBody = (props) => {
                     }}
                     className="list-group-item"
                   >
-                    Permission
+                    Permissions
                   </NavLink>
                 </li>
               )}

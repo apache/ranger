@@ -33,12 +33,10 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @Entity
 @Cacheable(false)
 @Table(name="x_rms_notification")
-@XmlRootElement
 public class XXRMSNotification implements Serializable {
 	private static final long serialVersionUID = 1L;
 

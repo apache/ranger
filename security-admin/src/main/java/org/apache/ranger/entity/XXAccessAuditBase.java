@@ -34,14 +34,12 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.RangerConstants;
 
 @MappedSuperclass
-@XmlRootElement
 public class XXAccessAuditBase extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 

@@ -27,10 +27,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
@@ -44,8 +40,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ServicePolicies implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -242,8 +236,6 @@ public class ServicePolicies implements java.io.Serializable {
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class TagPolicies implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -378,8 +370,6 @@ public class ServicePolicies implements java.io.Serializable {
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class GdsPolicies implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -514,8 +504,6 @@ public class ServicePolicies implements java.io.Serializable {
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY)
 	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class SecurityZoneInfo implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 		private String                          zoneName;

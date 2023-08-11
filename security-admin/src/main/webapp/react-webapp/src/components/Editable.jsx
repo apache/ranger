@@ -442,7 +442,7 @@ const Editable = (props) => {
                 data-js="permissions"
                 data-cy="permissions"
               >
-                Add Permission
+                Add Permissions
               </span>
               <Button
                 className="mg-10 mx-auto d-block btn-mini"

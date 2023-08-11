@@ -183,7 +183,7 @@ function Roles() {
     if (selectedRows.current.length > 0) {
       toggleConfirmModal();
     } else {
-      toast.info("Please select atleast one role!!");
+      toast.warning("Please select atleast one role!!");
     }
   };
 

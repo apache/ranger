@@ -22,12 +22,10 @@ package org.apache.ranger.entity;
 import org.apache.ranger.common.AppConstants;
 
 import javax.persistence.*;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_ugsync_audit_info")
 public class XXUgsyncAuditInfo extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;

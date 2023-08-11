@@ -25,10 +25,8 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
 import javax.persistence.Version;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @MappedSuperclass
-@XmlRootElement
 public abstract class XXServiceBase extends XXDBBase {
 	private static final long serialVersionUID = 1L;
 

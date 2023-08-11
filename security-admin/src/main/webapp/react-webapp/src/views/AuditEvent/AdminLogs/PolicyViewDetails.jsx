@@ -676,7 +676,7 @@ export function PolicyViewDetails(props) {
 
       {policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value && (
         <>
-          <p className="form-header">Allow Condition :</p>
+          <p className="form-header">Allow Conditions :</p>
           <div className="overflow-auto">
             <Table bordered size="sm" className="table-audit-filter-ready-only">
               {getFilterPolicy(
@@ -737,7 +737,7 @@ export function PolicyViewDetails(props) {
         policyType == RangerPolicyType.RANGER_ACCESS_POLICY_TYPE.value &&
         serviceDef?.options?.enableDenyAndExceptionsInPolicies == "true" && (
           <>
-            <p className="form-header">Deny Condition :</p>
+            <p className="form-header">Deny Conditions :</p>
             <div className="overflow-auto">
               <Table
                 bordered
@@ -748,7 +748,7 @@ export function PolicyViewDetails(props) {
                   denyPolicyItems,
                   serviceDef,
                   serviceType,
-                  ` No policy items of "Deny Condition" are present`
+                  ` No policy items of "Deny Conditions" are present`
                 )}
               </Table>
             </div>

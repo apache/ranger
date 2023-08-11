@@ -19,7 +19,9 @@
 
 package org.apache.ranger.plugin.resourcematcher;
 
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchType;
 import org.junit.Test;
 
 import java.util.Map;
@@ -47,5 +49,12 @@ public class RangerAbstractResourceMatcherTest {
             fail("This method is not expected to be used by test!");
             return false;
         }
+
+        @Override
+        public ResourceElementMatchType getMatchType(Object resource, ResourceElementMatchingScope matchingScope, Map<String, Object> evalContext) {
+            fail("This method is not expected to be used by test!");
+            return RangerAccessRequest.ResourceElementMatchType.NONE;
+        }
+
     }
 }

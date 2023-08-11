@@ -22,9 +22,6 @@
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.view.VList;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -33,8 +30,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class VXTrxLogList extends VList {
 	private static final long serialVersionUID = 1L;
     List<VXTrxLog> vXTrxLogs = new ArrayList<VXTrxLog>();

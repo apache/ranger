@@ -25,10 +25,6 @@ import java.util.List;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -40,8 +36,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class RangerPolicy extends RangerBaseModelObject implements java.io.Serializable {
 	public static final int POLICY_TYPE_ACCESS    = 0;
 	public static final int POLICY_TYPE_DATAMASK  = 1;
@@ -781,8 +775,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyResource implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -953,8 +945,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyItem implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1264,8 +1254,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerDataMaskPolicyItem extends RangerPolicyItem implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1351,8 +1339,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerRowFilterPolicyItem extends RangerPolicyItem implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1438,8 +1424,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyItemAccess implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1546,8 +1530,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyItemCondition implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1669,8 +1651,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyItemDataMaskInfo implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -1778,8 +1758,6 @@ public class RangerPolicy extends RangerBaseModelObject implements java.io.Seria
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
 	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerPolicyItemRowFilterInfo implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
