@@ -476,15 +476,17 @@ class ServiceDefinition extends Component {
                                 <p className="form-header">
                                   Config Properties :
                                 </p>
-                                <Table bordered size="sm">
-                                  <tbody className="service-config">
-                                    {s?.configs &&
-                                      this.getServiceConfigs(
-                                        this.state.serviceDef,
-                                        s.configs
-                                      )}
-                                  </tbody>
-                                </Table>
+                                <div className="table-responsive">
+                                  <Table bordered size="sm">
+                                    <tbody className="service-config">
+                                      {s?.configs &&
+                                        this.getServiceConfigs(
+                                          this.state.serviceDef,
+                                          s.configs
+                                        )}
+                                    </tbody>
+                                  </Table>
+                                </div>
                                 <p className="form-header">Audit Filter :</p>
                                 <div className="table-responsive">
                                   <Table

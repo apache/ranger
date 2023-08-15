@@ -17,7 +17,6 @@
  * under the License.
  */
 import axios from "axios";
-import ErrorPage from "../views/ErrorPage";
 import {
   RANGER_REST_CSRF_ENABLED,
   RANGER_REST_CSRF_CUSTOM_HEADER,
@@ -55,6 +54,7 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
   const config = {
     ...axiosConfig
   };
+
   if (otherConf && otherConf.cancelRequest) {
     /*
       Below code add "source" attribute in second argument which is use to cancel request.
@@ -77,6 +77,7 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
     config.cancelToken = source.token;
     otherConf.source = source;
   }
+
   try {
     const resp = await axios(config);
     return resp;
@@ -87,6 +88,9 @@ async function fetchApi(axiosConfig = {}, otherConf = {}) {
         isSessionActive = false;
         window.location.replace("login.jsp?sessionTimeout=true");
       }
+    }
+    if (config.skipNavigate !== undefined && config.skipNavigate) {
+      throw error;
     }
     if (
       error?.response?.status === 400 &&

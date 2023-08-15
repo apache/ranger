@@ -205,7 +205,9 @@ const SecurityZoneForm = (props) => {
         console.error(
           `Error occurred while fetching Zone or CSRF headers! ${error}`
         );
-        toast.error(error.response.data.msgDesc);
+        if (error?.response?.data?.msgDesc) {
+          toast.error(error.response.data.msgDesc);
+        }
       }
       setZone(zoneResp?.data);
     }

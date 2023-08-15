@@ -469,7 +469,10 @@ function UserFormComp(props) {
                           css="info-user-role-grp-icon"
                           position="right"
                           message={
-                            <p className="pd-10" style={{ fontSize: "small" }}>
+                            <p
+                              className="pd-10 mb-0"
+                              style={{ fontSize: "small" }}
+                            >
                               {
                                 RegexMessage.MESSAGE
                                   .passwordvalidationinfomessage
@@ -518,7 +521,10 @@ function UserFormComp(props) {
                           css="info-user-role-grp-icon"
                           position="right"
                           message={
-                            <p className="pd-10" style={{ fontSize: "small" }}>
+                            <p
+                              className="pd-10 mb-0"
+                              style={{ fontSize: "small" }}
+                            >
                               {
                                 RegexMessage.MESSAGE
                                   .passwordvalidationinfomessage

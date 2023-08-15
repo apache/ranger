@@ -30,6 +30,7 @@ import { has, isEmpty, isUndefined } from "lodash";
 import { RegexMessage } from "../utils/XAMessages";
 import { fetchApi } from "Utils/fetchAPI";
 import CustomBreadcrumb from "./CustomBreadcrumb";
+
 class UserProfile extends Component {
   constructor(props) {
     super(props);
@@ -37,6 +38,7 @@ class UserProfile extends Component {
       blockUI: false
     };
   }
+
   updateUserInfo = async (values) => {
     const userProps = getUserProfile();
 
@@ -83,7 +85,8 @@ class UserProfile extends Component {
       const passwdResp = await fetchApi({
         url: "users/" + userProps.id + "/passwordchange",
         method: "post",
-        data: jsonData
+        data: jsonData,
+        skipNavigate: true
       });
       this.setState({ blockUI: false });
       toast.success("Successfully updated user password");
@@ -91,11 +94,11 @@ class UserProfile extends Component {
     } catch (error) {
       this.setState({ blockUI: false });
       if (
-        (has(error?.response, "data.msgDesc") &&
-          error?.response?.data?.msgDesc == "serverMsg.userMgrOldPassword") ||
-        "serverMsg.userMgrNewPassword"
+        has(error?.response, "data.msgDesc") &&
+        (error?.response?.data?.msgDesc == "serverMsg.userMgrOldPassword" ||
+          error?.response?.data?.msgDesc == "serverMsg.userMgrNewPassword")
       ) {
-        toast.error("You can not use old password.");
+        toast.error("Error occured while updating user password!");
       }
       console.error(`Error occurred while updating user password! ${error}`);
     }
@@ -103,12 +106,14 @@ class UserProfile extends Component {
 
   validatePasswordForm = (values) => {
     const errors = {};
+
     if (!values.oldPassword) {
       errors.oldPassword = "Required";
     }
     if (!values.newPassword) {
       errors.newPassword = "Required";
     }
+
     if (
       values &&
       has(values, "newPassword") &&
@@ -116,19 +121,53 @@ class UserProfile extends Component {
     ) {
       errors.newPassword = RegexValidation.PASSWORD.message;
     }
+
     if (!values.reEnterPassword) {
       errors.reEnterPassword = "Required";
-    } else if (values.newPassword !== values.reEnterPassword) {
-      errors.reEnterPassword = "Must match";
+    } else if (
+      has(values, "newPassword") &&
+      values.newPassword !== values.reEnterPassword
+    ) {
+      errors.reEnterPassword =
+        "Re-enter New Password must match with New Password";
     }
+
+    if (values && has(values, "oldPassword") && has(values, "newPassword")) {
+      if (values.oldPassword === values.newPassword) {
+        errors.newPassword = "New Password cannot be same as Old Password";
+      }
+    }
+
     return errors;
   };
 
   validateUserForm = (values) => {
     const errors = {};
+
     if (!values.firstName) {
       errors.firstName = "Required";
     }
+
+    if (
+      values &&
+      has(values, "firstName") &&
+      !RegexValidation.NAME_VALIDATION.regexExpressionForFirstAndLastName.test(
+        values.firstName
+      )
+    ) {
+      errors.firstName = RegexMessage.MESSAGE.firstNameValidationMsg;
+    }
+
+    if (
+      values &&
+      has(values, "lastName") &&
+      !RegexValidation.NAME_VALIDATION.regexExpressionForFirstAndLastName.test(
+        values.lastName
+      )
+    ) {
+      errors.lastName = RegexMessage.MESSAGE.lastNameValidationMsg;
+    }
+
     if (
       (!isEmpty(values.emailAddress) || !isUndefined(values.emailAddress)) &&
       !RegexValidation.EMAIL_VALIDATION.regexExpressionForEmail.test(
@@ -266,7 +305,11 @@ class UserProfile extends Component {
                                       ? "isError"
                                       : "lastName"
                                   }
-                                  className="form-control"
+                                  className={
+                                    meta.error && meta.touched
+                                      ? "form-control border-danger"
+                                      : "form-control"
+                                  }
                                   disabled={
                                     userProps.userSource ==
                                     UserTypes.USER_INTERNAL.value
@@ -282,6 +325,11 @@ class UserProfile extends Component {
                                     RegexMessage.MESSAGE.lastNameValidationMsg
                                   }
                                 />
+                                {meta.error && meta.touched && (
+                                  <span className="invalid-field">
+                                    {meta.error}
+                                  </span>
+                                )}
                               </Col>
                             </Row>
                           )}
@@ -317,6 +365,14 @@ class UserProfile extends Component {
                                       : true
                                   }
                                   data-cy="emailAddress"
+                                />
+                                <InfoIcon
+                                  css="info-user-role-grp-icon"
+                                  position="right"
+                                  message={
+                                    RegexMessage.MESSAGE
+                                      .emailvalidationinfomessage
+                                  }
                                 />
                                 {meta.error && meta.touched && (
                                   <span className="invalid-field">
@@ -455,7 +511,7 @@ class UserProfile extends Component {
                                   position="right"
                                   message={
                                     <p
-                                      className="pd-10"
+                                      className="pd-10 mb-0"
                                       style={{ fontSize: "small" }}
                                     >
                                       {RegexValidation.PASSWORD.message}
@@ -503,7 +559,7 @@ class UserProfile extends Component {
                                   position="right"
                                   message={
                                     <p
-                                      className="pd-10"
+                                      className="pd-10 mb-0"
                                       style={{ fontSize: "small" }}
                                     >
                                       {RegexValidation.PASSWORD.message}
@@ -551,7 +607,7 @@ class UserProfile extends Component {
                                   position="right"
                                   message={
                                     <p
-                                      className="pd-10"
+                                      className="pd-10 mb-0"
                                       style={{ fontSize: "small" }}
                                     >
                                       {RegexValidation.PASSWORD.message}
