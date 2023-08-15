@@ -727,13 +727,6 @@ const Editable = (props) => {
           <RadioBtnComp value={value} options={options} valRef={selectValRef} />
         ) : type === TYPE_INPUT ? (
           <InputboxComp value={value} valRef={selectValRef} />
-        ) : type === TYPE_SELECT ? (
-          <CreatableSelectNew
-            value={value}
-            valRef={selectValRef}
-            conditionDefVal={props.conditionDefVal}
-            selectProps={props.selectProps}
-          />
         ) : type === TYPE_CUSTOM ? (
           <CustomCondition
             value={value}

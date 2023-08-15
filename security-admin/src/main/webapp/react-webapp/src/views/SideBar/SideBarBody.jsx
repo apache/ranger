@@ -45,6 +45,7 @@ import {
 import { getServiceDef } from "../../utils/appState";
 import ResourceTagContent from "./ResourceTagContent";
 import { Button } from "react-bootstrap";
+import { toast } from "react-toastify";
 
 function reducer(state, action) {
   switch (action.type) {

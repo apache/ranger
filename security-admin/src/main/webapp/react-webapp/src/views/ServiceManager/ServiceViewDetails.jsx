@@ -281,11 +281,13 @@ export const ServiceViewDetails = (props) => {
           </tbody>
         </Table>
         <p className="form-header">Config Properties :</p>
-        <Table bordered size="sm">
-          <tbody className="service-config">
-            {getServiceConfigs(serviceDefData, serviceData.configs)}
-          </tbody>
-        </Table>
+        <div className="table-responsive">
+          <Table bordered size="sm">
+            <tbody className="service-config">
+              {getServiceConfigs(serviceDefData, serviceData.configs)}
+            </tbody>
+          </Table>
+        </div>
         <p className="form-header">Audit Filter :</p>
         <div className="table-responsive">
           <Table bordered size="sm" className="table-audit-filter-ready-only">

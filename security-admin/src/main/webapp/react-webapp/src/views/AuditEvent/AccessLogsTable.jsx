@@ -173,7 +173,13 @@ export const AccessLogsTable = ({ data = {} }) => {
         </tr>
         <tr>
           <td>Result</td>
-          <td>{accessResult == 1 ? "Allowed" : "Denied"}</td>
+          <td>
+            {accessResult !== undefined
+              ? accessResult == 1
+                ? "Allowed"
+                : "Denied"
+              : "--"}
+          </td>
         </tr>
         <tr>
           <td className="text-nowrap">Access Enforcer</td>
