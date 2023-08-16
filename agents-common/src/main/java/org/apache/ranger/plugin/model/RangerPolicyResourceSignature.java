@@ -57,6 +57,10 @@ public class RangerPolicyResourceSignature {
 		}
 	}
 
+
+	public RangerPolicyResourceSignature(Map<String, RangerPolicyResource> policyResources) {
+		this(new RangerPolicy(null, null, null, null, null, policyResources, null, null, null, null, null));
+	}
 	/**
 	 * Only added for testability.  Do not make public
 	 * @param string

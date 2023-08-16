@@ -194,7 +194,7 @@ public class RangerGdsSharedResourceService extends RangerGdsBaseModelService<XX
         xObj.setDataShareId(vObj.getDataShareId());
         xObj.setResource(JsonUtils.mapToJson(vObj.getResource()));
         xObj.setSubResourceNames(JsonUtils.listToJson(vObj.getSubResourceNames()));
-        xObj.setResourceSignature(RangerPolicyResourceSignature.toSignatureString(vObj.getResource()));
+        xObj.setResourceSignature(new RangerPolicyResourceSignature(vObj.getResource()).getSignature());
         xObj.setConditionExpr(vObj.getConditionExpr());
         xObj.setAccessTypes(JsonUtils.objectToJson(vObj.getAccessTypes()));
         xObj.setRowFilter(JsonUtils.objectToJson(vObj.getRowFilter()));
