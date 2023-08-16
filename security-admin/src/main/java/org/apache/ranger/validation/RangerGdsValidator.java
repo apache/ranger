@@ -519,6 +519,46 @@ public class RangerGdsValidator {
         LOG.debug("<== validateDelete(dsInProjectId={}, existing={})", dsInProjectId, existing);
     }
 
+    public boolean hasPermission(RangerGdsObjectACL acl, GdsPermission permission) {
+        boolean ret = dataProvider.isAdminUser();
+
+        if (!ret && acl != null) {
+            String userName = dataProvider.getCurrentUserLoginId();
+
+            if (acl.getUsers() != null) {
+                ret = isAllowed(acl.getUsers().get(userName), permission);
+            }
+
+            if (!ret && acl.getGroups() != null) {
+                Set<String> userGroups = dataProvider.getGroupsForUser(userName);
+
+                for (String userGroup : userGroups) {
+                    ret = isAllowed(acl.getGroups().get(userGroup), permission);
+
+                    if (ret) {
+                        break;
+                    }
+                }
+            }
+
+            if (!ret && acl.getRoles() != null) {
+                Set<String> userRoles = dataProvider.getRolesForUser(userName);
+
+                if (userRoles != null) {
+                    for (String userRole : userRoles) {
+                        ret = isAllowed(acl.getRoles().get(userRole), permission);
+
+                        if (ret) {
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+
+        return ret;
+    }
+
     private void validateAcl(RangerGdsObjectACL acl, String fieldName, ValidationResult result) {
         if (acl != null) {
             if (MapUtils.isNotEmpty(acl.getUsers())) {
@@ -569,67 +609,34 @@ public class RangerGdsValidator {
         boolean isAdmin = false;
 
         if (acl != null) {
-            Set<String> userGroups = null;
-            Set<String> userRoles  = null;
-
             if (MapUtils.isNotEmpty(acl.getUsers())) {
-                for (Map.Entry<String, GdsPermission> entry : acl.getUsers().entrySet()) {
-                    GdsPermission permission = entry.getValue();
-
-                    if (permission != GdsPermission.ADMIN) {
-                        continue;
-                    }
-
-                    if (StringUtils.equals(userName, entry.getKey())) {
-                        isAdmin = true;
-
-                        break;
-                    }
-                }
+                isAdmin = isAllowed(acl.getUsers().get(userName), GdsPermission.ADMIN);
             }
 
             if (!isAdmin && MapUtils.isNotEmpty(acl.getGroups())) {
-                for (Map.Entry<String, GdsPermission> entry : acl.getGroups().entrySet()) {
-                    String        groupName  = entry.getKey();
-                    GdsPermission permission = entry.getValue();
+                Set<String> userGroups = dataProvider.getGroupsForUser(userName);
 
-                    if (permission != GdsPermission.ADMIN) {
-                        continue;
-                    }
+                if (userGroups != null) {
+                    for (String userGroup : userGroups) {
+                        isAdmin = isAllowed(acl.getGroups().get(userGroup), GdsPermission.ADMIN);
 
-                    if (userGroups == null) {
-                        userGroups = dataProvider.getGroupsForUser(userName);
-                    }
-
-                    if (userGroups != null && userGroups.contains(groupName)) {
-                        isAdmin = true;
-
-                        break;
+                        if (isAdmin) {
+                            break;
+                        }
                     }
                 }
             }
 
             if (!isAdmin && MapUtils.isNotEmpty(acl.getRoles())) {
-                for (Map.Entry<String, GdsPermission> entry : acl.getRoles().entrySet()) {
-                    String        roleName   = entry.getKey();
-                    GdsPermission permission = entry.getValue();
+                Set<String> userRoles  = dataProvider.getRolesForUser(userName);
 
-                    if (permission != GdsPermission.ADMIN) {
-                        continue;
-                    }
+                if (userRoles != null) {
+                    for (String userRole : userRoles) {
+                        isAdmin = isAllowed(acl.getRoles().get(userRole), GdsPermission.ADMIN);
 
-                    if (userRoles == null) {
-                        if (userGroups == null) {
-                            userGroups = dataProvider.getGroupsForUser(userName);
+                        if (isAdmin) {
+                            break;
                         }
-
-                        userRoles = dataProvider.getRolesForUser(userName);
-                    }
-
-                    if (userRoles != null && userRoles.contains(roleName)) {
-                        isAdmin = true;
-
-                        break;
                     }
                 }
             }
@@ -694,6 +701,52 @@ public class RangerGdsValidator {
                 }
             }
         }
+    }
+
+    private boolean isAllowed(GdsPermission hasPermission, GdsPermission accessPermission) {
+        final boolean ret;
+
+        switch (accessPermission) {
+            case ADMIN:
+                ret = hasPermission == GdsPermission.ADMIN;
+            break;
+
+            case POLICY_ADMIN:
+                ret = hasPermission == GdsPermission.POLICY_ADMIN ||
+                      hasPermission == GdsPermission.ADMIN;
+            break;
+
+            case AUDIT:
+                ret = hasPermission == GdsPermission.AUDIT ||
+                      hasPermission == GdsPermission.POLICY_ADMIN ||
+                      hasPermission == GdsPermission.ADMIN;
+            break;
+
+            case VIEW:
+                ret = hasPermission == GdsPermission.VIEW ||
+                      hasPermission == GdsPermission.AUDIT ||
+                      hasPermission == GdsPermission.POLICY_ADMIN ||
+                      hasPermission == GdsPermission.ADMIN;
+            break;
+
+            case LIST:
+                ret = hasPermission == GdsPermission.LIST ||
+                      hasPermission == GdsPermission.VIEW ||
+                      hasPermission == GdsPermission.AUDIT ||
+                      hasPermission == GdsPermission.POLICY_ADMIN ||
+                      hasPermission == GdsPermission.ADMIN;
+            break;
+
+            case NONE:
+                ret = true;
+            break;
+
+            default:
+                ret = false;
+            break;
+        }
+
+        return ret;
     }
 
     public class ValidationResult {

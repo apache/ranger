@@ -31,6 +31,7 @@ import org.apache.ranger.entity.XXGdsDataShareInDataset;
 import org.apache.ranger.entity.XXGdsDataset;
 import org.apache.ranger.entity.XXGdsDatasetInProject;
 import org.apache.ranger.entity.XXGdsProject;
+import org.apache.ranger.plugin.model.RangerGds.GdsPermission;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShare;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataShareInDataset;
 import org.apache.ranger.plugin.model.RangerGds.RangerDataset;
@@ -60,6 +61,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+
 import java.util.*;
 
 import static org.apache.ranger.db.XXGlobalStateDao.RANGER_GLOBAL_STATE_NAME_DATASET;
@@ -99,7 +101,6 @@ public class GdsDBStore extends AbstractGdsStore {
 
     @Autowired
     GUIDUtil guidUtil;
-
 
     @PostConstruct
     public void initStore() {
@@ -187,7 +188,10 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDataset ret = datasetService.read(datasetId);
 
-        // TODO: enforce RangerDataset.acl
+
+        if (ret != null && !validator.hasPermission(ret.getAcl(), GdsPermission.VIEW)) {
+            throw new Exception("no permission on dataset id=" + datasetId);
+        }
 
         LOG.debug("<== getDataset({}): ret={}", datasetId, ret);
 
@@ -207,7 +211,9 @@ public class GdsDBStore extends AbstractGdsStore {
 
         RangerDataset ret = datasetService.getPopulatedViewObject(existing);
 
-        // TODO: enforce RangerDataset.acl
+        if (ret != null && !validator.hasPermission(ret.getAcl(), GdsPermission.VIEW)) {
+            throw new Exception("no permission on dataset name=" + name);
+        }
 
         LOG.debug("<== getDatasetByName({}): ret={}", name, ret);
 
@@ -222,9 +228,9 @@ public class GdsDBStore extends AbstractGdsStore {
         List<String>      names  = new ArrayList<>();
 
         for (RangerDataset dataset : result.getList()) {
-            // TODO: enforce RangerDataset.acl
-
-            names.add(dataset.getName());
+            if (dataset != null && validator.hasPermission(dataset.getAcl(), GdsPermission.LIST)) {
+               names.add(dataset.getName());
+            }
         }
 
         PList<String> ret = new PList<>(names, 0, names.size(), names.size(), names.size(), result.getSortType(), result.getSortBy());
@@ -242,9 +248,9 @@ public class GdsDBStore extends AbstractGdsStore {
         List<RangerDataset> datasets = new ArrayList<>();
 
         for (RangerDataset dataset : result.getList()) {
-            // TODO: enforce RangerDataset.acl
-
-            datasets.add(dataset);
+            if (dataset != null && validator.hasPermission(dataset.getAcl(), GdsPermission.VIEW)) {
+                datasets.add(dataset);
+            }
         }
 
         PList<RangerDataset> ret = new PList<>(datasets, 0, datasets.size(), datasets.size(), datasets.size(), result.getSortBy(), result.getSortType());
@@ -253,7 +259,6 @@ public class GdsDBStore extends AbstractGdsStore {
 
         return ret;
     }
-
 
     @Override
     public RangerProject createProject(RangerProject project) throws Exception {
@@ -802,4 +807,5 @@ public class GdsDBStore extends AbstractGdsStore {
             }
         }
     }
+
 }
