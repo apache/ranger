@@ -88,12 +88,11 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
     }
 
     synchronized public boolean logJSON(final Collection<String> events) throws Exception {
-        boolean     ret = false;
+        boolean     ret = true;
         PrintWriter out = null;
         try {
             if (logger.isDebugEnabled()) {
-                logger.debug("UGI=" + MiscUtil.getUGILoginUser()
-                        + ". Will write to HDFS file=" + currentFileName);
+                logger.debug("UGI = {}, will write to HDFS file = {}", MiscUtil.getUGILoginUser(), currentFileName);
             }
             out = MiscUtil.executePrivilegedAction(new PrivilegedExceptionAction<PrintWriter>() {
                 @Override
@@ -108,27 +107,27 @@ public class RangerJSONAuditWriter extends AbstractRangerAuditWriter {
             // flush and check the stream for errors
             if (out.checkError()) {
                 // In theory, this count may NOT be accurate as part of the messages may have been successfully written.
-                // However, in practice, since client does buffer-ing, either all or none would succeed.
-                out.close();
+                // However, in practice, since client does buffering, either all or none would succeed.
                 logger.error("Stream encountered errors while writing audits to HDFS!");
                 closeWriter();
+                resetWriter();
+                ret = false;
                 return ret;
             }
         } catch (Exception e) {
-            if (out != null) {
-                out.close();
-            }
-            closeWriter();
             logger.error("Exception encountered while writing audits to HDFS!");
+            closeWriter();
+            resetWriter();
+            ret = false;
             return ret;
         } finally {
-            ret = true;
             if (logger.isDebugEnabled()) {
                 logger.debug("Flushing HDFS audit. Event Size:" + events.size());
             }
             if (out != null) {
                 out.flush();
             }
+            //closeWriter();
         }
 
         return ret;

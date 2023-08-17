@@ -208,7 +208,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
 
     }
 
-    public void closeFileIfNeeded() throws IOException {
+    public void closeFileIfNeeded() {
         if (logger.isDebugEnabled()) {
             logger.debug("==> AbstractRangerAuditWriter.closeFileIfNeeded()");
         }
@@ -218,18 +218,10 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         }
 
         if ( System.currentTimeMillis() >= nextRollOverTime.getTime() ) {
-            logger.info("Closing file. Rolling over. name=" + auditProviderName
-                    + ", fileName=" + currentFileName);
-            try {
-                logWriter.flush();
-                logWriter.close();
-            } catch (Throwable t) {
-                logger.error("Error on closing log writter. Exception will be ignored. name="
-                        + auditProviderName + ", fileName=" + currentFileName);
-            }
-
-            logWriter = null;
-            ostream   = null;
+            logger.info("Closing file. Rolling over. name = {}, fileName = {}", auditProviderName, currentFileName);
+            logWriter.flush();
+            closeWriter();
+            resetWriter();
             currentFileName = null;
 
             if (!rollOverByDuration) {
@@ -239,7 +231,8 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
                     }
                     nextRollOverTime = rollingTimeUtil.computeNextRollingTime(rolloverPeriod);
                 } catch ( Exception e) {
-                    logger.warn("Rollover by file.rollover.period failed...will be using the file.rollover.sec for " + fileSystemScheme + " audit file rollover...", e);
+                    logger.warn("Rollover by file.rollover.period failed", e);
+                    logger.warn("Using the file.rollover.sec for {} audit file rollover...", fileSystemScheme);
                     nextRollOverTime = rollOverByDuration();
                 }
             } else {
@@ -283,11 +276,31 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
     }
 
     /**
-     * Closes the writer because of errors encountered while writing audits to hdfs
+     * Closes the writer after writing audits
      **/
     public void closeWriter() {
         if (logger.isDebugEnabled()) {
             logger.debug("==> AbstractRangerAuditWriter.closeWriter()");
+        }
+
+        if (ostream != null) {
+            try {
+                ostream.close();
+            } catch (IOException e) {
+                logger.error("Error closing the stream {}", e.getMessage());
+            }
+        }
+        if (logWriter != null)
+            logWriter.close();
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== AbstractRangerAuditWriter.closeWriter()");
+        }
+    }
+
+    public void resetWriter() {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> AbstractRangerAuditWriter.resetWriter()");
         }
 
         logWriter = null;
@@ -295,7 +308,7 @@ public abstract class AbstractRangerAuditWriter implements RangerAuditWriter {
         reUseLastLogFile = true;
 
         if (logger.isDebugEnabled()) {
-            logger.debug("<== AbstractRangerAuditWriter.closeWriter()");
+            logger.debug("<== AbstractRangerAuditWriter.resetWriter()");
         }
     }
 
