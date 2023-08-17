@@ -20,7 +20,9 @@
  package org.apache.ranger.rest;
 
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.Consumes;
@@ -30,13 +32,12 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConfigUtil;
 import org.apache.ranger.common.RangerConstants;
@@ -56,6 +57,8 @@ import org.apache.ranger.view.VXPortalUser;
 import org.apache.ranger.view.VXPortalUserList;
 import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXStringList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -70,7 +73,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RangerAnnotationJSMgrName("UserMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class UserREST {
-	private static final Logger logger = Logger.getLogger(UserREST.class);
+	private static final Logger logger = LoggerFactory.getLogger(UserREST.class);
 
 	@Autowired
 	StringUtil stringUtil;
@@ -111,7 +114,7 @@ public class UserREST {
 	 * @return
 	 */
 	@GET
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_USERS + "\")")
 	public VXPortalUserList searchUsers(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -158,7 +161,7 @@ public class UserREST {
 	 */
 	@GET
 	@Path("{userId}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_PROFILE_FOR_USER + "\")")
 	public VXPortalUser getUserProfileForUser(@PathParam("userId") Long userId) {
 		try {
@@ -179,8 +182,8 @@ public class UserREST {
 	}
 
 	@POST
-	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE + "\")")
 	public VXPortalUser create(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
@@ -192,8 +195,8 @@ public class UserREST {
 	// API to add user with default account
 	@POST
 	@Path("/default")
-	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_DEFAULT_ACCOUNT_USER + "\")")
 	public VXPortalUser createDefaultAccountUser(VXPortalUser userProfile,
 			@Context HttpServletRequest servletRequest) {
@@ -208,8 +211,8 @@ public class UserREST {
 
 
 	@PUT
-	@Consumes({ "application/json", "application/xml" })
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@RangerAnnotationRestAPI(updates_classes = "VUserProfile")
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE + "\")")
 	public VXPortalUser update(VXPortalUser userProfile,
@@ -232,7 +235,8 @@ public class UserREST {
 
 	@PUT
 	@Path("/{userId}/roles")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES + "\")")
 	public VXResponse setUserRoles(@PathParam("userId") Long userId,
 			VXStringList roleList) {
@@ -251,7 +255,8 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/deactivate")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DEACTIVATE_USER + "\")")
 	@RangerAnnotationClassName(class_name = VXPortalUser.class)
 	public VXPortalUser deactivateUser(@PathParam("userId") Long userId) {
@@ -272,26 +277,22 @@ public class UserREST {
 	 */
 	@GET
 	@Path("/profile")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXPortalUser getUserProfile(@Context HttpServletRequest request) {
 		try {
 			logger.debug("getUserProfile(). httpSessionId="
 					+ request.getSession().getId());
+			Map<String, String> configProperties  = new HashMap<>();
+			Long inactivityTimeout = PropertiesUtil.getLongProperty("ranger.service.inactivity.timeout", 15*60);
+			configProperties.put("inactivityTimeout", Long.toString(inactivityTimeout));
 			VXPortalUser userProfile = userManager.getUserProfileByLoginId();
+			userProfile.setConfigProperties(configProperties);
 			return userProfile;
 		} catch (Throwable t) {
 			logger.error(
 					"getUserProfile() no user session. error=" + t.toString(),
 					t);
 		}
-		return null;
-	}
-
-	@GET
-	@Path("/firstnames")
-	@Produces({ "application/xml", "application/json" })
-	public String suggestUserFirstName(@QueryParam("letters") String letters,
-			@Context HttpServletRequest req) {
 		return null;
 	}
 
@@ -302,15 +303,20 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/passwordchange")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXResponse changePassword(@PathParam("userId") Long userId,
 			VXPasswordChange changePassword) {
-		if(changePassword==null || stringUtil.isEmpty(changePassword.getLoginId())){
+		if(changePassword==null || stringUtil.isEmpty(changePassword.getLoginId())) {
 			logger.warn("SECURITY:changePassword(): Invalid loginId provided. loginId was empty or null");
+			throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "");
+		} else if (changePassword.getId() == null) {
+			changePassword.setId(userId);
+		} else if (!changePassword.getId().equals(userId) ) {
+			logger.warn("SECURITY:changePassword(): userId mismatch");
 			throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null,"");
 		}
 
-		logger.info("changePassword:" + changePassword.getLoginId());
 		XXPortalUser gjUser = daoManager.getXXPortalUser().findByLoginId(changePassword.getLoginId());
 		if (gjUser == null) {
 			logger.warn("SECURITY:changePassword(): Invalid loginId provided: loginId="+ changePassword.getLoginId());
@@ -331,11 +337,17 @@ public class UserREST {
 	 */
 	@POST
 	@Path("{userId}/emailchange")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXPortalUser changeEmailAddress(@PathParam("userId") Long userId,
 			VXPasswordChange changeEmail) {
-		if(changeEmail==null || stringUtil.isEmpty(changeEmail.getLoginId())){
+		if(changeEmail==null || stringUtil.isEmpty(changeEmail.getLoginId())) {
 			logger.warn("SECURITY:changeEmail(): Invalid loginId provided. loginId was empty or null");
+			throw restErrorUtil.createRESTException("serverMsg.userRestUser", MessageEnums.DATA_NOT_FOUND, null, null, "");
+		} else if (changeEmail.getId() == null) {
+			changeEmail.setId(userId);
+		} else if (!changeEmail.getId().equals(userId) ) {
+			logger.warn("SECURITY:changeEmail(): userId mismatch");
 			throw restErrorUtil.createRESTException("serverMsg.userRestUser",MessageEnums.DATA_NOT_FOUND, null, null,"");
 		}
 

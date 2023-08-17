@@ -14,30 +14,28 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-	
-<div class="control-group">
-	<!--label class="control-label">{{headerTitle}}</label-->
-        <div class="controls no-margin no-padding">
-		<table class="table-permission table-condensed">
-			<thead>
-				<tr>
-					{{#each permHeaders}}
-					<th>{{./this}}</th>
-					{{/each}}
-
-				</tr>
-			</thead>
-			<tbody class="js-formInput permissionItemSortable">
-
-			</tbody>
-		</table>
-	</div>
-
+<div class="form-group">
+    <!--label class="control-label">{{headerTitle}}</label-->
+    <div class="col-md-12 m-t-sm">
+        <div class="table-responsive">
+            <table class="table-permission table-condensed">
+                <thead>
+                    <tr>
+                        {{#each permHeaders}}
+                        <th>{{./this}}</th>
+                        {{/each}}
+                    </tr>
+                </thead>
+                <tbody class="js-formInput permissionItemSortable">
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-<div class="control-group">
-        <div class="controls no-margin" style="margin-top:-14px">
-		<button type="button" class="btn btn-small" data-action="addGroup" title="Add">
-			<i class="icon-plus"></i>
-		</button>
-	</div>
+<div class="form-group">
+    <div class="col-md-12 m-t-sm">
+        <button type="button" class="btn btn-sm" data-action="addGroup" title="Add">
+            <i class="fa-fw fa fa-plus"></i>
+        </button>
+    </div>
 </div>

@@ -37,7 +37,10 @@ define(function(require){
 		 */
 		initialize: function() {
 			this.modelName = 'RangerServiceDef';
-			this.bindErrorEvents();
+			this.bind("error", function(e, error){
+				var XAUtils = require('utils/XAUtils');
+				XAUtils.defaultErrorHandler(undefined, error, e);
+			});
 		},
 		/**
 		 * @function schema
@@ -95,7 +98,6 @@ define(function(require){
 			return { 
 				closeOnSelect : true,
 				placeholder : 'Select Tag Service',
-				width :'220px',
 				allowClear: true,
 				initSelection : function (element, callback) {
                                         var rangerService = new RangerService()

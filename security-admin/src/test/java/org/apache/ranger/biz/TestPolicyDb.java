@@ -136,7 +136,7 @@ public class TestPolicyDb {
 				}
 				assertEquals("allowed-policy list mismatch!", test.allowedPolicies, allowedPolicyIds);
 			} else {
-				boolean result = policyAdmin.isAccessAllowedByUnzonedPolicies(test.resources, test.user, test.userGroups, test.accessType);
+				boolean result = policyAdmin.isAccessAllowedByUnzonedPolicies(test.resources, null, test.user, test.userGroups, test.accessType);
 
 				assertEquals("isAccessAllowed mismatched! - " + test.name, expected, result);
 			}

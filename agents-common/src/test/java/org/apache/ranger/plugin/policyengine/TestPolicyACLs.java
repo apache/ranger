@@ -35,6 +35,9 @@ import com.google.gson.JsonParseException;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceMatchingScope;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs.DataMaskResult;
+import org.apache.ranger.plugin.policyengine.RangerResourceACLs.RowFilterResult;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.junit.After;
 import org.junit.AfterClass;
@@ -44,6 +47,7 @@ import org.junit.Test;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+
 
 public class TestPolicyACLs {
 	private static Gson gsonBuilder;
@@ -76,6 +80,20 @@ public class TestPolicyACLs {
 		runTestsFromResourceFiles(tests);
 	}
 
+	@Test
+	public void testResourceACLs_dataMask() throws Exception {
+		String[] tests = {"/policyengine/test_aclprovider_mask_filter.json"};
+
+		runTestsFromResourceFiles(tests);
+	}
+
+	@Test
+	public void testResourceACLs_hdfs() throws Exception {
+		String[] tests = {"/policyengine/test_aclprovider_hdfs.json"};
+
+		runTestsFromResourceFiles(tests);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) throws Exception {
 		for(String resourceName : resourceNames) {
 			InputStream       inStream = this.getClass().getResourceAsStream(resourceName);
@@ -91,8 +109,9 @@ public class TestPolicyACLs {
 		assertTrue("invalid input: " + testName, testCases != null && testCases.testCases != null);
 
 		for(PolicyACLsTests.TestCase testCase : testCases.testCases) {
+			String                    serviceType         = testCase.servicePolicies.getServiceDef().getName();
 			RangerPolicyEngineOptions policyEngineOptions = new RangerPolicyEngineOptions();
-			RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig("hive", null, "test-policy-acls", "cl1", "on-prem", policyEngineOptions));
+			RangerPluginContext       pluginContext       = new RangerPluginContext(new RangerPluginConfig(serviceType, null, "test-policy-acls", "cl1", "on-prem", policyEngineOptions));
 			RangerPolicyEngine        policyEngine        = new RangerPolicyEngineImpl(testCase.servicePolicies, pluginContext, null);
 
 			for(PolicyACLsTests.TestCase.OneTest oneTest : testCase.tests) {
@@ -100,11 +119,15 @@ public class TestPolicyACLs {
 					continue;
 				}
 				RangerAccessRequestImpl request = new RangerAccessRequestImpl(oneTest.resource, RangerPolicyEngine.ANY_ACCESS, null, null, null);
+
+				request.setResourceMatchingScope(oneTest.resourceMatchingScope);
+
 				RangerResourceACLs acls = policyEngine.getResourceACLs(request);
 
-				boolean userACLsMatched = true, groupACLsMatched = true, roleACLsMatched = true;
+				boolean userACLsMatched = true, groupACLsMatched = true, roleACLsMatched = true, rowFiltersMatched = true, dataMaskingMatched = true;
 
 				if (MapUtils.isNotEmpty(acls.getUserACLs()) && MapUtils.isNotEmpty(oneTest.userPermissions)) {
+					assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - userACLsMatched", oneTest.userPermissions.size(), acls.getUserACLs().size());
 
 					for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
 							acls.getUserACLs().entrySet()) {
@@ -142,7 +165,43 @@ public class TestPolicyACLs {
 					userACLsMatched = false;
 				}
 
+				if (acls.getDataMasks().isEmpty()) {
+					dataMaskingMatched = (oneTest.dataMasks == null || oneTest.dataMasks.isEmpty());
+				} else if (acls.getDataMasks().size() != (oneTest.dataMasks == null ? 0 : oneTest.dataMasks.size())) {
+					dataMaskingMatched = false;
+				} else {
+					for (int i = 0; i < acls.getDataMasks().size(); i++) {
+						DataMaskResult found    = acls.getDataMasks().get(i);
+						DataMaskResult expected = oneTest.dataMasks.get(i);
+
+						dataMaskingMatched = found.equals(expected);
+
+						if (!dataMaskingMatched) {
+							break;
+						}
+					}
+				}
+
+				if (acls.getRowFilters().isEmpty()) {
+					rowFiltersMatched = (oneTest.rowFilters == null || oneTest.rowFilters.isEmpty());
+				} else if (acls.getRowFilters().size() != (oneTest.rowFilters == null ? 0 : oneTest.rowFilters.size())) {
+					rowFiltersMatched = false;
+				} else {
+					for (int i = 0; i < acls.getRowFilters().size(); i++) {
+						RowFilterResult found    = acls.getRowFilters().get(i);
+						RowFilterResult expected = oneTest.rowFilters.get(i);
+
+						rowFiltersMatched = found.equals(expected);
+
+						if (!rowFiltersMatched) {
+							break;
+						}
+					}
+				}
+
 				if (MapUtils.isNotEmpty(acls.getGroupACLs()) && MapUtils.isNotEmpty(oneTest.groupPermissions)) {
+					assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - groupACLsMatched", oneTest.groupPermissions.size(), acls.getGroupACLs().size());
+
 					for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
 							acls.getGroupACLs().entrySet()) {
 						String groupName = entry.getKey();
@@ -180,6 +239,8 @@ public class TestPolicyACLs {
 				}
 
 				if (MapUtils.isNotEmpty(acls.getRoleACLs()) && MapUtils.isNotEmpty(oneTest.rolePermissions)) {
+					assertEquals("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - roleACLsMatched", oneTest.rolePermissions.size(), acls.getRoleACLs().size());
+
 					for (Map.Entry<String, Map<String, RangerResourceACLs.AccessResult>> entry :
 							acls.getRoleACLs().entrySet()) {
 						String roleName = entry.getKey();
@@ -215,7 +276,11 @@ public class TestPolicyACLs {
 				} else if (!(MapUtils.isEmpty(acls.getRoleACLs()) && MapUtils.isEmpty(oneTest.rolePermissions))) {
 					roleACLsMatched = false;
 				}
-				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name, userACLsMatched && groupACLsMatched && roleACLsMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - userACLsMatched", userACLsMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - groupACLsMatched", groupACLsMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - roleACLsMatched", roleACLsMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - rowFiltersMatched", rowFiltersMatched);
+				assertTrue("getResourceACLs() failed! " + testCase.name + ":" + oneTest.name + " - dataMaskingMatched", dataMaskingMatched);
 			}
 		}
 	}
@@ -230,10 +295,13 @@ public class TestPolicyACLs {
 
 			class OneTest {
 				String               name;
-				RangerAccessResource   resource;
+				RangerAccessResource resource;
+				ResourceMatchingScope resourceMatchingScope;
 				Map<String, Map<String, RangerResourceACLs.AccessResult>> userPermissions;
 				Map<String, Map<String, RangerResourceACLs.AccessResult>> groupPermissions;
 				Map<String, Map<String, RangerResourceACLs.AccessResult>> rolePermissions;
+				List<RowFilterResult>                                     rowFilters;
+				List<DataMaskResult>                                      dataMasks;
 			}
 		}
 	}

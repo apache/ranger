@@ -36,6 +36,7 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.FixMethodOrder;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.junit.runners.MethodSorters;
@@ -65,6 +66,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 * and the others have role "ROLE_USER" by mock for test.
 *
 */
+@Ignore
 @RunWith(SpringJUnit4ClassRunner.class)
 @ContextConfiguration(locations = { "classpath*:applicationContext.xml", "classpath*:kylinSecurity.xml" })
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)

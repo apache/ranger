@@ -36,7 +36,6 @@ import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
@@ -72,12 +71,14 @@ import org.apache.ranger.view.VXResponse;
 import org.apache.ranger.view.VXString;
 import org.apache.ranger.view.VXStringList;
 import org.apache.ranger.view.VXUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RangerBizUtil {
-	private static final Logger logger = Logger.getLogger(RangerBizUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(RangerBizUtil.class);
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -111,12 +112,14 @@ public class RangerBizUtil {
 	public static final String AUDIT_STORE_RDBMS = "DB";
 	public static final String AUDIT_STORE_SOLR = "solr";
 	public static final String AUDIT_STORE_ElasticSearch = "elasticSearch";
+	public static final String AUDIT_STORE_CloudWatch = "cloudwatch";
 	public static final boolean batchClearEnabled = PropertiesUtil.getBooleanProperty("ranger.jpa.jdbc.batch-clear.enable", true);
 	public static final int policyBatchSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-clear.size", 10);
 	public static final int batchPersistSize = PropertiesUtil.getIntProperty("ranger.jpa.jdbc.batch-persist.size", 500);
 
 	String auditDBType = AUDIT_STORE_RDBMS;
 	private final boolean allowUnauthenticatedAccessInSecureEnvironment;
+	private final boolean allowUnauthenticatedDownloadAccessInSecureEnvironment;
 
 	static String fileSeparator = PropertiesUtil.getProperty("ranger.file.separator", "/");
 
@@ -124,6 +127,8 @@ public class RangerBizUtil {
 		RangerAdminConfig config = RangerAdminConfig.getInstance();
 
 		allowUnauthenticatedAccessInSecureEnvironment = config.getBoolean("ranger.admin.allow.unauthenticated.access", false);
+		allowUnauthenticatedDownloadAccessInSecureEnvironment = config.getBoolean("ranger.admin.allow.unauthenticated.download.access",
+				allowUnauthenticatedAccessInSecureEnvironment);
 
 		maxFirstNameLength = Integer.parseInt(PropertiesUtil.getProperty("ranger.user.firstname.maxlength", "16"));
 		maxDisplayNameLength = PropertiesUtil.getIntProperty("ranger.bookmark.name.maxlen", maxDisplayNameLength);
@@ -460,6 +465,17 @@ public class RangerBizUtil {
 			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
 			if (currentUserSession == null) {
 				if (!allowUnauthenticatedAccessInSecureEnvironment) {
+					throw new Exception("Unauthenticated access not allowed");
+				}
+			}
+		}
+	}
+
+	public void failUnauthenticatedDownloadIfNotAllowed() throws Exception {
+		if (UserGroupInformation.isSecurityEnabled()) {
+			UserSessionBase currentUserSession = ContextUtil.getCurrentUserSession();
+			if (currentUserSession == null) {
+				if (!allowUnauthenticatedDownloadAccessInSecureEnvironment) {
 					throw new Exception("Unauthenticated access not allowed");
 				}
 			}
@@ -1429,7 +1445,13 @@ public class RangerBizUtil {
 	}
 
 	public boolean isUserServiceAdmin(RangerService rangerService, String userName) {
-		return isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_USERS, userName);
+		boolean ret = isUserInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_USERS, userName);
+
+		if (!ret && userMgr != null && userMgr.xUserMgr != null) {
+			ret = isAnyGroupInConfigParameter(rangerService, ServiceDBStore.SERVICE_ADMIN_GROUPS, userMgr.xUserMgr.getGroupsForUser(userName));
+		}
+
+		return ret;
 	}
 
 	public boolean isUserInConfigParameter(RangerService rangerService, String configParamName, String userName) {
@@ -1449,12 +1471,32 @@ public class RangerBizUtil {
 		return false;
 	}
 
+	public boolean isAnyGroupInConfigParameter(RangerService rangerService, String configParamName, Set<String> groupNames) {
+		boolean             ret      = false;
+		Map<String, String> map      = rangerService.getConfigs();
+		String              cfgValue = map != null ? map.get(configParamName) : null;
+
+		if (StringUtils.isNotBlank(cfgValue) && CollectionUtils.isNotEmpty(groupNames)) {
+			String[] svcCfgGroupNames = cfgValue.split(",");
+
+			for (String svcCfgGroupName : svcCfgGroupNames) {
+				if (RangerConstants.GROUP_PUBLIC.equals(svcCfgGroupName) || groupNames.contains(svcCfgGroupName)) {
+					ret = true;
+
+					break;
+				}
+			}
+		}
+
+		return ret;
+	}
+
         public void blockAuditorRoleUser() {
                 UserSessionBase session = ContextUtil.getCurrentUserSession();
                 if (session != null) {
                         if (session.isAuditKeyAdmin() || session.isAuditUserAdmin()) {
                                 VXResponse vXResponse = new VXResponse();
-                                vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                                vXResponse.setStatusCode(HttpServletResponse.SC_FORBIDDEN);
                                 vXResponse.setMsgDesc("Operation"
                                                 + " denied. LoggedInUser="
                                                 +  session.getXXPortalUser().getId()
@@ -1463,7 +1505,7 @@ public class RangerBizUtil {
                         }
                 } else {
                         VXResponse vXResponse = new VXResponse();
-                        vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+                        vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
                         vXResponse.setMsgDesc("Bad Credentials");
                         throw restErrorUtil.generateRESTException(vXResponse);
                 }
@@ -1511,15 +1553,16 @@ public class RangerBizUtil {
 	}
 
 	public static boolean setBulkMode(boolean val) {
-		if(RangerContextHolder.getOpContext()!=null){
-			RangerContextHolder.getOpContext().setBulkModeContext(val);
-		}
-		else {
-			  RangerAdminOpContext opContext = new RangerAdminOpContext();
-			  opContext.setBulkModeContext(val);
-			  RangerContextHolder.setOpContext(opContext);
-		}
+		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(val);
+
 		return isBulkMode();
+	}
+
+	public boolean getCreatePrincipalsIfAbsent() {
+		RangerAdminOpContext opContext = RangerContextHolder.getOpContext();
+		Boolean              ret       = opContext != null ? opContext.getCreatePrincipalsIfAbsent() : null;
+
+		return ret != null ? ret : false;
 	}
 
 	//should be used only in bulk operation like importPolicies, policies delete.
@@ -1539,10 +1582,9 @@ public class RangerBizUtil {
 			return currentUserSession.isUserAdmin();
 		} else {
 			VXResponse vXResponse = new VXResponse();
-			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+			vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED); // user is null
 			vXResponse.setMsgDesc("Bad Credentials");
 			throw restErrorUtil.generateRESTException(vXResponse);
 		}
 	}
-
 }

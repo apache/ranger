@@ -34,13 +34,14 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.Validate;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class RangerSearchUtil extends SearchUtil {
-	final static Logger logger = Logger.getLogger(RangerSearchUtil.class);
+	final static Logger logger = LoggerFactory.getLogger(RangerSearchUtil.class);
 	
 	public SearchFilter getSearchFilter(@Nonnull HttpServletRequest request, List<SortField> sortFields) {
 		Validate.notNull(request, "request");
@@ -65,6 +66,7 @@ public class RangerSearchUtil extends SearchUtil {
 		ret.setParam(SearchFilter.IS_RECURSIVE, request.getParameter(SearchFilter.IS_RECURSIVE));
 		ret.setParam(SearchFilter.USER, request.getParameter(SearchFilter.USER));
 		ret.setParam(SearchFilter.GROUP, request.getParameter(SearchFilter.GROUP));
+		ret.setParam(SearchFilter.ROLE, request.getParameter(SearchFilter.ROLE));
 		ret.setParam(SearchFilter.POL_RESOURCE, request.getParameter(SearchFilter.POL_RESOURCE));
 		ret.setParam(SearchFilter.RESOURCE_SIGNATURE, request.getParameter(SearchFilter.RESOURCE_SIGNATURE));
 		ret.setParam(SearchFilter.POLICY_TYPE, request.getParameter(SearchFilter.POLICY_TYPE));
@@ -179,6 +181,13 @@ public class RangerSearchUtil extends SearchUtil {
 				configUtil.getDefaultMaxRows(), "Invalid value for parameter pageSize",
 				MessageEnums.INVALID_INPUT_DATA, null, SearchFilter.PAGE_SIZE);
 		ret.setMaxRows(validatePageSize(pageSize));
+
+		if (request.getParameter(SearchFilter.POLICY_TYPE) != null) {
+			int policyType = restErrorUtil.parseInt(request.getParameter(SearchFilter.POLICY_TYPE), 0,
+					"Invalid value for parameter policyType", MessageEnums.INVALID_INPUT_DATA, null,
+					SearchFilter.POLICY_TYPE);
+			ret.setParam(SearchFilter.POLICY_TYPE, Integer.toString(policyType));
+		}
 
 		ret.setGetCount(restErrorUtil.parseBoolean(request.getParameter("getCount"), true));
 		String sortBy = restErrorUtil.validateString(request.getParameter(SearchFilter.SORT_BY),

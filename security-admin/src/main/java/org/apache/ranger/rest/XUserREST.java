@@ -17,14 +17,18 @@
  * under the License.
  */
 
- package org.apache.ranger.rest;
+package org.apache.ranger.rest;
 
+import java.util.Set;
+import java.util.Map;
+import java.util.List;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -32,13 +36,13 @@ import javax.ws.rs.PUT;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.QueryParam;
-import javax.ws.rs.DefaultValue;
+import javax.ws.rs.WebApplicationException;
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.Response;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.biz.XUserMgr;
@@ -75,13 +79,20 @@ import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.service.XUserPermissionService;
 import org.apache.ranger.service.XUserService;
+import org.apache.ranger.ugsyncutil.model.GroupUserInfo;
+import org.apache.ranger.ugsyncutil.model.UsersGroupRoleAssignments;
 import org.apache.ranger.view.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import static org.apache.ranger.common.RangerCommonEnums.GROUP_EXTERNAL;
+import static org.apache.ranger.common.RangerCommonEnums.USER_EXTERNAL;
 
 
 @Path("xusers")
@@ -156,12 +167,12 @@ public class XUserREST {
 	@Autowired
 	ServiceDBStore svcStore;
 	
-	static final Logger logger = Logger.getLogger(XUserMgr.class);
+	static final Logger logger = LoggerFactory.getLogger(XUserMgr.class);
 
 	// Handle XGroup
 	@GET
 	@Path("/groups/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP + "\")")
 	public VXGroup getXGroup(@PathParam("id") Long id) {
 		return xUserMgr.getXGroup(id);
@@ -169,7 +180,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/secure/groups/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SECURE_GET_X_GROUP + "\")")
 	public VXGroup secureGetXGroup(@PathParam("id") Long id) {
 		return xUserMgr.getXGroup(id);
@@ -177,7 +188,8 @@ public class XUserREST {
 
 	@POST
 	@Path("/groups")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXGroup createXGroup(VXGroup vXGroup) {
 		return xUserMgr.createXGroupWithoutLogin(vXGroup);
@@ -185,7 +197,8 @@ public class XUserREST {
 
 	@POST
 	@Path("/groups/groupinfo")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXGroupUserInfo createXGroupUserFromMap(VXGroupUserInfo vXGroupUserInfo) {
 		return  xUserMgr.createXGroupUserFromMap(vXGroupUserInfo);
@@ -193,7 +206,8 @@ public class XUserREST {
 	
 	@POST
 	@Path("/secure/groups")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXGroup secureCreateXGroup(VXGroup vXGroup) {
 		return xUserMgr.createXGroup(vXGroup);
@@ -201,21 +215,24 @@ public class XUserREST {
 
 	@PUT
 	@Path("/groups")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXGroup updateXGroup(VXGroup vXGroup) {
 		return xUserMgr.updateXGroup(vXGroup);
 	}
 
 	@PUT
 	@Path("/secure/groups/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXGroup secureUpdateXGroup(VXGroup vXGroup) {
 		return xUserMgr.updateXGroup(vXGroup);
 	}
 
 	@PUT
 	@Path("/secure/groups/visibility")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.MODIFY_GROUPS_VISIBILITY + "\")")
 	public void modifyGroupsVisibility(HashMap<Long, Integer> groupVisibilityMap){
 		 xUserMgr.modifyGroupsVisibility(groupVisibilityMap);
@@ -243,21 +260,21 @@ public class XUserREST {
 	 */
 	@GET
 	@Path("/groups")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_GROUPS + "\")")
 	public VXGroupList searchXGroups(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xGroupService.sortFields);
 		searchUtil.extractString(request, searchCriteria, "name", "group name", null);
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "Group Visibility");
-//		searchUtil.extractString(request, searchCriteria, "groupSource", "group source", null);
 		searchUtil.extractInt(request, searchCriteria, "groupSource", "group source");
+		searchUtil.extractString(request, searchCriteria, "syncSource", "Sync Source", null);
 		return xUserMgr.searchXGroups(searchCriteria);
 	}
 
 	@GET
 	@Path("/groups/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_GROUPS + "\")")
 	public VXLong countXGroups(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -269,7 +286,7 @@ public class XUserREST {
 	// Handle XUser
 	@GET
 	@Path("/users/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_USER + "\")")
 	public VXUser getXUser(@PathParam("id") Long id) {
 		return xUserMgr.getXUser(id);
@@ -277,7 +294,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/secure/users/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SECURE_GET_X_USER + "\")")
 	public VXUser secureGetXUser(@PathParam("id") Long id) {
 		return xUserMgr.getXUser(id);
@@ -285,7 +302,8 @@ public class XUserREST {
 
 	@POST
 	@Path("/users")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXUser createXUser(VXUser vXUser) {
 		return xUserMgr.createXUserWithOutLogin(vXUser);
@@ -293,7 +311,8 @@ public class XUserREST {
 
 	@POST
 	@Path("/users/external")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXUser createExternalUser(VXUser vXUser) {
 		return xUserMgr.createExternalUser(vXUser.getName());
@@ -301,15 +320,17 @@ public class XUserREST {
 	
 	@POST
 	@Path("/users/userinfo")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXUserGroupInfo createXUserGroupFromMap(VXUserGroupInfo vXUserGroupInfo) {
 		return  xUserMgr.createXUserGroupFromMap(vXUserGroupInfo);
 	}
-	
+
 	@POST
 	@Path("/secure/users")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXUser secureCreateXUser(VXUser vXUser) {
 
@@ -319,7 +340,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/users")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXUser updateXUser(VXUser vXUser) {
                 bizUtil.checkUserAccessible(vXUser);
 		return xUserMgr.updateXUser(vXUser);
@@ -327,7 +349,8 @@ public class XUserREST {
 	
 	@PUT
 	@Path("/secure/users/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXUser secureUpdateXUser(VXUser vXUser) {
 
 		bizUtil.checkUserAccessible(vXUser);
@@ -336,7 +359,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/secure/users/visibility")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.MODIFY_USER_VISIBILITY + "\")")
 	public void modifyUserVisibility(HashMap<Long, Integer> visibilityMap){
 		 xUserMgr.modifyUserVisibility(visibilityMap);
@@ -364,7 +388,7 @@ public class XUserREST {
 	 */
 	@GET
 	@Path("/users")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_USERS + "\")")
 	public VXUserList searchXUsers(@Context HttpServletRequest request) {
 		String UserRoleParamName = RangerConstants.ROLE_USER;
@@ -380,9 +404,10 @@ public class XUserREST {
 		searchUtil.extractInt(request, searchCriteria, "userSource", "User Source");
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
 		searchUtil.extractInt(request, searchCriteria, "status", "User Status");
-		List<String> userRolesList = searchUtil.extractStringList(request, searchCriteria, "userRoleList", "User Role List", "userRoleList", null,
-				null);
+		List<String> userRolesList = searchUtil.extractStringList(request, searchCriteria, "userRoleList",
+				"User Role List", "userRoleList", null, null);
 		searchUtil.extractRoleString(request, searchCriteria, "userRole", "Role", null);
+		searchUtil.extractString(request, searchCriteria, "syncSource", "Sync Source", null);
 
 		if (CollectionUtils.isNotEmpty(userRolesList) && CollectionUtils.size(userRolesList) == 1 && userRolesList.get(0).equalsIgnoreCase(UserRoleParamName)) {
 			if (!(searchCriteria.getParamList().containsKey("name"))) {
@@ -420,7 +445,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/lookup/users")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USERS_LOOKUP + "\")")
 	public VXStringList getUsersLookup(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -430,7 +455,7 @@ public class XUserREST {
 		searchUtil.extractString(request, searchCriteria, "name", "User name",null);
 		searchUtil.extractInt(request, searchCriteria, "isVisible", "User Visibility");
 		try {
-			VXUserList vXUserList = xUserMgr.searchXUsers(searchCriteria);
+			VXUserList vXUserList = xUserMgr.lookupXUsers(searchCriteria);
 			VXString VXString = null;
 			for (VXUser vxUser : vXUserList.getList()) {
 				VXString = new VXString();
@@ -451,7 +476,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/lookup/groups")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_GROUPS_LOOKUP + "\")")
 	public VXStringList getGroupsLookup(@Context HttpServletRequest request) {
 		VXStringList ret = new VXStringList();
@@ -481,7 +506,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/users/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_USERS + "\")")
 	public VXLong countXUsers(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -493,7 +518,7 @@ public class XUserREST {
 	// Handle XGroupUser
 	@GET
 	@Path("/groupusers/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_USER + "\")")
 	public VXGroupUser getXGroupUser(@PathParam("id") Long id) {
 		return xUserMgr.getXGroupUser(id);
@@ -501,7 +526,8 @@ public class XUserREST {
 
 	@POST
 	@Path("/groupusers")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXGroupUser createXGroupUser(VXGroupUser vXGroupUser) {
 		return xUserMgr.createXGroupUser(vXGroupUser);
@@ -509,7 +535,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/groupusers")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXGroupUser updateXGroupUser(VXGroupUser vXGroupUser) {
 		return xUserMgr.updateXGroupUser(vXGroupUser);
 	}
@@ -532,7 +559,7 @@ public class XUserREST {
 	 */
 	@GET
 	@Path("/groupusers")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_GROUP_USERS + "\")")
 	public VXGroupUserList searchXGroupUsers(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -548,7 +575,7 @@ public class XUserREST {
 	 */
 	@GET
 	@Path("/groupusers/groupName/{groupName}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_USERS_BY_GROUP_NAME + "\")")
 	public VXGroupUserInfo getXGroupUsersByGroupName(@Context HttpServletRequest request,
 			@PathParam("groupName") String groupName) {
@@ -557,7 +584,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/groupusers/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_GROUP_USERS + "\")")
 	public VXLong countXGroupUsers(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -569,7 +596,7 @@ public class XUserREST {
 	// Handle XGroupGroup
 	@GET
 	@Path("/groupgroups/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_GROUP + "\")")
 	public VXGroupGroup getXGroupGroup(@PathParam("id") Long id) {
 		return xUserMgr.getXGroupGroup(id);
@@ -577,14 +604,16 @@ public class XUserREST {
 
 	@POST
 	@Path("/groupgroups")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXGroupGroup createXGroupGroup(VXGroupGroup vXGroupGroup) {
 		return xUserMgr.createXGroupGroup(vXGroupGroup);
 	}
 
 	@PUT
 	@Path("/groupgroups")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXGroupGroup updateXGroupGroup(VXGroupGroup vXGroupGroup) {
 		return xUserMgr.updateXGroupGroup(vXGroupGroup);
 	}
@@ -607,7 +636,7 @@ public class XUserREST {
 	 */
 	@GET
 	@Path("/groupgroups")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_GROUP_GROUPS + "\")")
 	public VXGroupGroupList searchXGroupGroups(
 			@Context HttpServletRequest request) {
@@ -618,7 +647,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/groupgroups/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_GROUP_GROUPS + "\")")
 	public VXLong countXGroupGroups(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -630,7 +659,7 @@ public class XUserREST {
 	// Handle XPermMap
 	@GET
 	@Path("/permmaps/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_PERM_MAP + "\")")
 	public VXPermMap getXPermMap(@PathParam("id") Long id) {
 		VXPermMap permMap = xUserMgr.getXPermMap(id);
@@ -646,7 +675,8 @@ public class XUserREST {
 
 	@POST
 	@Path("/permmaps")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_PERM_MAP + "\")")
 	public VXPermMap createXPermMap(VXPermMap vXPermMap) {
 
@@ -661,7 +691,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/permmaps")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_PERM_MAP + "\")")
 	public VXPermMap updateXPermMap(VXPermMap vXPermMap) {
 		VXPermMap vXPermMapRet = null;
@@ -695,7 +726,7 @@ public class XUserREST {
 	 */
 	@GET
 	@Path("/permmaps")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_PERM_MAPS + "\")")
 	public VXPermMapList searchXPermMaps(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -705,7 +736,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/permmaps/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_PERM_MAPS + "\")")
 	public VXLong countXPermMaps(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -717,7 +748,7 @@ public class XUserREST {
 	// Handle XAuditMap
 	@GET
 	@Path("/auditmaps/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_AUDIT_MAP + "\")")
 	public VXAuditMap getXAuditMap(@PathParam("id") Long id) {
 		VXAuditMap vXAuditMap = xUserMgr.getXAuditMap(id);
@@ -733,7 +764,8 @@ public class XUserREST {
 
 	@POST
 	@Path("/auditmaps")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_AUDIT_MAP + "\")")
 	public VXAuditMap createXAuditMap(VXAuditMap vXAuditMap) {
 
@@ -748,7 +780,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/auditmaps")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_AUDIT_MAP + "\")")
 	public VXAuditMap updateXAuditMap(VXAuditMap vXAuditMap) {
 		VXAuditMap vXAuditMapRet = null;
@@ -782,7 +815,7 @@ public class XUserREST {
 	 */
 	@GET
 	@Path("/auditmaps")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_AUDIT_MAPS + "\")")
 	public VXAuditMapList searchXAuditMaps(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -792,7 +825,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/auditmaps/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_AUDIT_MAPS + "\")")
 	public VXLong countXAuditMaps(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -804,7 +837,7 @@ public class XUserREST {
 	// Handle XUser
 	@GET
 	@Path("/users/userName/{userName}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_USER_BY_USER_NAME + "\")")
 	public VXUser getXUserByUserName(@Context HttpServletRequest request,
 			@PathParam("userName") String userName) {
@@ -813,7 +846,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/groups/groupName/{groupName}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_BY_GROUP_NAME + "\")")
 	public VXGroup getXGroupByGroupName(@Context HttpServletRequest request,
 			@PathParam("groupName") String groupName) {
@@ -832,6 +865,85 @@ public class XUserREST {
 		}
 		VXUser vxUser = xUserService.getXUserByUserName(userName);
 		xUserMgr.deleteXUser(vxUser.getId(), forceDelete);
+	}
+
+
+	/**
+	 * Proceed with <tt>caution</tt>: Force deletes users from the ranger db,
+	 * <tt>Delete</tt> happens one at a time with immediate commit on the transaction.
+	 */
+	@DELETE
+	@Path("/delete/external/users")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Produces({ "application/json" })
+	public Response forceDeleteExternalUsers(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchUtil.extractString(
+				request, searchCriteria, "name", "User name",null);
+		searchUtil.extractString(
+				request, searchCriteria, "emailAddress", "Email Address", null);
+		searchUtil.extractInt(
+				request, searchCriteria, "isVisible", "User Visibility");
+		searchUtil.extractInt(
+				request, searchCriteria, "status", "User Status");
+		searchUtil.extractString(
+				request, searchCriteria, "syncSource", "Sync Source", null);
+		searchUtil.extractRoleString(
+				request, searchCriteria, "userRole", "Role", null);
+
+		// for invalid params
+		if(request.getQueryString() != null && searchCriteria.getParamList().size() == 0){
+			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params!").build();
+		}
+
+		// only for external users
+		searchCriteria.addParam("userSource", USER_EXTERNAL);
+
+		List<Long> userIds = xUserService.searchXUsersForIds(searchCriteria);
+		long usersDeleted = xUserMgr.forceDeleteExternalUsers(userIds);
+		String response = "No users were deleted!";
+		if (usersDeleted == 1) {
+			response = "1 user deleted successfully.";
+		} else if (usersDeleted > 0) {
+			response = String.format("%d users deleted successfully.", usersDeleted);
+		}
+		return Response.ok(response).build();
+	}
+
+	/**
+	 * Proceed with <tt>caution</tt>: Force deletes groups from the ranger db,
+	 * <tt>Delete</tt> happens one at a time with immediate commit on the transaction.
+	 */
+	@DELETE
+	@Path("/delete/external/groups")
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Produces({ "application/json" })
+	public Response forceDeleteExternalGroups(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = new SearchCriteria();
+		searchUtil.extractString(
+				request, searchCriteria, "name", "Group Name",null);
+		searchUtil.extractInt(
+				request, searchCriteria, "isVisible", "Group Visibility");
+		searchUtil.extractString(
+				request, searchCriteria, "syncSource", "Sync Source", null);
+
+		// for invalid params
+		if(request.getQueryString() != null && searchCriteria.getParamList().size() == 0){
+			return Response.status(Response.Status.BAD_REQUEST).entity("Invalid query params!").build();
+		}
+
+		// only for external groups
+		searchCriteria.addParam("groupSource", GROUP_EXTERNAL);
+
+		List<Long> groupIds = xGroupService.searchXGroupsForIds(searchCriteria);
+		long groupsDeleted = xUserMgr.forceDeleteExternalGroups(groupIds);
+		String response = "No groups were deleted!";
+		if (groupsDeleted == 1) {
+			response = "1 group deleted successfully.";
+		} else if (groupsDeleted > 0) {
+			response = String.format("%d groups deleted successfully.", groupsDeleted);
+		}
+		return Response.ok(response).build();
 	}
 
 	@DELETE
@@ -860,7 +972,7 @@ public class XUserREST {
 	
 	@GET
 	@Path("/{userId}/groups")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_USER_GROUPS + "\")")
 	public VXGroupList getXUserGroups(@Context HttpServletRequest request,
 			@PathParam("userId") Long id){
@@ -869,7 +981,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/{groupId}/users")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_USERS + "\")")
 	public VXUserList getXGroupUsers(@Context HttpServletRequest request,
 			@PathParam("groupId") Long id){
@@ -881,7 +993,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/authSessions")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_AUTH_SESSIONS + "\")")
 	public VXAuthSessionList getAuthSessions(@Context HttpServletRequest request){
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -903,7 +1015,7 @@ public class XUserREST {
 	
 	@GET
 	@Path("/authSessions/info")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_AUTH_SESSION + "\")")
 	public VXAuthSession getAuthSession(@Context HttpServletRequest request){
 		String authSessionId = request.getParameter("extSessionId");
@@ -913,7 +1025,8 @@ public class XUserREST {
 	// Handle module permissions
 	@POST
 	@Path("/permission")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef createXModuleDefPermission(VXModuleDef vXModuleDef) {
 		xUserMgr.checkAdminAccess();
@@ -923,7 +1036,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/permission/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef getXModuleDefPermission(@PathParam("id") Long id) {
 		return xUserMgr.getXModuleDefPermission(id);
@@ -931,7 +1044,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/permission/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_MODULE_DEF_PERMISSION + "\")")
 	public VXModuleDef updateXModuleDefPermission(VXModuleDef vXModuleDef) {
 		xUserMgr.checkAdminAccess();
@@ -952,7 +1066,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/permission")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_MODULE_DEF + "\")")
 	public VXModuleDefList searchXModuleDef(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -972,8 +1086,29 @@ public class XUserREST {
 	}
 
 	@GET
+	@Path("/permissionlist")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_MODULE_DEF + "\")")
+	public VXModulePermissionList searchXModuleDefList(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
+				request, xModuleDefService.sortFields);
+
+		searchUtil.extractString(request, searchCriteria, "module",
+				"modulename", null);
+
+		searchUtil.extractString(request, searchCriteria, "moduleDefList",
+				"id", null);
+		searchUtil.extractString(request, searchCriteria, "userName",
+				"userName", null);
+		searchUtil.extractString(request, searchCriteria, "groupName",
+				"groupName", null);
+
+		return xUserMgr.searchXModuleDefList(searchCriteria);
+	}
+
+	@GET
 	@Path("/permission/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_MODULE_DEF + "\")")
 	public VXLong countXModuleDef(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -984,7 +1119,8 @@ public class XUserREST {
 	// Handle user permissions
 	@POST
 	@Path("/permission/user")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_USER_PERMISSION + "\")")
 	public VXUserPermission createXUserPermission(
 			VXUserPermission vXUserPermission) {
@@ -995,7 +1131,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/permission/user/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_USER_PERMISSION + "\")")
 	public VXUserPermission getXUserPermission(@PathParam("id") Long id) {
 		return xUserMgr.getXUserPermission(id);
@@ -1003,7 +1139,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/permission/user/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_USER_PERMISSION + "\")")
 	public VXUserPermission updateXUserPermission(
 			VXUserPermission vXUserPermission) {
@@ -1024,7 +1161,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/permission/user")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_USER_PERMISSION + "\")")
 	public VXUserPermissionList searchXUserPermission(
 			@Context HttpServletRequest request) {
@@ -1040,7 +1177,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/permission/user/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_USER_PERMISSION + "\")")
 	public VXLong countXUserPermission(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -1051,18 +1188,19 @@ public class XUserREST {
 	// Handle group permissions
 	@POST
 	@Path("/permission/group")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_GROUP_PERMISSION + "\")")
 	public VXGroupPermission createXGroupPermission(
 			VXGroupPermission vXGroupPermission) {
 		xUserMgr.checkAdminAccess();
-                bizUtil.blockAuditorRoleUser();
+		bizUtil.blockAuditorRoleUser();
 		return xUserMgr.createXGroupPermission(vXGroupPermission);
 	}
 
 	@GET
 	@Path("/permission/group/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_GROUP_PERMISSION + "\")")
 	public VXGroupPermission getXGroupPermission(@PathParam("id") Long id) {
 		return xUserMgr.getXGroupPermission(id);
@@ -1070,12 +1208,19 @@ public class XUserREST {
 
 	@PUT
 	@Path("/permission/group/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_GROUP_PERMISSION + "\")")
-	public VXGroupPermission updateXGroupPermission(
+	public VXGroupPermission updateXGroupPermission(@PathParam("id") Long id,
 			VXGroupPermission vXGroupPermission) {
+		// if VXGroupPermission.id is specified, it should be same as the param 'id'
+		if(vXGroupPermission.getId() == null) {
+			vXGroupPermission.setId(id);
+		} else if(!vXGroupPermission.getId().equals(id)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "vXGroupPermission Id mismatch", true);
+		}
 		xUserMgr.checkAdminAccess();
-                bizUtil.blockAuditorRoleUser();
+		bizUtil.blockAuditorRoleUser();
 		return xUserMgr.updateXGroupPermission(vXGroupPermission);
 	}
 
@@ -1092,7 +1237,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/permission/group")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_GROUP_PERMISSION + "\")")
 	public VXGroupPermissionList searchXGroupPermission(
 			@Context HttpServletRequest request) {
@@ -1107,7 +1252,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/permission/group/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_GROUP_PERMISSION + "\")")
 	public VXLong countXGroupPermission(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -1117,7 +1262,7 @@ public class XUserREST {
 
 	@PUT
 	@Path("/secure/users/activestatus")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.MODIFY_USER_ACTIVE_STATUS + "\")")
 	public void modifyUserActiveStatus(HashMap<Long, Integer> statusMap){
 		 xUserMgr.modifyUserActiveStatus(statusMap);
@@ -1125,7 +1270,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/secure/users/roles/{userId}")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_ID + "\")")
 	public VXStringList setUserRolesByExternalID(@PathParam("userId") Long userId,
 			VXStringList roleList) {
@@ -1134,7 +1280,8 @@ public class XUserREST {
 
 	@PUT
 	@Path("/secure/users/roles/userName/{userName}")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SET_USER_ROLES_BY_NAME + "\")")
 	public VXStringList setUserRolesByName(@PathParam("userName") String userName,
 			VXStringList roleList) {
@@ -1143,7 +1290,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/secure/users/external/{userId}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_ROLES_BY_ID + "\")")
 	public VXStringList getUserRolesByExternalID(@PathParam("userId") Long userId) {
 		VXStringList vXStringList=new VXStringList();
@@ -1153,7 +1300,7 @@ public class XUserREST {
 
 	@GET
 	@Path("/secure/users/roles/userName/{userName}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_USER_ROLES_BY_NAME + "\")")
 	public VXStringList getUserRolesByName(@PathParam("userName") String userName) {
 		VXStringList vXStringList=new VXStringList();
@@ -1164,7 +1311,6 @@ public class XUserREST {
 
 	@DELETE
 	@Path("/secure/users/delete")
-	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public void deleteUsersByUserName(@Context HttpServletRequest request,VXStringList userList){
 		String forceDeleteStr = request.getParameter("forceDelete");
@@ -1185,7 +1331,6 @@ public class XUserREST {
 
 	@DELETE
 	@Path("/secure/groups/delete")
-	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public void deleteGroupsByGroupName(
 			@Context HttpServletRequest request,VXStringList groupList) {
@@ -1206,7 +1351,6 @@ public class XUserREST {
 
         @DELETE
         @Path("/secure/users/{userName}")
-        @Produces({ "application/xml", "application/json" })
         @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
         public void deleteSingleUserByUserName(@Context HttpServletRequest request, @PathParam("userName") String userName) {
                 String forceDeleteStr = request.getParameter("forceDelete");
@@ -1223,7 +1367,6 @@ public class XUserREST {
 
         @DELETE
         @Path("/secure/groups/{groupName}")
-        @Produces({ "application/xml", "application/json" })
         @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
         public void deleteSingleGroupByGroupName(@Context HttpServletRequest request, @PathParam("groupName") String groupName) {
                 String forceDeleteStr = request.getParameter("forceDelete");
@@ -1239,7 +1382,6 @@ public class XUserREST {
 
         @DELETE
         @Path("/secure/users/id/{userId}")
-        @Produces({ "application/xml", "application/json" })
         @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
         public void deleteSingleUserByUserId(@Context HttpServletRequest request, @PathParam("userId") Long userId) {
                 String forceDeleteStr = request.getParameter("forceDelete");
@@ -1254,7 +1396,6 @@ public class XUserREST {
 
         @DELETE
         @Path("/secure/groups/id/{groupId}")
-        @Produces({ "application/xml", "application/json" })
         @PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
         public void deleteSingleGroupByGroupId(@Context HttpServletRequest request, @PathParam("groupId") Long groupId) {
                 String forceDeleteStr = request.getParameter("forceDelete");
@@ -1267,11 +1408,85 @@ public class XUserREST {
                 }
         }
 
+    @GET
+    @Path("/download/{serviceName}")
+	@Produces({ "application/json" })
+    public RangerUserStore getRangerUserStoreIfUpdated(@PathParam("serviceName") String serviceName,
+													   @DefaultValue("-1") @QueryParam("lastKnownUserStoreVersion") Long lastKnownUserStoreVersion,
+                                                       @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
+                                                       @QueryParam("pluginId") String pluginId,
+                                                       @DefaultValue("") @QueryParam("clusterName") String clusterName,
+                                                       @DefaultValue("") @QueryParam(RangerRESTUtils.REST_PARAM_CAPABILITIES) String pluginCapabilities,
+                                                       @Context HttpServletRequest request) throws Exception {
+        if (logger.isDebugEnabled()) {
+            logger.debug("==> XUserREST.getRangerUserStoreIfUpdated(serviceName={}, lastKnownUserStoreVersion={}, lastActivationTime={})", serviceName, lastKnownUserStoreVersion, lastActivationTime);
+        }
+
+        RangerUserStore ret      = null;
+        boolean         isValid  = false;
+        int             httpCode = HttpServletResponse.SC_OK;
+        String          logMsg   = null;
+        Long   downloadedVersion = null;
+
+		try {
+            bizUtil.failUnauthenticatedDownloadIfNotAllowed();
+
+            isValid = serviceUtil.isValidService(serviceName, request);
+        } catch (WebApplicationException webException) {
+            httpCode = webException.getResponse().getStatus();
+            logMsg   = webException.getResponse().getEntity().toString();
+        } catch (Exception e) {
+            httpCode = HttpServletResponse.SC_BAD_REQUEST;
+            logMsg   = e.getMessage();
+        }
+
+        if (isValid) {
+            try {
+                XXService xService = rangerDaoManager.getXXService().findByName(serviceName);
+
+                if (xService != null) {
+
+                    RangerUserStore rangerUserStore = xUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion);
+
+                    if (rangerUserStore == null) {
+                        downloadedVersion = lastKnownUserStoreVersion;
+                        httpCode          = HttpServletResponse.SC_NOT_MODIFIED;
+                        logMsg            = "No change since last update";
+                    } else {
+                        downloadedVersion = rangerUserStore.getUserStoreVersion();
+                        ret               = rangerUserStore;
+                        httpCode          = HttpServletResponse.SC_OK;
+                        logMsg            = "Returning RangerUserStore version " + downloadedVersion;
+                    }
+                }
+            } catch (Throwable excp) {
+                logger.error("getRangerUserStoreIfUpdated(serviceName={}, lastKnownUserStoreVersion={}, lastActivationTime={}) failed", serviceName, lastKnownUserStoreVersion, lastActivationTime, excp);
+
+                httpCode = HttpServletResponse.SC_BAD_REQUEST;
+                logMsg   = excp.getMessage();
+            }
+        }
+
+        assetMgr.createPluginInfo(serviceName, pluginId, request, RangerPluginInfo.ENTITY_TYPE_USERSTORE, downloadedVersion, lastKnownUserStoreVersion, lastActivationTime, httpCode, clusterName, pluginCapabilities);
+
+        if (httpCode != HttpServletResponse.SC_OK) {
+            boolean logError = httpCode != HttpServletResponse.SC_NOT_MODIFIED;
+
+            throw restErrorUtil.createRESTException(httpCode, logMsg, logError);
+        }
+
+        if (logger.isDebugEnabled()) {
+            logger.debug("<== XUserREST.getRangerUserStoreIfUpdated(serviceName={}, lastKnownUserStoreVersion={}, lastActivationTime={}): {}", serviceName, lastKnownUserStoreVersion, lastActivationTime, ret);
+        }
+
+        return ret;
+    }
+
 	@GET
 	@Path("/secure/download/{serviceName}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public RangerUserStore getSecureRangerUserStoreIfUpdated(@PathParam("serviceName") String serviceName,
-															 @QueryParam("lastKnownUserStoreVersion") Long lastKnownUserStoreVersion,
+															 @DefaultValue("-1") @QueryParam("lastKnownUserStoreVersion") Long lastKnownUserStoreVersion,
 															 @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
 															 @QueryParam("pluginId") String pluginId,
 															 @DefaultValue("") @QueryParam("clusterName") String clusterName,
@@ -1296,9 +1511,6 @@ public class XUserREST {
 				isValid = true;
 			}
 			if (isValid) {
-				if (lastKnownUserStoreVersion == null) {
-					lastKnownUserStoreVersion = Long.valueOf(-1);
-				}
 				XXServiceDef xServiceDef = rangerDaoManager.getXXServiceDef().getById(xService.getType());
 				RangerService rangerService = svcStore.getServiceByName(serviceName);
 
@@ -1317,7 +1529,7 @@ public class XUserREST {
 				}
 
 				if (isAllowed) {
-					RangerUserStore rangerUserStore = xUserMgr.getRangerUserStore(lastKnownUserStoreVersion);
+					RangerUserStore rangerUserStore = xUserMgr.getRangerUserStoreIfUpdated(lastKnownUserStoreVersion);
 					if (rangerUserStore == null) {
 						downloadedVersion = lastKnownUserStoreVersion;
 						httpCode = HttpServletResponse.SC_NOT_MODIFIED;
@@ -1330,7 +1542,7 @@ public class XUserREST {
 					}
 				} else {
 					logger.error("getSecureRangerUserStoreIfUpdated(" + serviceName + ", " + lastKnownUserStoreVersion + ") failed as User doesn't have permission to download UsersAndGroups");
-					httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+					httpCode = HttpServletResponse.SC_FORBIDDEN; // assert user is authenticated.
 					logMsg = "User doesn't have permission to download UsersAndGroups";
 				}
 			}
@@ -1356,10 +1568,75 @@ public class XUserREST {
 
 	@POST
 	@Path("/ugsync/auditinfo")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
 	public VXUgsyncAuditInfo postUserGroupAuditInfo(VXUgsyncAuditInfo vxUgsyncAuditInfo) {
 
 		return xUserMgr.postUserGroupAuditInfo(vxUgsyncAuditInfo);
+	}
+
+	@GET
+	@Path("/ugsync/groupusers")
+	@Produces({ "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public Map<String, Set<String>> getAllGroupUsers() {
+		return rangerDaoManager.getXXGroupUser().findUsersByGroupIds();
+	}
+
+	@POST
+	@Path("/ugsync/users")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	@Transactional(readOnly = false, propagation = Propagation.NOT_SUPPORTED)
+	public String addOrUpdateUsers(VXUserList users) {
+		int ret = xUserMgr.createOrUpdateXUsers(users);
+		return String.valueOf(ret);
+	}
+
+	@POST
+	@Path("/ugsync/groups")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public int addOrUpdateGroups(VXGroupList groups) {
+		int ret = xUserMgr.createOrUpdateXGroups(groups);
+		return ret;
+	}
+
+	@POST
+	@Path("/ugsync/groupusers")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public int addOrUpdateGroupUsersList(List<GroupUserInfo> groupUserInfoList) {
+		return xUserMgr.createOrDeleteXGroupUserList(groupUserInfoList);
+	}
+
+	@POST
+	@Path("/users/roleassignments")
+	@Produces({ "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public List<String> setXUserRolesByName(UsersGroupRoleAssignments ugRoleAssignments) {
+		return xUserMgr.updateUserRoleAssignments(ugRoleAssignments);
+	}
+
+	@POST
+	@Path("/ugsync/groups/visibility")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public int updateDeletedGroups(Set<String> deletedGroups){
+		return xUserMgr.updateDeletedGroups(deletedGroups);
+	}
+
+	@POST
+	@Path("/ugsync/users/visibility")
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	@PreAuthorize("hasRole('ROLE_SYS_ADMIN')")
+	public int updateDeletedUsers(Set<String> deletedUsers){
+		return xUserMgr.updateDeletedUsers(deletedUsers);
 	}
 }

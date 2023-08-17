@@ -19,8 +19,8 @@
 
 package org.apache.ranger.plugin.errors;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -104,13 +104,14 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME(3033, "Non-existent Zone name={0} in policy create"),
     POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE(3048, "Service name = {0} is not associated to Zone name = {1}"),
     POLICY_VALIDATION_ERR_UNSUPPORTED_POLICY_ITEM_TYPE(3049, "Deny or deny-exceptions are not supported if policy has isDenyAllElse flag set to true"),
+    POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009," Invalid service type [{0}] provided for service [{1}]"),
 
     // SECURITY_ZONE Validations
     SECURITY_ZONE_VALIDATION_ERR_UNSUPPORTED_ACTION(3034, "Internal error: unsupported action[{0}]; isValid() is only supported for DELETE"),
     SECURITY_ZONE_VALIDATION_ERR_MISSING_FIELD(3035, "Internal error: missing field[{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_ZONE_NAME_CONFLICT(3036, "Another security zone already exists for this name: zone-id=[{0}]]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_ZONE_ID(3037, "No security zone found for [{0}]"),
-    SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS(3038, "both users and user-groups collections for the security zone were null/empty"),
+    SECURITY_ZONE_VALIDATION_ERR_MISSING_USER_AND_GROUPS_AND_ROLES(3038, "users, user-groups and roles collections for the security zone were null/empty"),
     SECURITY_ZONE_VALIDATION_ERR_MISSING_RESOURCES(3039, "No resources specified for service [{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_NAME(3040, "Invalid service [{0}]"),
     SECURITY_ZONE_VALIDATION_ERR_INVALID_SERVICE_TYPE(3041, "Invalid service-type [{0}]"),
@@ -135,7 +136,7 @@ public enum ValidationErrorCode {
     ;
 
 
-    private static final Log LOG = LogFactory.getLog(ValidationErrorCode.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ValidationErrorCode.class);
 
     final int _errorCode;
     final String _template;

@@ -20,15 +20,15 @@
 package org.apache.ranger.plugin.geo;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.Objects;
 
 public class RangerGeolocationData implements Comparable<RangerGeolocationData>, RangeChecker<Long> {
-	private static final Log LOG = LogFactory.getLog(RangerGeolocationData.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerGeolocationData.class);
 
 	private static final Character IPSegmentsSeparator = '.';
 

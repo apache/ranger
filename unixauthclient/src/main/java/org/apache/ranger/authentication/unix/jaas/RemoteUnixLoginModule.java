@@ -66,7 +66,7 @@ public class RemoteUnixLoginModule implements LoginModule {
 	
 	private static final String JAAS_ENABLED_PARAM = "ranger.unixauth.remote.login.enabled";
 
-	private static final String SSL_ALGORITHM = "TLS";
+	private static final String SSL_ALGORITHM = "TLSv1.2";
 
 	private String userName;
 	private char[] password;

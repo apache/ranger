@@ -21,22 +21,22 @@ package org.apache.ranger.authorization.sqoop.authorizer;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
 import org.apache.sqoop.common.SqoopException;
 import org.apache.sqoop.model.MPrincipal;
 import org.apache.sqoop.model.MPrivilege;
 import org.apache.sqoop.security.AuthorizationValidator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerSqoopAuthorizer extends AuthorizationValidator {
-	private static final Log LOG = LogFactory.getLog(RangerSqoopAuthorizer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerSqoopAuthorizer.class);
 
 	private static final String RANGER_PLUGIN_TYPE = "sqoop";
 	private static final String RANGER_SQOOP_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.sqoop.authorizer.RangerSqoopAuthorizer";
 
-	private AuthorizationValidator authorizationValidator = null;
-	private static RangerPluginClassLoader rangerPluginClassLoader = null;
+	private AuthorizationValidator  authorizationValidator  = null;
+	private RangerPluginClassLoader rangerPluginClassLoader = null;
 
 	public RangerSqoopAuthorizer() {
 		if (LOG.isDebugEnabled()) {

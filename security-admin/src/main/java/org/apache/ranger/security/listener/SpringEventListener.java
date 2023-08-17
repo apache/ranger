@@ -20,15 +20,17 @@
  package org.apache.ranger.security.listener;
 
 import java.util.Calendar;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.entity.XXAuthSession;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AbstractAuthenticationEvent;
 import org.springframework.security.authentication.event.AuthenticationFailureBadCredentialsEvent;
 import org.springframework.security.authentication.event.AuthenticationFailureDisabledEvent;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
+import org.springframework.security.authentication.event.AuthenticationFailureLockedEvent;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.WebAuthenticationDetails;
 
@@ -36,7 +38,7 @@ import org.springframework.security.web.authentication.WebAuthenticationDetails;
 public class SpringEventListener implements
 	ApplicationListener<AbstractAuthenticationEvent> {
 
-    private static final Logger logger = Logger.getLogger(SpringEventListener.class);
+    private static final Logger logger = LoggerFactory.getLogger(SpringEventListener.class);
 
     @Autowired
     SessionMgr sessionMgr;
@@ -48,6 +50,8 @@ public class SpringEventListener implements
 		process((AuthenticationSuccessEvent) event);
 	    } else if (event instanceof AuthenticationFailureBadCredentialsEvent) {
 		process((AuthenticationFailureBadCredentialsEvent) event);
+	    } else if (event instanceof AuthenticationFailureLockedEvent) {
+		process((AuthenticationFailureLockedEvent) event);
 	    } else if (event instanceof AuthenticationFailureDisabledEvent) {
 		process((AuthenticationFailureDisabledEvent) event);
 	    }
@@ -92,6 +96,17 @@ public class SpringEventListener implements
 		remoteAddress, sessionId);
     }
 
+    protected void process(AuthenticationFailureLockedEvent authFailEvent) {
+		Authentication           auth          = authFailEvent.getAuthentication();
+		WebAuthenticationDetails details       = (WebAuthenticationDetails) auth.getDetails();
+		String                   remoteAddress = details != null ? details.getRemoteAddress() : "";
+		String                   sessionId     = details != null ? details.getSessionId() : "";
+
+		logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:" + remoteAddress + " | User account is locked");
+
+		sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_LOCKED, XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(), remoteAddress, sessionId);
+	}
+
     protected void process(AuthenticationFailureDisabledEvent authFailEvent) {
 	Authentication auth = authFailEvent.getAuthentication();
 	WebAuthenticationDetails details = (WebAuthenticationDetails) auth
@@ -101,7 +116,7 @@ public class SpringEventListener implements
 	String sessionId = details != null ? details.getSessionId() : "";
 
 	logger.info("Login Unsuccessful:" + auth.getName() + " | Ip Address:"
-		+ remoteAddress);
+		+ remoteAddress + " | User Disabled");
 
 	sessionMgr.processFailureLogin(XXAuthSession.AUTH_STATUS_DISABLED,
 		XXAuthSession.AUTH_TYPE_PASSWORD, auth.getName(),

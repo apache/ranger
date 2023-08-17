@@ -29,7 +29,8 @@ import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -37,7 +38,7 @@ import org.w3c.dom.NodeList;
 
 public class XMLUtils {
 
-	private static final Logger LOG = Logger.getLogger(XMLUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(XMLUtils.class);
 
 	private static final String XMLCONFIG_PROPERTY_TAGNAME = "property";
 	private static final String XMLCONFIG_NAME_TAGNAME = "name";

@@ -20,17 +20,16 @@
 package org.apache.ranger.plugin.util;
 
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.commons.collections.MapUtils;
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -40,14 +39,15 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ServicePolicies implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
+	private static final Logger LOG = LoggerFactory.getLogger(ServicePolicies.class);
 
 	private String             serviceName;
 	private Long               serviceId;
@@ -168,6 +168,40 @@ public class ServicePolicies implements java.io.Serializable {
 		this.securityZones = securityZones;
 	}
 
+	public void dedupStrings() {
+		Map<String, String> strTbl = new HashMap<>();
+
+		serviceName   = StringUtil.dedupString(serviceName, strTbl);
+		auditMode     = StringUtil.dedupString(auditMode, strTbl);
+		serviceConfig = StringUtil.dedupStringsMap(serviceConfig, strTbl);
+
+		if (policies != null) {
+			for (RangerPolicy policy : policies) {
+				policy.dedupStrings(strTbl);
+			}
+		}
+
+		if (serviceDef != null) {
+			serviceDef.dedupStrings(strTbl);
+		}
+
+		if (tagPolicies != null) {
+			tagPolicies.dedupStrings(strTbl);
+		}
+
+		if (securityZones != null) {
+			for (SecurityZoneInfo securityZoneInfo : securityZones.values()) {
+				securityZoneInfo.dedupStrings(strTbl);
+			}
+		}
+
+		if (policyDeltas != null) {
+			for (RangerPolicyDelta policyDelta : policyDeltas) {
+				policyDelta.dedupStrings(strTbl);
+			}
+		}
+	}
+
 	@Override
 	public String toString() {
 		return "serviceName=" + serviceName + ", "
@@ -187,10 +221,8 @@ public class ServicePolicies implements java.io.Serializable {
 	public void setPolicyDeltas(List<RangerPolicyDelta> policyDeltas) { this.policyDeltas = policyDeltas; }
 
 	@JsonAutoDetect(fieldVisibility=Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class TagPolicies implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 
@@ -201,6 +233,8 @@ public class ServicePolicies implements java.io.Serializable {
 		private List<RangerPolicy> policies;
 		private RangerServiceDef   serviceDef;
 		private String             auditMode = RangerPolicyEngine.AUDIT_DEFAULT;
+		private Map<String, String> serviceConfig;
+
 		/**
 		 * @return the serviceName
 		 */
@@ -282,6 +316,30 @@ public class ServicePolicies implements java.io.Serializable {
 			this.auditMode = auditMode;
 		}
 
+		public Map<String, String> getServiceConfig() {
+			return serviceConfig;
+		}
+
+		public void setServiceConfig(Map<String, String> serviceConfig) {
+			this.serviceConfig = serviceConfig;
+		}
+
+		public void dedupStrings(Map<String, String> strTbl) {
+			serviceName   = StringUtil.dedupString(serviceName, strTbl);
+			auditMode     = StringUtil.dedupString(auditMode, strTbl);
+			serviceConfig = StringUtil.dedupStringsMap(serviceConfig, strTbl);
+
+			if (policies != null) {
+				for (RangerPolicy policy : policies) {
+					policy.dedupStrings(strTbl);
+				}
+			}
+
+			if (serviceDef != null) {
+				serviceDef.dedupStrings(strTbl);
+			}
+		}
+
 		@Override
 		public String toString() {
 			return "serviceName=" + serviceName + ", "
@@ -291,15 +349,14 @@ public class ServicePolicies implements java.io.Serializable {
 					+ "policies=" + policies + ", "
 					+ "serviceDef=" + serviceDef + ", "
 					+ "auditMode=" + auditMode
+					+ "serviceConfig=" + serviceConfig
 					;
 		}
 	}
 
 	@JsonAutoDetect(fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown = true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class SecurityZoneInfo implements java.io.Serializable {
 		private static final long serialVersionUID = 1L;
 		private String                          zoneName;
@@ -339,6 +396,32 @@ public class ServicePolicies implements java.io.Serializable {
 		public void setPolicyDeltas(List<RangerPolicyDelta> policyDeltas) { this.policyDeltas = policyDeltas; }
 
 		public void setContainsAssociatedTagService(Boolean containsAssociatedTagService) { this.containsAssociatedTagService = containsAssociatedTagService; }
+
+		public void dedupStrings(Map<String, String> strTbl) {
+			zoneName = StringUtil.dedupString(zoneName, strTbl);
+
+			if (resources != null && resources.size() > 0) {
+				List<HashMap<String, List<String>>> updated = new ArrayList<>(resources.size());
+
+				for (HashMap<String, List<String>> resource : resources) {
+					updated.add(StringUtil.dedupStringsHashMapOfList(resource, strTbl));
+				}
+
+				resources = updated;
+			}
+
+			if (policies != null) {
+				for (RangerPolicy policy : policies) {
+					policy.dedupStrings(strTbl);
+				}
+			}
+
+			if (policyDeltas != null) {
+				for (RangerPolicyDelta policyDelta : policyDeltas) {
+					policyDelta.dedupStrings(strTbl);
+				}
+			}
+		}
 
 		@Override
 		public String toString() {
@@ -397,9 +480,19 @@ public class ServicePolicies implements java.io.Serializable {
 
 		final List<RangerPolicy> newTagPolicies;
 		if (servicePolicies.getTagPolicies() != null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("applyingDeltas for tag policies");
+			}
 			newTagPolicies = RangerPolicyDeltaUtil.applyDeltas(oldTagPolicies, servicePolicies.getPolicyDeltas(), servicePolicies.getTagPolicies().getServiceDef().getName());
 		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("No need to apply deltas for tag policies");
+			}
 			newTagPolicies = oldTagPolicies;
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("New tag policies:[" + Arrays.toString(newTagPolicies.toArray()) + "]");
 		}
 
 		if (ret.getTagPolicies() != null) {
@@ -416,7 +509,15 @@ public class ServicePolicies implements java.io.Serializable {
 				List<RangerPolicy> zoneResourcePolicies = policyEngine.getResourcePolicies(zoneName);
 				// There are no separate tag-policy-repositories for each zone
 
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Applying deltas for security-zone:[" + zoneName + "]");
+				}
+
 				final List<RangerPolicy> newZonePolicies = RangerPolicyDeltaUtil.applyDeltas(zoneResourcePolicies, zoneInfo.getPolicyDeltas(), servicePolicies.getServiceDef().getName());
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("New resource policies for security-zone:[" + zoneName + "], zoneResourcePolicies:[" + Arrays.toString(newZonePolicies.toArray())+ "]");
+				}
 
 				SecurityZoneInfo newZoneInfo = new SecurityZoneInfo();
 

@@ -19,11 +19,11 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 public class RangerPerfTracerFactory {
 
-	static RangerPerfTracer getPerfTracer(Log logger, String tag, String data) {
+	static RangerPerfTracer getPerfTracer(Logger logger, String tag, String data) {
 
 		RangerPerfTracer ret = null;
 

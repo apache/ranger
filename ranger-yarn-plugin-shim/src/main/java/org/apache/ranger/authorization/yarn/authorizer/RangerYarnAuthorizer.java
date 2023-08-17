@@ -22,8 +22,6 @@ package org.apache.ranger.authorization.yarn.authorizer;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authorize.AccessControlList;
@@ -31,17 +29,19 @@ import org.apache.hadoop.yarn.security.AccessRequest;
 import org.apache.hadoop.yarn.security.Permission;
 import org.apache.hadoop.yarn.security.YarnAuthorizationProvider;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
 public class RangerYarnAuthorizer extends YarnAuthorizationProvider {
-	private static final Log LOG  = LogFactory.getLog(RangerYarnAuthorizer.class);
+	private static final Logger LOG  = LoggerFactory.getLogger(RangerYarnAuthorizer.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "yarn";
 	private static final String   RANGER_YARN_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.yarn.authorizer.RangerYarnAuthorizer";
 
-	private YarnAuthorizationProvider 	 	yarnAuthorizationProviderImpl = null;
-	private static RangerPluginClassLoader  rangerPluginClassLoader  	  = null;
+	private YarnAuthorizationProvider yarnAuthorizationProviderImpl = null;
+	private RangerPluginClassLoader   rangerPluginClassLoader       = null;
 	
 	public RangerYarnAuthorizer() {
 		if(LOG.isDebugEnabled()) {

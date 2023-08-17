@@ -37,14 +37,15 @@ import java.util.Iterator;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.connector.Connector;
+import org.apache.catalina.core.StandardContext;
 import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.AccessLogValve;
 import org.apache.catalina.valves.ErrorReportValve;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
+
 import org.apache.ranger.credentialapi.CredentialReader;
 
 import javax.net.ssl.KeyManager;
@@ -74,9 +75,15 @@ public class EmbeddedServer {
 	private static final String ADMIN_NAME_RULES = "hadoop.security.auth_to_local";
 	private static final String ADMIN_SERVER_NAME = "rangeradmin";
 	private static final String KMS_SERVER_NAME   = "rangerkms";
-	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = "jks";
-	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = "jks";
-	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLS";
+	private static final String ACCESS_LOG_PREFIX = "ranger.accesslog.prefix";
+	private static final String ACCESS_LOG_DATE_FORMAT = "ranger.accesslog.dateformat";
+	private static final String ACCESS_LOG_PATTERN = "ranger.accesslog.pattern";
+	private static final String ACCESS_LOG_ROTATE_ENABLED = "ranger.accesslog.rotate.enabled";
+	private static final String ACCESS_LOG_ROTATE_MAX_DAYS = "ranger.accesslog.rotate.max_days";
+	private static final String ACCESS_LOG_ROTATE_RENAME_ON_ROTATE = "ranger.accesslog.rotate.rename_on_rotate";
+	public static final String RANGER_KEYSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
+	public static final String RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT = KeyStore.getDefaultType();
+	public static final String RANGER_SSL_CONTEXT_ALGO_TYPE = "TLSv1.2";
 	public static final String RANGER_SSL_KEYMANAGER_ALGO_TYPE = KeyManagerFactory.getDefaultAlgorithm();
 	public static final String RANGER_SSL_TRUSTMANAGER_ALGO_TYPE = TrustManagerFactory.getDefaultAlgorithm();
 
@@ -88,6 +95,7 @@ public class EmbeddedServer {
 		if (args.length > 0) {
 			configFile = args[0];
 		}
+
 		EmbeddedServerUtil.loadRangerConfigProperties(configFile);
 	}
 
@@ -139,7 +147,9 @@ public class EmbeddedServer {
 			ssl.setSecure(true);
 			ssl.setScheme("https");
 			ssl.setAttribute("SSLEnabled", "true");
-			ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLS"));
+			ssl.setAttribute("sslProtocol", EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.protocol", "TLSv1.2"));
+			ssl.setAttribute("keystoreType", EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
+			ssl.setAttribute("truststoreType", EmbeddedServerUtil.getConfig("ranger.truststore.file.type", RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT));
 			String clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.clientAuth", "false");
 			if("false".equalsIgnoreCase(clientAuth)){
 				clientAuth = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.client.auth", "want");
@@ -149,7 +159,7 @@ public class EmbeddedServer {
 			String keyAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
 			String keystorePass=null;
 			if(providerPath!=null && keyAlias!=null){
-				keystorePass = CredentialReader.getDecryptedString(providerPath.trim(), keyAlias.trim());
+				keystorePass = CredentialReader.getDecryptedString(providerPath.trim(), keyAlias.trim(), EmbeddedServerUtil.getConfig("ranger.keystore.file.type", RANGER_KEYSTORE_FILE_TYPE_DEFAULT));
 				if (StringUtils.isBlank(keystorePass) || "none".equalsIgnoreCase(keystorePass.trim())) {
 					keystorePass = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.pass");
 				}
@@ -158,7 +168,7 @@ public class EmbeddedServer {
 			ssl.setAttribute("keystorePass", keystorePass);
 			ssl.setAttribute("keystoreFile", getKeystoreFile());
 
-			String defaultEnabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
+			String defaultEnabledProtocols = "TLSv1.2";
 			String enabledProtocols = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.ssl.enabled.protocols", defaultEnabledProtocols);
 			ssl.setAttribute("sslEnabledProtocols", enabledProtocols);
 			String ciphers = EmbeddedServerUtil.getConfig("ranger.tomcat.ciphers");
@@ -185,12 +195,16 @@ public class EmbeddedServer {
 		valve.setAsyncSupported(true);
 		valve.setBuffered(false);
 		valve.setEnabled(true);
-		valve.setFileDateFormat(EmbeddedServerUtil.getConfig("ranger.accesslog.dateformat", "yyyy-MM-dd.HH"));
+		valve.setPrefix(EmbeddedServerUtil.getConfig(ACCESS_LOG_PREFIX,"access-" + hostName));
+		valve.setFileDateFormat(EmbeddedServerUtil.getConfig(ACCESS_LOG_DATE_FORMAT, "-yyyy-MM-dd.HH"));
 		valve.setDirectory(logDirectory.getAbsolutePath());
 		valve.setSuffix(".log");
+		valve.setRotatable(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ROTATE_ENABLED, true));
+		valve.setMaxDays(EmbeddedServerUtil.getIntConfig(ACCESS_LOG_ROTATE_MAX_DAYS,15));
+		valve.setRenameOnRotate(EmbeddedServerUtil.getBooleanConfig(ACCESS_LOG_ROTATE_RENAME_ON_ROTATE, false));
 
-		String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b" : "%h %l %u %t \"%r\" %s %b";
-		String logPattern = EmbeddedServerUtil.getConfig("ranger.accesslog.pattern", defaultAccessLogPattern);
+		String defaultAccessLogPattern = servername.equalsIgnoreCase(KMS_SERVER_NAME) ? "%h %l %u %t \"%m %U\" %s %b %D" : "%h %l %u %t \"%r\" %s %b %D";
+		String logPattern = EmbeddedServerUtil.getConfig(ACCESS_LOG_PATTERN, defaultAccessLogPattern);
 		valve.setPattern(logPattern);
 
 		server.getHost().getPipeline().addValve(valve);
@@ -241,8 +255,17 @@ public class EmbeddedServer {
 			}
 			LOG.info("Adding webapp [" + webContextName + "] = path ["
 					+ webapp_dir + "] .....");
-			Context webappCtx = server.addWebapp(webContextName, new File(
-					webapp_dir).getAbsolutePath());
+                       StandardContext webappCtx = (StandardContext) server.addWebapp(webContextName, new File(
+                           webapp_dir).getAbsolutePath());
+                       String workDirPath = EmbeddedServerUtil.getConfig("ranger.tomcat.work.dir", "");
+                       if (!workDirPath.isEmpty() && new File(workDirPath).exists()) {
+                           webappCtx.setWorkDir(workDirPath);
+                       } else {
+                            if (LOG.isLoggable(Level.FINE)) {
+                                LOG.fine("Skipping to set tomcat server work directory, '" + workDirPath +
+                                    "', as it is blank or directory does not exist.");
+                            }
+                       }
 			webappCtx.init();
 			LOG.info("Finished init of webapp [" + webContextName
 					+ "] = path [" + webapp_dir + "].");
@@ -374,7 +397,6 @@ public class EmbeddedServer {
 		server.getConnector().setAllowTrace(Boolean.valueOf(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.allowTrace", "false")));
 		server.getConnector().setAsyncTimeout(EmbeddedServerUtil.getLongConfig("ranger.service.http.connector.attrib.asyncTimeout", 10000L));
 		server.getConnector().setEnableLookups(Boolean.valueOf(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.enableLookups", "false")));
-		server.getConnector().setMaxHeaderCount(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxHeaderCount", 100));
 		server.getConnector().setMaxParameterCount(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxParameterCount", 10000));
 		server.getConnector().setMaxPostSize(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxPostSize", 2097152));
 		server.getConnector().setMaxSavePostSize(EmbeddedServerUtil.getIntConfig("ranger.service.http.connector.attrib.maxSavePostSize", 4096));
@@ -382,6 +404,7 @@ public class EmbeddedServer {
 		server.getConnector().setURIEncoding(EmbeddedServerUtil.getConfig("ranger.service.http.connector.attrib.URIEncoding", "UTF-8"));
 		server.getConnector().setXpoweredBy(false);
 		server.getConnector().setAttribute("server", "Apache Ranger");
+		server.getConnector().setProperty("sendReasonPhrase",EmbeddedServerUtil.getConfig("ranger.service.http.connector.property.sendReasonPhrase", "true"));
 		Iterator<Object> iterator = EmbeddedServerUtil.getRangerConfigProperties().keySet().iterator();
 		String key = null;
 		String property = null;
@@ -420,8 +443,9 @@ public class EmbeddedServer {
 			keyStoreFile = getKeystoreFile();
 			keyStoreAlias = EmbeddedServerUtil.getConfig("ranger.service.https.attrib.keystore.credential.alias", "keyStoreCredentialAlias");
 		}
+		String keyStoreFileType = EmbeddedServerUtil.getConfig("ranger.keystore.file.type",RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
 		String credentialProviderPath = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
-		String keyStoreFilepwd = CredentialReader.getDecryptedString(credentialProviderPath, keyStoreAlias);
+		String keyStoreFilepwd = CredentialReader.getDecryptedString(credentialProviderPath, keyStoreAlias, keyStoreFileType);
 
 		if (StringUtils.isNotEmpty(keyStoreFile) && StringUtils.isNotEmpty(keyStoreFilepwd)) {
 			InputStream in = null;
@@ -430,11 +454,11 @@ public class EmbeddedServer {
 				in = getFileInputStream(keyStoreFile);
 
 				if (in != null) {
-					KeyStore keyStore = KeyStore.getInstance(RANGER_KEYSTORE_FILE_TYPE_DEFAULT);
+					KeyStore keyStore = KeyStore.getInstance(keyStoreFileType);
 
 					keyStore.load(in, keyStoreFilepwd.toCharArray());
 
-					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(RANGER_SSL_KEYMANAGER_ALGO_TYPE);
+					KeyManagerFactory keyManagerFactory = KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm());
 
 					keyManagerFactory.init(keyStore, keyStoreFilepwd.toCharArray());
 
@@ -476,7 +500,8 @@ public class EmbeddedServer {
 		String truststoreFile = EmbeddedServerUtil.getConfig("ranger.truststore.file");
 		String truststoreAlias = EmbeddedServerUtil.getConfig("ranger.truststore.alias");
 		String credentialProviderPath = EmbeddedServerUtil.getConfig("ranger.credential.provider.path");
-		String trustStoreFilepwd = CredentialReader.getDecryptedString(credentialProviderPath, truststoreAlias);
+		String truststoreFileType = EmbeddedServerUtil.getConfig("ranger.truststore.file.type",RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
+		String trustStoreFilepwd = CredentialReader.getDecryptedString(credentialProviderPath, truststoreAlias, truststoreFileType);
 
 		if (StringUtils.isNotEmpty(truststoreFile) && StringUtils.isNotEmpty(trustStoreFilepwd)) {
 			InputStream in = null;
@@ -485,7 +510,7 @@ public class EmbeddedServer {
 				in = getFileInputStream(truststoreFile);
 
 				if (in != null) {
-					KeyStore trustStore = KeyStore.getInstance(RANGER_TRUSTSTORE_FILE_TYPE_DEFAULT);
+					KeyStore trustStore = KeyStore.getInstance(truststoreFileType);
 
 					trustStore.load(in, trustStoreFilepwd.toCharArray());
 

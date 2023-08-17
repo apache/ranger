@@ -113,6 +113,18 @@
 			"type": "password",
 			"mandatory": true,
 			"label": "Password"
+		},
+
+		{
+			"itemId": 4,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage":"",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['keyadmin'] ,'isAudited':false} ]"
 		}
 	],
 

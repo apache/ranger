@@ -28,13 +28,14 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.SessionMgr;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RangerConfigUtil;
-import org.apache.ranger.security.web.filter.RangerSSOAuthenticationFilter;
+import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
@@ -47,7 +48,7 @@ public class RangerAuthenticationEntryPoint extends
 		LoginUrlAuthenticationEntryPoint {
 	public static final int SC_AUTHENTICATION_TIMEOUT = 419;
 
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(RangerAuthenticationEntryPoint.class);
 	static int ajaxReturnCode = -1;
 
@@ -82,11 +83,13 @@ public class RangerAuthenticationEntryPoint extends
 			logger.debug("commence() X-Requested-With=" + ajaxRequestHeader);
 		}
 
-		String requestURL = (request.getRequestURL() != null) ? request
-				.getRequestURL().toString() : "";
+		String requestURI = (request.getRequestURI() != null) ? request
+				.getRequestURI() : "";
 		String servletPath = PropertiesUtil.getProperty(
 				"ranger.servlet.mapping.url.pattern", "service");
-
+		if (logger.isDebugEnabled()) {
+			logger.debug("===> RangerAuthenticationEntryPoint.commence() servletPath["+servletPath+"] requestURI ["+requestURI+"]");
+		}
 		if ("XMLHttpRequest".equals(ajaxRequestHeader)) {
 			try {
 
@@ -125,8 +128,8 @@ public class RangerAuthenticationEntryPoint extends
 						+ ajaxReturnCode + ". URL=" + request.getRequestURI());
 			}
 			response.sendError(ajaxReturnCode, "");
-		} else if (!(requestURL.contains(servletPath))) {
-			if(requestURL.contains(RangerSSOAuthenticationFilter.LOCAL_LOGIN_URL)){
+		} else if (!(requestURI.contains(servletPath))) {
+			if(requestURI.contains(RestUtil.LOCAL_LOGIN_URL)){
 				if (request.getSession() != null){
 					request.getSession().setAttribute("locallogin","true");
 					request.getServletContext().setAttribute(request.getSession().getId(), "locallogin");

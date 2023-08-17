@@ -22,7 +22,9 @@ package org.apache.ranger.tagsync.process;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.security.SecureClientLogin;
-import org.apache.log4j.Logger;
+import org.apache.ranger.tagsync.ha.TagSyncHAInitializerImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -40,8 +42,9 @@ import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 
 public class TagSyncConfig extends Configuration {
-	private static final Logger LOG = Logger.getLogger(TagSyncConfig.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TagSyncConfig.class);
 
+	private static TagSyncConfig instance = null;
 	private static final String CONFIG_FILE = "ranger-tagsync-site.xml";
 
 	private static final String DEFAULT_CONFIG_FILE = "ranger-tagsync-default.xml";
@@ -81,6 +84,7 @@ public class TagSyncConfig extends Configuration {
 
 	private static final String TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL_PROP = "ranger.tagsync.source.file.check.interval.millis";
 
+	private static final String TAGSYNC_KEYSTORE_TYPE_PROP = "ranger.keystore.file.type";
 	private static final String TAGSYNC_TAGADMIN_KEYSTORE_PROP = "ranger.tagsync.keystore.filename";
 	private static final String TAGSYNC_ATLASREST_KEYSTORE_PROP = "ranger.tagsync.source.atlasrest.keystore.filename";
 
@@ -95,6 +99,7 @@ public class TagSyncConfig extends Configuration {
 
 	private static final int DEFAULT_TAGSYNC_TAGADMIN_CONNECTION_CHECK_INTERVAL = 15000;
 	private static final long DEFAULT_TAGSYNC_ATLASREST_SOURCE_DOWNLOAD_INTERVAL = 900000;
+	public  static final int  DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = 10000;
 	private static final long DEFAULT_TAGSYNC_FILESOURCE_MOD_TIME_CHECK_INTERVAL = 60000;
 	private static final long DEFAULT_TAGSYNC_SOURCE_RETRY_INITIALIZATION_INTERVAL = 10000;
 
@@ -115,6 +120,12 @@ public class TagSyncConfig extends Configuration {
     private static final long    DEFAULT_TAGSYNC_METRICS_FREQUENCY__TIME_IN_MILLIS = 10000L;
     private static final String  TAGSYNC_METRICS_ENABLED_PROP = "ranger.tagsync.metrics.enabled";
 
+	private static final int     DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE = 1;
+	private static final String  TAGSYNC_SINK_MAX_BATCH_SIZE_PROP    = "ranger.tagsync.dest.ranger.max.batch.size";
+
+	private static final String TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE = "ranger.tagsync.source.atlasrest.entities.batch.size";
+	public static final String TAGSYNC_SERVER_HA_ENABLED_PARAM = "ranger-tagsync.server.ha.enabled";
+
 	private Properties props;
 
 	static {
@@ -126,7 +137,14 @@ public class TagSyncConfig extends Configuration {
 	}
 	
 	public static TagSyncConfig getInstance() {
-		return new TagSyncConfig();
+		if(instance == null ){
+			synchronized (TagSyncConfig.class){
+				if(instance == null ){
+					instance = new TagSyncConfig();
+				}
+			}
+		}
+		return instance;
 	}
 
 	public Properties getProperties() {
@@ -206,6 +224,10 @@ public class TagSyncConfig extends Configuration {
 		return ret;
 	}
 
+	synchronized static public boolean isTagSyncServiceActive() {
+		return TagSyncHAInitializerImpl.getInstance(TagSyncConfig.getInstance()).isActive();
+	}
+
 	@Override
 	public String toString() {
 		StringBuilder sb = new StringBuilder();
@@ -216,9 +238,8 @@ public class TagSyncConfig extends Configuration {
 		return sb.toString() + super.toString();
 	}
 
-	static public boolean isTagSyncEnabled(Properties prop) {
-		String val = prop.getProperty(TAGSYNC_ENABLED_PROP);
-		return val == null || Boolean.valueOf(val.trim());
+	static public String getTagsyncKeyStoreType(Properties prop) {
+		return prop.getProperty(TAGSYNC_KEYSTORE_TYPE_PROP);
 	}
 
 	static public boolean isTagSyncRangerCookieEnabled(Properties prop) {
@@ -277,6 +298,11 @@ public class TagSyncConfig extends Configuration {
 		return prop.getProperty(TAGSYNC_TAGADMIN_REST_URL_PROP);
 	}
 
+	static public boolean isTagSyncEnabled(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_ENABLED_PROP);
+		return val == null || Boolean.valueOf(val.trim());
+	}
+
 	static public String getTagAdminPassword(Properties prop) {
 		//update credential from keystore
 		String password = null;
@@ -291,7 +317,7 @@ public class TagSyncConfig extends Configuration {
 			if (path != null) {
 				if (!path.trim().isEmpty()) {
 					try {
-						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_DEST_RANGER_PASSWORD_ALIAS);
+						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_DEST_RANGER_PASSWORD_ALIAS, getTagsyncKeyStoreType(prop));
 					} catch (Exception ex) {
 						password = null;
 					}
@@ -341,7 +367,7 @@ public class TagSyncConfig extends Configuration {
 			if (path != null) {
 				if (!path.trim().isEmpty()) {
 					try {
-						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_SOURCE_ATLASREST_PASSWORD_ALIAS);
+						password = CredentialReader.getDecryptedString(path.trim(), TAGSYNC_SOURCE_ATLASREST_PASSWORD_ALIAS, getTagsyncKeyStoreType(prop));
 					} catch (Exception ex) {
 						password = null;
 					}
@@ -429,6 +455,20 @@ public class TagSyncConfig extends Configuration {
 		return prop.getProperty(TAGSYNC_KERBEROS_IDENTITY);
 	}
 
+	public static int getSinkMaxBatchSize(Properties prop) {
+		int ret = DEFAULT_TAGSYNC_SINK_MAX_BATCH_SIZE;
+
+		String maxBatchSizeStr = prop.getProperty(TAGSYNC_SINK_MAX_BATCH_SIZE_PROP);
+
+		if (StringUtils.isNotEmpty(maxBatchSizeStr)) {
+			try {
+				ret = Integer.valueOf(maxBatchSizeStr);
+			} catch (Exception e) {
+			}
+		}
+		return ret;
+	}
+
 	private TagSyncConfig() {
 		super(false);
 		init();
@@ -514,4 +554,18 @@ public class TagSyncConfig extends Configuration {
 		return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
 	}
 
+	static public int getAtlasRestSourceEntitiesBatchSize(Properties prop) {
+		String val = prop.getProperty(TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE);
+		int    ret = DEFAULT_TAGSYNC_ATLASREST_SOURCE_ENTITIES_BATCH_SIZE;
+
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Integer.valueOf(val);
+			} catch (NumberFormatException exception) {
+				// Ignore
+			}
+		}
+
+		return ret;
+	}
 }

@@ -17,19 +17,20 @@
 
 package org.apache.ranger.patch.cliutil;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.service.XPortalUserService;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class XXTrxLogUpdateUtil extends BaseLoader {
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(XXTrxLogUpdateUtil.class);
 
 	@Autowired

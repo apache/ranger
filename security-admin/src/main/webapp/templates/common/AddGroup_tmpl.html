@@ -14,19 +14,18 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<div class="control-group field-groupIdList">
-	<label class="control-label" for="c13_group">Group </label>
-    <div class="controls controls-row">                        
-        <div class="tags" id="tags-editable-1" data-toggle="manual" data-type="select2" 
-            data-value="{{groupId}}" data-original-title="Enter Group Name">
+<div class="form-group field-groupIdList">
+    <label class="control-label col-sm-3" for="c13_group">Group </label>
+    <div class="col-sm-3 controls-row">
+        <div class="tags" id="tags-editable-1" data-toggle="manual" data-type="select2" data-value="{{groupId}}" data-original-title="Enter Group Name">
         </div>
-	<a href="javascript:;" id="tags-edit-1" data-editable="tags-editable-1" class="link-tag" >
-       		{{#if isModelNew}}
-       			<i class="icon-plus" title="Add"></i>
-       		{{else}}
-       			<i class="icon-pencil" title="Edit"></i>
-       		{{/if}}	
-       	</a>
-       	<div class="help-inline" data-error="groupIdList" style="display:none;margin-bottom: 6px;padding-left: 2%;">Please add group.</div>
+    <a href="javascript:;" id="tags-edit-1" data-editable="tags-editable-1" class="link-tag">
+            {{#if isModelNew}}
+                <i class="fa-fw fa fa-plus" title="Add"></i>
+            {{else}}
+                <i class="fa-fw fa fa-pencil" title="Edit"></i>
+            {{/if}} 
+        </a>
+        <div class="help-inline" data-error="groupIdList" style="display:none;margin-bottom: 6px;padding-left: 2%;">Please add group.</div>
     </div>
 </div>

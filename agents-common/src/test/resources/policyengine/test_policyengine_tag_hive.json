@@ -49,6 +49,12 @@
       "policyItems":[
         {"accesses":[{"type":"all","isAllowed":true}],"users":["hive", "user1", "user2"],"groups":["public"],"delegateAdmin":false}
       ]
+    },
+    {"id":103,"name":"db=default, table=table2: audit-all-access","isEnabled":true,"isAuditEnabled":true,
+      "resources":{"database":{"values":["default"]},"table":{"values":["table2"]},"column":{"values":["*"]}},
+      "denyPolicyItems":[
+        {"accesses":[{"type":"select","isAllowed":true}],"users":["denieduser"],"groups":[],"delegateAdmin":false}
+      ]
     }
   ],
   "tagPolicyInfo": {
@@ -222,6 +228,14 @@
   },
 
   "tests":[
+    {"name":"DENY 'desc default.table2;' for denieduser",
+      "request":{
+        "resource":{"elements":{"database":"default", "table":"table2"}},
+        "accessType":"","user":"denieduser","userGroups":[],"requestData":"desc default.table2;' for denieduser",
+        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":103}
+    },
     {"name":"DENY 'select ssn from employee.personal;' for testuser using EXPIRES_ON tag with DESCENDANT match",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
@@ -322,13 +336,21 @@
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":3}
     },
+    {"name":"DENY 'desc default.table1;' for testuser",
+      "request":{
+        "resource":{"elements":{"database":"default", "table":"table1"}},
+        "accessType":"","user":"testuser","userGroups":[],"requestData":"desc default.table1;' for testuser",
+        "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":-1}
+    },
     {"name":"ALLOW 'use default;' for hive",
       "request":{
         "resource":{"elements":{"database":"default"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"use default",
         "context": {"TAGS":"[{\"type\":\"PII-FINAL\", \"attributes\":{\"expiry\":\"2026/06/15\"}}]"}
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"DENY 'use default;' for user1",
       "request":{

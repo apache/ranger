@@ -128,7 +128,7 @@ define(function(require) {
                 this.$el.find('[data-id="userGroupsTable"]').html('<tr data-name="'+this.fieldName+'"><td colspan="3"> No '
                     +this.fieldName+' found</td></tr>');
             }
-            this.ui.selectUsersOrGroups.select2(XAUtil.getUsersGroupsList(this.fieldName, this));
+            this.ui.selectUsersOrGroups.select2(XAUtil.getUsersGroupsList(this.fieldName, this, '300px'));
             this.ui.selectUsersOrGroups.attr("data-name", this.fieldName+"Select");
             this.ui.addUserGroupRoleBtn.attr("data-name", this.fieldName+"AddBtn")
         },

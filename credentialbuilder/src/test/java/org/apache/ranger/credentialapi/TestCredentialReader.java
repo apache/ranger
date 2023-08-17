@@ -50,7 +50,7 @@ public class TestCredentialReader {
 
     @Test
     public void testPassword() throws Exception {
-        String password = CredentialReader.getDecryptedString(keystoreFile, "TestCredential2");
+        String password = CredentialReader.getDecryptedString(keystoreFile, "TestCredential2", "jceks");
         assertEquals("PassworD123", password);
 
         String[] argsdeleteCommand = new String[] {"delete", "TestCredential2", "-provider", "jceks://file@/" + keystoreFile};

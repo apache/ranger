@@ -22,6 +22,7 @@
 import java.util.List;
 
 import com.google.gson.annotations.SerializedName;
+import org.apache.ranger.ugsyncutil.model.XUserInfo;
 
 public class GetXUserListResponse {
 

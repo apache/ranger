@@ -30,11 +30,13 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XAUtil			= require('utils/XAUtils');
 	var XALinks 		= require('modules/XALinks');
+	var XAGlobals 		= require('utils/XAGlobals');
 	var localization	= require('utils/XALangSupport');
 	
 	var RangerPolicycreateTmpl = require('hbs!tmpl/policies/RangerPolicyCreate_tmpl');
 	var RangerPolicyForm = require('views/policies/RangerPolicyForm');
 	var RangerServiceDef	= require('models/RangerServiceDef');
+	var RangerServiceDefList = require('collections/RangerServiceDefList');
 	var Vent			 = require('modules/Vent');
 
 	var RangerPolicyCreate = Backbone.Marionette.Layout.extend(
@@ -44,7 +46,7 @@ define(function(require){
 		
     	template : RangerPolicycreateTmpl,
     	templateHelpers : function(){
-                var infoMsg = '', displayClass = 'hide', policyTimeStatus = '', expiredClass = 'hide';
+                var infoMsg = '', displayClass = 'd-none', policyTimeStatus = '', expiredClass = 'd-none';
 		if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
 			if(XAUtil.isTagBasedDef(this.rangerServiceDefModel)){
 				infoMsg = localization.tt('msg.maskingPolicyInfoMsgForTagBased'), displayClass = 'show';	
@@ -58,7 +60,7 @@ define(function(require){
             if(XAUtil.isPolicyExpierd(this.model)){
                 policyTimeStatus = localization.tt('msg.policyExpired'), expiredClass = 'show';
             }else{
-                expiredClass = 'hide';
+                expiredClass = 'd-none';
             }
                 }
     		return {
@@ -130,6 +132,7 @@ define(function(require){
 				model : this.model,
 				rangerServiceDefModel : this.rangerServiceDefModel,
 				rangerService : this.rangerService,
+				rangerServiceDefList: this.RangerServiceDefList
 			});
 
 			this.editPolicy = this.model.has('id') ? true : false;
@@ -137,13 +140,14 @@ define(function(require){
 			this.params = {};
 		},
 		initializeServiceDef : function(){
-			
-			this.rangerServiceDefModel	= new RangerServiceDef();
-			this.rangerServiceDefModel.url = XAUtil.getRangerServiceDef(this.rangerService.get('type'));
-			this.rangerServiceDefModel.fetch({
+			var that = this
+			this.RangerServiceDefList = new RangerServiceDefList();
+			this.RangerServiceDefList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
+			this.RangerServiceDefList.fetch({
 				cache : false,
 				async : false
 			});
+			this.rangerServiceDefModel = this.RangerServiceDefList.findWhere({'name' : that.rangerService.get('type')})
 		},
 
 		/** all events binding here */
@@ -154,6 +158,12 @@ define(function(require){
 
 		/** on render callback */
 		onRender: function() {
+			if((localStorage.getItem('setOldUI') == "false" || localStorage.getItem('setOldUI') == null)
+				&& App.rSideBar.$el.hasClass('expanded')) {
+				App.rContent.$el.addClass('expanded-contant');
+			} else {
+				App.rContent.$el.removeClass('expanded-contant');
+			}
 			XAUtil.showAlerForDisabledPolicy(this);
 			this.rForm.show(this.form);
 			this.rForm.$el.dirtyFields();
@@ -172,8 +182,9 @@ define(function(require){
 			if(! _.isEmpty(errors)){
 				return;
 			}
-			
-			
+			if(this.form.validatePolicyResource()){
+				return;
+			}
 			//validate policyItems in the policy
 			var validateObj1 = this.form.formValidation(this.form.formInputList);
 			if(!this.validatePolicyItem(validateObj1)) return;
@@ -298,6 +309,7 @@ define(function(require){
 				callback : function(){
 					XAUtil.blockUI();
 					that.model.destroy({
+						wait: true,
 						success: function(model, response) {
 							XAUtil.blockUI('unblock');
 							XAUtil.allowNavigation();

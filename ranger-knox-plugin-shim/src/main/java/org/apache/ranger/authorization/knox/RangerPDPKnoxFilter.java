@@ -27,19 +27,19 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerPDPKnoxFilter implements Filter {
 
-	private static final Log LOG  = LogFactory.getLog(RangerPDPKnoxFilter.class);
+	private static final Logger LOG  = LoggerFactory.getLogger(RangerPDPKnoxFilter.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "knox";
 	private static final String   RANGER_PDP_KNOX_FILTER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.knox.RangerPDPKnoxFilter";
 	
-	private Filter 		    				rangerPDPKnoxFilteImpl	 = null;
-	private static RangerPluginClassLoader  rangerPluginClassLoader  = null;
+	private Filter                  rangerPDPKnoxFilteImpl  = null;
+	private RangerPluginClassLoader rangerPluginClassLoader = null;
 	
 	public RangerPDPKnoxFilter() {
 		if(LOG.isDebugEnabled()) {

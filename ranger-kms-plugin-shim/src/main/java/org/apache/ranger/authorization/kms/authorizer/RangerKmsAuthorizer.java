@@ -19,8 +19,6 @@
 
 package org.apache.ranger.authorization.kms.authorizer;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
 import org.apache.hadoop.crypto.key.kms.server.KMSACLsType.Type;
 import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyACLs;
@@ -28,19 +26,20 @@ import org.apache.hadoop.crypto.key.kms.server.KeyAuthorizationKeyProvider.KeyOp
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerKmsAuthorizer implements Runnable, KeyACLs {
 
-	private static final Log LOG  = LogFactory.getLog(RangerKmsAuthorizer.class);
+	private static final Logger LOG  = LoggerFactory.getLogger(RangerKmsAuthorizer.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "kms";
 	private static final String   RANGER_KMS_AUTHORIZER_IMPL_CLASSNAME  = "org.apache.ranger.authorization.kms.authorizer.RangerKmsAuthorizer";
 
-	private Object 	      	impl	     = null;
-	private Runnable      	implRunnable = null;
-	private KeyACLs      	implKeyACLs	 = null;
-
-	private static		RangerPluginClassLoader rangerPluginClassLoader   = null;
+	private Object                  impl                    = null;
+	private Runnable                implRunnable            = null;
+	private KeyACLs                 implKeyACLs             = null;
+	private RangerPluginClassLoader rangerPluginClassLoader = null;
 
 
 	public RangerKmsAuthorizer() {

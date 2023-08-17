@@ -71,6 +71,8 @@ public interface ServiceStore {
 
 	RangerPolicy createPolicy(RangerPolicy policy) throws Exception;
 
+	RangerPolicy createDefaultPolicy(RangerPolicy policy) throws Exception;
+
 	RangerPolicy updatePolicy(RangerPolicy policy) throws Exception;
 
 	void deletePolicy(RangerPolicy policy, RangerService service) throws Exception;
@@ -103,7 +105,7 @@ public interface ServiceStore {
 
 	ServicePolicies getServicePolicyDeltasOrPolicies(String serviceName, Long lastKnownVersion) throws Exception;
 
-	ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion) throws Exception;
+	ServicePolicies getServicePolicyDeltas(String serviceName, Long lastKnownVersion, Long cachedPolicyVersion) throws Exception;
 
 	ServicePolicies getServicePolicies(String serviceName, Long lastKnownVersion) throws Exception;
 

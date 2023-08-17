@@ -25,8 +25,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -38,7 +38,7 @@ import java.util.Arrays;
 
 public class CommandLineParser
 {
-    static final Log LOG      = LogFactory.getLog(CommandLineParser.class);
+    static final Logger LOG      = LoggerFactory.getLogger(CommandLineParser.class);
 
     private String servicePoliciesFileName;
     private String[] requestFileNames;

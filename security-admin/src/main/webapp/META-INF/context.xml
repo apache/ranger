@@ -14,7 +14,7 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 -->
-<Context allowLinking="true" useHttpOnly="true">
-  <Loader className="org.apache.catalina.loader.VirtualWebappLoader"
-    virtualClasspath="webapp/WEB-INF/classes/conf;webapp/WEB-INF/classes/lib/*" />
+<Context useHttpOnly="true">
+  <JarScanner scanManifest="false" />
+  <Resources allowLinking="true" />
 </Context>

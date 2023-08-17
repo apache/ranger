@@ -21,8 +21,6 @@ package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
@@ -32,10 +30,9 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -44,16 +41,14 @@ import java.util.List;
 import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 
 // This class needs above annotations for policy-engine unit tests involving RangerTagForEval objects that are initialized
 // from JSON specification
 
 public class RangerTagForEval implements Serializable {
-    private static final Log LOG = LogFactory.getLog(RangerTagForEval.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerTagForEval.class);
 
     private String                                type;
     private Map<String, String>                   attributes;
@@ -69,10 +64,10 @@ public class RangerTagForEval implements Serializable {
 
     public RangerTagForEval(RangerTag tag, RangerPolicyResourceMatcher.MatchType matchType) {
         this.type            = tag.getType();
-        this.attributes      = tag.getAttributes();
-        this.options         = tag.getOptions();
+        this.attributes      = tag.getAttributes() != null ? tag.getAttributes() : Collections.emptyMap();
+        this.options         = tag.getOptions() != null ? tag.getOptions() : Collections.emptyMap();
         this.matchType       = matchType;
-        this.validityPeriods = tag.getValidityPeriods();
+        this.validityPeriods = tag.getValidityPeriods() != null ? tag.getValidityPeriods() : Collections.emptyList();
 
         this.validityPeriodEvaluators = createValidityPeriodEvaluators();
     }

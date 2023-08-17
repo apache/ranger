@@ -25,14 +25,15 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HdfsResourceMgr {
 
-	private static final Logger LOG 	= Logger.getLogger(HdfsResourceMgr.class);
+	private static final Logger LOG 	= LoggerFactory.getLogger(HdfsResourceMgr.class);
 	public static final String PATH	= "path";
 
 	public static Map<String, Object> connectionTest(String serviceName, Map<String, String> configs) throws Exception {

@@ -90,7 +90,7 @@ define(function(require){
 		 */
 		initialize: function() {
 			this.modelName = 'RangerServiceDefBase';
-			//this.bind("error", XAUtils.defaultErrorHandler);
+			// this.bind("error", XAUtils.defaultErrorHandler);
 			this.bindErrorEvents();
 		}
 

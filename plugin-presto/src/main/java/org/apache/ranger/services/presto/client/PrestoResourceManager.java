@@ -18,10 +18,10 @@
  */
 package org.apache.ranger.services.presto.client;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Map;
@@ -29,7 +29,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
 public class PrestoResourceManager {
-  private static final Log LOG = LogFactory.getLog(PrestoResourceManager.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PrestoResourceManager.class);
 
   private static final String  CATALOG 	  = "catalog";
   private static final String  SCHEMA     = "schema";
@@ -41,18 +41,18 @@ public class PrestoResourceManager {
     Map<String, Object> ret = null;
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("==> PrestoResourceMgr.connectionTest ServiceName: " + serviceName + "Configs" + configs);
+      LOG.debug("==> PrestoResourceManager.connectionTest() ServiceName: " + serviceName + " Configs: " + configs);
     }
 
     try {
       ret = PrestoClient.connectionTest(serviceName, configs);
     } catch (Exception e) {
-      LOG.error("<== PrestoResourceManager.connectionTest Error: " + e);
+      LOG.error("<== PrestoResourceManager.connectionTest() Error: " + e);
       throw e;
     }
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("<== PrestoResourceManager.connectionTest Result : " + ret);
+      LOG.debug("<== PrestoResourceManager.connectionTest() Result : " + ret);
     }
 
     return ret;
@@ -75,7 +75,7 @@ public class PrestoResourceManager {
 
 
     if (LOG.isDebugEnabled()) {
-      LOG.debug("<== PrestoResourceMgr.getPrestoResources()  UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
+      LOG.debug("<== PrestoResourceMgr.getPrestoResources() UserInput: \"" + userInput + "\" resource : " + resource + " resourceMap: " + resourceMap);
     }
 
     if (userInput != null && resource != null) {
@@ -106,7 +106,7 @@ public class PrestoResourceManager {
       try {
 
         if (LOG.isDebugEnabled()) {
-          LOG.debug("==> PrestoResourceMgr.getPrestoResources() UserInput: " + userInput + " configs: " + configs + " catalogList: " + catalogList + " tableList: "
+          LOG.debug("==> PrestoResourceManager.getPrestoResources() UserInput: \"" + userInput + "\" configs: " + configs + " catalogList: " + catalogList + " tableList: "
             + tableList + " columnList: " + columnList);
         }
 

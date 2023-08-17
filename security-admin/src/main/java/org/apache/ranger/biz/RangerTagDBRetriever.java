@@ -31,22 +31,23 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.*;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
 import org.apache.ranger.service.RangerServiceResourceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionTemplate;
 
 public class RangerTagDBRetriever {
-	private static final Log LOG = LogFactory.getLog(RangerTagDBRetriever.class);
-	private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerTagDBRetriever");
+	private static final Logger LOG = LoggerFactory.getLogger(RangerTagDBRetriever.class);
+	private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerTagDBRetriever");
 
 	public static final Type subsumedDataType = new TypeToken<List<RangerTagDef.RangerTagAttributeDef>>() {}.getType();
 
@@ -109,6 +110,7 @@ public class RangerTagDBRetriever {
 		}
 	}
 
+
 	List<RangerServiceResource> getServiceResources() {
 		return serviceResources;
 	}
@@ -156,11 +158,8 @@ public class RangerTagDBRetriever {
 	private boolean initializeTagCache(XXService xService) {
 		boolean ret;
 		try {
-			TagRetrieverServiceResourceContext  serviceResourceContext  = new TagRetrieverServiceResourceContext(xService);
-			TagRetrieverTagDefContext           tagDefContext           = new TagRetrieverTagDefContext(xService);
-
-			serviceResources    = serviceResourceContext.getAllServiceResources();
-			tagDefs             = tagDefContext.getAllTagDefs();
+			serviceResources = new TagRetrieverServiceResourceContext(xService).getAllServiceResources();
+			tagDefs          = new TagRetrieverTagDefContext(xService).getAllTagDefs();
 
 			ret = true;
 		} catch (Exception ex) {
@@ -270,7 +269,6 @@ public class RangerTagDBRetriever {
 					ret.add(serviceResource);
 				}
 			}
-
 			return ret;
 		}
 
@@ -279,6 +277,8 @@ public class RangerTagDBRetriever {
 
 			if (iterServiceResource.hasNext()) {
 				XXServiceResource xServiceResource = iterServiceResource.next();
+
+				iterServiceResource.remove();
 
 				if (xServiceResource != null && StringUtils.isNotEmpty(xServiceResource.getTags())) {
 					ret = new RangerServiceResource();
@@ -297,13 +297,19 @@ public class RangerTagDBRetriever {
 					ret.setResourceElements(serviceResourceElements);
 
 					List<RangerTag> tags = gsonBuilder.fromJson(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
+
+					if (CollectionUtils.isNotEmpty(tags)) {
+						for (RangerTag tag : tags) {
+							RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+						}
+					}
+
 					lookupCache.serviceResourceToTags.put(xServiceResource.getId(), tags);
 				}
 			}
 
 			return ret;
 		}
-
 	}
 
 	private class TagRetrieverTagDefContext {
@@ -330,7 +336,6 @@ public class RangerTagDBRetriever {
 					ret.put(tagDef.getId(), tagDef);
 				}
 			}
-
 			return ret;
 		}
 
@@ -339,6 +344,8 @@ public class RangerTagDBRetriever {
 
 			if (iterTagDef.hasNext()) {
 				XXTagDef xTagDef = iterTagDef.next();
+
+				iterTagDef.remove();
 
 				if (xTagDef != null) {
 					ret = new RangerTagDef();

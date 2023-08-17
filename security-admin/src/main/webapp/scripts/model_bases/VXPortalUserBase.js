@@ -35,9 +35,6 @@ define(function(require){
 			"id" : {
 				"dataType" : "Long"
 			},
-			"version" : {
-				"dataType" : "int"
-			},
 			"createDate" : {
 				"dataType" : "Date"
 			},
@@ -48,35 +45,11 @@ define(function(require){
 				"dataType" : "list",
 				"listType" : "VNameValue"
 			},
-			"forUserId" : {
-				"dataType" : "Long"
-			},
-			"loginId" : {
-				"dataType" : "String"
-			},
 			"password" : {
 				"dataType" : "String"
 			},
-			"profileImageGId" : {
-				"dataType" : "Long"
-			},
-			"status" : {
-				"dataType" : "int"
-			},
 			"emailAddress" : {
 				"dataType" : "String"
-			},
-			"isTestUser" : {
-				"dataType" : "boolean"
-			},
-			"isRegistered" : {
-				"dataType" : "boolean"
-			},
-			"isInternal" : {
-				"dataType" : "boolean"
-			},
-			"gender" : {
-				"dataType" : "int"
 			},
 			"firstName" : {
 				"dataType" : "String"
@@ -89,9 +62,6 @@ define(function(require){
 			},
 			"userSource" : {
 				"dataType" : "int"
-			},
-			"timeZone" : {
-				"dataType" : "String"
 			},
 			"userRoleList" : {
 				"dataType" : "list",

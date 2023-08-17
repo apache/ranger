@@ -18,20 +18,53 @@
  */
 package org.apache.ranger.services.presto;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.presto.client.PrestoResourceManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class RangerServicePresto extends RangerBaseService {
-  private static final Log LOG = LogFactory.getLog(RangerServicePresto.class);
+  private static final Logger LOG = LoggerFactory.getLogger(RangerServicePresto.class);
+
+  public static final String ACCESS_TYPE_SELECT  = "select";
+
+  @Override
+  public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("==> RangerServicePresto.getDefaultRangerPolicies()");
+    }
+
+    List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+    for (RangerPolicy defaultPolicy : ret) {
+      if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+        List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicyItemAccess>();
+        accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_SELECT));
+        RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+        policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+        policyItemForLookupUser.setAccesses(accessListForLookupUser);
+        policyItemForLookupUser.setDelegateAdmin(false);
+        defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+      }
+    }
+
+    if (LOG.isDebugEnabled()) {
+      LOG.debug("<== RangerServicePresto.getDefaultRangerPolicies()");
+    }
+    return ret;
+  }
 
   @Override
   public Map<String, Object> validateConfig() throws Exception {
@@ -45,9 +78,12 @@ public class RangerServicePresto extends RangerBaseService {
 
     if (configs != null) {
       try {
+        if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
+          configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
+        }
         ret = PrestoResourceManager.connectionTest(serviceName, configs);
       } catch (HadoopException he) {
-        LOG.error("<== RangerServicePresto.validateConfig Error:" + he);
+        LOG.error("<== RangerServicePresto.validateConfig() Error:" + he);
         throw he;
       }
     }
@@ -67,18 +103,21 @@ public class RangerServicePresto extends RangerBaseService {
     String	serviceType		   = getServiceType();
     Map<String,String> configs = getConfigs();
     if(LOG.isDebugEnabled()) {
-      LOG.debug("==> RangerServiceHive.lookupResource Context: (" + context + ")");
+      LOG.debug("==> RangerServicePresto.lookupResource() Context: (" + context + ")");
     }
     if (context != null) {
       try {
+        if (!configs.containsKey(HadoopConfigHolder.RANGER_LOGIN_PASSWORD)) {
+          configs.put(HadoopConfigHolder.RANGER_LOGIN_PASSWORD, null);
+        }
         ret  = PrestoResourceManager.getPrestoResources(serviceName, serviceType, configs,context);
       } catch (Exception e) {
-        LOG.error( "<==RangerServicePresto.lookupResource Error : " + e);
+        LOG.error( "<==RangerServicePresto.lookupResource() Error : " + e);
         throw e;
       }
     }
     if(LOG.isDebugEnabled()) {
-      LOG.debug("<== RangerServicePresto.lookupResource Response: (" + ret + ")");
+      LOG.debug("<== RangerServicePresto.lookupResource() Response: (" + ret + ")");
     }
     return ret;
   }

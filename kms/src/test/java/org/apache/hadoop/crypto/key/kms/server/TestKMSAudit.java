@@ -26,15 +26,8 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.crypto.key.kms.server.KMS.KMSOp;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.test.GenericTestUtils;
-import org.apache.log4j.LogManager;
-import org.apache.log4j.PropertyConfigurator;
-import org.junit.After;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Rule;
-import org.junit.Test;
+import org.junit.*;
 import org.junit.rules.Timeout;
-import org.mockito.Mockito;
 import org.mockito.internal.util.reflection.Whitebox;
 
 public class TestKMSAudit {
@@ -45,6 +38,7 @@ public class TestKMSAudit {
   private PrintStream capturedOut;
 
   private KMSAudit kmsAudit;
+  private UserGroupInformation luser = UserGroupInformation.createUserForTesting("luser@REALM", new String[0]);
 
   private static class FilterOut extends FilterOutputStream {
     public FilterOut(OutputStream out) {
@@ -66,9 +60,6 @@ public class TestKMSAudit {
     filterOut = new FilterOut(memOut);
     capturedOut = new PrintStream(filterOut);
     System.setErr(capturedOut);
-    PropertyConfigurator.configure(Thread.currentThread().
-        getContextClassLoader()
-        .getResourceAsStream("log4j-kmsaudit.properties"));
     Configuration conf = new Configuration();
     this.kmsAudit = new KMSAudit(conf);
   }
@@ -76,7 +67,6 @@ public class TestKMSAudit {
   @After
   public void cleanUp() {
     System.setErr(originalOut);
-    LogManager.resetConfiguration();
     kmsAudit.shutdown();
   }
 
@@ -91,8 +81,6 @@ public class TestKMSAudit {
   @Test
   @SuppressWarnings("checkstyle:linelength")
   public void testAggregation() throws Exception {
-    UserGroupInformation luser = Mockito.mock(UserGroupInformation.class);
-    Mockito.when(luser.getShortUserName()).thenReturn("luser");
     kmsAudit.ok(luser, KMSOp.DECRYPT_EEK, "k1", "testmsg");
     kmsAudit.ok(luser, KMSOp.DECRYPT_EEK, "k1", "testmsg");
     kmsAudit.ok(luser, KMSOp.DECRYPT_EEK, "k1", "testmsg");
@@ -116,25 +104,23 @@ public class TestKMSAudit {
     System.out.println(out);
     Assert.assertTrue(
         out.matches(
-            "OK\\[op=DECRYPT_EEK, key=k1, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
+            "OK\\[op=DECRYPT_EEK, key=k1, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
             // Not aggregated !!
-            + "OK\\[op=DELETE_KEY, key=k1, user=luser\\] testmsg"
-            + "OK\\[op=ROLL_NEW_VERSION, key=k1, user=luser\\] testmsg"
-            + "OK\\[op=INVALIDATE_CACHE, key=k1, user=luser\\] testmsg"
+            + "OK\\[op=DELETE_KEY, key=k1, user=luser@REALM\\] testmsg"
+            + "OK\\[op=ROLL_NEW_VERSION, key=k1, user=luser@REALM\\] testmsg"
+            + "OK\\[op=INVALIDATE_CACHE, key=k1, user=luser@REALM\\] testmsg"
             // Aggregated
-            + "OK\\[op=DECRYPT_EEK, key=k1, user=luser, accessCount=6, interval=[^m]{1,4}ms\\] testmsg"
-            + "OK\\[op=DECRYPT_EEK, key=k1, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
-            + "OK\\[op=REENCRYPT_EEK, key=k1, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
-            + "OK\\[op=REENCRYPT_EEK, key=k1, user=luser, accessCount=3, interval=[^m]{1,4}ms\\] testmsg"
-            + "OK\\[op=REENCRYPT_EEK_BATCH, key=k1, user=luser\\] testmsg"
-            + "OK\\[op=REENCRYPT_EEK_BATCH, key=k1, user=luser\\] testmsg"));
+            + "OK\\[op=DECRYPT_EEK, key=k1, user=luser@REALM, accessCount=6, interval=[^m]{1,4}ms\\] testmsg"
+            + "OK\\[op=DECRYPT_EEK, key=k1, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
+            + "OK\\[op=REENCRYPT_EEK, key=k1, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
+            + "OK\\[op=REENCRYPT_EEK, key=k1, user=luser@REALM, accessCount=3, interval=[^m]{1,4}ms\\] testmsg"
+            + "OK\\[op=REENCRYPT_EEK_BATCH, key=k1, user=luser@REALM\\] testmsg"
+            + "OK\\[op=REENCRYPT_EEK_BATCH, key=k1, user=luser@REALM\\] testmsg"));
   }
 
   @Test
   @SuppressWarnings("checkstyle:linelength")
   public void testAggregationUnauth() throws Exception {
-    UserGroupInformation luser = Mockito.mock(UserGroupInformation.class);
-    Mockito.when(luser.getShortUserName()).thenReturn("luser");
     kmsAudit.unauthorized(luser, KMSOp.GENERATE_EEK, "k2");
     kmsAudit.evictCacheForTesting();
     kmsAudit.ok(luser, KMSOp.GENERATE_EEK, "k3", "testmsg");
@@ -154,22 +140,20 @@ public class TestKMSAudit {
     // the aggregated OK is arbitrary - no correctness concerns, but flaky here.
     Assert.assertTrue(
         out.matches(
-            "UNAUTHORIZED\\[op=GENERATE_EEK, key=k2, user=luser\\] "
-            + "OK\\[op=GENERATE_EEK, key=k3, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
-            + "OK\\[op=GENERATE_EEK, key=k3, user=luser, accessCount=5, interval=[^m]{1,4}ms\\] testmsg"
-            + "UNAUTHORIZED\\[op=GENERATE_EEK, key=k3, user=luser\\] "
-            + "OK\\[op=GENERATE_EEK, key=k3, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg")
-            || out.matches("UNAUTHORIZED\\[op=GENERATE_EEK, key=k2, user=luser\\] "
-            + "OK\\[op=GENERATE_EEK, key=k3, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
-            + "UNAUTHORIZED\\[op=GENERATE_EEK, key=k3, user=luser\\] "
-            + "OK\\[op=GENERATE_EEK, key=k3, user=luser, accessCount=5, interval=[^m]{1,4}ms\\] testmsg"
-            + "OK\\[op=GENERATE_EEK, key=k3, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"));
+            "UNAUTHORIZED\\[op=GENERATE_EEK, key=k2, user=luser@REALM\\] "
+            + "OK\\[op=GENERATE_EEK, key=k3, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
+            + "OK\\[op=GENERATE_EEK, key=k3, user=luser@REALM, accessCount=5, interval=[^m]{1,4}ms\\] testmsg"
+            + "UNAUTHORIZED\\[op=GENERATE_EEK, key=k3, user=luser@REALM\\] "
+            + "OK\\[op=GENERATE_EEK, key=k3, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg")
+            || out.matches("UNAUTHORIZED\\[op=GENERATE_EEK, key=k2, user=luser@REALM\\] "
+            + "OK\\[op=GENERATE_EEK, key=k3, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
+            + "UNAUTHORIZED\\[op=GENERATE_EEK, key=k3, user=luser@REALM\\] "
+            + "OK\\[op=GENERATE_EEK, key=k3, user=luser@REALM, accessCount=5, interval=[^m]{1,4}ms\\] testmsg"
+            + "OK\\[op=GENERATE_EEK, key=k3, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"));
   }
 
   @Test
   public void testAuditLogFormat() throws Exception {
-        UserGroupInformation luser = Mockito.mock(UserGroupInformation.class);
-        Mockito.when(luser.getShortUserName()).thenReturn("luser");
         kmsAudit.ok(luser, KMSOp.GENERATE_EEK, "k4", "testmsg");
         kmsAudit.ok(luser, KMSOp.GENERATE_EEK, "testmsg");
         kmsAudit.evictCacheForTesting();
@@ -179,11 +163,11 @@ public class TestKMSAudit {
         String out = getAndResetLogOutput();
         System.out.println(out);
         Assert.assertTrue(out.matches(
-          "OK\\[op=GENERATE_EEK, key=k4, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
-           + "OK\\[op=GENERATE_EEK, user=luser\\] testmsg"
-           + "OK\\[op=GENERATE_EEK, key=k4, user=luser, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
-           + "UNAUTHORIZED\\[op=DECRYPT_EEK, key=k4, user=luser\\] "
-           + "ERROR\\[user=luser\\] Method:'method' Exception:'testmsg'"
+          "OK\\[op=GENERATE_EEK, key=k4, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
+           + "OK\\[op=GENERATE_EEK, user=luser@REALM\\] testmsg"
+           + "OK\\[op=GENERATE_EEK, key=k4, user=luser@REALM, accessCount=1, interval=[^m]{1,4}ms\\] testmsg"
+           + "UNAUTHORIZED\\[op=DECRYPT_EEK, key=k4, user=luser@REALM\\] "
+           + "ERROR\\[user=luser@REALM\\] Method:'method' Exception:'testmsg'"
            + "UNAUTHENTICATED RemoteHost:remotehost Method:method URL:url ErrorMsg:'testmsg'"));
     }
 

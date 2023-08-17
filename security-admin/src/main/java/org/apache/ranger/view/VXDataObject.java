@@ -26,8 +26,6 @@
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.view.ViewBaseBean;
 import org.apache.ranger.json.JsonDateSerializer;
@@ -39,7 +37,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
 public class VXDataObject extends ViewBaseBean implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 

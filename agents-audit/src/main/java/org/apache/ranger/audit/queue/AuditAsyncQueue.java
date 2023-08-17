@@ -23,17 +23,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.concurrent.LinkedBlockingQueue;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * This is a non-blocking queue with no limit on capacity.
  */
 public class AuditAsyncQueue extends AuditQueue implements Runnable {
-	private static final Log logger = LogFactory.getLog(AuditAsyncQueue.class);
+	private static final Logger logger = LoggerFactory.getLogger(AuditAsyncQueue.class);
 
 	LinkedBlockingQueue<AuditEventBase> queue = new LinkedBlockingQueue<AuditEventBase>();
 	Thread consumerThread = null;
@@ -56,8 +56,13 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 	 */
 	@Override
 	public boolean log(AuditEventBase event) {
+		logStatusIfRequired();
+
+		addTotalCount(1);
+
 		// Add to the queue and return ASAP
 		if (queue.size() >= getMaxQueueSize()) {
+			addFailedCount(1);
 			return false;
 		}
 		queue.add(event);
@@ -130,9 +135,20 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 			MDC.clear();
 			runLogAudit();
 		} catch (Throwable t) {
-			logger.fatal("Exited thread abnormaly. queue=" + getName(), t);
+			logger.error("Exited thread abnormaly. queue=" + getName(), t);
 		}
 	}
+
+	@Override
+	public void logStatus() {
+		super.logStatus();
+
+		if (isStatusLogEnabled()) {
+			logger.info("AuditAsyncQueue.log(name={}): totalCount={}, currentQueueLength={}", getName(), getTotalCount(), queue.size());
+		}
+	}
+
+	public int size() { return queue.size(); }
 
 	public void runLogAudit() {
 		while (true) {
@@ -150,6 +166,8 @@ public class AuditAsyncQueue extends AuditQueue implements Runnable {
 					eventList.add(event);
 					queue.drainTo(eventList, MAX_DRAIN - 1);
 					consumer.log(eventList);
+
+					logStatusIfRequired();
 				}
 			} catch (InterruptedException e) {
 				logger.info("Caught exception in consumer thread. Shutdown might be in progress");

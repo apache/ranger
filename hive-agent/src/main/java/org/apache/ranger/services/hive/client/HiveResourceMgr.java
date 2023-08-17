@@ -23,14 +23,15 @@ import java.util.Map;
 import java.util.concurrent.Callable;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HiveResourceMgr {
 
-	private static final Logger LOG = Logger.getLogger(HiveResourceMgr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HiveResourceMgr.class);
 	
 	private static final String  DATABASE 	  = "database";
 	private static final String  TABLE	 	  = "table";

@@ -30,8 +30,6 @@ import java.util.HashMap;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -43,6 +41,8 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerDataMaskTypeDef;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Sets;
@@ -50,7 +50,7 @@ import org.apache.ranger.plugin.util.ServiceDefUtil;
 
 public class RangerServiceDefValidator extends RangerValidator {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceDefValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefValidator.class);
 
 	public RangerServiceDefValidator(ServiceStore store) {
 		super(store);

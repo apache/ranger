@@ -18,7 +18,6 @@
 package org.apache.ranger.patch;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.ServiceDBStore;
@@ -36,6 +35,8 @@ import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XPermMapService;
 import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -44,7 +45,7 @@ import java.util.Map;
 
 @Component
 public class PatchForHiveServiceDefUpdate_J10006 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchForHiveServiceDefUpdate_J10006.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchForHiveServiceDefUpdate_J10006.class);
 	public static final String SERVICEDBSTORE_SERVICEDEFBYNAME_HIVE_NAME  = "hive";
 	@Autowired
 	RangerDaoManager daoMgr;

@@ -18,19 +18,20 @@
 
 package org.apache.ranger.patch.cliutil;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.UserMgr;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXPortalUser;
 import org.apache.ranger.patch.BaseLoader;
 import org.apache.ranger.util.CLIUtil;
-import org.apache.solr.common.StringUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ChangeUserNameUtil extends BaseLoader {
-    private static final Logger logger = Logger.getLogger(ChangeUserNameUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(ChangeUserNameUtil.class);
 
     @Autowired
     RangerDaoManager daoMgr;

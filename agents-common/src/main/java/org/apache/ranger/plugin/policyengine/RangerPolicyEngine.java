@@ -30,9 +30,10 @@ import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRoles;
 
 public interface RangerPolicyEngine {
-	String GROUP_PUBLIC   = "public";
-	String ANY_ACCESS     = "_any";
-	String ADMIN_ACCESS   = "_admin";
+	String GROUP_PUBLIC      = "public";
+	String ANY_ACCESS        = "_any";
+	String ADMIN_ACCESS      = "_admin";
+	String SUPER_USER_ACCESS = "_super_user";
 
 	String AUDIT_ALL      = "audit-all";
 	String AUDIT_NONE     = "audit-none";
@@ -43,6 +44,8 @@ public interface RangerPolicyEngine {
 	String PLUGIN_AUDIT_EXCLUDE_ROLES  = "ranger.plugin.audit.exclude.roles";
 	String PLUGIN_SUPER_USERS          = "ranger.plugin.super.users";
 	String PLUGIN_SUPER_GROUPS         = "ranger.plugin.super.groups";
+	String PLUGIN_AUDIT_FILTER         = "ranger.plugin.audit.filters";
+	String PLUGIN_SERVICE_ADMINS	   = "ranger.plugin.service.admins";
 
 	String USER_CURRENT   = "{" + RangerAccessRequestUtil.KEY_USER + "}";
 	String RESOURCE_OWNER = "{OWNER}";
@@ -63,9 +66,17 @@ public interface RangerPolicyEngine {
 
 	Collection<RangerAccessResult> evaluatePolicies(Collection<RangerAccessRequest> requests, int policyType, RangerAccessResultProcessor resultProcessor);
 
+	void evaluateAuditPolicies(RangerAccessResult result);
+
 	RangerResourceACLs getResourceACLs(RangerAccessRequest request);
 
+	RangerResourceACLs getResourceACLs(RangerAccessRequest request, Integer requestedPolicyType);
+
 	Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
+
+	RangerRoles getRangerRoles();
+
+	RangerPluginContext getPluginContext();
 
 	String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest);
 

@@ -36,8 +36,6 @@ import org.apache.atlas.model.instance.AtlasEntityHeader;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.io.IOCase;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -50,18 +48,21 @@ import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.plugin.util.PasswordUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import javax.security.auth.Subject;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.NewCookie;
 
 public class RangerServiceAtlas extends RangerBaseService {
-	private static final Log LOG = LogFactory.getLog(RangerServiceAtlas.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceAtlas.class);
 
 	public static final String RESOURCE_SERVICE                       = "atlas-service";
 	public static final String RESOURCE_TYPE_CATEGORY                 = "type-category";
 	public static final String RESOURCE_TYPE_NAME                     = "type";
 	public static final String RESOURCE_ENTITY_TYPE                   = "entity-type";
 	public static final String RESOURCE_ENTITY_CLASSIFICATION         = "entity-classification";
+	public static final String RESOURCE_CLASSIFICATION                = "classification";
 	public static final String RESOURCE_ENTITY_ID                     = "entity";
 	public static final String RESOURCE_ENTITY_LABEL                  = "entity-label";
 	public static final String RESOURCE_ENTITY_BUSINESS_METADATA      = "entity-business-metadata";
@@ -76,6 +77,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String SEARCH_FEATURE_POLICY_NAME             = "Allow users to manage favorite searches";
 
 	public static final String ACCESS_TYPE_ENTITY_READ  = "entity-read";
+	public static final String ACCESS_TYPE_TYPE_READ = "type-read";
 	public static final String ACCESS_TYPE_ENTITY_CREATE  = "entity-create";
 	public static final String ACCESS_TYPE_ENTITY_UPDATE = "entity-update";
 	public static final String ACCESS_TYPE_ENTITY_DELETE = "entity-delete";
@@ -92,11 +94,12 @@ public class RangerServiceAtlas extends RangerBaseService {
 	public static final String CONFIG_PASSWORD                = "password";
 	public static final String ENTITY_NOT_CLASSIFIED          = "_NOT_CLASSIFIED";
 
-	private static final String TYPE_ENTITY         = "entity";
-	private static final String TYPE_CLASSIFICATION = "classification";
-	private static final String TYPE_STRUCT         = "struct";
-	private static final String TYPE_ENUM           = "enum";
-	private static final String TYPE_RELATIONSHIP   = "relationship";
+	private static final String TYPE_ENTITY             = "entity";
+	private static final String TYPE_CLASSIFICATION     = "classification";
+	private static final String TYPE_STRUCT             = "struct";
+	private static final String TYPE_ENUM               = "enum";
+	private static final String TYPE_RELATIONSHIP       = "relationship";
+	private static final String TYPE_BUSINESS_METADATA  = "business_metadata";
 
 	private static final String URL_LOGIN                = "/j_spring_security_check";
 	private static final String URL_GET_TYPESDEF_HEADERS = "/api/atlas/v2/types/typedefs/headers";
@@ -170,7 +173,7 @@ public class RangerServiceAtlas extends RangerBaseService {
             }
 
             // 2. add a policy-item for rangertagsync user with 'entity-read' permission in the policy for 'entity-type'
-            if (policyResources.containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)) {
+            if (policyResources.containsKey(RESOURCE_ENTITY_TYPE) && !policyResources.containsKey(RESOURCE_CLASSIFICATION)) {
                 RangerPolicyItem policyItemForTagSyncUser = new RangerPolicyItem();
 
                 policyItemForTagSyncUser.setUsers(Collections.singletonList(tagSyncUser));
@@ -191,12 +194,20 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 			if (defaultPolicy.getName().contains("all")
 					&& policyResources.containsKey(RangerServiceAtlas.RESOURCE_ENTITY_TYPE)
-					&& StringUtils.isNotBlank(lookUpUser)) {
+					&& StringUtils.isNotBlank(lookUpUser) && !policyResources.containsKey(RESOURCE_CLASSIFICATION)) {
 				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
 				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 				policyItemForLookupUser.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_ENTITY_READ)));
 				policyItemForLookupUser.setDelegateAdmin(false);
 				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+
+			//  add a policy-item for rangertagsync user with 'type-read' permission in the policy for 'type-category'
+			if (policyResources.containsKey(RangerServiceAtlas.RESOURCE_TYPE_CATEGORY)) {
+				RangerPolicyItem policyItemTypeReadForAll = new RangerPolicyItem();
+				policyItemTypeReadForAll.setGroups(Collections.singletonList(RangerPolicyEngine.GROUP_PUBLIC));
+				policyItemTypeReadForAll.setAccesses(Collections.singletonList(new RangerPolicyItemAccess(ACCESS_TYPE_TYPE_READ)));
+				defaultPolicy.getPolicyItems().add(policyItemTypeReadForAll);
 			}
         }
 
@@ -245,7 +256,7 @@ public class RangerServiceAtlas extends RangerBaseService {
 	}
 
 	private static class AtlasServiceClient extends BaseClient {
-		private static final String[] TYPE_CATEGORIES = new String[] { "classification", "enum", "entity", "relationship", "struct" };
+		private static final String[] TYPE_CATEGORIES = new String[] { "classification", "enum", "entity", "relationship", "struct" ,"business_metadata" };
 
 		Map<String, List<String>> typesDef = new HashMap<>();
 
@@ -299,6 +310,10 @@ public class RangerServiceAtlas extends RangerBaseService {
 
 					if (emptyOrContainsMatch(typeCategories, TYPE_RELATIONSHIP)) {
 						addIfStartsWithAndNotExcluded(ret, typesDef.get(TYPE_RELATIONSHIP), userInput, currentValues);
+					}
+
+					if (emptyOrContainsMatch(typeCategories, TYPE_BUSINESS_METADATA)) {
+						addIfStartsWithAndNotExcluded(ret, typesDef.get(TYPE_BUSINESS_METADATA), userInput, currentValues);
 					}
 				}
 				break;

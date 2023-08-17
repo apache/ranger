@@ -103,11 +103,11 @@ def main():
 
 	sortedList = sorted(fileList, key = lambda x: x[:-4])
 	for _, val in enumerate(sortedList):
-		m = hashfile(open(val,'rb'), hashlib.md5())
+		m = hashfile(open(val,'rb'), hashlib.sha512())
 		f = m +"  "+ val + "\n"
 		c.append(f)
 
-	srcChecksum = hashlib.md5(''.join(c).encode('UTF-8')).hexdigest()
+	srcChecksum = hashlib.sha512(''.join(c).encode('UTF-8')).hexdigest()
 	print('hash of the ' + str(len(sortedList)) + '\n\t file from: ' + parent_dir + '\n\t is ' + srcChecksum)
 
 	dir = os.path.join(src_dir,"target","gen","org","apache","ranger","common")

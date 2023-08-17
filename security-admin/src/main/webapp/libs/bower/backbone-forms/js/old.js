@@ -12,7 +12,12 @@ define(['jquery', 'underscore', 'backbone', 'backbone-forms'], function($, _, Ba
    * NOTE: These templates are deprecated.
    */
   Form.template = _.template('\
-    <form class="bbf-form" data-fieldsets></form>\
+    <form class="bbf-form">\
+      <div data-fieldsets></div>\
+      <% if (submitButton) { %>\
+        <button type="submit"><%= submitButton %></button>\
+      <% } %>\
+    </form>\
   ');
 
 
@@ -65,27 +70,30 @@ define(['jquery', 'underscore', 'backbone', 'backbone-forms'], function($, _, Ba
   ');
 
 
-  Form.editors.List.template = _.template('\
-    <div class="bbf-list">\
-      <ul data-items></ul>\
-      <div class="bbf-actions"><button type="button" data-action="add">Add</div>\
-    </div>\
-  ');
+  if (Form.editors.List) {
+  
+    Form.editors.List.template = _.template('\
+      <div class="bbf-list">\
+        <ul data-items></ul>\
+        <div class="bbf-actions"><button type="button" data-action="add">Add</div>\
+      </div>\
+    ');
+   
+   
+    Form.editors.List.Item.template = _.template('\
+      <li>\
+        <button type="button" data-action="remove" class="bbf-remove">&times;</button>\
+        <div class="bbf-editor-container" data-editor></div>\
+      </li>\
+    ');
+    
+   
+    Form.editors.List.Object.template = Form.editors.List.NestedModel.template = _.template('\
+      <div class="bbf-list-modal"><%= summary %></div>\
+    ');
 
+  }
 
-  Form.editors.List.Item.template = _.template('\
-    <li>\
-      <button type="button" data-action="remove" class="bbf-remove">&times;</button>\
-      <div class="bbf-editor-container" data-editor></div>\
-    </li>\
-  ');
-
-
-  Form.editors.List.Modal.template = _.template('\
-    <div class="bbf-list-modal">\
-      <%= summary %>\
-    </div>\
-  ');
 
 
 });

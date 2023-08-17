@@ -23,9 +23,9 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a sample implementation of a Context Enricher.  It works in conjunction with a sample Condition Evaluator
@@ -55,7 +55,7 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
  * This Context Enricher is almost identical to another sample enricher <code>RangerSampleProjectProvider</code>.
  */
 public class RangerSampleCountryProvider extends RangerAbstractContextEnricher {
-	private static final Log LOG = LogFactory.getLog(RangerSampleCountryProvider.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerSampleCountryProvider.class);
 
 	private String     contextName    = "COUNTRY";
 	private Properties userCountryMap = null;

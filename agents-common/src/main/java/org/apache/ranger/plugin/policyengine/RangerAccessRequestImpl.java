@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.policyengine;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -29,10 +30,12 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerAccessRequestImpl implements RangerAccessRequest {
-	private static final Logger LOG = Logger.getLogger(RangerAccessRequestImpl.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessRequestImpl.class);
 
 	private RangerAccessResource resource;
 	private String               accessType;
@@ -54,6 +57,7 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	private boolean isAccessTypeAny;
 	private boolean isAccessTypeDelegatedAdmin;
 	private ResourceMatchingScope resourceMatchingScope = ResourceMatchingScope.SELF;
+	private Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes = Collections.emptyMap();
 
 	public RangerAccessRequestImpl() {
 		this(null, null, null, null, null);
@@ -76,6 +80,27 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		setSessionId(null);
 		setContext(null);
 		setClusterName(null);
+	}
+
+	public RangerAccessRequestImpl(RangerAccessRequest request) {
+		setResource(request.getResource());
+		setAccessType(request.getAccessType());
+		setUser(request.getUser());
+		setUserGroups(request.getUserGroups());
+		setUserRoles(request.getUserRoles());
+		setForwardedAddresses(request.getForwardedAddresses());
+		setAccessTime(request.getAccessTime());
+		setRemoteIPAddress(request.getRemoteIPAddress());
+		setClientType(request.getClientType());
+		setAction(request.getAction());
+		setRequestData(request.getRequestData());
+		setSessionId(request.getSessionId());
+		setContext(request.getContext());
+		setClusterName(request.getClusterName());
+		setResourceMatchingScope(request.getResourceMatchingScope());
+		setResourceElementMatchingScopes(request.getResourceElementMatchingScopes());
+		setClientIPAddress(request.getClientIPAddress());
+		setClusterType(request.getClusterType());
 	}
 
 	@Override
@@ -150,6 +175,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 	}
 
 	@Override
+	public Map<String, ResourceElementMatchingScope> getResourceElementMatchingScopes() { return this.resourceElementMatchingScopes; }
+
+	@Override
 	public boolean isAccessTypeAny() {
 		return isAccessTypeAny;
 	}
@@ -161,6 +189,9 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 
 	public void setResource(RangerAccessResource resource) {
 		this.resource = resource;
+		if (context != null) {
+			RangerAccessRequestUtil.setIsRequestPreprocessed(context, Boolean.FALSE);
+		}
 	}
 
 	public void setAccessType(String accessType) {
@@ -233,10 +264,29 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		this.clusterType = clusterType;
 	}
 
-	public void setResourceMatchingScope(ResourceMatchingScope scope) { this.resourceMatchingScope = scope; }
+	public void setResourceMatchingScope(ResourceMatchingScope scope) {
+		this.resourceMatchingScope = scope;
+		if (context != null) {
+			RangerAccessRequestUtil.setIsRequestPreprocessed(context, Boolean.FALSE);
+		}
+	}
+
+	public void setResourceElementMatchingScopes(Map<String, ResourceElementMatchingScope> resourceElementMatchingScopes) {
+		this.resourceElementMatchingScopes = resourceElementMatchingScopes == null ? Collections.emptyMap() : resourceElementMatchingScopes;
+	}
 
 	public void setContext(Map<String, Object> context) {
-		this.context = (context == null) ? new HashMap<String, Object>() : context;
+		if (context == null) {
+			this.context = new HashMap<>();
+		} else {
+			this.context = context;
+		}
+
+		RangerAccessRequest current = RangerAccessRequestUtil.getRequestFromContext(this.context);
+
+		if (current == null) {
+			RangerAccessRequestUtil.setRequestInContext(this);
+		}
 	}
 
 	public void extractAndSetClientIPAddress(boolean useForwardedIPAddress, String[]trustedProxyAddresses) {
@@ -318,13 +368,18 @@ public class RangerAccessRequestImpl implements RangerAccessRequest {
 		sb.append("requestData={").append(requestData).append("} ");
 		sb.append("sessionId={").append(sessionId).append("} ");
 		sb.append("resourceMatchingScope={").append(resourceMatchingScope).append("} ");
+		sb.append("resourceElementMatchingScopes={").append(resourceElementMatchingScopes).append("} ");
 		sb.append("clusterName={").append(clusterName).append("} ");
 		sb.append("clusterType={").append(clusterType).append("} ");
 
 		sb.append("context={");
 		if(context != null) {
 			for(Map.Entry<String, Object> e : context.entrySet()) {
-				sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
+				Object val = e.getValue();
+
+				if (!(val instanceof RangerAccessRequest)) { // to avoid recursive calls
+					sb.append(e.getKey()).append("={").append(val).append("} ");
+				}
 			}
 		}
 		sb.append("} ");

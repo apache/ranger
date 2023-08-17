@@ -29,16 +29,17 @@ import java.util.TreeMap;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
-import org.apache.solr.common.StringUtils;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerPolicyResourceSignature {
 
 	static final int _SignatureVersion = 1;
-	private static final Log LOG = LogFactory.getLog(RangerPolicyResourceSignature.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyResourceSignature.class);
 	static final RangerPolicyResourceSignature _EmptyResourceSignature = new RangerPolicyResourceSignature((RangerPolicy)null);
 	
 	private final String _string;
@@ -49,7 +50,11 @@ public class RangerPolicyResourceSignature {
 		_policy = policy;
 		PolicySerializer serializer = new PolicySerializer(_policy);
 		_string = serializer.toString();
-		_hash = DigestUtils.sha256Hex(_string);
+		if (RangerAdminConfig.getInstance().isFipsEnabled()) {
+			_hash = DigestUtils.sha512Hex(_string);
+		} else {
+			_hash = DigestUtils.sha256Hex(_string);
+		}
 	}
 
 	/**
@@ -63,7 +68,11 @@ public class RangerPolicyResourceSignature {
 		} else {
 			_string = string;
 		}
-                _hash = DigestUtils.sha256Hex(_string);
+		if (RangerAdminConfig.getInstance().isFipsEnabled()) {
+			_hash = DigestUtils.sha384Hex(_string);
+		} else {
+			_hash = DigestUtils.sha256Hex(_string);
+		}
 	}
 	
 	String asString() {
@@ -112,6 +121,8 @@ public class RangerPolicyResourceSignature {
 				LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection on policy was null!");
 			} else if (_policy.getResources().containsKey(null)) {
 				LOG.debug("isPolicyValidForResourceSignatureComputation: resources collection has resource with null name!");
+			} else if (!_policy.getIsEnabled() && StringUtils.isEmpty(_policy.getGuid())) {
+				   LOG.debug("isPolicyValidForResourceSignatureComputation: policy GUID is empty for a disabled policy!");
 			} else {
 				valid = true;
 			}
@@ -121,7 +132,7 @@ public class RangerPolicyResourceSignature {
 			}
 			return valid;
 		}
-		
+
 		@Override
 		public String toString() {
 			// invalid/empty policy gets a deterministic signature as if it had an
@@ -133,13 +144,9 @@ public class RangerPolicyResourceSignature {
 			if (_policy.getPolicyType() != null) {
 				type = _policy.getPolicyType();
 			}
-			Map<String, ResourceSerializer> resources = new TreeMap<>();
-			for (Map.Entry<String, RangerPolicyResource> entry : _policy.getResources().entrySet()) {
-				String resourceName = entry.getKey();
-				ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
-				resources.put(resourceName, resourceView);
-			}
-			String resource = resources.toString();
+
+			String resource = toSignatureString(_policy.getResources(), _policy.getAdditionalResources());
+
 			if (CollectionUtils.isNotEmpty(_policy.getValiditySchedules())) {
 				resource += _policy.getValiditySchedules().toString();
 			}
@@ -154,6 +161,9 @@ public class RangerPolicyResourceSignature {
 				CustomConditionSerialiser customConditionSerialiser = new CustomConditionSerialiser(_policy.getConditions());
 				resource += customConditionSerialiser.toString();
 			}
+			if (!_policy.getIsEnabled()) {
+				resource += _policy.getGuid();
+			}
 
 			String result = String.format("{version=%d,type=%d,resource=%s}", _SignatureVersion, type, resource);
 			return result;
@@ -161,10 +171,43 @@ public class RangerPolicyResourceSignature {
 
 	}
 
-	static class ResourceSerializer {
+	public static String toSignatureString(Map<String, RangerPolicyResource> resource) {
+		Map<String, ResourceSerializer> resources = new TreeMap<>();
+
+		for (Map.Entry<String, RangerPolicyResource> entry : resource.entrySet()) {
+			String             resourceName = entry.getKey();
+			ResourceSerializer resourceView = new ResourceSerializer(entry.getValue());
+
+			resources.put(resourceName, resourceView);
+		}
+
+		return resources.toString();
+	}
+
+	public static String toSignatureString(Map<String, RangerPolicyResource> resource, List<Map<String, RangerPolicyResource>> additionalResources) {
+		String ret = toSignatureString(resource);
+
+		if (additionalResources != null && !additionalResources.isEmpty()) {
+			List<String> signatures = new ArrayList<>(additionalResources.size() + 1);
+
+			signatures.add(ret);
+
+			for (Map<String, RangerPolicyResource> additionalResource : additionalResources) {
+				signatures.add(toSignatureString(additionalResource));
+			}
+
+			Collections.sort(signatures);
+
+			ret = signatures.toString();
+		}
+
+		return ret;
+	}
+
+	static public class ResourceSerializer {
 		final RangerPolicyResource _policyResource;
 
-		ResourceSerializer(RangerPolicyResource policyResource) {
+		public ResourceSerializer(RangerPolicyResource policyResource) {
 			_policyResource = policyResource;
 		}
 

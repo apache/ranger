@@ -21,12 +21,10 @@ package org.apache.ranger.entity;
 
 import javax.persistence.Entity;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 
 @Entity
-@XmlRootElement
 @Table(name = "xa_access_audit")
 public class XXAccessAuditV4 extends XXAccessAuditBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;

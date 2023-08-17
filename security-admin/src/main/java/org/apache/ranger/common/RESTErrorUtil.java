@@ -28,10 +28,11 @@ import java.util.List;
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.view.VXMessage;
 import org.apache.ranger.view.VXResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -39,7 +40,7 @@ import org.springframework.stereotype.Component;
 @Component
 public class RESTErrorUtil {
 
-	private static final Logger logger = Logger.getLogger(RESTErrorUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(RESTErrorUtil.class);
 
 	@Autowired
 	StringUtil stringUtil;
@@ -410,6 +411,37 @@ public class RESTErrorUtil {
 		logger.info("Request failed. loginId="
 				+ loginId + ", logMessage=" + vResponse.getMsgDesc(),
 				restException);
+		return restException;
+	}
+
+	public WebApplicationException create404RESTException(String errorMessage,
+			MessageEnums messageEnum, Long objectId, String fieldName,
+			String logMessage) {
+		List<VXMessage> messageList = new ArrayList<VXMessage>();
+		messageList.add(messageEnum.getMessage(objectId, fieldName));
+
+		VXResponse gjResponse = new VXResponse();
+		gjResponse.setStatusCode(VXResponse.STATUS_ERROR);
+		gjResponse.setMsgDesc(errorMessage);
+		gjResponse.setMessageList(messageList);
+
+		Response errorResponse = Response
+				.status(javax.servlet.http.HttpServletResponse.SC_NOT_FOUND)
+				.entity(gjResponse).build();
+
+		WebApplicationException restException = new WebApplicationException(
+				errorResponse);
+		restException.fillInStackTrace();
+		UserSessionBase userSession = ContextUtil.getCurrentUserSession();
+		String loginId = null;
+		if (userSession != null) {
+			loginId = userSession.getLoginId();
+		}
+
+		logger.info("Request failed. loginId="
+				+ loginId + ", logMessage=" + gjResponse.getMsgDesc(),
+				restException);
+
 		return restException;
 	}
 }

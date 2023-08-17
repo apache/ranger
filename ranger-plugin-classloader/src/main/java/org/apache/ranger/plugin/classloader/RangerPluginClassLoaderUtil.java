@@ -28,9 +28,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

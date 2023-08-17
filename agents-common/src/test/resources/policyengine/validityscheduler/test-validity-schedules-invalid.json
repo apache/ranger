@@ -210,5 +210,209 @@
       "isApplicable": false,
       "validationFailureCount": 2
     }
+  },
+  {
+    "name": "invalid lower bound - minute",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "-1", "hour": "0", "dayOfMonth": "1", "dayOfWeek": "1", "month": "1", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid upper bound - minute",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "60", "hour": "0", "dayOfMonth": "1", "dayOfWeek": "1", "month": "1", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid lower bound - hour",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "-1", "dayOfMonth": "1", "dayOfWeek": "1", "month": "1", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid upper bound - hour",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "24", "dayOfMonth": "1", "dayOfWeek": "1", "month": "1", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid lower bound - dayOfMonth",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "0", "dayOfMonth": "0", "dayOfWeek": "1", "month": "1", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid upper bound - dayOfMonth",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "0", "dayOfMonth": "32", "dayOfWeek": "1", "month": "1", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid lower bound - dayOfWeek",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "0", "dayOfMonth": "1", "dayOfWeek": "0", "month": "1", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid upper bound - dayOfWeek",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "0", "dayOfMonth": "1", "dayOfWeek": "8", "month": "1", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid lower bound - month",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "0", "dayOfMonth": "1", "dayOfWeek": "1", "month": "0", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid upper bound - month",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "0", "dayOfMonth": "1", "dayOfWeek": "1", "month": "13", "year": "2018" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid lower bound - year",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "0", "dayOfMonth": "1", "dayOfWeek": "1", "month": 1, "year": "2016" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
+  },
+  {
+    "name": "invalid upper bound - year",
+    "validitySchedules": [
+      {
+        "startTime": "2018/01/12 14:32:00", "endTime": "2050/01/23 06:30:00",
+        "recurrences": [
+          {
+            "schedule": { "minute": "0", "hour": "0", "dayOfMonth": "1", "dayOfWeek": "1", "month": "1", "year": "2101" },
+            "interval": { "minutes": 10 }
+          }
+        ]
+      }
+    ],
+    "accessTime": "20180112-18:32:27.000-0800",
+    "result": { "isValid": false, "isApplicable": false, "validationFailureCount": 1
+    }
   }
 ]

@@ -29,7 +29,6 @@ import java.util.Properties;
 import java.util.UUID;
 import java.util.Arrays;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXAccessAudit;
 import org.apache.ranger.entity.XXAccessAuditBase;
@@ -54,13 +53,17 @@ import org.apache.solr.client.solrj.impl.SolrHttpClientBuilder;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
+import javax.security.auth.login.Configuration;
+
 @Component
 public class DbToSolrMigrationUtil extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(DbToSolrMigrationUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(DbToSolrMigrationUtil.class);
 	private final static String CHECK_FILE_NAME = "migration_check_file.txt";
 	private final static Charset ENCODING = StandardCharsets.UTF_8;
 
@@ -416,7 +419,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 						.setDefaultCollection(collectionName);
 				return solrCloudClient;
 			} catch (Exception e) {
-				logger.fatal(
+				logger.error(
 						"Can't connect to Solr server. ZooKeepers="
 								+ zkHosts + ", collection="
 								+ collectionName, e);
@@ -425,7 +428,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 		} else {
 			if (solrURL == null || solrURL.isEmpty()
 					|| "none".equalsIgnoreCase(solrURL)) {
-				logger.fatal("Solr ZKHosts and URL for Audit are empty. Please set property "
+				logger.error("Solr ZKHosts and URL for Audit are empty. Please set property "
 						+ SOLR_ZK_HOSTS
 						+ " or "
 						+ SOLR_URLS_PROP);
@@ -443,7 +446,7 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 					solrClient = httpSolrClient;
 
 					} catch (Exception e) {
-					logger.fatal(
+					logger.error(
 							"Can't connect to Solr server. URL="
 									+ solrURL, e);
 					throw e;
@@ -464,10 +467,15 @@ public class DbToSolrMigrationUtil extends BaseLoader {
 				 System.setProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG, "/dev/null");
 			 }
 			 logger.info("Loading SolrClient JAAS config from Ranger audit config if present...");
-			 InMemoryJAASConfiguration.init(props);
-			} catch (Exception e) {
-				logger.error("ERROR: Unable to load SolrClient JAAS config from ranger admin config file. Audit migration to Secure Solr will fail...",e);
-			}
+
+			 Configuration conf = InMemoryJAASConfiguration.init(props);
+
+			 if (conf != null) {
+				 Configuration.setConfiguration(conf);
+			 }
+		} catch (Exception e) {
+			logger.error("ERROR: Unable to load SolrClient JAAS config from ranger admin config file. Audit migration to Secure Solr will fail...",e);
+		}
 		logger.info("<==createSolrClient.registerSolrClientJAAS()" );
 	}
 }

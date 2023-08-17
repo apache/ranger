@@ -20,6 +20,7 @@
 package org.apache.ranger.plugin.store;
 
 import org.apache.commons.codec.digest.DigestUtils;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 
@@ -31,7 +32,11 @@ public class RangerServiceResourceSignature {
 
 	public RangerServiceResourceSignature(RangerServiceResource serviceResource) {
 		_string = ServiceResourceSerializer.toString(serviceResource);
-                _hash   = DigestUtils.sha256Hex(_string);
+		if (RangerAdminConfig.getInstance().isFipsEnabled()) {
+			_hash = DigestUtils.sha512Hex(_string);
+		} else {
+			_hash = DigestUtils.sha256Hex(_string);
+		}
 	}
 
 	String asString() {

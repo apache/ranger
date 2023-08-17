@@ -23,10 +23,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
+import org.apache.commons.lang.StringUtils;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
@@ -34,12 +31,13 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class RangerService extends RangerBaseModelObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
+
+	public static final String CONFIG_PASSWORD       = "password";
+	public static final String MASKED_PASSWORD_VALUE = "*******";
 
 	private String              type;
 	private String              name;
@@ -87,8 +85,12 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		setName(other.getName());
 		setDisplayName(other.getDisplayName());
 		setDescription(other.getDescription());
+		setTagService(other.getTagService());
 		setConfigs(other.getConfigs());
-		setTagService(other.tagService);
+		setPolicyVersion(other.getPolicyVersion());
+		setPolicyUpdateTime(other.getPolicyUpdateTime());
+		setTagVersion(other.getTagVersion());
+		setTagUpdateTime(other.getTagUpdateTime());
 	}
 
 	/**
@@ -262,7 +264,10 @@ public class RangerService extends RangerBaseModelObject implements java.io.Seri
 		sb.append("configs={");
 		if(configs != null) {
 			for(Map.Entry<String, String> e : configs.entrySet()) {
-				sb.append(e.getKey()).append("={").append(e.getValue()).append("} ");
+				String  key       = e.getKey();
+				boolean maskValue = StringUtils.containsIgnoreCase(key, CONFIG_PASSWORD);
+
+				sb.append(key).append("={").append(maskValue ? MASKED_PASSWORD_VALUE : e.getValue()).append("} ");
 			}
 		}
 		sb.append("} ");

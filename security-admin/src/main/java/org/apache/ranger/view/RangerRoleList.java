@@ -20,10 +20,6 @@ package org.apache.ranger.view;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.view.VList;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -32,8 +28,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
 @JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class RangerRoleList extends VList{
 
     private static final long serialVersionUID = 1L;
@@ -55,6 +49,10 @@ public class RangerRoleList extends VList{
 
     public void setRoleList(List<RangerRole> roles) {
         this.roles = roles;
+    }
+
+    public <T> void setGenericRoleList(List<T> roles) {
+        this.roles = (List<RangerRole>) roles;
     }
 
     @Override

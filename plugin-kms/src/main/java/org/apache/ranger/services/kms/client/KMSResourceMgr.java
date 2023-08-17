@@ -22,11 +22,12 @@ package org.apache.ranger.services.kms.client;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class KMSResourceMgr {
-	private static final 	Logger 	LOG 		= Logger.getLogger(KMSResourceMgr.class);
+	private static final 	Logger 	LOG 		= LoggerFactory.getLogger(KMSResourceMgr.class);
 	private static final 	String  KMSKEY	= "keyname";
 	
 	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {

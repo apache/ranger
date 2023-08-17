@@ -25,12 +25,23 @@ define(function(require) {
 
     var MAppState = require('models/VAppState');
     var XAGlobals = require('utils/XAGlobals');
+    var XAUtil    = require('utils/XAUtils');
+    var moment    = require('moment');
 
     return Backbone.Marionette.Controller.extend({
 
         initialize: function(options) {
-
             console.log("initialize a Controller Controller");
+            if (App.userProfile && App.userProfile.get('configProperties') && App.userProfile.get('configProperties').inactivityTimeout
+                && App.userProfile.get('configProperties').inactivityTimeout > 0) {
+                XAUtil.setIdleActivityTime()
+                $('#contentBody').on("click mousemove keyup mousedown scroll keypress", function(e){
+                    // do preload here
+                    if ($('.stayLoggdedIn-popup').length == 0) {
+                        XAUtil.setIdleActivityTime()
+                    }
+                })
+            }
             var vTopNav = require('views/common/TopNav');
             var vProfileBar = require('views/common/ProfileBar');
             var vFooter = require('views/common/Footer');
@@ -76,7 +87,6 @@ define(function(require) {
                 collection: new RangerPolicyList(),
                 groupList: new VXGroupList(),
                 userList: new VXUserList(),
-                urlQueryParams: tab.indexOf("?") !== -1 ? tab.substring(tab.indexOf("?") + 1) : undefined,
             }));
         },
         auditReportAction: function(tab) {
@@ -88,9 +98,6 @@ define(function(require) {
             var accessAuditList = new VXAccessAuditList();
             var XAUtil = require('utils/XAUtils');
             var localization = require('utils/XALangSupport');
-            _.extend(accessAuditList.queryParams, {
-                'sortBy': 'eventTime'
-            });
             App.rContent.show(new view({
                 accessAuditList: accessAuditList,
                 tab: tab
@@ -112,6 +119,33 @@ define(function(require) {
                     model: authSessionList.first()
                 }));
             });
+        },
+        auditEventDetail: function(eventID) {
+            MAppState.set({
+                'currentTab': XAGlobals.AppTabs.AccessManager.value
+            });
+            var view = require('views/reports/AuditAccessLogDetailView');
+            var VXAccessAuditList = require('collections/VXAccessAuditList');
+            var RangerServiceDefList = require('collections/RangerServiceDefList');
+            var serviceDefList = new RangerServiceDefList();
+            serviceDefList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
+            serviceDefList.fetch({
+                cache : false,
+                async:false,
+                data :{'pageSource':'Audit'}
+            });
+            var auditList = new VXAccessAuditList();
+            auditList.url = 'service/assets/accessAudit?eventId='+eventID
+            auditList.fetch({
+               cache : false,
+               async : false
+            }).done(function() {
+                App.rContent.show(new view({
+                    auditaccessDetail : auditList.models[0].attributes,
+                    auditAccessView : true,
+                    serviceDefList : serviceDefList
+                }));
+            })
         },
         //************** UserProfile Related *********************/
         userProfileAction: function() {
@@ -138,7 +172,6 @@ define(function(require) {
             App.rContent.show(new view({
                 collection: userList,
                 tab: tab.split('?')[0],
-                urlQueryParams: tab.indexOf("?") !== -1 ? tab.substring(tab.indexOf("?") + 1) : undefined,
             }));
         },
         userCreateAction: function() {
@@ -269,12 +302,12 @@ define(function(require) {
             var view = require('views/policymanager/ServiceLayout');
             var RangerServiceDefList = require('collections/RangerServiceDefList');
             var RangerServiceDef = require('models/RangerServiceDef');
-            var RangerZoneList = require('collections/RangerZoneList');
+            var RangerZoneList = require('model_bases/RangerZoneBase');
             var rangerZoneList = new RangerZoneList();
 
             var collection = new RangerServiceDefList();
+            collection.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             collection.queryParams.sortBy = 'serviceTypeId';
-
             if (type == 'tag') {
                 var tagServiceDef = new RangerServiceDef();
                 tagServiceDef.url = XAUtil.getRangerServiceDef(XAEnums.ServiceType.SERVICE_TAG.label)
@@ -296,8 +329,8 @@ define(function(require) {
             rangerZoneList.fetch({
                 cache: false,
                 async: false,
+                url: "service/public/v2/api/zone-headers",
             })
-            //         if(App.rContent.currentView) App.rContent.currentView.close();
             App.rContent.show(new view({
                 collection: collection,
                 type: type,
@@ -380,7 +413,6 @@ define(function(require) {
                 App.rContent.show(new view({
                     rangerService: rangerService,
                     collection: rangerPolicyList,
-                    urlQueryParams: policyType.indexOf("?") !== -1 ? policyType.substring(policyType.indexOf("?") + 1) : undefined,
                 }));
             });
         },
@@ -460,7 +492,6 @@ define(function(require) {
 
             App.rContent.show(new view({
                 collection: new ModulePermissionList(),
-                urlQueryParams: argument.indexOf("?") !== -1 ? argument.substring(argument.indexOf("?") + 1) : undefined,
             }));
 
         },
@@ -505,7 +536,6 @@ define(function(require) {
                 collection: new KmsKeyList(),
                 kmsServiceName: kmsServiceName.split("?")[0],
                 kmsManagePage: kmsManagePage,
-                urlQueryParams: kmsServiceName.indexOf("?") !== -1 ? kmsServiceName.substring(kmsServiceName.indexOf("?") + 1) : undefined,
             }));
         },
         kmsKeyCreateAction: function(kmsServiceName) {
@@ -534,10 +564,12 @@ define(function(require) {
             var RangerZoneList = require('collections/RangerZoneList');
             var rangerServiceList = new RangerServiceList();
             var rangerZoneList = new RangerZoneList();
+            rangerServiceList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             rangerServiceList.fetch({
                 cache: false,
                 async: false
             });
+            rangerZoneList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             rangerZoneList.fetch({
                 cache: false,
                 async: false,
@@ -559,6 +591,7 @@ define(function(require) {
             var RangerZoneList = require('collections/RangerZoneList');
             var zoneSerivesColl = new RangerZoneList();
             var rangerServiceList = new RangerServiceList();
+            rangerServiceList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             rangerServiceList.fetch({
                 cache: false,
             }).done(function() {
@@ -586,6 +619,7 @@ define(function(require) {
                 id: zoneId
             })
             var zoneSerivesColl = new RangerZoneList();
+            rangerServiceList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             rangerServiceList.fetch({
                 cache: false,
                 async: false,

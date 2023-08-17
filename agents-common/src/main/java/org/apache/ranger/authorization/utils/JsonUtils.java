@@ -23,33 +23,31 @@ import com.google.gson.reflect.TypeToken;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.plugin.model.AuditFilter;
 import org.apache.ranger.plugin.model.RangerValidityRecurrence;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Type;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class JsonUtils {
-    private static final Log LOG = LogFactory.getLog(JsonUtils.class);
+    private static final Logger LOG = LoggerFactory.getLogger(JsonUtils.class);
 
-    private static final HashMap<String, String> MAP_STRING_STRING = new HashMap<>();
-
-    private static final Gson gson;
-
-    static {
-        gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z")
-                .create();
-    }
+    private static final ThreadLocal<Gson> gson = new ThreadLocal<Gson>() {
+        @Override
+        protected Gson initialValue() {
+            return new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
+        }
+    };
 
     public static String mapToJson(Map<?, ?> map) {
         String ret = null;
         if (MapUtils.isNotEmpty(map)) {
             try {
-                ret = gson.toJson(map);
+                ret = gson.get().toJson(map);
             } catch (Exception e) {
                 LOG.error("Invalid input data: ", e);
             }
@@ -61,7 +59,7 @@ public class JsonUtils {
         String ret = null;
         if (CollectionUtils.isNotEmpty(list)) {
             try {
-                ret = gson.toJson(list);
+                ret = gson.get().toJson(list);
             } catch (Exception e) {
                 LOG.error("Invalid input data: ", e);
             }
@@ -74,7 +72,7 @@ public class JsonUtils {
 
         if(object != null) {
             try {
-                ret = gson.toJson(object);
+                ret = gson.get().toJson(object);
             } catch(Exception excp) {
                 LOG.warn("objectToJson() failed to convert object to Json", excp);
             }
@@ -88,7 +86,7 @@ public class JsonUtils {
 
         if(StringUtils.isNotEmpty(jsonStr)) {
             try {
-                ret = gson.fromJson(jsonStr, clz);
+                ret = gson.get().fromJson(jsonStr, clz);
             } catch(Exception excp) {
                 LOG.warn("jsonToObject() failed to convert json to object: " + jsonStr, excp);
             }
@@ -102,7 +100,8 @@ public class JsonUtils {
 
         if(StringUtils.isNotEmpty(jsonStr)) {
             try {
-                ret = gson.fromJson(jsonStr, MAP_STRING_STRING.getClass());
+                Type mapType = new TypeToken<Map<String, String>>() {}.getType();
+                ret = gson.get().fromJson(jsonStr, mapType);
             } catch(Exception excp) {
                 LOG.warn("jsonToObject() failed to convert json to object: " + jsonStr, excp);
             }
@@ -113,19 +112,29 @@ public class JsonUtils {
 
     public static List<RangerValiditySchedule> jsonToRangerValiditySchedule(String jsonStr) {
         try {
-            Type listType = new TypeToken<List<RangerValiditySchedule>>() {
-            }.getType();
-            return gson.fromJson(jsonStr, listType);
+            Type listType = new TypeToken<List<RangerValiditySchedule>>() {}.getType();
+            return gson.get().fromJson(jsonStr, listType);
         } catch (Exception e) {
             LOG.error("Cannot get List<RangerValiditySchedule> from " + jsonStr, e);
             return null;
         }
     }
+
+    public static List<AuditFilter> jsonToAuditFilterList(String jsonStr) {
+        try {
+            Type listType = new TypeToken<List<AuditFilter>>() {}.getType();
+            return gson.get().fromJson(jsonStr, listType);
+        } catch (Exception e) {
+            LOG.error("failed to create audit filters from: " + jsonStr, e);
+            return null;
+        }
+    }
+
     public static List<RangerValidityRecurrence> jsonToRangerValidityRecurringSchedule(String jsonStr) {
         try {
             Type listType = new TypeToken<List<RangerValidityRecurrence>>() {
             }.getType();
-            return gson.fromJson(jsonStr, listType);
+            return gson.get().fromJson(jsonStr, listType);
         } catch (Exception e) {
             LOG.error("Cannot get List<RangerValidityRecurrence> from " + jsonStr, e);
             return null;

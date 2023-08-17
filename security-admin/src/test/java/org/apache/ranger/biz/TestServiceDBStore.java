@@ -17,14 +17,18 @@
 
 package org.apache.ranger.biz;
 
+import static org.mockito.ArgumentMatchers.anyString;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.collections.ListUtils;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerFactory;
@@ -85,6 +89,9 @@ import org.mockito.junit.MockitoJUnitRunner;
 @FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class TestServiceDBStore {
 	private static Long Id = 8L;
+
+	private static final String CFG_SERVICE_ADMIN_USERS  = "service.admin.users";
+	private static final String CFG_SERVICE_ADMIN_GROUPS = "service.admin.groups";
 
 	@InjectMocks
 	ServiceDBStore serviceDBStore = new ServiceDBStore();
@@ -149,6 +156,13 @@ public class TestServiceDBStore {
 
 	@Mock
 	JSONUtil jsonUtil;
+
+	@Mock
+	GUIDUtil guidUtil;
+
+	@Mock
+	TagDBStore tagStore;
+
 
 	@Rule
 	public ExpectedException thrown = ExpectedException.none();
@@ -231,6 +245,7 @@ public class TestServiceDBStore {
 		configs.put("hadoop.rpc.protection", "Privacy");
 		configs.put("commonNameForCertificate", "");
 		configs.put("service.admin.users", "testServiceAdminUser1,testServiceAdminUser2");
+		configs.put("service.admin.groups", "testServiceAdminGroup1,testServiceAdminGroup2");
 
 		RangerService rangerService = new RangerService();
 		rangerService.setId(Id);
@@ -1227,6 +1242,7 @@ public class TestServiceDBStore {
 				.mock(XXServiceConfigMapDao.class);
 		XXPolicyLabelMapDao xPolicyLabelMapDao = Mockito.mock(XXPolicyLabelMapDao.class);
 		XXSecurityZoneDao xSecurityZoneDao = Mockito.mock(XXSecurityZoneDao.class);
+		XXRMSServiceResourceDao xRMSServiceResourceDao = Mockito.mock(XXRMSServiceResourceDao.class);
 
         RangerService rangerService = rangerService();
 		RangerPolicy rangerPolicy = rangerPolicy();
@@ -1394,9 +1410,14 @@ public class TestServiceDBStore {
 		Mockito.when(daoManager.getXXPolicyLabelMap()).thenReturn(xPolicyLabelMapDao);
 		Mockito.when(xPolicyLabelMapDao.findByPolicyId(rangerPolicy.getId())).thenReturn(ListUtils.EMPTY_LIST);
 
+		Mockito.when(daoManager.getXXRMSServiceResource()).thenReturn(xRMSServiceResourceDao);
+
 		Mockito.when(!bizUtil.hasAccess(xService, null)).thenReturn(true);
-        serviceDBStore.deleteService(Id);
+		Mockito.when(tagStore.resetTagCache(rangerService.getName())).thenReturn(true);
+
+		serviceDBStore.deleteService(Id);
 		Mockito.verify(svcService).delete(rangerService);
+		Mockito.verify(tagStore).resetTagCache(rangerService.getName());
 	}
 
 	@Test
@@ -1699,7 +1720,7 @@ public class TestServiceDBStore {
 
 		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
 		Mockito.when(xPolicyDao.getById(Id)).thenReturn(xPolicy);
-		Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(rangerPolicy, xPolicy, xServiceDef);
+		Mockito.doNothing().when(policyRefUpdater).createNewPolMappingForRefTable(rangerPolicy, xPolicy, xServiceDef, false);
 		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
 
 		Mockito.when(daoManager.getXXService()).thenReturn(xServiceDao);
@@ -2294,104 +2315,135 @@ public class TestServiceDBStore {
 			rangerService.getVersion());
 	Mockito.verify(daoManager).getXXUser();
 }
-    @Test
-    public void test41getMetricByTypeusergroup() throws Exception{
-    	VXGroupList vxGroupList = new VXGroupList();
-    	vxGroupList.setTotalCount(4l);
-    	vxGroupList.setPageSize(1);
-    	String type = "usergroup";
-    	VXUserList vXUserList = new VXUserList();
-    	vXUserList.setTotalCount(4l);
-    	Mockito.when(xUserMgr.searchXGroups(Mockito.any(SearchCriteria.class) )).thenReturn(vxGroupList);
-    	Mockito.when(xUserMgr.searchXUsers(Mockito.any(SearchCriteria.class))).thenReturn(vXUserList);
-    	serviceDBStore.getMetricByType(type);
-    	
 
-    }
-    @Test
-    public void test42getMetricByTypeaudits() throws Exception{
-    	String type = "audits";
-    	
-    	Date date = new Date();
-    	date.setYear(2018);
-    
-    	Mockito.when(restErrorUtil.parseDate(Mockito.anyString(),Mockito.anyString(),
-                                         Mockito.any(), Mockito.any(), Mockito.anyString(),  Mockito.anyString())).thenReturn(date);
-    	RangerServiceDefList svcDefList = new RangerServiceDefList();
-    	svcDefList.setTotalCount(10l);
-    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
-    	
-    	
-		serviceDBStore.getMetricByType(type);
-		
-		
-    }
-    @Test
-    public void test43getMetricByTypeServices() throws Exception{
-    	String type = "services";
-    	RangerServiceList svcList = new RangerServiceList();
-    	svcList.setTotalCount(10l);
-    	Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
-    	serviceDBStore.getMetricByType(type);
-    }
-    
-    @Test
-    public void test44getMetricByTypePolicies() throws Exception{
-    	String type = "policies";
-    	RangerServiceList svcList = new RangerServiceList();
-    	svcList.setTotalCount(10l);
-    	Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
-    	serviceDBStore.getMetricByType(type);
-    }
-    
-    @Test
-    public void test45getMetricByTypeDatabase() throws Exception{
-    	String type = "database";
-    	Mockito.when(bizUtil.getDBVersion()).thenReturn("MYSQL");
-    	serviceDBStore.getMetricByType(type);
-    }
-    
-    @Test
-    public void test46getMetricByTypeContextenrichers() throws Exception{
-    	String type = "contextenrichers";
-    	RangerServiceDefList svcDefList = new RangerServiceDefList();
-    	svcDefList.setTotalCount(10l);
-    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
-    	serviceDBStore.getMetricByType(type);
-    }
-    
-    @Test
-    public void test47getMetricByTypeDenyconditions() throws Exception{
-    	String type = "denyconditions";
-    	RangerServiceDefList svcDefList = new RangerServiceDefList();
-    	svcDefList.setTotalCount(10l);
-    	Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
-    	serviceDBStore.getMetricByType(type);
-    }
+@Test
+public void test41getMetricByTypeusergroup() throws Exception {
+    VXGroupList vxGroupList = new VXGroupList();
+    vxGroupList.setTotalCount(4l);
+    vxGroupList.setPageSize(1);
+    String         type       = "usergroup";
+    VXUserList     vXUserList = new VXUserList();
+    vXUserList.setTotalCount(4l);
+    Mockito.when(xUserMgr.searchXGroups(Mockito.any(SearchCriteria.class))).thenReturn(vxGroupList);
+    Mockito.when(xUserMgr.searchXUsers(Mockito.any(SearchCriteria.class))).thenReturn(vXUserList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
 
-    @Test
-    public void test48IsServiceAdminUserTrue() throws Exception{
-    	String configName = "service.admin.users";
-    	boolean result=false;
-    	RangerService rService= rangerService();
-    	XXServiceConfigMapDao xxServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
-    	XXServiceConfigMap xxServiceConfigMap = new XXServiceConfigMap();
-    	xxServiceConfigMap.setConfigkey(configName);
-    	xxServiceConfigMap.setConfigvalue(rService.getConfigs().get(configName));
+}
 
-    	Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
-    	Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), configName)).thenReturn(xxServiceConfigMap);
+@Test
+public void test42getMetricByTypeaudits() throws Exception {
+    String type = "audits";
 
-    	result = serviceDBStore.isServiceAdminUser(rService.getName(),"testServiceAdminUser2");
+    Date date = new Date();
+    date.setYear(2018);
 
-    	Assert.assertTrue(result);
-    	Mockito.verify(daoManager).getXXServiceConfigMap();
-    	Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), configName);
-    }
+    Mockito.when(restErrorUtil.parseDate(anyString(), anyString(), Mockito.any(), Mockito.any(), anyString(), anyString())).thenReturn(date);
+    RangerServiceDefList svcDefList = new RangerServiceDefList();
+    svcDefList.setTotalCount(10l);
+    Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+
+}
+
+@Test
+public void test43getMetricByTypeServices() throws Exception {
+    String                type    = "services";
+    RangerServiceList     svcList = new RangerServiceList();
+    svcList.setTotalCount(10l);
+    Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+@Test
+public void test44getMetricByTypePolicies() throws Exception {
+    String                type    = "policies";
+    RangerServiceList     svcList = new RangerServiceList();
+    svcList.setTotalCount(10l);
+    Mockito.when(svcService.searchRangerServices(Mockito.any(SearchFilter.class))).thenReturn(svcList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+@Test
+public void test45getMetricByTypeDatabase() throws Exception {
+    String type = "database";
+    Mockito.when(bizUtil.getDBVersion()).thenReturn("MYSQL");
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+@Test
+public void test46getMetricByTypeContextenrichers() throws Exception {
+    String                   type       = "contextenrichers";
+    RangerServiceDefList     svcDefList = new RangerServiceDefList();
+    svcDefList.setTotalCount(10l);
+    Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+@Test
+public void test47getMetricByTypeDenyconditions() throws Exception {
+    String                   type       = "denyconditions";
+    RangerServiceDefList     svcDefList = new RangerServiceDefList();
+    svcDefList.setTotalCount(10l);
+    Mockito.when(serviceDefService.searchRangerServiceDefs(Mockito.any(SearchFilter.class))).thenReturn(svcDefList);
+    serviceDBStore.getMetricByType(ServiceDBStore.METRIC_TYPE.getMetricTypeByName(type));
+}
+
+	@Test
+	public void test48IsServiceAdminUserTrue() {
+		RangerService         rService              = rangerService();
+		XXServiceConfigMapDao xxServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
+		XXServiceConfigMap    svcAdminUserCfg       = new XXServiceConfigMap() {{ setConfigkey(CFG_SERVICE_ADMIN_USERS); setConfigvalue(rService.getConfigs().get(CFG_SERVICE_ADMIN_USERS)); }};
+		XXServiceConfigMap    svcAdminGroupCfg      = new XXServiceConfigMap() {{ setConfigkey(CFG_SERVICE_ADMIN_GROUPS); setConfigvalue(rService.getConfigs().get(CFG_SERVICE_ADMIN_GROUPS)); }};
+
+		Mockito.when(daoManager.getXXServiceConfigMap()).thenReturn(xxServiceConfigMapDao);
+		Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS)).thenReturn(svcAdminUserCfg);
+		Mockito.when(xxServiceConfigMapDao.findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS)).thenReturn(svcAdminGroupCfg);
+
+		boolean result = serviceDBStore.isServiceAdminUser(rService.getName(), "testServiceAdminUser1");
+
+		Assert.assertTrue(result);
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
+		Mockito.verify(xxServiceConfigMapDao, Mockito.never()).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
+		Mockito.clearInvocations(daoManager);
+		Mockito.clearInvocations(xxServiceConfigMapDao);
+
+		result = serviceDBStore.isServiceAdminUser(rService.getName(), "testServiceAdminUser2");
+
+		Assert.assertTrue(result);
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
+		Mockito.verify(xxServiceConfigMapDao, Mockito.never()).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
+		Mockito.clearInvocations(daoManager);
+		Mockito.clearInvocations(xxServiceConfigMapDao);
+
+		Mockito.when(serviceDBStore.xUserMgr.getGroupsForUser("testUser1")).thenReturn(new HashSet<String>() {{ add("testServiceAdminGroup1"); }});
+
+		result = serviceDBStore.isServiceAdminUser(rService.getName(), "testUser1");
+
+		Assert.assertTrue(result);
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
+		Mockito.clearInvocations(daoManager);
+		Mockito.clearInvocations(xxServiceConfigMapDao);
+
+		Mockito.when(serviceDBStore.xUserMgr.getGroupsForUser("testUser2")).thenReturn(new HashSet<String>() {{ add("testServiceAdminGroup2"); }});
+
+		result = serviceDBStore.isServiceAdminUser(rService.getName(), "testUser2");
+
+		Assert.assertTrue(result);
+		Mockito.verify(daoManager).getXXServiceConfigMap();
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_USERS);
+		Mockito.verify(xxServiceConfigMapDao).findByServiceNameAndConfigKey(rService.getName(), CFG_SERVICE_ADMIN_GROUPS);
+		Mockito.clearInvocations(daoManager);
+		Mockito.clearInvocations(xxServiceConfigMapDao);
+	}
 
     @Test
     public void test49IsServiceAdminUserFalse() throws Exception{
-    	String configName = "service.admin.users";
+    	String configName = CFG_SERVICE_ADMIN_USERS;
     	boolean result=false;
     	RangerService rService= rangerService();
     	XXServiceConfigMapDao xxServiceConfigMapDao = Mockito.mock(XXServiceConfigMapDao.class);
@@ -2560,5 +2612,71 @@ public class TestServiceDBStore {
 		index = xConfMapList.size();
 		xConfMap = xConfMapList.remove(index - 1);
 		Assert.assertFalse(serviceDBStore.hasServiceConfigForPluginChanged(xConfMapList, validConfig));
+	}
+
+	@Test
+	public void test51GetPolicyByGUID() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, null)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), null, null);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, null);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test52GetPolicyByGUIDAndServiceName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService rangerService = rangerService();
+		String serviceName = rangerService.getName();
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, null)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), serviceName, null);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, null);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test53GetPolicyByGUIDAndServiceNameAndZoneName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		RangerService rangerService = rangerService();
+		String serviceName = rangerService.getName();
+		String zoneName = "zone-1";
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, zoneName)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), serviceName, zoneName);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), serviceName, zoneName);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
+	}
+
+	@Test
+	public void test53GetPolicyByGUIDAndZoneName() throws Exception {
+		XXPolicyDao xPolicyDao = Mockito.mock(XXPolicyDao.class);
+		XXPolicy xPolicy = Mockito.mock(XXPolicy.class);
+		RangerPolicy rangerPolicy = rangerPolicy();
+		String zoneName = "zone-1";
+		Mockito.when(daoManager.getXXPolicy()).thenReturn(xPolicyDao);
+		Mockito.when(xPolicyDao.findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, zoneName)).thenReturn(xPolicy);
+		Mockito.when(policyService.getPopulatedViewObject(xPolicy)).thenReturn(rangerPolicy);
+		RangerPolicy dbRangerPolicy = serviceDBStore.getPolicy(rangerPolicy.getGuid(), null, zoneName);
+		Assert.assertNotNull(dbRangerPolicy);
+		Assert.assertEquals(Id, dbRangerPolicy.getId());
+		Mockito.verify(xPolicyDao).findPolicyByGUIDAndServiceNameAndZoneName(rangerPolicy.getGuid(), null, zoneName);
+		Mockito.verify(policyService).getPopulatedViewObject(xPolicy);
 	}
 }

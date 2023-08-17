@@ -20,11 +20,12 @@ package org.apache.ranger.services.presto.client;
 
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopConfigHolder;
 import org.apache.ranger.plugin.client.HadoopException;
+import org.apache.ranger.plugin.util.PasswordUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import java.io.Closeable;
@@ -46,7 +47,7 @@ public class PrestoClient extends BaseClient implements Closeable {
   public static final String PRESTO_USER_NAME_PROP = "user";
   public static final String PRESTO_PASSWORD_PROP = "password";
 
-  private static final Log LOG = LogFactory.getLog(PrestoClient.class);
+  private static final Logger LOG = LoggerFactory.getLogger(PrestoClient.class);
 
   private static final String ERR_MSG = "You can still save the repository and start creating "
     + "policies, but you would not be able to use autocomplete for "
@@ -79,8 +80,21 @@ public class PrestoClient extends BaseClient implements Closeable {
     String url = prop.getProperty("jdbc.url");
 
     Properties prestoProperties = new Properties();
+    String decryptedPwd = null;
+    try {
+      decryptedPwd=PasswordUtils.decryptPassword(getConfigHolder().getPassword());
+    } catch (Exception ex) {
+    LOG.info("Password decryption failed");
+    decryptedPwd = null;
+    } finally {
+      if (decryptedPwd == null) {
+      decryptedPwd = prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD);
+      }
+    }
     prestoProperties.put(PRESTO_USER_NAME_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_USER_NAME_PROP));
-    prestoProperties.put(PRESTO_PASSWORD_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD));
+    if (prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD) != null) {
+      prestoProperties.put(PRESTO_PASSWORD_PROP, prop.getProperty(HadoopConfigHolder.RANGER_LOGIN_PASSWORD));
+    }
 
     if (driverClassName != null) {
       try {
@@ -210,7 +224,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getCatalogs(ndl, catList);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient getCatalogList() :Unable to get the Database List", he);
+          LOG.error("<== PrestoClient.getCatalogList() :Unable to get the Database List", he);
           throw he;
         }
         return ret;
@@ -292,7 +306,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getSchemas(ndl, cats, shms);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient getSchemaList() :Unable to get the Schema List", he);
+          LOG.error("<== PrestoClient.getSchemaList() :Unable to get the Schema List", he);
         }
         return ret;
       }
@@ -375,7 +389,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getTables(ndl, cats, shms, tbls);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient getTableList() :Unable to get the Column List", he);
+          LOG.error("<== PrestoClient.getTableList() :Unable to get the Column List", he);
           throw he;
         }
         return ret;
@@ -472,7 +486,7 @@ public class PrestoClient extends BaseClient implements Closeable {
         try {
           ret = getColumns(ndl, cats, shms, tbls, cols);
         } catch (HadoopException he) {
-          LOG.error("<== PrestoClient getColumnList() :Unable to get the Column List", he);
+          LOG.error("<== PrestoClient.getColumnList() :Unable to get the Column List", he);
           throw he;
         }
         return ret;
@@ -501,7 +515,7 @@ public class PrestoClient extends BaseClient implements Closeable {
       }
 
       if (status) {
-        String msg = "Connection test succesful";
+        String msg = "Connection test successful";
         generateResponseDataMap(status, msg, msg, null, null, resp);
       }
     } catch (Exception e) {

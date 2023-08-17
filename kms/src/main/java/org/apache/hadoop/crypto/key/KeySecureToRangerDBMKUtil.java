@@ -16,6 +16,8 @@
  */
 package org.apache.hadoop.crypto.key;
 
+import java.security.KeyStore;
+
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.kms.dao.DaoManager;
@@ -91,7 +93,7 @@ public class KeySecureToRangerDBMKUtil {
             String pathValue = conf.get(path);
             String aliasValue = conf.get(alias);
             if (pathValue != null && aliasValue != null) {
-                String xaDBPassword = CredentialReader.getDecryptedString(pathValue.trim(), aliasValue.trim());
+                String xaDBPassword = CredentialReader.getDecryptedString(pathValue.trim(), aliasValue.trim(), KeyStore.getDefaultType());
                 if (xaDBPassword != null && !xaDBPassword.trim().isEmpty() &&
                         !xaDBPassword.trim().equalsIgnoreCase("none")) {
                     conf.set(key, xaDBPassword);

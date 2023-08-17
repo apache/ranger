@@ -134,21 +134,29 @@ define(function(require) {
                     resourceDef = this.serviceDef.get('rowFilterDef').resources;
                 }
             }
-            _.each(resourceDef, function(def, i){
-				if(!_.isUndefined(this.policy.get('resources')[def.name])){
-					var resource = {},
-						policyResources = this.policy.get('resources')[def.name];
-					resource.label = def.label;
-					resource.values = policyResources.values;
-					if(def.recursiveSupported){
-						resource.Rec_Recursive = policyResources.isRecursive ? XAEnums.RecursiveStatus.STATUS_RECURSIVE.label : XAEnums.RecursiveStatus.STATUS_NONRECURSIVE.label;
+			var resources = [this.policy.get('resources')];
+			if(this.policy.has('additionalResources')){
+				resources = _.union(resources, this.policy.get('additionalResources'));
+			}
+			_.each(resources, function (resourceObj) {
+				var detailResource = [];
+				_.each(resourceDef, function(def, i){
+					if(!_.isUndefined(resourceObj[def.name])){
+						var resource = {}, policyResources = resourceObj[def.name];
+						resource.label = def.label;
+						resource.values = policyResources.values;
+						if(def.recursiveSupported){
+							resource.Rec_Recursive = policyResources.isRecursive ? XAEnums.RecursiveStatus.STATUS_RECURSIVE.label : XAEnums.RecursiveStatus.STATUS_NONRECURSIVE.label;
+						}
+						if(def.excludesSupported){
+							resource.Rec_Exc = policyResources.isExcludes ? XAEnums.ExcludeStatus.STATUS_EXCLUDE.label : XAEnums.ExcludeStatus.STATUS_INCLUDE.label;
+						}
+						detailResource.push(resource);
 					}
-					if(def.excludesSupported){
-						resource.Rec_Exc = policyResources.isExcludes ? XAEnums.ExcludeStatus.STATUS_EXCLUDE.label : XAEnums.ExcludeStatus.STATUS_INCLUDE.label;
-					}
-					details.resources.push(resource);
-				}
-			}, this);
+				}, this);
+				details.resources.push(detailResource);
+			})
+
             details.policyLabels = this.policy.get('policyLabels');
             details.zoneName = this.policy.get('zoneName');
 			var perm = details.permissions = this.getPermHeaders();

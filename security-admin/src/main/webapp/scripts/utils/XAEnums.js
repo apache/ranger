@@ -33,8 +33,9 @@ define(function(require) {
 	};
 
 	XAEnums.AccessResult = mergeParams(XAEnums.AccessResult, {
-		ACCESS_RESULT_DENIED:{value:0, label:'Denied', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_DENIED', tt: 'lbl.AccessResult_ACCESS_RESULT_DENIED'},
-		ACCESS_RESULT_ALLOWED:{value:1, label:'Allowed', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_ALLOWED', tt: 'lbl.AccessResult_ACCESS_RESULT_ALLOWED'}
+		ACCESS_RESULT_DENIED:{value:0, label:'Denied', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_DENIED', tt: 'lbl.AccessResult_ACCESS_RESULT_DENIED', auditFilterLabel:'DENIED'},
+		ACCESS_RESULT_ALLOWED:{value:1, label:'Allowed', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_ALLOWED', tt: 'lbl.AccessResult_ACCESS_RESULT_ALLOWED', auditFilterLabel:'ALLOWED'},
+		ACCESS_RESULT_NOT_DETERMINED:{value:2, label:'Not Determined', rbkey:'xa.enum.AccessResult.ACCESS_RESULT_NOT_DETERMINED', tt: 'lbl.AccessResult_ACCESS_RESULT_NOT_DETERMINED', auditFilterLabel:'NOT_DETERMINED'}
 	});
 	
 	XAEnums.UserSource = mergeParams(XAEnums.UserSource, {
@@ -120,7 +121,8 @@ define(function(require) {
 		ASSET_HIVE:{value:3, label:'Hive', rbkey:'xa.enum.AssetType.ASSET_HIVE', tt: 'lbl.AssetType_ASSET_HIVE'},
 		ASSET_AGENT:{value:4, label:'Agent', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
 		ASSET_KNOX:{value:5, label:'Knox', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
-		ASSET_STORM:{value:6, label:'Storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'}
+		ASSET_STORM:{value:6, label:'Storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'},
+		ASSET_SOLR:{value:7, label:'Solr', rbkey:'xa.enum.AssetType.ASSET_SOLR', tt: 'lbl.AssetType_ASSET_SOLR'}
 	});
 	
 	XAEnums.ServiceType = mergeParams(XAEnums.ServiceType, {
@@ -130,8 +132,10 @@ define(function(require) {
 		Service_HBASE:{value:3, label:'hbase', rbkey:'xa.enum.AssetType.ASSET_HBASE', tt: 'lbl.AssetType_ASSET_HBASE'},
 		Service_KNOX:{value:4, label:'knox', rbkey:'xa.enum.AssetType.ASSET_KNOX', tt: 'lbl.AssetType_ASSET_KNOX'},
 		Service_STORM:{value:5, label:'storm', rbkey:'xa.enum.AssetType.ASSET_STORM', tt: 'lbl.AssetType_ASSET_STORM'},
-    SERVICE_TAG:{value:6, label:'tag', rbkey:'xa.enum.ServiceType.SERVICE_TAG', tt: 'lbl.ServiceType_SERVICE_TAG'},
-    Service_KMS:{value:7, label:'kms', rbkey:'xa.enum.ServiceType.SERVICE_KMS', tt: 'lbl.ServiceType_SERVICE_KMS'}
+		Service_SOLR:{value:6, label:'solr', rbkey:'xa.enum.AssetType.ASSET_SOLR', tt: 'lbl.AssetType_ASSET_SOLR'},
+		SERVICE_TAG:{value:7, label:'tag', rbkey:'xa.enum.ServiceType.SERVICE_TAG', tt: 'lbl.ServiceType_SERVICE_TAG'},
+		Service_KMS:{value:8, label:'kms', rbkey:'xa.enum.ServiceType.SERVICE_KMS', tt: 'lbl.ServiceType_SERVICE_KMS'},
+		Service_YARN:{value:8, label:'yarn', rbkey:'xa.enum.ServiceType.SERVICE_YARN', tt: 'lbl.ServiceType_SERVICE_YARN'}
 	});
 
 	XAEnums.AuthStatus = mergeParams(XAEnums.AuthStatus, {
@@ -368,10 +372,13 @@ define(function(require) {
 		XA_PERM_TYPE_GET_USER_TOPOLOGY:{value:29, label:'Get User Topology', rbkey:'xa.enum.XAPermType.XA_PERM_TYPE_ALLOW', tt: 'lbl.XAPermType_XA_PERM_TYPE_ALLOW'},
 		XA_PERM_TYPE_GET_TOPOLOGY_INFO:{value:30, label:'Get Topology Info', rbkey:'xa.enum.XAPermType.XA_PERM_TYPE_ALLOW', tt: 'lbl.XAPermType_XA_PERM_TYPE_ALLOW'},
 		XA_PERM_TYPE_UPLOAD_NEW_CREDENTIAL:{value:31, label:'Upload New Credential', rbkey:'xa.enum.XAPermType.XA_PERM_TYPE_ALLOW', tt: 'lbl.XAPermType_XA_PERM_TYPE_ALLOW'},
-		
-        
 	});
-	
+
+	XAEnums.PluginConfig = mergeParams(XAEnums.PluginConfig, {
+		HDFS : {configName:"xasecure.add-hadoop-authorization"},
+		YARN : {configName:"ranger.add-yarn-authorization"}
+	})
+
 	XAEnums.MenuPermissions =  mergeParams(XAEnums.MenuPermissions, {
                 XA_RESOURCE_BASED_POLICIES:{value:1, label:'Resource Based Policies', rbkey:'xa.enum.MenuPermissions.XA_RESOURCE_BASED_POLICIES', tt: 'lbl.XAPermForType_XA_RESOURCE_BASED_POLICIES'},
                 XA_USER_GROUPS:{value:2, label:'Users/Groups', rbkey:'xa.enum.MenuPermissions.XA_USER_GROUP', tt: 'lbl.XAPermForType_XA_USER_GROUPS'},

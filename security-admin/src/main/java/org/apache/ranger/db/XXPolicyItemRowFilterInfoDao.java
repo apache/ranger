@@ -57,4 +57,13 @@ public class XXPolicyItemRowFilterInfoDao extends BaseDao<XXPolicyItemRowFilterI
 			return new ArrayList<XXPolicyItemRowFilterInfo>();
 		}
 	}
+
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
+		getEntityManager()
+			.createNamedQuery("XXPolicyItemRowFilterInfo.deleteByPolicyId", tClass)
+			.setParameter("policyId", policyId).executeUpdate();
+	}
 }

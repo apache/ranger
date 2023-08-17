@@ -45,7 +45,7 @@ public class TestStringUtil {
 	
 	@Test
 	public void testValidatePassword(){
-		String password="aa1234ddas12";
+		String password="Aa1234ddas12";
 		String[] invalidValues={"aa","bb","aa12345dd"};
 		boolean value=stringUtil.validatePassword(password, invalidValues);
 		Assert.assertTrue(password.length() >= 8);

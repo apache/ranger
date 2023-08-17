@@ -23,7 +23,6 @@ import java.security.Principal;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.storm.StormRangerPlugin;
@@ -45,7 +44,7 @@ public class RangerStormAuthorizer implements IAuthorizer {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerStormAuthorizer.class);
 
-	private static final Log PERF_STORMAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("stormauth.request");
+	private static final Logger PERF_STORMAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("stormauth.request");
 
 	private static final String STORM_CLIENT_JASS_CONFIG_SECTION = "StormClient";
 

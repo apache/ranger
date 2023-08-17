@@ -23,13 +23,13 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.tagsync.model.AbstractTagSource;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
 import org.apache.ranger.tagsync.process.TagSynchronizer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -39,7 +39,7 @@ import java.util.Date;
 import java.util.Properties;
 
 public class FileTagSource extends AbstractTagSource implements Runnable {
-	private static final Log LOG = LogFactory.getLog(FileTagSource.class);
+	private static final Logger LOG = LoggerFactory.getLogger(FileTagSource.class);
 
 	private String serviceTagsFileName;
 	private URL serviceTagsFileURL;
@@ -51,7 +51,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 	private Thread myThread = null;
 
 	public static void main(String[] args) {
-
 		FileTagSource fileTagSource = new FileTagSource();
 
 		TagSyncConfig config = TagSyncConfig.getInstance();
@@ -100,7 +99,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
 	@Override
 	public boolean initialize(Properties props) {
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> FileTagSource.initialize()");
 		}
@@ -196,7 +194,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 
 	@Override
 	public boolean start() {
-
 		myThread = new Thread(this);
 		myThread.setDaemon(true);
 		myThread.start();
@@ -218,29 +215,36 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 		}
 
 		while (true) {
-
 			try {
-				synchUp();
-
+				if (TagSyncConfig.isTagSyncServiceActive()) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("==> FileTagSource is running as server is active");
+					}
+					synchUp();
+				}
+			} catch (Exception e) {
+				LOG.error("Caught exception..", e);
+			} finally {
 				LOG.debug("Sleeping for [" + fileModTimeCheckIntervalInMs + "] milliSeconds");
 
-				Thread.sleep(fileModTimeCheckIntervalInMs);
-			}
-			catch (InterruptedException exception) {
-				LOG.error("Interrupted..: ", exception);
-				return;
+				try {
+					Thread.sleep(fileModTimeCheckIntervalInMs);
+				} catch (InterruptedException exception) {
+					LOG.error("Interrupted..: ", exception);
+
+					break;
+				}
 			}
 		}
 	}
 
 	private boolean isChanged() {
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> FileTagSource.isChanged()");
 		}
-		boolean ret = false;
 
-		long modificationTime = getModificationTime();
+		boolean ret              = false;
+		long    modificationTime = getModificationTime();
 
 		if (modificationTime > lastModifiedTimeInMillis) {
 			if (LOG.isDebugEnabled()) {
@@ -248,7 +252,7 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 				Date lastModifiedDate = new Date(lastModifiedTimeInMillis);
 				LOG.debug("File modified at " + modifiedDate + "last-modified at " + lastModifiedDate);
 			}
-			lastModifiedTimeInMillis = modificationTime;
+
 			ret = true;
 		}
 
@@ -258,19 +262,21 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 		return ret;
 	}
 
-	public void synchUp() {
+	public void synchUp() throws Exception {
 		if (isChanged()) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Begin: update tags from source==>sink");
 			}
 
 			ServiceTags serviceTags = readFromFile();
+
 			updateSink(serviceTags);
+
+			lastModifiedTimeInMillis = getModificationTime();
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("End: update tags from source==>sink");
 			}
-
 		} else {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("FileTagSource: no change found for synchronization.");
@@ -278,7 +284,6 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 		}
 	}
 	private ServiceTags readFromFile() {
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> FileTagSource.readFromFile(): sourceFileName=" + serviceTagsFileName);
 		}
@@ -286,13 +291,10 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 		ServiceTags ret = null;
 
 		if (serviceTagsFileURL != null) {
-			try (
-					InputStream serviceTagsFileStream = serviceTagsFileURL.openStream();
-					Reader reader = new InputStreamReader(serviceTagsFileStream, Charset.forName("UTF-8"))
-			) {
+			try (InputStream inputStream = serviceTagsFileURL.openStream();
+			     Reader      reader      = new InputStreamReader(inputStream, Charset.forName("UTF-8"))) {
 
 				ret = gsonBuilder.fromJson(reader, ServiceTags.class);
-
 			} catch (IOException e) {
 				LOG.warn("Error processing input file: or no privilege for reading file " + serviceTagsFileName, e);
 			}
@@ -311,8 +313,8 @@ public class FileTagSource extends AbstractTagSource implements Runnable {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> FileTagSource.getLastModificationTime(): sourceFileName=" + serviceTagsFileName);
 		}
-		long ret = 0L;
 
+		long ret        = 0L;
 		File sourceFile = new File(serviceTagsFileName);
 
 		if (sourceFile.exists() && sourceFile.isFile() && sourceFile.canRead()) {

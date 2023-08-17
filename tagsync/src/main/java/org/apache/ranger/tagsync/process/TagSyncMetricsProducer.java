@@ -20,12 +20,13 @@ package org.apache.ranger.tagsync.process;
  */
 import java.io.File;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.RangerMetricsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TagSyncMetricsProducer implements Runnable {
 
-	private static final Logger LOG = Logger.getLogger(TagSyncMetricsProducer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TagSyncMetricsProducer.class);
 	private boolean shutdownFlag = false;
 
 	public static void main(String[] args) {
@@ -54,7 +55,7 @@ public class TagSyncMetricsProducer implements Runnable {
 								+ "] milliseconds before attempting to tagsync metrics information", e);
 					}
 					try {
-						writeJVMMetrics(logFileNameWithPath);
+						writeJVMMetrics(logFileNameWithPath, config);
 					} catch (Throwable t) {
 						LOG.error("Failed to write tagsync metrics into file. Error details: ", t);
 					}
@@ -70,7 +71,7 @@ public class TagSyncMetricsProducer implements Runnable {
 
 	}
 
-	private void writeJVMMetrics(String logFileNameWithPath) throws Throwable {
+	private void writeJVMMetrics(String logFileNameWithPath, TagSyncConfig config) throws Throwable {
 		try {
 			File userMetricFile = null;
 			userMetricFile = new File(logFileNameWithPath);
@@ -78,6 +79,13 @@ public class TagSyncMetricsProducer implements Runnable {
 				userMetricFile.createNewFile();
 			}
 			RangerMetricsUtil rangerMetricsUtil = new RangerMetricsUtil();
+			if (config.getBoolean(TagSyncConfig.TAGSYNC_SERVER_HA_ENABLED_PARAM, false)) {
+				if(config.isTagSyncServiceActive()){
+					rangerMetricsUtil.setIsRoleActive(1);
+				}else{
+					rangerMetricsUtil.setIsRoleActive(0);
+				}
+			}
 			rangerMetricsUtil.writeMetricsToFile(userMetricFile);
 
 		} catch (Throwable t) {

@@ -22,16 +22,17 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUserPermission;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
 
-	private static final Logger logger = Logger.getLogger(XXUserPermissionDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(XXUserPermissionDao.class);
 
 	public XXUserPermissionDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -130,5 +131,22 @@ public class XXUserPermissionDao extends BaseDao<XXUserPermission>{
 		} else {
 			logger.debug("ModuleId not provided.");
 		}
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> findModuleUsersByModuleId(Long moduleId) {
+		if (moduleId != null) {
+			try {
+				return getEntityManager().createNamedQuery("XXUserPermission.findModuleUsersByModuleId", String.class)
+				.setParameter("moduleId", moduleId)
+				.setParameter("isAllowed",RangerCommonEnums.IS_ALLOWED)
+				.getResultList();
+			} catch (Exception e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			logger.debug("ModuleId not provided.");
+		}
+		return null;
 	}
 }

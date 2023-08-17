@@ -19,14 +19,13 @@
 
 package org.apache.ranger.audit.provider.solr;
 
+import java.io.IOException;
 import java.security.PrivilegedExceptionAction;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
@@ -36,9 +35,11 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class SolrAuditProvider extends AuditDestination {
-	private static final Log LOG = LogFactory.getLog(SolrAuditProvider.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SolrAuditProvider.class);
 
 	public static final String AUDIT_MAX_QUEUE_SIZE_PROP = "xasecure.audit.solr.async.max.queue.size";
 	public static final String AUDIT_MAX_FLUSH_INTERVAL_PROP = "xasecure.audit.solr.async.max.flush.interval.ms";
@@ -88,7 +89,7 @@ public class SolrAuditProvider extends AuditDestination {
 					lastConnectTime = new Date();
 
 					if (solrURL == null || solrURL.isEmpty()) {
-						LOG.fatal("Solr URL for Audit is empty");
+						LOG.error("Solr URL for Audit is empty");
 						return;
 					}
 
@@ -108,7 +109,7 @@ public class SolrAuditProvider extends AuditDestination {
 
 						me = solrClient;
 					} catch (Throwable t) {
-						LOG.fatal("Can't connect to Solr server. URL="
+						LOG.error("Can't connect to Solr server. URL="
 								+ solrURL, t);
 					}
 				}
@@ -229,8 +230,16 @@ public class SolrAuditProvider extends AuditDestination {
 	 */
 	@Override
 	public void stop() {
-		// TODO Auto-generated method stub
-
+		LOG.info("SolrAuditProvider.stop() called..");
+		try {
+			if (solrClient != null) {
+				solrClient.close();
+			}
+		} catch (IOException ioe) {
+			LOG.error("Error while stopping slor!", ioe);
+		} finally {
+			solrClient = null;
+		}
 	}
 
 	/*

@@ -25,13 +25,14 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class HiveConnectionMgr {
 
-	private static final Logger LOG = Logger.getLogger(HiveConnectionMgr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HiveConnectionMgr.class);
 	
 	protected ConcurrentMap<String, HiveClient> 	hiveConnectionCache;
 	protected ConcurrentMap<String, Boolean> 		repoConnectStatusMap;

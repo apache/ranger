@@ -24,11 +24,11 @@ import java.util.Map;
 
 import org.apache.commons.collections.ListUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerDefaultService extends RangerBaseService {
-	private static final Log LOG = LogFactory.getLog(RangerDefaultService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultService.class);
 		
 	@Override
 	public  Map<String, Object> validateConfig() throws Exception {

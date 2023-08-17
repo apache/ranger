@@ -19,12 +19,12 @@
 
 package org.apache.ranger.plugin.util;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerPerfTracer {
-	protected final Log    logger;
+	protected final Logger logger;
 	protected final String tag;
 	protected final String data;
 	private final long   startTimeMs;
@@ -33,19 +33,19 @@ public class RangerPerfTracer {
 
 	private final static String tagEndMarker = "(";
 
-	public static Log getPerfLogger(String name) {
-		return LogFactory.getLog("org.apache.ranger.perf." + name);
+	public static Logger getPerfLogger(String name) {
+		return LoggerFactory.getLogger("org.apache.ranger.perf." + name);
 	}
 
-	public static Log getPerfLogger(Class<?> cls) {
+	public static Logger getPerfLogger(Class<?> cls) {
 		return RangerPerfTracer.getPerfLogger(cls.getName());
 	}
 
-	public static boolean isPerfTraceEnabled(Log logger) {
+	public static boolean isPerfTraceEnabled(Logger logger) {
 		return logger.isDebugEnabled();
 	}
 
-	public static RangerPerfTracer getPerfTracer(Log logger, String tag) {
+	public static RangerPerfTracer getPerfTracer(Logger logger, String tag) {
 		String data = "";
 		String realTag = "";
 
@@ -61,7 +61,7 @@ public class RangerPerfTracer {
 		return RangerPerfTracerFactory.getPerfTracer(logger, realTag, data);
 	}
 
-	public static RangerPerfTracer getPerfTracer(Log logger, String tag, String data) {
+	public static RangerPerfTracer getPerfTracer(Logger logger, String tag, String data) {
 		return RangerPerfTracerFactory.getPerfTracer(logger, tag, data);
 	}
 
@@ -76,7 +76,7 @@ public class RangerPerfTracer {
 			tracer.logAlways();
 		}
 	}
-	public RangerPerfTracer(Log logger, String tag, String data) {
+	public RangerPerfTracer(Logger logger, String tag, String data) {
 		this.logger = logger;
 		this.tag    = tag;
 		this.data	= data;

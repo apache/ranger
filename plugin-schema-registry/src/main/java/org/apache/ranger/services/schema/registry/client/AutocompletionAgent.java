@@ -17,11 +17,11 @@
 
 package org.apache.ranger.services.schema.registry.client;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.services.schema.registry.client.connection.DefaultSchemaRegistryClient;
 import org.apache.ranger.services.schema.registry.client.connection.ISchemaRegistryClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
  * The class that is used to get needed information for auto completion feature.
  */
 public class AutocompletionAgent {
-    private static final Log LOG = LogFactory.getLog(AutocompletionAgent.class);
+    private static final Logger LOG = LoggerFactory.getLogger(AutocompletionAgent.class);
 
     private ISchemaRegistryClient client;
     private String serviceName;

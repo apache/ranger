@@ -31,13 +31,15 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.UserGroupInformation;
-import org.apache.log4j.Logger;
+import org.apache.ranger.tagsync.ha.TagSyncHAInitializerImpl;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.model.TagSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TagSynchronizer {
 
-	private static final Logger LOG = Logger.getLogger(TagSynchronizer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TagSynchronizer.class);
 
 	private static final String AUTH_TYPE_KERBEROS = "kerberos";
 
@@ -51,6 +53,7 @@ public class TagSynchronizer {
 
 	private final Object shutdownNotifier = new Object();
 	private volatile boolean isShutdownInProgress = false;
+	private TagSyncHAInitializerImpl tagSyncHAinitializerImpl = null;
 
 	public static void main(String[] args) {
 		TagSynchronizer tagSynchronizer = new TagSynchronizer();
@@ -62,16 +65,23 @@ public class TagSynchronizer {
 		tagSynchronizer.setProperties(props);
 
 		boolean tagSynchronizerInitialized = tagSynchronizer.initialize();
+		tagSynchronizer.tagSyncHAinitializerImpl = TagSyncHAInitializerImpl.getInstance(config);
 
 		if (tagSynchronizerInitialized) {
 			try {
 				tagSynchronizer.run();
 			} catch (Throwable t) {
 				LOG.error("main thread caught exception..:", t);
+				if (tagSynchronizer.tagSyncHAinitializerImpl != null) {
+					tagSynchronizer.tagSyncHAinitializerImpl.stop();
+				}
 				System.exit(1);
 			}
 		} else {
 			LOG.error("TagSynchronizer failed to initialize correctly, exiting..");
+			if (tagSynchronizer.tagSyncHAinitializerImpl != null) {
+				tagSynchronizer.tagSyncHAinitializerImpl.stop();
+			}
 			System.exit(1);
 		}
 
@@ -358,7 +368,7 @@ public class TagSynchronizer {
 				}
 				tagSource.setName(tagSourceName);
 			} catch (Exception e) {
-				LOG.fatal("Can't instantiate tagSource class for tagSourceName="
+				LOG.error("Can't instantiate tagSource class for tagSourceName="
 						+ tagSourceName + ", className=" + className
 						+ ", propertyPrefix=" + propPrefix, e);
 			}
@@ -386,34 +396,37 @@ public class TagSynchronizer {
 				LOG.debug("nameRules=" + nameRules);
 			}
 		}
-		final boolean isKerberized = !StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS) && SecureClientLogin.isKerberosCredentialExists(principal, keytab);
+		final boolean isKerberized = !StringUtils.isEmpty(authenticationType) && authenticationType.trim().equalsIgnoreCase(AUTH_TYPE_KERBEROS);
 
 		if (isKerberized) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Trying to get kerberos identitiy");
-			}
+			LOG.info("Configured for Kerberos Authentication");
 
-			UserGroupInformation kerberosIdentity;
-
-			try {
-				UserGroupInformation.loginUserFromKeytab(principal, keytab);
-				kerberosIdentity = UserGroupInformation.getLoginUser();
-				if (kerberosIdentity != null) {
-					props.put(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY, kerberosIdentity.getUserName());
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("Got UGI, user:[" + kerberosIdentity.getUserName() + "]");
-					}
-					ret = true;
-				} else {
-					LOG.error("KerberosIdentity is null!");
+			if (SecureClientLogin.isKerberosCredentialExists(principal, keytab)) {
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Trying to get kerberos identity");
 				}
-			} catch (IOException exception) {
-				LOG.error("Failed to get UGI from principal:[" + principal + "], and keytab:[" + keytab + "]", exception);
+
+				try {
+					UserGroupInformation.loginUserFromKeytab(principal, keytab);
+					UserGroupInformation kerberosIdentity = UserGroupInformation.getLoginUser();
+					if (kerberosIdentity != null) {
+						props.put(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY, kerberosIdentity.getUserName());
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("Got UGI, user:[" + kerberosIdentity.getUserName() + "]");
+						}
+						ret = true;
+					} else {
+						LOG.error("KerberosIdentity is null!");
+					}
+				} catch (IOException exception) {
+					LOG.error("Failed to get UGI from principal:[" + principal + "], and keytab:[" + keytab + "]", exception);
+				}
+			} else {
+				LOG.error("Invalid Kerberos principal and/or keytab specified. Failed to initialize Kerberos identity");
 			}
 		} else {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("Not configured for Kerberos Authentication");
-			}
+			LOG.info("Not configured for Kerberos Authentication");
+
 			props.remove(TagSyncConfig.TAGSYNC_KERBEROS_IDENTITY);
 
 			ret = true;

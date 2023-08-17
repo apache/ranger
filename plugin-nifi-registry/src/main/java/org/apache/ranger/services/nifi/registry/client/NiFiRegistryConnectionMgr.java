@@ -19,10 +19,10 @@
 package org.apache.ranger.services.nifi.registry.client;
 
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.client.BaseClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -47,7 +47,8 @@ import java.util.Map;
  */
 public class NiFiRegistryConnectionMgr {
 
-    private static final Log LOG = LogFactory.getLog(NiFiRegistryConnectionMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NiFiRegistryConnectionMgr.class);
+    private static final String SSL_ALGORITHM = "TLSv1.2";
 
     private static final String API_RESOURCES_PATH = "/nifi-registry-api/policies/resources";
     static final String INVALID_URL_MSG =  "NiFi Registry URL must be a valid URL of the form " +
@@ -112,7 +113,7 @@ public class NiFiRegistryConnectionMgr {
                         truststore.trim(),
                         truststorePassword.trim().toCharArray(),
                         truststoreType.trim(),
-                        "TLS");
+                        SSL_ALGORITHM);
             }
         }
 

@@ -16,12 +16,12 @@
  */
 package org.apache.ranger.audit.provider;
 
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
 
 public class Log4jTracer implements DebugTracer {
-	private Log mLogger = null;
+	private Logger mLogger = null;
 
-	public Log4jTracer(Log logger) {
+	public Log4jTracer(Logger logger) {
 		mLogger = logger;
 	}
 

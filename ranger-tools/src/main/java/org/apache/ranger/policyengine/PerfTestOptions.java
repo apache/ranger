@@ -20,6 +20,8 @@
 package org.apache.ranger.policyengine;
 
 
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
+
 import java.net.URL;
 
 public class PerfTestOptions {
@@ -32,6 +34,8 @@ public class PerfTestOptions {
 	private final int concurrentClientCount;
 	private final int iterationsCount;
 	private final URL perfConfigurationFileURL;
+	private final boolean isPolicyTrieOptimizedForSpace;
+	private final boolean isTagTrieOptimizedForSpace;
 
 	PerfTestOptions(URL servicePoliciesFileURL, URL[] requestFileURLs, URL statCollectionFileURL, int concurrentClientCount, int iterationsCount, boolean isTrieLookupPrefixDisabled, boolean isOnDemandTriePostSetupDisabled, URL perfConfigurationFileURL) {
 		this.servicePoliciesFileURL = servicePoliciesFileURL;
@@ -42,6 +46,10 @@ public class PerfTestOptions {
 		this.isTrieLookupPrefixDisabled = isTrieLookupPrefixDisabled;
 		this.isOnDemandTriePostSetupDisabled = isOnDemandTriePostSetupDisabled;
 		this.perfConfigurationFileURL = perfConfigurationFileURL;
+
+		RangerConfiguration configuration = new PerfTestConfiguration(perfConfigurationFileURL);
+		this.isPolicyTrieOptimizedForSpace = configuration.getBoolean("ranger.policyengine.option.optimize.policy.trie.for.space", false);
+		this.isTagTrieOptimizedForSpace = configuration.getBoolean("ranger.policyengine.option.optimize.tag.trie.for.space", false);
 	}
 
 	public URL getServicePoliciesFileURL() {
@@ -71,5 +79,8 @@ public class PerfTestOptions {
 	public URL getPerfConfigurationFileURL() {
 		return  this.perfConfigurationFileURL;
 	}
+
+	public boolean getIsPolicyTrieOptimizedForSpace() { return isPolicyTrieOptimizedForSpace; }
+	public boolean getIsTagTrieOptimizedForSpace() { return isTagTrieOptimizedForSpace; }
 
 }

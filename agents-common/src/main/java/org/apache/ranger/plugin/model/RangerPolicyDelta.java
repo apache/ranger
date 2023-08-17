@@ -19,21 +19,17 @@
 
 package org.apache.ranger.plugin.model;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
+import java.util.Map;
+
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class RangerPolicyDelta implements java.io.Serializable {
 
     public static final int CHANGE_TYPE_POLICY_CREATE       = 0;
@@ -50,23 +46,24 @@ public class RangerPolicyDelta implements java.io.Serializable {
 
     private Long                id;
     private Integer             changeType;
+    private Long                policiesVersion;
     private RangerPolicy        policy;
 
     public RangerPolicyDelta() {
-        this(null, null, null);
+        this(null, null, null, null);
     }
 
-    public RangerPolicyDelta(final Long id, final Integer changeType, final RangerPolicy policy) {
+    public RangerPolicyDelta(final Long id, final Integer changeType, final Long policiesVersion, final RangerPolicy policy) {
         setId(id);
         setChangeType(changeType);
+        setPoliciesVersion(policiesVersion);
         setPolicy(policy);
     }
     public Long getId() { return id; }
 
     public Integer getChangeType() { return changeType; }
 
-    @JsonIgnore
-    public Long getPolicyVersion() { return policy != null ? policy.getVersion() : null; }
+    public Long getPoliciesVersion() { return policiesVersion; }
 
     @JsonIgnore
     public String getServiceType() { return policy != null ? policy.getServiceType() : null; }
@@ -84,15 +81,23 @@ public class RangerPolicyDelta implements java.io.Serializable {
 
     public void setId(Long id) { this.id = id;}
 
-    private void setChangeType(Integer changeType) { this.changeType = changeType; }
+    public void setChangeType(Integer changeType) { this.changeType = changeType; }
+
+    private void setPoliciesVersion(Long policiesVersion) { this.policiesVersion = policiesVersion; }
 
     public void setPolicy(RangerPolicy policy) { this.policy = policy; }
+
+    public void dedupStrings(Map<String, String> strTbl) {
+        if (policy != null) {
+            policy.dedupStrings(strTbl);
+        }
+    }
 
     @Override
     public String toString() {
         return "id:" + id
                 + ", changeType:" + changeTypeNames[changeType]
-                + ", policyVersion:" + getPolicyVersion()
+                + ", policiesVersion:" + getPoliciesVersion()
                 + ", serviceType:" + getServiceType()
                 + ", policyType:" + getPolicyType()
                 + ", policyId:[" + getPolicyId() + "]"

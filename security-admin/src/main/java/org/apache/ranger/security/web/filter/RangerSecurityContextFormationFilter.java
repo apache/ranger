@@ -132,17 +132,30 @@ public class RangerSecurityContextFormationFilter extends GenericFilterBean {
 
 				context.setUserSession(userSession);
 			}
+
+			setupAdminOpContext(request);
+
 			HttpServletResponse res = (HttpServletResponse)response;
+			res.setHeader("Cache-Control", "no-cache, no-store, max-age=0, must-revalidate");
 			res.setHeader("X-Frame-Options", "DENY" );
 			res.setHeader("X-XSS-Protection", "1; mode=block");
-			res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
+			res.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
 			res.setHeader("Content-Security-Policy", "default-src 'none'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; connect-src 'self'; img-src 'self'; style-src 'self' 'unsafe-inline';font-src 'self'");
+			res.setHeader("X-Permitted-Cross-Domain-Policies", "none");
 			chain.doFilter(request, res);
 
 		} finally {
 			// [4]remove context from thread-local
 			RangerContextHolder.resetSecurityContext();
 			RangerContextHolder.resetOpContext();
+		}
+	}
+
+	private void setupAdminOpContext(ServletRequest request) {
+		Object attrCreatePrincipalsIfAbsent = request.getParameter("createPrincipalsIfAbsent");
+
+		if (attrCreatePrincipalsIfAbsent != null) {
+			RangerContextHolder.getOrCreateOpContext().setCreatePrincipalsIfAbsent(Boolean.parseBoolean(attrCreatePrincipalsIfAbsent.toString()));
 		}
 	}
 

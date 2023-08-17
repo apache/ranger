@@ -14,7 +14,6 @@
 	<id>kafka-plugin</id>
 	<formats>
 		<format>tar.gz</format>
-		<format>zip</format>
 	</formats>
 	<baseDirectory>${project.parent.name}-${project.version}-kafka-plugin
 	</baseDirectory>
@@ -56,27 +55,26 @@
 					<include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
 					<include>org.apache.hadoop:hadoop-hdfs:jar:${hadoop.version}</include>
 					<include>com.google.code.gson:gson</include>
-					<include>org.eclipse.persistence:eclipselink</include>
-					<include>org.eclipse.persistence:javax.persistence</include>
+					<include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
 					<include>commons-collections:commons-collections</include>
 					<include>com.sun.jersey:jersey-bundle</include>
-					<include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
+					<include>commons-logging:commons-logging</include>
 					<include>commons-lang:commons-lang</include>
 					<include>commons-io:commons-io</include>
 					<include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
 					<include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
 					<include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
+					<include>com.google.guava:guava:jar:${google.guava.version}</include>
 					<include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
 					<include>org.noggit:noggit:jar:${noggit.version}</include>
 					<include>org.codehaus.jackson:jackson-core-asl</include>
 					<include>org.codehaus.jackson:jackson-jaxrs</include>
 					<include>org.codehaus.jackson:jackson-mapper-asl</include>
 					<include>org.codehaus.jackson:jackson-xc</include>
-					<include>org.apache.solr:solr-solrj</include>
+					<include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
 					<include>commons-codec:commons-codec</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>com.fasterxml.woodstox:woodstox-core</include>
-					<include>org.apache.htrace:htrace-core4</include>
 					<include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
 					<include>net.java.dev.jna:jna:jar:${jna.version}</include>
 					<include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -89,6 +87,7 @@
 					<include>org.elasticsearch.plugin:lang-mustache-client</include>
 					<include>org.apache.httpcomponents:httpcore-nio:jar:${httpcomponents.httpcore.version}</include>
 					<include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
+					<include>org.apache.htrace:htrace-core4</include>
 					<include>org.apache.lucene:lucene-core</include>
 					<include>joda-time:joda-time</include>
 					<include>com.carrotsearch:hppc</include>
@@ -125,7 +124,6 @@
 					<include>org.apache.ranger:credentialbuilder</include>
 					<include>org.codehaus.woodstox:stax2-api</include>
 					<include>com.fasterxml.woodstox:woodstox-core</include>
-					<include>org.apache.htrace:htrace-core4</include>
 				</includes>
 			</binaries>
 		</moduleSet>

@@ -57,8 +57,14 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 	
 	static HashMap<String, VTrxLogAttr> trxLogAttrs = new HashMap<String, VTrxLogAttr>();
 	static {
-		trxLogAttrs.put("name", new VTrxLogAttr("name", "Group Name", false));
-		trxLogAttrs.put("description", new VTrxLogAttr("description", "Group Description", false));
+		trxLogAttrs.put("name",
+				new VTrxLogAttr("name", "Group Name", false));
+		trxLogAttrs.put("description",
+				new VTrxLogAttr("description", "Group Description", false));
+		trxLogAttrs.put("otherAttributes",
+				new VTrxLogAttr("otherAttributes", "Other Attributes", false));
+		trxLogAttrs.put("syncSource",
+				new VTrxLogAttr("syncSource", "Sync Source", false));
 	}
 	
 	public XGroupService() {
@@ -74,10 +80,12 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 				SearchField.DATA_TYPE.INTEGER, SearchField.SEARCH_TYPE.FULL,
 				"XXGroupUser groupUser", "obj.id = groupUser.parentGroupId"));
 
+		searchFields.add(new SearchField("syncSource", "obj.syncSource",
+				SearchField.DATA_TYPE.STRING, SearchField.SEARCH_TYPE.FULL));
 
 		createdByUserId = PropertiesUtil.getLongProperty("ranger.xuser.createdByUserId", 1);
 
-		 sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
+		sortFields.add(new SortField("name", "obj.name",true,SortField.SORT_ORDER.ASC));
 	}
 
 	@Override
@@ -125,10 +133,11 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
 			xxGroup.setUpdatedByUserId(createdByUserId);
 		}
 		if (groupExists) {
-			xxGroup = getDao().update(xxGroup);
+			getDao().update(xxGroup);
 		} else {
-			xxGroup = getDao().create(xxGroup);
+			getDao().create(xxGroup);
 		}
+		xxGroup = daoManager.getXXGroup().findByGroupName(vxGroup.getName());
 		vxGroup = postCreate(xxGroup);
 		return vxGroup;
 	}
@@ -268,4 +277,12 @@ public class XGroupService extends XGroupServiceBase<XXGroup, VXGroup> {
                 }catch(Exception ex){}
                 return xXGroupMap;
         }
+
+	public Map<Long, String> getXXGroupIdNameMap() {
+		return daoManager.getXXGroup().getAllGroupIdNames();
+	}
+
+	public Long getAllGroupCount() {
+		return daoManager.getXXGroup().getAllCount();
+	}
 }

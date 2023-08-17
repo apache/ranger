@@ -21,13 +21,13 @@ package org.apache.ranger.audit.queue;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.apache.log4j.MDC;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.io.*;
 import java.util.*;
@@ -42,7 +42,7 @@ import java.util.concurrent.TimeUnit;
  */
 
 public class AuditFileCacheProviderSpool implements Runnable {
-    private static final Log logger = LogFactory.getLog(AuditFileCacheProviderSpool.class);
+    private static final Logger logger = LoggerFactory.getLogger(AuditFileCacheProviderSpool.class);
 
     public enum SPOOL_FILE_STATUS {
         pending, write_inprogress, read_inprogress, done
@@ -56,10 +56,10 @@ public class AuditFileCacheProviderSpool implements Runnable {
     public static final String PROP_FILE_SPOOL_FILE_ROLLOVER 			= "filespool.file.rollover.sec";
     public static final String PROP_FILE_SPOOL_INDEX_FILE 				= "filespool.index.filename";
     public static final String PROP_FILE_SPOOL_DEST_RETRY_MS 			= "filespool.destination.retry.ms";
+    public static final String PROP_FILE_SPOOL_BATCH_SIZE               = "filespool.buffer.size";
 
     public static final String AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP = "xasecure.audit.provider.filecache.is.enabled";
     public static final String FILE_CACHE_PROVIDER_NAME 				= "AuditFileCacheProviderSpool";
-    public static final int    AUDIT_BATCH_SIZE_DEFAULT 				= 1000;
 
     AuditHandler consumerProvider = null;
 
@@ -79,6 +79,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
     int 	fileRolloverSec 	= 24 * 60 * 60; // In seconds
     int 	maxArchiveFiles 	= 100;
     int 	errorLogIntervalMS 	= 30 * 1000; // Every 30 seconds
+    int     auditBatchSize      = 1000;
     long 	lastErrorLogMS 		= 0;
     boolean isAuditFileCacheProviderEnabled = false;
     boolean closeFile 			= false;
@@ -151,7 +152,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                     + FILE_CACHE_PROVIDER_NAME);
 
             if (logFolderProp == null || logFolderProp.isEmpty()) {
-                logger.fatal("Audit spool folder is not configured. Please set "
+                logger.error("Audit spool folder is not configured. Please set "
                         + propPrefix
                         + "."
                         + PROP_FILE_SPOOL_LOCAL_DIR
@@ -162,7 +163,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             if (!logFolder.isDirectory()) {
                 boolean result = logFolder.mkdirs();
                 if (!logFolder.isDirectory() || !result) {
-                    logger.fatal("File Spool folder not found and can't be created. folder="
+                    logger.error("File Spool folder not found and can't be created. folder="
                             + logFolder.getAbsolutePath()
                             + ", queueName="
                             + FILE_CACHE_PROVIDER_NAME);
@@ -212,7 +213,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             if (!indexFile.exists()) {
                 boolean ret = indexFile.createNewFile();
                 if (!ret) {
-                    logger.fatal("Error creating index file. fileName="
+                    logger.error("Error creating index file. fileName="
                             + indexFile.getPath());
                     return false;
                 }
@@ -230,7 +231,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             if (!indexDoneFile.exists()) {
                 boolean ret = indexDoneFile.createNewFile();
                 if (!ret) {
-                    logger.fatal("Error creating index done file. fileName="
+                    logger.error("Error creating index done file. fileName="
                             + indexDoneFile.getPath());
                     return false;
                 }
@@ -271,10 +272,14 @@ public class AuditFileCacheProviderSpool implements Runnable {
             }
 
         } catch (Throwable t) {
-            logger.fatal("Error initializing File Spooler. queue="
+            logger.error("Error initializing File Spooler. queue="
                     + FILE_CACHE_PROVIDER_NAME, t);
             return false;
         }
+
+        auditBatchSize = MiscUtil.getIntProperty(props, propPrefix
+                + "." + PROP_FILE_SPOOL_BATCH_SIZE, auditBatchSize);
+
         initDone = true;
 
         logger.debug("<== AuditFileCacheProviderSpool.init()");
@@ -765,7 +770,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
             MDC.clear();
             runLogAudit();
         } catch (Throwable t) {
-            logger.fatal("Exited thread without abnormaly. queue="
+            logger.error("Exited thread without abnormaly. queue="
                     + consumerProvider.getName(), t);
         }
     }
@@ -824,7 +829,7 @@ public class AuditFileCacheProviderSpool implements Runnable {
                             AuditEventBase event = MiscUtil.fromJson(line, AuthzAuditEvent.class);
                             events.add(event);
 
-                            if (events.size() == AUDIT_BATCH_SIZE_DEFAULT) {
+                            if (events.size() == auditBatchSize) {
                                 boolean ret = sendEvent(events,
                                         currentConsumerIndexRecord, currLine);
                                 if (!ret) {

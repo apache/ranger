@@ -20,8 +20,9 @@
 package org.apache.ranger.util;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import java.lang.management.ManagementFactory;
@@ -40,10 +41,9 @@ import java.lang.management.MemoryUsage;
 @Component
 public class RangerMetricsUtil {
 
-    private static final Logger LOG = Logger.getLogger(RangerMetricsUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerMetricsUtil.class);
     private static final OperatingSystemMXBean OS;
     private static final MemoryMXBean MEM_BEAN;
-    public static final String NL = System.getProperty("line.separator");
 
     static {
         OS = ManagementFactory.getOperatingSystemMXBean();
@@ -52,7 +52,7 @@ public class RangerMetricsUtil {
 
     public Map<String, Object> getValues() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerJVMMetricUtil.getValues()");
+            LOG.debug("==> RangerMetricsUtil.getValues()");
         }
         
         Map<String, Object> values = new LinkedHashMap<>();
@@ -61,7 +61,7 @@ public class RangerMetricsUtil {
         values.put("memory", addMemoryDetails());
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerJVMMetricUtil.getValues()" + values);
+            LOG.debug("<== RangerMetricsUtil.getValues()" + values);
         }
 
         return values;
@@ -72,7 +72,7 @@ public class RangerMetricsUtil {
      */
     protected Map<String, Object> getPoolDivision() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerJVMMetricUtil.getPoolDivision()");
+            LOG.debug("==> RangerMetricsUtil.getPoolDivision()");
         }
 
         Map<String, Object> poolDivisionValues = new LinkedHashMap<>();
@@ -83,7 +83,7 @@ public class RangerMetricsUtil {
         }
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerJVMMetricUtil.getPoolDivision()" + poolDivisionValues);
+            LOG.debug("<== RangerMetricsUtil.getPoolDivision()" + poolDivisionValues);
         }
 
         return poolDivisionValues;
@@ -94,7 +94,7 @@ public class RangerMetricsUtil {
      */
     protected Map<String, Object> addMemoryDetails() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerJVMMetricUtil.addMemoryDetails()");
+            LOG.debug("==> RangerMetricsUtil.addMemoryDetails()");
         }
 
         Map<String, Object> memory  = new LinkedHashMap<>();
@@ -111,7 +111,7 @@ public class RangerMetricsUtil {
         memory.put("memory_pool_usages", getPoolDivision());
 
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerJVMMetricUtil.addMemoryDetails()" + memory);
+            LOG.debug("<== RangerMetricsUtil.addMemoryDetails()" + memory);
         }
 
         return memory;
@@ -122,12 +122,12 @@ public class RangerMetricsUtil {
      */
     protected String[] addSystemInfo() {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> RangerJVMMetricUtil.addSystemInfo()");
+            LOG.debug("==> RangerMetricsUtil.addSystemInfo()");
         }
 
         String[] osInfo = { OS.getName(), OS.getArch(), OS.getVersion() };
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== RangerJVMMetricUtil.addSystemInfo()" + osInfo);
+            LOG.debug("<== RangerMetricsUtil.addSystemInfo()" + osInfo);
         }
 
         return osInfo;

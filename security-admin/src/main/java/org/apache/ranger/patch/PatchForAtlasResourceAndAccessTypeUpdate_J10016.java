@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -51,12 +50,14 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForAtlasResourceAndAccessTypeUpdate_J10016 extends BaseLoader {
-	private static final Logger logger = Logger.getLogger(PatchForAtlasResourceAndAccessTypeUpdate_J10016.class);
+	private static final Logger logger = LoggerFactory.getLogger(PatchForAtlasResourceAndAccessTypeUpdate_J10016.class);
 	private static final String RESOURCE_DEF_NAME = "all - relationship-type, end-one-entity-type, end-one-entity-classification, end-one-entity, end-two-entity-type, end-two-entity-classification, end-two-entity";
 	private static final List<String> ATLAS_RESOURCES = new ArrayList<>(
 			Arrays.asList("relationship-type", "end-one-entity-type", "end-one-entity-classification", "end-one-entity",

@@ -28,6 +28,7 @@ import com.google.gson.JsonParseException;
 import com.google.gson.reflect.TypeToken;
 
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
@@ -43,14 +44,17 @@ import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
+import org.apache.ranger.plugin.model.validation.RangerZoneResourceMatcher;
 import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.policyengine.TestPolicyEngine.PolicyEngineTestCase.TestData;
+import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator.RangerPolicyResourceEvaluator;
 import org.apache.ranger.plugin.policyevaluator.RangerValidityScheduleEvaluator;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRequestedResources;
 import org.apache.ranger.plugin.util.RangerRoles;
+import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.ServicePolicies;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.junit.AfterClass;
@@ -66,6 +70,7 @@ import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -105,21 +110,11 @@ public class TestPolicyEngine {
 		} else {
 			System.out.println("Audit properties file missing: " + AUDIT_PROPERTIES_FILE);
 
-			auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.url", "jdbc:mysql://node-1:3306/xasecure_audit");
-			auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.user", "xalogger");
-			auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.password", "xalogger");
-			auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.driver", "com.mysql.jdbc.Driver");
-
 			auditProperties.setProperty("xasecure.audit.is.enabled", "false"); // Set this to true to enable audit logging
 			auditProperties.setProperty("xasecure.audit.log4j.is.enabled", "false");
 			auditProperties.setProperty("xasecure.audit.log4j.is.async", "false");
 			auditProperties.setProperty("xasecure.audit.log4j.async.max.queue.size", "100000");
 			auditProperties.setProperty("xasecure.audit.log4j.async.max.flush.interval.ms", "30000");
-			auditProperties.setProperty("xasecure.audit.db.is.enabled", "false");
-			auditProperties.setProperty("xasecure.audit.db.is.async", "false");
-			auditProperties.setProperty("xasecure.audit.db.async.max.queue.size", "100000");
-			auditProperties.setProperty("xasecure.audit.db.async.max.flush.interval.ms", "30000");
-			auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
 		}
 
 		AuditProviderFactory factory = AuditProviderFactory.getInstance();
@@ -266,6 +261,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hdfs_incremental_update() {
+		String[] hdfsTestResourceFiles = {"/policyengine/test_policyengine_hdfs_incremental_update.json"};
+
+		runTestsFromResourceFiles(hdfsTestResourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hiveForTag() {
 		String[] hiveTestResourceFiles = { "/policyengine/test_policyengine_tag_hive.json" };
 
@@ -350,6 +352,13 @@ public class TestPolicyEngine {
 	}
 
 	@Test
+	public void testPolicyEngine_hiveMaskingWithReqExpressions() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_hive_mask_filter_with_req_expressions.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
 	public void testPolicyEngine_hiveTagMasking() {
 		String[] resourceFiles = {"/policyengine/test_policyengine_tag_hive_mask.json"};
 
@@ -423,6 +432,70 @@ public class TestPolicyEngine {
 		runTestsFromResourceFiles(resourceFiles);
 	}
 
+	@Test
+	public void testPolicyEngine_superUserAccess() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_super_user_access.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_auditFilterHdfs() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_audit_filter_hdfs.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_descendantTagsDeny() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_descendant_tags_deny.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+
+	@Test
+	public void testPolicyEngine_auditFilterHive() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_audit_filter_hive.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_aws() {
+		String[] awsTestResourceFiles = {"/policyengine/test_policyengine_aws.json"};
+
+		runTestsFromResourceFiles(awsTestResourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngine_resourceWithReqExpressions() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_resource_with_req_expressions.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
+	public void testPolicyEngin_policyWithAdditionalResources() {
+		String[] resourceFiles = {"/policyengine/test_policyengine_policy_with_additional_resources.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
+	public void testAnyResourceAccess_Kafka() throws Exception {
+		String[] resourceFiles = {"/policyengine/test_policyengine_kafka.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
+	@Test
+	public void testAnyResourceAccess_S3() throws Exception {
+		String[] resourceFiles = {"/policyengine/test_policyengine_aws_s3.json"};
+
+		runTestsFromResourceFiles(resourceFiles);
+	}
+
 	private void runTestsFromResourceFiles(String[] resourceNames) {
 		for(String resourceName : resourceNames) {
 			InputStream inStream = this.getClass().getResourceAsStream(resourceName);
@@ -454,6 +527,7 @@ public class TestPolicyEngine {
 			tagPolicies.setServiceName(testCase.tagPolicyInfo.serviceName);
 			tagPolicies.setServiceDef(testCase.tagPolicyInfo.serviceDef);
 			tagPolicies.setPolicies(testCase.tagPolicyInfo.tagPolicies);
+			tagPolicies.setServiceConfig(testCase.tagPolicyInfo.serviceConfig);
 
 			if (StringUtils.isNotBlank(testCase.auditMode)) {
 				tagPolicies.setAuditMode(testCase.auditMode);
@@ -461,8 +535,9 @@ public class TestPolicyEngine {
 			servicePolicies.setTagPolicies(tagPolicies);
 		}
 
-		boolean useForwardedIPAddress = pluginContext.getConfig().getBoolean("ranger.plugin.hive.use.x-forwarded-for.ipaddress", false);
-		String trustedProxyAddressString = pluginContext.getConfig().get("ranger.plugin.hive.trusted.proxy.ipaddresses");
+		RangerPluginConfig config = pluginContext.getConfig();
+		boolean useForwardedIPAddress = config.getBoolean(config.getPropertyPrefix() + ".use.x-forwarded-for.ipaddress", false);
+		String trustedProxyAddressString = config.get(config.getPropertyPrefix() + ".trusted.proxy.ipaddresses");
 		String[] trustedProxyAddresses = StringUtils.split(trustedProxyAddressString, ';');
 		if (trustedProxyAddresses != null) {
 			for (int i = 0; i < trustedProxyAddresses.length; i++) {
@@ -519,18 +594,18 @@ public class TestPolicyEngine {
 
 		roles.setRangerRoles(rolesSet);
 
-        RangerPolicyEngineOptions policyEngineOptions = pluginContext.getConfig().getPolicyEngineOptions();
+        RangerPolicyEngineOptions policyEngineOptions = config.getPolicyEngineOptions();
 
         policyEngineOptions.disableAccessEvaluationWithPolicyACLSummary = true;
 
-        setPluginConfig(pluginContext.getConfig(), ".super.users", testCase.superUsers);
-        setPluginConfig(pluginContext.getConfig(), ".super.groups", testCase.superGroups);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.users", testCase.auditExcludedUsers);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.groups", testCase.auditExcludedGroups);
-        setPluginConfig(pluginContext.getConfig(), ".audit.exclude.roles", testCase.auditExcludedRoles);
+        setPluginConfig(config, ".super.users", testCase.superUsers);
+        setPluginConfig(config, ".super.groups", testCase.superGroups);
+        setPluginConfig(config, ".audit.exclude.users", testCase.auditExcludedUsers);
+        setPluginConfig(config, ".audit.exclude.groups", testCase.auditExcludedGroups);
+        setPluginConfig(config, ".audit.exclude.roles", testCase.auditExcludedRoles);
 
         // so that setSuperUsersAndGroups(), setAuditExcludedUsersGroupsRoles() will be called on the pluginConfig
-        new RangerBasePlugin(pluginContext.getConfig());
+        new RangerBasePlugin(config);
 
         RangerPolicyEngineImpl policyEngine = new RangerPolicyEngineImpl(servicePolicies, pluginContext, roles);
 
@@ -556,7 +631,6 @@ public class TestPolicyEngine {
 	}
 
     private void runTestCaseTests(RangerPolicyEngine policyEngine, RangerPolicyEngine policyEngineForEvaluatingWithACLs, RangerServiceDef serviceDef, String testName, List<TestData> tests) {
-
         RangerAccessRequest request = null;
 
         for(TestData test : tests) {
@@ -630,17 +704,30 @@ public class TestPolicyEngine {
 
 			RangerAccessResultProcessor auditHandler = new RangerDefaultAuditHandler();
 
+			if (MapUtils.isNotEmpty(test.userAttributes) || MapUtils.isNotEmpty(test.groupAttributes)) {
+				RangerUserStore userStore = new RangerUserStore();
+
+				userStore.setUserAttrMapping(test.userAttributes);
+				userStore.setGroupAttrMapping(test.groupAttributes);
+
+				RangerAccessRequestUtil.setRequestUserStoreInContext(request.getContext(), userStore);
+			}
+
 			if(test.result != null) {
                 RangerAccessResult expected = test.result;
                 RangerAccessResult result;
 
 				result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
 
+				policyEngine.evaluateAuditPolicies(result);
+
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
 				assertEquals("isAudited mismatched! - " + test.name, expected.getIsAudited(), result.getIsAudited());
 
 				result   = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ACCESS, auditHandler);
+
+				policyEngine.evaluateAuditPolicies(result);
 
                 assertNotNull("result was null! - " + test.name, result);
                 assertEquals("isAllowed mismatched! - " + test.name, expected.getIsAllowed(), result.getIsAllowed());
@@ -653,6 +740,8 @@ public class TestPolicyEngine {
 
                 result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
 
+                policyEngine.evaluateAuditPolicies(result);
+
                 assertNotNull("result was null! - " + test.name, result);
                 assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
                 assertEquals("maskCondition mismatched! - " + test.name, expected.getMaskCondition(), result.getMaskCondition());
@@ -660,6 +749,8 @@ public class TestPolicyEngine {
                 assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
 
                 result = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_DATAMASK, auditHandler);
+
+                policyEngine.evaluateAuditPolicies(result);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("maskType mismatched! - " + test.name, expected.getMaskType(), result.getMaskType());
@@ -675,11 +766,15 @@ public class TestPolicyEngine {
 
                 result   = policyEngine.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
 
+                policyEngine.evaluateAuditPolicies(result);
+
                 assertNotNull("result was null! - " + test.name, result);
                 assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
                 assertEquals("policyId mismatched! - " + test.name, expected.getPolicyId(), result.getPolicyId());
 
 				result = policyEngineForEvaluatingWithACLs.evaluatePolicies(request, RangerPolicy.POLICY_TYPE_ROWFILTER, auditHandler);
+
+				policyEngine.evaluateAuditPolicies(result);
 
 				assertNotNull("result was null! - " + test.name, result);
 				assertEquals("filterExpr mismatched! - " + test.name, expected.getFilterExpr(), result.getFilterExpr());
@@ -733,11 +828,14 @@ public class TestPolicyEngine {
 			public RangerAccessResult  dataMaskResult;
 			public RangerAccessResult rowFilterResult;
 			public RangerResourceAccessInfo resourceAccessInfo;
+			public Map<String, Map<String, String>> userAttributes;
+			public Map<String, Map<String, String>> groupAttributes;
 		}
 
 		class TagPolicyInfo {
 			public String	serviceName;
 			public RangerServiceDef serviceDef;
+			public Map<String, String> serviceConfig;
 			public List<RangerPolicy> tagPolicies;
 		}
 	}
@@ -824,9 +922,9 @@ public class TestPolicyEngine {
                     }
                 }
 
-                assertTrue(testCase.name, isValid == testCase.result.isValid);
-                assertTrue(testCase.name, isApplicable == testCase.result.isApplicable);
-                assertTrue(testCase.name + ", [" + validationFailures +"]", validationFailures.size() == testCase.result.validationFailureCount);
+                assertEquals(testCase.name + " - isValid (validationFailures: " + validationFailures + ")", testCase.result.isValid, isValid);
+				assertEquals(testCase.name + " - isApplicable (validationFailures: " + validationFailures + ")", testCase.result.isApplicable, isApplicable);
+                assertEquals(testCase.name + " - validationFailureCount (validationFailures: " + validationFailures +")", testCase.result.validationFailureCount, validationFailures.size());
             }
         }
         TimeZone.setDefault(defaultTZ);
@@ -841,6 +939,13 @@ public class TestPolicyEngine {
 			ret.setAccessType(ret.getAccessType()); // to force computation of isAccessTypeAny and isAccessTypeDelegatedAdmin
 			if (ret.getAccessTime() == null) {
 				ret.setAccessTime(new Date());
+			}
+			Map<String, Object> reqContext = ret.getContext();
+			Object accessTypes = reqContext.get("ACCESSTYPES");
+			if (accessTypes != null) {
+				Collection<String> accessTypesCollection = (Collection<String>) accessTypes;
+				Set<String> requestedAccesses = new HashSet<>(accessTypesCollection);
+				ret.getContext().put("ACCESSTYPES", requestedAccesses);
 			}
 
 			return ret;
@@ -877,7 +982,7 @@ public class TestPolicyEngine {
 			ret = Objects.equals(me.getResourceZoneTrie().keySet(), other.getResourceZoneTrie().keySet());
 
 			if (ret) {
-				for (Map.Entry<String, RangerResourceTrie> entry : me.getResourceZoneTrie().entrySet()) {
+				for (Map.Entry<String, RangerResourceTrie<RangerZoneResourceMatcher>> entry : me.getResourceZoneTrie().entrySet()) {
 					ret = compareSubtree(entry.getValue(), other.getResourceZoneTrie().get(entry.getKey()));
 
 					if (!ret) {
@@ -913,13 +1018,13 @@ public class TestPolicyEngine {
 	public static boolean compareTrie(final int policyType, RangerPolicyRepository me, RangerPolicyRepository other) {
 		boolean ret;
 
-		Map<String, RangerResourceTrie> myTrie    = me.getTrie(policyType);
-		Map<String, RangerResourceTrie> otherTrie = other.getTrie(policyType);
+		Map<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> myTrie    = me.getTrie(policyType);
+		Map<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> otherTrie = other.getTrie(policyType);
 
 		ret = myTrie.size() == otherTrie.size();
 
 		if (ret) {
-			for (Map.Entry<String, RangerResourceTrie> entry : myTrie.entrySet()) {
+			for (Map.Entry<String, RangerResourceTrie<RangerPolicyResourceEvaluator>> entry : myTrie.entrySet()) {
 				RangerResourceTrie myResourceTrie    = entry.getValue();
 				RangerResourceTrie otherResourceTrie = otherTrie.get(entry.getKey());
 
@@ -1042,28 +1147,36 @@ public class TestPolicyEngine {
 			ret = me.size() == other.size();
 
 			if (ret) {
-				List<? extends RangerPolicyResourceEvaluator> meAsList = new ArrayList<>(me);
-				List<? extends RangerPolicyResourceEvaluator> otherAsList = new ArrayList<>(other);
+				List<? extends RangerResourceEvaluator> meAsList    = new ArrayList<>(me);
+				List<? extends RangerResourceEvaluator> otherAsList = new ArrayList<>(other);
+				List<Long>                              myIds       = new ArrayList<>();
+				List<Long>                              otherIds    = new ArrayList<>();
 
-				List<Long> myIds = new ArrayList<>();
-				List<Long> otherIds = new ArrayList<>();
-				for (RangerPolicyResourceEvaluator evaluator : meAsList) {
-					myIds.add(evaluator.getId());
+				for (RangerResourceEvaluator evaluator : meAsList) {
+					if (evaluator instanceof RangerPolicyResourceEvaluator) {
+						myIds.add(((RangerPolicyResourceEvaluator) evaluator).getPolicyId());
+					} else {
+						myIds.add(evaluator.getId());
+					}
 				}
-				for (RangerPolicyResourceEvaluator evaluator : otherAsList) {
-					otherIds.add(evaluator.getId());
+
+				for (RangerResourceEvaluator evaluator : otherAsList) {
+					if (evaluator instanceof RangerPolicyResourceEvaluator) {
+						otherIds.add(((RangerPolicyResourceEvaluator) evaluator).getPolicyId());
+					} else {
+						otherIds.add(evaluator.getId());
+					}
 				}
 
 				ret = compareLongLists(myIds, otherIds);
 			}
 		}
+
 		return ret;
 	}
 
 	private static boolean compareLongLists(List<Long> me, List<Long> other) {
 		return me.size() == CollectionUtils.intersection(me, other).size();
 	}
-
-
 }
 

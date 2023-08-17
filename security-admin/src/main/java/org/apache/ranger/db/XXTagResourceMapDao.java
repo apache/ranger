@@ -24,6 +24,7 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXTagResourceMap;
@@ -49,27 +50,41 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
 	}
 
 	public List<XXTagResourceMap> findByResourceId(Long resourceId) {
+		List<XXTagResourceMap> ret = null;
+
 		if (resourceId == null) {
-			return new ArrayList<XXTagResourceMap>();
+			ret = new ArrayList<>();
+		} else {
+			try {
+				List<Object[]> rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByResourceId", Object[].class)
+						                                .setParameter("resourceId", resourceId).getResultList();
+
+				ret = fromRows(rows);
+			} catch (NoResultException e) {
+				ret = new ArrayList<>();
+			}
 		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.findByResourceId", tClass)
-					.setParameter("resourceId", resourceId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTagResourceMap>();
-		}
+
+		return ret;
 	}
 
 	public List<XXTagResourceMap> findByResourceGuid(String resourceGuid) {
-		if (StringUtil.isEmpty(resourceGuid)) {
-			return new ArrayList<XXTagResourceMap>();
+		List<XXTagResourceMap> ret = null;
+
+		if (resourceGuid == null) {
+			ret = new ArrayList<>();
+		} else {
+			try {
+				List<Object[]> rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByResourceGuid", Object[].class)
+						                                .setParameter("resourceGuid", resourceGuid).getResultList();
+
+				ret = fromRows(rows);
+			} catch (NoResultException e) {
+				ret = new ArrayList<>();
+			}
 		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.findByResourceGuid", tClass)
-					.setParameter("resourceGuid", resourceGuid).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTagResourceMap>();
-		}
+
+		return ret;
 	}
 
 	public List<Long> findTagIdsForResourceId(Long resourceId) {
@@ -82,15 +97,22 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
 	}
 
 	public List<XXTagResourceMap> findByTagId(Long tagId) {
+		List<XXTagResourceMap> ret = null;
+
 		if (tagId == null) {
-			return new ArrayList<XXTagResourceMap>();
+			ret = new ArrayList<>();
+		} else {
+			try {
+				List<Object[]>  rows = getEntityManager().createNamedQuery("XXTagResourceMap.findByTagId", Object[].class)
+                                                         .setParameter("tagId", tagId).getResultList();
+
+				ret = fromRows(rows);
+			} catch (NoResultException e) {
+				ret = new ArrayList<>();
+			}
 		}
-		try {
-			return getEntityManager().createNamedQuery("XXTagResourceMap.findByTagId", tClass)
-					.setParameter("tagId", tagId).getResultList();
-		} catch (NoResultException e) {
-			return new ArrayList<XXTagResourceMap>();
-		}
+
+		return ret;
 	}
 
 	public List<XXTagResourceMap> findByTagGuid(String tagGuid) {
@@ -143,4 +165,30 @@ public class XXTagResourceMapDao extends BaseDao<XXTagResourceMap> {
 		}
 	}
 
+	private XXTagResourceMap fromRow(Object[] row) {
+		XXTagResourceMap ret = new XXTagResourceMap();
+
+		ret.setId((Long) row[0]);
+		ret.setGuid((String) row[1]);
+		ret.setTagId((Long) row[2]);
+		ret.setResourceId((Long) row[3]);
+
+		return ret;
+	}
+
+	private List<XXTagResourceMap> fromRows(List<Object[]> rows) {
+		final List<XXTagResourceMap> ret;
+
+		if (CollectionUtils.isNotEmpty(rows)) {
+			ret = new ArrayList<>(rows.size());
+
+			for (Object[] row : rows) {
+				ret.add(fromRow(row));
+			}
+		} else {
+			ret = new ArrayList<>();
+		}
+
+		return ret;
+	}
 }

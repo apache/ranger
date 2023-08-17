@@ -34,12 +34,33 @@ BEGIN
 	SET @drpstmt = 'DROP TABLE IF EXISTS ' + @tblname;
 	execute(@drpstmt)
 END
+
 GO
-call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
+DROP VIEW IF EXISTS dbo.vx_trx_log
+GO
+call dbo.removeForeignKeysAndTable('x_rms_mapping_provider')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_resource_mapping')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_notification')
+GO
+call dbo.removeForeignKeysAndTable('x_rms_service_resource')
+GO
+call dbo.removeForeignKeysAndTable('x_tag_change_log')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_role')
+GO
+call dbo.removeForeignKeysAndTable('x_policy_ref_role')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_group')
+GO
+call dbo.removeForeignKeysAndTable('x_role_ref_user')
+GO
+call dbo.removeForeignKeysAndTable('x_role')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_change_log')
 GO
-call dbo.removeForeignKeysAndTable('x_tag_change_log')
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_resource')
 GO
 call dbo.removeForeignKeysAndTable('x_policy_ref_group')
 GO
@@ -69,15 +90,7 @@ call dbo.removeForeignKeysAndTable('x_policy_item_datamask')
 GO
 call dbo.removeForeignKeysAndTable('x_datamask_type_def')
 GO
-call dbo.removeForeignKeysAndTable('x_service_resource_element_val')
-GO
 call dbo.removeForeignKeysAndTable('x_tag_resource_map')
-GO
-call dbo.removeForeignKeysAndTable('x_tag_attr')
-GO
-call dbo.removeForeignKeysAndTable('x_tag_attr_def')
-GO
-call dbo.removeForeignKeysAndTable('x_service_resource_element')
 GO
 call dbo.removeForeignKeysAndTable('x_service_resource')
 GO
@@ -131,9 +144,11 @@ call dbo.removeForeignKeysAndTable('x_security_zone_ref_group')
 GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_user')
 GO
-call dbo.removeForeignKeysAndTable('x_security_zone_ref_service')
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_role')
 GO
 call dbo.removeForeignKeysAndTable('x_security_zone_ref_tag_srvc')
+GO
+call dbo.removeForeignKeysAndTable('x_security_zone_ref_service')
 GO
 call dbo.removeForeignKeysAndTable('x_ranger_global_state')
 GO
@@ -147,8 +162,6 @@ call dbo.removeForeignKeysAndTable('x_audit_map')
 GO
 call dbo.removeForeignKeysAndTable('x_perm_map')
 GO
-DROP VIEW IF EXISTS dbo.vx_trx_log
-GO
 call dbo.removeForeignKeysAndTable('x_trx_log')
 GO
 call dbo.removeForeignKeysAndTable('x_resource')
@@ -156,18 +169,6 @@ GO
 call dbo.removeForeignKeysAndTable('x_policy_export_audit')
 GO
 call dbo.removeForeignKeysAndTable('x_group_users')
-GO
-
-call dbo.removeForeignKeysAndTable('x_role_ref_role')
-GO
-call dbo.removeForeignKeysAndTable('x_policy_ref_role')
-GO
-call dbo.removeForeignKeysAndTable('x_role_ref_group')
-GO
-call dbo.removeForeignKeysAndTable('x_role_ref_user')
-GO
-call dbo.removeForeignKeysAndTable('x_role')
-
 GO
 call dbo.removeForeignKeysAndTable('x_user')
 GO
@@ -216,8 +217,11 @@ create table dbo.x_portal_user(
 	email varchar(512) DEFAULT NULL NULL,
 	status int DEFAULT 0 NOT NULL,
 	user_src int DEFAULT 0 NOT NULL,
-	notes varchar(4000) DEFAULT NULL NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
+	notes text DEFAULT NULL NULL,
+	other_attributes text DEFAULT NULL NULL,
+	sync_source text DEFAULT NULL NULL,
+	old_passwords text DEFAULT NULL,
+	password_updated_time datetime DEFAULT NULL,
 	CONSTRAINT x_portal_user_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_portal_user_UK_login_id UNIQUE NONCLUSTERED (login_id)
 )
@@ -325,13 +329,14 @@ create table dbo.x_group(
 	added_by_id bigint DEFAULT NULL NULL,
 	upd_by_id bigint DEFAULT NULL NULL,
 	group_name varchar(767) NOT NULL,
-	descr varchar(4000) NOT NULL,
+	descr text DEFAULT NULL NULL,
 	status int DEFAULT 0 NOT NULL,
 	group_type int DEFAULT 0 NOT NULL,
 	cred_store_id bigint DEFAULT NULL NULL,
 	group_src int DEFAULT 0 NOT NULL,
 	is_visible int DEFAULT 1 NOT NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
+	other_attributes text DEFAULT NULL NULL,
+	sync_source text DEFAULT NULL NULL,
 	CONSTRAINT x_group_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_group_UK_group_name UNIQUE NONCLUSTERED (group_name)
 )
@@ -355,11 +360,12 @@ create table dbo.x_user(
 	added_by_id bigint DEFAULT NULL NULL,
 	upd_by_id bigint DEFAULT NULL NULL,
 	user_name varchar(767) NOT NULL,
-	descr varchar(4000) NOT NULL,
+	descr text DEFAULT NULL NULL,
 	status int DEFAULT 0 NOT NULL,
 	cred_store_id bigint DEFAULT NULL NULL,
 	is_visible int DEFAULT 1 NOT NULL,
-	other_attributes varchar(4000) DEFAULT NULL NULL,
+	other_attributes text DEFAULT NULL NULL,
+	sync_source text DEFAULT NULL NULL,
 	CONSTRAINT x_user_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_user_UK_user_name UNIQUE NONCLUSTERED (user_name)
 )
@@ -553,7 +559,7 @@ CREATE TABLE dbo.x_ranger_global_state(
 GO
 create table dbo.x_policy (
 	id bigint IDENTITY NOT NULL,
-	guid varchar(1024) DEFAULT NULL NULL,
+	guid varchar(1024) NOT NULL,
 	create_time datetime DEFAULT NULL NULL,
 	update_time datetime DEFAULT NULL NULL,
 	added_by_id bigint DEFAULT NULL NULL,
@@ -563,7 +569,7 @@ create table dbo.x_policy (
 	name varchar(512) NOT NULL,
 	policy_type int DEFAULT 0 NULL,
 	description varchar(1024) DEFAULT NULL NULL,
-	resource_signature varchar(128) DEFAULT NULL NULL,
+	resource_signature varchar(128) NOT NULL,
 	is_enabled tinyint DEFAULT 0 NOT NULL,
 	is_audit_enabled tinyint DEFAULT 0 NOT NULL,
 	policy_options varchar(4000) DEFAULT NULL NULL,
@@ -571,7 +577,9 @@ create table dbo.x_policy (
 	policy_text text DEFAULT NULL NULL,
 	zone_id bigint DEFAULT '1' NOT NULL,
 	CONSTRAINT x_policy_PK_id PRIMARY KEY CLUSTERED(id),
-	CONSTRAINT x_policy_UK_name_service_zone UNIQUE NONCLUSTERED (name,service,zone_id)
+	CONSTRAINT x_policy_UK_name_service_zone UNIQUE NONCLUSTERED (name,service,zone_id),
+	CONSTRAINT x_policy_UK_guid_service_zone UNIQUE NONCLUSTERED (guid,service,zone_id),
+	CONSTRAINT x_policy_UK_service_signature UNIQUE NONCLUSTERED (service,resource_signature),
 )
 GO
 create table dbo.x_service_config_def (
@@ -943,6 +951,7 @@ CREATE TABLE dbo.x_service_resource(
 	CONSTRAINT x_service_res_PK_id PRIMARY KEY CLUSTERED(id),
 	CONSTRAINT x_service_res_UK_guid UNIQUE NONCLUSTERED (guid)
 )
+CREATE UNIQUE INDEX x_service_resource_IDX_svc_id_resource_signature ON x_service_resource(service_id, resource_signature);
 GO
 CREATE TABLE dbo.x_tag_resource_map(
 	id bigint IDENTITY NOT NULL,
@@ -1012,6 +1021,7 @@ CREATE TABLE dbo.x_service_version_info(
 	tag_update_time datetime DEFAULT NULL NULL,
 	role_version bigint NOT NULL DEFAULT 0,
 	role_update_time datetime DEFAULT NULL NULL,
+	version bigint NOT NULL DEFAULT 1,
 	CONSTRAINT x_service_version_info_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -1065,7 +1075,7 @@ CREATE TABLE dbo.x_ugsync_audit_info(
 		no_of_new_groups bigint NOT NULL,
 		no_of_modified_users bigint NOT NULL,
 		no_of_modified_groups bigint NOT NULL,
-		sync_source_info varchar(4000) NOT NULL,
+		sync_source_info text NOT NULL,
 		session_id varchar(255) DEFAULT NULL NULL,
 		CONSTRAINT x_ugsync_audit_info_PK_id PRIMARY KEY CLUSTERED(id)
 )
@@ -1216,6 +1226,18 @@ CREATE TABLE dbo.x_security_zone_ref_group(
         CONSTRAINT x_sz_ref_agroup_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
+CREATE TABLE dbo.x_security_zone_ref_role(
+        id bigint IDENTITY NOT NULL,
+        create_time datetime DEFAULT NULL NULL,
+        update_time datetime DEFAULT NULL NULL,
+        added_by_id bigint DEFAULT NULL NULL,
+        upd_by_id bigint DEFAULT NULL NULL,
+        zone_id bigint DEFAULT NULL NULL,
+        role_id bigint DEFAULT NULL NULL,
+        role_name varchar(767) DEFAULT NULL NULL
+        CONSTRAINT x_sz_ref_arole_PK_id PRIMARY KEY CLUSTERED(id)
+)
+GO
 CREATE TABLE dbo.x_policy_change_log(
         id bigint IDENTITY NOT NULL,
         create_time datetime DEFAULT NULL NULL,
@@ -1225,7 +1247,8 @@ CREATE TABLE dbo.x_policy_change_log(
         service_type varchar(256) DEFAULT NULL NULL,
         policy_type int DEFAULT NULL NULL,
         zone_name varchar(256) DEFAULT NULL NULL,
-		    policy_id bigint DEFAULT NULL NULL,
+        policy_id bigint DEFAULT NULL NULL,
+        policy_guid varchar(1024) DEFAULT NULL NULL,
         CONSTRAINT x_policy_change_log_PK_id PRIMARY KEY CLUSTERED(id)
 )
 GO
@@ -1700,6 +1723,14 @@ ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_zone_id
 GO
 ALTER TABLE dbo.x_security_zone_ref_group ADD CONSTRAINT x_sz_ref_grp_FK_group_id FOREIGN KEY(group_id) REFERENCES dbo.x_group (id)
 GO
+ALTER TABLE dbo.x_security_zone_ref_role ADD CONSTRAINT x_sz_ref_role_FK_added_by_id FOREIGN KEY(added_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_role ADD CONSTRAINT x_sz_ref_role_FK_upd_by_id FOREIGN KEY(upd_by_id) REFERENCES dbo.x_portal_user (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_role ADD CONSTRAINT x_sz_ref_role_FK_zone_id FOREIGN KEY(zone_id) REFERENCES dbo.x_security_zone (id)
+GO
+ALTER TABLE dbo.x_security_zone_ref_role ADD CONSTRAINT x_sz_ref_role_FK_role_id FOREIGN KEY(role_id) REFERENCES dbo.x_role (id)
+GO
 
 ALTER TABLE dbo.x_role_ref_role ADD CONSTRAINT x_role_ref_role_FK_added_by_id FOREIGN KEY (added_by_id) REFERENCES dbo.x_portal_user (id)
 GO
@@ -2053,10 +2084,81 @@ CREATE NONCLUSTERED INDEX x_policy_change_log_IDX_service_id ON dbo.x_policy_cha
 GO
 CREATE NONCLUSTERED INDEX x_policy_change_log_IDX_policy_version ON dbo.x_policy_change_log(policy_version ASC)
 GO
+CREATE NONCLUSTERED UNIQUE INDEX x_policy_change_log_uk_service_id_policy_version ON dbo.x_policy_change_log((service_id, policy_version) ASC)
+GO
 CREATE NONCLUSTERED INDEX x_tag_change_log_IDX_service_id ON dbo.x_tag_change_log(service_id ASC);
 GO
 CREATE NONCLUSTERED INDEX x_tag_change_log_IDX_tag_version ON dbo.x_tag_change_log(service_tags_version ASC);
 GO
+CREATE NONCLUSTERED INDEX x_tag_change_log_uk_service_id_service_tags_version ON dbo.x_tag_change_log((service_id, service_tags_version) ASC);
+GO
+
+CREATE TABLE dbo.x_rms_service_resource(
+id BIGINT IDENTITY NOT NULL,
+guid VARCHAR(64) NOT NULL,
+create_time TIMESTAMP DEFAULT NULL NULL,
+update_time TIMESTAMP DEFAULT NULL NULL,
+added_by_id BIGINT DEFAULT NULL NULL,
+upd_by_id BIGINT DEFAULT NULL NULL,
+version BIGINT DEFAULT NULL NULL,
+service_id BIGINT NOT NULL,
+resource_signature VARCHAR(128) DEFAULT NULL NULL,
+is_enabled tinyint DEFAULT 1 NOT NULL,
+service_resource_elements_text TEXT DEFAULT NULL NULL,
+primary key (id),
+CONSTRAINT x_rms_service_resource_IDX_resource_signature UNIQUE(resource_signature),
+CONSTRAINT x_rms_notification_FK_hl_service_id FOREIGN KEY(hl_service_id) REFERENCES x_service(id),
+CONSTRAINT x_rms_notification_FK_ll_service_id FOREIGN KEY(ll_service_id) REFERENCES x_service(id)
+);
+CREATE INDEX x_rms_service_resource_IDX_service_id ON x_rms_service_resource(service_id);
+GO
+
+CREATE TABLE dbo.x_rms_notification (
+id BIGINT IDENTITY NOT NULL ,
+hms_name VARCHAR(128)  DEFAULT NULL NULL,
+notification_id BIGINT  DEFAULT NULL NULL,
+change_timestamp TIMESTAMP  DEFAULT NULL NULL,
+change_type VARCHAR(64) DEFAULT  NULL NULL,
+hl_resource_id BIGINT DEFAULT NULL NULL,
+hl_service_id BIGINT DEFAULT NULL  NULL,
+ll_resource_id BIGINT DEFAULT NULL NULL,
+ll_service_id BIGINT  DEFAULT NULL NULL,
+PRIMARY KEY (id),
+CONSTRAINT x_rms_notification_FK_hl_service_id FOREIGN KEY(hl_service_id) REFERENCES x_service(id),
+CONSTRAINT x_rms_notification_FK_ll_service_id FOREIGN KEY(ll_service_id) REFERENCES x_service(id)
+);
+
+CREATE INDEX x_rms_notification_IDX_notification_id ON x_rms_notification(notification_id);
+CREATE INDEX x_rms_notification_IDX_hms_name_notification_id ON x_rms_notification(hms_name, notification_id);
+CREATE INDEX x_rms_notification_IDX_hl_service_id ON x_rms_notification(hl_service_id);
+CREATE INDEX x_rms_notification_IDX_ll_service_id ON x_rms_notification(ll_service_id);
+GO
+
+CREATE TABLE dbo.x_rms_resource_mapping(
+id BIGINT  IDENTITY NOT NULL ,
+change_timestamp TIMESTAMP  DEFAULT NULL NULL,
+hl_resource_id BIGINT NOT NULL,
+ll_resource_id BIGINT NOT NULL,
+PRIMARY KEY (id),
+CONSTRAINT x_rms_res_map_UK_hl_res_id_ll_res_id UNIQUE(hl_resource_id, ll_resource_id),
+CONSTRAINT x_rms_res_map_FK_hl_res_id FOREIGN KEY(hl_resource_id) REFERENCES x_rms_service_resource(id),
+CONSTRAINT x_rms_res_map_FK_ll_res_id FOREIGN KEY(ll_resource_id) REFERENCES x_rms_service_resource(id)
+);
+
+CREATE INDEX x_rms_resource_mapping_IDX_hl_resource_id ON x_rms_resource_mapping(hl_resource_id);
+CREATE INDEX x_rms_resource_mapping_IDX_ll_resource_id ON x_rms_resource_mapping(ll_resource_id);
+GO
+
+CREATE TABLE dbo.x_rms_mapping_provider (
+id BIGINT IDENTITY NOT NULL ,
+change_timestamp TIMESTAMP DEFAULT NULL NULL,
+name VARCHAR(128) DEFAULT  NULL NULL,
+last_known_version BIGINT NOT NULL,
+PRIMARY KEY (id),
+CONSTRAINT x_rms_mapping_provider_UK_name UNIQUE(name)
+);
+GO
+
 insert into x_portal_user (create_time,update_time,first_name,last_name,pub_scr_name,login_id,password,email,status) values (GETDATE(),GETDATE(),'Admin','','Admin','admin','ceb4f32325eda6142bd65215f4c0f371','',1)
 GO
 insert into x_portal_user_role (create_time,update_time,user_id,user_role,status) values (GETDATE(),GETDATE(),dbo.getXportalUIdByLoginId('admin'),'ROLE_SYS_ADMIN',1)
@@ -2162,6 +2264,34 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('046',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('047',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('048',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('049',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('050',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('051',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('052',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('054',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('055',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('056',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('057',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('058',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('059',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('060',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('065',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('066',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('DB_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
@@ -2276,6 +2406,36 @@ GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10037',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10038',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10040',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10041',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10043',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10044',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10045',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10046',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10047',CURRENT_TIMESTAMP,'Ranger 2.2.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10049',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10050',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10051',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10052',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10053',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10054',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10055',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
+GO
+INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('J10056',CURRENT_TIMESTAMP,'Ranger 3.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO
 INSERT INTO x_db_version_h (version,inst_at,inst_by,updated_at,updated_by,active) VALUES ('JAVA_PATCHES',CURRENT_TIMESTAMP,'Ranger 1.0.0',CURRENT_TIMESTAMP,'localhost','Y');
 GO

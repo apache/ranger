@@ -24,16 +24,17 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.contextenricher.RangerTagEnricher;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.store.TagStore;
+import org.apache.ranger.plugin.util.RangerReadWriteLock;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerAdminTagEnricher extends RangerTagEnricher {
-    private static final Log LOG = LogFactory.getLog(RangerAdminTagEnricher.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAdminTagEnricher.class);
 
     private static TagStore         tagStore   = null;
     private static RangerDaoManager daoManager = null;
@@ -71,9 +72,11 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
         if (tagStore == null || svcStore == null) {
             LOG.error("ServiceDBStore/TagDBStore is not initialized!! Internal Error!");
         } else {
+            super.init();
             try {
                 RangerService service = svcStore.getServiceByName(serviceName);
                 serviceId = service.getId();
+                createLock();
             } catch (Exception e) {
                 LOG.error("Cannot find service with name:[" + serviceName + "]", e);
                 LOG.error("This will cause tag-enricher in Ranger-Admin to fail!!");
@@ -82,6 +85,15 @@ public class RangerAdminTagEnricher extends RangerTagEnricher {
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerAdminTagEnricher.init()");
         }
+    }
+
+    @Override
+    protected RangerReadWriteLock createLock() {
+        boolean useReadWriteLock = tagStore != null && tagStore.isInPlaceTagUpdateSupported();
+
+        LOG.info("Policy-Engine will" + (useReadWriteLock ? " " : " not ") + "use read-write locking to update tags in place when tag-deltas are provided");
+
+        return new RangerReadWriteLock(useReadWriteLock);
     }
 
     @Override

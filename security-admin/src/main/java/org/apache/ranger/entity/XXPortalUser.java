@@ -31,15 +31,18 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.persistence.Temporal;
+import javax.persistence.TemporalType;
 
 import org.apache.ranger.common.AppConstants;
+import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.RangerConstants;
+
+import java.util.Date;
 
 
 @Entity
 @Table(name="x_portal_user")
-@XmlRootElement
 public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -155,6 +158,22 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	 */
 	@Column(name="OTHER_ATTRIBUTES")
 	protected String otherAttributes;
+
+	/**
+	 * Sync Source Attribute.
+	 * <ul>
+	 * </ul>
+	 *
+	 */
+	@Column(name="SYNC_SOURCE")
+	protected String syncSource;
+
+	@Column(name="OLD_PASSWORDS")
+	protected String oldPasswords;
+
+	@Temporal(TemporalType.TIMESTAMP)
+	@Column(name="PASSWORD_UPDATED_TIME")
+	protected Date passwordUpdatedTime = DateUtil.getUTCDate();
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -340,6 +359,37 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 	}
 
 	/**
+	 * This method sets JSON {@link String} representation of sync source attribute.
+	 * This method accepts null values.
+	 * @param syncSource
+	 */
+	public void setSyncSource(String syncSource) {
+		this.syncSource = syncSource;
+	}
+
+	/**
+	 * @return JSON {@link String} representation of sync source attribute if available,
+	 * <code>null</code> otherwise.
+	 */
+	public String getSyncSource() { return syncSource; }
+
+	public String getOldPasswords() {
+		return oldPasswords;
+	}
+
+	public void setOldPasswords(String oldPasswords) {
+		this.oldPasswords = oldPasswords;
+	}
+
+	public Date getPasswordUpdatedTime() {
+		return passwordUpdatedTime;
+	}
+
+	public void setPasswordUpdatedTime(Date passwordUpdatedTime) {
+		this.passwordUpdatedTime = passwordUpdatedTime;
+	}
+
+	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
 	*/
@@ -356,6 +406,8 @@ public class XXPortalUser extends XXDBBase implements java.io.Serializable {
 		str += "userSource={" + userSource + "} ";
 		str += "notes={" + notes + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
+		str += "syncSource={" + syncSource + "} ";
+		str += "passwordUpdatedTime={" + passwordUpdatedTime + "} ";
 		str += "}";
 		return str;
 	}

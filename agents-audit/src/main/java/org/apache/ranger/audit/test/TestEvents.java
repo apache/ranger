@@ -18,14 +18,13 @@
  */
 
  package org.apache.ranger.audit.test;
-import org.apache.commons.logging.Log;
-import org.apache.log4j.xml.DOMConfigurator;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.model.EnumRepositoryType;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.AuditProviderFactory;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -34,11 +33,9 @@ import java.util.Properties;
 
 public class TestEvents {
 
-    private static final Log LOG = LogFactory.getLog(TestEvents.class);
+    private static final Logger LOG = LoggerFactory.getLogger(TestEvents.class);
 
     public static void main(String[] args) {
-        DOMConfigurator.configure("log4j.xml");
-
         LOG.info("==> TestEvents.main()");
 
         try {
@@ -55,21 +52,11 @@ public class TestEvents {
             } else {
                 LOG.info("Audit properties file missing: " + AUDIT_PROPERTIES_FILE);
 
-                auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.url", "jdbc:mysql://localhost:3306/xa_db");
-                auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.user", "xaaudit");
-                auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.password", "xaaudit");
-                auditProperties.setProperty("xasecure.audit.jpa.javax.persistence.jdbc.driver", "com.mysql.jdbc.Driver");
-
                 auditProperties.setProperty("xasecure.audit.is.enabled", "true");
                 auditProperties.setProperty("xasecure.audit.log4j.is.enabled", "false");
                 auditProperties.setProperty("xasecure.audit.log4j.is.async", "false");
                 auditProperties.setProperty("xasecure.audit.log4j.async.max.queue.size", "100000");
                 auditProperties.setProperty("xasecure.audit.log4j.async.max.flush.interval.ms", "30000");
-                auditProperties.setProperty("xasecure.audit.db.is.enabled", "false");
-                auditProperties.setProperty("xasecure.audit.db.is.async", "true");
-                auditProperties.setProperty("xasecure.audit.db.async.max.queue.size", "100000");
-                auditProperties.setProperty("xasecure.audit.db.async.max.flush.interval.ms", "30000");
-                auditProperties.setProperty("xasecure.audit.db.batch.size", "100");
             }
 
             AuditProviderFactory factory = new AuditProviderFactory();

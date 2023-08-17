@@ -55,7 +55,7 @@ define(function(require){
 			// Overwrite your schema definition here
 			return _.extend(attrs,{
 				name : {
-                                        type		: 'TextFieldWithIcon',
+                    type		: 'TextFieldWithIcon',
 					title		: 'Policy Name *',
 					validators	: ['required'],
 					editorAttrs 	:{ maxlength: 255},
@@ -77,32 +77,34 @@ define(function(require){
 				isEnabled : {
 					type		: 'Switch',
 					title		: '',//localization.tt("lbl.policyStatus"),
-					onText		: 'enabled',
-					offText		: 'disabled',
+					editorClass : 'policy-enable-disable',
+					onText		: 'Enabled',
+					offText		: 'Disabled',
 					width		: '80',
 					switchOn	: true
 				},
                 policyPriority : {
                     type            : 'Switch',
                     title           : '',//localization.tt("lbl.policyStatus"),
-                    onText          : 'override',
-                    offText         : 'normal',
+                    editorClass     : 'policy-priority',
+                    onText          : 'Override',
+                    offText         : 'Normal',
                     width           : '80',
                     switchOn        : false
                 },
 				isAuditEnabled : {
 					type		: 'Switch',
 					title		: localization.tt("lbl.auditLogging"),
-					onText 		: 'YES',
-					offText		: 'NO',
+					onText 		: 'Yes',
+					offText		: 'No',
 					switchOn	: true
 				},
 				//recursive(ON/OFF) toggle
 				recursive : {
 					type : 'Switch',
 					title : 'Recursive',
-					onText : 'ON',
-					offText : 'OFF',
+					onText : 'On',
+					offText : 'Off',
 					switchOn : true
 				}
 			});
@@ -157,7 +159,6 @@ define(function(require){
                 multiple: true,
                 closeOnSelect : true,
                 placeholder : 'Policy Label',
-                width :'220px',
                 allowClear: true,
                 tokenSeparators: ["," , " "],
                 tags : true,

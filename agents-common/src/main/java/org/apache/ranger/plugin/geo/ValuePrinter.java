@@ -20,13 +20,13 @@
 package org.apache.ranger.plugin.geo;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 
 class ValuePrinter<T> implements ValueProcessor<T> {
-	private static final Log LOG = LogFactory.getLog(ValuePrinter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ValuePrinter.class);
 
 	private Writer writer;
 	private String fileName;

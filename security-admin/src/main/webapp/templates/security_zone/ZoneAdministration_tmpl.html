@@ -11,62 +11,62 @@ distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 KIND, either express or implied. See the License for the specific
 language governing permissions and limitations under the License. --}}
 {{#if description}}
-    <div class="row-fluid">
-        <div class="span12">
-            <p>{{this.zoneModel.attributes.description}}</p>
+    <div class="row">
+        <div class="col-md-12">
+            <p class="font-13">{{this.zoneModel.attributes.description}}</p>
         </div>
     </div>
 {{/if}}
-<div class="row-fluid">
-    <div class="span12">
-        <div class="panel panel-default m-b-md">
-            <div class="panel-header" data-id="panel">Zone Administration<i class="icon-chevron-up pull-right"></i></div>
-            <div class="panel-content">
+<div class="row">
+    <div class="col-md-12">
+        <div class="m-b-md card panel">
+            <div class="card-header" data-id="panel">Zone Administrationss<i class="fa-fw fa fa-chevron-up pull-right"></i></div>
+            <div class="card-body">
                 <form class="form-horizontal form-administration">
-                    <div class="control-group">
-                        <label class="control-label" for="inputEmail">Admin Users</label>
-                        <div class="controls">
+                    <div class="form-group row">
+                        <label class="control-label col-sm-3 text-right font-13" for="inputEmail">Admin Users</label>
+                        <div class="controls col-sm-6">
                             {{#compare this.zoneModel.attributes.adminUsers "eq" ''}}
                                 <span> -- </span>
                             {{else}}
                                 {{#each this.zoneModel.attributes.adminUsers}}
-                                    <span class="label label-info">{{this}}</span>
+                                    <span class="badge badge-info">{{this}}</span>
                                 {{/each}}
                             {{/compare}}
                         </div>
                     </div>
-                    <div class="control-group">
-                        <label class="control-label" for="inputEmail">Admin Usergroups</label>
-                        <div class="controls">
+                    <div class="form-group row">
+                        <label class="control-label col-sm-3 text-right font-13" for="inputEmail">Admin Usergroups</label>
+                        <div class="controls col-sm-6">
                             {{#compare this.zoneModel.attributes.adminUserGroups "eq" ''}}
                                 <span> -- </span>
                             {{else}}
                                 {{#each this.zoneModel.attributes.adminUserGroups}}
-                                    <span class="label label-default">{{this}}</span>
+                                    <span class="badge badge-secondary">{{this}}</span>
                                 {{/each}}
                             {{/compare}}
                         </div>
                     </div>
-                    <div class="control-group">
-                        <label class="control-label" for="inputEmail">Auditor Users</label>
-                        <div class="controls">
+                    <div class="form-group row">
+                        <label class="control-label col-sm-3 text-right font-13" for="inputEmail">Auditor Users</label>
+                        <div class="controls col-sm-6">
                             {{#compare this.zoneModel.attributes.auditUsers "eq" ''}}
                                 <span> -- </span>
                             {{else}}
                                 {{#each this.zoneModel.attributes.auditUsers}}
-                                    <span class="label label-info">{{this}}</span>
+                                    <span class="badge badge-info">{{this}}</span>
                                 {{/each}}
                             {{/compare}}
                         </div>
                     </div>
-                    <div class="control-group">
-                        <label class="control-label" for="inputEmail">Auditor Usergroups</label>
-                        <div class="controls">
+                    <div class="form-group row">
+                        <label class="control-label col-sm-3 text-right font-13" for="inputEmail">Auditor Usergroups</label>
+                        <div class="controls col-sm-6">
                             {{#compare this.zoneModel.attributes.auditUserGroups "eq" ''}}
                                 <span> -- </span>
                             {{else}}
                                 {{#each this.zoneModel.attributes.auditUserGroups}}
-                                    <span class="label label-default">{{this}}</span>
+                                    <span class="badge badge-secondary">{{this}}</span>
                                 {{/each}}
                             {{/compare}}
                         </div>
@@ -76,15 +76,15 @@ language governing permissions and limitations under the License. --}}
         </div>
     </div>
 </div>
-<div class="panel panel-default m-b-md">
-    <div class="panel-header" data-id="panel">Zone Tag Services <i class="icon-chevron-up pull-right"></i></div>
-    <div class="panel-content">
+<div class="m-b-md card panel">
+    <div class="card-header" data-id="panel">Zone Tag Services <i class="fa-fw fa fa-chevron-up pull-right"></i></div>
+    <div class="card-body">
         {{#if tagServices}}
             {{#each tagServices}}
-                <span class="label label-info">{{this}}</span>
+                <span class="badge badge-info">{{this}}</span>
             {{/each}}
         {{else}}
-            <span> No tag based services are associated with this zone </span>
+            <span class="font-13"> No tag based services are associated with this zone </span>
         {{/if}}
     </div>
 </div>

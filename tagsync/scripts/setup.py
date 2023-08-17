@@ -53,7 +53,7 @@ confDistBaseDirName = 'conf.dist'
 
 outputFileName = 'ranger-tagsync-site.xml'
 installPropFileName = 'install.properties'
-log4jFileName          = 'log4j.properties'
+logbackFileName          = 'logback.xml'
 install2xmlMapFileName = 'installprop2xml.properties'
 templateFileName = 'ranger-tagsync-template.xml'
 initdProgramName = 'ranger-tagsync'
@@ -101,6 +101,7 @@ TAG_SOURCE_FILE_ENABLED = 'ranger.tagsync.source.file'
 hadoopConfFileName = 'core-site.xml'
 ENV_HADOOP_CONF_FILE = "ranger-tagsync-env-hadoopconfdir.sh"
 ENV_PID_FILE = 'ranger-tagsync-env-piddir.sh'
+ENV_CONF_FILE = 'ranger-tagsync-env-confdir.sh'
 
 globalDict = {}
 configure_security = False
@@ -318,16 +319,14 @@ def initializeInitD():
 				for  prefix in initPrefixList:
 					scriptFn = prefix + initdProgramName
 					scriptName = join(rcDir, scriptFn)
-					if isfile(scriptName):
-						os.remove(scriptName)
+					if not (isfile(scriptName) or os.path.islink(scriptName)):
+						os.symlink(initdFn,scriptName)
 					#print "+ ln -sf %s %s" % (initdFn, scriptName)
-					os.symlink(initdFn,scriptName)
 		tagSyncScriptName = "ranger-tagsync-services.sh"
 		localScriptName = os.path.abspath(join(installPropDirName,tagSyncScriptName))
 		ubinScriptName = join("/usr/bin",tagSyncScriptName)
-		if isfile(ubinScriptName) or os.path.islink(ubinScriptName):
-			os.remove(ubinScriptName)
-		os.symlink(localScriptName,ubinScriptName)
+		if not (isfile(ubinScriptName) or os.path.islink(ubinScriptName)):
+			os.symlink(localScriptName,ubinScriptName)
 
 def write_env_files(exp_var_name, log_path, file_name):
         final_path = "{0}/{1}".format(confBaseDirName,file_name)
@@ -365,7 +364,7 @@ def main():
 		if (not os.path.isdir(dir)):
 			os.makedirs(dir,0o755)
 
-	defFileList = [ log4jFileName ]
+	defFileList = [ logbackFileName ]
 	for defFile in defFileList:
 		fn = join(confDistDirName, defFile)
 		if ( isfile(fn) ):
@@ -490,10 +489,13 @@ def main():
 
 	write_env_files("RANGER_TAGSYNC_HADOOP_CONF_DIR", hadoop_conf, ENV_HADOOP_CONF_FILE)
 	write_env_files("TAGSYNC_PID_DIR_PATH", pid_dir_path, ENV_PID_FILE);
+	write_env_files("TAGSYNC_CONF_DIR", os.path.join(tagsyncBaseDirFullName,confBaseDirName), ENV_CONF_FILE)
 	os.chown(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),ownerId,groupId)
 	os.chmod(os.path.join(confBaseDirName, ENV_HADOOP_CONF_FILE),0o755)
 	os.chown(os.path.join(confBaseDirName, ENV_PID_FILE),ownerId,groupId)
 	os.chmod(os.path.join(confBaseDirName, ENV_PID_FILE),0o755)
+	os.chown(os.path.join(confBaseDirName, ENV_CONF_FILE),ownerId,groupId)
+	os.chmod(os.path.join(confBaseDirName, ENV_CONF_FILE),0o755)
 
 	f = open(os.path.join(confBaseDirName, ENV_PID_FILE), "a+")
 	f.write("\nexport {0}={1}".format("UNIX_TAGSYNC_USER",unix_user))

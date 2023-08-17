@@ -20,13 +20,13 @@
 package org.apache.ranger.audit.destination;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.audit.utils.InMemoryJAASConfiguration;
-import org.apache.ranger.audit.utils.SolrAppUtil;
+import org.apache.ranger.audit.utils.KerberosAction;
+import org.apache.ranger.audit.utils.KerberosUser;
+import org.apache.ranger.audit.utils.KerberosJAASConfigUser;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.impl.CloudSolrClient;
 import org.apache.solr.client.solrj.impl.HttpClientUtil;
@@ -36,6 +36,8 @@ import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrInputDocument;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -62,14 +64,15 @@ import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
+import javax.security.auth.login.LoginException;
 
 import java.util.Arrays;
 import java.util.Optional;
 
 
 public class SolrAuditDestination extends AuditDestination {
-	private static final Log LOG = LogFactory
-			.getLog(SolrAuditDestination.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(SolrAuditDestination.class);
 
 	public static final String PROP_SOLR_URLS = "urls";
 	public static final String PROP_SOLR_ZK = "zookeepers";
@@ -80,6 +83,7 @@ public class SolrAuditDestination extends AuditDestination {
 	public static final String PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG = "java.security.auth.login.config";
 
 	private volatile SolrClient solrClient = null;
+	private volatile KerberosUser kerberosUser = null;
 
 	public SolrAuditDestination() {
 	}
@@ -94,8 +98,28 @@ public class SolrAuditDestination extends AuditDestination {
 
 	@Override
 	public void stop() {
-		super.stop();
+		LOG.info("SolrAuditDestination.stop() called..");
 		logStatus();
+
+		if (solrClient != null) {
+			try {
+				solrClient.close();
+			} catch (IOException ioe) {
+				LOG.error("Error while stopping slor!", ioe);
+			} finally {
+				solrClient = null;
+			}
+		}
+
+		if (kerberosUser != null) {
+			try {
+				kerberosUser.logout();
+			} catch (LoginException excp) {
+				LOG.error("Error logging out keytab user", excp);
+			} finally {
+				kerberosUser = null;
+			}
+		}
 	}
 
 	synchronized void connect() {
@@ -157,11 +181,8 @@ public class SolrAuditDestination extends AuditDestination {
 							solrCloudClient.setDefaultCollection(collectionName);
 							me = solrClient = solrCloudClient;
 						} catch (Throwable t) {
-							LOG.fatal("Can't connect to Solr server. ZooKeepers="
+							LOG.error("Can't connect to Solr server. ZooKeepers="
 									+ zkHosts, t);
-						}
-						finally {
-							resetInitializerInSOLR();
 						}
 					} else if (solrURLs != null && !solrURLs.isEmpty()) {
 						try {
@@ -186,50 +207,14 @@ public class SolrAuditDestination extends AuditDestination {
 							}
 							me = solrClient = lbSolrClient;
 						} catch (Throwable t) {
-							LOG.fatal("Can't connect to Solr server. URL="
+							LOG.error("Can't connect to Solr server. URL="
 									+ solrURLs, t);
-						}
-						finally {
-							resetInitializerInSOLR();
 						}
 					}
 				}
 			}
 		}
 	}
-
-
-    private void resetInitializerInSOLR() {
-		javax.security.auth.login.Configuration solrConfig = javax.security.auth.login.Configuration.getConfiguration();
-		String solrConfigClassName = solrConfig.getClass().getName();
-		String solrJassConfigEnd = "SolrJaasConfiguration";
-		if (solrConfigClassName.endsWith(solrJassConfigEnd)) {
-			try {
-				Field f = solrConfig.getClass().getDeclaredField("initiateAppNames");
-				if (f != null) {
-					f.setAccessible(true);
-					HashSet<String> val = new HashSet<String>();
-					f.set(solrConfig, val);
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debug("resetInitializerInSOLR: successfully reset the initiateAppNames");
-					}
-
-				} else {
-					if ( LOG.isDebugEnabled() ) {
-						LOG.debug("resetInitializerInSOLR: not applying on class [" + solrConfigClassName + "] as it does not have initiateAppNames variable name.");
-					}
-				}
-			} catch (Throwable t) {
-				logError("resetInitializerInSOLR: Unable to reset SOLRCONFIG.initiateAppNames to be empty", t);
-			}
-		}
-		else {
-			if ( LOG.isDebugEnabled() ) {
-				LOG.debug("resetInitializerInSOLR: not applying on class [" + solrConfigClassName + "] as it does not endwith [" + solrJassConfigEnd + "]");
-			}
-		}
-
-    }
 
 	@Override
 	public boolean log(Collection<AuditEventBase> events) {
@@ -255,7 +240,7 @@ public class SolrAuditDestination extends AuditDestination {
 				docs.add(document);
 			}
 			try {
-				final UpdateResponse response = SolrAppUtil.addDocsToSolr(solrClient, docs);
+				final UpdateResponse response = addDocsToSolr(solrClient, docs);
 
 				if (response.getStatus() != 0) {
 					addFailedCount(events.size());
@@ -336,12 +321,19 @@ public class SolrAuditDestination extends AuditDestination {
 					LOG.warn("No Client JAAS config present in solr audit config. Ranger Audit to Kerberized Solr will fail...");
 				}
 			 }
+
 			 LOG.info("Loading SolrClient JAAS config from Ranger audit config if present...");
-			 InMemoryJAASConfiguration.init(props);
-			} catch (Exception e) {
-				LOG.error("ERROR: Unable to load SolrClient JAAS config from Audit config file. Audit to Kerberized Solr will fail...", e);
-		}
-        finally {
+
+			 InMemoryJAASConfiguration conf = InMemoryJAASConfiguration.init(props);
+
+			 KerberosUser kerberosUser = new KerberosJAASConfigUser("Client", conf);
+
+			 if (kerberosUser.getPrincipal() != null) {
+				this.kerberosUser = kerberosUser;
+			 }
+		} catch (Exception e) {
+			LOG.error("ERROR: Unable to load SolrClient JAAS config from Audit config file. Audit to Kerberized Solr will fail...", e);
+		} finally {
 			 String confFileName = System.getProperty(PROP_JAVA_SECURITY_AUTH_LOGIN_CONFIG);
 			 LOG.info("In solrAuditDestination.init() (finally) : JAAS Configuration set as [" + confFileName + "]");
 		}
@@ -453,6 +445,27 @@ public class SolrAuditDestination extends AuditDestination {
 			LOG.error("Unable to initialise the SSLContext", e);
 		}
 		return sslContext;
+	}
+
+	private  UpdateResponse addDocsToSolr(final SolrClient solrClient, final Collection<SolrInputDocument> docs) throws Exception {
+		final UpdateResponse ret;
+
+		try {
+			final PrivilegedExceptionAction<UpdateResponse> action = () -> solrClient.add(docs);
+
+			if (kerberosUser != null) {
+				// execute the privileged action as the given keytab user
+				final KerberosAction kerberosAction = new KerberosAction<>(kerberosUser, action, LOG);
+
+				ret = (UpdateResponse) kerberosAction.execute();
+			} else {
+				ret = action.run();
+			}
+		} catch (Exception e) {
+			throw e;
+		}
+
+		return ret;
 	}
 
 	private InputStream getFileInputStream(String fileName) throws IOException {

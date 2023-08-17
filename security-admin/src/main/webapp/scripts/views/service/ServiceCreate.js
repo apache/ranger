@@ -31,6 +31,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
 	var localization	= require('utils/XALangSupport');
+	var bootbox 		= require('bootbox');
 
 	var ServiceForm		= require('views/service/ServiceForm');
 	var RangerServiceDef	= require('models/RangerServiceDef');
@@ -100,6 +101,9 @@ define(function(require){
 			this.rangerServiceDefModel.fetch({
 			   cache : false,
 			   async : false
+			}).fail(function(e){
+				e.stopPropagation()
+				return
 			});
 		},
 		setupModel : function(){
@@ -176,7 +180,9 @@ define(function(require){
 				msg :'Are you sure want to delete ?',
 				callback : function(){
 					XAUtil.blockUI();
-
+					if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+						$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+					}
 					that.model.destroy({
 						success: function(model, response) {
 							XAUtil.blockUI('unblock');
@@ -243,7 +249,10 @@ define(function(require){
                             		   		}];
                             	   }
                                    var msgHtml = '<b>Connection Failed.</b></br>'+msResponse.msgDesc;
-                                   bootbox.dialog(msgHtml, popupBtnOpts);
+                                    bootbox.dialog({
+                                        message : msgHtml,
+                                        buttons: popupBtnOpts
+                                    });
 								} else {
 										bootbox.alert("Connection Failed.");
 								}

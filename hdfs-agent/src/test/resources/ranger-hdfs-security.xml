@@ -50,4 +50,12 @@
 		</description>
 	</property>
 
+	<property>
+		<name>xasecure.add-hadoop-authorization</name>
+		<value>true</value>
+		<description>
+			Enable fallback to Hadoop Acl
+		</description>
+	</property>
+
 </configuration>

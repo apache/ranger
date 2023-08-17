@@ -19,7 +19,6 @@
   <id>yarn-plugin</id>
   <formats>
     <format>tar.gz</format>
-    <format>zip</format>
   </formats>
   <baseDirectory>${project.parent.name}-${project.version}-yarn-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
@@ -54,13 +53,13 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.eclipse.persistence:eclipselink</include>
-          <include>org.eclipse.persistence:javax.persistence</include>
+          <include>commons-lang:commons-lang:jar:${commons.lang.version}</include>
+          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.noggit:noggit:jar:${noggit.version}</include>
-          <include>org.apache.solr:solr-solrj</include>
+          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -107,7 +106,6 @@
           <include>org.apache.ranger:credentialbuilder</include>
           <include>org.codehaus.woodstox:stax2-api</include>
           <include>com.fasterxml.woodstox:woodstox-core</include>
-          <include>org.apache.htrace:htrace-core4</include>
         </includes>
       </binaries>
     </moduleSet>

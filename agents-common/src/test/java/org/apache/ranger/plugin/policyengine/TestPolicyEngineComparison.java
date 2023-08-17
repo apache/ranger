@@ -138,11 +138,15 @@ public class TestPolicyEngineComparison {
                     myTagEnricher.setAppId("test-compare-my-tags");
                     myTagEnricher.setServiceDef(myServicePolicies.getServiceDef());
                     myTagEnricher.setServiceName(myServiceTags.getServiceName());
+                    myTagEnricher.init();
+
                     myTagEnricher.setServiceTags(myServiceTags);
 
                     otherTagEnricher.setAppId("test-compare-other-tags");
                     otherTagEnricher.setServiceDef(myServicePolicies.getServiceDef());
                     otherTagEnricher.setServiceName(otherServiceTags.getServiceName());
+                    otherTagEnricher.init();
+
                     otherTagEnricher.setServiceTags(otherServiceTags);
 
                     isTagsEqual = TestPolicyEngine.compare(myTagEnricher, otherTagEnricher) && TestPolicyEngine.compare(otherTagEnricher, myTagEnricher);

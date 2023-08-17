@@ -19,28 +19,26 @@
 
 package org.apache.ranger.audit;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.model.AuditEventBase;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestConsumer extends AuditDestination {
-	private static final Log logger = LogFactory.getLog(TestConsumer.class);
+	private static final Logger logger = LoggerFactory.getLogger(TestConsumer.class);
 
 	int countTotal = 0;
 	int sumTotal = 0;
 	int batchCount = 0;
+	AuthzAuditEvent lastEvent = null;
+	AuthzAuditEvent lastOutOfSeqEvent = null;
 	String providerName = getClass().getName();
 	boolean isDown = false;
-
-	List<AuthzAuditEvent> eventList = new ArrayList<AuthzAuditEvent>();
 
 	/*
 	 * (non-Javadoc)
@@ -58,7 +56,8 @@ public class TestConsumer extends AuditDestination {
 			AuthzAuditEvent azEvent = (AuthzAuditEvent) event;
 			sumTotal += azEvent.getEventCount();
 			logger.info("EVENT:" + event);
-			eventList.add(azEvent);
+
+			processEvent(azEvent);
 		}
 		return true;
 	}
@@ -85,7 +84,7 @@ public class TestConsumer extends AuditDestination {
 				AuthzAuditEvent.class);
 		sumTotal += event.getEventCount();
 		logger.info("JSON:" + jsonStr);
-		eventList.add(event);
+		processEvent(event);
 		return true;
 	}
 
@@ -198,13 +197,16 @@ public class TestConsumer extends AuditDestination {
 
 	// Local methods
 	public AuthzAuditEvent isInSequence() {
-		long lastSeq = -1;
-		for (AuthzAuditEvent event : eventList) {
-			if (event.getSeqNum() <= lastSeq) {
-				return event;
+		return lastOutOfSeqEvent;
+	}
+
+	private void processEvent(AuthzAuditEvent azEvent) {
+		if (lastEvent == null) {
+			lastEvent = azEvent;
+		} else if (lastOutOfSeqEvent == null) {
+			if (azEvent.getSeqNum() <= lastEvent.getSeqNum()) {
+				lastOutOfSeqEvent = azEvent;
 			}
-			lastSeq = event.getSeqNum();
 		}
-		return null;
 	}
 }

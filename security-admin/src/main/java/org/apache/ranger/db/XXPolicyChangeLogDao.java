@@ -24,14 +24,14 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.entity.XXPolicyChangeLog;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
-import org.apache.ranger.service.RangerPolicyService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 /**
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Service;
 @Service
 public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
 
-    private static final Log LOG = LogFactory.getLog(XXPolicyChangeLogDao.class);
+    private static final Logger LOG = LoggerFactory.getLogger(XXPolicyChangeLogDao.class);
 
     private static final int POLICY_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER             = 0;
     private static final int POLICY_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER    = 1;
@@ -56,12 +56,13 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
         super(daoManager);
     }
 
-    public List<RangerPolicyDelta> findLaterThan(RangerPolicyService policyService, Long version, Long serviceId) {
+    public List<RangerPolicyDelta> findLaterThan(Long version, Long maxVersion, Long serviceId) {
         final List<RangerPolicyDelta> ret;
         if (version != null) {
             List<Object[]> logs = getEntityManager()
                     .createNamedQuery("XXPolicyChangeLog.findSinceVersion", Object[].class)
                     .setParameter("version", version)
+                    .setParameter("maxVersion", maxVersion)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
 
@@ -81,7 +82,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                     }
                 }
                 if (foundAndRemoved) {
-                    ret = convert(policyService, logs);
+                    ret = convert(logs);
                 } else {
                     ret = null;
                 }
@@ -94,15 +95,16 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
         return ret;
     }
 
-    public List<RangerPolicyDelta> findGreaterThan(RangerPolicyService policyService, Long id, Long serviceId) {
+    public List<RangerPolicyDelta> findGreaterThan(Long id, Long maxVersion, Long serviceId) {
         final List<RangerPolicyDelta> ret;
         if (id != null) {
             List<Object[]> logs = getEntityManager()
                     .createNamedQuery("XXPolicyChangeLog.findGreaterThan", Object[].class)
                     .setParameter("id", id)
+                    .setParameter("maxVersion", maxVersion)
                     .setParameter("serviceId", serviceId)
                     .getResultList();
-            ret = convert(policyService, logs);
+            ret = convert(logs);
         } else {
             ret = null;
         }
@@ -120,7 +122,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
         getEntityManager().createNamedQuery("XXPolicyChangeLog.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
     }
 
-    private List<RangerPolicyDelta> convert(RangerPolicyService policyService, List<Object[]> queryResult) {
+    private List<RangerPolicyDelta> convert(List<Object[]> queryResult) {
 
         final List<RangerPolicyDelta> ret;
 
@@ -134,6 +136,7 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
 
                 Long    logRecordId      = (Long) log[POLICY_CHANGE_LOG_RECORD_ID_COLUMN_NUMBER];
                 Integer policyChangeType = (Integer) log[POLICY_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER];
+                Long    policiesVersion  = (Long) log[POLICY_CHANGE_LOG_RECORD_POLICY_VERSION_COLUMN_NUMBER];
                 String  serviceType      = (String) log[POLICY_CHANGE_LOG_RECORD_SERVICE_TYPE_COLUMN_NUMBER];
                 Long    policyId         = (Long) log[POLICY_CHANGE_LOG_RECORD_POLICY_ID_COLUMN_NUMBER];
 
@@ -141,34 +144,36 @@ public class XXPolicyChangeLogDao extends BaseDao<XXPolicyChangeLog> {
                     XXPolicy xxPolicy = daoManager.getXXPolicy().getById(policyId);
                     if (xxPolicy != null) {
                         try {
-                            policy = policyService.read(policyId);
+                            policy = JsonUtils.jsonToObject(xxPolicy.getPolicyText(), RangerPolicy.class);
+                            policy.setId(policyId);
+                            if (policy.getServiceType() == null) {
+                                policy.setServiceType(serviceType);
+                            }
+                            policy.setVersion(xxPolicy.getVersion());
                         } catch (Exception e) {
                             LOG.error("Cannot read policy:[" + policyId + "]. Should not have come here!! Offending log-record-id:[" + logRecordId + "] and returning...", e);
                             ret.clear();
-                            ret.add(new RangerPolicyDelta(logRecordId, RangerPolicyDelta.CHANGE_TYPE_LOG_ERROR, null));
+                            ret.add(new RangerPolicyDelta(logRecordId, RangerPolicyDelta.CHANGE_TYPE_LOG_ERROR, null, null));
                             break;
                         }
                     } else {
-                        if (LOG.isDebugEnabled()) {
-                            LOG.debug("Policy:[" + policyId + "] not found - log-record - id:[" + logRecordId + "], PolicyChangeType:[" + policyChangeType + "]");
+                        if (policyChangeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE || policyChangeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
+                            LOG.warn((policyChangeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE ? "POLICY_CREATE" : "POLICY_UPDATE") + " type change for policy-id:[" + policyId + "], log-id:[" + logRecordId + "] was not found.. probably already deleted");
+                            // Create a placeholder delta with a dummy policy as the created/updated policy cannot be found - If there is a subsequent POLICY_DELETE, this delta will be cleaned-up in ServiceDBStore.compressDeltas()
                         }
-
-                        // Create a dummy policy as the policy cannot be found - probably already deleted
+                        // Create a placeholder delta with a dummy policy
                         policy = new RangerPolicy();
                         policy.setId(policyId);
-                        policy.setVersion((Long) log[POLICY_CHANGE_LOG_RECORD_POLICY_VERSION_COLUMN_NUMBER]);
+                        policy.setServiceType(serviceType);
                         policy.setPolicyType((Integer) log[POLICY_CHANGE_LOG_RECORD_POLICY_TYPE_COLUMN_NUMBER]);
                         policy.setZoneName((String) log[POLICY_CHANGE_LOG_RECORD_ZONE_NAME_COLUMN_NUMBER]);
                     }
-                    policy.setServiceType(serviceType);
 
-                    ret.add(new RangerPolicyDelta(logRecordId, policyChangeType, policy));
+                    ret.add(new RangerPolicyDelta(logRecordId, policyChangeType, policiesVersion, policy));
                 } else {
-                    if (LOG.isDebugEnabled()) {
-                        LOG.debug("policyId is null! log-record-id:[" + logRecordId + ", service-type:[" + log[POLICY_CHANGE_LOG_RECORD_SERVICE_TYPE_COLUMN_NUMBER] + "], policy-change-type:[" + log[POLICY_CHANGE_LOG_RECORD_CHANGE_TYPE_COLUMN_NUMBER] + "]");
-                    }
+                    LOG.info("delta-reset-event: log-record-id=" + logRecordId + "; service-type=" + serviceType + "; policy-change-type=" + policyChangeType + ". Discarding " + ret.size() + " deltas");
                     ret.clear();
-                    ret.add(new RangerPolicyDelta(logRecordId, policyChangeType, null));
+                    ret.add(new RangerPolicyDelta(logRecordId, policyChangeType, null, null));
                     break;
                 }
             }

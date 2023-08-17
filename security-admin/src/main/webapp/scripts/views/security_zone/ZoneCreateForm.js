@@ -185,6 +185,7 @@ define(function(require) {
                     placeholder: 'Select Service Name',
                     allowClear: true,
                     data: options || [],
+                    width :'600px',
                     initSelection: function(element, callback) {
                         callback(tags);
                     },
@@ -216,6 +217,7 @@ define(function(require) {
                     includeFilter: false,
                     includePagination: false,
                     gridOpts: {
+                        row: Backgrid.Row.extend({}),
                         header: XABackgrid,
                         emptyText: 'No Zone Data Found!!'
                     }

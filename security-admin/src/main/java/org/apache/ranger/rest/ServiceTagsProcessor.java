@@ -21,8 +21,6 @@ package org.apache.ranger.rest;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
@@ -30,15 +28,20 @@ import org.apache.ranger.plugin.model.RangerTagDef;
 import org.apache.ranger.plugin.model.RangerTagResourceMap;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
 import org.apache.ranger.plugin.store.TagStore;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ServiceTagsProcessor {
-	private static final Log LOG = LogFactory.getLog(ServiceTagsProcessor.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ServiceTagsProcessor.class);
+	private static final Logger PERF_LOG_ADD_OR_UPDATE = RangerPerfTracer.getPerfLogger("tags.addOrUpdate");
 
 	private final TagStore tagStore;
 
@@ -87,8 +90,15 @@ public class ServiceTagsProcessor {
 			LOG.debug("==> ServiceTagsProcessor.createOrUpdate()");
 		}
 
+		RangerPerfTracer perfTotal = null;
+		RangerPerfTracer perf      = null;
+
 		Map<Long, RangerTagDef>          tagDefsInStore   = new HashMap<Long, RangerTagDef>();
 		Map<Long, RangerServiceResource> resourcesInStore = new HashMap<Long, RangerServiceResource>();
+
+		if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
+			perfTotal = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.addOrUpdate()");
+		}
 
 		if (MapUtils.isNotEmpty(serviceTags.getTagDefinitions())) {
 			RangerTagDef tagDef = null;
@@ -139,24 +149,38 @@ public class ServiceTagsProcessor {
 					Long                  resourceId        = resource.getId();
 
 					if(StringUtils.isNotEmpty(resource.getGuid())) {
+						if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
+							perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.search_service_resource_by_guid(" + resourceId + ")");
+						}
 						existing = tagStore.getServiceResourceByGuid(resource.getGuid());
+						RangerPerfTracer.logAlways(perf);
 					}
 
-					if(existing == null) {
+					if (existing == null) {
 						if(MapUtils.isNotEmpty(resource.getResourceElements())) {
+							if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
+								perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.search_service_resource_by_signature(" + resourceId + ")");
+							}
 							RangerServiceResourceSignature serializer = new RangerServiceResourceSignature(resource);
 
 							resourceSignature = serializer.getSignature();
 							resource.setResourceSignature(resourceSignature);
 
 							existing = tagStore.getServiceResourceByServiceAndResourceSignature(resource.getServiceName(), resourceSignature);
+
+							RangerPerfTracer.logAlways(perf);
 						}
 					}
 
 					RangerServiceResource resourceInStore = null;
 
+					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.createOrUpdate_service_resource(" + resourceId + ")");
+					}
 					if (existing == null) {
-
+						if (StringUtils.isBlank(resource.getServiceName())) {
+							resource.setServiceName(serviceTags.getServiceName());
+						}
 						resourceInStore = tagStore.createServiceResource(resource);
 
 					} else if (StringUtils.isEmpty(resource.getServiceName()) || MapUtils.isEmpty(resource.getResourceElements())) {
@@ -169,6 +193,7 @@ public class ServiceTagsProcessor {
 					}
 
 					resourcesInStore.put(resourceId, resourceInStore);
+					RangerPerfTracer.logAlways(perf);
 				}
 			} catch (Exception exception) {
 				LOG.error("createServiceResource failed, resource=" + resource, exception);
@@ -187,6 +212,10 @@ public class ServiceTagsProcessor {
 					continue;
 				}
 
+				if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
+					perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.get_tags_for_service_resource(" + resourceInStore.getId() + ")");
+				}
+
 				// Get all tags associated with this resourceId
 				List<RangerTag> associatedTags = null;
 
@@ -195,9 +224,12 @@ public class ServiceTagsProcessor {
 				} catch (Exception exception) {
 					LOG.error("RangerTags cannot be retrieved for resource with guid=" + resourceInStore.getGuid());
 					throw exception;
+				} finally {
+					RangerPerfTracer.logAlways(perf);
 				}
 
 				List<RangerTag> tagsToRetain = new ArrayList<RangerTag>();
+				boolean         isAnyTagUpdated = false;
 
 				List<Long> tagIds = entry.getValue();
 				try {
@@ -215,92 +247,122 @@ public class ServiceTagsProcessor {
 								LOG.debug("Did not find matching tag for tagId=" + tagId);
 							}
 							// create new tag from incoming tag and associate it with service-resource
+							if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
+								perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.create_tag(" + tagId + ")");
+							}
 							RangerTag newTag = tagStore.createTag(incomingTag);
+							RangerPerfTracer.logAlways(perf);
 
 							RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
 
 							tagResourceMap.setTagId(newTag.getId());
 							tagResourceMap.setResourceId(resourceInStore.getId());
-
+							if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
+								perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.create_tagResourceMap(" + tagId + ")");
+							}
 							tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+							RangerPerfTracer.logAlways(perf);
 
 							associatedTags.add(newTag);
 							tagsToRetain.add(newTag);
 
-							continue;
+						} else {
 
-						}
-
-						if (LOG.isDebugEnabled()) {
-							LOG.debug("Found matching tag for tagId=" + tagId + ", matchingTag=" + matchingTag);
-						}
-
-						if (isResourcePrivateTag(incomingTag)) {
-							if (!isResourcePrivateTag(matchingTag)) {
-								// create new tag from incoming tag and associate it with service-resource
-								RangerTag newTag = tagStore.createTag(incomingTag);
-
-								RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
-
-								tagResourceMap.setTagId(newTag.getId());
-								tagResourceMap.setResourceId(resourceInStore.getId());
-
-								tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
-
-								associatedTags.add(newTag);
-								tagsToRetain.add(newTag);
-
-							} else {
-								// Keep this tag, but update it with attribute-values from incoming tag
-								tagsToRetain.add(matchingTag);
-
-								if (StringUtils.equals(incomingTag.getGuid(), matchingTag.getGuid())) {
-									// matching tag was found because of Guid match
-									if (LOG.isDebugEnabled()) {
-										LOG.debug("Updating existing private tag with id=" + matchingTag.getId());
-									}
-									// update private tag with new values
-									incomingTag.setId(matchingTag.getId());
-									tagStore.updateTag(incomingTag);
-								}
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("Found matching tag for tagId=" + tagId + ", matchingTag=" + matchingTag);
 							}
-						} else { // shared model
-							if (isResourcePrivateTag(matchingTag)) {
-								// create new tag from incoming tag and associate it with service-resource
-								RangerTag newTag = tagStore.createTag(incomingTag);
 
-								RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
+							if (isResourcePrivateTag(incomingTag)) {
+								if (!isResourcePrivateTag(matchingTag)) {
+									// create new tag from incoming tag and associate it with service-resource
+									RangerTag newTag = tagStore.createTag(incomingTag);
 
-								tagResourceMap.setTagId(newTag.getId());
-								tagResourceMap.setResourceId(resourceInStore.getId());
-
-								tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
-
-								associatedTags.add(newTag);
-								tagsToRetain.add(newTag);
-
-							} else {
-								// Keep this tag, but update it with attribute-values from incoming tag
-								tagsToRetain.add(matchingTag);
-
-								// Update shared tag with new values
-								incomingTag.setId(matchingTag.getId());
-								tagStore.updateTag(incomingTag);
-
-								// associate with service-resource if not already associated
-								if (findTagInList(matchingTag, associatedTags) == null) {
 									RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
 
-									tagResourceMap.setTagId(matchingTag.getId());
+									tagResourceMap.setTagId(newTag.getId());
 									tagResourceMap.setResourceId(resourceInStore.getId());
 
 									tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+
+									associatedTags.add(newTag);
+									tagsToRetain.add(newTag);
+
+								} else {
+									tagsToRetain.add(matchingTag);
+
+									boolean isTagUpdateNeeded = false;
+
+									// Note that as there is no easy way to check validityPeriods for equality, an easy way to rule out the possibility of validityPeriods
+									// not matching is to check if both old and new tags have empty validityPeriods
+									if (matchingTag.getGuid() != null && matchingTag.getGuid().equals(incomingTag.getGuid())) {
+										if (isMatch(incomingTag, matchingTag) && CollectionUtils.isEmpty(incomingTag.getValidityPeriods()) && CollectionUtils.isEmpty(matchingTag.getValidityPeriods())) {
+											if (LOG.isDebugEnabled()) {
+												LOG.debug("No need to update existing-tag:[" + matchingTag + "] with incoming-tag:[" + incomingTag + "]");
+											}
+										} else {
+											isTagUpdateNeeded = true;
+										}
+									} else {
+										if (CollectionUtils.isEmpty(incomingTag.getValidityPeriods()) && CollectionUtils.isEmpty(matchingTag.getValidityPeriods())) {
+											// Completely matched tags. No need to update
+											if (LOG.isDebugEnabled()) {
+												LOG.debug("No need to update existing-tag:[" + matchingTag + "] with incoming-tag:[" + incomingTag + "]");
+											}
+										} else {
+											isTagUpdateNeeded = true;
+										}
+									}
+									if (isTagUpdateNeeded) {
+											// Keep this tag, and update it with attribute-values and validity schedules from incoming tag
+											if (LOG.isDebugEnabled()) {
+												LOG.debug("Updating existing private tag with id=" + matchingTag.getId());
+											}
+											incomingTag.setId(matchingTag.getId());
+											tagStore.updateTag(incomingTag);
+											isAnyTagUpdated = true;
+									}
 								}
+							} else { // shared model
+								if (isResourcePrivateTag(matchingTag)) {
+									// create new tag from incoming tag and associate it with service-resource
+									RangerTag newTag = tagStore.createTag(incomingTag);
 
+									RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
+
+									tagResourceMap.setTagId(newTag.getId());
+									tagResourceMap.setResourceId(resourceInStore.getId());
+
+									tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+
+									associatedTags.add(newTag);
+									tagsToRetain.add(newTag);
+
+								} else {
+									// Keep this tag, but update it with attribute-values from incoming tag
+									tagsToRetain.add(matchingTag);
+
+									// Update shared tag with new values
+									incomingTag.setId(matchingTag.getId());
+									tagStore.updateTag(incomingTag);
+
+									// associate with service-resource if not already associated
+									if (findTagInList(matchingTag, associatedTags) == null) {
+										RangerTagResourceMap tagResourceMap = new RangerTagResourceMap();
+
+										tagResourceMap.setTagId(matchingTag.getId());
+										tagResourceMap.setResourceId(resourceInStore.getId());
+
+										tagResourceMap = tagStore.createTagResourceMap(tagResourceMap);
+									} else {
+										isAnyTagUpdated = true;
+									}
+
+								}
 							}
-						}
 
+						}
 					}
+
 				} catch (Exception exception) {
 					LOG.error("createRangerTagResourceMap failed", exception);
 					throw exception;
@@ -331,8 +393,22 @@ public class ServiceTagsProcessor {
 						throw exception;
 					}
 				}
+				if (isAnyTagUpdated) {
+					if(RangerPerfTracer.isPerfTraceEnabled(PERF_LOG_ADD_OR_UPDATE)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_LOG_ADD_OR_UPDATE, "tags.refreshServiceResource(" + resourceInStore.getId() + ")");
+					}
+					tagStore.refreshServiceResource(resourceInStore.getId());
+					RangerPerfTracer.logAlways(perf);
+				} else {
+					if (CollectionUtils.isEmpty(tagIds)) {
+						// No tags associated with the resource - delete the resource too
+						tagStore.deleteServiceResource(resourceInStore.getId());
+					}
+				}
 			}
 		}
+
+		RangerPerfTracer.logAlways(perfTotal);
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== ServiceTagsProcessor.createOrUpdate()");
@@ -364,7 +440,7 @@ public class ServiceTagsProcessor {
 		return ret;
 	}
 	private boolean isResourcePrivateTag(RangerTag tag) {
-		return tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE;
+		return tag.getOwner() == null || tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE;
 	}
 
 	private RangerTag findMatchingTag(RangerTag incomingTag, List<RangerTag> existingTags) throws Exception {
@@ -380,40 +456,51 @@ public class ServiceTagsProcessor {
 			if (isResourcePrivateTag(incomingTag)) {
 
 				for (RangerTag existingTag : existingTags) {
-
-					if (StringUtils.equals(incomingTag.getType(), existingTag.getType())) {
-
-						// Check attribute values
-						Map<String, String> incomingTagAttributes = incomingTag.getAttributes();
-						Map<String, String> existingTagAttributes = existingTag.getAttributes();
-
-						if (CollectionUtils.isEqualCollection(incomingTagAttributes.keySet(), existingTagAttributes.keySet())) {
-
-							boolean matched = true;
-
-							for (Map.Entry<String, String> entry : incomingTagAttributes.entrySet()) {
-
-								String key = entry.getKey();
-								String value = entry.getValue();
-
-								if (!StringUtils.equals(value, existingTagAttributes.get(key))) {
-									matched = false;
-									break;
-								}
-
-							}
-							if (matched) {
-								ret = existingTag;
-								break;
-							}
-						}
-
+					if (isMatch(incomingTag, existingTag)) {
+						ret = existingTag;
+						break;
 					}
 				}
 			}
 
 		}
 
+		return ret;
+	}
+
+	private boolean isMatch(final RangerTag incomingTag, final RangerTag existingTag) {
+		boolean ret = false;
+
+		if (incomingTag != null && existingTag != null) {
+
+			if (StringUtils.equals(incomingTag.getType(), existingTag.getType())) {
+
+				// Check attribute values
+				Map<String, String> incomingTagAttributes = incomingTag.getAttributes() != null ? incomingTag.getAttributes() : Collections.emptyMap();
+				Map<String, String> existingTagAttributes = existingTag.getAttributes() != null ? existingTag.getAttributes() : Collections.emptyMap();
+
+				if (CollectionUtils.isEqualCollection(incomingTagAttributes.keySet(), existingTagAttributes.keySet())) {
+
+					boolean matched = true;
+
+					for (Map.Entry<String, String> entry : incomingTagAttributes.entrySet()) {
+
+						String key = entry.getKey();
+						String value = entry.getValue();
+
+						if (!StringUtils.equals(value, existingTagAttributes.get(key))) {
+							matched = false;
+							break;
+						}
+
+					}
+					if (matched) {
+						ret = true;
+					}
+				}
+
+			}
+		}
 		return ret;
 	}
 

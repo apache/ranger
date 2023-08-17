@@ -29,11 +29,12 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHost;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.client.CredentialsProvider;
@@ -55,12 +56,14 @@ import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestClientBuilder;
 import org.elasticsearch.client.RestHighLevelClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.Subject;
 import javax.security.auth.kerberos.KerberosTicket;
 
 public class ElasticSearchAuditDestination extends AuditDestination {
-    private static final Log LOG = LogFactory.getLog(ElasticSearchAuditDestination.class);
+    private static final Logger LOG = LoggerFactory.getLogger(ElasticSearchAuditDestination.class);
 
     public static final String CONFIG_URLS = "urls";
     public static final String CONFIG_PORT = "port";
@@ -148,7 +151,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                         addFailedCount(1);
                         logFailedEvent(Arrays.asList(itemRequest), itemResponse.getFailureMessage());
                     } else {
-                        if(LOG.isDebugEnabled()) {
+                        if (LOG.isDebugEnabled()) {
                             LOG.debug(String.format("Indexed %s", itemRequest.getEventKey()));
                         }
                         addSuccessCount(1);
@@ -185,18 +188,20 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                 }
             }
         }
-        KerberosTicket ticket = CredentialsProviderUtil.getTGT(subject);
-        try {
-            if (new Date().getTime() > ticket.getEndTime().getTime()){
-                client = null;
-                CredentialsProviderUtil.ticketExpireTime80 = 0;
-                newClient();
-            } else if (CredentialsProviderUtil.ticketWillExpire(ticket)) {
-                subject = CredentialsProviderUtil.login(user, password);
+        if (subject != null) {
+            KerberosTicket ticket = CredentialsProviderUtil.getTGT(subject);
+            try {
+                if (new Date().getTime() > ticket.getEndTime().getTime()) {
+                    client = null;
+                    CredentialsProviderUtil.ticketExpireTime80 = 0;
+                    newClient();
+                } else if (CredentialsProviderUtil.ticketWillExpire(ticket)) {
+                    subject = CredentialsProviderUtil.login(user, password);
+                }
+            } catch (PrivilegedActionException e) {
+                LOG.error("PrivilegedActionException:", e);
+                throw new RuntimeException(e);
             }
-        } catch (PrivilegedActionException e) {
-            LOG.error("PrivilegedActionException:", e);
-            throw new RuntimeException(e);
         }
         return client;
     }
@@ -209,13 +214,18 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                         .map(x -> new HttpHost(x, port, protocol))
                         .<HttpHost>toArray(i -> new HttpHost[i])
         );
-        if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password)) {
+        ThreadFactory clientThreadFactory = new ThreadFactoryBuilder()
+                .setNameFormat("ElasticSearch rest client %s")
+                .setDaemon(true)
+                .build();
+        if (StringUtils.isNotBlank(user) && StringUtils.isNotBlank(password) && !user.equalsIgnoreCase("NONE") && !password.equalsIgnoreCase("NONE")) {
             if (password.contains("keytab") && new File(password).exists()) {
                 final KerberosCredentialsProvider credentialsProvider =
                         CredentialsProviderUtil.getKerberosCredentials(user, password);
                 Lookup<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create()
                         .register(AuthSchemes.SPNEGO, new SPNegoSchemeFactory()).build();
                 restClientBuilder.setHttpClientConfigCallback(clientBuilder -> {
+                    clientBuilder.setThreadFactory(clientThreadFactory);
                     clientBuilder.setDefaultCredentialsProvider(credentialsProvider);
                     clientBuilder.setDefaultAuthSchemeRegistry(authSchemeRegistry);
                     return clientBuilder;
@@ -223,14 +233,20 @@ public class ElasticSearchAuditDestination extends AuditDestination {
             } else {
                 final CredentialsProvider credentialsProvider =
                         CredentialsProviderUtil.getBasicCredentials(user, password);
-                restClientBuilder.setHttpClientConfigCallback(clientBuilder ->
-                        clientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+                restClientBuilder.setHttpClientConfigCallback(clientBuilder -> {
+                    clientBuilder.setThreadFactory(clientThreadFactory);
+                    clientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                    return clientBuilder;
+                });
             }
         } else {
             LOG.error("ElasticSearch Credentials not provided!!");
             final CredentialsProvider credentialsProvider = null;
-            restClientBuilder.setHttpClientConfigCallback(clientBuilder ->
-                    clientBuilder.setDefaultCredentialsProvider(credentialsProvider));
+            restClientBuilder.setHttpClientConfigCallback(clientBuilder -> {
+                clientBuilder.setThreadFactory(clientThreadFactory);
+                clientBuilder.setDefaultCredentialsProvider(credentialsProvider);
+                return clientBuilder;
+            });
         }
         return restClientBuilder;
     }
@@ -252,7 +268,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
             } catch (Exception e) {
                 LOG.warn("Error validating index " + this.index);
             }
-            if(exits) {
+            if (exits) {
                 if (LOG.isDebugEnabled()) {
                     LOG.debug("Index exists");
                 }
@@ -265,7 +281,7 @@ public class ElasticSearchAuditDestination extends AuditDestination {
                 long now = System.currentTimeMillis();
                 long elapsed = now - lastLoggedAt;
                 if (elapsed > TimeUnit.MINUTES.toMillis(1)) {
-                    LOG.fatal("Can't connect to ElasticSearch server: " + connectionString(), t);
+                    LOG.error("Can't connect to ElasticSearch server: " + connectionString(), t);
                     return now;
                 } else {
                     return lastLoggedAt;

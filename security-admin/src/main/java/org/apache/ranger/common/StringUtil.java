@@ -20,22 +20,26 @@
  package org.apache.ranger.common;
 
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Component
 public class StringUtil implements Serializable {
-	private static final Logger logger = Logger.getLogger(StringUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(StringUtil.class);
 
-	static final public int MIN_PASSWORD_LENGTH = 8;
+	static final public String VALIDATION_CRED = "(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).{8,}";
 
-        static final public String VALIDATION_NAME = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s_. -@]|[\u00C0-\u017F])+$";
-	static final public String VALIDATION_TEXT = "[a-zA-Z0-9\\ \"!@#$%^&amp;*()-_=+;:'&quot;|~`&lt;&gt;?/{}\\.\\,\\-\\?<>]*";
+	static final public String VALIDATION_NAME = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-zA-Z0-9\\s_. -@]|[\u00C0-\u017F])+$";
+	static final public String VALIDATION_TEXT = "[a-zA-Z0-9\\ \"!@#$%^&amp;*()-_=+;:'&quot;|~`&lt;&gt;?/{}\\.\\,\\-\\?<>\\x00-\\x7F\\p{L}-]*";
 	static final public String VALIDATION_LOGINID = "^([A-Za-z0-9_]|[\u00C0-\u017F])([a-z0-9,._\\-+/@= ]|[\u00C0-\u017F])+$";
 
 	static final public String VALIDATION_ALPHA = "[a-z,A-Z]*";
@@ -122,23 +126,8 @@ public class StringUtil implements Serializable {
 			return false;
 		}
 		password = password.trim();
-		if (password.length() < MIN_PASSWORD_LENGTH) {
-			return false;
-		}
-
-		boolean hasAlpha = false;
-		boolean hasNum = false;
-		for (int i = 0; i < password.length(); i++) {
-			char ch = password.charAt(i);
-
-			if (Character.isDigit(ch)) {
-				hasNum = true;
-			} else if (Character.isLetter(ch)) {
-				hasAlpha = true;
-			}
-		}
-
-		if (!hasAlpha || !hasNum) {
+		boolean checkPassword = password.matches(VALIDATION_CRED);
+		if (!checkPassword) {
 			return false;
 		}
 
@@ -161,14 +150,21 @@ public class StringUtil implements Serializable {
 	}
 
 	public boolean regExPatternMatch(String expression, String inputStr) {
-		Pattern pattern = compiledRegEx.get(expression);
-		if (pattern == null) {
-			pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
-			compiledRegEx.put(expression, pattern);
+		boolean ret = false;
+
+		if (expression != null && inputStr != null) {
+			Pattern pattern = compiledRegEx.get(expression);
+
+			if (pattern == null) {
+				pattern = Pattern.compile(expression, Pattern.CASE_INSENSITIVE);
+				compiledRegEx.put(expression, pattern);
+			}
+
+			Matcher matcher = pattern.matcher(inputStr);
+			ret = matcher.matches();
 		}
 
-		Matcher matcher = pattern.matcher(inputStr);
-		return matcher.matches();
+		return ret;
 	}
 
 	public boolean validateString(String regExStr, String str) {
@@ -216,7 +212,7 @@ public class StringUtil implements Serializable {
 	}
 
 	/**
-	 * @param firstName
+	 * @param name
 	 * @return
 	 */
 	public boolean isValidName(String name) {
@@ -256,6 +252,10 @@ public class StringUtil implements Serializable {
 				:	str.indexOf("@") >= 0 ?
 						str.substring(0,str.indexOf("@"))
 						: str;
+	}
+
+	public static String getUTFEncodedString(String username) throws UnsupportedEncodingException {
+		return URLEncoder.encode(username, StandardCharsets.UTF_8.toString());
 	}
 
 }

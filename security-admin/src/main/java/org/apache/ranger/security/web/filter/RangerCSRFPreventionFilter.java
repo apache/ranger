@@ -31,13 +31,16 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.PropertiesUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerCSRFPreventionFilter implements Filter {
 	
-	private static final Logger LOG = Logger.getLogger(RangerCSRFPreventionFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerCSRFPreventionFilter.class);
 		
 	public static final String BROWSER_USER_AGENT_PARAM = "ranger.rest-csrf.browser-useragents-regex";
 	public static final String BROWSER_USER_AGENTS_DEFAULT = "Mozilla,Opera,Chrome";
@@ -46,6 +49,7 @@ public class RangerCSRFPreventionFilter implements Filter {
 	public static final String CUSTOM_HEADER_PARAM = "ranger.rest-csrf.custom-header";
 	public static final String HEADER_DEFAULT = "X-XSRF-HEADER";
 	public static final String HEADER_USER_AGENT = "User-Agent";
+	public static final String CSRF_TOKEN = "_csrfToken";
 	private static final boolean IS_CSRF_ENABLED = PropertiesUtil.getBooleanProperty("ranger.rest-csrf.enabled", true);
 
 	private String  headerName = HEADER_DEFAULT;
@@ -147,22 +151,45 @@ public class RangerCSRFPreventionFilter implements Filter {
 		void sendError(int code, String message) throws IOException;
 	}	
 	
-	public void handleHttpInteraction(HttpInteraction httpInteraction)
+	public void handleHttpInteraction(HttpInteraction httpInteraction, boolean spnegoEnabled, boolean trustedProxyEnabled)
 			throws IOException, ServletException {
-		if (httpInteraction.getHeader(headerName) != null
+
+		HttpSession session   = ((ServletFilterHttpInteraction) httpInteraction).getSession();
+		String clientCsrfToken = httpInteraction.getHeader(headerName);
+		String actualCsrfToken = StringUtils.EMPTY;
+
+		if (session != null) {
+			actualCsrfToken = (String) session.getAttribute(CSRF_TOKEN);
+		} else {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Session is null");
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("actualCsrfToken = " + actualCsrfToken + " clientCsrfToken = " + clientCsrfToken +
+					"trustedProxy = " + trustedProxyEnabled + " for " + ((ServletFilterHttpInteraction) httpInteraction).httpRequest.getRequestURI());
+		}
+		/* When the request is from Knox, then spnegoEnabled and trustedProxyEnabled are true.
+		 * In this case Knox inserts XSRF header with proper value for POST & PUT requests and hence proceed with authentication filter
+		 */
+		if ((spnegoEnabled && trustedProxyEnabled) || clientCsrfToken != null && clientCsrfToken.equals(actualCsrfToken)
 				|| !isBrowser(httpInteraction.getHeader(HEADER_USER_AGENT))
 				|| methodsToIgnore.contains(httpInteraction.getMethod())) {
 			httpInteraction.proceed();
 		}else {
-			httpInteraction.sendError(HttpServletResponse.SC_BAD_REQUEST,"Missing Required Header for CSRF Vulnerability Protection");
+			LOG.error("Missing header or invalid Header value for CSRF Vulnerability Protection");
+			httpInteraction.sendError(HttpServletResponse.SC_BAD_REQUEST,"Missing header or invalid Header value for CSRF Vulnerability Protection");
 		}
 	}
-	
+
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 		if (IS_CSRF_ENABLED) {
 			final HttpServletRequest httpRequest = (HttpServletRequest)request;
 		    final HttpServletResponse httpResponse = (HttpServletResponse)response;
-		    handleHttpInteraction(new ServletFilterHttpInteraction(httpRequest, httpResponse, chain));
+		    Boolean spnegoEnabled = httpRequest.getAttribute("spnegoEnabled") != null ? Boolean.valueOf(String.valueOf(httpRequest.getAttribute("spnegoEnabled"))) : false;
+		    Boolean trustedProxyEnabled = httpRequest.getAttribute("trustedProxyEnabled") != null ? Boolean.valueOf(String.valueOf(httpRequest.getAttribute("trustedProxyEnabled"))) : false;
+		    handleHttpInteraction(new ServletFilterHttpInteraction(httpRequest, httpResponse, chain), spnegoEnabled, trustedProxyEnabled);
 		}else{
 			chain.doFilter(request, response);
 		}
@@ -208,6 +235,10 @@ public class RangerCSRFPreventionFilter implements Filter {
 		@Override
 		public void proceed() throws IOException, ServletException {
 			chain.doFilter(httpRequest, httpResponse);
+		}
+
+		public HttpSession getSession() {
+			return httpRequest.getSession();
 		}
 
 		@Override

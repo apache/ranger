@@ -21,15 +21,15 @@ package org.apache.ranger.audit.queue;
 
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.AuditDestination;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.BaseAuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class AuditQueue extends BaseAuditHandler {
-	private static final Log LOG = LogFactory.getLog(AuditQueue.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AuditQueue.class);
 
 	public static final int AUDIT_MAX_QUEUE_SIZE_DEFAULT = 1024 * 1024;
 	public static final int AUDIT_BATCH_INTERVAL_DEFAULT_MS = 3000;
@@ -114,7 +114,7 @@ public abstract class AuditQueue extends BaseAuditHandler {
 			fileSpooler = new AuditFileSpool(this, consumer);
 			if (!fileSpooler.init(props, basePropertyName)) {
 				fileSpoolerEnabled = false;
-				LOG.fatal("Couldn't initialize file spooler. Disabling it. queue="
+				LOG.error("Couldn't initialize file spooler. Disabling it. queue="
 						+ getName() + ", consumer=" + consumer.getName());
 			}
 		} else {

@@ -20,8 +20,6 @@
 package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.service.RangerAuthContext;
 import org.apache.ranger.plugin.util.DownloaderTask;
@@ -29,27 +27,27 @@ import org.apache.ranger.plugin.util.DownloadTrigger;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
 public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
-    private static final Log LOG = LogFactory.getLog(RangerUserStoreEnricher.class);
+    private static final Logger LOG                    = LoggerFactory.getLogger(RangerUserStoreEnricher.class);
+    private static final Logger PERF_SET_USERSTORE_LOG = RangerPerfTracer.getPerfLogger("userstoreenricher.setuserstore");
 
-    private static final Log PERF_SET_USERSTORE_LOG      = RangerPerfTracer.getPerfLogger("userstoreenricher.setuserstore");
+    public static final String USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION = "userStoreRefresherPollingInterval";
+    public static final String USERSTORE_RETRIEVER_CLASSNAME_OPTION       = "userStoreRetrieverClassName";
 
-
-    private static final String USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION = "userStoreRefresherPollingInterval";
-    private static final String USERSTORE_RETRIEVER_CLASSNAME_OPTION       = "userStoreRetrieverClassName";
-
-    private RangerUserStoreRefresher                 userStoreRefresher;
-    private RangerUserStoreRetriever                 userStoreRetriever;
-    private RangerUserStore							 rangerUserStore;
-    private boolean                                  disableCacheIfServiceNotFound = true;
-
-    private final BlockingQueue<DownloadTrigger>     userStoreDownloadQueue = new LinkedBlockingQueue<>();
-    private Timer                                    userStoreDownloadTimer;
+    private       RangerUserStoreRefresher       userStoreRefresher;
+    private       RangerUserStoreRetriever       userStoreRetriever;
+    private       RangerUserStore                rangerUserStore;
+    private       boolean                        disableCacheIfServiceNotFound = true;
+    private       boolean                        dedupStrings                  = true;
+    private final BlockingQueue<DownloadTrigger> userStoreDownloadQueue = new LinkedBlockingQueue<>();
+    private       Timer                          userStoreDownloadTimer;
 
     @Override
     public void init() {
@@ -59,9 +57,11 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
 
         super.init();
 
+        String propertyPrefix              = getPropertyPrefix();
         String userStoreRetrieverClassName = getOption(USERSTORE_RETRIEVER_CLASSNAME_OPTION);
+        long   pollingIntervalMs           = getLongOption(USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, 3600 * 1000);
 
-        long pollingIntervalMs = getLongOption(USERSTORE_REFRESHER_POLLINGINTERVAL_OPTION, 3600 * 1000);
+        dedupStrings = getBooleanConfig(propertyPrefix + ".dedup.strings", true);
 
         if (StringUtils.isNotBlank(userStoreRetrieverClassName)) {
 
@@ -82,7 +82,6 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
             }
 
             if (userStoreRetriever != null) {
-                String propertyPrefix    = "ranger.plugin." + serviceDef.getName();
                 disableCacheIfServiceNotFound = getBooleanConfig(propertyPrefix + ".disable.cache.if.servicenotfound", true);
                 String cacheDir      = getConfig(propertyPrefix + ".policy.cache.dir", null);
                 String cacheFilename = String.format("%s_%s_userstore.json", appId, serviceName);
@@ -96,9 +95,11 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
                 userStoreRetriever.setServiceDef(serviceDef);
                 userStoreRetriever.setAppId(appId);
                 userStoreRetriever.setPluginConfig(getPluginConfig());
+                userStoreRetriever.setPluginContext(getPluginContext());
                 userStoreRetriever.init(enricherDef.getEnricherOptions());
 
                 userStoreRefresher = new RangerUserStoreRefresher(userStoreRetriever, this, null, -1L, userStoreDownloadQueue, cacheFile);
+                LOG.info("Created Thread(RangerUserStoreRefresher(" + getName() + ")");
 
                 try {
                     userStoreRefresher.populateUserStoreInfo();
@@ -192,7 +193,12 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
                 perf = RangerPerfTracer.getPerfTracer(PERF_SET_USERSTORE_LOG, "RangerUserStoreEnricher.setRangerUserStore(newUserStoreVersion=" + rangerUserStore.getUserStoreVersion() + ")");
             }
 
+            if (dedupStrings) {
+                rangerUserStore.dedupStrings();
+            }
+
             this.rangerUserStore = rangerUserStore;
+
             RangerPerfTracer.logAlways(perf);
         }
 
@@ -201,6 +207,12 @@ public class RangerUserStoreEnricher extends RangerAbstractContextEnricher {
             LOG.debug("<== RangerUserStoreEnricher.setRangerUserStore(rangerUserStore=" + rangerUserStore + ")");
         }
 
+    }
+
+    public Long getUserStoreVersion() {
+        RangerUserStore localUserStore = this.rangerUserStore;
+
+        return localUserStore != null ? localUserStore.getUserStoreVersion() : null;
     }
 
     @Override

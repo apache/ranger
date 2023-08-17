@@ -19,7 +19,6 @@
   <id>hdfs-plugin</id>
   <formats>
      <format>tar.gz</format>
-     <format>zip</format>
   </formats>
   <baseDirectory>${project.parent.name}-${project.version}-hdfs-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
@@ -53,6 +52,8 @@
           <include>commons-cli:commons-cli</include>
           <include>commons-collections:commons-collections</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+          <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
+          <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-lang:commons-lang</include>
           <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
@@ -61,8 +62,8 @@
           <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.codehaus.woodstox:stax2-api</include>
-          <include>com.fasterxml.woodstox:woodstox-core</include>
           <include>org.apache.htrace:htrace-core4</include>
+          <include>com.fasterxml.woodstox:woodstox-core</include>
         </includes>
      </binaries>
     </moduleSet>
@@ -82,13 +83,13 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.eclipse.persistence:javax.persistence</include>
-          <include>org.eclipse.persistence:eclipselink</include>
+          <include>commons-lang:commons-lang</include>
+          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
           <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
           <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.noggit:noggit:jar:${noggit.version}</include>
-          <include>org.apache.solr:solr-solrj</include>
+          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>

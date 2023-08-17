@@ -27,17 +27,17 @@ import java.util.Set;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.MessageEnums;
+import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.SearchField;
 import org.apache.ranger.common.SortField;
 import org.apache.ranger.common.SearchField.DATA_TYPE;
 import org.apache.ranger.common.SearchField.SEARCH_TYPE;
 import org.apache.ranger.entity.*;
+import org.apache.ranger.plugin.conditionevaluator.RangerScriptConditionEvaluator;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
@@ -52,14 +52,21 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 import org.apache.ranger.view.RangerServiceDefList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V extends RangerServiceDef>
 		extends RangerBaseModelService<T, V> {
-	private static final Log LOG = LogFactory.getLog(RangerServiceDefServiceBase.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefServiceBase.class);
 
 	private static final String OPTION_RESOURCE_ACCESS_TYPE_RESTRICTIONS = "__accessTypeRestrictions";
 	private static final String OPTION_RESOURCE_IS_VALID_LEAF            = "__isValidLeaf";
+	public static final String PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION = "ranger.servicedef.enableImplicitConditionExpression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_EVALUATOR   = RangerScriptConditionEvaluator.class.getCanonicalName();
+	public static final String IMPLICIT_CONDITION_EXPRESSION_NAME        = "_expression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_LABEL       = "Enter boolean expression";
+	public static final String IMPLICIT_CONDITION_EXPRESSION_DESC        = "Boolean expression";
 
 	@Autowired
 	RangerAuditFields<?> rangerAuditFields;
@@ -110,11 +117,12 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 			serviceDef.setResources(resources);
 		}
 
-		List<XXAccessTypeDef> xAccessTypes = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
+		List<XXAccessTypeDef>     xAccessTypes  = daoMgr.getXXAccessTypeDef().findByServiceDefId(serviceDefId);
+		Map<String, List<String>> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByServiceDefId(serviceDefId);
 		if (!stringUtil.isEmpty(xAccessTypes)) {
 			List<RangerAccessTypeDef> accessTypes = new ArrayList<RangerAccessTypeDef>();
 			for (XXAccessTypeDef xAtd : xAccessTypes) {
-				RangerAccessTypeDef accessType = populateXXToRangerAccessTypeDef(xAtd);
+				RangerAccessTypeDef accessType = populateXXToRangerAccessTypeDef(xAtd, impliedGrants.get(xAtd.getName()));
 				accessTypes.add(accessType);
 			}
 			serviceDef.setAccessTypes(accessTypes);
@@ -199,6 +207,8 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		}
 		serviceDef.setDataMaskDef(dataMaskDef);
 		serviceDef.setRowFilterDef(rowFilterDef);
+
+		addImplicitConditionExpressionIfNeeded(serviceDef);
 
 		ServiceDefUtil.normalize(serviceDef);
 
@@ -405,17 +415,27 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 	}
 	
 	public RangerAccessTypeDef populateXXToRangerAccessTypeDef(XXAccessTypeDef xObj) {
+		List<String> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByATDId(xObj.getId());
+
+		return populateXXToRangerAccessTypeDef(xObj, impliedGrants);
+	}
+
+	public RangerAccessTypeDef populateXXToRangerAccessTypeDef(XXAccessTypeDef xObj, List<String> impliedGrants) {
 		RangerAccessTypeDef vObj = new RangerAccessTypeDef();
+
+		if (impliedGrants == null) {
+			impliedGrants = new ArrayList<>();
+		}
+
 		vObj.setItemId(xObj.getItemId());
 		vObj.setName(xObj.getName());
 		vObj.setLabel(xObj.getLabel());
 		vObj.setRbKeyLabel(xObj.getRbkeylabel());
-		
-		List<String> impliedGrants = daoMgr.getXXAccessTypeDefGrants().findImpliedGrantsByATDId(xObj.getId());
 		vObj.setImpliedGrants(impliedGrants);
+
 		return vObj;
 	}
-	
+
 	public XXPolicyConditionDef populateRangerPolicyConditionDefToXX(RangerPolicyConditionDef vObj,
 			XXPolicyConditionDef xObj, XXServiceDef serviceDef, int operationContext) {
 		if(serviceDef == null) {
@@ -582,9 +602,10 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		RangerServiceDefList retList = new RangerServiceDefList();
 		int startIndex = searchFilter.getStartIndex();
 		int pageSize = searchFilter.getMaxRows();
+		String denyCondition = searchFilter.getParam(SearchFilter.FETCH_DENY_CONDITION);
 		searchFilter.setStartIndex(0);
 		searchFilter.setMaxRows(Integer.MAX_VALUE);
-	
+
 		boolean isAuditPage=false;
 		if(searchFilter.getParam("pageSource")!=null){
 			isAuditPage=true;
@@ -593,7 +614,7 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 				retList);
 		List<T> permittedServiceDefs = new ArrayList<T>();
 		for (T xSvcDef : xSvcDefList) {
-			if (bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage) ) {
+			if ((bizUtil.hasAccess(xSvcDef, null) || (bizUtil.isAdmin() && isAuditPage)) || ("true".equals(denyCondition))) {
 				permittedServiceDefs.add(xSvcDef);
 			}
 		}
@@ -695,4 +716,58 @@ public abstract class RangerServiceDefServiceBase<T extends XXServiceDefBase, V 
 		return ret;
 	}
 
+
+	boolean addImplicitConditionExpressionIfNeeded(RangerServiceDef serviceDef) {
+		boolean ret                      = false;
+		boolean implicitConditionDefault = PropertiesUtil.getBooleanProperty(PROP_ENABLE_IMPLICIT_CONDITION_EXPRESSION, true);
+		boolean implicitConditionEnabled = ServiceDefUtil.getBooleanValue(serviceDef.getOptions(), RangerServiceDef.OPTION_ENABLE_IMPLICIT_CONDITION_EXPRESSION, implicitConditionDefault);
+
+		if (implicitConditionEnabled) {
+			boolean                        exists        = false;
+			Long                           maxItemId     = 0L;
+			List<RangerPolicyConditionDef> conditionDefs = serviceDef.getPolicyConditions();
+
+			if (conditionDefs == null) {
+				conditionDefs = new ArrayList<>();
+			}
+
+			for (RangerPolicyConditionDef conditionDef : conditionDefs) {
+				if (StringUtils.equalsIgnoreCase(conditionDef.getEvaluator(), IMPLICIT_CONDITION_EXPRESSION_EVALUATOR)) {
+					exists = true;
+
+					break;
+				}
+
+				if (conditionDef.getItemId() != null && maxItemId < conditionDef.getItemId()) {
+					maxItemId = conditionDef.getItemId();
+				}
+			}
+
+			if (!exists) {
+				RangerPolicyConditionDef conditionDef = new RangerPolicyConditionDef();
+				Map<String, String>      options      = new HashMap<>();
+
+				options.put("ui.isMultiline", "true");
+
+				conditionDef.setItemId(maxItemId + 1);
+				conditionDef.setName(IMPLICIT_CONDITION_EXPRESSION_NAME);
+				conditionDef.setLabel(IMPLICIT_CONDITION_EXPRESSION_LABEL);
+				conditionDef.setDescription(IMPLICIT_CONDITION_EXPRESSION_DESC);
+				conditionDef.setEvaluator(IMPLICIT_CONDITION_EXPRESSION_EVALUATOR);
+				conditionDef.setEvaluatorOptions(options);
+
+				conditionDefs.add(conditionDef);
+
+				serviceDef.setPolicyConditions(conditionDefs);
+
+				ret = true;
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("addImplicitConditionExpressionIfNeeded(serviceType={}): implicitConditionDefault={}, implicitConditionEnabled={}, conditionDefs={}, ret={}", serviceDef.getName(), implicitConditionDefault, implicitConditionEnabled, serviceDef.getPolicyConditions(), ret);
+		}
+
+		return ret;
+	}
 }

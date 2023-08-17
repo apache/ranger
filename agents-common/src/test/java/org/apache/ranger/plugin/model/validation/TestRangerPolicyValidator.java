@@ -205,6 +205,12 @@ public class TestRangerPolicyValidator {
 		when(_store.getServiceByName("service-name2")).thenReturn(service2);
 
 		when(_policy.getService()).thenReturn("service-name2");
+
+		RangerPolicyResourceSignature policySignature = mock(RangerPolicyResourceSignature.class);
+		when(policySignature.getSignature()).thenReturn("hash-1");
+
+		when(_factory.createPolicyResourceSignature(_policy)).thenReturn(policySignature);
+
 		when(_store.getServiceByName("service-name2")).thenReturn(service2);
 		action = Action.UPDATE;
 
@@ -730,26 +736,26 @@ public class TestRangerPolicyValidator {
 		when(_policy.getIsEnabled()).thenReturn(true); // ensure policy is enabled
 		_failures.clear(); Assert.assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.CREATE));
 		_utils.checkFailureForSemanticError(_failures, "resources");
-		// same check should pass if the policy is disabled
+		// same check should fail even if the policy is disabled
 		when(_policy.getIsEnabled()).thenReturn(false);
-		_failures.clear(); Assert.assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.CREATE));
-		Assert.assertTrue("failures collection wasn't empty!", _failures.isEmpty());
+		_failures.clear(); Assert.assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.CREATE));
+		_utils.checkFailureForSemanticError(_failures, "resources");
 
 		// For Update match with itself is not a problem as long as it isn't itself, i.e. same id.
 		when(_policy.getIsEnabled()).thenReturn(true); // ensure policy is enabled
 		when(policy1.getId()).thenReturn(103L);
 		when(_policy.getId()).thenReturn(103L);
 		Assert.assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
-		
+
 		// matching policy can't be some other policy (i.e. different id) because that implies a conflict.
 		when(policy1.getId()).thenReturn(104L);
 		Assert.assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
 		_utils.checkFailureForSemanticError(_failures, "resources");
 		// same check should pass if the policy is disabled
 		when(_policy.getIsEnabled()).thenReturn(false);
-		_failures.clear(); Assert.assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
-		Assert.assertTrue("failures collection wasn't empty!", _failures.isEmpty());
-		
+		_failures.clear(); Assert.assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
+		_utils.checkFailureForSemanticError(_failures, "resources");
+
 		// And validation should never pass if there are more than one policies with matching signature, regardless of their ID!!
 		RangerPolicy policy2 = mock(RangerPolicy.class);
 		when(policy2.getId()).thenReturn(103L);  // has same id as the policy being tested (_policy)
@@ -759,8 +765,8 @@ public class TestRangerPolicyValidator {
 		_utils.checkFailureForSemanticError(_failures, "resources");
 		// same check should pass if the policy is disabled
 		when(_policy.getIsEnabled()).thenReturn(false);
-		_failures.clear(); Assert.assertTrue(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
-		Assert.assertTrue("failures collection wasn't empty!", _failures.isEmpty());
+		_failures.clear(); Assert.assertFalse(_validator.isPolicyResourceUnique(_policy, _failures, Action.UPDATE));
+		_utils.checkFailureForSemanticError(_failures, "resources");
 	}
 	
 	@Test
@@ -805,7 +811,30 @@ public class TestRangerPolicyValidator {
 		_failures.clear(); Assert.assertFalse("Policy with resources for multiple hierarchies missing mandatory resources for all pontential matches", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
 		_utils.checkFailureForSemanticError(_failures, "policy resources", "missing mandatory");
 	}
-	
+
+	@Test
+	public void test_isValidResource_additionalResources() throws Exception {
+		String                                  serviceName         = "a-service-def";
+		Date                                    now                 = new Date();
+		List<RangerResourceDef>                 resourceDefs        = _utils.createResourceDefs(resourceDefData_multipleHierarchies);
+		Map<String, RangerPolicyResource>       resources           = _utils.createPolicyResourceMap(policyResourceMap_good);
+		List<Map<String, RangerPolicyResource>> additionalResources = new ArrayList<>();
+
+		when(_serviceDef.getName()).thenReturn(serviceName );
+		when(_serviceDef.getUpdateTime()).thenReturn(now);
+		when(_serviceDef.getResources()).thenReturn(resourceDefs);
+		when(_policy.getResources()).thenReturn(resources);
+		when(_policy.getAdditionalResources()).thenReturn(additionalResources);
+
+		Assert.assertTrue("valid resources and empty additionalResources", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+
+		additionalResources.add(_utils.createPolicyResourceMap(policyResourceMap_good));
+		Assert.assertTrue("valid resources and additionalResources[0]", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+
+		additionalResources.add(_utils.createPolicyResourceMap(policyResourceMap_bad));
+		Assert.assertFalse("valid resources and invalid additionalResources[1]", _validator.isValidResourceNames(_policy, _failures, _serviceDef));
+	}
+
 	@Test
 	public final void test_isValidServiceWithZone_happyPath() throws Exception{
 		boolean isAdmin = true;

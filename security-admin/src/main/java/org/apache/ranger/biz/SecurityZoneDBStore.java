@@ -25,19 +25,22 @@ import java.util.Map;
 import javax.annotation.PostConstruct;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXSecurityZone;
 import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
+import org.apache.ranger.plugin.model.RangerSecurityZoneHeaderInfo;
+import org.apache.ranger.plugin.model.RangerServiceHeaderInfo;
 import org.apache.ranger.plugin.store.AbstractPredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZonePredicateUtil;
 import org.apache.ranger.plugin.store.SecurityZoneStore;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerSecurityZoneServiceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +49,7 @@ import com.google.gson.GsonBuilder;
 
 @Component
 public class SecurityZoneDBStore implements SecurityZoneStore {
-    private static final Log LOG = LogFactory.getLog(SecurityZoneDBStore.class);
+    private static final Logger LOG = LoggerFactory.getLogger(SecurityZoneDBStore.class);
     private static final String RANGER_GLOBAL_STATE_NAME = "RangerSecurityZone";
 
     @Autowired
@@ -106,8 +109,8 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
     }
 
     @Override
-    public RangerSecurityZone updateSecurityZoneById(RangerSecurityZone securityZone) throws Exception {
-        XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(securityZone.getId());
+	public RangerSecurityZone updateSecurityZoneById(RangerSecurityZone securityZone) throws Exception {
+		XXSecurityZone xxSecurityZone = daoMgr.getXXSecurityZoneDao().findByZoneId(securityZone.getId());
         if (xxSecurityZone == null) {
             throw restErrorUtil.createRESTException("security-zone with id: " + securityZone.getId() + " does not exist");
         }
@@ -122,6 +125,10 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
             throw new Exception("Cannot update security zone:[" + securityZone + "]");
         }
         securityZoneRefUpdater.createNewZoneMappingForRefTable(updatedSecurityZone);
+        boolean isRenamed = !StringUtils.equals(securityZone.getName(), (null == oldSecurityZone) ? null : oldSecurityZone.getName());
+		if (isRenamed) {
+			securityZoneRefUpdater.updateResourceSignatureWithZoneName(updatedSecurityZone);
+		}
         List<XXTrxLog> trxLogList = securityZoneService.getTransactionLog(updatedSecurityZone, oldSecurityZone, "update");
         bizUtil.createTrxLog(trxLogList);
         return securityZone;
@@ -215,5 +222,17 @@ public class SecurityZoneDBStore implements SecurityZoneStore {
         }
 
         return ret;
+    }
+
+    public List<RangerSecurityZoneHeaderInfo> getSecurityZoneHeaderInfoList() {
+        return daoMgr.getXXSecurityZoneDao().findAllZoneHeaderInfos();
+    }
+
+    public List<RangerServiceHeaderInfo> getServiceHeaderInfoListByZoneId(Long zoneId) {
+        List<RangerServiceHeaderInfo> services    = daoMgr.getXXSecurityZoneRefService().findServiceHeaderInfosByZoneId(zoneId);
+        List<RangerServiceHeaderInfo> tagServices = daoMgr.getXXSecurityZoneRefTagService().findServiceHeaderInfosByZoneId(zoneId);
+        services.addAll(tagServices);
+
+        return services;
     }
 }

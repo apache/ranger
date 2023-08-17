@@ -51,6 +51,7 @@ public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends V
 		mObj.setUserSource( vObj.getUserSource());
 		mObj.setNotes( vObj.getNotes());
 		mObj.setOtherAttributes(vObj.getOtherAttributes());
+		mObj.setSyncSource(vObj.getSyncSource());
 		return mObj;
 	}
 
@@ -66,6 +67,7 @@ public abstract class XPortalUserServiceBase<T extends XXPortalUser, V extends V
 		vObj.setUserSource( mObj.getUserSource());
 		vObj.setNotes( mObj.getNotes());
 		vObj.setOtherAttributes(mObj.getOtherAttributes());
+		vObj.setSyncSource(mObj.getSyncSource());
 		return vObj;
 	}
 

@@ -26,8 +26,8 @@ import java.security.PrivilegedExceptionAction;
 import com.google.protobuf.Message;
 import com.google.protobuf.Service;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.hbase.*;
 import org.apache.hadoop.hbase.client.*;
@@ -56,18 +56,24 @@ import org.apache.hadoop.hbase.util.Pair;
 import org.apache.hadoop.hbase.wal.WALEdit;
 import org.apache.hadoop.security.AccessControlException;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
+import org.apache.ranger.audit.provider.AuditProviderFactory;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.audit.RangerDefaultAuditHandler;
+import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.policyengine.RangerAccessResultProcessor;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequestImpl;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs;
 import org.apache.ranger.plugin.policyengine.RangerResourceACLs.AccessResult;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.base.MoreObjects;
 import com.google.common.collect.Lists;
@@ -78,8 +84,8 @@ import com.google.protobuf.RpcController;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 
 public class RangerAuthorizationCoprocessor implements AccessControlService.Interface, RegionCoprocessor, MasterCoprocessor, RegionServerCoprocessor, MasterObserver, RegionObserver, RegionServerObserver, EndpointObserver, BulkLoadObserver, Coprocessor {
-	private static final Log LOG = LogFactory.getLog(RangerAuthorizationCoprocessor.class.getName());
-	private static final Log PERF_HBASEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hbaseauth.request");
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAuthorizationCoprocessor.class.getName());
+	private static final Logger PERF_HBASEAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("hbaseauth.request");
 	private static boolean UpdateRangerPoliciesOnGrantRevoke = RangerHadoopConstants.HBASE_UPDATE_RANGER_POLICIES_ON_GRANT_REVOKE_DEFAULT_VALUE;
 	private static final String GROUP_PREFIX = "@";
 
@@ -205,7 +211,10 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		try {
 			remoteAddr = RpcServer.getRemoteAddress().get();
 		} catch (NoSuchElementException e) {
-			LOG.info("Unable to get remote Address");
+			// HBase services will sometimes make calls as a part of
+			// internal operations. It is not worth logging when we do
+			// not have a remote address (a client's remote address).
+			LOG.trace("Unable to get remote Address");
 		}
 
 		if(remoteAddr == null) {
@@ -309,7 +318,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	}
 	
 	ColumnFamilyAccessResult evaluateAccess(ObserverContext<?> ctx, String operation, Action action, final RegionCoprocessorEnvironment env,
-											final Map<byte[], ? extends Collection<?>> familyMap) throws AccessDeniedException {
+											final Map<byte[], ? extends Collection<?>> familyMap, String commandStr) throws AccessDeniedException {
 
 		String access = _authUtils.getAccess(action);
 		User user = getActiveUser(ctx);
@@ -345,6 +354,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		HbaseAuditHandler auditHandler = _factory.getAuditHandler();
 		AuthorizationSession session = new AuthorizationSession(hbasePlugin)
 				.operation(operation)
+				.otherInformation(commandStr)
 				.remoteAddress(getRemoteAddress())
 				.auditHandler(auditHandler)
 				.user(user)
@@ -525,7 +535,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		return result;
 	}
 
-	Filter authorizeAccess(ObserverContext<?> ctx, String operation, Action action, final RegionCoprocessorEnvironment env, final Map<byte[], NavigableSet<byte[]>> familyMap) throws AccessDeniedException {
+	Filter authorizeAccess(ObserverContext<?> ctx, String operation, Action action, final RegionCoprocessorEnvironment env, final Map<byte[], NavigableSet<byte[]>> familyMap, String commandStr) throws AccessDeniedException {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> authorizeAccess");
@@ -535,7 +545,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		try {
 			perf = RangerPerfTracer.getPerfTracer(PERF_HBASEAUTH_REQUEST_LOG, "RangerAuthorizationCoprocessor.authorizeAccess(request=Operation[" + operation + "]");
 
-			ColumnFamilyAccessResult accessResult = evaluateAccess(ctx, operation, action, env, familyMap);
+			ColumnFamilyAccessResult accessResult = evaluateAccess(ctx, operation, action, env, familyMap, commandStr);
 			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
 			if (accessResult._everythingIsAccessible) {
 				auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
@@ -578,7 +588,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_HBASEAUTH_REQUEST_LOG)) {
 				perf = RangerPerfTracer.getPerfTracer(PERF_HBASEAUTH_REQUEST_LOG, "RangerAuthorizationCoprocessor.requirePermission(request=Operation[" + operation + "]");
 			}
-			ColumnFamilyAccessResult accessResult = evaluateAccess(ctx, operation, action, regionServerEnv, familyMap);
+			ColumnFamilyAccessResult accessResult = evaluateAccess(ctx, operation, action, regionServerEnv, familyMap, null);
 			RangerDefaultAuditHandler auditHandler = new RangerDefaultAuditHandler(hbasePlugin.getConfig());
 			if (accessResult._everythingIsAccessible) {
 				auditHandler.logAuthzAudits(accessResult._accessAllowedEvents);
@@ -781,7 +791,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			Throwable var3 = null;
 
 			try {
-				if(!admin.tableExists(AccessControlLists.ACL_TABLE_NAME)) {
+				if(!admin.tableExists(PermissionStorage.ACL_TABLE_NAME)) {
 					createACLTable(admin);
 				}
 			} catch (Throwable var12) {
@@ -805,8 +815,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	}
 
 	private static void createACLTable(Admin admin) throws IOException {
-		ColumnFamilyDescriptor cfd = ColumnFamilyDescriptorBuilder.newBuilder(AccessControlLists.ACL_LIST_FAMILY).setMaxVersions(1).setInMemory(true).setBlockCacheEnabled(true).setBlocksize(8192).setBloomFilterType(BloomType.NONE).setScope(0).build();
-		TableDescriptor td = TableDescriptorBuilder.newBuilder(AccessControlLists.ACL_TABLE_NAME).addColumnFamily(cfd).build();
+		ColumnFamilyDescriptor cfd = ColumnFamilyDescriptorBuilder.newBuilder(PermissionStorage.ACL_LIST_FAMILY).setMaxVersions(1).setInMemory(true).setBlockCacheEnabled(true).setBlocksize(8192).setBloomFilterType(BloomType.NONE).setScope(0).build();
+		TableDescriptor td = TableDescriptorBuilder.newBuilder(PermissionStorage.ACL_TABLE_NAME).addColumnFamily(cfd).build();
 		admin.createTable(td);
 	}
 
@@ -988,13 +998,16 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> preScannerOpen");
 		}
-
+		String commandStr = null;
 		try {
 			RegionCoprocessorEnvironment e = c.getEnvironment();
 
 			Map<byte[], NavigableSet<byte[]>> familyMap = scan.getFamilyMap();
-			String operation = "scannerOpen";
-			Filter filter = authorizeAccess(c, operation, Action.READ, e, familyMap);
+			String operation    = "scannerOpen";
+			byte[] tableName    = getTableName(e);
+			String tableNameStr = tableName != null ?  new String(tableName):" ";
+			commandStr          = getCommandString(HbaseConstants.SCAN, tableNameStr, scan.toMap());
+			Filter filter       = authorizeAccess(c, operation, Action.READ, e, familyMap, commandStr);
 			if (filter == null) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("preScannerOpen: Access allowed for all families/column.  No filter added");
@@ -1009,13 +1022,14 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			}
 		} finally {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== preScannerOpen");
+				LOG.debug("<== preScannerOpen: commandStr: " + commandStr);
 			}
 		}
 	}
 	@Override
 	public void preShutdown(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
 		requirePermission(c, "shutdown", Permission.Action.ADMIN);
+		cleanUp_HBaseRangerPlugin();
 	}
 	@Override
 	public void preSnapshot(ObserverContext<MasterCoprocessorEnvironment> ctx, SnapshotDescription snapshot, TableDescriptor hTableDescriptor) throws IOException {
@@ -1025,10 +1039,12 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	@Override
 	public void preStopMaster(ObserverContext<MasterCoprocessorEnvironment> c) throws IOException {
 		requirePermission(c, "stopMaster", Permission.Action.ADMIN);
+		cleanUp_HBaseRangerPlugin();
 	}
 	@Override
 	public void preStopRegionServer(ObserverContext<RegionServerCoprocessorEnvironment> env) throws IOException {
 		requirePermission(env, "stop", Permission.Action.ADMIN);
+		cleanUp_HBaseRangerPlugin();
 	}
 	@Override
 	public void preUnassign(ObserverContext<MasterCoprocessorEnvironment> c, RegionInfo regionInfo, boolean force) throws IOException {
@@ -1128,12 +1144,16 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> preGetOp");
 		}
+		String commandStr = null;
 		try {
 			RegionCoprocessorEnvironment e = rEnv.getEnvironment();
 			Map<byte[], NavigableSet<byte[]>> familyMap = get.getFamilyMap();
 
-			String operation = "get";
-			Filter filter = authorizeAccess(rEnv, operation, Action.READ, e, familyMap);
+			String operation    = "get";
+			byte[] tableName    = getTableName(e);
+			String tableNameStr = tableName != null ?  new String(tableName):" ";
+			commandStr          = getCommandString(HbaseConstants.GET, tableNameStr, get.toMap());
+			Filter filter       = authorizeAccess(rEnv, operation, Action.READ, e, familyMap, commandStr);
 			if (filter == null) {
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("preGetOp: all access allowed, no filter returned");
@@ -1148,7 +1168,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			}
 		} finally {
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("<== preGetOp");
+				LOG.debug("<== preGetOp: commandStr: " + commandStr );
 			}
 		}
 	}
@@ -1170,48 +1190,42 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	}
 
 	@Override
+	public void postGetTableNames(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableDescriptor> descriptors, String regex) throws IOException {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("==> postGetTableNames(count(descriptors)=%s, regex=%s)", descriptors == null ? 0 : descriptors.size(), regex));
+		}
+		checkGetTableInfoAccess(ctx, "getTableNames", descriptors, regex, RangerPolicyEngine.ANY_ACCESS);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== postGetTableNames(count(descriptors)=%s, regex=%s)", descriptors == null ? 0 : descriptors.size(), regex));
+		}
+	}
+
+	@Override
 	public void postGetTableDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx, List<TableName> tableNamesList, List<TableDescriptor> descriptors, String regex) throws IOException {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
 					descriptors == null ? 0 : descriptors.size(), regex));
 		}
 
-		if (CollectionUtils.isNotEmpty(descriptors)) {
-			// Retains only those which passes authorization checks
-			User user = getActiveUser(ctx);
-			String access = _authUtils.getAccess(Action.CREATE);
-			HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
-			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
-				.operation("getTableDescriptors")
-				.otherInformation("regex=" + regex)
-				.remoteAddress(getRemoteAddress())
-				.auditHandler(auditHandler)
-				.user(user)
-				.access(access);
-	
-			Iterator<TableDescriptor> itr = descriptors.iterator();
-			while (itr.hasNext()) {
-				TableDescriptor htd = itr.next();
-				String tableName = htd.getTableName().getNameAsString();
-				session.table(tableName).buildRequest().authorize();
-				if (!session.isAuthorized()) {
-					List<AuthzAuditEvent> events = null;
-					itr.remove();
-					AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent();
-					if (event != null) {
-						events = Lists.newArrayList(event);
-					}
-					auditHandler.logAuthzAudits(events);
-				}
-			}
-			if (descriptors.size() > 0) {
-				session.logCapturedEvents();
-			}
-		}
+		checkGetTableInfoAccess(ctx, "getTableDescriptors", descriptors, regex, _authUtils.getAccess(Action.CREATE));
 		
 		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("<== postGetTableDescriptors(count(tableNamesList)=%s, count(descriptors)=%s, regex=%s)", tableNamesList == null ? 0 : tableNamesList.size(),
 					descriptors == null ? 0 : descriptors.size(), regex));
+		}
+	}
+
+	@Override
+	public void postListNamespaceDescriptors(ObserverContext<MasterCoprocessorEnvironment> ctx,	List<NamespaceDescriptor> descriptors) throws IOException {
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
+		}
+
+		checkAccessForNamespaceDescriptor(ctx, "getNameSpaceDescriptors", descriptors);
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAuthorizationCoprocessor.postListNamespaceDescriptors()");
 		}
 	}
 
@@ -1325,6 +1339,11 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 	}
 
 	@Override
+	public void hasPermission(RpcController controller, AccessControlProtos.HasPermissionRequest request, RpcCallback<AccessControlProtos.HasPermissionResponse> done) {
+		LOG.debug("hasPermission(): ");
+	}
+
+	@Override
 	public void checkPermissions(RpcController controller, AccessControlProtos.CheckPermissionsRequest request, RpcCallback<AccessControlProtos.CheckPermissionsResponse> done) {
 		LOG.debug("checkPermissions(): ");
 	}
@@ -1386,8 +1405,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 					}
 				});
 				if (_userUtils.isSuperUser(user)) {
-					perms.add(new UserPermission(Bytes.toBytes(_userUtils.getUserAsString(user)),
-							AccessControlLists.ACL_TABLE_NAME, null, Action.values()));
+					perms.add(new UserPermission(_userUtils.getUserAsString(user),
+					                             Permission.newBuilder(PermissionStorage.ACL_TABLE_NAME).withActions(Action.values()).build()));
 				}
 			}
 			response = AccessControlUtil.buildGetUserPermissionsResponse(perms);
@@ -1429,11 +1448,11 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			if (!allowedPermissions.isEmpty()) {
 				UserPermission up = null;
 				if (isNamespace) {
-					up = new UserPermission(Bytes.toBytes(user), resource,
-							allowedPermissions.toArray(new Action[allowedPermissions.size()]));
+					up = new UserPermission(user,
+                                                                Permission.newBuilder(resource).withActions(allowedPermissions.toArray(new Action[allowedPermissions.size()])).build());
 				} else {
-					up = new UserPermission(Bytes.toBytes(user), TableName.valueOf(resource), null, null,
-							allowedPermissions.toArray(new Action[allowedPermissions.size()]));
+					up = new UserPermission(user,
+                                                                Permission.newBuilder(TableName.valueOf(resource)).withActions(allowedPermissions.toArray(new Action[allowedPermissions.size()])).build());
 				}
 				userPermissions.add(up);
 			}
@@ -1445,8 +1464,8 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
 
 		UserPermission      userPerm  = up == null ? null : AccessControlUtil.toUserPermission(up);
-		Permission.Action[] actions   = userPerm == null ? null : userPerm.getActions();
-		String              userName  = userPerm == null ? null : Bytes.toString(userPerm.getUser());
+		Permission.Action[] actions   = userPerm == null ? null : userPerm.getPermission().getActions();
+		String              userName  = userPerm == null ? null : userPerm.getUser();
 		String              nameSpace = null;
 		String              tableName = null;
 		String              colFamily = null;
@@ -1470,13 +1489,15 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			break;
 
 			case Table:
-				tableName = Bytes.toString(userPerm.getTableName().getName());
-				colFamily = Bytes.toString(userPerm.getFamily());
-				qualifier = Bytes.toString(userPerm.getQualifier());
+				TablePermission tablePerm = (TablePermission)userPerm.getPermission();
+				tableName = Bytes.toString(tablePerm.getTableName().getName());
+				colFamily = Bytes.toString(tablePerm.getFamily());
+				qualifier = Bytes.toString(tablePerm.getQualifier());
 			break;
 
 			case Namespace:
-				nameSpace = userPerm.getNamespace();
+				NamespacePermission namepsacePermission = (NamespacePermission)userPerm.getPermission();
+				nameSpace = namepsacePermission.getNamespace();
 			break;
 		}
 		
@@ -1560,7 +1581,7 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 		AccessControlProtos.Permission     perm = up == null ? null : up.getPermission();
 
 		UserPermission      userPerm  = up == null ? null : AccessControlUtil.toUserPermission(up);
-		String              userName  = userPerm == null ? null : Bytes.toString(userPerm.getUser());
+		String              userName  = userPerm == null ? null : userPerm.getUser();
 		String              nameSpace = null;
 		String              tableName = null;
 		String              colFamily = null;
@@ -1580,13 +1601,15 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 			break;
 
 			case Table :
-				tableName = Bytes.toString(userPerm.getTableName().getName());
-				colFamily = Bytes.toString(userPerm.getFamily());
-				qualifier = Bytes.toString(userPerm.getQualifier());
+				TablePermission tablePerm = (TablePermission)userPerm.getPermission();
+				tableName = Bytes.toString(tablePerm.getTableName().getName());
+				colFamily = Bytes.toString(tablePerm.getFamily());
+				qualifier = Bytes.toString(tablePerm.getQualifier());
 			break;
 
 			case Namespace:
-				nameSpace = userPerm.getNamespace();
+				NamespacePermission namespacePermission = (NamespacePermission)userPerm.getPermission();
+				nameSpace = namespacePermission.getNamespace();
 			break;
 		}
 
@@ -1645,14 +1668,225 @@ public class RangerAuthorizationCoprocessor implements AccessControlService.Inte
 
 		return ret;
 	}
+
+	private void cleanUp_HBaseRangerPlugin() {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerAuthorizationCoprocessor.cleanUp_HBaseRangerPlugin()");
+		}
+		if (hbasePlugin != null) {
+			hbasePlugin.setHBaseShuttingDown(true);
+			hbasePlugin.cleanup();
+			AuditProviderFactory auditProviderFactory = hbasePlugin.getAuditProviderFactory();
+			if (auditProviderFactory != null) {
+				auditProviderFactory.shutdown();
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerAuthorizationCoprocessor.cleanUp_HBaseRangerPlugin() completed!");
+		}
+	}
+
+	private String getCommandString(String operationName, String tableNameStr, Map<String,Object> opMetaData) {
+		StringBuilder ret = new StringBuilder();
+		if (!HbaseConstants.HBASE_META_TABLE.equals(tableNameStr)) {
+			ret.append(operationName);
+			ret.append(HbaseConstants.SPACE);
+			ret.append(tableNameStr).append(HbaseConstants.COMMA).append(HbaseConstants.SPACE);
+			ret.append(getPredicates(operationName, opMetaData));
+		}
+		return ret.toString();
+	}
+
+	private String getPredicates(String operationName, Map<String,Object> opMetaData) {
+		StringBuilder ret = new StringBuilder();
+
+		if (MapUtils.isNotEmpty(opMetaData)) {
+			HashMap<String, ArrayList<?>> families    = (HashMap<String, ArrayList<?>>) opMetaData.get(HbaseConstants.FAMILIES);
+			String 						  startRowVal = (String) opMetaData.get(HbaseConstants.STARTROW);
+			String                        stopRowVal  = (String) opMetaData.get(HbaseConstants.STOPROW);
+			String                        filterVal   = (String) opMetaData.get(HbaseConstants.FILTER);
+			String                        rowVal      = (String) opMetaData.get(HbaseConstants.ROW);
+
+			if (!isQueryforInfo(families)) {
+				ret.append(HbaseConstants.OPEN_BRACES);
+				if (HbaseConstants.SCAN.equals(operationName)) {
+					if (StringUtils.isNotEmpty(startRowVal)) {
+						ret.append(formatPredicate(ret, PredicateType.STARTROW, startRowVal));
+					}
+					if (StringUtils.isNotEmpty(stopRowVal)) {
+						ret.append(formatPredicate(ret, PredicateType.STOPROW, stopRowVal));
+					}
+				} else {
+					if(StringUtils.isNotEmpty(rowVal)) {
+						ret.append(formatPredicate(ret, PredicateType.ROW, rowVal));
+					}
+				}
+				if (StringUtils.isNotEmpty(filterVal)) {
+					ret.append(formatPredicate(ret, PredicateType.FILTER, filterVal));
+				}
+				if (MapUtils.isNotEmpty(families)) {
+					String colfamily = families.toString();
+					ret.append(formatPredicate(ret, PredicateType.COLUMNS, colfamily));
+				}
+				ret.append(HbaseConstants.SPACE).append(HbaseConstants.CLOSED_BRACES);
+			}
+		}
+		return ret.toString();
+	}
+
+	private boolean isQueryforInfo(HashMap<String, ArrayList<?>> families) {
+		boolean ret = false;
+		for(HashMap.Entry family : families.entrySet()) {
+			String familyKey = (String) family.getKey();
+			if (HbaseConstants.INFO.equals(familyKey)) {
+				ret = true;
+				break;
+			}
+		}
+		return ret;
+	}
+
+	private String formatPredicate(StringBuilder commandStr, PredicateType predicateType, String val) {
+		StringBuilder ret = new StringBuilder();
+		if (HbaseConstants.OPEN_BRACES.equals(commandStr.toString())) {
+			ret.append(HbaseConstants.SPACE);
+		} else {
+			ret.append(HbaseConstants.COMMA).append(HbaseConstants.SPACE);
+		}
+		ret.append(buildPredicate(predicateType, val));
+		return ret.toString();
+	}
+
+	private String buildPredicate(PredicateType predicateType, String val) {
+		StringBuilder ret = new StringBuilder();
+		switch (predicateType) {
+			case STARTROW:
+				ret.append(PredicateType.STARTROW.name().toUpperCase());
+				ret.append(HbaseConstants.ARROW);
+				ret.append(HbaseConstants.SINGLE_QUOTES).append(val).append(HbaseConstants.SINGLE_QUOTES);
+				break;
+			case STOPROW:
+				ret.append(PredicateType.STOPROW.name().toUpperCase());
+				ret.append(HbaseConstants.ARROW);
+				ret.append(HbaseConstants.SINGLE_QUOTES).append(val).append(HbaseConstants.SINGLE_QUOTES);
+				break;
+			case FILTER:
+				ret.append(PredicateType.FILTER.name().toUpperCase());
+				ret.append(HbaseConstants.ARROW);
+				ret.append(HbaseConstants.SINGLE_QUOTES).append(val).append(HbaseConstants.SINGLE_QUOTES);
+				break;
+			case COLUMNS:
+				ret.append(PredicateType.COLUMNS.name().toUpperCase());
+				ret.append(HbaseConstants.ARROW);
+				ret.append(HbaseConstants.SINGLE_QUOTES).append(val).append(HbaseConstants.SINGLE_QUOTES);
+				break;
+			case ROW:
+				ret.append(val);
+				break;
+		}
+		return ret.toString();
+	}
+
+	private void checkGetTableInfoAccess(ObserverContext<MasterCoprocessorEnvironment> ctx, String operation, List<TableDescriptor> descriptors, String regex, String accessPermission) {
+
+		if (CollectionUtils.isNotEmpty(descriptors)) {
+			// Retains only those which passes authorization checks
+			User user = getActiveUser(ctx);
+			String access = accessPermission;
+			HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
+			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
+					.operation(operation)
+					.otherInformation("regex=" + regex)
+					.remoteAddress(getRemoteAddress())
+					.auditHandler(auditHandler)
+					.user(user)
+					.access(access);
+
+			Iterator<TableDescriptor> itr = descriptors.iterator();
+			while (itr.hasNext()) {
+				TableDescriptor htd = itr.next();
+				String tableName = htd.getTableName().getNameAsString();
+				session.table(tableName).buildRequest().authorize();
+				if (!session.isAuthorized()) {
+					List<AuthzAuditEvent> events = null;
+					itr.remove();
+					AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent();
+					if (event != null) {
+						events = Lists.newArrayList(event);
+					}
+					auditHandler.logAuthzAudits(events);
+				}
+			}
+			if (descriptors.size() > 0) {
+				session.logCapturedEvents();
+			}
+		}
+	}
+
+	private void checkAccessForNamespaceDescriptor(ObserverContext<MasterCoprocessorEnvironment> ctx, String operation, List<NamespaceDescriptor> descriptors) {
+
+		if (CollectionUtils.isNotEmpty(descriptors)) {
+			// Retains only those which passes authorization checks
+			User user = getActiveUser(ctx);
+			String access = _authUtils.getAccess(Action.ADMIN);
+			HbaseAuditHandler auditHandler = _factory.getAuditHandler();  // this will accumulate audits for all tables that succeed.
+			AuthorizationSession session = new AuthorizationSession(hbasePlugin)
+					.operation(operation)
+					.remoteAddress(getRemoteAddress())
+					.auditHandler(auditHandler)
+					.user(user)
+					.access(access);
+
+			Iterator<NamespaceDescriptor> itr = descriptors.iterator();
+			while (itr.hasNext()) {
+				NamespaceDescriptor namespaceDescriptor = itr.next();
+				String namespace = namespaceDescriptor.getName();
+				session.table(namespace).buildRequest().authorize();
+				if (!session.isAuthorized()) {
+					List<AuthzAuditEvent> events = null;
+					itr.remove();
+					AuthzAuditEvent event = auditHandler.getAndDiscardMostRecentEvent();
+					if (event != null) {
+						events = Lists.newArrayList(event);
+					}
+					auditHandler.logAuthzAudits(events);
+				}
+			}
+			if (descriptors.size() > 0) {
+				session.logCapturedEvents();
+			}
+		}
+	}
+
+	enum PredicateType {STARTROW, STOPROW, FILTER, COLUMNS, ROW};
 }
 
 
 class RangerHBasePlugin extends RangerBasePlugin {
+	private static final Logger LOG = LoggerFactory.getLogger(RangerHBasePlugin.class);
+	boolean isHBaseShuttingDown  = false;
+
 	public RangerHBasePlugin(String appType) {
 		super("hbase", appType);
 	}
 
+	public void setHBaseShuttingDown(boolean hbaseShuttingDown) {
+		isHBaseShuttingDown = hbaseShuttingDown;
+	}
+
+	@Override
+	public RangerAccessResult isAccessAllowed(RangerAccessRequest request, RangerAccessResultProcessor resultProcessor) {
+		RangerAccessResult ret = null;
+		if (isHBaseShuttingDown) {
+			ret = new RangerAccessResult(RangerPolicy.POLICY_TYPE_ACCESS, this.getServiceName(), this.getServiceDef(), request);
+			ret.setIsAllowed(true);
+			ret.setIsAudited(false);
+			LOG.warn("Auth request came after HBase shutdown....");
+		} else {
+			ret = super.isAccessAllowed(request, resultProcessor);
+		}
+		return ret;
+	}
 }
 
 

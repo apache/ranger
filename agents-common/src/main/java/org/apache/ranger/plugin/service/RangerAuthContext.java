@@ -97,4 +97,8 @@ public class RangerAuthContext {
     }
 
     public long getRoleVersion() { return this.rolesUtil.getRoleVersion(); }
+
+    public RangerRolesUtil getRangerRolesUtil() {
+        return this.rolesUtil;
+    }
 }

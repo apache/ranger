@@ -31,8 +31,6 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
@@ -48,10 +46,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerServiceConfigDef;
 import org.apache.ranger.plugin.store.RoleStore;
 import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.RangerObjectFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class RangerValidator {
 	
-	private static final Log LOG = LogFactory.getLog(RangerValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerValidator.class);
 
 	RoleStore 	 _roleStore;
 	ServiceStore _store;
@@ -346,19 +346,30 @@ public abstract class RangerValidator {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerValidator.getPoliciesForResourceSignature(%s, %s)", serviceName, policySignature));
 		}
+		final List<RangerPolicy> ret;
 
-		List<RangerPolicy> policies = null;
+		List<RangerPolicy> enabledPolicies = new ArrayList<>();
+		List<RangerPolicy> disabledPolicies = new ArrayList<>();
 		try {
-			policies = _store.getPoliciesByResourceSignature(serviceName, policySignature, true); // only look for enabled policies
+			enabledPolicies = _store.getPoliciesByResourceSignature(serviceName, policySignature, true);
+			disabledPolicies = _store.getPoliciesByResourceSignature(serviceName, policySignature, false);
 		} catch (Exception e) {
 			LOG.debug("Encountred exception while retrieving policies from service store!", e);
 		}
+		if (CollectionUtils.isEmpty(enabledPolicies)) {
+			ret = disabledPolicies;
+		} else if (CollectionUtils.isEmpty(disabledPolicies)) {
+			ret = enabledPolicies;
+		} else {
+			ret = enabledPolicies;
+			ret.addAll(disabledPolicies);
+		}
 		
 		if(LOG.isDebugEnabled()) {
-			int count = policies == null ? 0 : policies.size();
-			LOG.debug(String.format("<== RangerValidator.getPoliciesForResourceSignature(%s, %s): count[%d], %s", serviceName, policySignature, count, policies));
+			int count = ret == null ? 0 : ret.size();
+			LOG.debug(String.format("<== RangerValidator.getPoliciesForResourceSignature(%s, %s): count[%d], %s", serviceName, policySignature, count, ret));
 		}
-		return policies;
+		return ret;
 	}
 
     RangerSecurityZone getSecurityZone(Long id) {
@@ -528,19 +539,21 @@ public abstract class RangerValidator {
 
 	/**
 	 * Converts, in place, the resources defined in the policy to have lower-case resource-def-names
-	 * @param policy
+	 * @param resources
 	 * @return
 	 */
 
-	void convertPolicyResourceNamesToLower(RangerPolicy policy) {
+	void convertPolicyResourceNamesToLower(Map<String, RangerPolicyResource> resources) {
 		Map<String, RangerPolicyResource> lowerCasePolicyResources = new HashMap<>();
-		if (policy.getResources() != null) {
-			for (Map.Entry<String, RangerPolicyResource> entry : policy.getResources().entrySet()) {
+		if (resources != null) {
+			for (Map.Entry<String, RangerPolicyResource> entry : resources.entrySet()) {
 				String lowerCasekey = entry.getKey().toLowerCase();
 				lowerCasePolicyResources.put(lowerCasekey, entry.getValue());
 			}
+
+			resources.clear();
+			resources.putAll(lowerCasePolicyResources);
 		}
-		policy.setResources(lowerCasePolicyResources);
 	}
 
 	Map<String, String> getValidationRegExes(RangerServiceDef serviceDef) {

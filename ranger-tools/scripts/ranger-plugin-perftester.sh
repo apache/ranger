@@ -24,7 +24,7 @@ then
 	export PATH
 fi
 
-JAVA_CMD="java -cp ${cp} org.apache.ranger.policyengine.RangerPluginPerfTester"
+JAVA_CMD="java -Xms1g -Xmx1g -Xloggc:./gc.log -verbose:gc -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=. -cp ${cp} org.apache.ranger.policyengine.RangerPluginPerfTester"
 
 cd ${cdir}
 

@@ -19,10 +19,11 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerAuditConfig extends RangerConfiguration {
-    private static final Logger LOG = Logger.getLogger(RangerAuditConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerAuditConfig.class);
 
     private final boolean initSuccess;
 

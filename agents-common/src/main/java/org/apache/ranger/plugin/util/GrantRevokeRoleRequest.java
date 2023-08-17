@@ -24,19 +24,14 @@ import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
 
 
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY )
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class GrantRevokeRoleRequest implements Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -275,7 +270,7 @@ public class GrantRevokeRoleRequest implements Serializable {
 		sb.append("} ");
 
 		sb.append("groups={");
-		if(roles != null) {
+		if(groups != null) {
 			for(String group : groups) {
 				sb.append(group).append(" ");
 			}

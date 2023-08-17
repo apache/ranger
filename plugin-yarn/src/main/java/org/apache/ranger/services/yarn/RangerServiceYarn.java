@@ -34,12 +34,12 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.yarn.client.YarnResourceMgr;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceYarn extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceYarn.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceYarn.class);
 	public static final String ACCESS_TYPE_SUBMIT_APP  = "submit-app";
 	
 	public RangerServiceYarn() {

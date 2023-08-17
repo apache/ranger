@@ -201,7 +201,7 @@
         ]
         ,
         "denyExceptions":[
-          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1"],"groups":[],"delegateAdmin":false,
+          {"accesses":[{"type":"hive:select","isAllowed":true}],"users":["hive", "user1", "{OWNER}"],"groups":[],"delegateAdmin":false,
             "conditions":[{
               "type":"expression",
               "values":["if ( ctx.isAccessedBefore('activation_date') ) ctx.result = true;"]
@@ -225,6 +225,14 @@
   },
 
   "tests":[
+    {"name":"DENY 'select from employee.personal;' for user1 using EXPIRES_ON tag",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal"}}, "resourceMatchingScope": "SELF_OR_DESCENDANTS",
+        "accessType":"select","user":"user1","userGroups":[],"requestData":"select from employee.personal;' for user1"
+
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+    },
     {"name":"ALLOW 'select ssn from employee.personal;' for user1 using EXPIRES_ON tag",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"ssn"}},
@@ -269,6 +277,20 @@
       },
       "result":{"isAudited":true,"isAllowed":false,"policyId":4}
     },
+    {"name":"ALLOW 'select address from employee.personal;' for user2, the {OWNER}, using RESTRICTED-FINAL tag",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal", "column":"address"}, "ownerUser": "user2"},
+        "accessType":"select","user":"user2","userGroups":[],"requestData":"select address from employee.personal;' for user2"
+      },
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
+    },
+    {"name":"DENY 'select address from employee.personal;' for user3, owner=user2, using RESTRICTED-FINAL tag",
+      "request":{
+        "resource":{"elements":{"database":"employee", "table":"personal", "column":"address"}, "ownerUser": "user2"},
+        "accessType":"select","user":"user3","userGroups":[],"requestData":"select address from employee.personal;' for user2"
+      },
+      "result":{"isAudited":true,"isAllowed":false,"policyId":4}
+    },
     {"name":"ALLOW 'select name from employee.personal;' for user1 - no tag",
       "request":{
         "resource":{"elements":{"database":"employee", "table":"personal", "column":"name"}},
@@ -283,12 +305,12 @@
       },
       "result":{"isAudited":true,"isAllowed":true,"policyId":2}
     },
-    {"name":"DENY 'desc default.table1;' for hive using PII, PII-FINAL tags",
+    {"name":"ALLOW 'desc default.table1;' for hive using PII, PII-FINAL tags",
       "request":{
         "resource":{"elements":{"database":"default", "table":"table1"}},
         "accessType":"","user":"hive","userGroups":[],"requestData":"desc default.table1;' for hive"
       },
-      "result":{"isAudited":true,"isAllowed":false,"policyId":3}
+      "result":{"isAudited":true,"isAllowed":true,"policyId":101}
     },
     {"name":"DENY 'desc default.table2;' for user1 using PII-FINAL tag",
       "request":{

@@ -19,8 +19,8 @@
 
 package org.apache.ranger.service;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,13 +30,11 @@ import javax.annotation.PostConstruct;
 
 @Component
 public class RangerPluginActivityLogger {
-    @Autowired
-    RangerTransactionService transactionService;
 
     @Autowired
     RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
-    private static final Log LOG = LogFactory.getLog(RangerPluginActivityLogger.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPluginActivityLogger.class);
 
     boolean pluginActivityAuditCommitInline = false;
 
@@ -52,18 +50,7 @@ public class RangerPluginActivityLogger {
     }
 
     public void commitAfterTransactionComplete(Runnable commitWork) {
-        if (pluginActivityAuditCommitInline) {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Using TransactionManager for committing work [pluginActivityAuditCommitInline:" + pluginActivityAuditCommitInline + "]");
-            }
-            transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
-        } else {
-            if (LOG.isDebugEnabled()) {
-                LOG.debug("Using separate thread for committing work [pluginActivityAuditCommitInline:" + pluginActivityAuditCommitInline + "]");
-            }
-            final long delayInMillis = 1000L;
-            transactionService.scheduleToExecuteInOwnTransaction(commitWork, delayInMillis);
-        }
+        transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
     }
 
 }

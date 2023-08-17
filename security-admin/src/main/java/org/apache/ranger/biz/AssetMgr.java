@@ -37,7 +37,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.ranger.amazon.cloudwatch.CloudWatchAccessAuditsService;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -47,6 +47,7 @@ import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.SearchCriteria;
 import org.apache.ranger.common.StringUtil;
+import org.apache.ranger.common.db.RangerTransactionSynchronizationAdapter;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.elasticsearch.ElasticSearchAccessAuditsService;
 import org.apache.ranger.entity.XXPermMap;
@@ -65,6 +66,8 @@ import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.*;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.map.JsonMappingException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -114,10 +117,13 @@ public class AssetMgr extends AssetMgrBase {
 	ElasticSearchAccessAuditsService elasticSearchAccessAuditsService;
 
 	@Autowired
+	CloudWatchAccessAuditsService cloudWatchAccessAuditsService;
+
+	@Autowired
 	XPolicyService xPolicyService;
 
 	@Autowired
-	RangerPluginActivityLogger activityLogger;
+	RangerTransactionSynchronizationAdapter transactionSynchronizationAdapter;
 
 	@Autowired
 	RangerPluginInfoService pluginInfoService;
@@ -128,7 +134,7 @@ public class AssetMgr extends AssetMgrBase {
 	@Autowired
 	ServiceMgr serviceMgr;
 
-	private static final Logger logger = Logger.getLogger(AssetMgr.class);
+	private static final Logger logger = LoggerFactory.getLogger(AssetMgr.class);
 
 	private static final String adminCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
 
@@ -659,7 +665,7 @@ public class AssetMgr extends AssetMgrBase {
 
 					}
 				};
-				activityLogger.commitAfterTransactionComplete(commitWork);
+				transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
 			}
 		} else {
 			ret = rangerDaoManager.getXXPolicyExportAudit().create(xXPolicyExportAudit);
@@ -668,7 +674,7 @@ public class AssetMgr extends AssetMgrBase {
 		return ret;
 	}
 
-	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, Long downloadedVersion, long lastKnownVersion, long lastActivationTime, int httpCode, String clusterName, String pluginCapabilities) {
+	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, Long downloadedVersion, Long lastKnownVersion, long lastActivationTime, int httpCode, String clusterName, String pluginCapabilities) {
 		RangerRESTUtils restUtils = new RangerRESTUtils();
 
 		final String ipAddress = getRemoteAddress(request);
@@ -729,6 +735,7 @@ public class AssetMgr extends AssetMgrBase {
 		}
 
 		final boolean isTagVersionResetNeeded;
+		final Runnable commitWork;
 
 		if (httpCode == HttpServletResponse.SC_NOT_MODIFIED) {
 			// Create or update PluginInfo record after transaction is completed. If it is created in-line here
@@ -753,15 +760,13 @@ public class AssetMgr extends AssetMgrBase {
 					break;
 			}
 
-			Runnable commitWork = new Runnable() {
+			commitWork = new Runnable() {
 				@Override
 				public void run() {
 					doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
 				}
 			};
-			activityLogger.commitAfterTransactionComplete(commitWork);
 		} else if (httpCode == HttpServletResponse.SC_NOT_FOUND) {
-			Runnable commitWork;
 			if ((isPolicyDownloadRequest(entityType) && (pluginInfo.getPolicyActiveVersion() == null || pluginInfo.getPolicyActiveVersion() == -1))
 					|| (isTagDownloadRequest(entityType) && (pluginInfo.getTagActiveVersion() == null || pluginInfo.getTagActiveVersion() == -1))
 					|| (isRoleDownloadRequest(entityType) && (pluginInfo.getRoleActiveVersion() == null || pluginInfo.getRoleActiveVersion() == -1))
@@ -780,12 +785,16 @@ public class AssetMgr extends AssetMgrBase {
 					}
 				};
 			}
-			activityLogger.commitAfterTransactionComplete(commitWork);
-
 		} else {
 			isTagVersionResetNeeded = false;
+			commitWork = null;
 			doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
 		}
+
+		if (commitWork != null) {
+			transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
+		}
+
 		if (logger.isDebugEnabled()) {
 			logger.debug("<== createOrUpdatePluginInfo(pluginInfo = " + pluginInfo + ", isPolicyDownloadRequest = " + isPolicyDownloadRequest(entityType) + ", httpCode = " + httpCode + ")");
 		}
@@ -1128,6 +1137,8 @@ public class AssetMgr extends AssetMgrBase {
             return solrAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else if (RangerBizUtil.AUDIT_STORE_ElasticSearch.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
             return elasticSearchAccessAuditsService.searchXAccessAudits(searchCriteria);
+        } else if (RangerBizUtil.AUDIT_STORE_CloudWatch.equalsIgnoreCase(xaBizUtil.getAuditDBType())) {
+            return cloudWatchAccessAuditsService.searchXAccessAudits(searchCriteria);
         } else {
             return xAccessAuditService.searchXAccessAudits(searchCriteria);
         }

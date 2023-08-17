@@ -21,9 +21,11 @@ import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.sun.org.apache.xml.internal.security.utils.Base64;
 import java.io.IOException;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.security.Key;
 import java.security.KeyStore;
@@ -37,7 +39,7 @@ import java.security.cert.CertificateException;
  */
 public class RangerSafenetKeySecure implements RangerKMSMKI {
 
-        static final Logger logger = Logger.getLogger(RangerSafenetKeySecure.class);
+        static final Logger logger = LoggerFactory.getLogger(RangerSafenetKeySecure.class);
 
         private final String alias;
         private final String providerType;
@@ -68,14 +70,15 @@ public class RangerSafenetKeySecure implements RangerKMSMKI {
 		try {
 			int javaVersion = getJavaVersion();
 			/*Minimum java requirement for Ranger KMS is Java 8 and Maximum java supported by Ranger KMS is Java 11*/
-			if(javaVersion == 8){
-				provider = new sun.security.pkcs11.SunPKCS11(pkcs11CfgFilePath);
-			}else if(javaVersion == 9 || javaVersion == 10 || javaVersion == 11){
+			if(javaVersion <= 8){
+				Class<?> providerClass = Class.forName("sun.security.pkcs11.SunPKCS11");
+				Constructor<?> constructor = providerClass.getConstructor(String.class);
+				provider = (Provider) constructor.newInstance(pkcs11CfgFilePath);
+			}else if(javaVersion > 8){
 				Class<Provider> cls = Provider.class;
-				Method configureMethod = null;
-				configureMethod = cls.getDeclaredMethod("configure", String.class);
+				Method configureMethod = cls.getDeclaredMethod("configure", String.class);
 				provider = Security.getProvider(providerType);
-				if(configureMethod != null){
+				if(provider != null){
 					provider = (Provider) configureMethod.invoke(provider,pkcs11CfgFilePath);
 				}
 			}

@@ -28,21 +28,23 @@ import java.util.Timer;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 
 public class PolicyRefresher extends Thread {
-	private static final Log LOG = LogFactory.getLog(PolicyRefresher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PolicyRefresher.class);
 
-	private static final Log PERF_POLICYENGINE_INIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.init");
+	private static final Logger PERF_POLICYENGINE_INIT_LOG = RangerPerfTracer.getPerfLogger("policyengine.init");
 
 	private final RangerBasePlugin               plugIn;
 	private final String                         serviceType;
@@ -53,7 +55,6 @@ public class PolicyRefresher extends Thread {
 	private final String                         cacheFileName;
 	private final String                         cacheDir;
 	private final Gson                           gson;
-	private final boolean                        disableCacheIfServiceNotFound;
 	private final BlockingQueue<DownloadTrigger> policyDownloadQueue = new LinkedBlockingQueue<>();
 	private       Timer                          policyDownloadTimer;
 	private       long                           lastKnownVersion    = -1L;
@@ -87,12 +88,13 @@ public class PolicyRefresher extends Thread {
 		try {
 			gson = new GsonBuilder().setDateFormat("yyyyMMdd-HH:mm:ss.SSS-Z").create();
 		} catch(Throwable excp) {
-			LOG.fatal("PolicyRefresher(): failed to create GsonBuilder object", excp);
+			LOG.error("PolicyRefresher(): failed to create GsonBuilder object", excp);
 		}
 
+		RangerPluginContext pluginContext  = plugIn.getPluginContext();
+		RangerAdminClient   adminClient    = pluginContext.getAdminClient();
+		this.rangerAdmin                   = (adminClient != null) ? adminClient : pluginContext.createAdminClient(pluginConfig);
 		this.gson                          = gson;
-		this.disableCacheIfServiceNotFound = pluginConfig.getBoolean(propertyPrefix + ".disable.cache.if.servicenotfound", true);
-		this.rangerAdmin                   = RangerBasePlugin.createAdminClient(pluginConfig);
 		this.rolesProvider                 = new RangerRolesProvider(getServiceType(), appId, getServiceName(), rangerAdmin,  cacheDir, pluginConfig);
 		this.pollingIntervalMs             = pluginConfig.getLong(propertyPrefix + ".policy.pollIntervalMs", 30 * 1000);
 
@@ -207,7 +209,7 @@ public class PolicyRefresher extends Thread {
 				loadRoles();
 				loadPolicy();
 			} catch(InterruptedException excp) {
-				LOG.debug("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
+				LOG.info("PolicyRefresher(serviceName=" + serviceName + ").run(): interrupted! Exiting thread", excp);
 				break;
 			} finally {
 				if (trigger != null) {
@@ -261,6 +263,7 @@ public class PolicyRefresher extends Thread {
 			if (svcPolicies != null) {
 				plugIn.setPolicies(svcPolicies);
 				policiesSetInPlugin = true;
+				serviceDefSetInPlugin = false;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
 				lastKnownVersion = svcPolicies.getPolicyVersion() != null ? svcPolicies.getPolicyVersion() : -1L;
 			} else {
@@ -270,12 +273,12 @@ public class PolicyRefresher extends Thread {
 				}
 			}
 		} catch (RangerServiceNotFoundException snfe) {
-			if (disableCacheIfServiceNotFound) {
+			if (!serviceDefSetInPlugin) {
 				disableCache();
 				plugIn.setPolicies(null);
+				serviceDefSetInPlugin = true;
 				setLastActivationTimeInMillis(System.currentTimeMillis());
 				lastKnownVersion = -1;
-				serviceDefSetInPlugin = true;
 			}
 		} catch (Exception excp) {
 			LOG.error("Encountered unexpected exception, ignoring..", excp);
@@ -402,21 +405,30 @@ public class PolicyRefresher extends Thread {
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> PolicyRefresher(serviceName=" + serviceName + ").saveToCache()");
 		}
+		boolean doPreserveDeltas = plugIn.getConfig().getBoolean(plugIn.getConfig().getPropertyPrefix() + ".preserve.deltas", false);
 
 		if(policies != null) {
 			File cacheFile = null;
+			File backupCacheFile = null;
 			if (cacheDir != null) {
+				String realCacheDirName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? cacheDir + File.separator + "deltas" : cacheDir;
+				String backupCacheFileName = cacheFileName + "_" + policies.getPolicyVersion();
+				String realCacheFileName = CollectionUtils.isNotEmpty(policies.getPolicyDeltas()) ? backupCacheFileName : cacheFileName;
+
 				// Create the cacheDir if it doesn't already exist
-				File cacheDirTmp = new File(cacheDir);
+				File cacheDirTmp = new File(realCacheDirName);
 				if (cacheDirTmp.exists()) {
-					cacheFile =  new File(cacheDir + File.separator + cacheFileName);
+					cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 				} else {
 					try {
 						cacheDirTmp.mkdirs();
-						cacheFile =  new File(cacheDir + File.separator + cacheFileName);
+						cacheFile =  new File(realCacheDirName + File.separator + realCacheFileName);
 					} catch (SecurityException ex) {
 						LOG.error("Cannot create cache directory", ex);
 					}
+				}
+				if (CollectionUtils.isEmpty(policies.getPolicyDeltas())) {
+					backupCacheFile = new File(realCacheDirName + File.separator + backupCacheFileName);
 				}
 			}
 			
@@ -449,6 +461,26 @@ public class PolicyRefresher extends Thread {
 				RangerPerfTracer.log(perf);
 
 	    	}
+
+			if (doPreserveDeltas) {
+				if (backupCacheFile != null) {
+
+					RangerPerfTracer perf = null;
+
+					if (RangerPerfTracer.isPerfTraceEnabled(PERF_POLICYENGINE_INIT_LOG)) {
+						perf = RangerPerfTracer.getPerfTracer(PERF_POLICYENGINE_INIT_LOG, "PolicyRefresher.saveToCache(serviceName=" + serviceName + ")");
+					}
+
+					try (Writer writer = new FileWriter(backupCacheFile)) {
+						gson.toJson(policies, writer);
+					} catch (Exception excp) {
+						LOG.error("failed to save policies to cache file '" + backupCacheFile.getAbsolutePath() + "'", excp);
+					}
+
+					RangerPerfTracer.log(perf);
+
+				}
+			}
 		} else {
 			LOG.info("policies is null. Nothing to save in cache");
 		}

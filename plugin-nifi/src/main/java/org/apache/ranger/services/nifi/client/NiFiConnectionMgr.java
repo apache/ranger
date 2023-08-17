@@ -19,10 +19,10 @@
 package org.apache.ranger.services.nifi.client;
 
 
-import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.client.BaseClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.KeyManagerFactory;
 import javax.net.ssl.SSLContext;
@@ -47,7 +47,7 @@ import java.util.Map;
  */
 public class NiFiConnectionMgr {
 
-    private static final Log LOG = LogFactory.getLog(NiFiConnectionMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(NiFiConnectionMgr.class);
 
     static final String INVALID_URL_MSG =  "NiFi URL must be a valid URL of the form " +
             "http(s)://<hostname>(:<port>)/nifi-api/resources";

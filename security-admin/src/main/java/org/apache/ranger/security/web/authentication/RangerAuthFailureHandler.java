@@ -28,11 +28,12 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.util.CLIUtil;
 import org.apache.ranger.view.VXResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.authentication.ExceptionMappingAuthenticationFailureHandler;
@@ -43,7 +44,7 @@ import org.springframework.security.web.authentication.ExceptionMappingAuthentic
  */
 public class RangerAuthFailureHandler extends
 ExceptionMappingAuthenticationFailureHandler {
-    private static final Logger logger = Logger.getLogger(RangerAuthFailureHandler.class);
+    private static final Logger logger = LoggerFactory.getLogger(RangerAuthFailureHandler.class);
 
     String ajaxLoginfailurePage = null;
 
@@ -84,9 +85,9 @@ ExceptionMappingAuthenticationFailureHandler {
 			VXResponse vXResponse = new VXResponse();
 			if (msg != null && !msg.isEmpty()) {
 				if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.badCredentials",request).equalsIgnoreCase(msg)) {
-				vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
-				vXResponse.setMsgDesc("The username or password you entered is incorrect.");
-				logger.info("Error Message : " + msg);
+					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+					vXResponse.setMsgDesc("The username or password you entered is incorrect.");
+					logger.info("Error Message : " + msg);
 				} else if (msg.contains("Could not get JDBC Connection; nested exception is java.sql.SQLException: Connections could not be acquired from the underlying database!")) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("Unable to connect to DB.");
@@ -96,6 +97,9 @@ ExceptionMappingAuthenticationFailureHandler {
 				} else if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.disabled",request).equalsIgnoreCase(msg)) {
 					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
 					vXResponse.setMsgDesc("The username or password you entered is disabled.");
+				} else if (CLIUtil.getMessage("AbstractUserDetailsAuthenticationProvider.locked",request).equalsIgnoreCase(msg)) {
+					vXResponse.setStatusCode(HttpServletResponse.SC_UNAUTHORIZED);
+					vXResponse.setMsgDesc("The user account is locked.");
 				}
 			}
 			jsonResp = jsonUtil.writeObjectAsString(vXResponse);

@@ -19,7 +19,6 @@
   <id>ranger-tools</id>
   <formats>
     <format>tar.gz</format>
-    <format>zip</format>
   </formats>
   <baseDirectory>${project.parent.name}-${project.version}-ranger-tools</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
@@ -43,9 +42,9 @@
               <include>commons-cli:commons-cli</include>
               <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
               <include>commons-lang:commons-lang</include>
+              <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
               <include>com.google.code.gson:gson</include>
               <include>log4j:log4j</include>
-              <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
               <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
               <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
               <include>org.apache.hadoop:hadoop-common-plus:jar:${hadoop.version}</include>
@@ -65,11 +64,14 @@
               <include>org.codehaus.jackson:jackson-jaxrs</include>
               <include>org.codehaus.jackson:jackson-mapper-asl</include>
               <include>org.codehaus.jackson:jackson-xc</include>
+              <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
+              <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
               <include>org.apache.ranger:ranger-plugins-common</include>
               <include>org.apache.ranger:ranger-plugins-audit</include>
               <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
               <include>net.java.dev.jna:jna:jar:${jna.version}</include>
               <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
+              <include>org.slf4j:slf4j-api</include>
             </includes>
           </dependencySet>
         </dependencySets>
@@ -133,10 +135,40 @@
       <fileMode>755</fileMode>
     </file>
     <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/ranger-mem-sizing.sh</source>
+      <outputDirectory></outputDirectory>
+      <destName>ranger-mem-sizing.sh</destName>
+      <fileMode>755</fileMode>
+    </file>
+    <file>
       <source>${project.parent.basedir}/ranger-tools/scripts/README.txt</source>
       <outputDirectory></outputDirectory>
       <destName>README.txt</destName>
       <fileMode>644</fileMode>
+    </file>
+    <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/create_requests.py</source>
+      <outputDirectory></outputDirectory>
+      <destName>create_requests.py</destName>
+      <fileMode>644</fileMode>
+    </file>
+    <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/gen_service_tags.sh</source>
+      <outputDirectory></outputDirectory>
+      <destName>gen_service_tags.sh</destName>
+      <fileMode>755</fileMode>
+    </file>
+    <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/gen_service_policies.sh</source>
+      <outputDirectory></outputDirectory>
+      <destName>gen_service_policies.sh</destName>
+      <fileMode>755</fileMode>
+    </file>
+    <file>
+      <source>${project.parent.basedir}/ranger-tools/scripts/create_tags_file.sh</source>
+      <outputDirectory></outputDirectory>
+      <destName>create_tags_file.sh</destName>
+      <fileMode>755</fileMode>
     </file>
   </files>
 </assembly>

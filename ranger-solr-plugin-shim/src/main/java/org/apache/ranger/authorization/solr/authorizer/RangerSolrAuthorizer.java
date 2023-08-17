@@ -23,26 +23,27 @@ package org.apache.ranger.authorization.solr.authorizer;
 import java.io.IOException;
 import java.util.Map;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.apache.solr.common.StringUtils;
 import org.apache.solr.common.util.NamedList;
 import org.apache.solr.handler.component.ResponseBuilder;
 import org.apache.solr.handler.component.SearchComponent;
 import org.apache.solr.security.AuthorizationContext;
 import org.apache.solr.security.AuthorizationPlugin;
 import org.apache.solr.security.AuthorizationResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerSolrAuthorizer extends SearchComponent implements AuthorizationPlugin {
-	private static final Log LOG = LogFactory
-			.getLog(RangerSolrAuthorizer.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(RangerSolrAuthorizer.class);
 
 	private static final String   RANGER_PLUGIN_TYPE                      = "solr";
 	private static final String   RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME   = "org.apache.ranger.authorization.solr.authorizer.RangerSolrAuthorizer";
 
-	private 		AuthorizationPlugin  	rangerSolrAuthorizerImpl 	  = null;
-	private			SearchComponent			rangerSearchComponentImpl	  = null;
-	private static	RangerPluginClassLoader rangerPluginClassLoader  	  = null;
+	private AuthorizationPlugin     rangerSolrAuthorizerImpl  = null;
+	private	SearchComponent         rangerSearchComponentImpl = null;
+	private RangerPluginClassLoader rangerPluginClassLoader   = null;
 
 	public RangerSolrAuthorizer() {
 		if(LOG.isDebugEnabled()) {
@@ -126,12 +127,21 @@ public class RangerSolrAuthorizer extends SearchComponent implements Authorizati
 		if(LOG.isDebugEnabled()) {
 			LOG.debug("==> RangerSolrAuthorizer.close(Resource)");
 		}
-		try {
-			activatePluginClassLoader();
+		// close() to be forwarded only for authorizer instance
+		boolean isAuthorizer = StringUtils.equals(super.getName(), RANGER_SOLR_AUTHORIZER_IMPL_CLASSNAME);
+		if (isAuthorizer) {
 
-			rangerSolrAuthorizerImpl.close();
-		} finally {
-			deactivatePluginClassLoader();
+			try {
+				activatePluginClassLoader();
+
+				rangerSolrAuthorizerImpl.close();
+			} finally {
+				deactivatePluginClassLoader();
+			}
+		} else {
+			if(LOG.isDebugEnabled()) {
+				LOG.debug("RangerSolrAuthorizer.close(): not forwarding for instance '" + super.getName() + "'");
+			}
 		}
 
 		if(LOG.isDebugEnabled()) {

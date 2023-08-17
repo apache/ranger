@@ -29,25 +29,27 @@ import java.util.Map;
 import java.util.Properties;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerContextEnricherDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerPluginContext;
+import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.service.RangerAuthContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public abstract class RangerAbstractContextEnricher implements RangerContextEnricher {
-	private static final Log LOG = LogFactory.getLog(RangerAbstractContextEnricher.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractContextEnricher.class);
 
 	protected RangerContextEnricherDef enricherDef;
 	protected String                   serviceName;
 	protected String                   appId;
 	protected RangerServiceDef         serviceDef;
 	private   RangerPluginContext      pluginContext;
+	protected RangerPolicyEngineOptions options = new RangerPolicyEngineOptions();
 
 	@Override
 	public void setEnricherDef(RangerContextEnricherDef enricherDef) {
@@ -176,10 +178,22 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		this.pluginContext = pluginContext;
 	}
 
+	public RangerPluginContext getPluginContext() {
+		return this.pluginContext;
+	}
+
+	final public void setPolicyEngineOptions(RangerPolicyEngineOptions options) {
+		this.options = options;
+	}
+
 	public RangerPluginConfig getPluginConfig() {
 		RangerPluginContext pluginContext = this.pluginContext;
 
 		return pluginContext != null ? pluginContext.getConfig() : null;
+	}
+
+	public RangerPolicyEngineOptions getPolicyEngineOptions() {
+		return options;
 	}
 
 	public void notifyAuthContextChanged() {
@@ -188,6 +202,12 @@ public abstract class RangerAbstractContextEnricher implements RangerContextEnri
 		if (pluginContext != null) {
 			pluginContext.notifyAuthContextChanged();
 		}
+	}
+
+	public String getPropertyPrefix() {
+		RangerPluginConfig pluginConfig = getPluginConfig();
+
+		return pluginConfig != null ? pluginConfig.getPropertyPrefix() : "ranger.plugin." + serviceDef.getName();
 	}
 
 	public String getConfig(String configName, String defaultValue) {

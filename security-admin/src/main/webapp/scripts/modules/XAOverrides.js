@@ -23,9 +23,17 @@
 	var vBreadCrumbs 	= require('views/common/BreadCrumbs');
 	var XAEnums			= require('utils/XAEnums');
 	var XAUtil			= require('utils/XAUtils');
+	require('Backbone.BootstrapModal')
 	
 	require('backgrid');
 	require('jquery-toggles');
+
+	Backbone.history.getHash = function(window) {
+		$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+		var pathStripper = /#.*$/;
+		var match = (window || this).location.href.match(/#(.*)$/);
+		return match ? this.decodeFragment(match[1].replace(pathStripper, '')) : '';
+	};
 
 	window.onbeforeunload = function(e) {
 		if (window._preventNavigation) {
@@ -384,7 +392,7 @@
 	  		   
 	  		 initialize: function(options) {
 		  		  Form.editors.Base.prototype.initialize.call(this, options);
-		  	      this.template = _.template('<input type="text" class="textFiledInputPadding " data-id="textFiledInput"><span><i class="icon-info-sign customTextFiledIcon" data-id="infoTextFiled"></i></span>');
+		  	      this.template = _.template('<input type="text" class="textFiledInputPadding" data-id="textFiledInput"><span><i class="fa-fw fa fa-info-circle customTextFiledIcon" data-id="infoTextFiled"></i></span>');
 		          var schema = this.schema;
 		  		//Allow customising text type (email, phone etc.) for HTML5 browsers
 		  		  var type = 'text';
@@ -479,6 +487,9 @@
 		  events: {
 			  'click':  function(event) {
 			  },
+			  'change':  function(event) {
+				  this.trigger('change', this);
+			  },
 		  },
 		  initialize: function(options) {
 		    Form.editors.Base.prototype.initialize.call(this, options);
@@ -520,22 +531,33 @@
 		  	this.renderSameLevelResource();
 		    return this;
 		  },
-                  renderResource : function(def) {
-			  var that = this;
-                          var Vent = require('modules/Vent');
-			  if(!_.isNull(this.value) && !_.isEmpty(this.value)){
-				this.value.values = _.map(this.value.values, function(val){ return _.escape(val); });
-			    	this.$resource.val(this.value.values.toString())
+			renderResource : function(def) {
+				var that = this;
+				var Vent = require('modules/Vent');
+				if(!_.isNull(this.value) && !_.isEmpty(this.value)){
+					if (!_.isUndefined(this.key) && (this.key == "path" || this.key == "relativepath")) {
+						this.value.values = this.value.values.join('||');
+						// Set initial value for resources.
+						if (_.isUndefined(def)) {
+							this.$resource.val((this.value.values));
+						}
+					} else {
+						this.value.values = _.map(this.value.values, function(val){ return  _.escape(val)});
+						// Set initial value for resources.
+						if (_.isUndefined(def)) {
+							this.$resource.val(JSON.stringify(this.value.values));
+						}
+					}
 			    	//to preserve resources values to text field
 			    	if(!_.isUndefined(this.value.resourceType)){
-			    		this.preserveResourceValues[this.value.resourceType] = this.value.values.toString();	
+			    		this.preserveResourceValues[this.value.resourceType] = this.value.values;
 			    	}else{
-			    		this.preserveResourceValues[this.name] = this.value.values.toString(); 
+			    		this.preserveResourceValues[this.name] = this.value.values;
 			    	}
 			    }
 			  	//check dirtyField for input
 			  	this.$resource.on('change', function(e) {
-			  		if(_.isUndefined(that.resourceOpts.select2Opts)){
+					if(_.isUndefined(that.resourceOpts.select2Opts)){
 //			  			that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
 			  		}
 			  	});
@@ -548,7 +570,11 @@
                         if(_.has(def, 'validationRegEx') && !_.isEmpty(def.validationRegEx)){
                             opts['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(def.validationRegEx), 'message' : def.validationMessage};
                         }
-                        opts['lookupURL'] = "service/plugins/services/lookupResource/"+this.form.rangerService.get('name');
+                        if(!_.isUndefined(this.form.serviceName)) {
+                            opts['lookupURL'] = "service/plugins/services/lookupResource/"+this.form.serviceName;
+                        } else {
+                            opts['lookupURL'] = "service/plugins/services/lookupResource/"+this.form.rangerService.get('name');
+                        }
                         opts['type'] = def.name;
                         this.resourceOpts['select2Opts'] = that.form.getPlugginAttr(true, opts);
                     }else{
@@ -564,7 +590,6 @@
 			  	//create select2 if select2Opts is specified
 			    if(!_.isUndefined(this.resourceOpts.select2Opts)){
 			    	this.$resource.select2(this.resourceOpts.select2Opts).on('change',function(e){
-			    		console.log(e)
 			    		that.preserveResourceValues[that.$resourceType.val()] = e.currentTarget.value;
 			    		//check dirty field value for select2 resource field
 			    		that.checkDirtyFieldForSelect2($(e.currentTarget), that, this.value);
@@ -584,17 +609,17 @@
 			  			this.value.isExcludes = _.isUndefined(this.value.isExcludes) ? false : this.value.isExcludes;
 			  			isExcludes = this.value.isExcludes
 			  		}
-					this.$excludeSupport.show();
+					this.$excludeSupport.css('visibility', 'visible');
 			  		this.$excludeSupport.toggles({
 			  			on: !isExcludes,
-			  			text : {on : 'include', off : 'exclude' },
+			  			text : {on : 'Include', off : 'Exclude' },
 			  			width: 80,
 			  		}).on('toggle', function (e, active) {
 			  		    that.value.isExcludes = !active;
 			  		    XAUtil.checkDirtyFieldForToggle($(e.currentTarget))
 			  		});
 				} else {
-					this.$excludeSupport.hide();
+					this.$excludeSupport.css('visibility', 'hidden');
 			  	}
 			  	if(this.recursiveSupport){
 			  		if(!_.isNull(this.value)){
@@ -606,7 +631,7 @@
 		  			this.$recursiveSupport.addClass(this.excludeSupport ? 'recursive-toggle-2' : 'recursive-toggle-1')
 		  			this.$recursiveSupport.toggles({
 		  				on: isRecursive,
-		  				text : {on : 'recursive', off : 'non-recursive' },
+		  				text : {on : 'Recursive', off : 'Non-recursive' },
 		  				width: 120,
 		  			}).on('toggle', function (e, active) {
 		  				that.value.isRecursive = active;
@@ -626,19 +651,18 @@
 			  		}
 			  		this.$resourceType.on('change', function(e,onChangeResources) {
 		  				if(!_.isUndefined(that.preserveResourceValues[e.currentTarget.value])){
-		  					var val = _.isEmpty(that.preserveResourceValues[e.currentTarget.value]) ? '' : that.preserveResourceValues[e.currentTarget.value].split(','); 
-		  					that.$resource.select2('val', val)
+							var val = _.isEmpty(that.preserveResourceValues[e.currentTarget.value]) ? '' : that.preserveResourceValues[e.currentTarget.value];
+							that.$resource.val(JSON.stringify(val))
 		  				}else{
 							that.$resource.select2('val', "");
-							that.value=[];
-		  				}
+						}
 			  			//reset values
 			  			that.value.isExcludes = false;
 			  			that.value.isRecursive = false;
 			  			that.$excludeSupport.trigger('toggleOn');
 			  			($(e.currentTarget).addClass('dirtyField'))
 			  			//resource are shown if parent is selected or showned
-			  			that.$el.parents('.control-group').attr('data-name', 'field-'+this.value);
+			  			that.$el.parents('.form-group').attr('data-name', 'field-'+this.value);
 						//remove error class
 						that.$el.removeClass('error');
 //						if noneFlag is true not trigger parentChildHideShow
@@ -670,17 +694,22 @@
                             that.renderResource(def);
                         }
                         //trigger resource event for showing respective access permissions
-                        Vent.trigger('resourceType:change', changeType = 'resourceType', e.currentTarget.value, e.currentTarget.value, e);
+                        var resourceItemIndex = that.form.model && that.form.model.collection.indexOf(that.form.model);
+						Vent.trigger('resourceType:change', { changeType : 'resourceType', value : e.currentTarget.value, resourceName: e.currentTarget.value, event:e, resourceItemIndex : resourceItemIndex });
 					});
 			  	}
 		  },
-		  getValue: function() {
+		  getValue: function(fieldName) {
 			  var that = this;
 			  //checkParent
-			  if(this.$el.parents('.control-group').hasClass('hideResource')){
+			  if(this.$el.parents('.form-group').hasClass('hideResource')){
 				  return null;
 			  }
-			  this.value['resource'] = this.$resource.val();
+			if (that.key == "path" || that.key == "relativepath") {
+				this.value['resource'] = this.$resource.tagit("assignedTags");
+			} else {
+				this.value['resource'] = this.$resource.select2('data');
+			}
 			  //validation
 			  
 			  
@@ -753,7 +782,7 @@
                   recursiveSupportToggleDiv = '<div class="toggle-xa recursive-toggle '+recursiveTogglePosition+'"" data-js="recursive" style="height: 20px; width: 120px;"><div  class="toggle"></div></div>';
 				  
 				  return _.template(selectTemplate+'<input data-js="resource" type="text">'+
-				    					excludeSupportToggleDiv+''+recursiveSupportToggleDiv);
+									'<div class="excludeRecursiveSupport">'+excludeSupportToggleDiv+''+recursiveSupportToggleDiv+'</div>');
 			  },
 			});
 	  
@@ -803,7 +832,7 @@
 	              var $tbody = $('<tbody><tr><th><input type="checkbox" data-id="selectAllComponent" /> Component</th><td><strong>Permissions</strong></td></tr></tbody>');
 	              
 	              $selectComp.append($table)
-	              $('<div>').append($selectComp).appendTo(this.$tpl);
+	              $('<div class="mb-1">').append($selectComp).appendTo(this.$tpl);
 	              $table.append($tbody).appendTo(this.$tpl);
 	              
 	              this.$tpl.find('[data-id="selectComp"]').select2(this.options.select2option).on('change',function(e){
@@ -1699,5 +1728,4 @@
 
 		return Picky;
 	})(Backbone, _);
-
 });

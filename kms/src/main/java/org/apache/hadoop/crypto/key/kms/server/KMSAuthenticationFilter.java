@@ -26,7 +26,12 @@ import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthentica
 import org.apache.hadoop.security.token.delegation.web.DelegationTokenAuthenticationHandler;
 import org.apache.hadoop.security.token.delegation.web.KerberosDelegationTokenAuthenticationHandler;
 import org.apache.hadoop.security.token.delegation.web.PseudoDelegationTokenAuthenticationHandler;
+
+import com.google.common.annotations.VisibleForTesting;
+
 import org.apache.hadoop.http.HtmlQuoting;
+import org.apache.ranger.kms.metrics.KMSMetrics;
+
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletException;
@@ -49,20 +54,24 @@ public class KMSAuthenticationFilter
 
   public static final String CONFIG_PREFIX = KMSConfiguration.CONFIG_PREFIX +
       "authentication.";
+  static final String RANGER_KMS_REST_API_PATH = "/kms/api/status";
 
   @Override
   protected Properties getConfiguration(String configPrefix,
       FilterConfig filterConfig) {
-    Properties props = new Properties();
     Configuration conf = KMSWebApp.getConfiguration();
-    for (Map.Entry<String, String> entry : conf) {
-      String name = entry.getKey();
-      if (name.startsWith(CONFIG_PREFIX)) {
-        String value = conf.get(name);
-        name = name.substring(CONFIG_PREFIX.length());
-        props.setProperty(name, value);
-      }
-    }
+    return this.getKMSConfiguration(conf);
+  }
+
+  @VisibleForTesting
+  Properties getKMSConfiguration(Configuration conf) {
+	Properties props = new Properties();
+	Map<String, String> propsWithPrefixMap = conf.getPropsWithPrefix(CONFIG_PREFIX);
+
+	for (Map.Entry<String, String> entry : propsWithPrefixMap.entrySet()) {
+		props.setProperty(entry.getKey(), entry.getValue());
+	}
+
     String authType = props.getProperty(AUTH_TYPE,"simple");
     if (authType.equals(PseudoAuthenticationHandler.TYPE)) {
       props.setProperty(AUTH_TYPE,
@@ -126,32 +135,39 @@ public class KMSAuthenticationFilter
   public void doFilter(ServletRequest request, ServletResponse response,
       FilterChain filterChain) throws IOException, ServletException {
     KMSResponse kmsResponse = new KMSResponse(response);
-    super.doFilter(request, kmsResponse, filterChain);
+    String path = ((HttpServletRequest) request).getRequestURI();
+    	if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
+    		filterChain.doFilter(request, response);
+		} else {
+            KMSWebApp.getKmsMetricsCollector().incrementCounter(KMSMetrics.KMSMetric.TOTAL_CALL_COUNT);
+			super.doFilter(request, kmsResponse, filterChain);
 
-    if (kmsResponse.statusCode != HttpServletResponse.SC_OK &&
-        kmsResponse.statusCode != HttpServletResponse.SC_CREATED &&
-        kmsResponse.statusCode != HttpServletResponse.SC_UNAUTHORIZED) {
-      KMSWebApp.getInvalidCallsMeter().mark();
-    }
+			if (kmsResponse.statusCode != HttpServletResponse.SC_OK
+					&& kmsResponse.statusCode != HttpServletResponse.SC_CREATED
+					&& kmsResponse.statusCode != HttpServletResponse.SC_UNAUTHORIZED) {
+				KMSWebApp.getInvalidCallsMeter().mark();
+			}
 
-    // HttpServletResponse.SC_UNAUTHORIZED is because the request does not
-    // belong to an authenticated user.
-    if (kmsResponse.statusCode == HttpServletResponse.SC_UNAUTHORIZED) {
-      KMSWebApp.getUnauthenticatedCallsMeter().mark();
-      String method = ((HttpServletRequest) request).getMethod();
-      StringBuffer requestURL = ((HttpServletRequest) request).getRequestURL();
-      String queryString = ((HttpServletRequest) request).getQueryString();
-      if (queryString != null) {
-        requestURL.append("?").append(queryString);
-      }
+			// HttpServletResponse.SC_UNAUTHORIZED is because the request does not
+			// belong to an authenticated user.
+			if (kmsResponse.statusCode == HttpServletResponse.SC_UNAUTHORIZED) {
 
-      if (!method.equals("OPTIONS")) {
-        // an HTTP OPTIONS request is made as part of the SPNEGO authentication
-        // sequence. We do not need to audit log it, since it doesn't belong
-        // to KMS context. KMS server doesn't handle OPTIONS either.
-        KMSWebApp.getKMSAudit().unauthenticated(request.getRemoteHost(), method,
-          requestURL.toString(), kmsResponse.msg);
-      }
-    }
+				KMSWebApp.getUnauthenticatedCallsMeter().mark();
+				String method = ((HttpServletRequest) request).getMethod();
+				StringBuffer requestURL = ((HttpServletRequest) request).getRequestURL();
+				String queryString = ((HttpServletRequest) request).getQueryString();
+				if (queryString != null) {
+					requestURL.append("?").append(queryString);
+				}
+
+				if (!method.equals("OPTIONS")) {
+					// an HTTP OPTIONS request is made as part of the SPNEGO authentication
+					// sequence. We do not need to audit log it, since it doesn't belong
+					// to KMS context. KMS server doesn't handle OPTIONS either.
+					KMSWebApp.getKMSAudit().unauthenticated(request.getRemoteHost(), method, requestURL.toString(),
+							kmsResponse.msg);
+				}
+			}
+		}
   }
 }

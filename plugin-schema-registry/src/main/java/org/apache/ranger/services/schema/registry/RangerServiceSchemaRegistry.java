@@ -19,12 +19,12 @@ package org.apache.ranger.services.schema.registry;
 
 import org.apache.ranger.services.schema.registry.client.AutocompletionAgent;
 import org.apache.ranger.services.schema.registry.client.SchemaRegistryResourceMgr;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -32,7 +32,7 @@ import java.util.List;
 
 public class RangerServiceSchemaRegistry extends RangerBaseService {
 
-    private static final Log LOG = LogFactory.getLog(RangerServiceSchemaRegistry.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerServiceSchemaRegistry.class);
 
 
     @Override

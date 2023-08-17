@@ -26,6 +26,7 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XALinks 		= require('modules/XALinks');
 	var localization	= require('utils/XALangSupport');
+	var RangerServiceList 	= require('models/RangerService');
 	var UploadservicepolicyTmpl = require('hbs!tmpl/common/uploadservicepolicy_tmpl');
 	
 	var ServiceMappingItem = Backbone.Marionette.ItemView.extend({
@@ -218,33 +219,35 @@ define(function(require){
 			}else{
 				var selectedZoneServices = [], selectedZone;
 				if(!_.isUndefined( that.ui.zoneDestination.val()) && !_.isEmpty( that.ui.zoneDestination.val())){
-					selectedZone = this.rangerZoneList.find(function(m) {
-						return that.ui.zoneDestination.val() === m.get('name');
-					});
-					_.each(selectedZone.get('services'), function(value, key) {
-						var model = that.services.find(function(m) {
-							return m.get('name') == key
-						})
-						if (model) {
-							selectedZoneServices.push(model);
-						}
-					})
-					if(selectedZone.has('tagServices') && !_.isEmpty(selectedZone.get('tagServices'))){
-						_.filter(selectedZone.get('tagServices'), function(tag){
-							var zoneServiceModelTags = that.serviceNames.find(function(serviceModel){
-								return serviceModel.get('name') === tag
-							})
-							if(zoneServiceModelTags){
-								selectedZoneServices.push(zoneServiceModelTags);
-							}
-						})
-					}
+                    selectedZone = _.find(that.rangerZoneList.attributes, function (m){
+                        return m.name == that.ui.zoneDestination.val();
+                    })
+                    var zoneServiceListModel = new RangerServiceList();
+                    zoneServiceListModel.clear();
+                    zoneServiceListModel.fetch({
+                        cache : false,
+                        async : false,
+                        url : "service/public/v2/api/zones/"+selectedZone.id+"/service-headers",
+                    });
+                    if(!_.isEmpty(zoneServiceListModel.attributes)) {
+                        _.filter(zoneServiceListModel.attributes, function(obj) {
+                            var zoneServiceModel = that.services.find(function(m) {
+                                return m.get('name') == obj.name;
+                            });
+                            if (zoneServiceModel) {
+                                selectedZoneServices.push(zoneServiceModel);
+                            }
+                        })
+                    }
 				}else{
 					selectedZoneServices = this.serviceNames;
 				}
 				compString = _.map(_.groupBy(selectedZoneServices, function(m){return m.get('type')}), function(m, key){return key}).toString();
 			}
 			XAUtil.blockUI();
+			if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+				$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+			}
 			$.ajax({
 				type: 'POST',
 				url: url+"&serviceType="+compString,
@@ -293,7 +296,7 @@ define(function(require){
                         }
 			if(!_.isUndefined(this.targetFileObj)){
                                 this.$el.find('.selectFile').text(this.targetFileObj.name);
-                                this.$el.find('.selectFile').append('<i></i><label class="icon icon-remove icon-1x icon-remove-btn" data-id="fileNameClosebtn"></label>');
+                                this.$el.find('.selectFile').append('<i></i><label class="icon fa-fw fa fa-remove fa-fw fa fa-1x fa-fw fa fa-remove-btn" data-id="fileNameClosebtn"></label>');
                                 //check if file name is proper json extension or not
                                 if(this.targetFileObj.type === "application/json" || (this.targetFileObj.name).match(".json$", "i")){
                                         this.selectedFileValidation(e)
@@ -363,8 +366,8 @@ define(function(require){
 		},
 		setServiceDestination : function(){
 			var that =this,
-			zoneNameOption = _.map(this.rangerZoneList.models, function(m){
-				return { 'id':m.get('name'), 'text':m.get('name')}
+			zoneNameOption = _.map(that.rangerZoneList.attributes, function(m){
+				return { 'id':m.name, 'text':m.name}
 			});
 			this.ui.zoneDestination.attr('disabled',false);
 			this.ui.zoneDestination.select2({
@@ -379,25 +382,26 @@ define(function(require){
 					var  zoneServiceList = [];
 					that.ui.selectServicesMapping.show();
 					that.serviceNames = that.services.models;
-					var selectedZone = that.rangerZoneList.find(function(m) {return e.val === m.get('name')});
-					_.filter(selectedZone.get('services'), function(m, key){
-						var zoneServiceModel = that.serviceNames.find(function(serviceModel){
-							return serviceModel.get('name') === key
-						})
-						if(zoneServiceModel){
-							zoneServiceList.push(zoneServiceModel);
-						}
-					});
-					if(selectedZone.has('tagServices') && !_.isEmpty(selectedZone.get('tagServices'))){
-						_.filter(selectedZone.get('tagServices'), function(tag){
-							var zoneServiceModelTags = that.serviceNames.find(function(serviceModel){
-								return serviceModel.get('name') === tag
-							})
-							if(zoneServiceModelTags){
-								zoneServiceList.push(zoneServiceModelTags);
-							}
-						})
-					}
+                    var selectedZone = _.find( that.rangerZoneList.attributes, function (m){
+                        return m.name == e.val
+                    })
+                    var zoneServiceListModel = new RangerServiceList();
+                    zoneServiceListModel.clear();
+                    zoneServiceListModel.fetch({
+                        cache : false,
+                        async : false,
+                        url : "service/public/v2/api/zones/"+selectedZone.id+"/service-headers",
+                    });
+                    if(!_.isEmpty(zoneServiceListModel.attributes)) {
+                        _.filter(zoneServiceListModel.attributes, function(obj) {
+                            var zoneServiceModel = that.serviceNames.find(function(m) {
+                                return m.get('name') == obj.name;
+                            });
+                            if (zoneServiceModel) {
+                                zoneServiceList.push(zoneServiceModel);
+                            }
+                        })
+                    }
 					that.serviceNames = zoneServiceList;
 					that.setServiceSourceData();
 				}else{

@@ -27,11 +27,12 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.util.List;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class PasswordValidator implements Runnable {
 
-	private static final Logger LOG = Logger.getLogger(PasswordValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(PasswordValidator.class);
 	
 	private static String validatorProgram = null;
 

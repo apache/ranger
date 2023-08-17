@@ -105,8 +105,7 @@ define(function(require) {
 //				if(XAUtil.isMaskingPolicy(this.rangerPolicyType)) this.renderMaskingTypesForTagBasedPolicies();
 			} else {
 //				To handle scenario : Access permission doesnt changes if we change resource before adding new policy item.
-				this.renderPerms(this.storeResourceRef.changeType, this.storeResourceRef.value,
-						this.storeResourceRef.resourceName, this.storeResourceRef.e );
+				this.renderPerms({ action : "permissionItemAdd" });
 				if(XAUtil.isMaskingPolicy(this.rangerPolicyType)){
 					this.renderMaskingType();
 				}
@@ -174,12 +173,15 @@ define(function(require) {
 			}
 		},
 		dropDownChange : function($select){
-			var that = this;
+			var that = this, otherName, otherName2;
 			$select.on('change',function(e){
-                                var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group' :
+                var name = ($(e.currentTarget).attr('data-js') == that.ui.selectGroups.attr('data-js')) ? 'group' :
                                 (($(e.currentTarget).attr('data-js') == that.ui.selectUsers.attr('data-js')) ? 'user' : 'role');
-				var otherName = (name == 'user') ? 'group': 'user';
-                                var otherName2 = (name == 'user') ? 'role': 'user';
+				var nameList = ['user', 'group', 'role'];
+				nameList.splice(nameList.indexOf(name),1);
+				otherName = nameList.pop();
+				otherName2 = nameList.pop();
+
 				that.checkDirtyFieldForDropDown(e);
 				
 				if(_.isNull(that.model.get(otherName+'Name'))){
@@ -218,7 +220,7 @@ define(function(require) {
 			$select.select2({
 				closeOnSelect : true,
 				placeholder : placeholder,
-				width :'220px',
+				width :'290px',
 				tokenSeparators: [",", " "],
 				tags : true,
 				initSelection : function (element, callback) {
@@ -276,17 +278,43 @@ define(function(require) {
 				}
 			}).on('select2-focus', XAUtil.select2Focus);
 		},
-		renderPerms :function(changeType, value, resourceName, e){
+		renderPerms :function(options){
+			var changeType = options.changeType, value = options.value, resourceName = options.resourceName, event = options.event,
+				resourceItemIndex = options.resourceItemIndex, action = options.action;
 	        var that = this , accessTypeByResource = this.accessTypes;
-	        this.storeResourceRef.changeType = changeType;
-	        this.storeResourceRef.value = value;
-	        this.storeResourceRef.resourceName = resourceName;
-	        this.storeResourceRef.e = e;
+			if(action === 'removed'){
+				var removedItemIndex = _.findIndex(this.storeResourceRef, function(a){ return a.resourceItemIndex == resourceItemIndex;});
+				if(removedItemIndex >= 0){
+					this.storeResourceRef.splice(this.storeResourceRef.findIndex(function (item) {
+						return item.resourceItemIndex === resourceItemIndex;
+					}) , 1);
+					_.each(this.storeResourceRef, function (obj, index) {
+						if(index >= removedItemIndex){
+							obj.resourceItemIndex = obj.resourceItemIndex - 1;
+						}
+					});
+				}
+			} else if (changeType || action== 'added') {
+				var resourceChangeObj = {
+					resourceItemIndex : resourceItemIndex, changeType : changeType, value : value, resourceName : resourceName, event :event
+				};
+				var found = _.findWhere(this.storeResourceRef, { resourceItemIndex: resourceItemIndex });
+				if(found && changeType){
+					_.extend(_.findWhere(this.storeResourceRef, { resourceItemIndex: resourceItemIndex }), resourceChangeObj );
+				} else {
+					this.storeResourceRef.push(resourceChangeObj)
+				}
+			}
 	        //get permissions by resource only for access policy
-	        accessTypeByResource = this.getAccessPermissionForSelectedResource(changeType, value, resourceName, e);
+			accessTypeByResource = (this.storeResourceRef.length && (changeType || action === 'removed' || action === 'permissionItemAdd'))
+				? [] : accessTypeByResource;
+			_.each(this.storeResourceRef, function (obj) {
+				accessTypeByResource = _.union(accessTypeByResource, this.getAccessPermissionForSelectedResource(obj.changeType, obj.value, obj.resourceName, obj.event));
+			}, this);
 	        //reset permissions on resource change
-	        if(this.permsIds.length > 0 && !_.isUndefined(changeType) && !_.isUndefined(resourceName)){
-	                this.permsIds = [];
+			this.permsIds = _.pluck(this.model.get('accesses'), 'type');
+	        if(this.permsIds.length > 0 && ( !_.isUndefined(changeType) && !_.isUndefined(resourceName) || action === 'removed') ){
+				this.permsIds = this.permsIds.filter(function(name){ return _.findWhere(accessTypeByResource, {'name' : name}) });
 	        }
 	        this.perms =  _.map(accessTypeByResource , function(m){return {text : m.label, value : m.name};});
 			if(this.perms.length > 1){
@@ -294,9 +322,9 @@ define(function(require) {
 			}
 			//if policy items not present. its skip that items and move forward
 			if(_.isObject(this.ui.addPerms)){
-                                if(changeType){
-                                    this.ui.addPerms.editable("destroy");
-                                }
+				if(changeType || action === 'removed' || action== 'added'){
+					this.ui.addPerms.editable("destroy");
+				}
 				//create x-editable for permissions
 				this.ui.addPerms.editable({
 					emptytext : 'Add Permissions',
@@ -306,7 +334,7 @@ define(function(require) {
                         if(_.isNull(values) || _.isEmpty(values) || (_.contains(values,"-1")  &&  values.length == 1)){
                             $(this).empty();
                             that.model.unset('accesses');
-                            that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+                            that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
                             that.ui.addPermissionsSpan.attr('title','add');
                             return;
 						}
@@ -319,7 +347,7 @@ define(function(require) {
                         	if(!_.isUndefined(id)){
                         		var obj = _.findWhere(that.rangerServiceDefModel.attributes.accessTypes,{'name' : id});
 								permTypeArr.push({permType : obj.value});
-								return "<span class='label label-info'>" + obj.label + "</span>";
+								return "<span class='badge badge-info'>" + obj.label + "</span>";
                         	}
                         });
                         var items=[];
@@ -332,7 +360,7 @@ define(function(require) {
                         // Save form data to model
                         that.model.set('accesses', items);
                         $(this).html(valArr.join(" "));
-                        that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
+                        that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
                         that.ui.addPermissionsSpan.attr('title','edit');
 					},
                                 }).on('shown', function(e, editable) {
@@ -478,7 +506,7 @@ define(function(require) {
 					if(_.isNull(values) || _.isEmpty(values)){
 						$(this).empty();
 						that.model.unset('accesses');
-						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 						that.ui.addPermissionsSpan.attr('title','add');
 						//disable Masking option for tag based
 						if(XAUtil.isMaskingPolicy(that.rangerPolicyType)){
@@ -501,7 +529,7 @@ define(function(require) {
 						if(!_.isUndefined(id)){
 							var obj = _.findWhere(srcData,{'value' : id});
 							permTypeArr.push({permType : obj.value});
-							return "<span class='label label-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
+							return "<span class='badge badge-info'>" + id.substr(0,id.indexOf(":")).toUpperCase() + "</span>";
 						}
 					});
 					var items=[];
@@ -514,7 +542,7 @@ define(function(require) {
 					// Save form data to model
 					that.model.set('accesses', items);
 					$(this).html(_.uniq(valArr).join(" "));
-					that.ui.addPermissionsSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addPermissionsSpan.attr('title','edit');
 					
 					//enabling add masking option for Tag-based
@@ -525,24 +553,31 @@ define(function(require) {
 						that.renderMaskingTypesForTagBasedPolicies(selectedComponent)
 					}
 				},
-			}).on('hide',function(e){
-					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
+			}).on('hidden',function(e){
+					// $(e.currentTarget).parent().find('.tag-condition-popover').remove()
+					$('.popover').parent().remove()
 			}).on('click', function(e) {
 				e.stopPropagation();
+				if($('.popover')){
+					$('.tag-condition-popover').remove()
+				}
 //				e.preventDefault();
 //				that.clickOnPermissions(that);
 				 //Sticky popup
-				var pop = $(this).parent('td').find('.popover')
+				var pop = $('.popover')
 				pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
 				pop.addClass('tag-fixed-popover');
 				pop.find('.arrow').removeClass('arrow')
 			});
 			that.ui.addPermissionsSpan.click(function(e) {
 				e.stopPropagation();
+				if($('.popover')){
+					$('.tag-condition-popover').remove()
+				}
 				that.$('a[data-js="permissions"]').editable('toggle');
 //				that.clickOnPermissions(that);
 				
-				var pop = $(this).parent('td').find('.popover')
+				var pop = $('.popover')
 				pop.wrap('<div class="tag-fixed-popover-wrapper"></div>');
 				pop.addClass('tag-fixed-popover');
 				pop.find('.arrow').removeClass('arrow')
@@ -575,7 +610,7 @@ define(function(require) {
                         }
                         that.ui.addMaskingTypeSpan.unbind( "click" );
 			this.$el.find('input[data-id="maskTypeCustom"]').unbind( "change" );
-			that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-plus');
+			that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 			that.ui.addMaskingTypeSpan.attr('title','add');
                         this.$el.find('input[data-id="maskTypeCustom"]').css("display","none");
 
@@ -590,7 +625,7 @@ define(function(require) {
 				display: function(value,srcData) {
 					if(_.isNull(value) || _.isUndefined(value) || _.isEmpty(value)){
 						$(this).empty();
-						that.ui.addPermissionsSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addPermissionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 						that.ui.addPermissionsSpan.attr('title','add');
 						return;
 					}
@@ -606,13 +641,14 @@ define(function(require) {
 						$(this).siblings('[data-id="maskTypeCustom"]').val(" ");
 					}
 					
-					$(this).html("<span class='label label-info'>"+ value.substr(0,value.indexOf(":")).toUpperCase() +" : "
+					$(this).html("<span class='badge badge-info'>"+ value.substr(0,value.indexOf(":")).toUpperCase() +" : "
 							+ obj.text +"</span>");
-					that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-pencil');
+					that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addMaskingTypeSpan.attr('title','edit');
 				},
 			}).on('hide',function(e){
-					$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
+					//$(e.currentTarget).parent().find('.tag-fixed-popover-wrapper').remove()
+					$('.popover').parent().remove()
                         }).on('click', function(e) {
                             e.stopPropagation();
                             e.preventDefault();
@@ -637,47 +673,47 @@ define(function(require) {
 		},
 		clickOnPermissions : function(that) {
 			var selectAll = true;
-			var checklist = that.$('.editable-checklist').find('input[type="checkbox"]')
+			var checklist = $('.editable-checklist').find('input[type="checkbox"]')
             _.each(checklist,function(checkbox){
                 if($(checkbox).val() != -1 && !$(checkbox).is(':checked'))
                     selectAll = false;
             })
 			if(selectAll){
-				that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',true)
+				$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',true)
 			} else {
-				that.$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',false)
+				$('.editable-checklist').find('input[type="checkbox"][value="-1"]').prop('checked',false)
 			}
 			//for selectAll functionality
-                        that.$('input[type="checkbox"][value="-1"]').click(function(e){
+                        $('input[type="checkbox"][value="-1"]').click(function(e){
                 var checkboxlist =$(this).closest('.editable-checklist').find('input[type="checkbox"][value!=-1]')
                 $(this).is(':checked') ? checkboxlist.prop('checked',true) : checkboxlist.prop('checked',false);
             });
-			that.$('.editable-checklist input[type="checkbox"]').click(function(e){
+			$('.editable-checklist input[type="checkbox"]').click(function(e){
 				if(this.value!="-1"){
 					var selectAll = true;
-					that.$('.editable-checklist input[type="checkbox"]').each(function(index,item){
+					$('.editable-checklist input[type="checkbox"]').each(function(index,item){
 						if(item.value!="-1" && !item.checked){
 							selectAll = false;
 						}
 					});
-					that.$('input[type="checkbox"][value="-1"]').prop('checked',selectAll);
+					$('input[type="checkbox"][value="-1"]').prop('checked',selectAll);
 				}
 			});
 		},
 		renderPolicyCondtion : function() {
 			var that = this;
 			
-			if(this.policyConditions.length > 0){
+			if(!_.isEmpty(this.policyConditions)){
 				var tmpl = _.map(this.policyConditions,function(obj){
 					if(!_.isUndefined(obj.evaluatorOptions) && !_.isUndefined(obj.evaluatorOptions['ui.isMultiline']) && Boolean(obj.evaluatorOptions['ui.isMultiline'])){
 						return '<div class="editable-address margin-bottom-5">\
 						            <label style="display:block !important;">\
 						                <span>'+obj.label+' : </span>\
-						                <i title="'+localization.tt('validationMessages.jsValidationMsg')+'" class="icon-info-sign" style="float: right;margin-top: 6px;"></i>\
+						                <i title="'+localization.tt('validationMessages.jsValidationMsg')+'" class="fa-fw fa fa-info-circle" style="float: right;margin-top: 6px;"></i>\
 						            </label>\
 						            <textarea class="textAreaContainer" name="'+obj.name+'" placeholder="Please enter condition.."></textarea>\
 						            <div class="jsValidation">\
-						                <a href="javascript:;"class="jsValidationCheck btn btn-defult btn-mini" style="margin: 5px">Syntax check</a>\
+						                <a href="javascript:;"class="jsValidationCheck btn btn-defult btn-sm" style="margin: 5px">Syntax check</a>\
 						            </div>\
 						       </div>'
 					}
@@ -685,7 +721,7 @@ define(function(require) {
 						
 				});
 				//to show only mutiline line policy codition 
-				this.multiLinecond = _.filter(that.policyConditions, function(m){ return (!_.isUndefined(m.evaluatorOptions['ui.isMultiline']) && m.evaluatorOptions['ui.isMultiline']) });
+				this.multiLinecond = _.filter(that.policyConditions, function(m){ return (!_.isUndefined(m.evaluatorOptions) && !_.isUndefined(m.evaluatorOptions['ui.isMultiline']) && m.evaluatorOptions['ui.isMultiline']) });
 				this.multiLinecond = _.isArray(this.multiLinecond) ? this.multiLinecond : [this.multiLinecond];
 				//get the select input size(for bootstrap x-editable) of policy conditions
 				var selectSizeList = [];
@@ -713,7 +749,7 @@ define(function(require) {
 						if(continue_){
 							//Generate html to show on UI
 							var html = _.map(value, function(val,name) {
-								var label = (i%2 == 0) ? 'label label-inverse' : 'label';
+								var label = (i%2 == 0) ? 'badge badge-dark' : 'label';
 								if(_.isEmpty(val)){
 									return ''; 
 								}
@@ -732,12 +768,12 @@ define(function(require) {
 							});
 							that.model.set('conditions', cond);
 							$(this).html(html);
-							that.ui.addConditionsSpan.find('i').attr('class', 'icon-pencil');
+							that.ui.addConditionsSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 							that.ui.addConditionsSpan.attr('title','edit');
 						} else {
 							that.model.unset('conditions');
 							$(this).empty();
-							that.ui.addConditionsSpan.find('i').attr('class', 'icon-plus');
+							that.ui.addConditionsSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 							that.ui.addConditionsSpan.attr('title','add');
 						}
 					},
@@ -770,13 +806,14 @@ define(function(require) {
 							return error.message;
 						}
 				    },
-				}).on('shown', function(e){
-				    that.$el.find('.jsValidationCheck').on('click',function(e){
+				}).on('shown' , function(e, editable) {
+				    $('.popover').addClass('tag-condition-popover');
+				    $('.jsValidationCheck').on('click',function(e){
 				        e.stopPropagation();
 				        var $textArea = $(e.currentTarget).parent().parent();
-				        if(that.$el.find('.editableform div.control-group').hasClass('error')){
-				            that.$el.find('.editableform div.control-group').removeClass('error');
-				            that.$el.find('.editable-error-block').remove();
+				        if($('.editableform div.form-group').hasClass('error')){
+				            $('.editableform div.form-group').removeClass('error');
+				            $('.editable-error-block').remove();
 				        }
 				        if($textArea.find('.textAreaContainer').hasClass('errorClass') || $textArea.find('.jsValidation span').hasClass('validSyntax')){
 				            $textArea.find('.textAreaContainer').removeClass('errorClass');
@@ -802,6 +839,7 @@ define(function(require) {
 				that.ui.addConditionsSpan.click(function(e) {
 					e.stopPropagation();
 					that.$('#policyConditions').editable('toggle');
+					$('.popover').addClass('tag-condition-popover');
 				});
 			}else{
 			    that.model.unset('conditions');
@@ -892,7 +930,7 @@ define(function(require) {
 					if(_.isNull(value) || _.isEmpty(value)){
 						$(this).empty();
 						that.model.unset('dataMaskInfo');
-						that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 						that.ui.addMaskingTypeSpan.attr('title','add');
 						return;
 					}
@@ -908,8 +946,8 @@ define(function(require) {
                                                 $(this).siblings('[data-id="maskTypeCustom"]').val(" ")
 					}
 					
-					$(this).html("<span class='label label-info'>" + obj.text + "</span>");
-					that.ui.addMaskingTypeSpan.find('i').attr('class', 'icon-pencil');
+					$(this).html("<span class='badge badge-info'>" + obj.text + "</span>");
+					that.ui.addMaskingTypeSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addMaskingTypeSpan.attr('title','edit');
 				},
 			}).on('click', function(e) {
@@ -937,13 +975,13 @@ define(function(require) {
 					if(_.isNull(value) || _.isEmpty(value)){
 						$(this).empty();
 						that.model.unset('rowFilterInfo');
-						that.ui.addRowFilterSpan.find('i').attr('class', 'icon-plus');
+						that.ui.addRowFilterSpan.find('i').attr('class', 'fa-fw fa fa-plus');
 						that.ui.addRowFilterSpan.attr('title','add');
 						return;
 					}	
 					that.model.set('rowFilterInfo', {'filterExpr': value });
-					$(this).html("<span class='label label-info'>" + _.escape(value) + "</span>");
-					that.ui.addRowFilterSpan.find('i').attr('class', 'icon-pencil');
+					$(this).html("<span class='badge badge-info'>" + _.escape(value) + "</span>");
+					that.ui.addRowFilterSpan.find('i').attr('class', 'fa-fw fa fa-pencil');
 					that.ui.addRowFilterSpan.attr('title','edit');
 				},
 			}).on('click', function(e) {
@@ -996,7 +1034,31 @@ define(function(require) {
 			if(this.collection.length == 0){
 				this.collection.add(new Backbone.Model())
 			}
-			this.storeResourceRef = {};
+			this.storeResourceRef = [];
+			var resourceDefByPolicyType = _.sortBy(this.getResourceDefByPolicyType(), 'itemId');
+			if(!this.model.isNew()){
+				_.each(_.union([this.model.get('resources')], this.model.get('additionalResources')), function(obj, index){
+					var resourceNames = Object.keys(obj);
+					var resourceName = resourceNames[0];
+					if(resourceName.length > 1){
+						var resourceByDef = resourceDefByPolicyType.filter(function (resource) { return resourceNames.includes(resource.name) });
+						var maxLevel = Math.max.apply(null, resourceByDef.map(function(o) { return o.level; }));
+						var resource = resourceByDef.find(function(o) { return o.level == maxLevel; });
+						resourceName = resource.name;
+					}
+					this.storeResourceRef.push({'changeType': 'resourceType','resourceName': resourceName, value: resourceName, resourceItemIndex: index });
+				}, this);
+			} else {
+				var getChildResource = function (resource) {
+					var childResource = _.findWhere(resourceDefByPolicyType, {parent : resource.name  });
+					if(childResource){
+						return getChildResource(childResource);
+					}
+					return resource.name;
+				}
+				var resourceName = getChildResource(resourceDefByPolicyType[0])
+				this.storeResourceRef.push({'changeType': 'resourceType','resourceName': resourceName, value: resourceName, resourceItemIndex: 0 });
+			}
 		},
 		onRender : function(){
 			this.makePolicyItemSortable();
@@ -1062,6 +1124,20 @@ define(function(require) {
 					that.$el.find(ui.item[0]).addClass("dirtyField");
 				},
 			});
+		},
+		getResourceDefByPolicyType : function () {
+			var resourceDefList =   this.rangerServiceDefModel.get('resources');
+			if(XAUtil.isMaskingPolicy(this.model.get('policyType'))){
+				if(!_.isEmpty(this.rangerServiceDefModel.get('dataMaskDef').resources)){
+					resourceDefList = this.rangerServiceDefModel.get('dataMaskDef').resources;
+				}
+			}
+			if(XAUtil.isRowFilterPolicy(this.model.get('policyType'))){
+				if(!_.isEmpty(this.rangerServiceDefModel.get('rowFilterDef').resources)){
+					resourceDefList = this.rangerServiceDefModel.get('rowFilterDef').resources;
+				}
+			}
+			return resourceDefList
 		}
 	});
 

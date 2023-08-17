@@ -19,8 +19,9 @@
 
 package org.apache.ranger.services.ozone.client;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.util.TimedEventUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.Callable;
@@ -29,7 +30,7 @@ import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.TimeUnit;
 
 public class OzoneConnectionMgr {
-    private static final Logger LOG = Logger.getLogger(OzoneConnectionMgr.class);
+    private static final Logger LOG = LoggerFactory.getLogger(OzoneConnectionMgr.class);
 
     protected ConcurrentMap<String, OzoneClient>    ozoneConnectionCache;
     protected ConcurrentMap<String, Boolean>        repoConnectStatusMap;
@@ -50,20 +51,14 @@ public class OzoneConnectionMgr {
             if (ozoneClient == null) {
                 if (configs != null) {
 
-                    final Callable<OzoneClient> connectHive = new Callable<OzoneClient>() {
-                        @Override
-                        public OzoneClient call() throws Exception {
-                            return new OzoneClient(serviceName, configs);
-                        }
-                    };
+                    final Callable<OzoneClient> connectOzone = () -> new OzoneClient(serviceName, configs);
                     try {
-                        ozoneClient = TimedEventUtil.timedTask(connectHive, 5, TimeUnit.SECONDS);
+                        ozoneClient = TimedEventUtil.timedTask(connectOzone, 5, TimeUnit.SECONDS);
                     } catch(Exception e){
-                        LOG.error("Error connecting ozone repository : "+
-                                serviceName +" using config : "+ configs, e);
+                        LOG.error("Error connecting ozone repository : " + serviceName +" using config : "+ configs, e);
                     }
 
-                    OzoneClient oldClient = null;
+                    OzoneClient oldClient;
                     if (ozoneClient != null) {
                         oldClient = ozoneConnectionCache.putIfAbsent(serviceName, ozoneClient);
                     } else {
@@ -79,8 +74,7 @@ public class OzoneConnectionMgr {
                     }
                     repoConnectStatusMap.put(serviceName, true);
                 } else {
-                    LOG.error("Connection Config not defined for asset :"
-                            + serviceName, new Throwable());
+                    LOG.error("Connection Config not defined for asset :" + serviceName, new Throwable());
                 }
             } else {
                 try {

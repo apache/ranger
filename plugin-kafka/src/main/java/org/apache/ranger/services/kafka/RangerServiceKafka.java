@@ -34,14 +34,14 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.kafka.client.ServiceKafkaClient;
 import org.apache.ranger.services.kafka.client.ServiceKafkaConnectionMgr;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import static org.apache.ranger.plugin.policyengine.RangerPolicyEngine.GROUP_PUBLIC;
 
 public class RangerServiceKafka extends RangerBaseService {
-	private static final Log LOG = LogFactory.getLog(RangerServiceKafka.class);
-	public static final String ACCESS_TYPE_CONSUME  = "consume";
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceKafka.class);
+	public static final String ACCESS_TYPE_DESCRIBE = "describe";
 
 	public RangerServiceKafka() {
 		super();
@@ -129,7 +129,7 @@ public class RangerServiceKafka extends RangerBaseService {
 				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
 				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
 				policyItemForLookupUser.setAccesses(Collections.singletonList(
-						new RangerPolicyItemAccess(ACCESS_TYPE_CONSUME)));
+						new RangerPolicyItemAccess(ACCESS_TYPE_DESCRIBE)));
 				policyItemForLookupUser.setDelegateAdmin(false);
 				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
 			}

@@ -26,8 +26,6 @@ import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.JSONUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -41,6 +39,8 @@ import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +50,7 @@ import javax.persistence.Query;
 @Service
 public class RangerPluginInfoService {
 
-	private static final Log LOG = LogFactory.getLog(RangerPluginInfoService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPluginInfoService.class);
 
 	@Autowired
 	RangerSearchUtil searchUtil;

@@ -32,8 +32,6 @@ import java.util.TreeSet;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
@@ -46,10 +44,12 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.validation.RangerServiceDefHelper;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public abstract class RangerBaseService {
-	private static final Log LOG = LogFactory.getLog(RangerBaseService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerBaseService.class);
 
 	protected static final String ADMIN_USER_PRINCIPAL = "ranger.admin.kerberos.principal";
 	protected static final String ADMIN_USER_KEYTAB    = "ranger.admin.kerberos.keytab";
@@ -59,9 +59,13 @@ public abstract class RangerBaseService {
 
 	protected static final String KERBEROS_TYPE        = "kerberos";
 
+	protected static final String CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY = "create.default.policy.per.hierarchy";
+
 	private static final String PROP_DEFAULT_POLICY_PREFIX      = "default-policy.";
 	private static final String PROP_DEFAULT_POLICY_NAME_SUFFIX = "name";
 
+	private static final String PROP_RESOURCE_FLAG_SUFFIX_IS_EXCLUDES  = ".is-excludes";
+	private static final String PROP_RESOURCE_FLAG_SUFFIX_IS_RECURSIVE = ".is-recursive";
 
 	protected RangerServiceDef serviceDef;
 	protected RangerService    service;
@@ -140,17 +144,19 @@ public abstract class RangerBaseService {
 
 		List<RangerPolicy> ret = new ArrayList<RangerPolicy>();
 
-		try {
-			// we need to create one policy for each resource hierarchy
-			RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-			for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.filterHierarchies_containsOnlyMandatoryResources(RangerPolicy.POLICY_TYPE_ACCESS)) {
-				RangerPolicy policy = getDefaultPolicy(aHierarchy);
-				if (policy != null) {
-					ret.add(policy);
+		if (createDefaultPolicyPerHierarchy()) {
+			try {
+				// we need to create one policy for each resource hierarchy
+				RangerServiceDefHelper serviceDefHelper = new RangerServiceDefHelper(serviceDef);
+				for (List<RangerServiceDef.RangerResourceDef> aHierarchy : serviceDefHelper.filterHierarchies_containsOnlyMandatoryResources(RangerPolicy.POLICY_TYPE_ACCESS)) {
+					RangerPolicy policy = getDefaultPolicy(aHierarchy);
+					if (policy != null) {
+						ret.add(policy);
+					}
 				}
+			} catch (Exception e) {
+				LOG.error("Error getting default polcies for Service: " + service.getName(), e);
 			}
-		} catch (Exception e) {
-			LOG.error("Error getting default polcies for Service: " + service.getName(), e);
 		}
 
 		final Boolean additionalDefaultPolicySetup = Boolean.valueOf(configs.get("setup.additional.default.policies"));
@@ -196,13 +202,19 @@ public abstract class RangerBaseService {
 				String configName  = entry.getKey();
 				String configValue = entry.getValue();
 
-				if(configName.startsWith(resourcePropertyPrefix) && StringUtils.isNotBlank(configValue)){
+				if (configName.endsWith(PROP_RESOURCE_FLAG_SUFFIX_IS_EXCLUDES) || configName.endsWith(PROP_RESOURCE_FLAG_SUFFIX_IS_RECURSIVE)) {
+					continue;
+				}
+
+				if (configName.startsWith(resourcePropertyPrefix) && StringUtils.isNotBlank(configValue)) {
 					RangerPolicyResource rPolRes      = new RangerPolicyResource();
 					String               resourceKey  = configName.substring(resourcePropertyPrefix.length());
 					List<String>         resourceList = new ArrayList<String>(Arrays.asList(configValue.split(",")));
+					boolean              isExcludes   = Boolean.parseBoolean(configs.getOrDefault(configName + PROP_RESOURCE_FLAG_SUFFIX_IS_EXCLUDES, "false"));
+					boolean              isRecursive  = Boolean.parseBoolean(configs.getOrDefault(configName + PROP_RESOURCE_FLAG_SUFFIX_IS_RECURSIVE, "false"));
 
-					rPolRes.setIsExcludes(false);
-					rPolRes.setIsRecursive(false);
+					rPolRes.setIsExcludes(isExcludes);
+					rPolRes.setIsRecursive(isRecursive);
 					rPolRes.setValues(resourceList);
 					policyResourceMap.put(resourceKey, rPolRes);
 				}
@@ -215,6 +227,7 @@ public abstract class RangerBaseService {
 	private void addCustomRangerDefaultPolicies(List<RangerPolicy> ret, Map<String, RangerPolicy.RangerPolicyResource> policyResourceMap, String policyPropertyPrefix) throws Exception {
 		String policyName  = configs.get(policyPropertyPrefix + PROP_DEFAULT_POLICY_NAME_SUFFIX);
 		String description = configs.get(policyPropertyPrefix + "description");
+		Boolean isDenyAllElse = Boolean.valueOf(configs.get(policyPropertyPrefix + "isDenyAllElse"));
 
 		if (StringUtils.isEmpty(description)) {
 			description = "Policy for " + policyName;
@@ -230,6 +243,7 @@ public abstract class RangerBaseService {
 		policy.setDescription(description);
 		policy.setName(policyName);
 		policy.setResources(policyResourceMap);
+		policy.setIsDenyAllElse(isDenyAllElse);
 
 		for (int i = 1; ; i++) {
 			String policyItemPropertyPrefix = policyPropertyPrefix + "policyItem." + i + ".";
@@ -445,6 +459,32 @@ public abstract class RangerBaseService {
 		ret.addAll(uniqueGroups);
 
 		return ret;
+	}
+
+	protected boolean createDefaultPolicyPerHierarchy() {
+		String ret = configs.get(CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY);
+
+		if (ret == null) {
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("{} is not defined in service(name={}) config", CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY, getServiceName());
+			}
+
+			ret = serviceDef.getOptions().get(CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY);
+
+			if (ret == null) {
+				ret = Boolean.TRUE.toString();
+
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("{} is not defined in service-def(name={}) options as well. Using default value: {}", CONFIG_CREATE_DEFAULT_POLICY_PER_HIERARCHY, getServiceType(), ret);
+				}
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("createDefaultPolicyPerHierarchy(serviceName={}, serviceType={}): ret={}", getServiceName(), getServiceType(), ret);
+		}
+
+		return Boolean.parseBoolean(ret);
 	}
 
 	protected String getLookupUser(String authType, String lookupPrincipal, String lookupKeytab) {

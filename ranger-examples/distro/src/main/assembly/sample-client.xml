@@ -29,6 +29,7 @@
                 <include>org.apache.ranger:sample-client</include>
                 <include>org.apache.ranger:ranger-intg</include>
                 <include>org.apache.ranger:ranger-plugins-common</include>
+                <include>org.apache.ranger:ranger-plugins-cred</include>
             </includes>
             <binaries>
                 <outputDirectory>lib</outputDirectory>
@@ -38,17 +39,14 @@
                 <fileMode>644</fileMode>
                 <includes>
                     <include>commons-cli:commons-cli</include>
-                    <include>commons-logging:commons-logging:jar:${commons.logging.version}</include>
                     <include>commons-lang:commons-lang</include>
                     <include>com.google.code.gson:gson</include>
-                    <include>org.slf4j:slf4j-api:jar:${slf4j-api.version}</include>
+                    <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
                     <include>org.slf4j:slf4j-log4j12</include>
                     <include>log4j:log4j</include>
                     <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
                     <include>org.apache.hadoop:hadoop-common:jar:${hadoop.version}</include>
                     <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
-                    <include>org.eclipse.persistence:eclipselink</include>
-                    <include>org.eclipse.persistence:javax.persistence</include>
                     <include>commons-collections:commons-collections</include>
                     <include>com.sun.jersey:jersey-bundle</include>
                     <include>commons-io:commons-io</include>
@@ -76,6 +74,15 @@
             <directory>${project.parent.basedir}/sample-client/scripts</directory>
             <includes>
                 <include>*.sh</include>
+                <include>*.py</include>
+            </includes>
+            <fileMode>755</fileMode>
+        </fileSet>
+        <fileSet>
+            <outputDirectory></outputDirectory>
+            <directory>${project.parent.basedir}/sample-client/conf</directory>
+            <includes>
+                <include>*.properties</include>
             </includes>
             <fileMode>755</fileMode>
         </fileSet>
@@ -87,6 +94,25 @@
             <includes>
                 <include>*.properties</include>
             </includes>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>venv/pylib</outputDirectory>
+            <directory>../../intg/src/main/python</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>venv/resources</outputDirectory>
+            <directory>../../intg/src/main/resources</directory>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>venv/pylib</outputDirectory>
+            <directory>../sample-client/src/main/python</directory>
+            <includes>
+                <include>sample_client.py</include>
+            </includes>
+        </fileSet>
+        <fileSet>
+            <outputDirectory>venv</outputDirectory>
+            <directory>../sample-client/venv</directory>
         </fileSet>
     </fileSets>
 </assembly>

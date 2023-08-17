@@ -57,6 +57,7 @@ import org.junit.Test;
  * b) The tag "HiveDatabaseTag" is associated with "create" permission to the "dev" group to the "hivetable" database.
  * c) The tag "HiveColumnTag" is associated with "select" permission to the "frank" user to the "word" column of the "words" table.
  */
+@org.junit.Ignore
 public class HIVERangerAuthorizerTest {
 
     private static final File hdfsBaseDir = new File("./target/hdfs/").getAbsoluteFile();

@@ -25,7 +25,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -41,18 +40,23 @@ import org.apache.solr.client.solrj.SolrRequest.METHOD;
 import org.apache.solr.client.solrj.request.QueryRequest;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class SolrUtil {
-	private static final Logger logger = Logger.getLogger(SolrUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(SolrUtil.class);
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
 
 	@Autowired
 	StringUtil stringUtil;
+
+	@Autowired
+	SolrMgr solrMgr;
 
 	SimpleDateFormat dateFormat = new SimpleDateFormat(
 			"yyyy-MM-dd'T'HH:mm:ss'Z'");
@@ -69,24 +73,24 @@ public class SolrUtil {
 		}
 	}
 
-	public QueryResponse runQuery(SolrClient solrClient, SolrQuery solrQuery) throws Throwable {
-	    if (solrQuery != null) {
-	        try {
-	            QueryRequest req = new QueryRequest(solrQuery, METHOD.POST);
-	            String username = PropertiesUtil.getProperty("ranger.solr.audit.user");
-	            String password = PropertiesUtil.getProperty("ranger.solr.audit.user.password");
-	            if (username != null && password != null) {
-	                req.setBasicAuthCredentials(username, password);
-	            }
+    public QueryResponse runQuery(SolrClient solrClient, SolrQuery solrQuery) throws Throwable {
+        if (solrQuery != null) {
+            try {
+                QueryRequest req      = new QueryRequest(solrQuery, METHOD.POST);
+                String       username = PropertiesUtil.getProperty("ranger.solr.audit.user");
+                String       password = PropertiesUtil.getProperty("ranger.solr.audit.user.password");
+                if (username != null && password != null) {
+                    req.setBasicAuthCredentials(username, password);
+                }
 
-	            return req.process(solrClient);
-	        } catch (Throwable e) {
-	            logger.error("Error from Solr server. ", e);
-	            throw e;
-	        }
-	    }
-	    return null;
-	}
+                return solrMgr.queryToSolr(req);
+            } catch (Throwable e) {
+                logger.error("Error from Solr server. ", e);
+                throw e;
+            }
+        }
+        return null;
+    }
 
 	public QueryResponse searchResources(SearchCriteria searchCriteria,
 			List<SearchField> searchFields, List<SortField> sortFieldList,
@@ -299,56 +303,4 @@ public class SolrUtil {
 		}
 	}
 
-	// Utility methods
-	public int toInt(Object value) {
-		if (value == null) {
-			return 0;
-		}
-		if (value instanceof Integer) {
-			return (Integer) value;
-		}
-		if (value.toString().isEmpty()) {
-			return 0;
-		}
-		try {
-			return Integer.valueOf(value.toString());
-		} catch (Throwable t) {
-                        logger.error("Error converting value to integer. Value = " + value, t);
-		}
-		return 0;
-	}
-
-	public long toLong(Object value) {
-		if (value == null) {
-			return 0;
-		}
-		if (value instanceof Long) {
-			return (Long) value;
-		}
-		if (value.toString().isEmpty()) {
-			return 0;
-		}
-		try {
-			return Long.valueOf(value.toString());
-		} catch (Throwable t) {
-                        logger.error("Error converting value to long. Value = " + value, t);
-		}
-		return 0;
-	}
-
-	public Date toDate(Object value) {
-		if (value == null) {
-			return null;
-		}
-		if (value instanceof Date) {
-			return (Date) value;
-		}
-		try {
-			// TODO: Do proper parsing based on Solr response value
-			return new Date(value.toString());
-		} catch (Throwable t) {
-                        logger.error("Error converting value to date. Value = " + value, t);
-		}
-		return null;
-	}
 }

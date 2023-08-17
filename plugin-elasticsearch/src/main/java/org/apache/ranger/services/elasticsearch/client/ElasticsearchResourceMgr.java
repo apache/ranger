@@ -24,14 +24,15 @@ import java.util.Map;
 
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ElasticsearchResourceMgr {
 
 	public static final String INDEX = "index";
 
-	private static final Logger LOG = Logger.getLogger(ElasticsearchResourceMgr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(ElasticsearchResourceMgr.class);
 
 	public static Map<String, Object> validateConfig(String serviceName, Map<String, String> configs) throws Exception {
 		Map<String, Object> ret = null;

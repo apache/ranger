@@ -19,7 +19,6 @@
   <id>admin</id> 
   <formats>
      <format>tar.gz</format>
-     <format>zip</format>
   </formats>
   <baseDirectory>${project.parent.name}-${project.version}-admin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
@@ -79,6 +78,7 @@
           <include>org.apache.hive:hive-exec:jar:${hive.version}</include>
           <include>org.apache.hive:hive-jdbc:jar:${hive.version}</include>
           <include>org.apache.hive:hive-metastore:jar:${hive.version}</include>
+          <include>org.apache.thrift:libfb303:jar:${libfb303.version}</include>
           <include>org.apache.thrift:libthrift:jar:${libthrift.version}</include>
         </includes>
       </binaries>
@@ -101,6 +101,7 @@
             <include>org.apache.hbase:hbase-protocol:jar:${hbase.version}</include>
             <include>org.apache.hbase:hbase-server:jar:${hbase.version}</include>
             <include>org.apache.hbase:hbase-protocol-shaded:jar:${hbase.version}</include>
+            <include>org.apache.hbase:hbase-shaded-client:jar:${hbase.version}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-protobuf:jar:${hbase-shaded-protobuf}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-netty:jar:${hbase-shaded-netty}</include>
             <include>org.apache.hbase.thirdparty:hbase-shaded-miscellaneous:jar:${hbase-shaded-miscellaneous}</include>
@@ -177,21 +178,26 @@
         <directoryMode>755</directoryMode>
         <fileMode>644</fileMode>
         <includes>
-          <include>org.apache.hadoop:hadoop-ozone-common:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-ozone-client:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-hdds-common:jar:${ozone.version}</include>
-          <include>org.apache.hadoop:hadoop-hdds-client:jar:${ozone.version}</include>
+          <include>org.apache.ozone:ozone-common:jar:${ozone.version}</include>
+          <include>org.apache.ozone:ozone-client:jar:${ozone.version}</include>
+          <include>org.apache.ozone:hdds-common:jar:${ozone.version}</include>
+          <include>org.apache.ozone:hdds-client:jar:${ozone.version}</include>
+          <include>org.apache.ozone:hdds-config:jar:${ozone.version}</include>
+          <include>org.apache.ozone:hdds-interface-client:jar:${ozone.version}</include>
+          <include>org.apache.ozone:ozone-interface-client:jar:${ozone.version}</include>
+          <include>org.apache.ratis:ratis-common:jar:${ratis.version}</include>
+          <include>org.apache.ratis:ratis-proto:jar:${ratis.version}</include>
+          <include>org.apache.ratis:ratis-thirdparty-misc:jar:${ratis-thirdparty.version}</include>
           <include>org.apache.commons:commons-compress:jar:1.4.1</include>
+          <include>org.bouncycastle:bcpkix-jdk15on:jar:${org.bouncycastle.bcpkix-jdk15on}</include>
           <include>commons-net:commons-net:jar:${commons.net.version}</include>
           <include>com.google.guava:guava</include>
-          <include>io.jaegertracing:jaeger-core:jar:0.33.1</include>
-          <include>io.opentracing:opentracing-api:jar:0.31.0</include>
-          <include>io.opentracing:opentracing-noop:jar:0.31.0</include>
-          <include>io.opentracing:opentracing-util:jar:0.31.0</include>
-          <include>io.opentracing.contrib:opentracing-tracerresolver:jar:0.1.5</include>
-          <include>com.google.protobuf:protobuf-java</include>
-          <include>org.apache.ratis:ratis-common:jar:0.2.0</include>
-          <include>org.apache.ratis:ratis-thirdparty-misc:jar:0.2.0</include>
+          <include>io.jaegertracing:jaeger-core:jar:1.6.0</include>
+          <include>io.opentracing:opentracing-api:jar:0.33.0</include>
+          <include>io.opentracing:opentracing-noop:jar:0.33.0</include>
+          <include>io.opentracing:opentracing-util:jar:0.33.0</include>
+          <include>io.opentracing.contrib:opentracing-tracerresolver:jar:0.1.8</include>
+          <include>com.google.protobuf:protobuf-java:jar:${protobuf-java.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -228,10 +234,9 @@
           <include>org.apache.tomcat.embed:tomcat-embed*</include>
           <include>org.apache.tomcat:tomcat-annotations-api*</include>
           <include>org.eclipse.jdt.core.compiler:ecj:jar:P20140317-1600</include>
-          <include>log4j:log4j</include>
           <include>org.apache.hadoop:hadoop-auth:jar:${hadoop.version}</include>
           <include>org.apache.ranger:ranger-plugins-common</include>
-          <include>org.slf4j:slf4j-api</include>
+          <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
           <include>org.apache.hadoop:hadoop-common</include>
           <include>commons-logging:commons-logging</include>
           <include>com.sun.jersey.contribs:jersey-multipart</include>
@@ -239,17 +244,17 @@
           <include>commons-collections:commons-collections</include>
           <include>commons-lang:commons-lang</include>
           <include>commons-io:commons-io</include>
-          <include>org.apache.solr:solr-solrj</include>
-          <include>org.apache.httpcomponents:httpclient</include>
-          <include>org.apache.httpcomponents:httpcore</include>
-          <include>org.noggit:noggit</include>
+          <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
+          <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
+          <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
           <include>org.apache.zookeeper:zookeeper:jar:${zookeeper.version}</include>
-          <include>org.apache.httpcomponents:httpmime</include>
+          <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
           <include>commons-codec:commons-codec</include>
           <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+          <include>org.apache.commons:commons-lang3:jar:${commons.lang3.version}</include>
           <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
           <include>net.java.dev.jna:jna:jar:${jna.version}</include>
           <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>
@@ -261,15 +266,19 @@
           <include>org.elasticsearch:elasticsearch</include>
           <include>org.elasticsearch.plugin:lang-mustache-client</include>
           <include>org.elasticsearch.plugin:rank-eval-client</include>
-          <include>org.apache.httpcomponents:httpasyncclient</include>
+          <include>org.apache.httpcomponents:httpasyncclient:jar:${httpcomponents.httpasyncclient.version}</include>
           <include>org.apache.httpcomponents:httpcore-nio</include>
           <include>com.fasterxml.jackson.core:jackson-core</include>
-          <include>org.apache.logging.log4j:log4j-core</include>
-          <include>org.apache.logging.log4j:log4j-api</include>
           <include>org.apache.lucene:lucene-core</include>
           <include>com.carrotsearch:hppc</include>
           <include>joda-time:joda-time</include>
           <include>org.apache.ranger:ranger-plugins-cred</include>
+          <include>org.apache.ranger:ugsyn-util</include>
+          <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
+          <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
+          <include>org.slf4j:log4j-over-slf4j:jar:${slf4j.version}</include>
+          <include>ch.qos.logback:logback-classic:jar:${logback.version}</include>
+          <include>ch.qos.logback:logback-core:jar:${logback.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -291,16 +300,17 @@
           <include>commons-configuration:commons-configuration</include>
           <include>commons-io:commons-io:jar:${commons.io.version}</include>
           <include>commons-lang:commons-lang</include>
-          <include>commons-lang3:commons-lang3</include>
           <include>commons-logging:commons-logging</include>
           <include>com.google.guava:guava</include>
-          <include>org.slf4j:slf4j-api</include>
+          <include>org.slf4j:slf4j-api:jar:${slf4j.version}</include>
+          <include>org.apache.commons:commons-lang3</include>
           <include>org.apache.hadoop:hadoop-common</include>
-          <include>org.apache.hadoop:hadoop-auth</include>
           <include>org.apache.htrace:htrace-core4:jar:${htrace-core.version}</include>
+          <include>org.apache.hadoop:hadoop-auth</include>
           <include>com.fasterxml.woodstox:woodstox-core:jar:${fasterxml.woodstox.version}</include>
           <include>org.codehaus.woodstox:stax2-api:jar:${codehaus.woodstox.stax2api.version}</include>
           <include>org.apache.commons:commons-configuration2:jar:${commons.configuration.version}</include>
+          <include>org.apache.commons:commons-compress:jar:${commons.compress.version}</include>
         </includes>
       </binaries>
     </moduleSet>
@@ -481,6 +491,25 @@
     <moduleSet>
       <useAllReactorProjects>true</useAllReactorProjects>
       <includes>
+        <include>org.apache.ranger:ranger-trino-plugin</include>
+      </includes>
+      <binaries>
+        <outputDirectory>ews/webapp/WEB-INF/classes/ranger-plugins/trino</outputDirectory>
+        <includeDependencies>true</includeDependencies>
+        <unpack>false</unpack>
+        <directoryMode>755</directoryMode>
+        <fileMode>644</fileMode>
+        <includes>
+          <include>org.apache.ranger:ranger-trino-plugin</include>
+          <include>io.trino:trino-spi:jar:${trino.version}</include>
+          <include>io.trino:trino-jdbc:jar:${trino.version}</include>
+        </includes>
+      </binaries>
+    </moduleSet>
+
+    <moduleSet>
+      <useAllReactorProjects>true</useAllReactorProjects>
+      <includes>
         <include>org.apache.ranger:ranger-kudu-plugin</include>
       </includes>
       <binaries>
@@ -577,6 +606,24 @@
     </fileSet>
 
     <fileSet>
+      <outputDirectory>ews/webapp/apidocs</outputDirectory>
+      <directory>${project.parent.basedir}/docs/target/apidocs/ui</directory>
+      <excludes>
+        <exclude>index.html</exclude>
+      </excludes>
+      <includes>
+        <include>swagger.json</include>
+      </includes>
+      <fileMode>544</fileMode>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>ews/webapp/apidocs</outputDirectory>
+      <directory>${project.parent.basedir}/docs/src/site/resources</directory>
+      <fileMode>544</fileMode>
+    </fileSet>
+
+    <fileSet>
       <outputDirectory></outputDirectory>
       <directory>${project.parent.basedir}/security-admin</directory>
       <includes>
@@ -598,6 +645,13 @@
     <fileSet>
       <outputDirectory>bin</outputDirectory>
       <directory>${project.parent.basedir}/security-admin/src/bin</directory>
+      <fileMode>0755</fileMode>
+      <directoryMode>0755</directoryMode>
+    </fileSet>
+
+    <fileSet>
+      <outputDirectory>stability-tests</outputDirectory>
+      <directory>${project.parent.basedir}/security-admin/src/test/resources/stability-tests</directory>
       <fileMode>0755</fileMode>
       <directoryMode>0755</directoryMode>
     </fileSet>

@@ -19,7 +19,6 @@
 
 package org.apache.ranger.patch;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -33,6 +32,8 @@ import org.apache.ranger.plugin.model.validation.RangerValidator;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -42,7 +43,7 @@ import java.util.List;
 
 @Component
 public class PatchForPrestoToSupportPresto333_J10038 extends BaseLoader {
-  private static final Logger logger = Logger.getLogger(PatchForPrestoToSupportPresto333_J10038.class);
+  private static final Logger logger = LoggerFactory.getLogger(PatchForPrestoToSupportPresto333_J10038.class);
 
   private static final List<String> PRESTO_RESOURCES = new ArrayList<>(
     Arrays.asList("function", "procedure", "prestouser", "systemproperty", "sessionproperty"));
@@ -147,10 +148,10 @@ public class PatchForPrestoToSupportPresto333_J10038 extends BaseLoader {
       validator.validate(dbPrestoServiceDef, RangerValidator.Action.UPDATE);
       ret = svcStore.updateServiceDef(dbPrestoServiceDef);
       if (ret == null) {
-        logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME
+        logger.error("Error while updating " + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME
           + " service-def");
         throw new RuntimeException("Error while updating "
-          + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_ATLAS_NAME + " service-def");
+          + EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_PRESTO_NAME + " service-def");
       }
 
     }

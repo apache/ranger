@@ -51,6 +51,22 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole>{
         }
     }
 
+    public List<Long> findIdsByRoleId(Long roleId) {
+        List<Long> ret = Collections.EMPTY_LIST;
+
+        if (roleId != null) {
+            try {
+                ret = getEntityManager()
+                        .createNamedQuery("XXRoleRefRole.findIdsByRoleId", Long.class)
+                        .setParameter("roleId", roleId).getResultList();
+            } catch (NoResultException e) {
+                ret = Collections.EMPTY_LIST;
+            }
+        }
+
+        return ret;
+    }
+
     public List<XXRoleRefRole> findBySubRoleId(Long subRoleId) {
         if(subRoleId == null) {
             return Collections.EMPTY_LIST;
@@ -103,5 +119,11 @@ public class XXRoleRefRoleDao extends BaseDao<XXRoleRefRole>{
         }
 
         return ret;
+    }
+
+    public void deleteRoleRefRoleByIds(List<Long> ids) {
+        if (CollectionUtils.isNotEmpty(ids)) {
+            batchDeleteByIds("XXRoleRefRole.deleteRoleRefRoleByIds", ids, "ids");
+        }
     }
 }

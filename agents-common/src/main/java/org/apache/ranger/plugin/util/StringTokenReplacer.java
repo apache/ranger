@@ -34,9 +34,12 @@ public class StringTokenReplacer {
         this.tokenPrefix = tokenPrefix;
     }
 
+    public static boolean hasToken(String value, char startDelimiterChar, char endDelimiterChar, char escapeChar) {
+        return value != null && (value.indexOf(escapeChar) != -1 || (value.indexOf(startDelimiterChar) != -1 && value.indexOf(endDelimiterChar) != -1));
+    }
+
     public String replaceTokens(String value, Map<String, Object> tokens) {
-        if(tokens == null || tokens.size() < 1 || value == null || value.length() < 1 ||
-                (value.indexOf(startChar) == -1 && value.indexOf(endChar) == -1 && value.indexOf(escapeChar) == -1)) {
+        if(tokens == null || tokens.size() < 1 || !hasToken(value, startChar, endChar, escapeChar)) {
             return value;
         }
 

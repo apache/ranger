@@ -24,8 +24,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.ranger.audit.dao.DaoManager;
-import org.apache.ranger.audit.entity.AuthzAuditEventDbObj;
 
 import com.google.gson.annotations.SerializedName;
 
@@ -573,11 +571,5 @@ public class AuthzAuditEvent extends AuditEventBase {
 				.append(FIELD_SEPARATOR).append("additionalInfo=").append(additionalInfo);
 
 		return sb;
-	}
-
-	@Override
-	public void persist(DaoManager daoManager) {
-		daoManager.getAuthzAuditEventDao().create(
-				new AuthzAuditEventDbObj(this));
 	}
 }

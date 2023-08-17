@@ -20,12 +20,13 @@
 package org.apache.ranger.services.storm.client;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class StormConnectionMgr {
 
-	private static final Logger LOG = Logger.getLogger(StormConnectionMgr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(StormConnectionMgr.class);
 
 	public static StormClient getStormClient(final String stormUIURL, String userName, String password, String lookupPrincipal, String lookupKeytab, String nameRules) {
         StormClient stormClient = null;

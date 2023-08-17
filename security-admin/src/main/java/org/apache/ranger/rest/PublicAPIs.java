@@ -19,7 +19,6 @@
 
 package org.apache.ranger.rest;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.*;
 import org.apache.ranger.common.annotation.RangerAnnotationClassName;
 import org.apache.ranger.common.annotation.RangerAnnotationJSMgrName;
@@ -32,6 +31,8 @@ import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.XAssetService;
 import org.apache.ranger.view.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
 
@@ -51,7 +53,7 @@ import java.util.List;
 @RangerAnnotationJSMgrName("PublicMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class PublicAPIs {
-	private static final Logger logger = Logger.getLogger(PublicAPIs.class);
+	private static final Logger logger = LoggerFactory.getLogger(PublicAPIs.class);
 
 	@Autowired
 	RangerSearchUtil searchUtil;
@@ -79,7 +81,7 @@ public class PublicAPIs {
 	
 	@GET
 	@Path("/api/repository/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXRepository getRepository(@PathParam("id") Long id) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.getRepository(" + id + ")");
@@ -98,7 +100,8 @@ public class PublicAPIs {
 	
 	@POST
 	@Path("/api/repository/")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXRepository createRepository(VXRepository vXRepository) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.createRepository(" + vXRepository + ")");
@@ -124,7 +127,8 @@ public class PublicAPIs {
 	
 	@PUT
 	@Path("/api/repository/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXRepository updateRepository(VXRepository vXRepository,
 			@PathParam("id") Long id) {
 		
@@ -178,7 +182,7 @@ public class PublicAPIs {
 	
 	@GET
 	@Path("/api/repository/")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXRepositoryList searchRepositories(
 			@Context HttpServletRequest request) {
 	
@@ -206,7 +210,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/repository/count")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXLong countRepositories(@Context HttpServletRequest request) {
 
 		if(logger.isDebugEnabled()) {
@@ -229,7 +233,7 @@ public class PublicAPIs {
 	
 	@GET
 	@Path("/api/policy/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXPolicy getPolicy(@PathParam("id") Long id) {
 		
 		if(logger.isDebugEnabled()) {
@@ -257,13 +261,17 @@ public class PublicAPIs {
 
 	@POST
 	@Path("/api/policy")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXPolicy createPolicy(VXPolicy vXPolicy) {
 		
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.createPolicy()");
 		}
-		
+
+		if(vXPolicy == null) {
+		    throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Policy object is null in create policy api", false);
+		}
 		RangerService service = serviceREST.getServiceByName(vXPolicy.getRepositoryName());
 		RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXPolicy,service);
 
@@ -287,13 +295,18 @@ public class PublicAPIs {
 
 	@PUT
 	@Path("/api/policy/{id}")
-	@Produces({ "application/json", "application/xml" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXPolicy updatePolicy(VXPolicy vXPolicy, @PathParam("id") Long id) {
 		
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> PublicAPIs.updatePolicy(): "  + vXPolicy );
 		}
-		
+
+		if(vXPolicy == null) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Policy object is null in update policy api", false);
+		}
+
 		XXPolicy existing = daoMgr.getXXPolicy().getById(id);
 		if(existing == null) {
 			throw restErrorUtil.createRESTException("Policy not found for Id: " + id, MessageEnums.DATA_NOT_FOUND);
@@ -308,7 +321,7 @@ public class PublicAPIs {
 		if(policy != null) {
 			policy.setVersion(existing.getVersion());
 
-			RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy);
+			RangerPolicy  updatedPolicy = serviceREST.updatePolicy(policy, policy.getId());
 
 			ret = serviceUtil.toVXPolicy(updatedPolicy, service);
 		}
@@ -340,7 +353,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/policy")
-	@Produces({ "application/json", "application/xml" })
+	@Produces({ "application/json" })
 	public VXPolicyList searchPolicies(@Context HttpServletRequest request) {
 		
 		if(logger.isDebugEnabled()) {
@@ -372,7 +385,7 @@ public class PublicAPIs {
 
 	@GET
 	@Path("/api/policy/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXLong countPolicies(@Context HttpServletRequest request) {
 		
 		if(logger.isDebugEnabled()) {

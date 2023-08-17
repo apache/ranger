@@ -26,6 +26,7 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.Encoded;
 import javax.ws.rs.GET;
@@ -40,7 +41,6 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -69,6 +69,8 @@ import org.apache.ranger.service.XPolicyService;
 import org.apache.ranger.service.XResourceService;
 import org.apache.ranger.service.XTrxLogService;
 import org.apache.ranger.view.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -82,7 +84,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RangerAnnotationJSMgrName("AssetMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class AssetREST {
-	private static final Logger logger = Logger.getLogger(AssetREST.class);
+	private static final Logger logger = LoggerFactory.getLogger(AssetREST.class);
 
 	@Autowired
 	RangerSearchUtil searchUtil;
@@ -128,7 +130,7 @@ public class AssetREST {
 	
 	@GET
 	@Path("/assets/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_X_ASSET + "\")")
 	public VXAsset getXAsset(@PathParam("id") Long id) {
 		if(logger.isDebugEnabled()) {
@@ -148,7 +150,8 @@ public class AssetREST {
 
 	@POST
 	@Path("/assets")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_X_ASSET + "\")")
 	public VXAsset createXAsset(VXAsset vXAsset) {
 		if(logger.isDebugEnabled()) {
@@ -170,7 +173,8 @@ public class AssetREST {
 
 	@PUT
 	@Path("/assets/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.UPDATE_X_ASSET + "\")")
 	public VXAsset updateXAsset(VXAsset vXAsset) {
 		if(logger.isDebugEnabled()) {
@@ -209,7 +213,8 @@ public class AssetREST {
 
 	@POST
 	@Path("/assets/testConfig")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.TEST_CONFIG + "\")")
 	public VXResponse configTest(VXAsset vXAsset) {
 		if(logger.isDebugEnabled()) {
@@ -229,7 +234,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/assets")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_ASSETS + "\")")
 	public VXAssetList searchXAssets(@Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
@@ -265,7 +270,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/assets/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.COUNT_X_ASSETS + "\")")
 	public VXLong countXAssets(@Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
@@ -285,7 +290,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/resources/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXResource getXResource(@PathParam("id") Long id) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.getXResource(" + id + ")");
@@ -311,7 +316,8 @@ public class AssetREST {
 
 	@POST
 	@Path("/resources")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXResource createXResource(VXResource vXResource) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.createXResource(" + vXResource + ")");
@@ -333,16 +339,24 @@ public class AssetREST {
 	
 	@PUT
 	@Path("/resources/{id}")
-	@Produces({ "application/xml", "application/json" })
-	public VXResource updateXResource(VXResource vXResource) {
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
+	public VXResource updateXResource(VXResource vXResource , @PathParam("id") Long id) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.updateXResource(" + vXResource + ")");
+		}
+
+		// if vXResource.id is specified, it should be same as the param 'id'
+		if (vXResource.getId() == null) {
+			vXResource.setId(id);
+		} else if(!vXResource.getId().equals(id)) {
+			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST , "resource Id mismatch", true);
 		}
 
 		RangerService service = serviceREST.getService(vXResource.getAssetId());
 		RangerPolicy  policy  = serviceUtil.toRangerPolicy(vXResource, service);
 
-		RangerPolicy updatedPolicy = serviceREST.updatePolicy(policy);
+		RangerPolicy updatedPolicy = serviceREST.updatePolicy(policy, policy.getId());
 		
 		VXResource ret = serviceUtil.toVXResource(updatedPolicy, service);
 
@@ -372,7 +386,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/resources")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXResourceList searchXResources(@Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.searchXResources()");
@@ -409,7 +423,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/resources/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXLong countXResources(@Context HttpServletRequest request) {
 		if(logger.isDebugEnabled()) {
 			logger.debug("==> AssetREST.countXResources()");
@@ -428,14 +442,15 @@ public class AssetREST {
 
 	@GET
 	@Path("/credstores/{id}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXCredentialStore getXCredentialStore(@PathParam("id") Long id) {
 		return assetMgr.getXCredentialStore(id);
 	}
 
 	@POST
 	@Path("/credstores")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXCredentialStore createXCredentialStore(
 			VXCredentialStore vXCredentialStore) {
 		return assetMgr.createXCredentialStore(vXCredentialStore);
@@ -443,7 +458,8 @@ public class AssetREST {
 
 	@PUT
 	@Path("/credstores")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXCredentialStore updateXCredentialStore(
 			VXCredentialStore vXCredentialStore) {
 		return assetMgr.updateXCredentialStore(vXCredentialStore);
@@ -461,7 +477,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/credstores")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXCredentialStoreList searchXCredentialStores(
 			@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -471,7 +487,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/credstores/count")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	public VXLong countXCredentialStores(@Context HttpServletRequest request) {
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
 				request, xCredentialStoreService.sortFields);
@@ -480,6 +496,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/resource/{id}")
+	@Produces({ "application/json" })
 	public Response getXResourceFile(@Context HttpServletRequest request,
 			@PathParam("id") Long id) {
 		String fileType = searchUtil.extractString(request,
@@ -503,6 +520,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/policyList/{repository}")
+	@Produces({ "application/json" })
 	@Encoded
 	public String getResourceJSON(@Context HttpServletRequest request,
 			@PathParam("repository") String repository) {
@@ -550,7 +568,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/exportAudit")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_X_POLICY_EXPORT_AUDITS + "\")")
 	public VXPolicyExportAuditList searchXPolicyExportAudits(
 			@Context HttpServletRequest request) {
@@ -581,7 +599,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/report")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_REPORT_LOGS + "\")")
 	public VXTrxLogList getReportLogs(@Context HttpServletRequest request){
 
@@ -603,7 +621,7 @@ public class AssetREST {
 	
 	@GET
 	@Path("/report/{transactionId}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_TRANSACTION_REPORT + "\")")
 	public VXTrxLogList getTransactionReport(@Context HttpServletRequest request,
 			@PathParam("transactionId") String transactionId){
@@ -612,7 +630,7 @@ public class AssetREST {
 	
 	@GET
 	@Path("/accessAudit")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_ACCESS_LOGS + "\")")
 	public VXAccessAuditList getAccessLogs(@Context HttpServletRequest request){
 		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(
@@ -641,24 +659,24 @@ public class AssetREST {
 				"Resource Type", StringUtil.VALIDATION_TEXT);
 		searchUtil.extractString(request,searchCriteria,"excludeServiceUser",
 				"Exclude Service User",StringUtil.VALIDATION_TEXT);
+
 		searchUtil.extractInt(request, searchCriteria, "auditType", "Audit Type");
-                searchUtil.extractInt(request, searchCriteria, "accessResult", "Result");
+		searchUtil.extractInt(request, searchCriteria, "accessResult", "Result");
 		searchUtil.extractInt(request, searchCriteria, "assetId", "Asset ID");
 		searchUtil.extractLong(request, searchCriteria, "policyId", "Policy ID");
-                searchUtil.extractInt(request, searchCriteria, "repoType", "Service Type");
-		
-		searchUtil.extractDate(request, searchCriteria, "startDate",
-                                "Start Date", "MM/dd/yyyy");
-                searchUtil.extractDate(request, searchCriteria, "endDate", "End Date",
-				"MM/dd/yyyy");
+		searchUtil.extractInt(request, searchCriteria, "repoType", "Service Type");
+
+		searchUtil.extractDate(request, searchCriteria, "startDate","Start Date", "MM/dd/yyyy");
+		searchUtil.extractDate(request, searchCriteria, "endDate", "End Date", "MM/dd/yyyy");
 
 		searchUtil.extractString(request, searchCriteria, "tags", "tags", null);
 		searchUtil.extractString(request, searchCriteria, "cluster", "Cluster Name", StringUtil.VALIDATION_TEXT);
-		searchUtil.extractStringList(request, searchCriteria, "zoneName", "Zone Name List", "zoneName", null,
-				                               null);
+		searchUtil.extractStringList(request, searchCriteria, "zoneName", "Zone Name List", "zoneName", null, null);
 
 		searchUtil.extractString(request, searchCriteria, "agentHost", "Agent Host Name", StringUtil.VALIDATION_TEXT);
-		
+
+		searchUtil.extractString(request, searchCriteria, "eventId", "Event Id", null);
+
 		boolean isKeyAdmin = msBizUtil.isKeyAdmin();
 		boolean isAuditKeyAdmin = msBizUtil.isAuditKeyAdmin();
 		XXServiceDef xxServiceDef = daoManager.getXXServiceDef().findByName(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_KMS_NAME);
@@ -673,7 +691,8 @@ public class AssetREST {
 	
 	@POST
 	@Path("/resources/grant")
-	@Produces({ "application/xml", "application/json" })	
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXPolicy grantPermission(@Context HttpServletRequest request,VXPolicy vXPolicy) {
 		
 		RESTResponse ret = null;
@@ -708,7 +727,8 @@ public class AssetREST {
 	
 	@POST
 	@Path("/resources/revoke")
-	@Produces({ "application/xml", "application/json" })	
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	public VXPolicy revokePermission(@Context HttpServletRequest request,VXPolicy vXPolicy) {
 		
 		RESTResponse ret = null;
@@ -741,7 +761,7 @@ public class AssetREST {
 
 	@GET
 	@Path("/ugsyncAudits")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_UGSYNC_AUDITS + "\")")
 	public VXUgsyncAuditInfoList getUgsyncAudits(@Context HttpServletRequest request){
 
@@ -768,7 +788,7 @@ public class AssetREST {
 	@GET
 	@Path("/ugsyncAudits/{syncSource}")
 	@Encoded
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_UGSYNC_AUDITS_BY_SYNCSOURCE + "\")")
 	public VXUgsyncAuditInfoList getUgsyncAuditsBySyncSource(@PathParam("syncSource") String syncSource){
 		VXUgsyncAuditInfoList vxUgsyncAuditInfoList = new VXUgsyncAuditInfoList();

@@ -26,19 +26,29 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.Map;
+import java.util.Set;
+import java.util.HashSet;
+import java.util.HashMap;
+import java.util.Date;
+import java.util.Arrays;
+import java.util.Iterator;
 
 import com.google.common.annotations.VisibleForTesting;
-import org.apache.log4j.Logger;
+import com.google.common.collect.HashBasedTable;
+import com.google.common.collect.Table;
+import org.apache.ranger.ugsyncutil.model.UgsyncAuditInfo;
+import org.apache.ranger.ugsyncutil.model.UnixSyncSourceInfo;
+import org.apache.ranger.ugsyncutil.util.UgsyncCommonConstants;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
-import org.apache.ranger.unixusersync.model.UgsyncAuditInfo;
-import org.apache.ranger.unixusersync.model.UnixSyncSourceInfo;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UnixUserGroupBuilder implements UserGroupSource {
-	
-	private static final Logger LOG = Logger.getLogger(UnixUserGroupBuilder.class);
+
+	private static final Logger LOG = LoggerFactory.getLogger(UnixUserGroupBuilder.class);
 	private final static String OS = System.getProperty("os.name");
 
 	// kept for legacy support
@@ -50,8 +60,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	static final String LINUX_GET_ALL_GROUPS_CMD = "getent group";
 	static final String LINUX_GET_GROUP_CMD = "getent group %s";
 
-	// mainly for testing purposes
-	// there might be a better way
+	// mainly for testing purposes, there might be a better way
 	static final String MAC_GET_ALL_USERS_CMD = "dscl . -readall /Users UniqueID PrimaryGroupID | " +
 			"awk 'BEGIN { OFS = \":\"; ORS=\"\\n\"; i=0;}" +
 			"/RecordName: / {name = $2;i = 0;}/PrimaryGroupID: / {gid = $2;}" +
@@ -73,9 +82,11 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private long timeout = 0;
 
 	private UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
-	private Map<String,List<String>> user2GroupListMap;
-	private Map<String,List<String>> internalUser2GroupListMap;
 	private Map<String,String> groupId2groupNameMap;
+	private Map<String, Map<String, String>> sourceUsers; // Stores username and attr name & value pairs
+	private Map<String, Map<String, String>> sourceGroups; // Stores groupname and attr name & value pairs
+	private Map<String, Set<String>> sourceGroupUsers;
+	private Table<String, String, String> groupUserTable; // groupname, username, group id
 	private int minimumUserId  = 0;
 	private int minimumGroupId = 0;
 	private String unixPasswordFile;
@@ -86,28 +97,26 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	private UgsyncAuditInfo ugsyncAuditInfo;
 	private UnixSyncSourceInfo unixSyncSourceInfo;
 	private boolean isStartupFlag = false;
+	private int deleteCycles;
+	private String currentSyncSource;
+	private boolean computeDeletes = false;
 	Set<String> allGroups = new HashSet<>();
 
 
 	public static void main(String[] args) throws Throwable {
 		UnixUserGroupBuilder ugbuilder = new UnixUserGroupBuilder();
 		ugbuilder.init();
-		ugbuilder.print();
+		if (LOG.isDebugEnabled()) {
+			ugbuilder.print();
+		}
 	}
-	
+
 	public UnixUserGroupBuilder() {
 		isStartupFlag = true;
 		minimumUserId = Integer.parseInt(config.getMinUserId());
 		minimumGroupId = Integer.parseInt(config.getMinGroupId());
 		unixPasswordFile = config.getUnixPasswordFile();
 		unixGroupFile = config.getUnixGroupFile();
-		ugsyncAuditInfo = new UgsyncAuditInfo();
-		unixSyncSourceInfo = new UnixSyncSourceInfo();
-		ugsyncAuditInfo.setSyncSource("Unix");
-		ugsyncAuditInfo.setUnixSyncSourceInfo(unixSyncSourceInfo);
-		unixSyncSourceInfo.setFileName(unixPasswordFile);
-		unixSyncSourceInfo.setMinUserId(config.getMinUserId());
-		unixSyncSourceInfo.setMinGroupId(config.getMinGroupId());
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("Minimum UserId: " + minimumUserId + ", minimum GroupId: " + minimumGroupId);
@@ -116,6 +125,21 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		timeout = config.getUpdateMillisMin();
 		enumerateGroupMembers = config.isGroupEnumerateEnabled();
 
+	}
+
+	@Override
+	public void init() throws Throwable {
+		deleteCycles = 1;
+
+		currentSyncSource = config.getCurrentSyncSource();
+
+		ugsyncAuditInfo = new UgsyncAuditInfo();
+		unixSyncSourceInfo = new UnixSyncSourceInfo();
+		ugsyncAuditInfo.setSyncSource(currentSyncSource);
+		ugsyncAuditInfo.setUnixSyncSourceInfo(unixSyncSourceInfo);
+		unixSyncSourceInfo.setFileName(unixPasswordFile);
+		unixSyncSourceInfo.setMinUserId(config.getMinUserId());
+		unixSyncSourceInfo.setMinGroupId(config.getMinGroupId());
 		if (!config.getUnixBackend().equalsIgnoreCase(BACKEND_PASSWD)) {
 			useNss = true;
 			unixSyncSourceInfo.setUnixBackend("nss");
@@ -124,23 +148,35 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					"instead of standard system mechanisms.");
 			unixSyncSourceInfo.setUnixBackend(BACKEND_PASSWD);
 		}
-
-	}
-
-	@Override
-	public void init() throws Throwable {
 		buildUserGroupInfo();
 	}
 
 	@Override
 	public boolean isChanged() {
-		// If previous update to Ranger admin fails, 
+		computeDeletes = false;
+		// If previous update to Ranger admin fails,
 		// we want to retry the sync process even if there are no changes to the sync files
 		if (!isUpdateSinkSucc) {
 			LOG.info("Previous updateSink failed and hence retry!!");
+			isUpdateSinkSucc = true;
 			return true;
 		}
-		
+		try {
+			if (config.isUserSyncDeletesEnabled() && deleteCycles >= config.getUserSyncDeletesFrequency()) {
+				deleteCycles = 1;
+				computeDeletes = true;
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Compute deleted users/groups is enabled for this sync cycle");
+				}
+				return true;
+			}
+		} catch (Throwable t) {
+			LOG.error("Failed to get information about usersync delete frequency", t);
+		}
+		if (config.isUserSyncDeletesEnabled()) {
+			deleteCycles++;
+		}
+
 		if (useNss)
 			return System.currentTimeMillis() - lastUpdateTime > timeout;
 
@@ -150,11 +186,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		}
 
 		long TempGroupFileModifiedAt = new File(unixGroupFile).lastModified();
-		if (groupFileModifiedAt != TempGroupFileModifiedAt) {
-			return true;
-		}
-
-		return false;
+		return groupFileModifiedAt != TempGroupFileModifiedAt;
 	}
 
 
@@ -165,39 +197,37 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		Date syncTime = new Date(System.currentTimeMillis());
 		unixSyncSourceInfo.setLastModified(formatter.format(lastModifiedTime));
 		unixSyncSourceInfo.setSyncTime(formatter.format(syncTime));
-		isUpdateSinkSucc = true;
 		if (isChanged() || isStartupFlag) {
 			buildUserGroupInfo();
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("Users = " + sourceUsers.keySet());
+				LOG.debug("Groups = " + sourceGroups.keySet());
+				LOG.debug("GroupUsers = " + sourceGroupUsers.keySet());
+			}
 
-			for (Map.Entry<String, List<String>> entry : user2GroupListMap.entrySet()) {
-				String user = entry.getKey();
-				List<String> groups = entry.getValue();
-				try {
-					sink.addOrUpdateUser(user, groups);
-				} catch (Throwable t) {
-					LOG.error("sink.addOrUpdateUser failed with exception: " + t.getMessage()
-							+ ", for user: " + user
-							+ ", groups: " + groups);
-					isUpdateSinkSucc = false;
-				}
+			try {
+				sink.addOrUpdateUsersGroups(sourceGroups, sourceUsers, sourceGroupUsers, computeDeletes);
+			} catch (Throwable t) {
+				LOG.error("Failed to update ranger admin. Will retry in next sync cycle!!", t);
+				isUpdateSinkSucc = false;
 			}
 		}
 		try {
-			unixSyncSourceInfo.setTotalUsersSynced(user2GroupListMap.size());
-			unixSyncSourceInfo.setTotalGroupsSynced(allGroups.size());
 			sink.postUserGroupAuditInfo(ugsyncAuditInfo);
 		} catch (Throwable t) {
 			LOG.error("sink.postUserGroupAuditInfo failed with exception: ", t);
 		}
 		isStartupFlag = false;
 	}
-	
-	
+
+
 	private void buildUserGroupInfo() throws Throwable {
-		user2GroupListMap = new HashMap<String,List<String>>();
-		groupId2groupNameMap = new HashMap<String, String>();
-		internalUser2GroupListMap = new HashMap<String,List<String>>();
-		allGroups = new HashSet<>();
+		groupId2groupNameMap = new HashMap<>();
+		sourceUsers          = new HashMap<>();
+		sourceGroups         = new HashMap<>();
+		sourceGroupUsers     = new HashMap<>();
+		groupUserTable       = HashBasedTable.create();
+		allGroups            = new HashSet<>();
 
 		if (OS.startsWith("Mac")) {
 			buildUnixGroupList(MAC_GET_ALL_GROUPS_CMD, MAC_GET_GROUP_CMD, false);
@@ -210,32 +240,40 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 			buildUnixUserList(LINUX_GET_ALL_USERS_CMD);
 		}
 
+		Iterator<String> groupUserTableIterator = groupUserTable.rowKeySet().iterator();
+		while (groupUserTableIterator.hasNext()) {
+			String groupName                  = groupUserTableIterator.next();
+			Map<String, String> groupUsersMap = groupUserTable.row(groupName);
+			Set<String> userSet               = new HashSet<>();
+
+			for (String userName : groupUsersMap.keySet()) {
+				if (sourceUsers.containsKey(userName)) {
+					userSet.add(userName);
+				}
+			}
+			sourceGroupUsers.put(groupName, userSet);
+		}
+
 		lastUpdateTime = System.currentTimeMillis();
 
 		if (LOG.isDebugEnabled()) {
 			print();
 		}
 	}
-	
+
 	private void print() {
-		for(String user : user2GroupListMap.keySet()) {
-			if (LOG.isDebugEnabled()) {
-				LOG.debug("USER:" + user);
-			}
-			List<String> groups = user2GroupListMap.get(user);
-			if (groups != null) {
-				for(String group : groups) {
-					if (LOG.isDebugEnabled()) {
-						LOG.debug("\tGROUP: " + group);
-					}
-				}
+		for(String user : sourceUsers.keySet()) {
+			LOG.debug("USER:" + user);
+			Set<String> groups = groupUserTable.column(user).keySet();
+			for(String group : groups) {
+				LOG.debug("\tGROUP: " + group);
 			}
 		}
 	}
-	
+
 	private void buildUnixUserList(String command) throws Throwable {
 		BufferedReader reader = null;
-		Map<String, String> userName2uid = new HashMap<String, String>();
+		Map<String, String> userName2uid = new HashMap<>();
 
 		try {
 			if (!useNss) {
@@ -244,14 +282,11 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				FileInputStream fis = new FileInputStream(file);
 				reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
 			} else {
-				Process process = Runtime.getRuntime().exec(
-						new String[]{"bash", "-c", command});
-
+				Process process = Runtime.getRuntime().exec(new String[]{"bash", "-c", command});
 				reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
 			}
 
-			String line = null;
-
+			String line;
 			while ((line = reader.readLine()) != null) {
 				if (line.trim().isEmpty())
 					continue;
@@ -265,22 +300,21 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					continue;
 				}
 
-				String userName = null;
-				String userId = null;
-				String groupId = null;
+				String userName;
+				String userId;
+				String groupId;
 
 				try {
 					userName = tokens[0];
-					userId = tokens[2];
-					groupId = tokens[3];
+					userId   = tokens[2];
+					groupId  = tokens[3];
 				}
 				catch(ArrayIndexOutOfBoundsException aiobe) {
 					LOG.warn("Ignoring line - [" + line + "]: Unable to parse line for getting user information", aiobe);
 					continue;
 				}
 
-				int numUserId = -1;
-
+				int numUserId;
 				try {
 					numUserId = Integer.parseInt(userId);
 				} catch (NumberFormatException nfe) {
@@ -292,20 +326,14 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 					userName2uid.put(userName, userId);
 					String groupName = groupId2groupNameMap.get(groupId);
 					if (groupName != null) {
-						List<String> groupList = new ArrayList<String>();
-						groupList.add(groupName);
-						// do we already know about this use's membership to other groups?  If so add those, too
-						if (internalUser2GroupListMap.containsKey(userName)) {
-							List<String> map = internalUser2GroupListMap.get(userName);
-
-							// there could be duplicates
-							map.remove(groupName);
-							groupList.addAll(map);
-						}
-						user2GroupListMap.put(userName, groupList);
-						allGroups.addAll(groupList);
+						Map<String, String> userAttrMap = new HashMap<>();
+						userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+						userAttrMap.put(UgsyncCommonConstants.FULL_NAME, userName);
+						userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+						sourceUsers.put(userName, userAttrMap);
+						groupUserTable.put(groupName, userName, groupId);
 					} else {
-						// we are ignoring the possibility that this user was present in /etc/groups.
+						// we are ignoring the possibility that this user was present in getent group.
 						LOG.warn("Group Name could not be found for group id: [" + groupId + "]. Skipping adding user [" + userName + "] with id [" + userId + "].");
 					}
 				} else {
@@ -324,36 +352,24 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 		// this does a reverse check as not all users might be listed in getent passwd
 		if (enumerateGroupMembers) {
-			String line = null;
+			String line;
+			Table<String, String, String> tempGroupUserTable = HashBasedTable.create();
 
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("Start drill down group members");
 			}
-			for (Map.Entry<String, List<String>> entry : internalUser2GroupListMap.entrySet()) {
-				// skip users we already now about
-				if (user2GroupListMap.containsKey(entry.getKey()))
+			for (String userName : groupUserTable.columnKeySet()) {
+
+				if (sourceUsers.containsKey(userName))// skip users we already now about
 					continue;
 
 				if (LOG.isDebugEnabled()) {
-					LOG.debug("Enumerating user " + entry.getKey());
+					LOG.debug("Enumerating user " + userName);
 				}
-
-				int numUserId = -1;
-				try {
-					numUserId = Integer.parseInt(userName2uid.get(entry.getKey()));
-				} catch (NumberFormatException nfe) {
-					numUserId = -1;
-				}
-
-				// if a user comes from an external group we might not have a uid
-				if (numUserId < minimumUserId && numUserId != -1)
-					continue;
-
 
 				// "id" is same across Linux / BSD / MacOSX
 				// gids are used as id might return groups with spaces, ie "domain users"
-				Process process = Runtime.getRuntime().exec(
-						new String[]{"bash", "-c", "id -G " + entry.getKey()});
+				Process process = Runtime.getRuntime().exec(new String[]{"bash", "-c", "id -G " + userName});
 
 				try {
 					reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
@@ -367,27 +383,30 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				}
 
 				if (line == null || line.trim().isEmpty()) {
-					LOG.warn("User " + entry.getKey() + " could not be resolved");
+					LOG.warn("User " + userName + " could not be resolved");
 					continue;
 				}
 
-				String[] gids = line.split(" ");
-
 				// check if all groups returned by id are visible to ranger
-				ArrayList<String> allowedGroups = new ArrayList<String>();
-				for (String gid : gids) {
-					int numGroupId = Integer.parseInt(gid);
-					if (numGroupId < minimumGroupId)
-						continue;
-
-					String groupName = groupId2groupNameMap.get(gid);
-					if (groupName != null)
-						allowedGroups.add(groupName);
+				for (String gid : line.split(" ")) {
+					if (Integer.parseInt(gid) >= minimumGroupId) {
+						String groupName = groupId2groupNameMap.get(gid);
+						if (groupName != null) {
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("New group user mapping found : " + groupName + " " + userName);
+							}
+							tempGroupUserTable.put(groupName, userName, gid);
+						}
+					}
 				}
 
-				user2GroupListMap.put(entry.getKey(), allowedGroups);
-				allGroups.addAll(allowedGroups);
+				Map<String, String> userAttrMap = new HashMap<>();
+				userAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, userName);
+				userAttrMap.put(UgsyncCommonConstants.FULL_NAME, userName);
+				userAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+				sourceUsers.put(userName, userAttrMap);
 			}
+			groupUserTable.putAll(tempGroupUserTable);
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("End drill down group members");
 			}
@@ -410,27 +429,25 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		if (tokens.length > 3)
 			groupMembers = tokens[3];
 
-		if (groupId2groupNameMap.containsKey(groupId)) {
-			groupId2groupNameMap.remove(groupId);
-		}
+		groupId2groupNameMap.remove(groupId);
 
 		int numGroupId = Integer.parseInt(groupId);
 		if (numGroupId < minimumGroupId)
 			return;
 
 		groupId2groupNameMap.put(groupId, groupName);
+		Map<String, String> groupAttrMap = new HashMap<>();
+		groupAttrMap.put(UgsyncCommonConstants.ORIGINAL_NAME, groupName);
+		groupAttrMap.put(UgsyncCommonConstants.FULL_NAME, groupName);
+		groupAttrMap.put(UgsyncCommonConstants.SYNC_SOURCE, currentSyncSource);
+		sourceGroups.put(groupName, groupAttrMap);
 
 		if (groupMembers != null && !groupMembers.trim().isEmpty()) {
 			for (String user : groupMembers.split(",")) {
-				List<String> groupList = internalUser2GroupListMap.get(user);
-				if (groupList == null) {
-					groupList = new ArrayList<String>();
-					internalUser2GroupListMap.put(user, groupList);
-				}
-				if (!groupList.contains(groupName)) {
-					groupList.add(groupName);
-				}
+				groupUserTable.put(groupName, user, groupId);
 			}
+		} else {
+			sourceGroupUsers.put(groupName, new HashSet<String>());
 		}
 	}
 
@@ -447,18 +464,14 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 				FileInputStream fis = new FileInputStream(file);
 				reader = new BufferedReader(new InputStreamReader(fis, StandardCharsets.UTF_8));
 			} else {
-				Process process = Runtime.getRuntime().exec(
-						new String[]{"bash", "-c", allGroupsCmd});
+				Process process = Runtime.getRuntime().exec(new String[]{"bash", "-c", allGroupsCmd});
 				reader = new BufferedReader(new InputStreamReader(process.getInputStream(), StandardCharsets.UTF_8));
 			}
 
-			String line = null;
-
+			String line;
 			while ((line = reader.readLine()) != null) {
-				if (line.trim().isEmpty())
-					continue;
-
-				parseMembers(line);
+				if (!line.trim().isEmpty())
+					parseMembers(line);
 			}
 		} finally {
 			if (reader != null)
@@ -516,7 +529,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 		}
 
 		if (config.getEnumerateGroups() != null) {
-			String line = null;
+			String line;
 			String[] groups = config.getEnumerateGroups().split(",");
 
 			if (LOG.isDebugEnabled()) {
@@ -525,7 +538,7 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 
 			for (String group : groups) {
 				String command = String.format(groupCmd, group);
-				String[] cmd = new String[]{"bash", "-c", command + " '" + group + "'"};
+				String[] cmd = new String[]{"bash", "-c", command};
 				if (LOG.isDebugEnabled()) {
 					LOG.debug("Executing: " + Arrays.toString(cmd));
 				}
@@ -552,13 +565,18 @@ public class UnixUserGroupBuilder implements UserGroupSource {
 	}
 
 	@VisibleForTesting
-	Map<String,List<String>> getUser2GroupListMap() {
-		return user2GroupListMap;
+	Map<String, Set<String>> getGroupUserListMap() {
+		return sourceGroupUsers;
 	}
 
 	@VisibleForTesting
 	Map<String,String> getGroupId2groupNameMap() {
 		return groupId2groupNameMap;
+	}
+
+	@VisibleForTesting
+	Set<String> getUsers() {
+		return sourceUsers.keySet();
 	}
 
 }

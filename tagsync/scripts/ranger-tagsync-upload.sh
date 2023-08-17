@@ -66,5 +66,5 @@ cp="${cdir}/conf:${cdir}/dist/*:${cdir}/lib/*"
 cd ${cdir}
 umask 0077
 
-java -Dproc_rangertagsync-${action} ${JAVA_OPTS} -Dlogdir="${logdir}" -Dlog4j.configuration=file:/etc/ranger/tagsync/conf/log4j.properties -cp "${cp}" ${className} $* > ${logdir}/tagsync.out 2>&1
+java -Dproc_rangertagsync-${action} ${JAVA_OPTS} -Dlogdir="${logdir}" -Dlogback.configurationFile=file:/etc/ranger/tagsync/conf/logback.xml -cp "${cp}" ${className} $* > ${logdir}/tagsync.out 2>&1
 

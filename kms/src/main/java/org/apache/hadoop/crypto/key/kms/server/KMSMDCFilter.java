@@ -20,7 +20,6 @@ package org.apache.hadoop.crypto.key.kms.server;
 import org.apache.hadoop.classification.InterfaceAudience;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.token.delegation.web.HttpUserGroupInformation;
-
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.FilterConfig;
@@ -28,6 +27,8 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
 import java.io.IOException;
 
 /**
@@ -36,7 +37,8 @@ import java.io.IOException;
  */
 @InterfaceAudience.Private
 public class KMSMDCFilter implements Filter {
-
+	
+	static final String RANGER_KMS_REST_API_PATH = "/kms/api/status";
   private static class Data {
     private UserGroupInformation ugi;
     private String method;
@@ -69,23 +71,31 @@ public class KMSMDCFilter implements Filter {
 
   @Override
   public void doFilter(ServletRequest request, ServletResponse response,
-      FilterChain chain)
-      throws IOException, ServletException {
-    try {
-      DATA_TL.remove();
-      UserGroupInformation ugi = HttpUserGroupInformation.get();
-      String method = ((HttpServletRequest) request).getMethod();
-      StringBuffer requestURL = ((HttpServletRequest) request).getRequestURL();
-      String queryString = ((HttpServletRequest) request).getQueryString();
-      if (queryString != null) {
-        requestURL.append("?").append(queryString);
-      }
-      DATA_TL.set(new Data(ugi, method, requestURL.toString()));
-      chain.doFilter(request, response);
-    } finally {
-      DATA_TL.remove();
-    }
-  }
+			FilterChain chain) throws IOException, ServletException {
+		try {
+			String path = ((HttpServletRequest) request).getRequestURI();
+			HttpServletResponse resp = (HttpServletResponse) response;
+			resp.setHeader("Strict-Transport-Security", "max-age=31536000; includeSubDomains; preload");
+
+			if (path.startsWith(RANGER_KMS_REST_API_PATH)) {
+				chain.doFilter(request, resp);
+			} else {
+				DATA_TL.remove();
+				UserGroupInformation ugi = HttpUserGroupInformation.get();
+				String method = ((HttpServletRequest) request).getMethod();
+				StringBuffer requestURL = ((HttpServletRequest) request).getRequestURL();
+				String queryString = ((HttpServletRequest) request).getQueryString();
+				if (queryString != null) {
+					requestURL.append("?").append(queryString);
+				}
+				DATA_TL.set(new Data(ugi, method, requestURL.toString()));
+				chain.doFilter(request, resp);
+			}
+		} finally {
+			DATA_TL.remove();
+
+		}
+	}
 
   @Override
   public void destroy() {

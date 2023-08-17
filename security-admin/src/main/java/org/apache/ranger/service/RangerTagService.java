@@ -65,7 +65,8 @@ public class RangerTagService extends RangerTagServiceBase<XXTag, RangerTag> {
 	public RangerTag postCreate(XXTag tag) {
 		RangerTag ret = super.postCreate(tag);
 
-		daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagUpdate(tag.getId());
+		// This is not needed - on tag creation, service-version-info need not be updated.
+		//daoMgr.getXXServiceVersionInfo().updateServiceVersionInfoForTagUpdate(tag.getId());
 
 		return ret;
 	}

@@ -39,7 +39,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.ContextUtil;
 import org.apache.ranger.common.DateUtil;
@@ -63,11 +62,13 @@ import org.apache.ranger.security.handler.Permission;
 import org.apache.ranger.security.handler.RangerDomainObjectSecurityHandler;
 import org.apache.ranger.view.VXDataObject;
 import org.apache.ranger.view.VXLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends VXDataObject> {
 
-	protected static final Logger logger = Logger
+	protected static final Logger logger = LoggerFactory
 			.getLogger(AbstractBaseResourceService.class);
 
 	public static final int OPERATION_CREATE_CONTEXT = 1;
@@ -187,7 +188,7 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 			tEntityClass = (Class<T>) var[0].getBounds()[0];
 			tViewClass = (Class<V>) var[1].getBounds()[0];
 		} else {
-			logger.fatal("Cannot find class for template", new Throwable());
+			logger.error("Cannot find class for template", new Throwable());
 		}
 		if (tEntityClass != null) {
 			className = tEntityClass.getName();
@@ -819,5 +820,16 @@ public abstract class AbstractBaseResourceService<T extends XXDBBase, V extends 
 			}
 
 		}
+	}
+
+	public Map<Long,V> convertVListToVMap(List<V> vObjList) {
+		Map<Long,V> ret = new HashMap<Long,V>();
+		if (vObjList == null) {
+			return ret;
+		}
+		for (V vObj : vObjList) {
+			ret.put(vObj.getId(), vObj);
+		}
+		return ret;
 	}
 }

@@ -22,9 +22,10 @@ package org.apache.ranger.authorization.hadoop.config;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.net.URL;
@@ -34,7 +35,7 @@ import java.util.Set;
 
 
 public class RangerPluginConfig extends RangerConfiguration {
-    private static final Logger LOG = Logger.getLogger(RangerPluginConfig.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPluginConfig.class);
 
     private static final char RANGER_TRUSTED_PROXY_IPADDRESSES_SEPARATOR_CHAR = ',';
 
@@ -47,11 +48,13 @@ public class RangerPluginConfig extends RangerConfiguration {
     private final boolean                   useForwardedIPAddress;
     private final String[]                  trustedProxyAddresses;
     private final String                    propertyPrefix;
+    private       boolean                   isFallbackSupported;
     private       Set<String>               auditExcludedUsers  = Collections.emptySet();
     private       Set<String>               auditExcludedGroups = Collections.emptySet();
     private       Set<String>               auditExcludedRoles  = Collections.emptySet();
     private       Set<String>               superUsers          = Collections.emptySet();
     private       Set<String>               superGroups         = Collections.emptySet();
+    private       Set<String>               serviceAdmins       = Collections.emptySet();
 
 
     public RangerPluginConfig(String serviceType, String serviceName, String appId, String clusterName, String clusterType, RangerPolicyEngineOptions policyEngineOptions) {
@@ -113,7 +116,25 @@ public class RangerPluginConfig extends RangerConfiguration {
 
         this.policyEngineOptions = policyEngineOptions;
 
-        LOG.info(policyEngineOptions);
+        LOG.info("" + policyEngineOptions);
+    }
+
+    protected RangerPluginConfig(String serviceType, String serviceName, String appId, RangerPluginConfig sourcePluginConfig) {
+        super();
+
+        this.serviceType    = serviceType;
+        this.appId          = StringUtils.isEmpty(appId) ? serviceType : appId;
+        this.propertyPrefix = "ranger.plugin." + serviceType;
+        this.serviceName    = serviceName;
+
+        this.clusterName    = sourcePluginConfig.getClusterName();
+        this.clusterType    = sourcePluginConfig.getClusterType();
+        this.useForwardedIPAddress = sourcePluginConfig.isUseForwardedIPAddress();
+        this.trustedProxyAddresses = sourcePluginConfig.getTrustedProxyAddresses();
+        this.isFallbackSupported   = sourcePluginConfig.getIsFallbackSupported();
+
+        this.policyEngineOptions = sourcePluginConfig.getPolicyEngineOptions();
+
     }
 
     public String getServiceType() {
@@ -148,6 +169,14 @@ public class RangerPluginConfig extends RangerConfiguration {
         return propertyPrefix;
     }
 
+    public boolean getIsFallbackSupported() {
+        return isFallbackSupported;
+    }
+
+    public void setIsFallbackSupported(boolean isFallbackSupported) {
+        this.isFallbackSupported = isFallbackSupported;
+    }
+
     public RangerPolicyEngineOptions getPolicyEngineOptions() {
         return policyEngineOptions;
     }
@@ -155,7 +184,7 @@ public class RangerPluginConfig extends RangerConfiguration {
     public void setAuditExcludedUsersGroupsRoles(Set<String> users, Set<String> groups, Set<String> roles) {
         auditExcludedUsers  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
         auditExcludedGroups = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(groups);
-        auditExcludedRoles  = CollectionUtils.isEmpty(groups) ? Collections.emptySet() : new HashSet<>(roles);
+        auditExcludedRoles  = CollectionUtils.isEmpty(roles) ? Collections.emptySet() : new HashSet<>(roles);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("auditExcludedUsers=" + auditExcludedUsers + ", auditExcludedGroups=" + auditExcludedGroups + ", auditExcludedRoles=" + auditExcludedRoles);
@@ -169,6 +198,10 @@ public class RangerPluginConfig extends RangerConfiguration {
         if (LOG.isDebugEnabled()) {
             LOG.debug("superUsers=" + superUsers + ", superGroups=" + superGroups);
         }
+    }
+
+    public void setServiceAdmins(Set<String> users) {
+        serviceAdmins  = CollectionUtils.isEmpty(users) ? Collections.emptySet() : new HashSet<>(users);
     }
 
     public boolean isAuditExcludedUser(String userName) {
@@ -189,6 +222,10 @@ public class RangerPluginConfig extends RangerConfiguration {
 
     public boolean hasSuperGroup(Set<String> userGroups) {
         return userGroups != null && userGroups.size() > 0 && superGroups.size() > 0 && CollectionUtils.containsAny(userGroups, superGroups);
+    }
+
+    public boolean isServiceAdmin(String userName) {
+        return serviceAdmins.contains(userName);
     }
 
     private void addResourcesForServiceType(String serviceType) {

@@ -20,22 +20,20 @@
  package org.apache.ranger.db;
 
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import javax.persistence.NoResultException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXGroupUserDao extends BaseDao<XXGroupUser> {
-	private static final Logger logger = Logger.getLogger(XXGroupUserDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(XXGroupUserDao.class);
 
 	public XXGroupUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -133,5 +131,53 @@ public class XXGroupUserDao extends BaseDao<XXGroupUser> {
 			return new XXGroupUser();
 		}
 		return null;
+	}
+
+	public Map<String, Set<String>> findUsersByGroupIds() {
+		Map<String, Set<String>> groupUsers = new HashMap<>();
+
+		try {
+			List<Object[]> rows = (List<Object[]>) getEntityManager()
+					.createNamedQuery("XXGroupUser.findUsersByGroupIds")
+					.getResultList();
+			if (rows != null) {
+				for (Object[] row : rows) {
+					if (groupUsers.containsKey((String)row[0])) {
+						groupUsers.get((String)row[0]).add((String)row[1]);
+					} else {
+						Set<String> users = new HashSet<>();
+						users.add((String)row[1]);
+						groupUsers.put((String)row[0], users);
+					}
+				}
+			}
+		} catch (NoResultException e) {
+			//Ignore
+		}
+		return groupUsers;
+	}
+
+	public Map<String, XXGroupUser> findUsersByGroupName(String groupName) {
+		Map<String, XXGroupUser> users = new HashMap<>();
+
+		if (StringUtils.isNotBlank(groupName)) {
+			try {
+				List<Object[]> rows = (List<Object[]>) getEntityManager()
+						.createNamedQuery("XXGroupUser.findUsersByGroupName")
+						.setParameter("groupName", groupName)
+						.getResultList();
+				if (rows != null) {
+					for (Object[] row : rows) {
+							users.put((String)row[0], (XXGroupUser)row[1]);
+					}
+				}
+			} catch (NoResultException e) {
+				if (logger.isDebugEnabled()) {
+					logger.debug(e.getMessage());
+				}
+			}
+		}
+
+		return users;
 	}
 }

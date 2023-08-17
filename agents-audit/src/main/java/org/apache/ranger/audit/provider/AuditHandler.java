@@ -18,6 +18,7 @@
 
 package org.apache.ranger.audit.provider;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -28,7 +29,8 @@ public interface AuditHandler {
 	boolean log(Collection<AuditEventBase> events);	
 
 	boolean logJSON(String event);
-	boolean logJSON(Collection<String> events);	
+	boolean logJSON(Collection<String> events);
+    boolean logFile(File file);
 
     void init(Properties prop);
     void init(Properties prop, String basePropertyName);

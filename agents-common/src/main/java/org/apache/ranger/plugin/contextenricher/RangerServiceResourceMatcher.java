@@ -22,9 +22,10 @@ package org.apache.ranger.plugin.contextenricher;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.policyengine.RangerAccessRequest.ResourceElementMatchingScope;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
 
@@ -32,7 +33,7 @@ import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Map;
 
-public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluator {
+public class RangerServiceResourceMatcher implements RangerResourceEvaluator {
 	public static final Comparator<RangerServiceResourceMatcher> ID_COMPARATOR = new IdComparator();
 
 	private final RangerServiceResource       serviceResource;
@@ -70,8 +71,8 @@ public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluat
 		return ServiceDefUtil.isAncestorOf(policyResourceMatcher.getServiceDef(), leafResourceDef, resourceDef);
 	}
 
-	public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, Object> evalContext) {
-		return policyResourceMatcher != null ?  policyResourceMatcher.getMatchType(requestedResource, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;
+	public RangerPolicyResourceMatcher.MatchType getMatchType(RangerAccessResource requestedResource, Map<String, ResourceElementMatchingScope> scopes, Map<String, Object> evalContext) {
+		return policyResourceMatcher != null ? policyResourceMatcher.getMatchType(requestedResource, scopes, evalContext) : RangerPolicyResourceMatcher.MatchType.NONE;
 	}
 
 	static class IdComparator implements Comparator<RangerServiceResourceMatcher>, Serializable {
@@ -79,5 +80,10 @@ public class RangerServiceResourceMatcher implements RangerPolicyResourceEvaluat
 		public int compare(RangerServiceResourceMatcher me, RangerServiceResourceMatcher other) {
 			return Long.compare(me.getId(), other.getId());
 		}
+	}
+
+	@Override
+	public String toString() {
+		return String.valueOf(getId());
 	}
 }

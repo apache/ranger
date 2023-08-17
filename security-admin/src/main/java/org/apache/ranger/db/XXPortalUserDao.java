@@ -20,9 +20,15 @@
 package org.apache.ranger.db;
 
 import java.util.List;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.Collections;
+import java.util.Objects;
 
 import javax.persistence.NoResultException;
 
+import org.apache.ranger.common.RangerCommonEnums;
+import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPortalUser;
 import org.springframework.stereotype.Service;
@@ -102,5 +108,64 @@ public class XXPortalUserDao extends BaseDao<XXPortalUser> {
 			return null;
 		}
 
+	}
+
+	@SuppressWarnings("unchecked")
+	public List<String> getNonUserRoleExternalUsers() {
+		try {
+		return getEntityManager().createNamedQuery("XXPortalUser.getNonUserRoleExternalUsers", String.class)
+				.setParameter("userRole", RangerConstants.ROLE_USER)
+				.setParameter("userSource",  RangerCommonEnums.USER_EXTERNAL)
+				.getResultList();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	public List<XXPortalUser> findByUserSourceAndStatus(final int source, final int status) {
+		try {
+			return getEntityManager().createNamedQuery("XXPortalUser.findByUserSourceAndStatus", tClass)
+					.setParameter("userSource", source)
+					.setParameter("status", status)
+					.getResultList();
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	public XXPortalUser findById(Long id) {
+		XXPortalUser xXPortalUser = null;
+		if (id == null) {
+			return xXPortalUser;
+		}
+		try {
+			xXPortalUser = new XXPortalUser();
+			Object[] row = (Object[]) getEntityManager().createNamedQuery("XXPortalUser.findById").setParameter("id", id).getSingleResult();
+			if (row != null) {
+				xXPortalUser.setFirstName((String) row[0]);
+				xXPortalUser.setLastName((String) row[1]);
+				xXPortalUser.setPublicScreenName((String) row[2]);
+				xXPortalUser.setLoginId((String) row[3]);
+				return xXPortalUser;
+			}
+		} catch (NoResultException e) {
+			return null;
+		}
+		return xXPortalUser;
+	}
+
+	public Map<String, Long> getCountByUserRole() {
+		Map<String, Long> ret = Collections.emptyMap();
+		List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXPortalUser.getCountByUserRole").getResultList();
+		if (rows != null) {
+			ret = new HashMap<>();
+			for (Object[] row : rows) {
+				if (Objects.nonNull(row) && Objects.nonNull(row[0]) && Objects.nonNull(row[1]) && (!row[0].toString().isEmpty())) {
+					// since group by query will not return empty count field, no need to check
+					ret.put((String) row[0], (Long) row[1]);
+				}
+			}
+		}
+		return ret;
 	}
 }

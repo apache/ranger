@@ -17,19 +17,20 @@
  */
 package org.apache.ranger.audit.provider;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.model.AuditEventBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class MultiDestAuditProvider extends BaseAuditHandler {
 
-	private static final Log LOG = LogFactory
-			.getLog(MultiDestAuditProvider.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(MultiDestAuditProvider.class);
 
 	protected List<AuditHandler> mProviders = new ArrayList<AuditHandler>();
 	static final String DEFAULT_NAME = "multi_dest";
@@ -150,6 +151,19 @@ public class MultiDestAuditProvider extends BaseAuditHandler {
 				provider.logJSON(events);
 			} catch (Throwable excp) {
 				logFailedEventJSON(events, excp);
+			}
+		}
+		return true;
+	}
+
+
+	@Override
+	public boolean logFile(File file) {
+		for (AuditHandler provider : mProviders) {
+			try {
+				provider.logFile(file);
+			} catch (Throwable excp) {
+			   logFailedEventJSON(file.getAbsolutePath(), excp);
 			}
 		}
 		return true;

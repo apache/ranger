@@ -26,10 +26,10 @@ import java.util.List;
 import java.util.Set;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -45,11 +45,11 @@ import org.apache.ranger.plugin.util.ServiceDefUtil;
  * initialize embedded service-defs.
  */
 public class EmbeddedServiceDefsUtil {
-	private static final Log LOG = LogFactory.getLog(EmbeddedServiceDefsUtil.class);
+	private static final Logger LOG = LoggerFactory.getLogger(EmbeddedServiceDefsUtil.class);
 
 
 	// following servicedef list should be reviewed/updated whenever a new embedded service-def is added
-	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,ozone,kudu,schema-registry";
+	public static final String DEFAULT_BOOTSTRAP_SERVICEDEF_LIST = "tag,hdfs,hbase,hive,kms,knox,storm,yarn,kafka,solr,atlas,nifi,nifi-registry,sqoop,kylin,elasticsearch,presto,trino,ozone,kudu,schema-registry,nestedstructure";
 	private static final String PROPERTY_SUPPORTED_SERVICE_DEFS = "ranger.supportedcomponents";
 	private Set<String> supportedServiceDefs;
 	public static final String EMBEDDED_SERVICEDEF_TAG_NAME  = "tag";
@@ -72,8 +72,10 @@ public class EmbeddedServiceDefsUtil {
 	public static final String EMBEDDED_SERVICEDEF_ABFS_NAME  = "abfs";
 	public static final String EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME = "elasticsearch";
 	public static final String EMBEDDED_SERVICEDEF_PRESTO_NAME  = "presto";
+	public static final String EMBEDDED_SERVICEDEF_TRINO_NAME  = "trino";
 	public static final String EMBEDDED_SERVICEDEF_OZONE_NAME  = "ozone";
 	public static final String EMBEDDED_SERVICEDEF_KUDU_NAME  = "kudu";
+	public static final String EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME  = "nestedstructure";
 
 	public static final String PROPERTY_CREATE_EMBEDDED_SERVICE_DEFS = "ranger.service.store.create.embedded.service-defs";
 
@@ -90,6 +92,7 @@ public class EmbeddedServiceDefsUtil {
 	public static final String NIFI_IMPL_CLASS_NAME  = "org.apache.ranger.services.nifi.RangerServiceNiFi";
 	public static final String ATLAS_IMPL_CLASS_NAME  = "org.apache.ranger.services.atlas.RangerServiceAtlas";
 	public static final String PRESTO_IMPL_CLASS_NAME  = "org.apache.ranger.services.presto.RangerServicePresto";
+	public static final String TRINO_IMPL_CLASS_NAME  = "org.apache.ranger.services.trino.RangerServiceTrino";
 	public static final String OZONE_IMPL_CLASS_NAME  = "org.apache.ranger.services.ozone.RangerServiceOzone";
 	public static final String KUDU_IMPL_CLASS_NAME  = "org.apache.ranger.services.kudu.RangerServiceKudu";
 
@@ -115,8 +118,10 @@ public class EmbeddedServiceDefsUtil {
 	private RangerServiceDef abfsServiceDef;
 	private RangerServiceDef elasticsearchServiceDef;
 	private RangerServiceDef prestoServiceDef;
+	private RangerServiceDef trinoServiceDef;
 	private RangerServiceDef ozoneServiceDef;
 	private RangerServiceDef kuduServiceDef;
+	private RangerServiceDef nestedStructureServiveDef;
 
 	private RangerServiceDef tagServiceDef;
 
@@ -164,14 +169,16 @@ public class EmbeddedServiceDefsUtil {
 			kylinServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KYLIN_NAME);
 			abfsServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ABFS_NAME);
 			elasticsearchServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_ELASTICSEARCH_NAME);
+			trinoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_TRINO_NAME);
 			prestoServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_PRESTO_NAME);
 			ozoneServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_OZONE_NAME);
 			kuduServiceDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_KUDU_NAME);
+			nestedStructureServiveDef = getOrCreateServiceDef(store, EMBEDDED_SERVICEDEF_NESTEDSTRUCTURE_NAME);
 
 			// Ensure that tag service def is updated with access types of all service defs
 			store.updateTagServiceDefForAccessTypes();
 		} catch(Throwable excp) {
-			LOG.fatal("EmbeddedServiceDefsUtil.init(): failed", excp);
+			LOG.error("EmbeddedServiceDefsUtil.init(): failed", excp);
 		}
 
 		LOG.info("<== EmbeddedServiceDefsUtil.init()");
@@ -246,11 +253,15 @@ public class EmbeddedServiceDefsUtil {
 
 	public long getAbfsServiceDefId() { return getId(abfsServiceDef); }
 
+	public long getTrinoServiceDefId() { return getId(trinoServiceDef); }
+
 	public long getPrestoServiceDefId() { return getId(prestoServiceDef); }
 
 	public long getOzoneServiceDefId() { return getId(ozoneServiceDef); }
 
 	public long getKuduServiceDefId() { return getId(kuduServiceDef); }
+
+	public long getNestedStructureServiceDefId() { return getId(nestedStructureServiveDef); }
 
 	public RangerServiceDef getEmbeddedServiceDef(String defType) throws Exception {
 		RangerServiceDef serviceDef=null;
@@ -302,7 +313,7 @@ public class EmbeddedServiceDefsUtil {
 				LOG.info("created embedded service-def " + serviceDefName);
 			}
 		} catch(Exception excp) {
-			LOG.fatal("EmbeddedServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);
+			LOG.error("EmbeddedServiceDefsUtil.getOrCreateServiceDef(): failed to load/create serviceType " + serviceDefName, excp);
 		}
 
 		if(LOG.isDebugEnabled()) {

@@ -21,8 +21,6 @@ package org.apache.ranger.plugin.store;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.model.RangerBaseModelObject;
 import org.apache.ranger.plugin.model.RangerPolicy;
@@ -30,6 +28,8 @@ import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.util.SearchFilter;
 import org.apache.ranger.services.tag.RangerServiceTag;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -38,7 +38,7 @@ import java.util.List;
 import java.util.Objects;
 
 public abstract class AbstractServiceStore implements ServiceStore {
-	private static final Log LOG = LogFactory.getLog(AbstractServiceStore.class);
+	private static final Logger LOG = LoggerFactory.getLogger(AbstractServiceStore.class);
 
 	public static final String COMPONENT_ACCESSTYPE_SEPARATOR = ":";
 

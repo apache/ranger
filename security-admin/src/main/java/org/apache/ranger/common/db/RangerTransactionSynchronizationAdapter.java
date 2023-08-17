@@ -23,8 +23,9 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,10 +33,13 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.transaction.support.TransactionCallback;
 import org.springframework.transaction.support.TransactionSynchronizationAdapter;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.transaction.support.TransactionTemplate;
+
+import javax.persistence.OptimisticLockException;
 
 @Component
 public class RangerTransactionSynchronizationAdapter extends TransactionSynchronizationAdapter {
@@ -44,7 +48,7 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
 
-    private static final Log LOG = LogFactory.getLog(RangerTransactionSynchronizationAdapter.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerTransactionSynchronizationAdapter.class);
 
     private static final ThreadLocal<List<Runnable>> RUNNABLES = new ThreadLocal<List<Runnable>>();
     private static final ThreadLocal<List<Runnable>> RUNNABLES_AFTER_COMMIT = new ThreadLocal<List<Runnable>>();
@@ -115,29 +119,21 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
             LOG.debug("==> RangerTransactionSynchronizationAdapter.afterCompletion(status=" + (status == STATUS_COMMITTED ? "COMMITTED" : "ROLLED_BACK") + ")");
         }
 
-        List<Runnable> allRunnables = null;
+        final boolean isParentTransactionCommitted = status == STATUS_COMMITTED;
 
-        if (status == STATUS_COMMITTED) {
-            final List<Runnable> postCommitRunnables = RUNNABLES_AFTER_COMMIT.get();
-            if (CollectionUtils.isNotEmpty(postCommitRunnables)) {
-                allRunnables = postCommitRunnables;
-            }
-        }
-
-        final List<Runnable> postCompletionRunnables = RUNNABLES.get();
-
-        if (CollectionUtils.isNotEmpty(postCompletionRunnables)) {
-            if (allRunnables == null) {
-                allRunnables = postCompletionRunnables;
-            } else {
-                allRunnables.addAll(postCompletionRunnables);
-            }
-        }
-
-        runRunnables(allRunnables);
-
+        List<Runnable> runnablesAfterCommit = RUNNABLES_AFTER_COMMIT.get();
         RUNNABLES_AFTER_COMMIT.remove();
+
+        List<Runnable> runnables = RUNNABLES.get();
         RUNNABLES.remove();
+
+        if (isParentTransactionCommitted) {
+            // Run tasks scheduled to run after transaction is successfully committed
+            runRunnables(runnablesAfterCommit, true);
+        }
+
+        // Run other tasks scheduled to run after transaction completes
+        runRunnables(runnables, false);
 
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== RangerTransactionSynchronizationAdapter.afterCompletion(status=" + (status == STATUS_COMMITTED ? "COMMITTED" : "ROLLED_BACK") + ")");
@@ -156,42 +152,71 @@ public class RangerTransactionSynchronizationAdapter extends TransactionSynchron
         return ret;
     }
 
-    private void runRunnables(final List<Runnable> runnables) {
+    private void runRunnables(final List<Runnable> runnables, final boolean isParentTransactionCommitted) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> RangerTransactionSynchronizationAdapter.runRunnables()");
         }
 
-        if (runnables != null) {
+        if (CollectionUtils.isNotEmpty(runnables)) {
             if (LOG.isDebugEnabled()) {
                 LOG.debug("Executing {" + runnables.size() + "} runnables");
             }
-            try {
-                //Create new  transaction
-                TransactionTemplate txTemplate = new TransactionTemplate(txManager);
-                txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            for (Runnable runnable : runnables) {
+                boolean isThisTransactionCommitted = false;
+                do {
+                    try {
+                        //Create new  transaction
+                        TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+                        txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
 
-                txTemplate.execute(new TransactionCallback<Object>() {
-                    public Object doInTransaction(TransactionStatus status) {
-                        for (Runnable runnable : runnables) {
-                            if (LOG.isDebugEnabled()) {
-                                LOG.debug("Executing runnable {" + runnable + "}");
+                        Object result = txTemplate.execute(new TransactionCallback<Object>() {
+                            public Object doInTransaction(TransactionStatus status) {
+                                Object result = null;
+                                if (LOG.isDebugEnabled()) {
+                                    LOG.debug("Executing runnable {" + runnable + "}");
+                                }
+                                try {
+                                    runnable.run();
+                                    result = runnable;
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("executed runnable " + runnable);
+                                    }
+                                } catch (OptimisticLockException optimisticLockException) {
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("Failed to execute runnable " + runnable + "because of OpmimisticLockException");
+                                    }
+                                } catch (Throwable e) {
+                                    if (LOG.isDebugEnabled()) {
+                                        LOG.debug("Failed to execute runnable " + runnable, e);
+                                    }
+                                }
+                                return result;
                             }
-                            try {
-                                runnable.run();
-                            } catch (RuntimeException e) {
-                                LOG.error("Failed to execute runnable " + runnable, e);
-                                break;
+                        });
+
+                        isThisTransactionCommitted = result == runnable;
+                        if (isParentTransactionCommitted) {
+                            if (!isThisTransactionCommitted) {
+                                LOG.info("Failed to commit runnable:[" + runnable + "]. Will retry!");
+                            } else {
+                                LOG.info("Committed runnable:[" + runnable + "].");
                             }
                         }
 
-                        return null;
+                    } catch (OptimisticLockException optimisticLockException) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Failed to commit TransactionService transaction for runnable:[" + runnable + "]");
+                        }
+                    } catch (TransactionSystemException tse) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Failed to commit TransactionService transaction, exception:[" + tse + "]");
+                        }
+                    } catch (Throwable e){
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("Failed to commit TransactionService transaction, throwable:[" + e + "]");
+                        }
                     }
-                });
-            } catch (Exception e) {
-            	if(LOG.isDebugEnabled()) {
-            		LOG.debug("Failed to commit TransactionService transaction", e);
-            	}
-                LOG.warn("Failed to commit TransactionService transaction. Ignoring...");
+                } while (isParentTransactionCommitted && !isThisTransactionCommitted);
             }
         } else {
             if (LOG.isDebugEnabled()) {

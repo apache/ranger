@@ -43,24 +43,29 @@ import javax.net.ssl.SSLServerSocketFactory;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.TrustManagerFactory;
 
-import org.apache.log4j.Logger;
+import org.apache.ranger.unixusersync.ha.UserSyncHAInitializerImpl;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.XMLUtils;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.UserGroupSync;
 import org.apache.ranger.usergroupsync.UserSyncMetricsProducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class UnixAuthenticationService {
 
-	private static final Logger LOG = Logger.getLogger(UnixAuthenticationService.class);
+	private static final Logger LOG = LoggerFactory.getLogger(UnixAuthenticationService.class);
 
 	private static final String serviceName = "UnixAuthenticationService";
 
-	private static final String SSL_ALGORITHM = "TLS";
+	private static final String SSL_ALGORITHM = "TLSv1.2";
 	private static final String REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM = "ranger.usersync.port";
 
 	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file";
 	private static final String SSL_TRUSTSTORE_PATH_PARAM = "ranger.usersync.truststore.file";
+
+	private static final String SSL_KEYSTORE_FILE_TYPE_PARAM = "ranger.keystore.file.type";
+	private static final String SSL_TRUSTSTORE_FILE_TYPE_PARAM = "ranger.truststore.file.type";
 
 	private static final String SSL_KEYSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.key.password";
 	private static final String SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS = "usersync.ssl.truststore.password";
@@ -73,12 +78,16 @@ public class UnixAuthenticationService {
 	private static final String CREDSTORE_FILENAME_PARAM = "ranger.usersync.credstore.filename";
 	
 	private String keyStorePath;
+	private String keyStoreType;
 	private List<String> enabledProtocolsList;
+	private List<String> enabledCipherSuiteList;
 	private String keyStorePathPassword;
 	private String trustStorePath;
 	private String trustStorePathPassword;
+	private String trustStoreType;
 	private List<String>  adminUserList = new ArrayList<String>();
 	private String adminRoleNames;
+	private UserSyncHAInitializerImpl userSyncHAInitializerImpl = null;
 	
 	private int  portNum;
 	
@@ -98,6 +107,7 @@ public class UnixAuthenticationService {
 			}
 		}
 		UnixAuthenticationService service = new UnixAuthenticationService();
+		service.userSyncHAInitializerImpl = UserSyncHAInitializerImpl.getInstance(UserGroupSyncConfig.getInstance().getUserGroupConfig());
 		service.run();
 	}
 
@@ -123,6 +133,10 @@ public class UnixAuthenticationService {
 		}
 		finally {
 			LOG.info("Service: " + serviceName + " - STOPPED.");
+			if(this.userSyncHAInitializerImpl != null) {
+				LOG.info("Stopping curator leader latch service as main thread is closing");
+				this.userSyncHAInitializerImpl.stop();
+			}
 		}
 	}
 
@@ -166,6 +180,9 @@ public class UnixAuthenticationService {
 		String credStoreFileName = prop.getProperty(CREDSTORE_FILENAME_PARAM);
 		
 		keyStorePath = prop.getProperty(SSL_KEYSTORE_PATH_PARAM);
+
+		keyStoreType = prop.getProperty(SSL_KEYSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
+		trustStoreType = prop.getProperty(SSL_TRUSTSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
 		
 		if (credStoreFileName == null) {
 			throw new RuntimeException("Credential file is not defined. param = [" + CREDSTORE_FILENAME_PARAM + "]");
@@ -181,8 +198,12 @@ public class UnixAuthenticationService {
 			throw new RuntimeException("Credential file [" + credStoreFileName + "]: can not be read." );
 		}
 		
-		keyStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName, SSL_KEYSTORE_PATH_PASSWORD_ALIAS);
-		trustStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName,SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS);
+		if ("bcfks".equalsIgnoreCase(keyStoreType)) {
+			String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+			credStoreFileName = crendentialProviderPrefixBcfks + credStoreFileName;
+		}
+		keyStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName, SSL_KEYSTORE_PATH_PASSWORD_ALIAS, keyStoreType);
+		trustStorePathPassword = CredentialReader.getDecryptedString(credStoreFileName,SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS, trustStoreType);
 		
 		trustStorePath  = prop.getProperty(SSL_TRUSTSTORE_PATH_PARAM);
 		portNum = Integer.parseInt(prop.getProperty(REMOTE_LOGIN_AUTH_SERVICE_PORT_PARAM));
@@ -212,9 +233,11 @@ public class UnixAuthenticationService {
 		String SSLEnabledProp = prop.getProperty(SSL_ENABLED_PARAM);
 		
 		SSLEnabled = (SSLEnabledProp != null &&  (SSLEnabledProp.equalsIgnoreCase("true")));
-		String defaultEnabledProtocols = "SSLv2Hello, TLSv1, TLSv1.1, TLSv1.2";
+		String defaultEnabledProtocols = "TLSv1.2";
 		String enabledProtocols = prop.getProperty("ranger.usersync.https.ssl.enabled.protocols", defaultEnabledProtocols);
+		String enabledCipherSuites = prop.getProperty("ranger.usersync.https.ssl.enabled.cipher.suites", "");
 		enabledProtocolsList=new ArrayList<String>(Arrays.asList(enabledProtocols.toUpperCase().trim().split("\\s*,\\s*")));
+		enabledCipherSuiteList = new ArrayList<String>(Arrays.asList(enabledCipherSuites.toUpperCase().trim().split("\\s*,\\s*")));
 //		LOG.info("Key:" + keyStorePath);
 //		LOG.info("KeyPassword:" + keyStorePathPassword);
 //		LOG.info("TrustStore:" + trustStorePath);
@@ -231,8 +254,8 @@ public class UnixAuthenticationService {
 		KeyManager[] km = null;
 
 		if (keyStorePath != null && ! keyStorePath.isEmpty()) {
-			KeyStore ks = KeyStore.getInstance(KeyStore.getDefaultType());
-			
+			KeyStore ks = KeyStore.getInstance(keyStoreType);
+		
 			InputStream in = null;
 			
 			in = getFileInputStream(keyStorePath);
@@ -260,7 +283,7 @@ public class UnixAuthenticationService {
 		KeyStore trustStoreKeyStore = null;
 		
 		if (trustStorePath != null && ! trustStorePath.isEmpty()) {
-			trustStoreKeyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+			trustStoreKeyStore = KeyStore.getInstance(trustStoreType);
 			
 			InputStream in = null;
 			
@@ -307,6 +330,23 @@ public class UnixAuthenticationService {
 			
 			if (!allowedProtocols.isEmpty()) {
 				secureSocket.setEnabledProtocols(allowedProtocols.toArray(new String[0]));
+			}
+			String[] enabledCipherSuites = secureSocket.getEnabledCipherSuites();
+			Set<String> allowedCipherSuites = new HashSet<String>();
+			for(String enabledCipherSuite : enabledCipherSuites) {
+				if (enabledCipherSuiteList.contains(enabledCipherSuite)) {
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Enabling CipherSuite : [" + enabledCipherSuite + "]");
+					}
+					allowedCipherSuites.add(enabledCipherSuite);
+				} else {
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Disabling CipherSuite : [" + enabledCipherSuite + "]");
+					}
+				}
+			}
+			if (!allowedCipherSuites.isEmpty()) {
+				secureSocket.setEnabledCipherSuites(allowedCipherSuites.toArray(new String[0]));
 			}
 		}
 		

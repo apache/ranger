@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.security.KeyStore;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,19 +33,22 @@ import java.util.StringTokenizer;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
+//import org.apache.hadoop.security.alias.BouncyCastleFipsKeyStoreProvider;
 import org.apache.ranger.credentialapi.CredentialReader;
 import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.XMLUtils;
+import org.apache.ranger.unixusersync.ha.UserSyncHAInitializerImpl;
 import org.apache.ranger.usergroupsync.UserGroupSink;
 import org.apache.ranger.usergroupsync.UserGroupSource;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class UserGroupSyncConfig  {
 
 	public static final String CONFIG_FILE = "ranger-ugsync-site.xml";
-	private static final Logger LOG = Logger.getLogger(UserGroupSyncConfig.class);
+	private static final Logger LOG = LoggerFactory.getLogger(UserGroupSyncConfig.class);
 
 	public static final String DEFAULT_CONFIG_FILE = "ranger-ugsync-default.xml";
 
@@ -59,7 +63,7 @@ public class UserGroupSyncConfig  {
 	
 	public static final String UGSYNC_UNIX_GROUP_FILE = "ranger.usersync.unix.group.file";
 	public static final String  DEFAULT_UGSYNC_UNIX_GROUP_FILE =   "/etc/group";
-	
+
 	public static final String  UGSYNC_MIN_USERID_PROP  = 	"ranger.usersync.unix.minUserId";
 
 	public static final String  UGSYNC_MIN_GROUPID_PROP =   "ranger.usersync.unix.minGroupId";
@@ -70,11 +74,15 @@ public class UserGroupSyncConfig  {
 	public static final String  UGSYNC_MOCK_RUN_PROP  = 	"ranger.usersync.policymanager.mockrun";
 
 	public static final String  UGSYNC_TEST_RUN_PROP  = 	"ranger.usersync.policymanager.testrun";
-	
+
 	public static final String UGSYNC_SOURCE_FILE_PROC =	"ranger.usersync.filesource.file";
 
 	public static final String UGSYNC_SOURCE_FILE_DELIMITER = "ranger.usersync.filesource.text.delimiter";
 	public static final String UGSYNC_SOURCE_FILE_DELIMITERER = "ranger.usersync.filesource.text.delimiterer";
+
+	private static final String SSL_KEYSTORE_FILE_TYPE_PARAM = "ranger.keystore.file.type";
+
+	private static final String SSL_TRUSTSTORE_FILE_TYPE_PARAM = "ranger.truststore.file.type";
 
 	private static final String SSL_KEYSTORE_PATH_PARAM = "ranger.usersync.keystore.file";
 
@@ -104,14 +112,10 @@ public class UserGroupSyncConfig  {
 
 	private static final String UGSYNC_SINK_CLASS = "org.apache.ranger.unixusersync.process.PolicyMgrUserGroupBuilder";
 
-	private static final String LGSYNC_DELTASYNC_SINK_CLASS = "org.apache.ranger.ldapusersync.process.LdapPolicyMgrUserGroupBuilder";
-	
 	private static final String LGSYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapUserGroupBuilder";
 
-	private static final String LGSYNC_DELTASYNC_SOURCE_CLASS = "org.apache.ranger.ldapusersync.process.LdapDeltaUserGroupBuilder";
-
 	private static final String LGSYNC_LDAP_URL = "ranger.usersync.ldap.url";
-	
+
 	private static final String LGSYNC_LDAP_DELTASYNC_ENABLED = "ranger.usersync.ldap.deltasync";
 	private static final boolean DEFAULT_LGSYNC_LDAP_DELTASYNC_ENABLED = false;
 
@@ -138,6 +142,7 @@ public class UserGroupSyncConfig  {
 	private static final String LGSYNC_USER_OBJECT_CLASS = "ranger.usersync.ldap.user.objectclass";
 	private static final String DEFAULT_USER_OBJECT_CLASS = "person";
 
+    private static final String LGSYNC_GROUPNAMES = "ranger.usersync.ldap.groupnames";
 	private static final String LGSYNC_USER_SEARCH_FILTER = "ranger.usersync.ldap.user.searchfilter";
 
 	private static final String LGSYNC_USER_NAME_ATTRIBUTE = "ranger.usersync.ldap.user.nameattribute";
@@ -174,10 +179,10 @@ public class UserGroupSyncConfig  {
 	private static final int DEFAULT_LGSYNC_PAGED_RESULTS_SIZE = 500;
 
 	private static final String LGSYNC_GROUP_SEARCH_ENABLED = "ranger.usersync.group.searchenabled";
-	private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = false;
+	private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_ENABLED = true;
 
 	private static final String LGSYNC_GROUP_SEARCH_FIRST_ENABLED = "ranger.usersync.group.search.first.enabled";
-	private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_FIRST_ENABLED = false;
+	private static final boolean DEFAULT_LGSYNC_GROUP_SEARCH_FIRST_ENABLED = true;
 
 	/*This flag (ranger.usersync.user.searchenabled) is used only when group search first is enabled to get username either -
 	 * from the group member attribute of the group or
@@ -231,6 +236,9 @@ public class UserGroupSyncConfig  {
 
 	private static final String SYNC_POLICY_MGR_USERNAME = "ranger.usersync.policymgr.username";
 
+	private static final String SYNC_POLICY_MGR_MAX_RETRY_ATTEMPTS = "ranger.usersync.policymgr.max.retry.attempts";
+	private static final String SYNC_POLICY_MGR_RETRY_INTERVAL_MS  = "ranger.usersync.policymgr.retry.interval.ms";
+
 	private static final String DEFAULT_POLICYMGR_USERNAME = "rangerusersync";
 
 	private static final String SYNC_SOURCE = "ranger.usersync.sync.source";
@@ -247,6 +255,9 @@ public class UserGroupSyncConfig  {
 	private static final String SYNC_MAPPING_GROUPNAME_HANDLER = "ranger.usersync.mapping.groupname.handler";
 	private static final String DEFAULT_SYNC_MAPPING_GROUPNAME_HANDLER = "org.apache.ranger.usergroupsync.RegEx";
 
+	private static final String SYNC_MAPPING_SEPARATOR = "ranger.usersync.mapping.regex.separator";
+
+	private static final String DEFAULT_MAPPING_SEPARATOR = "/";
     private static final String ROLE_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.role.assignment.list.delimiter";
 
     private static final String USERS_GROUPS_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.users.groups.assignment.list.delimiter";
@@ -254,6 +265,9 @@ public class UserGroupSyncConfig  {
     private static final String USERNAME_GROUPNAME_ASSIGNMENT_LIST_DELIMITER = "ranger.usersync.username.groupname.assignment.list.delimiter";
 
     private static final String GROUP_BASED_ROLE_ASSIGNMENT_RULES = "ranger.usersync.group.based.role.assignment.rules";
+
+	private static final String WHITELIST_USER_ROLE_ASSIGNMENT_RULES = "ranger.usersync.whitelist.users.role.assignment.rules";
+	private static final String DEFAULT_WHITELIST_USER_ROLE_ASSIGNMENT_RULES = "&ROLE_SYS_ADMIN:u:admin,rangerusersync,rangertagsync&ROLE_KEY_ADMIN:u:keyadmin";
 
     private static final String USERSYNC_RANGER_COOKIE_ENABLED_PROP = "ranger.usersync.cookie.enabled";
 
@@ -267,7 +281,19 @@ public class UserGroupSyncConfig  {
     private static final long    DEFAULT_UGSYNC_METRICS_FREQUENCY_TIME_IN_MILLIS = 10000L;
     public static final String   UGSYNC_METRICS_ENABLED_PROP = "ranger.usersync.metrics.enabled";
 
+	private static final String UGSYNC_DELETES_ENABLED = "ranger.usersync.deletes.enabled";
+	private static final boolean DEFAULT_UGSYNC_DELETES_ENABLED = false;
+	private static final String  UGSYNC_DELETES_FREQUENCY = "ranger.usersync.deletes.frequency";
+	private static final long    DEFAULT_UGSYNC_DELETES_FREQUENCY = 10L; // After every 10 sync cycles
+	public static final String UGSYNC_NAME_VALIDATION_ENABLED = "ranger.usersync.name.validation.enabled";
+	private static final boolean DEFAULT_UGSYNC_NAME_VALIDATION_ENABLED = false;
+	private static final long UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA = 5000L;
+	public static final String UGSYNC_SERVER_HA_ENABLED_PARAM = "ranger-ugsync.server.ha.enabled";
+	public static final String UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED = "ranger.usersync.syncsource.validation.enabled";
+	private static final boolean DEFAULT_UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED = true;
+
     private Properties prop = new Properties();
+	private Configuration userGroupConfig = null;
 
 	private static volatile UserGroupSyncConfig me = null;
 
@@ -292,6 +318,7 @@ public class UserGroupSyncConfig  {
 		XMLUtils.loadConfig(DEFAULT_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CORE_SITE_CONFIG_FILE, prop);
 		XMLUtils.loadConfig(CONFIG_FILE, prop);
+		userGroupConfig = getConfig();
 	}
 
 	public Configuration getConfig() {
@@ -302,6 +329,13 @@ public class UserGroupSyncConfig  {
 		}
 
 		return ret;
+	}
+
+	public Configuration getUserGroupConfig(){
+		return userGroupConfig;
+	}
+	synchronized public static boolean isUgsyncServiceActive() {
+		return UserSyncHAInitializerImpl.getInstance(UserGroupSyncConfig.getInstance().getUserGroupConfig()).isActive();
 	}
 
 	public String getUserSyncFileSource(){
@@ -320,7 +354,7 @@ public class UserGroupSyncConfig  {
 		}
 		return val;
 	}
-	
+
 	public String getUnixPasswordFile() {
 		String val = prop.getProperty(UGSYNC_UNIX_PASSWORD_FILE);
 		if ( val == null ) {
@@ -329,7 +363,7 @@ public class UserGroupSyncConfig  {
 
 		return val;
 	}
-	
+
 	public String getUnixGroupFile() {
 		String val = prop.getProperty(UGSYNC_UNIX_GROUP_FILE);
 		if ( val == null ) {
@@ -366,7 +400,7 @@ public class UserGroupSyncConfig  {
 		String val = prop.getProperty(UGSYNC_MOCK_RUN_PROP);
 		return (val != null && val.trim().equalsIgnoreCase("true"));
 	}
-	
+
 	public boolean isTestRunEnabled() {
 		String val = prop.getProperty(UGSYNC_TEST_RUN_PROP);
 		return (val != null && val.trim().equalsIgnoreCase("true"));
@@ -393,6 +427,13 @@ public class UserGroupSyncConfig  {
 		return prop.getProperty(UGSYNC_MAX_RECORDS_PER_API_CALL_PROP);
 	}
 
+	public String getSSLKeyStoreType() {
+		return  prop.getProperty(SSL_KEYSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
+	}
+
+	public String getSSLTrustStoreType() {
+		return  prop.getProperty(SSL_TRUSTSTORE_FILE_TYPE_PARAM, KeyStore.getDefaultType());
+	}
 
 	public String getSSLKeyStorePath() {
 		return  prop.getProperty(SSL_KEYSTORE_PATH_PARAM);
@@ -408,7 +449,11 @@ public class UserGroupSyncConfig  {
 			String alias=SSL_KEYSTORE_PATH_PASSWORD_ALIAS;
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
-					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
+						String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+						path = crendentialProviderPrefixBcfks + path;
+					}
+					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim(), getSSLKeyStoreType());
 					if(password!=null&& !password.trim().isEmpty() && !"none".equalsIgnoreCase(password.trim()) && !"_".equalsIgnoreCase(password.trim())){
 						prop.setProperty(SSL_KEYSTORE_PATH_PASSWORD_PARAM,password);
 					}
@@ -432,7 +477,11 @@ public class UserGroupSyncConfig  {
 			String alias=SSL_TRUSTSTORE_PATH_PASSWORD_ALIAS;
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
-					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
+						String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+						path = crendentialProviderPrefixBcfks + path;
+					}
+					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim(), getSSLKeyStoreType());
 					if(password!=null&& !password.trim().isEmpty() && !"none".equalsIgnoreCase(password.trim()) && !"_".equalsIgnoreCase(password.trim())){
 						prop.setProperty(SSL_TRUSTSTORE_PATH_PASSWORD_PARAM,password);
 					}
@@ -456,11 +505,21 @@ public class UserGroupSyncConfig  {
 		return ret;
 	}
 
+	public long getInitSleepTimeInMillisBetweenCycle() throws Throwable{
+		long initSleepValue = 0;
+		Configuration config = getUserGroupConfig();
+		if(config.getBoolean(UGSYNC_SERVER_HA_ENABLED_PARAM, false)){
+			initSleepValue = UGSYNC_INIT_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_MIN_VALUE_FOR_HA;
+		}else{
+			initSleepValue = getSleepTimeInMillisBetweenCycle();
+		}
+		return initSleepValue;
+	}
 	public long getSleepTimeInMillisBetweenCycle() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_PARAM);
 		String className = getUserGroupSource().getClass().getName();
 		if (val == null) {
-			if (LGSYNC_SOURCE_CLASS.equals(className) || LGSYNC_DELTASYNC_SOURCE_CLASS.equals(className)) {
+			if (LGSYNC_SOURCE_CLASS.equals(className)) {
 				return UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
 			} else {
 				return UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
@@ -469,7 +528,7 @@ public class UserGroupSyncConfig  {
 		else {
 			long ret = Long.parseLong(val);
 			long min_interval;
-			if (LGSYNC_SOURCE_CLASS.equals(className) || LGSYNC_DELTASYNC_SOURCE_CLASS.equals(className)) {
+			if (LGSYNC_SOURCE_CLASS.equals(className)) {
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_LDAP_DEFAULT_VALUE;
 			}else if(UGSYNC_SOURCE_CLASS.equals(className)){
 				min_interval = UGSYNC_SLEEP_TIME_IN_MILLIS_BETWEEN_CYCLE_UNIX_DEFAULT_VALUE;
@@ -488,15 +547,15 @@ public class UserGroupSyncConfig  {
 	private String getUserGroupSourceClassName() {
 		String val =  prop.getProperty(UGSYNC_SOURCE_CLASS_PARAM);
 		String className = UGSYNC_SOURCE_CLASS;
-		
+
 		String syncSource = null;
 
 		if(val == null || val.trim().isEmpty()) {
 			syncSource=getSyncSource();
 		}
 		else {
-			if (val.equalsIgnoreCase(LGSYNC_SOURCE_CLASS) && isDeltaSyncEnabled()) {
-				val = LGSYNC_DELTASYNC_SOURCE_CLASS;
+			if (val.equalsIgnoreCase(LGSYNC_SOURCE_CLASS)) {
+				val = LGSYNC_SOURCE_CLASS;
 			}
 			syncSource = val;
 		}
@@ -506,16 +565,12 @@ public class UserGroupSyncConfig  {
 		if(syncSource!=null && syncSource.equalsIgnoreCase("UNIX")){
 			className = UGSYNC_SOURCE_CLASS;
 		}else if(syncSource!=null && syncSource.equalsIgnoreCase("LDAP")){
-			if (!isDeltaSyncEnabled()) {
-				className = LGSYNC_SOURCE_CLASS;
-			} else {
-				className = LGSYNC_DELTASYNC_SOURCE_CLASS;
-			}
-		} 
+			className = LGSYNC_SOURCE_CLASS;
+		}
 
 		return className;
 	}
-	
+
 	public UserGroupSource getUserGroupSource() throws Throwable {
 
 		String className = getUserGroupSourceClassName();
@@ -529,14 +584,9 @@ public class UserGroupSyncConfig  {
 
 	public UserGroupSink getUserGroupSink() throws Throwable {
 		String val =  prop.getProperty(UGSYNC_SINK_CLASS_PARAM);
-		String className = getUserGroupSourceClassName();
 
-		if (className.equals(LGSYNC_DELTASYNC_SOURCE_CLASS)) {
-			val = LGSYNC_DELTASYNC_SINK_CLASS;
-		} else {
-			if(val == null || val.trim().isEmpty()) {
-				val = UGSYNC_SINK_CLASS;
-			}
+		if(val == null || val.trim().isEmpty()) {
+			val = UGSYNC_SINK_CLASS;
 		}
 
 		Class<UserGroupSink> ugSinkClass = (Class<UserGroupSink>)Class.forName(val);
@@ -575,7 +625,11 @@ public class UserGroupSyncConfig  {
 			String alias=LGSYNC_LDAP_BIND_ALIAS;
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
-					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+					if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
+						String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+						path = crendentialProviderPrefixBcfks + path;
+					}
+					String password=CredentialReader.getDecryptedString(path.trim(),alias.trim(), getSSLKeyStoreType());
 					if(password!=null&& !password.trim().isEmpty() && !password.trim().equalsIgnoreCase("none")){
 						prop.setProperty(LGSYNC_LDAP_BIND_PASSWORD,password);
 					}
@@ -652,6 +706,22 @@ public class UserGroupSyncConfig  {
 		}
 		return val;
 	}
+
+    public String getGroupNames() {
+        return prop.getProperty(LGSYNC_GROUPNAMES);
+    }
+
+    public Set<String> getGroupNameSet() {
+        String groupNames =  getGroupNames();
+		Set<String> groupNamegSet = new HashSet<String>();
+		if (StringUtils.isNotEmpty(groupNames)) {
+			StringTokenizer st = new StringTokenizer(groupNames, ";");
+			while (st.hasMoreTokens()) {
+				groupNamegSet.add(st.nextToken().trim().toLowerCase());
+			}
+		}
+        return groupNamegSet;
+    }
 
 	public Set<String> getUserGroupNameAttributeSet() {
 		String uga =  getUserGroupNameAttribute();
@@ -771,6 +841,9 @@ public class UserGroupSyncConfig  {
 			userSearchEnabled = DEFAULT_LGSYNC_USER_SEARCH_ENABLED;
 		} else {
 			userSearchEnabled  = Boolean.valueOf(val);
+		}
+		if (!isGroupSearchFirstEnabled()) {
+			userSearchEnabled = true;
 		}
 		return userSearchEnabled;
 	}
@@ -903,8 +976,12 @@ public class UserGroupSyncConfig  {
 			String alias=prop.getProperty(SYNC_POLICY_MGR_ALIAS,"policymgr.user.password");
 			if(path!=null && alias!=null){
 				if(!path.trim().isEmpty() && !alias.trim().isEmpty()){
+					if ("bcfks".equalsIgnoreCase(getSSLKeyStoreType())) {
+						String crendentialProviderPrefixBcfks= "bcfks" + "://file";
+						path = crendentialProviderPrefixBcfks + path;
+					}
 					try{
-						password=CredentialReader.getDecryptedString(path.trim(),alias.trim());
+						password=CredentialReader.getDecryptedString(path.trim(),alias.trim(), getSSLKeyStoreType());
 					}catch(Exception ex){
 						password=null;
 					}
@@ -927,6 +1004,14 @@ public class UserGroupSyncConfig  {
 			userName = DEFAULT_POLICYMGR_USERNAME;
 		}
 		return userName;
+	}
+
+	public int getPolicyMgrMaxRetryAttempts() {
+		return getIntProperty(prop, SYNC_POLICY_MGR_MAX_RETRY_ATTEMPTS, 0);
+	}
+
+	public int getPolicyMgrRetryIntervalMs() {
+		return getIntProperty(prop, SYNC_POLICY_MGR_RETRY_INTERVAL_MS, 1 * 1000);
 	}
 
 	public String getSyncSource() {
@@ -996,12 +1081,23 @@ public class UserGroupSyncConfig  {
         if (prop != null && prop.containsKey(GROUP_BASED_ROLE_ASSIGNMENT_RULES)) {
             String GroupRoleRules = prop
                     .getProperty(GROUP_BASED_ROLE_ASSIGNMENT_RULES);
-            if (GroupRoleRules != null && !GroupRoleRules.isEmpty()) {
+            if (StringUtils.isNotBlank(GroupRoleRules)) {
                 return GroupRoleRules.trim();
             }
         }
         return null;
     }
+
+	public String getWhileListUserRoleRules() {
+		if (prop != null && prop.containsKey(WHITELIST_USER_ROLE_ASSIGNMENT_RULES)) {
+			String whiteListUserRoleRules = prop
+					.getProperty(WHITELIST_USER_ROLE_ASSIGNMENT_RULES);
+			if (StringUtils.isNotBlank(whiteListUserRoleRules) ) {
+				return whiteListUserRoleRules.trim();
+			}
+		}
+		return DEFAULT_WHITELIST_USER_ROLE_ASSIGNMENT_RULES;
+	}
 
     public String getUserGroupDelimiter() {
         if (prop != null
@@ -1062,7 +1158,7 @@ public class UserGroupSyncConfig  {
 		}
 		return starttlsEnabled;
 	}
-	
+
 	public boolean isDeltaSyncEnabled() {
 		boolean deltaSyncEnabled;
 		String val = prop.getProperty(LGSYNC_LDAP_DELTASYNC_ENABLED);
@@ -1133,11 +1229,11 @@ public class UserGroupSyncConfig  {
 	public void setGroupObjectClass(String groupObjectClass) {
 		prop.setProperty(LGSYNC_GROUP_OBJECT_CLASS, groupObjectClass);
 	}
-	
+
 	/* Used only for unit testing */
     	public void setDeltaSync(boolean deltaSyncEnabled) {
         	prop.setProperty(LGSYNC_LDAP_DELTASYNC_ENABLED, String.valueOf(deltaSyncEnabled));
-    	}	
+    	}
 
 	/* Used only for unit testing */
     	public void setUserNameAttribute(String userNameAttr) {
@@ -1147,6 +1243,11 @@ public class UserGroupSyncConfig  {
 	/* Used only for unit testing */
 	public void setGroupHierarchyLevel(int groupHierarchyLevel) {
 		prop.setProperty(LGSYNC_GROUP_HIERARCHY_LEVELS, String.valueOf(groupHierarchyLevel));
+	}
+
+	/* Used only for unit testing */
+	public void setGroupnames(String groupnames) {
+		prop.setProperty(LGSYNC_GROUPNAMES, groupnames);
 	}
 
 	public String getUserSyncMetricsFileName() throws IOException {
@@ -1200,5 +1301,100 @@ public class UserGroupSyncConfig  {
 	public boolean isUserSyncMetricsEnabled() {
 		String val = prop.getProperty(UGSYNC_METRICS_ENABLED_PROP);
 		return "true".equalsIgnoreCase(StringUtils.trimToEmpty(val));
+	}
+
+
+	public boolean isUserSyncDeletesEnabled() {
+		boolean isUserSyncDeletesEnabled;
+		String val = prop.getProperty(UGSYNC_DELETES_ENABLED);
+		if(StringUtils.isEmpty(val)) {
+			isUserSyncDeletesEnabled = DEFAULT_UGSYNC_DELETES_ENABLED;
+		} else {
+			isUserSyncDeletesEnabled  = Boolean.valueOf(val);
+		}
+		return isUserSyncDeletesEnabled;
+	}
+
+	/*
+	 * This is the frequency of computing deleted users/groups from the sync source.
+	 * Default and minimum value is 8hrs
+	 * If the delete frequency interval value is less than sync interval and greater than 8hrs,
+	 * then deleted objects are computed at every sync cycle.
+	 */
+	public long getUserSyncDeletesFrequency() throws Throwable {
+		long ret = 1;
+
+		String val = prop.getProperty(UGSYNC_DELETES_FREQUENCY);
+		if (StringUtils.isNotBlank(val)) {
+			ret = Long.valueOf(val);
+			if (!isTestRunEnabled() && ret < DEFAULT_UGSYNC_DELETES_FREQUENCY) {
+				LOG.info("Frequency of computing deletes cannot be set below " + DEFAULT_UGSYNC_DELETES_FREQUENCY);
+				ret = DEFAULT_UGSYNC_DELETES_FREQUENCY;
+			}
+		}
+		return ret;
+	}
+
+	public String getCurrentSyncSource() throws Throwable{
+		String currentSyncSource;
+		String className = getUserGroupSource().getClass().getName();
+		if (LGSYNC_SOURCE_CLASS.equals(className)) {
+			currentSyncSource = "LDAP/AD";
+		} else if (UGSYNC_SOURCE_CLASS.equalsIgnoreCase(className)){
+			currentSyncSource = "Unix";
+		} else {
+			currentSyncSource = "File";
+		}
+		return currentSyncSource;
+	}
+
+	public boolean isUserSyncNameValidationEnabled() {
+		boolean isUserSyncNameValidationEnabled;
+		String val = prop.getProperty(UGSYNC_NAME_VALIDATION_ENABLED);
+		if(StringUtils.isEmpty(val)) {
+			isUserSyncNameValidationEnabled = DEFAULT_UGSYNC_NAME_VALIDATION_ENABLED;
+		} else {
+			isUserSyncNameValidationEnabled  = Boolean.valueOf(val);
+		}
+		return isUserSyncNameValidationEnabled;
+	}
+
+	public String getRegexSeparator() {
+		String ret = DEFAULT_MAPPING_SEPARATOR;
+		String val = prop.getProperty(SYNC_MAPPING_SEPARATOR);
+		if(StringUtils.isNotEmpty(val)) {
+			if (val.length() == 1) {
+				ret = val;
+			} else {
+				LOG.warn("More than one character found in RegEx Separator, using default RegEx Separator /");
+			}
+		}
+		LOG.info(String.format("Using %s as the RegEx Separator", ret));
+		return ret;
+	}
+
+
+	private int getIntProperty(Properties prop, String key, int defaultValue) {
+		int   ret  = defaultValue;
+		String val = prop.getProperty(key);
+
+		if (StringUtils.isNotBlank(val)) {
+			try {
+				ret = Integer.parseInt(val);
+			} catch (NumberFormatException excp) {
+				LOG.warn("Invalid value for property: " + key + "=" + val + ". Will use default value: " + defaultValue, excp);
+			}
+		}
+
+		return ret;
+	}
+
+	public boolean isSyncSourceValidationEnabled() {
+		boolean isSyncSourceValidationEnabled = DEFAULT_UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED;
+		String val = prop.getProperty(UGSYNC_SYNC_SOURCE_VALIDATION_ENABLED);
+		if(StringUtils.isNotEmpty(val)) {
+			isSyncSourceValidationEnabled = Boolean.parseBoolean(val);
+		}
+		return isSyncSourceValidationEnabled;
 	}
 }

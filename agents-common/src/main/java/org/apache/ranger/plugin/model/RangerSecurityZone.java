@@ -23,19 +23,14 @@ import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class RangerSecurityZone extends RangerBaseModelObject implements java.io.Serializable {
     public static final long RANGER_UNZONED_SECURITY_ZONE_ID = 1L;
 	private static final long serialVersionUID = 1L;
@@ -44,21 +39,29 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
     private List<String>  							tagServices;
     private List<String>                            adminUsers;
     private List<String>                            adminUserGroups;
+    private List<String>                            adminRoles;
     private List<String>                            auditUsers;
     private List<String>                            auditUserGroups;
+    private List<String>                            auditRoles;
     private String                                  description;
 
     public RangerSecurityZone() {
-        this(null, null, null, null, null, null, null,null);
+        this(null, null, null, null, null, null, null,null, null, null);
     }
 
     public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services,List<String> tagServices, List<String> adminUsers, List<String> adminUserGroups, List<String> auditUsers, List<String> auditUserGroups, String description) {
+        this(name, services, tagServices, adminUsers, adminUserGroups, null, auditUsers, auditUserGroups, null, description);
+    }
+
+    public RangerSecurityZone(String name, Map<String, RangerSecurityZoneService> services,List<String> tagServices, List<String> adminUsers, List<String> adminUserGroups, List<String> adminRoles, List<String> auditUsers, List<String> auditUserGroups, List<String> auditRoles, String description) {
         setName(name);
         setServices(services);
         setAdminUsers(adminUsers);
         setAdminUserGroups(adminUserGroups);
+        setAdminRoles(adminRoles);
         setAuditUsers(auditUsers);
         setAuditUserGroups(auditUserGroups);
+        setAuditRoles(auditRoles);
         setDescription(description);
         setTagServices(tagServices);
     }
@@ -92,6 +95,12 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
         this.adminUserGroups = adminUserGroups == null ? new ArrayList<>() : adminUserGroups;
     }
 
+    public List<String> getAdminRoles() { return adminRoles; }
+
+    public void setAdminRoles(List<String> adminRoles) {
+        this.adminRoles = adminRoles == null ? new ArrayList<>() : adminRoles;
+    }
+
     public List<String> getAuditUsers() { return auditUsers; }
 
     public void setAuditUsers(List<String> auditUsers) {
@@ -102,6 +111,12 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
 
     public void setAuditUserGroups(List<String> auditUserGroups) {
         this.auditUserGroups = auditUserGroups == null ? new ArrayList<>() : auditUserGroups;
+    }
+
+    public List<String> getAuditRoles() { return auditRoles; }
+
+    public void setAuditRoles(List<String> auditRoles) {
+        this.auditRoles = auditRoles == null ? new ArrayList<>() : auditRoles;
     }
 
     public List<String> getTagServices() {
@@ -119,17 +134,17 @@ public class RangerSecurityZone extends RangerBaseModelObject implements java.io
                 + ", tagServices=" + tagServices
                 + ", adminUsers=" + adminUsers
                 + ", adminUserGroups=" + adminUserGroups
+                + ", adminRoles=" + adminRoles
                 + ", auditUsers=" + auditUsers
                 + ", auditUserGroups=" + auditUserGroups
+                + ", auditRoles=" + auditRoles
                 + ", description="+ description
                 +"}";
     }
 
 	@JsonAutoDetect(fieldVisibility=JsonAutoDetect.Visibility.ANY)
-	@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown=true)
-	@XmlRootElement
-	@XmlAccessorType(XmlAccessType.FIELD)
 	public static class RangerSecurityZoneService implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
         private List<HashMap<String, List<String>>> resources;

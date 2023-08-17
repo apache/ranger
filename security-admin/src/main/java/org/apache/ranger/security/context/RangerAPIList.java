@@ -88,8 +88,8 @@ public class RangerAPIList {
 	public static final String GET_POLICY_VERSION_LIST = "ServiceREST.getPolicyVersionList";
 	public static final String GET_POLICY_FOR_VERSION_NO = "ServiceREST.getPolicyForVersionNumber";
 	public static final String GET_PLUGINS_INFO = "ServiceREST.getPluginsInfo";
-        public static final String GET_METRICS_BY_TYPE = "ServiceREST.getMetricByType";
-
+	public static final String GET_METRICS_BY_TYPE = "ServiceREST.getMetricByType";
+	public static final String DELETE_CLUSTER_SERVICES = "ServiceREST.deleteClusterServices";
 
 	/**
 	 * List of APIs for UserREST
@@ -102,7 +102,6 @@ public class RangerAPIList {
 	public static final String SET_USER_ROLES = "UserREST.setUserRoles";
 	public static final String DEACTIVATE_USER = "UserREST.deactivateUser";
 	public static final String GET_USER_PROFILE = "UserREST.getUserProfile";
-	public static final String SUGGEST_USER_FIRST_NAME = "UserREST.suggestUserFirstName";
 	public static final String CHANGE_PASSWORD = "UserREST.changePassword";
 	public static final String CHANGE_EMAIL_ADDRESS = "UserREST.changeEmailAddress";
 
@@ -210,4 +209,6 @@ public class RangerAPIList {
 	public static final String SET_USER_ROLES_BY_NAME="XUserREST.setUserRolesByName";
 	public static final String GET_USER_ROLES_BY_ID="XUserREST.getUserRolesByID";
 	public static final String GET_USER_ROLES_BY_NAME="XUserREST.getUserRolesByName";
+	public static final String FORCE_DELETE_EXTERNAL_USERS = "XUserREST.forceDeleteExternalUsers";
+	public static final String FORCE_DELETE_EXTERNAL_GROUPS = "XUserREST.forceDeleteExternalGroups";
 }

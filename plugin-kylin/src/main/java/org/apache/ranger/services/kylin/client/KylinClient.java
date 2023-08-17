@@ -33,11 +33,12 @@ import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpStatus;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.plugin.util.PasswordUtils;
 import org.apache.ranger.services.kylin.client.json.model.KylinProjectResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -49,7 +50,7 @@ import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 
 public class KylinClient extends BaseClient {
 
-	private static final Logger LOG = Logger.getLogger(KylinClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KylinClient.class);
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 

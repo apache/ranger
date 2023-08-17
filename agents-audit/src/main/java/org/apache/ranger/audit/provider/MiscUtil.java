@@ -24,6 +24,9 @@ import java.security.Principal;
 import java.security.PrivilegedAction;
 import java.security.PrivilegedExceptionAction;
 import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
@@ -48,13 +51,12 @@ import javax.security.auth.login.LoginContext;
 
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.hadoop.security.authentication.util.KerberosName;
 import org.apache.hadoop.security.authentication.util.KerberosUtil;
-import org.apache.log4j.helpers.LogLog;
 import org.apache.ranger.authorization.hadoop.utils.RangerCredentialProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -62,7 +64,7 @@ import com.google.gson.GsonBuilder;
 import static org.apache.hadoop.util.PlatformName.IBM_JAVA;
 
 public class MiscUtil {
-	private static final Log logger = LogFactory.getLog(MiscUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(MiscUtil.class);
 
 	public static final String TOKEN_START = "%";
 	public static final String TOKEN_END = "%";
@@ -92,7 +94,7 @@ public class MiscUtil {
 			sGsonBuilder = new GsonBuilder().setDateFormat(
 					"yyyy-MM-dd HH:mm:ss.SSS").create();
 		} catch (Throwable excp) {
-			LogLog.warn(
+			logger.warn(
 					"failed to create GsonBuilder object. stringify() will return obj.toString(), instead of Json",
 					excp);
 		}
@@ -203,7 +205,7 @@ public class MiscUtil {
 			ret = propertyName != null ? System.getProperty(propertyName)
 					: null;
 		} catch (Exception excp) {
-			LogLog.warn("getSystemProperty(" + propertyName + ") failed", excp);
+			logger.warn("getSystemProperty(" + propertyName + ") failed", excp);
 		}
 
 		return ret;
@@ -215,7 +217,7 @@ public class MiscUtil {
 		try {
 			ret = envName != null ? System.getenv(envName) : null;
 		} catch (Exception excp) {
-			LogLog.warn("getenv(" + envName + ") failed", excp);
+			logger.warn("getenv(" + envName + ") failed", excp);
 		}
 
 		return ret;
@@ -229,7 +231,7 @@ public class MiscUtil {
 
 			ret = sdf.format(time);
 		} catch (Exception excp) {
-			LogLog.warn("SimpleDateFormat.format() failed: " + format, excp);
+			logger.warn("SimpleDateFormat.format() failed: " + format, excp);
 		}
 
 		return ret;
@@ -244,7 +246,7 @@ public class MiscUtil {
 
 				if (!parentDir.exists()) {
 					if (!parentDir.mkdirs()) {
-						LogLog.warn("createParents(): failed to create "
+						logger.warn("createParents(): failed to create "
 								+ parentDir.getAbsolutePath());
 					}
 				}
@@ -328,6 +330,19 @@ public class MiscUtil {
 
 	public static String getStringProperty(Properties props, String propName) {
 		String ret = null;
+
+		if (props != null && propName != null) {
+			String val = props.getProperty(propName);
+			if (val != null) {
+				ret = val;
+			}
+		}
+
+		return ret;
+	}
+
+	public static String getStringProperty(Properties props, String propName, String defValue) {
+		String ret = defValue;
 
 		if (props != null && propName != null) {
 			String val = props.getProperty(propName);
@@ -461,7 +476,7 @@ public class MiscUtil {
 				logger.info("Default UGI before using new Subject:"
 						+ UserGroupInformation.getLoginUser());
 			} catch (Throwable t) {
-				logger.error(t);
+				logger.error("failed to get login user", t);
 			}
 			ugi = UserGroupInformation.getUGIFromSubject(subject);
 			logger.info("SUBJECT.UGI.NAME=" + ugi.getUserName() + ", ugi="
@@ -600,7 +615,7 @@ public class MiscUtil {
 		return Collections.emptySet();
 	}
 
-	static public boolean logErrorMessageByInterval(Log useLogger,
+	static public boolean logErrorMessageByInterval(Logger useLogger,
 			String message) {
 		return logErrorMessageByInterval(useLogger, message, null);
 	}
@@ -610,7 +625,7 @@ public class MiscUtil {
 	 * @param message
 	 * @param e
 	 */
-	static public boolean logErrorMessageByInterval(Log useLogger,
+	static public boolean logErrorMessageByInterval(Logger useLogger,
 			String message, Throwable e) {
         if (message == null) {
             return false;
@@ -771,6 +786,45 @@ public class MiscUtil {
 
 	}
 
+	public static void loginWithKeyTab(String keytab, String principal, String nameRules) {
+		if (logger.isDebugEnabled()) {
+			logger.debug("==> MiscUtil.loginWithKeyTab() keytab= " + keytab + "principal= " + principal + "nameRules= " + nameRules);
+		}
+
+		if (keytab == null || principal == null) {
+			logger.error("Failed to login as keytab or principal is null!");
+			return;
+		}
+
+		String[]             spnegoPrincipals;
+		UserGroupInformation ugi;
+
+		try {
+			if (principal.equals("*")) {
+				spnegoPrincipals = KerberosUtil.getPrincipalNames(keytab, Pattern.compile("HTTP/.*"));
+				if (spnegoPrincipals.length == 0) {
+					logger.error("No principals found in keytab= " + keytab);
+				}
+			} else {
+				spnegoPrincipals = new String[] { principal };
+			}
+
+			if (nameRules != null) {
+				KerberosName.setRules(nameRules);
+			}
+
+			logger.info("Creating UGI from keytab directly. keytab= " + keytab + ", principal= " + spnegoPrincipals[0]);
+			ugi = UserGroupInformation.loginUserFromKeytabAndReturnUGI(spnegoPrincipals[0], keytab);
+			MiscUtil.setUGILoginUser(ugi, null);
+		} catch (Exception e) {
+			logger.error("Failed to login with given keytab= " + keytab + "principal= " + principal + "nameRules= " + nameRules, e);
+		}
+
+		if (logger.isDebugEnabled()) {
+			logger.debug("<== MiscUtil.loginWithKeyTab()");
+		}
+	}
+
 	static class LogHistory {
 		long lastLogTime = 0;
 		int counter = 0;
@@ -842,7 +896,7 @@ public class MiscUtil {
 		try {
 			local_hostname = InetAddress.getLocalHost().getHostName();
 		} catch (Throwable excp) {
-			LogLog.warn("getHostname()", excp);
+			logger.warn("getHostname()", excp);
 		}
 		if ( logger.isDebugEnabled() ) {
 			logger.debug("<== MiscUtil.initLocalHost()");
@@ -870,6 +924,75 @@ public class MiscUtil {
 	// use Holder class to defer initialization until needed
 	private static class RandomHolder {
 		static final Random random = new Random();
+	}
+
+	// Utility methods
+	public static int toInt(Object value) {
+		if (value == null) {
+			return 0;
+		}
+		if (value instanceof Integer) {
+			return (Integer) value;
+		}
+		if (value.toString().isEmpty()) {
+			return 0;
+		}
+		try {
+			return Integer.valueOf(value.toString());
+		} catch (Throwable t) {
+			logger.error("Error converting value to integer. Value = " + value, t);
+		}
+		return 0;
+	}
+
+	public static long toLong(Object value) {
+		if (value == null) {
+			return 0;
+		}
+		if (value instanceof Long) {
+			return (Long) value;
+		}
+		if (value.toString().isEmpty()) {
+			return 0;
+		}
+		try {
+			return Long.valueOf(value.toString());
+		} catch (Throwable t) {
+			logger.error("Error converting value to long. Value = " + value, t);
+		}
+		return 0;
+	}
+
+	public static Date toDate(Object value) {
+		if (value == null) {
+			return null;
+		}
+		if (value instanceof Date) {
+			return (Date) value;
+		}
+		try {
+			// TODO: Do proper parsing based on Solr response value
+			return new Date(value.toString());
+		} catch (Throwable t) {
+			logger.error("Error converting value to date. Value = " + value, t);
+		}
+		return null;
+	}
+
+	public static Date toLocalDate(Object value) {
+		if (value == null) {
+			return null;
+		}
+		if (value instanceof Date) {
+			return (Date) value;
+		}
+		try {
+			LocalDateTime localDateTime = LocalDateTime.parse(value.toString(), DateTimeFormatter.ISO_DATE_TIME);
+			return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
+		} catch (Throwable t) {
+			logger.error("Error converting value to date. Value = " + value, t);
+		}
+		return null;
 	}
 
 }

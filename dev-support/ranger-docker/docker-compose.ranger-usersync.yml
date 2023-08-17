@@ -1,0 +1,26 @@
+version: '3'
+services:
+  ranger-usersync:
+    build:
+      context: .
+      dockerfile: Dockerfile.ranger-usersync
+      args:
+        - RANGER_VERSION=${RANGER_VERSION}
+    image: ranger-usersync
+    container_name: ranger-usersync
+    hostname: ranger-usersync.example.com
+    stdin_open: true
+    tty: true
+    networks:
+      - ranger
+    depends_on:
+      ranger:
+        condition: service_started
+    environment:
+      - RANGER_VERSION
+      - ENABLE_FILE_SYNC_SOURCE
+      - DEBUG_USERSYNC=${DEBUG_USERSYNC:-false}
+
+networks:
+  ranger:
+    name: rangernw

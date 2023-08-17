@@ -74,6 +74,7 @@ define(function(require){
 		onRender: function() {
 			this.initializePlugins();
 			$('#r_breadcrumbs').hide();
+			$('.latestResponse').hide();
 			var msg = '', moreInfo = '';
 			if(this.status == 401){
 				msg = 'Access Denied (401)';
@@ -84,6 +85,9 @@ define(function(require){
 			} else if(this.status == "checkSSOTrue"){
 				msg = 'Sign Out Is Not Complete!'
 				moreInfo = localization.tt("msg.signOutIsNotComplete");
+			} else if(this.status == 400){
+				msg = 'Data Not Found (400).'
+				moreInfo = localization.tt("msg.dataNotFound");
 			} else {
 				msg = 'Page not found (404).'
 				moreInfo = localization.tt("msg.pageNotFound");
@@ -108,6 +112,7 @@ define(function(require){
 		/** on close */
 		onClose: function(){
 			$('#r_breadcrumbs').show();
+			$('.latestResponse').show();
 		}
 
 	});

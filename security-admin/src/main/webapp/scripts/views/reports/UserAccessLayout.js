@@ -35,7 +35,7 @@ define(function(require) {'use strict';
 	var RangerPolicyList	= require('collections/RangerPolicyList');
 	var UseraccesslayoutTmpl= require('hbs!tmpl/reports/UserAccessLayout_tmpl');
 	var SessionMgr  	= require('mgrs/SessionMgr');
-	var RangerZoneList = require('collections/RangerZoneList');
+	var RangerZoneBase = require('model_bases/RangerZoneBase');
 	var UserAccessLayout 	= Backbone.Marionette.Layout.extend(
 	/** @lends UserAccessLayout */
 	{
@@ -87,6 +87,7 @@ define(function(require) {'use strict';
 			policyLabels		: '[data-id="policyLabels"]',
 			zoneName			: '[data-id="zoneName"]',
             selectUserGroup		: '[data-id="btnUserGroup"]',
+            roleName 			: '[data-js="roleName"]',
 
 		},
 
@@ -112,7 +113,8 @@ define(function(require) {'use strict';
 		 */
 		initialize : function(options) {
 			console.log("initialized a UserAccessLayout Layout");
-			_.extend(this, _.pick(options, 'groupList','userList', 'urlQueryParams'));
+			_.extend(this, _.pick(options, 'groupList','userList'));
+			this.urlQueryParams = XAUtil.urlQueryParams();
 			this.bindEvents();
 			this.previousSearchUrl = '';
 			this.searchedFlag = false;
@@ -137,14 +139,16 @@ define(function(require) {'use strict';
 		initializeServiceDef : function() {
 			var that = this;
 			this.serviceDefList = new RangerServiceDefList();
+			this.serviceDefList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
 			this.serviceDefList.fetch({
 				cache : false,
 				async:false
 			});
-			this.rangerZoneList = new RangerZoneList();
+			this.rangerZoneList = new RangerZoneBase();
 			this.rangerZoneList.fetch({
 				cache : false,
 				async:false,
+				url: "service/public/v2/api/zone-headers",
 			})
 		},
 
@@ -168,6 +172,7 @@ define(function(require) {'use strict';
 				this.ui.selectUserGroup = sidebarUiElement.selectUserGroup;
 				this.ui.userName = sidebarUiElement.userName;
 				this.ui.searchBtn = sidebarUiElement.searchBtn;
+				this.ui.roleName = sidebarUiElement.roleName;
 			}
 			this.initializePlugins();
                         if( this.urlQueryParams) {
@@ -183,18 +188,33 @@ define(function(require) {'use strict';
                                         this.setupUserAutoComplete();
                                         this.ui.userGroup.select2('destroy');
                                         this.ui.userGroup.val('').hide();
-                                        this.ui.selectUserGroup.find('span').first().text('Username')
-                                } else {
+                                        this.ui.roleName.select2('destroy');
+                                        this.ui.roleName.val('').hide();
+                                        this.ui.selectUserGroup.text('Username')
+                                } else if (!_.isUndefined(this.urlParam['group']) && !_.isEmpty(this.urlParam['group'])) {
                                         this.ui.userGroup.show();
                                         this.setupGroupAutoComplete();
                                         this.ui.userName.select2('destroy');
                                         this.ui.userName.val('').hide();
-                                        this.ui.selectUserGroup.find('span').first().text('Group')
+                                        this.ui.roleName.select2('destroy');
+                                        this.ui.roleName.val('').hide();
+                                        this.ui.selectUserGroup.text('Group')
+                                } else {
+                                        this.ui.roleName.show();
+                                        this.setupRoleAutoComplete();
+                                        this.ui.userGroup.select2('destroy');
+                                        this.ui.userGroup.val('').hide();
+                                        this.ui.userName.select2('destroy');
+                                        this.ui.userName.val('').hide();
+                                        this.ui.selectUserGroup.text('Rolename')
                                 }
                         } else {
                                 this.setupGroupAutoComplete();
                         }
 			this.renderComponentAndPolicyTypeSelect();
+			if(!_.isUndefined(this.ui.policyType.val()) && _.isUndefined(this.urlQueryParams)) {
+				this.urlQueryParams = {'policyType' : this.ui.policyType.val()}
+			}
                         if(this.urlQueryParams) {
                                 this.onSearch()
                         } else {
@@ -262,7 +282,39 @@ define(function(require) {'use strict';
 		getSubgridColumns:function(coll,collName,serviceDefName){
 			var that = this;
 
-			var subcolumns = [{
+			var subcolumns = [
+				{
+					name: 'roles',
+					cell: 'html',
+					label: 'Roles',
+					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+						fromRaw: function (rawValue,model, coll) {
+							var role_str = '';
+							if(_.isEmpty(model.get('roles'))){
+								return '<center>--</center>';
+							} else {
+								_.each(model.get('roles'),function(role,index){
+									if(index < 4) {
+										role_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" role-policy-id="'+model.cid+'" style="">' + _.escape(role) + '</span>'  + " ";
+									} else {
+										role_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" role-policy-id="'+model.cid+'" style="display:none">' + _.escape(role) + '</span>'  + " ";
+									}
+								});
+								if(model.get('roles').length > 4) {
+									role_str += '<span class="pull-left float-left-margin-2">\
+									<a href="javascript:void(0);" data-id="showMoreAccess" policy-id="'+
+									model.cid+'"><code style=""> + More..</code></a></span>\
+									<span class="pull-left float-left-margin-2" ><a href="javascript:void(0);" data-id="showLessAccess" policy-id="'+
+									model.cid+'" style="display:none;"><code style=""> - Less..</code></a></span>';}
+									return role_str;
+								}
+						}
+					}),
+					editable: false,
+					click: false,
+					sortable: false
+				},
+				{
 					name: 'groups',
 					cell: 'html',
 					label: 'Groups',
@@ -274,9 +326,9 @@ define(function(require) {'use strict';
 							} else {
 								_.each(model.get('groups'),function(group,index){
 									if(index < 4) {
-										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + '</span>'  + " ";
+										group_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="">' + _.escape(group) + '</span>'  + " ";
 									} else {
-										group_str += '<span class="label label-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + '</span>'  + " ";
+										group_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" group-policy-id="'+model.cid+'" style="display:none">' + _.escape(group) + '</span>'  + " ";
 									}
 								});
 								if(model.get('groups').length > 4) {
@@ -305,9 +357,9 @@ define(function(require) {'use strict';
 							} else {
 								_.each(model.get('users'),function(user,index){
 									if(index < 4) {
-										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + '</span>'+ " ";
+										user_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="">' + _.escape(user) + '</span>'+ " ";
 									} else {
-										user_str += '<span class="label label-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + '</span>'+ " ";
+										user_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" user-policy-id="'+model.cid+'" style="display:none">' + _.escape(user) + '</span>'+ " ";
 									}
 								});
 								if(model.get('users').length > 4) {
@@ -332,9 +384,9 @@ define(function(require) {'use strict';
 							var access_str = '';
 							_.each(model.get('accesses'),function(access,index){
 								if(index < 4){
-                                                                        access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + access.type+'</span>'  + " ";
+                                                                        access_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="">' + access.type+'</span>'  + " ";
 								} else {
-                                                                        access_str += '<span class="label label-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + access.type+'</span>'+ " ";
+                                                                        access_str += '<span class="badge badge-info cellWidth-1 float-left-margin-2" access-policy-id="'+model.cid+'" style="display:none">' + access.type+'</span>'+ " ";
 								}
 							});
 							if(model.get('accesses').length > 4) {
@@ -370,9 +422,9 @@ define(function(require) {'use strict';
                                 if(maskValue.label){
 									if(maskValue.label == "Custom"){
 										var title = model.attributes.dataMaskInfo.dataMaskType +' : '+model.attributes.dataMaskInfo.valueExpr;
-										access_str = '<span class="label label-info trim-containt" title="'+_.escape(title)+'">'+_.escape(title)+'</span>';
+										access_str = '<span class="badge badge-info trim-containt" title="'+_.escape(title)+'">'+_.escape(title)+'</span>';
 									}else{
-										access_str = '<span class="label label-info trim-containt" title="'+_.escape(maskValue.label)+'">'+_.escape(maskValue.label)+'</span>';
+										access_str = '<span class="badge badge-info trim-containt" title="'+_.escape(maskValue.label)+'">'+_.escape(maskValue.label)+'</span>';
 									}
                                 }else {
                                   access_str ='<center>--</center>';
@@ -397,7 +449,7 @@ define(function(require) {'use strict';
                                 fromRaw: function (rawValue,model) {
                                     var access_str = '';
                                     if(model.get('rowFilterInfo').filterExpr){
-                                           access_str = '<span class="label label-info trim-containt" title="'+_.escape(model.get('rowFilterInfo').filterExpr)+'">' + _.escape(model.get('rowFilterInfo').filterExpr)+ '</span>'  + " ";
+                                           access_str = '<span class="badge badge-info trim-containt" title="'+_.escape(model.get('rowFilterInfo').filterExpr)+'">' + _.escape(model.get('rowFilterInfo').filterExpr)+ '</span>'  + " ";
                                     } else {
                                            access_str ='<center>--</center>';
                                     }
@@ -478,7 +530,7 @@ define(function(require) {'use strict';
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype,{
 						fromRaw: function(rawValue,model){
 							var policyType = model.get("policyType");
-							var startLbl = '<label class="label label-ranger" style="float:inherit;">';
+							var startLbl = '<label class="badge badge-primary">';
 							if (XAUtil.isMaskingPolicy(policyType)) {
 								return startLbl + XAEnums.RangerPolicyType.RANGER_MASKING_POLICY_TYPE.label + '</label>';
 							} else if (XAUtil.isRowFilterPolicy(policyType)) {
@@ -498,7 +550,7 @@ define(function(require) {'use strict';
 					editable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue) {
-							return rawValue ? '<label class="label label-success" style="float:inherit;">Enabled</label>' : '<label class="label label-important" style="float:inherit;">Disabled</label>';
+							return rawValue ? '<label class="badge badge-success" style="float:inherit;">Enabled</label>' : '<label class="badge badge-danger" style="float:inherit;">Disabled</label>';
 						}
 					}),
 					click : false,
@@ -514,7 +566,7 @@ define(function(require) {'use strict';
 						fromRaw: function (rawValue, model) {
 							var labels ="";
 							if(!_.isUndefined(rawValue) && rawValue.length != 0){
-								return '<span class="label label-inverse" style="float:inherit;">'+rawValue+'</span>'
+								return '<span class="badge badge-dark" style="float:inherit;">'+rawValue+'</span>'
 							}else{
 								return '<span style="float:inherit;">'+"--"+'</span>';
 							}
@@ -618,9 +670,10 @@ define(function(require) {'use strict';
 			var policyTypes = _.map(XAEnums.RangerPolicyType,function(m){
 				return {'id': m.value,'text': m.label};
 			});
-			var zoneListOptions = _.map(this.rangerZoneList.models, function(m){
-				return { 'id':m.get('name'), 'text':m.get('name')}
+			var zoneListOptions = _.map(this.rangerZoneList.attributes, function(m){
+				return { 'id':m.name, 'text':m.name}
 			});
+			zoneListOptions = _.sortBy(zoneListOptions, 'id')
                         var tags = [];
                         if (this.urlParam && this.urlParam['policyLabelsPartial'] && !_.isEmpty(this.urlParam['policyLabelsPartial'])) {
                                 tags.push( { 'id' : _.escape( this.urlParam['policyLabelsPartial'] ), 'text' : _.escape( this.urlParam['policyLabelsPartial'] ) } );
@@ -632,15 +685,13 @@ define(function(require) {'use strict';
 				//maximumSelectionSize : 1,
                                 value : (!_.isUndefined(that.urlParam) && !_.isUndefined(that.urlParam['serviceType']) && !_.isEmpty(that.urlParam['serviceType'])) ?
                                                 this.ui.componentType.val(that.urlParam['serviceType']) : this.ui.componentType.val(""),
-				width: '220px',
 				allowClear: true,
 				data: options
 			});
 			this.ui.policyType.select2({
 				closeOnSelect: false,
 				maximumSelectionSize : 1,
-				width: '220px',
-                                value : (!_.isUndefined(that.urlParam) && !_.isUndefined(that.urlParam['policyType']) && !_.isEmpty(that.urlParam['policyType'])) ?
+				value : (!_.isUndefined(that.urlParam) && !_.isUndefined(that.urlParam['policyType']) && !_.isEmpty(that.urlParam['policyType'])) ?
                                                 this.ui.policyType.val(that.urlParam['policyType']) : this.ui.policyType.val("0"),
 				allowClear: false,
 				data: policyTypes
@@ -649,7 +700,6 @@ define(function(require) {'use strict';
                                 multiple: true,
                 closeOnSelect : true,
                 placeholder : 'Policy Label',
-                width :'220px',
                 allowClear: true,
                 tokenSeparators: ["," , " "],
                 tags : true,
@@ -699,7 +749,6 @@ define(function(require) {'use strict';
 			this.ui.zoneName.select2({
 				closeOnSelect: false,
 				maximumSelectionSize : 1,
-				width: '220px',
 				allowClear: true,
 				data: zoneListOptions,
 				placeholder: 'Select Zone Name',
@@ -709,6 +758,9 @@ define(function(require) {'use strict';
 		},
 		onDownload: function(e){
 			var that = this, url = '';
+			if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+				$('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+			}
 			if(!this.allowDownload){
 				return XAUtil.alertBoxWithTimeSet(localization.tt('msg.noPolicytoExport'))
 			}
@@ -762,7 +814,6 @@ define(function(require) {'use strict';
 				closeOnSelect : true,
 				placeholder : 'Select Group',
 				maximumSelectionSize : 1,
-				width :'220px',
 				tokenSeparators: [",", " "],
 				allowClear: true,
 				// tags : this.groupArr,
@@ -809,7 +860,6 @@ define(function(require) {'use strict';
 			this.ui.userName.select2({
 				closeOnSelect : true,
 				placeholder : 'Select User',
-				width :'220px',
 				allowClear: true,
 				initSelection : function (element, callback) {
                                         var data = {};
@@ -850,6 +900,52 @@ define(function(require) {'use strict';
                                 this.ui.userName.val(this.urlParam['user']).trigger('change');
                         }
 		},
+
+		setupRoleAutoComplete : function(){
+			var that = this;
+			this.ui.roleName.select2({
+				closeOnSelect : true,
+				placeholder : 'Select Role',
+				allowClear: true,
+				initSelection : function (element, callback) {
+                                        var data = {};
+                                        data = {id: element.val(), text: element.val()};
+					callback(data);
+				},
+				ajax: {
+					url: "service/roles/roles",
+					dataType: 'json',
+					data: function (term, page) {
+						return {roleNamePartial : term};
+					},
+					results: function (data, page) {
+						var results = [],selectedVals=[];
+						if(!_.isEmpty(that.ui.roleName.select2('val')))
+							selectedVals = that.ui.roleName.select2('val');
+						if(data.totalCount != "0"){
+							results = data.roles.map(function(m){	return {id : _.escape(m.name), text: _.escape(m.name) };});
+							if(!_.isEmpty(selectedVals))
+								results = XAUtil.filterResultByIds(results, selectedVals);
+							return {results : results};
+						}
+						return {results : results};
+					}
+				},
+				formatResult : function(result){
+					return result.text;
+				},
+				formatSelection : function(result){
+					return result.text;
+				},
+				formatNoMatches: function(result){
+					return 'No user found.';
+				}
+			})//.on('select2-focus', XAUtil.select2Focus);
+                        if(this.urlParam && this.urlParam['role'] && !_.isEmpty(this.urlParam['role'])) {
+                                this.ui.roleName.val(this.urlParam['role']).trigger('change');
+                        }
+		},
+
 		/** all post render plugin initialization */
 		initializePlugins : function() {
 			var that = this;
@@ -857,7 +953,7 @@ define(function(require) {'use strict';
 				var wrap = $(this).next();
 				// If next element is a wrap and hasn't .non-collapsible class
 				if (wrap.hasClass('wrap') && ! wrap.hasClass('non-collapsible'))
-					$(this).prepend('<a href="#" class="wrap-collapse btn-right">hide&nbsp;&nbsp;<i class="icon-caret-up"></i></a>').prepend('<a href="#" class="wrap-expand btn-right" style="display: none">show&nbsp;&nbsp;<i class="icon-caret-down"></i></a>');
+					$(this).prepend('<a href="#" class="wrap-collapse btn-right">hide&nbsp;&nbsp;<i class="fa-fw fa fa-caret-up"></i></a>').prepend('<a href="#" class="wrap-expand btn-right" style="display: none">show&nbsp;&nbsp;<i class="fa-fw fa fa-caret-down"></i></a>');
 			});
 			
 			// Collapse wrap
@@ -889,9 +985,10 @@ define(function(require) {'use strict';
 			//Get search values
                         var groups = (this.ui.selectUserGroup.text().trim() == "Group" ) ? this.ui.userGroup.select2('val'):undefined;
                         var users = (this.ui.selectUserGroup.text().trim() == "Username") ? this.ui.userName.select2('val'):undefined;
+                        var roles = (this.ui.selectUserGroup.text().trim() == "Rolename") ? this.ui.roleName.select2('val'):undefined;
 			var rxName = this.ui.resourceName.val(), policyName = this.ui.policyName.val() , policyType = this.ui.policyType.val(),
 			policyLabel = this.ui.policyLabels.val(), zoneName = this.ui.zoneName.val()
-			var params = {group : groups, user : users, polResource : rxName, policyNamePartial : policyName, policyType: policyType, policyLabelsPartial:policyLabel,
+			var params = {group : groups, user : users, role : roles, polResource : rxName, policyNamePartial : policyName, policyType: policyType, policyLabelsPartial:policyLabel,
 				zoneName : zoneName};
 			var component = (this.ui.componentType.val() != "") ? this.ui.componentType.select2('val'):undefined;
                         urlParam = _.extend(params, {'serviceType': this.ui.componentType.val()});
@@ -952,6 +1049,7 @@ define(function(require) {'use strict';
 			params = {
 				group : groups,
 				user : users,
+				role : roles,
 				polResource : rxName,
 				policyNamePartial : policyName,
 				policyType: policyType,
@@ -964,19 +1062,31 @@ define(function(require) {'use strict';
         },
 		autocompleteFilter	: function(e){
 			var $el = $(e.currentTarget);
-			var $button = $(e.currentTarget).parents('.btn-group').find('button').find('span').first();
+			var $button = $(e.currentTarget).parent().parent().find('button');
 			if($el.data('id')== "grpSel"){
 				$button.text('Group');
 				this.ui.userGroup.show();
 				this.setupGroupAutoComplete();
 				this.ui.userName.select2('destroy');
 				this.ui.userName.val('').hide();
-			} else {
+				this.ui.roleName.select2('destroy');
+				this.ui.roleName.val('').hide();
+			} else if ($el.data('id')== "userSel") {
 				this.ui.userGroup.select2('destroy');
 				this.ui.userGroup.val('').hide();
 				this.ui.userName.show();
 				this.setupUserAutoComplete();
 				$button.text('Username');
+				this.ui.roleName.select2('destroy');
+				this.ui.roleName.val('').hide();
+			}else {
+				this.ui.userGroup.select2('destroy');
+				this.ui.userGroup.val('').hide();
+				this.ui.roleName.show();
+				this.setupRoleAutoComplete();
+				$button.text('Rolename');
+				this.ui.userName.select2('destroy');
+				this.ui.userName.val('').hide();
 			}
 		},
 		setDownloadFormatFilter : function(e){

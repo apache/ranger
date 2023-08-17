@@ -34,7 +34,6 @@ import org.apache.commons.lang.ArrayUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.security.authentication.client.PseudoAuthenticator;
 import org.apache.http.HttpStatus;
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.client.BaseClient;
 import org.apache.ranger.plugin.client.HadoopException;
 import org.apache.ranger.services.sqoop.client.json.model.SqoopConnectorResponse;
@@ -43,6 +42,8 @@ import org.apache.ranger.services.sqoop.client.json.model.SqoopJobResponse;
 import org.apache.ranger.services.sqoop.client.json.model.SqoopJobsResponse;
 import org.apache.ranger.services.sqoop.client.json.model.SqoopLinkResponse;
 import org.apache.ranger.services.sqoop.client.json.model.SqoopLinksResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -52,7 +53,7 @@ import com.sun.jersey.api.client.WebResource;
 
 public class SqoopClient extends BaseClient {
 
-	private static final Logger LOG = Logger.getLogger(SqoopClient.class);
+	private static final Logger LOG = LoggerFactory.getLogger(SqoopClient.class);
 
 	private static final String EXPECTED_MIME_TYPE = "application/json";
 

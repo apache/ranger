@@ -111,6 +111,8 @@ public class RangerKrbFilter implements Filter {
 
   static final String ALLOW_TRUSTED_PROXY = "ranger.authentication.allow.trustedproxy";
 
+  private static final String supportKerberosAuthForBrowserLoginConfig = "ranger.allow.kerberos.auth.login.browser";
+
   private String[] browserUserAgents;
 
   private Properties config;
@@ -121,6 +123,8 @@ public class RangerKrbFilter implements Filter {
   private String cookieDomain;
   private String cookiePath;
   private String cookieName;
+  private boolean isKerberosEnabled = false;
+  private boolean supportKerberosAuthForBrowserLogin = false;
 
   /**
    * <p>Initializes the authentication filter and signer secret provider.</p>
@@ -160,6 +164,8 @@ public class RangerKrbFilter implements Filter {
     cookieDomain = config.getProperty(COOKIE_DOMAIN, null);
     cookiePath = config.getProperty(COOKIE_PATH, null);
     cookieName = config.getProperty(RangerCommonConstants.PROP_COOKIE_NAME, RangerCommonConstants.DEFAULT_COOKIE_NAME);
+    isKerberosEnabled = (PropertiesUtil.getProperty("hadoop.security.authentication", "simple").equalsIgnoreCase("kerberos"));
+    supportKerberosAuthForBrowserLogin = PropertiesUtil.getBooleanProperty(supportKerberosAuthForBrowserLoginConfig, false);
   }
 
   protected void initializeAuthHandler(String authHandlerClassName, FilterConfig filterConfig)
@@ -504,6 +510,7 @@ public class RangerKrbFilter implements Filter {
       LOG.warn("Authentication exception: " + ex.getMessage(), ex);
     }
     if (unauthorizedResponse) {
+      String doAsUser = request.getParameter("doAs");
       if (!httpResponse.isCommitted()) {
         if (LOG.isDebugEnabled()) {
           LOG.debug("create auth cookie");
@@ -514,7 +521,7 @@ public class RangerKrbFilter implements Filter {
         // present.. reset to 403 if not found..
         if ((errCode == HttpServletResponse.SC_UNAUTHORIZED)
             && (!httpResponse.containsHeader(
-                KerberosAuthenticator.WWW_AUTHENTICATE))) {
+                KerberosAuthenticator.WWW_AUTHENTICATE) && !isKerberosEnabled && !supportKerberosAuthForBrowserLogin)) {
           errCode = HttpServletResponse.SC_FORBIDDEN;
         }
         if (authenticationEx == null) {
@@ -523,12 +530,17 @@ public class RangerKrbFilter implements Filter {
               agents = RangerCSRFPreventionFilter.BROWSER_USER_AGENTS_DEFAULT;
             }
             parseBrowserUserAgents(agents);
-            String doAsUser = request.getParameter("doAs");
             if(isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) &&
-                    (!allowTrustedProxy || (allowTrustedProxy && StringUtils.isEmpty(doAsUser))) ){
+                    (!allowTrustedProxy || (allowTrustedProxy && StringUtils.isEmpty(doAsUser))) && !supportKerberosAuthForBrowserLogin){
         	  ((HttpServletResponse)response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, "");
                 filterChain.doFilter(request, response);
             }else{
+              if (isKerberosEnabled && isBrowser(httpRequest.getHeader(RangerCSRFPreventionFilter.HEADER_USER_AGENT)) && supportKerberosAuthForBrowserLogin) {
+                if (LOG.isDebugEnabled()) {
+                  LOG.debug("Kerberos and ticket based browser login is enabled setting header to authenticate ticket based login for user.");
+                }
+                ((HttpServletResponse) response).setHeader(KerberosAuthenticator.WWW_AUTHENTICATE, KerberosAuthenticator.NEGOTIATE);
+              }
               if (allowTrustedProxy) {
                 String expectHeader = httpRequest.getHeader("Expect");
                 if (LOG.isDebugEnabled()) {
@@ -608,11 +620,11 @@ public class RangerKrbFilter implements Filter {
       sb.append("\"").append(token).append("\"");
     }
 
-    if (path != null) {
+    if (StringUtils.isNotEmpty(path)) {
       sb.append("; Path=").append(path);
     }
 
-    if (domain != null) {
+    if (StringUtils.isNotEmpty(domain)) {
       sb.append("; Domain=").append(domain);
     }
 

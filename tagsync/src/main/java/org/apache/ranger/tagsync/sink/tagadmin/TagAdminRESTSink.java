@@ -33,19 +33,19 @@ import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.NewCookie;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.plugin.util.RangerRESTClient;
 import org.apache.ranger.plugin.util.ServiceTags;
 import org.apache.ranger.tagsync.model.TagSink;
 import org.apache.ranger.tagsync.process.TagSyncConfig;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.jersey.api.client.ClientResponse;
 
 public class TagAdminRESTSink implements TagSink, Runnable {
-	private static final Log LOG = LogFactory.getLog(TagAdminRESTSink.class);
+	private static final Logger LOG = LoggerFactory.getLogger(TagAdminRESTSink.class);
 
 	private static final String REST_PREFIX = "/service";
 	private static final String MODULE_PREFIX = "/tags";
@@ -366,40 +366,41 @@ public class TagAdminRESTSink implements TagSink, Runnable {
 		}
 
 		while (true) {
-			UploadWorkItem uploadWorkItem;
+			if (TagSyncConfig.isTagSyncServiceActive()) {
+				UploadWorkItem uploadWorkItem;
 
-			try {
-				uploadWorkItem = uploadWorkItems.take();
+				try {
+					uploadWorkItem = uploadWorkItems.take();
 
-				ServiceTags toUpload = uploadWorkItem.getServiceTags();
+					ServiceTags toUpload = uploadWorkItem.getServiceTags();
 
-				boolean doRetry;
+					boolean doRetry;
 
-				do {
-					doRetry = false;
+					do {
+						doRetry = false;
 
-					try {
-						ServiceTags uploaded = doUpload(toUpload);
-						if (uploaded == null) { // Treat this as if an Exception is thrown by doUpload
+						try {
+							ServiceTags uploaded = doUpload(toUpload);
+							if (uploaded == null) { // Treat this as if an Exception is thrown by doUpload
+								doRetry = true;
+								Thread.sleep(rangerAdminConnectionCheckInterval);
+							} else {
+								// ServiceTags uploaded successfully
+								uploadWorkItem.uploadCompleted(uploaded);
+							}
+						} catch (InterruptedException interrupted) {
+							LOG.error("Caught exception..: ", interrupted);
+							return;
+						} catch (Exception exception) {
 							doRetry = true;
 							Thread.sleep(rangerAdminConnectionCheckInterval);
-						} else {
-							// ServiceTags uploaded successfully
-							uploadWorkItem.uploadCompleted(uploaded);
 						}
-					} catch (InterruptedException interrupted) {
-						LOG.error("Caught exception..: ", interrupted);
-						return;
-					} catch (Exception exception) {
-						doRetry = true;
-						Thread.sleep(rangerAdminConnectionCheckInterval);
-					}
-				} while (doRetry);
+					} while (doRetry);
 
-			}
-			catch (InterruptedException exception) {
-				LOG.error("Interrupted..: ", exception);
-				return;
+				} catch (InterruptedException exception) {
+					LOG.error("Interrupted..: ", exception);
+					return;
+				}
 			}
 		}
 

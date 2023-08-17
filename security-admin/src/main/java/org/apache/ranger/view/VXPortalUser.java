@@ -21,8 +21,7 @@
 
 import java.util.Collection;
 import java.util.List;
-
-import javax.xml.bind.annotation.XmlRootElement;
+import java.util.Map;
 
 import org.apache.ranger.common.AppConstants;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -33,7 +32,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
 public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -90,6 +88,18 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 	 *
 	 */
 	protected String otherAttributes;
+
+	/**
+	 * sync Source Attribute.
+	 *
+	 */
+	protected String syncSource;
+
+	/**
+	 * Configuration properties.
+	 *
+	 */
+	protected Map<String, String> configProperties;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -315,6 +325,29 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 		this.otherAttributes = otherAttributes;
 	}
 
+	public Map<String, String> getConfigProperties() {
+		return configProperties;
+	}
+
+	public void setConfigProperties(Map<String, String> configProperties) {
+		this.configProperties = configProperties;
+	}
+
+	/**
+	 * @return {@link String} - sync Source attribute.
+	 */
+	public String getSyncSource() {
+		return syncSource;
+	}
+
+	/**
+	 * This method sets sync Source attribute.
+	 * @param syncSource
+	 */
+	public void setSyncSource(final String syncSource) {
+		this.syncSource = syncSource;
+	}
+
 	/**
 	 * This return the bean content in string format
 	 * @return formatedStr
@@ -332,6 +365,7 @@ public class VXPortalUser extends VXDataObject implements java.io.Serializable {
 		str += "notes={" + notes + "} ";
 		str += "userRoleList={" + userRoleList + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
+		str += "syncSource={" + syncSource + "} ";
 		str += "}";
 		return str;
 	}

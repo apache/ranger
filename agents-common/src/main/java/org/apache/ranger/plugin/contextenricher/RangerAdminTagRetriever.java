@@ -20,20 +20,25 @@
 package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.admin.client.RangerAdminClient;
 import org.apache.ranger.authorization.hadoop.config.RangerPluginConfig;
-import org.apache.ranger.plugin.service.RangerBasePlugin;
+import org.apache.ranger.plugin.policyengine.RangerPluginContext;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.nio.channels.ClosedByInterruptException;
 import java.util.Map;
 
 public class RangerAdminTagRetriever extends RangerTagRetriever {
-	private static final Log LOG = LogFactory.getLog(RangerAdminTagRetriever.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAdminTagRetriever.class);
+
+	private static final String  OPTION_DEDUP_TAGS         = "deDupTags";
+	private static final Boolean OPTION_DEDUP_TAGS_DEFAULT = true;
+
 
 	private RangerAdminClient adminClient;
+	private boolean           deDupTags;
 
 	@Override
 	public void init(Map<String, String> options) {
@@ -45,7 +50,12 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 				pluginConfig = new RangerPluginConfig(serviceDef.getName(), serviceName, appId, null, null, null);
 			}
 
-			adminClient = RangerBasePlugin.createAdminClient(pluginConfig);
+			String              deDupTagsVal  = options != null? options.get(OPTION_DEDUP_TAGS) : null;
+			RangerPluginContext pluginContext = getPluginContext();
+			RangerAdminClient	rangerAdmin   = pluginContext.getAdminClient();
+
+			this.deDupTags   = StringUtils.isNotBlank(deDupTagsVal) ? Boolean.parseBoolean(deDupTagsVal) : OPTION_DEDUP_TAGS_DEFAULT;
+			this.adminClient = (rangerAdmin != null) ? rangerAdmin : pluginContext.createAdminClient(pluginConfig);
 		} else {
 			LOG.error("FATAL: Cannot find service/serviceDef to use for retrieving tags. Will NOT be able to retrieve tags.");
 		}
@@ -67,6 +77,13 @@ public class RangerAdminTagRetriever extends RangerTagRetriever {
 				LOG.error("Returning null service tags");
 			}
 		}
+
+		if (serviceTags != null && !serviceTags.getIsDelta() && deDupTags) {
+			final int countOfDuplicateTags = serviceTags.dedupTags();
+
+			LOG.info("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + serviceTags.getTags().size() + "].");
+		}
+
 		return serviceTags;
 	}
 

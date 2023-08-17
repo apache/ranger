@@ -24,9 +24,15 @@ import org.apache.commons.cli.*;
 import org.apache.ranger.RangerClient;
 import org.apache.ranger.RangerServiceException;
 import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
+import org.apache.ranger.plugin.model.RangerServiceResource;
+import org.apache.ranger.plugin.model.RangerServiceTags;
+import org.apache.ranger.plugin.model.RangerTag;
+import org.apache.ranger.plugin.model.RangerTagDef;
+import org.apache.ranger.plugin.model.RangerTagDef.RangerTagAttributeDef;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,12 +48,16 @@ public class SampleClient {
         Options options  = new Options();
 
         Option host = OptionBuilder.hasArgs(1).isRequired().withLongOpt("host").withDescription("hostname").create('h');
+        Option auth = OptionBuilder.hasArgs(1).isRequired().withLongOpt("authType").withDescription("Authentication Type").create('k');
         Option user = OptionBuilder.hasArgs(1).isRequired().withLongOpt("user").withDescription("username").create('u');
         Option pass = OptionBuilder.hasArgs(1).isRequired().withLongOpt("pass").withDescription("password").create('p');
+        Option conf = OptionBuilder.hasArgs(1).withLongOpt("config").withDescription("configuration").create('c');
 
         options.addOption(host);
+        options.addOption(auth);
         options.addOption(user);
         options.addOption(pass);
+        options.addOption(conf);
 
         CommandLineParser parser = new BasicParser();
         CommandLine cmd;
@@ -61,12 +71,15 @@ public class SampleClient {
         String hostName = cmd.getOptionValue('h');
         String userName = cmd.getOptionValue('u');
         String password = cmd.getOptionValue('p');
+        String cfg      = cmd.getOptionValue('c');
+        String authType = cmd.getOptionValue('k');
 
-        RangerClient rangerClient = new RangerClient(hostName, userName, password);
+        RangerClient rangerClient = new RangerClient(hostName, authType, userName, password, cfg);
 
         String serviceDefName     = "sampleServiceDef";
         String serviceName        = "sampleService";
         String policyName         = "samplePolicy";
+        String zoneName           = null;
         String roleName           = "sampleRole";
         Map<String,String> filter = Collections.emptyMap();
 
@@ -112,6 +125,16 @@ public class SampleClient {
         LOG.info("New Service created successfully {}", gsonBuilder.toJson(createdService));
 
         /*
+        All Services
+         */
+        List<RangerService> services = rangerClient.findServices(filter);
+        String allServiceNames = "";
+        for (RangerService svc: services) {
+            allServiceNames = allServiceNames.concat(svc.getName() + " ");
+        }
+        LOG.info("List of Services : {}", allServiceNames);
+
+        /*
         Policy Management
          */
 
@@ -123,25 +146,81 @@ public class SampleClient {
                 "root", new RangerPolicy.RangerPolicyResource(Collections.singletonList("/path/to/sample/resource"),false,false));
         RangerPolicy policy = new RangerPolicy();
         policy.setService(serviceName);
+        policy.setZoneName(zoneName);
         policy.setName(policyName);
         policy.setResources(resource);
 
         RangerPolicy createdPolicy = rangerClient.createPolicy(policy);
-        LOG.info("New Policy created successfully {}", gsonBuilder.toJson(createdPolicy));
+        LOG.info("Created policy {} in zone {}: {}", policyName, zoneName, gsonBuilder.toJson(createdPolicy));
 
         /*
-        Get a policy by name
-         */
-        RangerPolicy fetchedPolicy = rangerClient.getPolicy(serviceName, policyName);
-        LOG.info("Policy: {} fetched {}", policyName, gsonBuilder.toJson(fetchedPolicy));
-
+        Get a policy by name and Zone
+        */
+        RangerPolicy fetchedPolicy = rangerClient.getPolicyByNameAndZone(serviceName, policyName, zoneName);
+        LOG.info("Fetched policy {} in zone {}: {}", policyName, zoneName ,gsonBuilder.toJson(fetchedPolicy));
 
         /*
-        Delete a policy
-         */
-        rangerClient.deletePolicy(serviceName, policyName);
-        LOG.info("Policy {} successfully deleted", policyName);
+        Update a policy by name and Zone
+        */
+        RangerPolicy updatedPolicy = rangerClient.updatePolicyByNameAndZone(serviceName, policyName, zoneName, fetchedPolicy);
+        LOG.info("Updated policy {} in zone {}: {}", policyName, zoneName ,gsonBuilder.toJson(updatedPolicy));
 
+        /*
+        Delete a policy by name and zone
+        */
+        rangerClient.deletePolicyByNameAndZone(serviceName, policyName, zoneName);
+        LOG.info("Deleted policy {} in zone {}", policyName, zoneName);
+
+
+        /* import tags */
+        RangerTagDef tagDefTest1 = new RangerTagDef("test1");
+        RangerTagDef tagDefTest2 = new RangerTagDef("test2");
+
+        tagDefTest1.setAttributeDefs(Arrays.asList(new RangerTagAttributeDef("attr1", "string")));
+
+        RangerTag tagTest1Val1 = new RangerTag(tagDefTest1.getName(), Collections.singletonMap("attr1", "val1"));
+        RangerTag tagTest1Val2 = new RangerTag(tagDefTest1.getName(), Collections.singletonMap("attr1", "val2"));
+        RangerTag tagTest2     = new RangerTag(tagDefTest2.getName(), Collections.emptyMap());
+
+        RangerServiceResource db1 = new RangerServiceResource(serviceName, Collections.singletonMap("database", new RangerPolicyResource("db1")));
+        RangerServiceResource db2 = new RangerServiceResource(serviceName, Collections.singletonMap("database", new RangerPolicyResource("db2")));
+
+        db1.setId(1L);
+        db2.setId(2L);
+
+        RangerServiceTags serviceTags = new RangerServiceTags();
+
+        serviceTags.setOp(RangerServiceTags.OP_SET);
+        serviceTags.getTagDefinitions().put(0L, tagDefTest1);
+        serviceTags.getTagDefinitions().put(1L, tagDefTest2);
+        serviceTags.getTags().put(0L, tagTest1Val1);
+        serviceTags.getTags().put(1L, tagTest1Val2);
+        serviceTags.getTags().put(2L, tagTest2);
+        serviceTags.getServiceResources().add(db1);
+        serviceTags.getServiceResources().add(db2);
+        serviceTags.getResourceToTagIds().put(db1.getId(), Arrays.asList(0L, 2L));
+        serviceTags.getResourceToTagIds().put(db2.getId(), Arrays.asList(1L, 2L));
+
+        LOG.info("Importing tags: {}", serviceTags);
+
+        rangerClient.importServiceTags(serviceName, serviceTags);
+
+        RangerServiceTags serviceTags2 = rangerClient.getServiceTags(serviceName);
+
+        LOG.info("Imported tags: {}", serviceTags2);
+
+        serviceTags.setOp(RangerServiceTags.OP_DELETE);
+        serviceTags.setTagDefinitions(Collections.emptyMap());
+        serviceTags.setTags(Collections.emptyMap());
+        serviceTags.setResourceToTagIds(Collections.emptyMap());
+
+        LOG.info("Deleting tags: {}" + serviceTags);
+
+        rangerClient.importServiceTags(serviceName, serviceTags);
+
+        serviceTags2 = rangerClient.getServiceTags(serviceName);
+
+        LOG.info("Service tags after delete: {}", serviceTags2);
 
         /*
         Delete a Service
@@ -183,6 +262,11 @@ public class SampleClient {
          */
         List<RangerRole> allRoles = rangerClient.findRoles(filter);
         LOG.info("List of Roles {}", gsonBuilder.toJson(allRoles));
+        String allRoleNames = "";
+        for (RangerRole role: allRoles) {
+            allRoleNames = allRoleNames.concat(role.getName() + " ");
+        }
+        LOG.info("List of Roles : {}", allRoleNames);
 
         /*
         Delete a role in Ranger

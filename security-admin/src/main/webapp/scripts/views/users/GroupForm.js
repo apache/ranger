@@ -23,6 +23,7 @@ define(function(require){
 
 	var Backbone		= require('backbone');
 	var XAEnums			= require('utils/XAEnums');
+	var XAViewUtils		= require('utils/XAViewUtils');
 	
 	require('backbone-forms');
 	require('backbone-forms.templates');
@@ -30,6 +31,12 @@ define(function(require){
 	/** @lends GroupForm */
 	{
 		_viewName : 'GroupForm',
+
+				/**Form template**/
+
+		templateData : function(){
+			return {syncSourceInfo : this.syncData}
+		},
 
     	/**
 		* intialize a new GroupForm Form View 
@@ -39,6 +46,9 @@ define(function(require){
 			console.log("initialized a GroupForm Form View");
 			_.extend(this, _.pick(options,''));
     		Backbone.Form.prototype.initialize.call(this, options);
+			if (this.model && !_.isUndefined(this.model.get('otherAttributes'))) {
+				this.syncData = XAViewUtils.syncUsersGroupsDetails(this);
+			}
 
 			this.bindEvents();
 		},

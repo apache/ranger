@@ -54,7 +54,11 @@ define(function(require) {
 				formObj.validators = [];
 				if (_.has(v, 'mandatory') && v.mandatory && v.type != 'bool') {
 					formObj.validators.push('required');
-					formObj.title = formObj.title + " *"
+					if (_.isEmpty(formObj.title)) {
+						formObj.title = formObj.title + " *"
+					} else {
+						formObj.title = formObj.title + " *"
+					}
 				}
 				if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx) && !v.lookupSupported){
 					formObj.validators.push({'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage});
@@ -100,12 +104,14 @@ define(function(require) {
 							if( isPolicyForm ){
 								var resourceOpts = {};
 								formObj.type = 'Resource';
+								formObj.editorClass = "rosource-boder"
 								formObj['excludeSupport']= v.excludesSupported;
 								formObj['recursiveSupport'] = v.recursiveSupported;
 								formObj.name = v.name;
 //								formObj.level = v.level;
 								//checkParentHideShow field
 								formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
+								formObj.fieldAttrs.fieldClass = "resorces-with-label-css"
 								formObj['resourceOpts'] = {'data-placeholder': v.label };
                                                                 if(!_.isUndefined(v.lookupSupported)){
                                                                         var opts = {};
@@ -118,7 +124,11 @@ define(function(require) {
                                     }
                                     opts['type'] = v.name;
                                     if(v.lookupSupported){
-                                        opts['lookupURL'] = "service/plugins/services/lookupResource/"+form.rangerService.get('name');
+                                        if (form.serviceName) {
+											opts['lookupURL'] = "service/plugins/services/lookupResource/"+form.serviceName;
+										} else {
+											opts['lookupURL'] = "service/plugins/services/lookupResource/"+form.rangerService.get('name');
+										}
                                         resourceOpts['select2Opts'] = form.getPlugginAttr(true, opts);
                                     }else{
                                         resourceOpts['select2Opts'] = XAUtils.select2OptionForUserCreateChoice();
@@ -161,6 +171,7 @@ define(function(require) {
                                                                                 fieldName = 'sameLevel'+v.level;
                                                                         }
 									formObj['title'] = '';
+									formObj.fieldAttrs.fieldClass = "resorces-css";
 									formObj['resourcesAtSameLevel'] = true;
 									
 									// formView is used to listen form events
@@ -195,18 +206,24 @@ define(function(require) {
 							break;
 						case 'path' : 
 							formObj.type = 'Resource';
+							formObj.editorClass = "rosource-boder-path"
 							formObj['excludeSupport']= v.excludesSupported;
 							formObj['recursiveSupport'] = v.recursiveSupported;
 							formObj['name'] = v.name;
 							formObj['editorAttrs'] = {'data-placeholder': v.label };
-                                                        formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
-                                                        if(!_.isUndefined(v.lookupSupported)){
+							formObj.fieldAttrs = { 'data-name' : 'field-'+v.name, 'parent' : v.parent };
+							formObj.fieldAttrs.fieldClass = "resorces-with-label-css"
+							if(!_.isUndefined(v.lookupSupported)){
 								var options = {
-										'containerCssClass' : v.name,
-                                                                };
-                                                                if(v.lookupSupported){
-                                                                    options['lookupURL'] = "service/plugins/services/lookupResource/"+form.rangerService.get('name');
-                                                                }
+									'containerCssClass' : v.name,
+								};
+							if(v.lookupSupported){
+								if (form.serviceName) {
+									options['lookupURL'] = "service/plugins/services/lookupResource/"+form.serviceName;
+								} else {
+									options['lookupURL'] = "service/plugins/services/lookupResource/"+form.rangerService.get('name');
+								}
+							}
 								//to support regexp level validation
 								if(_.has(v, 'validationRegEx') && !_.isEmpty(v.validationRegEx)){
 									options['regExpValidation'] = {'type': 'regexp', 'regexp':new RegExp(v.validationRegEx), 'message' : v.validationMessage};

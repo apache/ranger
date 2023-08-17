@@ -20,7 +20,6 @@ package org.apache.ranger.authorization.knox;
 
 import java.io.IOException;
 import java.security.AccessController;
-import java.security.Principal;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -36,8 +35,6 @@ import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.knox.gateway.filter.AbstractGatewayFilter;
 import org.apache.knox.gateway.security.GroupPrincipal;
 import org.apache.knox.gateway.security.ImpersonatedPrincipal;
@@ -47,12 +44,14 @@ import org.apache.ranger.authorization.knox.KnoxRangerPlugin.RequestBuilder;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.policyengine.RangerAccessResult;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerPDPKnoxFilter implements Filter {
 
-	private static final Log LOG = LogFactory.getLog(RangerPDPKnoxFilter.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPDPKnoxFilter.class);
 
-	private static final Log PERF_KNOXAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("knoxauth.request");
+	private static final Logger PERF_KNOXAUTH_REQUEST_LOG = RangerPerfTracer.getPerfLogger("knoxauth.request");
 
 	private static final String KNOX_GATEWAY_JASS_CONFIG_SECTION = "com.sun.security.jgss.initiate";
 
@@ -108,15 +107,18 @@ public class RangerPDPKnoxFilter implements Filter {
 
 		Subject subject = Subject.getSubject(AccessController.getContext());
 
-		Principal primaryPrincipal = (Principal) subject.getPrincipals(
-				PrimaryPrincipal.class).toArray()[0];
-		String primaryUser = primaryPrincipal.getName();
+		Set<PrimaryPrincipal> primaryPrincipals = subject.getPrincipals(
+				PrimaryPrincipal.class);
+		String primaryUser = null;
+		if (primaryPrincipals != null && primaryPrincipals.size() > 0) {
+			primaryUser = primaryPrincipals.stream().findFirst().get().getName();
+		}
 
 		String impersonatedUser = null;
-		Object[] impersonations = subject.getPrincipals(
-				ImpersonatedPrincipal.class).toArray();
-		if (impersonations != null && impersonations.length > 0) {
-			impersonatedUser = ((Principal) impersonations[0]).getName();
+		Set<ImpersonatedPrincipal> impersonations = subject.getPrincipals(
+				ImpersonatedPrincipal.class);
+		if (impersonations != null && impersonations.size() > 0) {
+			impersonatedUser = impersonations.stream().findFirst().get().getName();
 		}
 
 		String user = (impersonatedUser != null) ? impersonatedUser
@@ -126,11 +128,10 @@ public class RangerPDPKnoxFilter implements Filter {
 					+ impersonatedUser + ", effectiveUser: " + user);
 		}
 
-		Object[] groupObjects = subject.getPrincipals(GroupPrincipal.class)
-				.toArray();
+		Set<GroupPrincipal> groupObjects = subject.getPrincipals(GroupPrincipal.class);
 		Set<String> groups = new HashSet<String>();
-		for (Object obj : groupObjects) {
-			groups.add(((Principal) obj).getName());
+		for (GroupPrincipal obj : groupObjects) {
+			groups.add(obj.getName());
 		}
 
 		String clientIp = request.getRemoteAddr();

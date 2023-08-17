@@ -19,21 +19,26 @@
 
 package org.apache.ranger.biz;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
+import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
+import org.apache.ranger.plugin.store.ServiceStore;
 import org.apache.ranger.plugin.util.GrantRevokeRequest;
 import org.apache.ranger.plugin.util.RangerRoles;
 
 public interface RangerPolicyAdmin {
 
-    boolean isAccessAllowed(RangerAccessResource resource, String zoneName, String user, Set<String> userGroups, String accessType);
+    boolean isDelegatedAdminAccessAllowed(RangerAccessResource resource, String zoneName, String user, Set<String> userGroups, Set<String> accessTypes);
 
-    boolean isAccessAllowed(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, String accessType);
+    boolean isDelegatedAdminAccessAllowedForRead(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext);
+
+    boolean isDelegatedAdminAccessAllowedForModify(RangerPolicy policy, String user, Set<String> userGroups, Set<String> roles, Map<String, Object> evalContext);
 
     List<RangerPolicy> getExactMatchPolicies(RangerAccessResource resource, String zoneName, Map<String, Object> evalContext);
 
@@ -49,14 +54,20 @@ public interface RangerPolicyAdmin {
 
     String getServiceName();
 
+    RangerServiceDef getServiceDef();
+
     Set<String> getRolesFromUserAndGroups(String user, Set<String> groups);
+
+    Collection<String> getZoneNamesForResource(Map<String, ?> resource);
 
     String getUniquelyMatchedZoneName(GrantRevokeRequest grantRevokeRequest);
 
     // This API is used only by test-code
-    boolean isAccessAllowedByUnzonedPolicies(Map<String, RangerPolicyResource> resources, String user, Set<String> userGroups, String accessType);
+    boolean isAccessAllowedByUnzonedPolicies(Map<String, RangerPolicyResource> resources, List<Map<String, RangerPolicyResource>> additionalResources, String user, Set<String> userGroups, String accessType);
 
     // This API is used only by test-code
     List<RangerPolicy> getAllowedUnzonedPolicies(String user, Set<String> userGroups, String accessType);
+
+    void setServiceStore(ServiceStore svcStore);
 
 }

@@ -34,14 +34,34 @@ import javax.persistence.Query;
 import javax.persistence.Table;
 import javax.persistence.TypedQuery;
 
-import org.apache.log4j.Logger;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.db.RangerDaoManagerBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class BaseDao<T> {
-	private static final Logger logger = Logger.getLogger(BaseDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(BaseDao.class);
+	private static final String PROP_BATCH_DELETE_BATCH_SIZE    = "ranger.admin.dao.batch.delete.batch.size";
+	private static final int    DEFAULT_BATCH_DELETE_BATCH_SIZE = 1000;
+	private static       int    BATCH_DELETE_BATCH_SIZE;
+
+	static {
+		try {
+			BATCH_DELETE_BATCH_SIZE = RangerAdminConfig.getInstance().getInt(PROP_BATCH_DELETE_BATCH_SIZE, DEFAULT_BATCH_DELETE_BATCH_SIZE);
+
+			if (BATCH_DELETE_BATCH_SIZE > DEFAULT_BATCH_DELETE_BATCH_SIZE) {
+				logger.warn("Configuration {}={}, which is larger than default value {}", PROP_BATCH_DELETE_BATCH_SIZE, BATCH_DELETE_BATCH_SIZE, DEFAULT_BATCH_DELETE_BATCH_SIZE);
+			}
+		} catch(Exception e) {
+			// When we get the Number format exception due to the invalid value entered into the config file.
+			BATCH_DELETE_BATCH_SIZE = DEFAULT_BATCH_DELETE_BATCH_SIZE;
+		}
+
+		logger.info(PROP_BATCH_DELETE_BATCH_SIZE + "=" + BATCH_DELETE_BATCH_SIZE);
+	}
 
 	protected RangerDaoManager daoManager;
 
@@ -108,6 +128,32 @@ public abstract class BaseDao<T> {
 
 		ret = obj;
 		return ret;
+	}
+
+	public void batchDeleteByIds(String namedQuery, List<Long> ids, String paramName) {
+		if (BATCH_DELETE_BATCH_SIZE <= 0) {
+			getEntityManager()
+				.createNamedQuery(namedQuery, tClass)
+				.setParameter(paramName, ids).executeUpdate();
+		} else {
+			for (int fromIndex = 0; fromIndex < ids.size(); fromIndex += BATCH_DELETE_BATCH_SIZE) {
+				int toIndex = fromIndex + BATCH_DELETE_BATCH_SIZE;
+
+				if (toIndex > ids.size()) {
+					toIndex = ids.size();
+				}
+
+				if (logger.isDebugEnabled()) {
+					logger.debug("batchDeleteByIds({}, idCount={}): deleting fromIndex={}, toIndex={}", namedQuery, ids.size(), fromIndex, toIndex);
+				}
+
+				List<Long> subList = ids.subList(fromIndex, toIndex);
+
+				getEntityManager()
+						.createNamedQuery(namedQuery, tClass)
+						.setParameter(paramName, subList).executeUpdate();
+			}
+		}
 	}
 
 	public T update(T obj) {
@@ -224,6 +270,10 @@ public abstract class BaseDao<T> {
 		return rtrnList;
 	}
 
+	public List<Long> getIds(Query query) {
+		return (List<Long>) query.getResultList();
+	}
+
 	public Long executeCountQueryInSecurityContext(Class<T> clazz, Query query) { //NOPMD
 		return (Long) query.getSingleResult();
 	}
@@ -311,25 +361,28 @@ public abstract class BaseDao<T> {
 
 	public String getDBVersion(){
 		String dbVersion="Not Available";
+		int dbFlavor = RangerBizUtil.getDBFlavor();
 		String query ="SELECT 1";
 		try{
-			if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_MYSQL) {
+			if(dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
 				query="SELECT version()";
 				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_ORACLE){
-				query="SELECT * from v$version where rownum<2";
-				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_POSTGRES){
+			}else if(dbFlavor == AppConstants.DB_FLAVOR_ORACLE){
+				query="SELECT banner from v$version where rownum<2";
+				dbVersion = (String)getEntityManager().createNativeQuery(query).getSingleResult();
+			}else if(dbFlavor == AppConstants.DB_FLAVOR_POSTGRES){
 				query="SELECT version()";
 				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_SQLSERVER){
+			}else if(dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER){
 				query="SELECT @@version";
 				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
-			}else if(RangerBizUtil.getDBFlavor() == AppConstants.DB_FLAVOR_SQLANYWHERE){
+			}else if(dbFlavor == AppConstants.DB_FLAVOR_SQLANYWHERE){
 				query="SELECT @@version";
 				dbVersion=(String) getEntityManager().createNativeQuery(query).getSingleResult();
 			}
-		}catch(Exception ex){}
+		}catch(Exception ex){
+			logger.error("Error occurred while fetching the DB version.", ex);
+		}
 		return dbVersion;
 	}
 }

@@ -19,14 +19,13 @@
 package org.apache.ranger.audit.provider;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.Semaphore;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.util.ShutdownHookManager;
 import org.apache.ranger.audit.destination.*;
 import org.apache.ranger.audit.provider.hdfs.HdfsAuditProvider;
@@ -34,8 +33,11 @@ import org.apache.ranger.audit.provider.kafka.KafkaAuditProvider;
 import org.apache.ranger.audit.provider.solr.SolrAuditProvider;
 import org.apache.ranger.audit.queue.AuditAsyncQueue;
 import org.apache.ranger.audit.queue.AuditBatchQueue;
+import org.apache.ranger.audit.queue.AuditFileQueue;
 import org.apache.ranger.audit.queue.AuditQueue;
 import org.apache.ranger.audit.queue.AuditSummaryQueue;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /*
  * TODO:
@@ -45,11 +47,10 @@ import org.apache.ranger.audit.queue.AuditSummaryQueue;
  */
 
 public class AuditProviderFactory {
-	private static final Log LOG = LogFactory
-			.getLog(AuditProviderFactory.class);
+	private static final Logger LOG = LoggerFactory
+			.getLogger(AuditProviderFactory.class);
 
 	public static final String AUDIT_IS_ENABLED_PROP = "xasecure.audit.is.enabled";
-	public static final String AUDIT_DB_IS_ENABLED_PROP = "xasecure.audit.db.is.enabled";
 	public static final String AUDIT_HDFS_IS_ENABLED_PROP = "xasecure.audit.hdfs.is.enabled";
 	public static final String AUDIT_LOG4J_IS_ENABLED_PROP = "xasecure.audit.log4j.is.enabled";
 	public static final String AUDIT_KAFKA_IS_ENABLED_PROP = "xasecure.audit.kafka.is.enabled";
@@ -58,6 +59,8 @@ public class AuditProviderFactory {
 	public static final String AUDIT_DEST_BASE = "xasecure.audit.destination";
 	public static final String AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC = "xasecure.audit.shutdown.hook.max.wait.seconds";
 	public static final String AUDIT_IS_FILE_CACHE_PROVIDER_ENABLE_PROP = "xasecure.audit.provider.filecache.is.enabled";
+	public static final String FILE_QUEUE_TYPE	  = "filequeue";
+	public static final String DEFAULT_QUEUE_TYPE = "memoryqueue";
 	public static final int AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT = 30;
 
 	public static final int AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT = 10 * 1024;
@@ -71,6 +74,7 @@ public class AuditProviderFactory {
 	private String componentAppType = "";
 	private boolean mInitDone = false;
 	private JVMShutdownHook jvmShutdownHook = null;
+	private ArrayList<String> hbaseAppTypes = new ArrayList<>(Arrays.asList("hbaseMaster","hbaseRegional"));
 
 	public AuditProviderFactory() {
 		LOG.info("AuditProviderFactory: creating..");
@@ -128,8 +132,6 @@ public class AuditProviderFactory {
             return;
         }
 
-		boolean isAuditToDbEnabled = MiscUtil.getBooleanProperty(props,
-				AUDIT_DB_IS_ENABLED_PROP, false);
 		boolean isAuditToHdfsEnabled = MiscUtil.getBooleanProperty(props,
 				AUDIT_HDFS_IS_ENABLED_PROP, false);
 		boolean isAuditToLog4jEnabled = MiscUtil.getBooleanProperty(props,
@@ -200,13 +202,13 @@ public class AuditProviderFactory {
 							qProvider.init(props, queuePropPrefix);
 							providers.add(queueProvider);
 						} else {
-							LOG.fatal("Provider queue doesn't extend AuditQueue. Destination="
+							LOG.error("Provider queue doesn't extend AuditQueue. Destination="
 									+ destName
 									+ " can't be created. queueName="
 									+ queueName);
 						}
 					} else {
-						LOG.fatal("Queue provider for destination " + destName
+						LOG.error("Queue provider for destination " + destName
 								+ " can't be created. queueName=" + queueName);
 					}
 				} else {
@@ -278,7 +280,7 @@ public class AuditProviderFactory {
 		} else {
 			LOG.info("No v3 audit configuration found. Trying v2 audit configurations");
 			if (!isEnabled
-					|| !(isAuditToDbEnabled || isAuditToHdfsEnabled
+					|| !(isAuditToHdfsEnabled
 					|| isAuditToKafkaEnabled || isAuditToLog4jEnabled
 					|| isAuditToSolrEnabled || providers.size() == 0)) {
 				LOG.info("AuditProviderFactory: Audit not enabled..");
@@ -286,31 +288,6 @@ public class AuditProviderFactory {
 				mProvider = getDefaultProvider();
 
 				return;
-			}
-
-			if (isAuditToDbEnabled) {
-				LOG.info("DbAuditProvider is enabled");
-				DbAuditProvider dbProvider = new DbAuditProvider();
-
-				boolean isAuditToDbAsync = MiscUtil.getBooleanProperty(props,
-						DbAuditProvider.AUDIT_DB_IS_ASYNC_PROP, false);
-
-				if (isAuditToDbAsync) {
-					int maxQueueSize = MiscUtil.getIntProperty(props,
-							DbAuditProvider.AUDIT_DB_MAX_QUEUE_SIZE_PROP,
-							AUDIT_ASYNC_MAX_QUEUE_SIZE_DEFAULT);
-					int maxFlushInterval = MiscUtil.getIntProperty(props,
-							DbAuditProvider.AUDIT_DB_MAX_FLUSH_INTERVAL_PROP,
-							AUDIT_ASYNC_MAX_FLUSH_INTERVAL_DEFAULT);
-
-					AsyncAuditProvider asyncProvider = new AsyncAuditProvider(
-							"DbAuditProvider", maxQueueSize, maxFlushInterval,
-							dbProvider);
-
-					providers.add(asyncProvider);
-				} else {
-					providers.add(dbProvider);
-				}
 			}
 
 			if (isAuditToHdfsEnabled) {
@@ -431,7 +408,7 @@ public class AuditProviderFactory {
 							.newInstance();
 				}
 			} catch (Exception e) {
-				LOG.fatal("Can't instantiate audit class for providerName="
+				LOG.error("Can't instantiate audit class for providerName="
 						+ providerName + ", className=" + className
 						+ ", propertyPrefix=" + propPrefix, e);
 			}
@@ -444,14 +421,14 @@ public class AuditProviderFactory {
 				provider = new SolrAuditDestination();
 			} else if (providerName.equalsIgnoreCase("elasticsearch")) {
 				provider = new ElasticSearchAuditDestination();
+			} else if (providerName.equalsIgnoreCase("amazon_cloudwatch")) {
+				provider = new AmazonCloudWatchAuditDestination();
 			} else if (providerName.equalsIgnoreCase("kafka")) {
 				provider = new KafkaAuditProvider();
-			} else if (providerName.equalsIgnoreCase("db")) {
-				provider = new DBAuditDestination();
 			} else if (providerName.equalsIgnoreCase("log4j")) {
 				provider = new Log4JAuditDestination();
 			} else if (providerName.equalsIgnoreCase("batch")) {
-				provider = new AuditBatchQueue(consumer);
+				provider = getAuditProvider(props, propPrefix, consumer);
 			} else if (providerName.equalsIgnoreCase("async")) {
 				provider = new AuditAsyncQueue(consumer);
 			} else {
@@ -461,12 +438,36 @@ public class AuditProviderFactory {
 		}
 		if (provider != null && provider instanceof AuditQueue) {
 			if (consumer == null) {
-				LOG.fatal("consumer can't be null for AuditQueue. queue="
+				LOG.error("consumer can't be null for AuditQueue. queue="
 						+ provider.getName() + ", propertyPrefix=" + propPrefix);
 				provider = null;
 			}
 		}
 		return provider;
+	}
+
+	private AuditHandler getAuditProvider(Properties props, String propPrefix, AuditHandler consumer) {
+		AuditHandler ret       = null;
+		String       queueType = MiscUtil.getStringProperty(props, propPrefix + "." + "queuetype", DEFAULT_QUEUE_TYPE);
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> AuditProviderFactory.getAuditProvider()  propPerfix=  " + propPrefix + ", " + " queueType=  " + queueType);
+		}
+
+		if (FILE_QUEUE_TYPE.equalsIgnoreCase(queueType)) {
+			AuditFileQueue auditFileQueue      = new AuditFileQueue(consumer);
+			String         propPrefixFileQueue = propPrefix + "." + FILE_QUEUE_TYPE;
+			auditFileQueue.init(props, propPrefixFileQueue);
+			ret = new AuditBatchQueue(auditFileQueue);
+		} else {
+			ret = new AuditBatchQueue(consumer);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== AuditProviderFactory.getAuditProvider()");
+		}
+
+		return ret;
 	}
 
 	private AuditHandler getDefaultProvider() {
@@ -476,7 +477,10 @@ public class AuditProviderFactory {
 	private void installJvmSutdownHook(Properties props) {
 		int shutdownHookMaxWaitSeconds = MiscUtil.getIntProperty(props, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC, AUDIT_SHUTDOWN_HOOK_MAX_WAIT_SEC_DEFAULT);
 		jvmShutdownHook = new JVMShutdownHook(mProvider, shutdownHookMaxWaitSeconds);
-		ShutdownHookManager.get().addShutdownHook(jvmShutdownHook, RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY);
+		String appType = this.componentAppType;
+		if (appType != null && !hbaseAppTypes.contains(appType)) {
+			ShutdownHookManager.get().addShutdownHook(jvmShutdownHook, RANGER_AUDIT_SHUTDOWN_HOOK_PRIORITY);
+		}
 	}
 
 	private static class RangerAsyncAuditCleanup implements Runnable {

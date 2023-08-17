@@ -38,11 +38,11 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "Type Name",
 			"description": "Type Name",
-			"accessTypeRestrictions": ["type-create", "type-update", "type-delete"]
+			"accessTypeRestrictions": ["type-read" ,"type-create", "type-update", "type-delete" ]
 		},
 		{
 			"itemId": 3,
@@ -56,7 +56,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "Entity Type",
 			"description": "Entity Type"
@@ -74,7 +74,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "Entity Classification",
 			"description": "Entity Classification"
@@ -97,7 +97,7 @@
 			},
 			"label": "Entity ID",
 			"description": "Entity ID",
-			"accessTypeRestrictions": ["entity-read", "entity-create", "entity-update", "entity-delete", "entity-add-classification", "entity-update-classification", "entity-remove-classification"]
+			"accessTypeRestrictions": ["entity-read", "entity-create", "entity-update", "entity-delete"]
 		},
 		{
 			"itemId": 6,
@@ -115,7 +115,7 @@
 			},
 			"label": "Atlas Service",
 			"description": "Atlas Service",
-			"accessTypeRestrictions": ["admin-import", "admin-export"]
+			"accessTypeRestrictions": ["admin-import", "admin-export", "admin-purge", "admin-audits"]
 		},
 		{
 			"itemId": 7,
@@ -129,7 +129,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 					"wildCard": "true",
-					"ignoreCase": "true"
+					"ignoreCase": "false"
 			},
 			"label": "Relationship Type",
 			"description": "Relationship Type"
@@ -147,7 +147,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "End1 Entity Type",
 			"description": "End1 Entity Type"
@@ -165,7 +165,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "End1 Entity Classification",
 			"description": "End1 Entity Classification"
@@ -201,7 +201,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "End2 Entity Type",
 			"description": "End2 Entity Type"
@@ -219,7 +219,7 @@
 			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
 			"matcherOptions": {
 				"wildCard": "true",
-				"ignoreCase": "true"
+				"ignoreCase": "false"
 			},
 			"label": "End2 Entity Classification",
 			"description": "End2 Entity Classification"
@@ -292,23 +292,59 @@
 			"accessTypeRestrictions": [
 				"entity-update-business-metadata"
 			]
+		},
+		{
+			"itemId": 16,
+			"name": "classification",
+			"type": "string",
+			"level": 40,
+			"mandatory": true,
+			"parent": "entity",
+			"isValidLeaf": true,
+			"lookupSupported": true,
+			"recursiveSupported": false,
+			"excludesSupported": true,
+			"matcher": "org.apache.ranger.plugin.resourcematcher.RangerDefaultResourceMatcher",
+			"matcherOptions": {
+				"wildCard": "true",
+				"ignoreCase": "false"
+			},
+			"label": "Targetted classifications",
+			"description": "Targetted classifications",
+			"accessTypeRestrictions": [
+				"entity-add-classification",
+				"entity-update-classification",
+				"entity-remove-classification"
+			]
 		}
 	],
 	"accessTypes": [
 		{
 			"itemId": 1,
 			"name": "type-create",
-			"label": "Create Type"
+			"label": "Create Type",
+			"impliedGrants":
+			[
+				"type-read"
+			]
 		},
 		{
 			"itemId": 2,
 			"name": "type-update",
-			"label": "Update Type"
+			"label": "Update Type",
+			"impliedGrants":
+			[
+				"type-read"
+			]
 		},
 		{
 			"itemId": 3,
 			"name": "type-delete",
-			"label": "Delete Type"
+			"label": "Delete Type",
+			"impliedGrants":
+			[
+				"type-read"
+			]
 		},
 		{
 			"itemId": 4,
@@ -389,6 +425,16 @@
 			"itemId": 19,
 			"name": "entity-update-business-metadata",
 			"label": "Update Business Metadata"
+		},
+		{
+			"itemId": 20,
+			"name": "type-read",
+			"label": "Read Type"
+		},
+		{
+			"itemId": 21,
+			"name": "admin-audits",
+			"label": "Admin Audits"
 		}
 	],
 	"configs": [
@@ -419,6 +465,19 @@
 			"type": "string",
 			"mandatory": false,
 			"label": "Common Name for Certificate"
+		},
+
+		{
+			"itemId": 5,
+			"name": "ranger.plugin.audit.filters",
+			"type": "string",
+			"subType": "",
+			"mandatory": false,
+			"validationRegEx":"",
+			"validationMessage": "",
+			"uiHint":"",
+			"label": "Ranger Default Audit Filters",
+			"defaultValue": "[ {'accessResult': 'DENIED', 'isAudited': true}, {'users':['atlas'] ,'isAudited':false}, {'accessResult':'ALLOWED', 'isAudited':false, 'actions':['entity-read'], 'accessTypes':['entity-read'], 'users':['nifi']} ]"
 		}
 	],
 	"options": {

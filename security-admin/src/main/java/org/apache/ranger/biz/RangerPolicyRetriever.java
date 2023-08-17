@@ -28,8 +28,6 @@ import java.util.Map;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.db.RangerDaoManager;
@@ -48,6 +46,8 @@ import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemCondition;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyResource;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionStatus;
 import org.springframework.transaction.support.TransactionCallback;
@@ -55,8 +55,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 
 
 public class RangerPolicyRetriever {
-	static final Log LOG      = LogFactory.getLog(RangerPolicyRetriever.class);
-	static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
+	static final Logger LOG      = LoggerFactory.getLogger(RangerPolicyRetriever.class);
+	static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.RangerPolicyRetriever");
 
 	private final RangerDaoManager  daoMgr;
 	private final LookupCache       lookupCache = new LookupCache();
@@ -343,7 +343,7 @@ public class RangerPolicyRetriever {
 				ret = userScreenNames.get(userId);
 
 				if(ret == null) {
-					XXPortalUser user = daoMgr.getXXPortalUser().getById(userId);
+					XXPortalUser user = daoMgr.getXXPortalUser().findById(userId);
 
 					if(user != null) {
 						ret = user.getPublicScreenName();
@@ -522,6 +522,8 @@ public class RangerPolicyRetriever {
 
 			if (service != null && iterPolicy != null && iterPolicy.hasNext()) {
 				XXPolicy xPolicy = iterPolicy.next();
+
+				iterPolicy.remove();
 
 				if (xPolicy != null) {
 					String policyText = xPolicy.getPolicyText();

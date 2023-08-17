@@ -28,12 +28,12 @@ import java.util.Properties;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class HadoopConfigHolder  {
-	private static final Log LOG = LogFactory.getLog(HadoopConfigHolder.class);
+	private static final Logger LOG = LoggerFactory.getLogger(HadoopConfigHolder.class);
 	public static final String GLOBAL_LOGIN_PARAM_PROP_FILE = "hadoop-login.properties";
 	public static final String DEFAULT_DATASOURCE_PARAM_PROP_FILE = "datasource.properties";
 	public static final String RESOURCEMAP_PROP_FILE = "resourcenamemap.properties";

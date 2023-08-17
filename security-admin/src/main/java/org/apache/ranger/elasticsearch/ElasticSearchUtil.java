@@ -19,7 +19,6 @@
 
 package org.apache.ranger.elasticsearch;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.*;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.elasticsearch.action.get.MultiGetItemResponse;
@@ -36,6 +35,8 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.elasticsearch.search.fetch.subphase.FetchSourceContext;
 import org.elasticsearch.search.sort.SortOrder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -48,7 +49,7 @@ import java.util.*;
 
 @Component
 public class ElasticSearchUtil {
-    private static final Logger logger = Logger.getLogger(ElasticSearchUtil.class);
+    private static final Logger logger = LoggerFactory.getLogger(ElasticSearchUtil.class);
 
     @Autowired
     StringUtil stringUtil;
@@ -66,60 +67,6 @@ public class ElasticSearchUtil {
                 logger.error("Error setting timezone. TimeZone = " + timeZone);
             }
         }
-    }
-
-
-    // Utility methods
-    public int toInt(Object value) {
-        if (value == null) {
-            return 0;
-        }
-        if (value instanceof Integer) {
-            return (Integer) value;
-        }
-        if (value.toString().isEmpty()) {
-            return 0;
-        }
-        try {
-            return Integer.valueOf(value.toString());
-        } catch (Throwable t) {
-            logger.error("Error converting value to integer. Value = " + value, t);
-        }
-        return 0;
-    }
-
-    public long toLong(Object value) {
-        if (value == null) {
-            return 0;
-        }
-        if (value instanceof Long) {
-            return (Long) value;
-        }
-        if (value.toString().isEmpty()) {
-            return 0;
-        }
-        try {
-            return Long.valueOf(value.toString());
-        } catch (Throwable t) {
-            logger.error("Error converting value to long. Value = " + value, t);
-        }
-        return 0;
-    }
-
-    public Date toDate(Object value) {
-        if (value == null) {
-            return null;
-        }
-        if (value instanceof Date) {
-            return (Date) value;
-        }
-        try {
-            LocalDateTime localDateTime = LocalDateTime.parse(value.toString(), DateTimeFormatter.ISO_DATE_TIME);
-            return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
-        } catch (Throwable t) {
-            logger.error("Error converting value to date. Value = " + value, t);
-        }
-        return null;
     }
 
     public SearchResponse searchResources(SearchCriteria searchCriteria, List<SearchField> searchFields, List<SortField> sortFields, RestHighLevelClient client, String index) throws IOException {

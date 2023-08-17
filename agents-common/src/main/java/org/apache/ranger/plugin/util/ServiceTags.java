@@ -21,28 +21,26 @@ package org.apache.ranger.plugin.util;
 
 
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.ArrayList;
 
-import javax.xml.bind.annotation.XmlAccessType;
-import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlRootElement;
-
+import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.model.RangerServiceResource;
 import org.apache.ranger.plugin.model.RangerTag;
 import org.apache.ranger.plugin.model.RangerTagDef;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
 
 @JsonAutoDetect(fieldVisibility=Visibility.ANY)
-@JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include=JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
-@XmlAccessorType(XmlAccessType.FIELD)
 public class ServiceTags implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -63,6 +61,9 @@ public class ServiceTags implements java.io.Serializable {
 	private Map<Long, List<Long>>       resourceToTagIds;
 	private Boolean					 	isDelta;
 	private TagsChangeExtent			tagsChangeExtent;
+
+	@JsonIgnore
+	Map<RangerTag, Long>                cachedTags  = new HashMap<>();
 
 	public ServiceTags() {
 		this(OP_ADD_OR_UPDATE, null, 0L, null, null, null, null, null);
@@ -85,6 +86,22 @@ public class ServiceTags implements java.io.Serializable {
 		setIsDelta(isDelta);
 		setTagsChangeExtent(tagsChangeExtent);
 	}
+
+	public ServiceTags(ServiceTags other) {
+		setOp(other.getOp());
+		setServiceName(other.getServiceName());
+		setTagVersion(other.getTagVersion());
+		setTagUpdateTime(other.getTagUpdateTime());
+		setTagDefinitions(other.getTagDefinitions() != null ? new HashMap<>(other.getTagDefinitions()) : null);
+		setTags(other.getTags() != null ? new HashMap<>(other.getTags()) : null);
+		setServiceResources(other.getServiceResources() != null ? new ArrayList<>(other.getServiceResources()) : null);
+		setResourceToTagIds(other.getResourceToTagIds() != null ? new HashMap<>(other.getResourceToTagIds()) : null);
+		setIsDelta(other.getIsDelta());
+		setTagsChangeExtent(other.getTagsChangeExtent());
+
+		this.cachedTags = new HashMap<>(other.cachedTags);
+	}
+
 	/**
 	 * @return the op
 	 */
@@ -205,8 +222,73 @@ public class ServiceTags implements java.io.Serializable {
 				.append("tagUpdateTime={").append(tagUpdateTime).append("}")
 				.append("isDelta={").append(isDelta).append("}")
 				.append("tagsChangeExtent={").append(tagsChangeExtent).append("}")
+				.append(", serviceResources={").append(serviceResources).append("}")
+				.append(", tags={").append(tags).append("}")
+				.append(", resourceToTagIds={").append(resourceToTagIds).append("}")
 				.append("}");
 
 		return sb;
+	}
+
+	public int dedupTags() {
+		final int             ret;
+		final Map<Long, Long> replacedIds      = new HashMap<>();
+		final int             initialTagsCount = tags.size();
+
+		for (Iterator<Map.Entry<Long, RangerTag>> iter = tags.entrySet().iterator(); iter.hasNext(); ) {
+			Map.Entry<Long, RangerTag> entry       = iter.next();
+			Long                       tagId       = entry.getKey();
+			RangerTag                  tag         = entry.getValue();
+			Long                       cachedTagId = cachedTags.get(tag);
+
+			if (cachedTagId == null) {
+				cachedTags.put(tag, tagId);
+			} else {
+				replacedIds.put(tagId, cachedTagId);
+				iter.remove();
+			}
+		}
+
+		final int finalTagsCount = tags.size();
+
+		for (Map.Entry<Long, List<Long>> resourceEntry : resourceToTagIds.entrySet()) {
+			for (ListIterator<Long> listIter = resourceEntry.getValue().listIterator(); listIter.hasNext(); ) {
+				Long tagId         = listIter.next();
+				Long replacerTagId = replacedIds.get(tagId);
+
+				if (replacerTagId != null) {
+					listIter.set(replacerTagId);
+				}
+			}
+		}
+
+		ret = initialTagsCount - finalTagsCount;
+
+		return ret;
+	}
+
+	public void dedupStrings() {
+		Map<String, String> strTbl = new HashMap<>();
+
+		op          = StringUtil.dedupString(op, strTbl);
+		serviceName = StringUtil.dedupString(serviceName, strTbl);
+
+		if (tagDefinitions != null) {
+			for (RangerTagDef tagDef : tagDefinitions.values()) {
+				tagDef.dedupStrings(strTbl);
+			}
+		}
+
+		if (tags != null) {
+			for (RangerTag tag : tags.values()) {
+				tag.dedupStrings(strTbl);
+			}
+		}
+
+		if (serviceResources != null) {
+			for (RangerServiceResource resource : serviceResources) {
+				resource.dedupStrings(strTbl);
+			}
+		}
 	}
 }

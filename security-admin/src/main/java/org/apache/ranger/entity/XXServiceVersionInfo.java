@@ -32,7 +32,7 @@ import javax.persistence.SequenceGenerator;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.xml.bind.annotation.XmlRootElement;
+import javax.persistence.Version;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
@@ -40,7 +40,6 @@ import org.apache.ranger.common.DateUtil;
 @EntityListeners( org.apache.ranger.common.db.JPABeanCallbacks.class)
 @Entity
 @Cacheable
-@XmlRootElement
 @Table(name = "x_service_version_info")
 public class XXServiceVersionInfo implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
@@ -48,6 +47,7 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 	@Id
 	@SequenceGenerator(name = "X_SERVICE_VERSION_INFO_SEQ", sequenceName = "X_SERVICE_VERSION_INFO_SEQ", allocationSize = 1)
 	@GeneratedValue(strategy = GenerationType.AUTO, generator = "X_SERVICE_VERSION_INFO_SEQ")
+
 	@Column(name = "id")
 	protected Long id;
 
@@ -75,6 +75,10 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 	@Column(name="role_update_time"   )
 	protected Date roleUpdateTime = DateUtil.getUTCDate();
 
+	@Version
+	@Column(name = "version")
+	protected Long version;
+
 	/**
 	 * Default constructor. This will set all the attributes to default value.
 	 */
@@ -93,8 +97,16 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 		this.id = id;
 	}
 
+	public void setVersion(Long version) {
+		this.version = version;
+	}
+
 	public Long getId() {
 		return this.id;
+	}
+
+	public Long getVersion() {
+		return version;
 	}
 
 	public void setServiceId(Long serviceId) {
@@ -161,6 +173,7 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 	public String toString( ) {
 		String str = "XXServiceVersionInfo={";
 		str += "id={" + id + "} ";
+		str += "version={" + version + "} ";
 		str += "serviceId={" + serviceId + "} ";
 		str += "policyVersion={" + policyVersion + "} ";
 		str += "policyUpdateTime={" + policyUpdateTime + "} ";
@@ -188,6 +201,9 @@ public class XXServiceVersionInfo implements java.io.Serializable {
 			return false;
 		XXServiceVersionInfo other = (XXServiceVersionInfo) obj;
 		if ((this.id == null && other.id != null) || (this.id != null && !this.id.equals(other.id))) {
+			return false;
+		}
+		if ((version == null && other.version != null) || (this.version != null && !this.version.equals(other.version))) {
 			return false;
 		}
 		if ((this.serviceId == null && other.serviceId != null) || (this.serviceId != null && !this.serviceId.equals(other.serviceId))) {

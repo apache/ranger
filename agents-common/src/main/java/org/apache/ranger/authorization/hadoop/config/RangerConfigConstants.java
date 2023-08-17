@@ -29,6 +29,7 @@ public class RangerConfigConstants {
 	public static final String 	RANGER_PLUGIN_POLICY_POLLINVETERVALMS			= "ranger.plugin.<ServiceType>.policy.pollIntervalMs";
     public static final String	RANGER_PLUGIN_POLICY_CACHE_DIR					= "ranger.plugin.<ServiceType>.policy.cache.dir";
     public static final	String 	RANGER_PLUGIN_ADD_HADDOOP_AUTHORIZATION			= "xasecure.add-hadoop-authorization";
+    public static final String  RANGER_KEYSTORE_TYPE                            = "ranger.keystore.file.type";
 
     //CHANGE MAP CONSTANTS
     public static final String	XASECURE_POLICYMGR_URL							= "xasecure.<ServiceType>.policymgr.url";

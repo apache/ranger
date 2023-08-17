@@ -24,10 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.plugin.store.TagStore;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashMap;
@@ -37,13 +37,15 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RangerServiceTagsCache {
-	private static final Log LOG = LogFactory.getLog(RangerServiceTagsCache.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceTagsCache.class);
 
 	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
 	private static volatile RangerServiceTagsCache sInstance = null;
+
 	private final boolean useServiceTagsCache;
-	private final int waitTimeInSeconds;
+	private final int     waitTimeInSeconds;
+	private final boolean dedupStrings;
 
 	private final Map<String, ServiceTagsWrapper> serviceTagsMap = new HashMap<>();
 
@@ -63,6 +65,7 @@ public class RangerServiceTagsCache {
 
 		useServiceTagsCache = config.getBoolean("ranger.admin.tag.download.usecache", true);
 		waitTimeInSeconds   = config.getInt("ranger.admin.tag.download.cache.max.waittime.for.update", MAX_WAIT_TIME_FOR_UPDATE);
+		dedupStrings        = config.getBoolean("ranger.admin.tag.dedup.strings", Boolean.TRUE);
 	}
 
 	public void dump() {
@@ -105,6 +108,10 @@ public class RangerServiceTagsCache {
 				if (tagStore != null) {
 					try {
 						ret = tagStore.getServiceTags(serviceName, -1L);
+
+						if (ret != null && dedupStrings) {
+							ret.dedupStrings();
+						}
 					} catch (Exception exception) {
 						LOG.error("getServiceTags(" + serviceName + "): failed to get latest tags from tag-store", exception);
 					}
@@ -152,6 +159,50 @@ public class RangerServiceTagsCache {
 
 		return ret;
 	}
+
+    /**
+     * Reset service tag cache using serviceName if provided.
+     * If serviceName is empty, reset everything.
+     * @param serviceName
+     * @return true if was able to reset service tag cache, false otherwise
+     */
+    public boolean resetCache(final String serviceName) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> RangerServiceTagsCache.resetCache({})", serviceName);
+        }
+
+        boolean ret = false;
+        synchronized (this) {
+            if (!serviceTagsMap.isEmpty()) {
+                if (StringUtils.isBlank(serviceName)) {
+                    serviceTagsMap.clear();
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("RangerServiceTagsCache.resetCache(): Removed policy caching for all services.");
+                    }
+                    ret = true;
+                } else {
+                    ServiceTagsWrapper removedServicePoliciesWrapper = serviceTagsMap.remove(serviceName.trim()); // returns null if key not found
+                    ret = removedServicePoliciesWrapper != null;
+
+                    if (ret) {
+                        if (LOG.isDebugEnabled()) {
+                            LOG.debug("RangerServiceTagsCache.resetCache(): Removed policy caching for [{}] service.", serviceName);
+                        }
+                    } else {
+                        LOG.warn("RangerServiceTagsCache.resetCache(): Caching for [{}] service not found, hence reset is skipped.", serviceName);
+                    }
+                }
+            } else {
+                LOG.warn("RangerServiceTagsCache.resetCache(): Policy cache is already empty.");
+            }
+        }
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== RangerServiceTagsCache.resetCache(): ret={}", ret);
+        }
+
+        return ret;
+    }
 
 	private class ServiceTagsWrapper {
 		final Long serviceId;
@@ -292,12 +343,21 @@ public class RangerServiceTagsCache {
 				updateTime = new Date();
 
 				if (serviceTagsFromDb != null) {
+					if (LOG.isDebugEnabled()) {
+						LOG.debug("loading serviceTags from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTime) + " seconds");
+					}
+
+					if (dedupStrings) {
+						serviceTagsFromDb.dedupStrings();
+					}
+
 					if (serviceTags == null) {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Initializing ServiceTags cache for the first time");
 						}
-						serviceTags = serviceTagsFromDb;
-						this.deltaCache = null;
+
+						this.serviceTags = serviceTagsFromDb;
+						this.deltaCache  = null;
 						pruneUnusedAttributes();
 						isCacheCompletelyLoaded = true;
 					} else if (!serviceTagsFromDb.getIsDelta()) {
@@ -305,8 +365,9 @@ public class RangerServiceTagsCache {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Complete set of tag are loaded from database, because of some disqualifying event or because tag-delta is not supported");
 						}
-						serviceTags = serviceTagsFromDb;
-						this.deltaCache = null;
+
+						this.serviceTags = serviceTagsFromDb;
+						this.deltaCache  = null;
 						pruneUnusedAttributes();
 						isCacheCompletelyLoaded = true;
 					} else { // Previously cached service tags are still valid - no disqualifying change
@@ -314,8 +375,9 @@ public class RangerServiceTagsCache {
 						if (LOG.isDebugEnabled()) {
 							LOG.debug("Retrieved tag-deltas from database. These will be applied on top of ServiceTags version:[" + cachedServiceTagsVersion + "], tag-deltas:[" + serviceTagsFromDb.getTagVersion() + "]");
 						}
-						RangerServiceTagsDeltaUtil.applyDelta(serviceTags, serviceTagsFromDb);
-						this.deltaCache = new ServiceTagsDeltasCache(cachedServiceTagsVersion, serviceTagsFromDb);
+
+						this.serviceTags = RangerServiceTagsDeltaUtil.applyDelta(serviceTags, serviceTagsFromDb);
+						this.deltaCache  = new ServiceTagsDeltasCache(cachedServiceTagsVersion, serviceTagsFromDb);
 					}
 				} else {
 					LOG.error("Could not get tags from database, from-version:[" + cachedServiceTagsVersion + ")");

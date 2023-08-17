@@ -13,6 +13,17 @@
 -- See the License for the specific language governing permissions and
 -- limitations under the License.
 
+CREATE OR REPLACE FUNCTION getXportalUIdByLoginId(input_val IN VARCHAR2)
+RETURN NUMBER iS
+BEGIN
+DECLARE
+myid Number := 0;
+begin
+    SELECT x_portal_user.id into myid FROM x_portal_user
+    WHERE x_portal_user.login_id=input_val;
+    RETURN myid;
+end;
+END;/
 
 DECLARE
 	t_count number:=0;

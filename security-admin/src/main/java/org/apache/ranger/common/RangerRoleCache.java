@@ -19,14 +19,14 @@
 
 package org.apache.ranger.common;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.plugin.model.RangerRole;
 
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Date;
 import java.util.HashSet;
@@ -35,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 public class RangerRoleCache {
-	private static final Log LOG = LogFactory.getLog(RangerRoleCache.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerRoleCache.class);
 
 	private static final int MAX_WAIT_TIME_FOR_UPDATE = 10;
 
@@ -69,10 +69,8 @@ public class RangerRoleCache {
 		if (lastKnownRoleVersion == null || !lastKnownRoleVersion.equals(rangerRoleVersionInDB)) {
 			roleCacheWrapper = new RangerRoleCacheWrapper();
 			ret              = roleCacheWrapper.getLatestRangerRoles(serviceName, roleDBStore, lastKnownRoleVersion, rangerRoleVersionInDB);
-		} else if (lastKnownRoleVersion.equals(rangerRoleVersionInDB)) {
-			ret = null;
 		} else {
-			ret = roleCacheWrapper.getRoles();
+			ret = null;
 		}
 
 		return ret;
@@ -108,12 +106,16 @@ public class RangerRoleCache {
 
 				if (lockResult) {
 					// We are getting all the Roles to be downloaded for now. Should do downloades for each service based on what roles are there in the policies.
+					final long            startTimeMs  = System.currentTimeMillis();
 					SearchFilter          searchFilter = null;
 					final Set<RangerRole> rolesInDB    = new HashSet<>(roleDBStore.getRoles(searchFilter));
-
-					Date updateTime = new Date();
+					final long            dbLoadTimeMs = System.currentTimeMillis() - startTimeMs;
+					Date                  updateTime   = new Date();
 
 					if (rolesInDB != null) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("loading Roles from database and it took:" + TimeUnit.MILLISECONDS.toSeconds(dbLoadTimeMs) + " seconds");
+						}
 						ret = new RangerRoles();
 
 						ret.setRangerRoles(rolesInDB);
@@ -121,6 +123,7 @@ public class RangerRoleCache {
 						ret.setRoleVersion(rolesVersionInDB);
 
 						rolesVersion = rolesVersionInDB;
+						roles = ret;
 					} else {
 						LOG.error("Could not get Ranger Roles from database ...");
 					}

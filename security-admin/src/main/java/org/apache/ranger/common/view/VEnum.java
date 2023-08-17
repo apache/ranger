@@ -21,12 +21,9 @@
 
 import java.util.List;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.RangerCommonEnums;
 
 
-@XmlRootElement
 public class VEnum extends ViewBaseBean implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 

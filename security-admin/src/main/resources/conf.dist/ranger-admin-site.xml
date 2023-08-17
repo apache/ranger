@@ -75,6 +75,18 @@
 		<value>true</value>
 	</property>
 	<property>
+		<name>ranger.audit.amazon_cloudwatch.region</name>
+		<value>us-east-2</value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_group</name>
+		<value>ranger_audits</value>
+	</property>
+	<property>
+		<name>ranger.audit.amazon_cloudwatch.log_stream_prefix</name>
+		<value></value>
+	</property>
+	<property>
 		<name>ranger.audit.solr.urls</name>
 		<value>http://##solr_host##:6083/solr/ranger_audits</value>
 		<description></description>
@@ -309,6 +321,14 @@
         <name>ranger.kms.service.user.hive</name>
         <value>hive</value>
     </property>
+    <property>
+        <name>ranger.kms.service.user.hbase</name>
+        <value>hbase</value>
+    </property>
+    <property>
+        <name>ranger.kms.service.user.om</name>
+        <value>om</value>
+    </property>
 
     <property>
         <name>ranger.audit.hive.query.visibility</name>
@@ -330,6 +350,10 @@
         </property>
         <property>
                 <name>ranger.audit.solr.config.name</name>
+                <value></value>
+        </property>
+        <property>
+                <name>ranger.audit.solr.configset.location</name>
                 <value></value>
         </property>
         <property>
@@ -360,5 +384,13 @@
 		<property>
 			<name>ranger.admin.cookie.name</name>
 			<value>RANGERADMINSESSIONID</value>
+		</property>
+		<property>
+			<name>ranger.admin.init.purge.login_records</name>
+			<value>false</value>
+		</property>
+		<property>
+			<name>ranger.admin.init.purge.login_records.retention.days</name>
+			<value>0</value>
 		</property>
 </configuration>

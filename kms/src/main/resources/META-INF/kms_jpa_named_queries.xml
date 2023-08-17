@@ -16,22 +16,28 @@
   limitations under the License.
 -->
 <entity-mappings version="1.0"
-	xmlns="http://java.sun.com/xml/ns/persistence/orm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd ">
-	<named-query name="XXRangerKeyStore.findByAlias">
-		<query>SELECT Obj FROM XXRangerKeyStore obj
-			   WHERE obj.alias=:alias
-		</query>
-	</named-query>
-	
-	<named-query name="XXRangerKeyStore.getAllKeys">
-		<query>SELECT Obj FROM XXRangerKeyStore obj
-		</query>
-	</named-query>
+                 xmlns="http://java.sun.com/xml/ns/persistence/orm" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                 xsi:schemaLocation="http://java.sun.com/xml/ns/persistence/orm http://java.sun.com/xml/ns/persistence/orm_1_0.xsd ">
 
-	<named-query name="XXRangerKeyStore.deleteByAlias">
-		<query>DELETE FROM XXRangerKeyStore obj
-			   WHERE obj.alias=:alias
-		</query>
-	</named-query>
+    <named-query name="XXRangerKeyStore.findByAlias">
+        <query>SELECT Obj FROM XXRangerKeyStore obj WHERE obj.alias = :alias</query>
+    </named-query>
+
+    <named-query name="XXRangerKeyStore.getAllKeys">
+        <query>SELECT obj.id,
+                      obj.alias,
+                      obj.createdDate,
+                      obj.encoded,
+                      obj.cipher,
+                      obj.bitLength,
+                      obj.description,
+                      obj.version,
+                      obj.attributes
+                 FROM XXRangerKeyStore obj
+        </query>
+    </named-query>
+
+    <named-query name="XXRangerKeyStore.deleteByAlias">
+        <query>DELETE FROM XXRangerKeyStore obj WHERE obj.alias = :alias</query>
+    </named-query>
 </entity-mappings>

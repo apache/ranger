@@ -20,14 +20,14 @@ package org.apache.ranger.services.schema.registry.client.connection;
 import com.hortonworks.registries.auth.Login;
 import com.hortonworks.registries.schemaregistry.client.LoadBalancedFailoverUrlSelector;
 import com.hortonworks.registries.schemaregistry.client.UrlSelector;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.services.schema.registry.client.connection.util.SecurityUtils;
 import org.codehaus.jettison.json.JSONArray;
 import org.codehaus.jettison.json.JSONObject;
 import org.glassfish.jersey.client.ClientConfig;
 import org.glassfish.jersey.client.ClientProperties;
 import org.glassfish.jersey.client.JerseyClientBuilder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.net.ssl.SSLContext;
 import javax.ws.rs.client.ClientBuilder;
@@ -50,12 +50,12 @@ import static com.hortonworks.registries.schemaregistry.client.SchemaRegistryCli
 
 public class DefaultSchemaRegistryClient implements ISchemaRegistryClient {
 
-    private static final Log LOG = LogFactory.getLog(DefaultSchemaRegistryClient.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefaultSchemaRegistryClient.class);
 
     private static final String SCHEMA_REGISTRY_PATH = "/api/v1/schemaregistry";
     private static final String SCHEMAS_PATH = SCHEMA_REGISTRY_PATH + "/schemas/";
     private static final String SCHEMA_REGISTRY_VERSION_PATH = SCHEMA_REGISTRY_PATH + "/version";
-    private static final String SSL_ALGORITHM = "TLS";
+    private static final String SSL_ALGORITHM = "TLSv1.2";
     private final javax.ws.rs.client.Client client;
     private final Login login;
     private final UrlSelector urlSelector;

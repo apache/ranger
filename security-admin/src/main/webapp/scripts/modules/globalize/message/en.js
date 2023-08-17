@@ -267,6 +267,8 @@ define(function(require) {
                 editValidityPeriod              : ' Edit Validity Period',
                 totalUsersSynced                : 'Total number of users synced',
                 totalGroupsSynced               : 'Total number of groups synced',
+                totalUsersDeleted               : 'Total number of users marked for delete',
+                totalGroupsDeleted              : 'Total number of groups marked for delete',
                 addPolicyCondition              : 'Add Policy Condition',
                 editPolicyCondition             : 'Edit Policy Condition',
                 agentHost	                    :'Agent Host Name',
@@ -281,12 +283,16 @@ define(function(require) {
                 displayName                     : 'Display Name',
                 auditAccessDetail               : 'Audit Access Log Detail',
                 hiveQuery                       : 'Hive Query',
+                hbaseAudit                      : 'HBase Audit Data',
+                solrQuery                       : 'Solr Query',
+                hdfsOperation                   : 'HDFS Operation Name',
                 clientIP                        : 'Client IP',
                 eventCount                      : 'Event Count',
                 tags                            : 'Tags',
                 permission                      : 'Permission',
                 override                        : 'Override',
-                normal                          : 'Normal'
+                normal                          : 'Normal',
+                auditId                         : 'Audit ID'
 
 			},
 			btn : {
@@ -297,7 +303,9 @@ define(function(require) {
 				stayOnPage					: 'Stay on this page',
 				leavePage					: 'Leave this page',
 				setVisibility               : 'Set Visibility',
-				setStatus               	: 'Set Status'
+				setStatus               	: 'Set Status',
+				stayLoggdedIn				: 'Stay Logged In',
+				logOutNow					: 'Log Out Now'
 				
 			},
 			// h1, h2, h3, fieldset, title
@@ -360,6 +368,7 @@ define(function(require) {
                 serviceTypeMsg              :'Select type of service.',
                 startDate                   :'Set start date.',
                 userMsg                     :'Name of User.',
+                roleMsg                     :'Name of Role.',
                 application                 :'Application.',
                 tagsMsg                     :'Tag Name.',
                 endDate                     :'Set end date.',
@@ -373,7 +382,7 @@ define(function(require) {
                 type                        :'Policy for all type.',
                 udf                         :'Hive udf.',
                 pluginStatus                :'Plugin Status',
-                clusterName                 :'Name of ambari cluster',
+                clusterName                 :'Name of cluster',
                 zoneName                    :"Name of Zone",
                 policyVersion               :'Policy Version',
                 url        					:'Hive url.',
@@ -395,8 +404,10 @@ define(function(require) {
                 nifiResource                :'NiFi Resource Identifier.',
                 securityZone				:'Security Zone',
                 zoneCreate					:'Create Zone',
-                zoneEdit					:'Zone Edit'
-                        },
+                zoneEdit					:'Zone Edit',
+                bucket                      :'Name of the S3 bucket.',
+                auditFilter                 :'Audit Filter'
+            },
 			msg : {
 				deletePolicyValidationMsg : 'Policy does not have any settings for the specific resource. Policy will be deleted. Press [Ok] to continue. Press [Cancel] to edit the policy.',
 				areYouSureWantToDelete	  : 'Are you sure want to delete ?',
@@ -492,7 +503,9 @@ define(function(require) {
                 signOutIsNotComplete    : 'Authentication to this instance of Ranger is managed externally(for example,Apache Knox). \
                                         You can still open this instance of Ranger from the same web browser without re-authentication. \
                                         To prevent additional access to Ranger, <b>close all browser windows and exit the browser</b>.',
-                pageNotFound            : 'Sorry, this page isn\'t here or has moved.'
+                pageNotFound            : 'Sorry, this page isn\'t here or has moved.',
+                resourcesLookup         : 'Resouce lookup fail for current resource',
+                dataNotFound            : 'Data not found for given page.'
 
 
 			},
@@ -506,7 +519,8 @@ define(function(require) {
 				preventNavUserForm : 'User form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavGroupForm : 'Group form edit is in progress. Please save/cancel changes before navigating away!',
 				preventNavUserList : 'Some Users/Groups have been edited. Kindly save your changes before navigating away!',
-				preventNavZoneForm : 'Zone form edit is in progress. Please save/cancel changes before navigating away!'
+				preventNavZoneForm : 'Zone form edit is in progress. Please save/cancel changes before navigating away!',
+				idleTimeOutMsg : 'Because you have been inactive, your session is about to expire.'
 				
 			},	
 			validationMessages : {
@@ -515,10 +529,10 @@ define(function(require) {
 				alphaNumericUnderscoreDotComma :'* Only Alpha Numeric,underscore,comma,hypen,dot and space characters are allowed',
 				oldPasswordError       :'Your password does not match. Please try again with proper password',
 				oldPasswordRepeatError :'You can not use old password.',
-				newPasswordError       :'Invalid Password. Minimum 8 characters with min one alphabet and one numeric.',
+				newPasswordError       :'Invalid Password. Password should be minimum 8 characters, atleast one uppercase letter, one lowercase letter and one numeric. For FIPS environment password should be minimum 14 characters with atleast one uppercase letter, one special characters, one lowercase letter and one numeric.',
 				emailIdError           : 'Please enter valid email address.',
 				enterValidName         : 'Please enter valid name.',
-				passwordError          :'Password should be minimum 8 characters with min one alphabet and one numeric.',
+				passwordError          :'Password should be minimum 8 characters, atleast one uppercase letter, one lowercase letter and one numeric. For FIPS environment password should be minimum 14 characters with atleast one uppercase letter, one special characters, one lowercase letter and one numeric.',
 				userNameValidationMsg  :'1. User name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
 				groupNameValidationMsg :'1. Group name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ,._\-+/@= and space. <br>3. Name length should be greater than one.',
                 firstNameValidationMsg :'1. First name should be start with alphabet / numeric / underscore / non-us characters.<br> 2. Allowed special character ._-@ and space. <br>3. Name length should be greater than one.',

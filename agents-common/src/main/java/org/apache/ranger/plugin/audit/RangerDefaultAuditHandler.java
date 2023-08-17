@@ -25,23 +25,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.authorization.hadoop.constants.RangerHadoopConstants;
+import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.plugin.contextenricher.RangerTagForEval;
 import org.apache.ranger.plugin.policyengine.*;
 import org.apache.ranger.plugin.service.RangerBasePlugin;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
-	private static final Log LOG = LogFactory.getLog(RangerDefaultAuditHandler.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultAuditHandler.class);
 
 	private static final String       CONF_AUDIT_ID_STRICT_UUID     = "xasecure.audit.auditid.strict.uuid";
 	private static final boolean      DEFAULT_AUDIT_ID_STRICT_UUID  = false;
@@ -266,11 +267,12 @@ public class RangerDefaultAuditHandler implements RangerAccessResultProcessor {
 		if (StringUtils.isBlank(request.getRemoteIPAddress()) && CollectionUtils.isEmpty(request.getForwardedAddresses())) {
 			return null;
 		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("{\"remote-ip-address\":").append(request.getRemoteIPAddress())
-				.append(", \"forwarded-ip-addresses\":[").append(StringUtils.join(request.getForwardedAddresses(), ", ")).append("]");
+		Map<String,String> addInfomap=new HashMap<String,String>();
+		addInfomap.put("forwarded-ip-addresses", "[" + StringUtils.join(request.getForwardedAddresses(), ", ") + "]");
+		addInfomap.put("remote-ip-address", request.getRemoteIPAddress());
+		String addInfojsonStr = JsonUtils.mapToJson(addInfomap);
+		return addInfojsonStr;
 
-		return sb.toString();
 	}
 
 	private String generateNextAuditEventId() {

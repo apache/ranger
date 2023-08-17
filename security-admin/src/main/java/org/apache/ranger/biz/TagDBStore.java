@@ -21,15 +21,13 @@ package org.apache.ranger.biz;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.authorization.utils.JsonUtils;
 import org.apache.ranger.common.MessageEnums;
@@ -37,11 +35,14 @@ import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerAdminTagEnricher;
 import org.apache.ranger.common.RangerServiceTagsCache;
 import org.apache.ranger.db.RangerDaoManager;
+import org.apache.ranger.db.XXTagDao;
+import org.apache.ranger.db.XXTagDefDao;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceResource;
 import org.apache.ranger.entity.XXServiceVersionInfo;
 import org.apache.ranger.entity.XXTag;
 import org.apache.ranger.entity.XXTagChangeLog;
+import org.apache.ranger.entity.XXTagDef;
 import org.apache.ranger.entity.XXTagResourceMap;
 import org.apache.ranger.plugin.model.*;
 import org.apache.ranger.plugin.model.validation.RangerValidityScheduleValidator;
@@ -49,6 +50,7 @@ import org.apache.ranger.plugin.model.validation.ValidationFailureDetails;
 import org.apache.ranger.plugin.store.AbstractTagStore;
 import org.apache.ranger.plugin.store.PList;
 import org.apache.ranger.plugin.store.RangerServiceResourceSignature;
+import org.apache.ranger.plugin.util.RangerCommonConstants;
 import org.apache.ranger.plugin.util.RangerPerfTracer;
 import org.apache.ranger.plugin.util.RangerServiceNotFoundException;
 import org.apache.ranger.plugin.util.RangerServiceTagsDeltaUtil;
@@ -58,6 +60,8 @@ import org.apache.ranger.service.RangerTagDefService;
 import org.apache.ranger.service.RangerTagResourceMapService;
 import org.apache.ranger.service.RangerTagService;
 import org.apache.ranger.service.RangerServiceResourceService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
@@ -68,12 +72,13 @@ import javax.servlet.http.HttpServletResponse;
 
 @Component
 public class TagDBStore extends AbstractTagStore {
-	private static final Log LOG      = LogFactory.getLog(TagDBStore.class);
-	private static final Log PERF_LOG = RangerPerfTracer.getPerfLogger("db.TagDBStore");
+	private static final Logger LOG      = LoggerFactory.getLogger(TagDBStore.class);
+	private static final Logger PERF_LOG = RangerPerfTracer.getPerfLogger("db.TagDBStore");
 
 
 	private static boolean SUPPORTS_TAG_DELTAS = false;
 	private static boolean IS_SUPPORTS_TAG_DELTAS_INITIALIZED = false;
+	public static boolean SUPPORTS_IN_PLACE_TAG_UPDATES = false;
 
 	@Autowired
 	RangerTagDefService rangerTagDefService;
@@ -475,6 +480,19 @@ public class TagDBStore extends AbstractTagStore {
 		return ret;
 	}
 
+    public boolean resetTagCache(final String serviceName) {
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> TagDBStore.resetTagCache({})", serviceName);
+        }
+
+        boolean ret = RangerServiceTagsCache.getInstance().resetCache(serviceName);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== TagDBStore.resetTagCache(): ret={}", ret);
+        }
+
+        return ret;
+    }
 
 	@Override
 	public RangerServiceResource createServiceResource(RangerServiceResource resource) throws Exception {
@@ -623,10 +641,10 @@ public class TagDBStore extends AbstractTagStore {
 
 		List<RangerServiceResource> ret = null;
 
-		XXService service = daoManager.getXXService().findByName(serviceName);
+		Long serviceId = daoManager.getXXService().findIdByName(serviceName);
 
-		if (service != null) {
-			ret = rangerServiceResourceService.getByServiceId(service.getId());
+		if (serviceId != null) {
+			ret = rangerServiceResourceService.getByServiceId(serviceId);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -644,10 +662,10 @@ public class TagDBStore extends AbstractTagStore {
 
 		List<String> ret = null;
 
-		XXService service = daoManager.getXXService().findByName(serviceName);
+		Long serviceId = daoManager.getXXService().findIdByName(serviceName);
 
-		if (service != null) {
-			ret = daoManager.getXXServiceResource().findServiceResourceGuidsInServiceId(service.getId());
+		if (serviceId != null) {
+			ret = daoManager.getXXServiceResource().findServiceResourceGuidsInServiceId(serviceId);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -665,10 +683,10 @@ public class TagDBStore extends AbstractTagStore {
 
 		RangerServiceResource ret = null;
 
-		XXService service = daoManager.getXXService().findByName(serviceName);
+		Long serviceId = daoManager.getXXService().findIdByName(serviceName);
 
-		if (service != null) {
-			ret = rangerServiceResourceService.getByServiceAndResourceSignature(service.getId(), resourceSignature);
+		if (serviceId != null) {
+			ret = rangerServiceResourceService.getByServiceAndResourceSignature(serviceId, resourceSignature);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -739,7 +757,7 @@ public class TagDBStore extends AbstractTagStore {
 
 		rangerTagResourceMapService.delete(tagResourceMap);
 
-		if (tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
+		if (tag.getOwner() == null || tag.getOwner() == RangerTag.OWNER_SERVICERESOURCE) {
 			deleteTag(tagId);
 		}
 		// We also need to update tags stored with the resource
@@ -925,9 +943,9 @@ public class TagDBStore extends AbstractTagStore {
 
 		ServiceTags ret = null;
 
-		XXService xxService = daoManager.getXXService().findByName(serviceName);
+		Long serviceId = daoManager.getXXService().findIdByName(serviceName);
 
-		if (xxService == null) {
+		if (serviceId == null) {
 			LOG.error("Requested Service not found. serviceName=" + serviceName);
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, RangerServiceNotFoundException.buildExceptionMsg(serviceName),
 					false);
@@ -940,7 +958,7 @@ public class TagDBStore extends AbstractTagStore {
 		}
 
 		if (lastKnownVersion == null || serviceVersionInfoDbObj == null || serviceVersionInfoDbObj.getTagVersion() == null || !lastKnownVersion.equals(serviceVersionInfoDbObj.getTagVersion())) {
-			ret = RangerServiceTagsCache.getInstance().getServiceTags(serviceName, xxService.getId(), lastKnownVersion, needsBackwardCompatibility, this);
+			ret = RangerServiceTagsCache.getInstance().getServiceTags(serviceName, serviceId, lastKnownVersion, needsBackwardCompatibility, this);
 		}
 
 		if (ret != null && lastKnownVersion != null && lastKnownVersion.equals(ret.getTagVersion())) {
@@ -993,7 +1011,7 @@ public class TagDBStore extends AbstractTagStore {
 			throw new Exception("service-def does not exist. id=" + xxService.getType());
 		}
 
-		ServiceTags delta = getServiceTagsDelta(xxService, lastKnownVersion);
+		ServiceTags delta = getServiceTagsDelta(xxService.getId(), serviceName, lastKnownVersion);
 
 		if (delta != null) {
 			ret = delta;
@@ -1014,6 +1032,13 @@ public class TagDBStore extends AbstractTagStore {
 			ret.setTags(tagMap);
 			ret.setServiceResources(resources);
 			ret.setResourceToTagIds(resourceToTagIds);
+
+			if (RangerServiceTagsDeltaUtil.isSupportsTagsDedup()) {
+				final int countOfDuplicateTags = ret.dedupTags();
+				if (LOG.isDebugEnabled()) {
+					LOG.debug("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + ret.getTags().size() + "].");
+				}
+			}
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1037,13 +1062,13 @@ public class TagDBStore extends AbstractTagStore {
 			}
 			ret = null;
 		} else {
-			XXService xxService = daoManager.getXXService().findByName(serviceName);
+			Long serviceId = daoManager.getXXService().findIdByName(serviceName);
 
-			if (xxService == null) {
+			if (serviceId == null) {
 				throw new Exception("service does not exist. name=" + serviceName);
 			}
 
-			ret = getServiceTagsDelta(xxService, lastKnownVersion);
+			ret = getServiceTagsDelta(serviceId, serviceName, lastKnownVersion);
 		}
 
 		if (LOG.isDebugEnabled()) {
@@ -1142,7 +1167,7 @@ public class TagDBStore extends AbstractTagStore {
 		return tag;
 	}
 
-	private ServiceTags getServiceTagsDelta(XXService xxService, Long lastKnownVersion) {
+	private ServiceTags getServiceTagsDelta(Long serviceId, String serviceName, Long lastKnownVersion) {
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.getServiceTagsDelta(lastKnownVersion=" + lastKnownVersion + ")");
 		}
@@ -1156,19 +1181,19 @@ public class TagDBStore extends AbstractTagStore {
 			RangerPerfTracer perf = null;
 
 			if (RangerPerfTracer.isPerfTraceEnabled(PERF_LOG)) {
-				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "TagDBStore.getServiceTagsDelta(serviceName=" + xxService.getName() + ", lastKnownVersion=" + lastKnownVersion + ")");
+				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "TagDBStore.getServiceTagsDelta(serviceName=" + serviceName + ", lastKnownVersion=" + lastKnownVersion + ")");
 			}
 
-			List<XXTagChangeLog> changeLogRecords = daoManager.getXXTagChangeLog().findLaterThan(lastKnownVersion, xxService.getId());
+			List<XXTagChangeLog> changeLogRecords = daoManager.getXXTagChangeLog().findLaterThan(lastKnownVersion, serviceId);
 
 			if (LOG.isDebugEnabled()) {
-				LOG.debug("Number of tag-change-log records found since " + lastKnownVersion + " :[" + (changeLogRecords == null ? 0 : changeLogRecords.size()) + "] for serviceId:[" + xxService.getId() + "]");
+				LOG.debug("Number of tag-change-log records found since " + lastKnownVersion + " :[" + (changeLogRecords == null ? 0 : changeLogRecords.size()) + "] for serviceId:[" + serviceId + "]");
 			}
 
 			try {
 				ret = createServiceTagsDelta(changeLogRecords);
 				if (ret != null) {
-					ret.setServiceName(xxService.getName());
+					ret.setServiceName(serviceName);
 				}
 			} catch (Exception e) {
 				LOG.error("Perhaps some tag or service-resource could not be found", e);
@@ -1185,25 +1210,25 @@ public class TagDBStore extends AbstractTagStore {
 	}
 
 	private ServiceTags createServiceTagsDelta(List<XXTagChangeLog> changeLogs) throws Exception {
-
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("==> TagDBStore.createServiceTagsDelta()");
 		}
+
 		ServiceTags ret = null;
 
 		if (CollectionUtils.isNotEmpty(changeLogs)) {
-
-			Map<Long, Long> tagIds = new HashMap<>();
-			Map<Long, Long> serviceResourceIds = new HashMap<>();
+			Set<String> tagTypes           = new HashSet<>();
+			Set<Long>   tagIds             = new HashSet<>();
+			Set<Long>   serviceResourceIds = new HashSet<>();
 
 			for (XXTagChangeLog record : changeLogs) {
 				if (record.getChangeType().equals(ServiceTags.TagsChangeType.TAG_UPDATE.ordinal())) {
-					tagIds.put(record.getTagId(), record.getTagId());
+					tagIds.add(record.getTagId());
 				} else if (record.getChangeType().equals(ServiceTags.TagsChangeType.SERVICE_RESOURCE_UPDATE.ordinal())) {
-					serviceResourceIds.put(record.getServiceResourceId(), record.getServiceResourceId());
+					serviceResourceIds.add(record.getServiceResourceId());
 				} else if (record.getChangeType().equals(ServiceTags.TagsChangeType.TAG_RESOURCE_MAP_UPDATE.ordinal())) {
-					tagIds.put(record.getTagId(), record.getTagId());
-					serviceResourceIds.put(record.getServiceResourceId(), record.getServiceResourceId());
+					tagIds.add(record.getTagId());
+					serviceResourceIds.add(record.getServiceResourceId());
 				} else {
 					if (LOG.isDebugEnabled()) {
 						LOG.debug("Unknown changeType in tag-change-log record: [" + record + "]");
@@ -1215,7 +1240,7 @@ public class TagDBStore extends AbstractTagStore {
 				}
 			}
 
-			if (MapUtils.isNotEmpty(serviceResourceIds) || MapUtils.isNotEmpty(tagIds)) {
+			if (CollectionUtils.isNotEmpty(serviceResourceIds) || CollectionUtils.isNotEmpty(tagIds)) {
 				ret = new ServiceTags();
 				ret.setIsDelta(true);
 
@@ -1223,40 +1248,105 @@ public class TagDBStore extends AbstractTagStore {
 
 				ret.setTagVersion(changeLogs.get(changeLogs.size() - 1).getServiceTagsVersion());
 
-				for (Long tagId : tagIds.keySet()) {
-					// Check if tagId is part of any resource->id mapping
-					final RangerTag tag;
-					if (CollectionUtils.isNotEmpty(rangerTagResourceMapService.getByTagId(tagId))) {
-						tag = rangerTagService.read(tagId); // This should not throw exception
-					} else {
-						tag = new RangerTag();
-						tag.setId(tagId);
+				XXTagDao tagDao = daoManager.getXXTag();
+
+				for (Long tagId : tagIds) {
+					RangerTag tag = null;
+
+					try {
+						XXTag xTag = tagDao.getById(tagId);
+
+						if (xTag != null) {
+							tag = rangerTagService.getPopulatedViewObject(xTag);
+
+							tagTypes.add(tag.getType());
+						}
+					} catch (Throwable t) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("TagDBStore.createServiceTagsDelta(): failed to read tag id={}", tagId, t);
+						}
+					} finally {
+						if (tag == null) {
+							tag = new RangerTag();
+							tag.setId(tagId);
+						}
 					}
+
+					RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+
 					ret.getTags().put(tag.getId(), tag);
 				}
 
-				if (MapUtils.isNotEmpty(serviceResourceIds)) {
+				XXTagDefDao tagDefDao = daoManager.getXXTagDef();
 
-					for (Long serviceResourceId : serviceResourceIds.keySet()) {
-						// Check if serviceResourceId is part of any resource->id mapping
-						List<Long> mappings = rangerTagResourceMapService.getTagIdsForResourceId(serviceResourceId);
+				for (String tagType : tagTypes) {
+					try {
+						XXTagDef     xTagDef = tagDefDao.findByName(tagType);
+						RangerTagDef tagDef  = xTagDef != null ? rangerTagDefService.getPopulatedViewObject(xTagDef) : null;
 
-						final RangerServiceResource serviceResource;
-						if (CollectionUtils.isNotEmpty(mappings)) {
-							serviceResource = rangerServiceResourceService.read(serviceResourceId); // This should not throw exception
-							ret.getResourceToTagIds().put(serviceResourceId, mappings);
+						if (tagDef != null) {
+							RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tagDef);
+
+							ret.getTagDefinitions().put(tagDef.getId(), tagDef);
 						} else {
-							serviceResource = new RangerServiceResource();
-							serviceResource.setId(serviceResourceId);
+							if (LOG.isDebugEnabled()) {
+								LOG.debug("TagDBStore.createServiceTagsDelta(): failed to load tagDef type={}", tagType);
+							}
 						}
-
-						ret.getServiceResources().add(serviceResource);
-						tagsChangeExtent = ServiceTags.TagsChangeExtent.SERVICE_RESOURCE;
+					} catch (Throwable t) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("TagDBStore.createServiceTagsDelta(): failed to load tagDef type={}", tagType, t);
+						}
 					}
 				}
-				ret.setTagsChangeExtent(tagsChangeExtent);
 
-				RangerServiceTagsDeltaUtil.pruneUnusedAttributes(ret);
+				for (Long serviceResourceId : serviceResourceIds) {
+					// Check if serviceResourceId is part of any resource->id mapping
+					XXServiceResource xServiceResource = null;
+					try {
+						xServiceResource = daoManager.getXXServiceResource().getById(serviceResourceId);
+					} catch (Throwable t) {
+						if (LOG.isDebugEnabled()) {
+							LOG.debug("TagDBStore.createServiceTagsDelta(): failed to read serviceResource id={}", serviceResourceId, t);
+						}
+					}
+
+					final RangerServiceResource serviceResource;
+
+					if (xServiceResource == null) {
+						serviceResource = new RangerServiceResource();
+						serviceResource.setId(serviceResourceId);
+					} else {
+						serviceResource = rangerServiceResourceService.getPopulatedViewObject(xServiceResource);
+
+						if (StringUtils.isNotEmpty(xServiceResource.getTags())) {
+							List<RangerTag> tags = RangerTagDBRetriever.gsonBuilder.fromJson(xServiceResource.getTags(), RangerServiceResourceService.duplicatedDataType);
+
+							if (CollectionUtils.isNotEmpty(tags)) {
+								List<Long> resourceTagIds = new ArrayList<>(tags.size());
+
+								for (RangerTag tag : tags) {
+									RangerServiceTagsDeltaUtil.pruneUnusedAttributes(tag);
+
+									if (!ret.getTags().containsKey(tag.getId())) {
+										ret.getTags().put(tag.getId(), tag);
+									}
+
+									resourceTagIds.add(tag.getId());
+								}
+
+								ret.getResourceToTagIds().put(serviceResourceId, resourceTagIds);
+							}
+						}
+					}
+
+					RangerServiceTagsDeltaUtil.pruneUnusedAttributes(serviceResource);
+
+					ret.getServiceResources().add(serviceResource);
+					tagsChangeExtent = ServiceTags.TagsChangeExtent.SERVICE_RESOURCE;
+				}
+
+				ret.setTagsChangeExtent(tagsChangeExtent);
 			}
 		} else {
 			if (LOG.isDebugEnabled()) {
@@ -1270,13 +1360,26 @@ public class TagDBStore extends AbstractTagStore {
 		return ret;
 	}
 
-	public static boolean isSupportsTagDeltas() {
-        if (!IS_SUPPORTS_TAG_DELTAS_INITIALIZED) {
-            RangerAdminConfig config = RangerAdminConfig.getInstance();
+	private static void initStatics() {
+		if (!IS_SUPPORTS_TAG_DELTAS_INITIALIZED) {
+			RangerAdminConfig config = RangerAdminConfig.getInstance();
 
-            SUPPORTS_TAG_DELTAS = config.getBoolean("ranger.admin.supports.tag.deltas", false);
-            IS_SUPPORTS_TAG_DELTAS_INITIALIZED = true;
-        }
+			SUPPORTS_TAG_DELTAS = config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_TAG_DELTA, RangerCommonConstants.RANGER_ADMIN_SUFFIX_TAG_DELTA_DEFAULT);
+			SUPPORTS_IN_PLACE_TAG_UPDATES    = SUPPORTS_TAG_DELTAS && config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES, RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_TAG_UPDATES_DEFAULT);
+			IS_SUPPORTS_TAG_DELTAS_INITIALIZED = true;
+
+			LOG.info("SUPPORTS_TAG_DELTAS=" + SUPPORTS_TAG_DELTAS);
+			LOG.info("SUPPORTS_IN_PLACE_TAG_UPDATES=" + SUPPORTS_IN_PLACE_TAG_UPDATES);
+		}
+	}
+
+	public static boolean isSupportsTagDeltas() {
+		initStatics();
         return SUPPORTS_TAG_DELTAS;
     }
+
+	public boolean isInPlaceTagUpdateSupported() {
+		initStatics();
+		return SUPPORTS_IN_PLACE_TAG_UPDATES;
+	}
 }

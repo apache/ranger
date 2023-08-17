@@ -27,7 +27,8 @@ define(function(require){
 
 	var localization	= require('utils/XALangSupport');
 	var BackboneFormDataType	= require('models/BackboneFormDataType');
-	var ConfigurationList		= require('views/service/ConfigurationList')
+	var ConfigurationList		= require('views/service/ConfigurationList');
+	var AuditFilterConfig		= require('views/service/AuditFilterConfig')
 
 	require('backbone-forms');
 	require('backbone-forms.list');
@@ -58,10 +59,18 @@ define(function(require){
 				serviceConfig : serviceConfig.slice(0,-1)
 			};
 		},
+		ui : {
+			renderAuditFilter : '[data-id="renderAuditFilter"]',
+		},
+		events : {
+			'change [data-id="renderAuditFilter"]'  : 'renderAuditFilter',
+		},
+
 		initialize: function(options) {
 			console.log("initialized a ServiceForm Form View");
 			_.extend(this, _.pick(options, 'rangerServiceDefModel'));
 			this.extraConfigColl = new Backbone.Collection();
+			this.auditFilterColl = new Backbone.Collection();
 			this.setupFormForEditMode();
     		Backbone.Form.prototype.initialize.call(this, options);
 
@@ -73,6 +82,9 @@ define(function(require){
 			this.on('isEnabled:change', function(form, fieldEditor){
 				this.evIsEnabledChange(form, fieldEditor);
 			});
+			// this.on('change [data-id="renderAuditFilter"]', function(){
+			// 	this.renderAuditFilter();
+			// })
 		},
 
 		/** schema for the form
@@ -98,9 +110,23 @@ define(function(require){
 			this.setupForm();
 			this.initializePlugins();
 			this.renderCustomFields();
+			this.renderAuditFilterFields();
+			this.renderAuditFilter();
 		},
 		setupFormForEditMode : function() {
+			var that = this;
 			if(!this.model.isNew()){
+				if(this.model.get('configs')['ranger.plugin.audit.filters']) {
+					var auditFilterCollValue = this.model.get('configs')['ranger.plugin.audit.filters'];
+					delete this.model.get('configs')['ranger.plugin.audit.filters']
+				}
+				var configs = this.rangerServiceDefModel.get('configs');
+				var auditFilterCollValueIndex = _.findIndex(configs,function(m){
+					return m.name == 'ranger.plugin.audit.filters'
+				})
+				if(auditFilterCollValueIndex != -1) {
+					configs.splice(auditFilterCollValueIndex, 1);
+				}
 				_.each(this.model.get('configs'),function(value, name){
 					var configObj = _.findWhere(this.rangerServiceDefModel.get('configs'),{'name' : name });
 					if(!_.isUndefined(configObj) && configObj.type == 'bool'){
@@ -112,6 +138,27 @@ define(function(require){
 						}
 					}
 				},this);
+
+				if(auditFilterCollValue) {
+					auditFilterCollValue = JSON.parse((auditFilterCollValue).replace(/'/g, '"'));
+					auditFilterCollValue.forEach(function(model) {
+						that.auditFilterColl.add(new Backbone.Model(model));
+					})
+				}
+			} else {
+				var configs = this.rangerServiceDefModel.get('configs');
+				var auditFilterCollValueIndex = _.findIndex(configs,function(m){
+					return m.name == 'ranger.plugin.audit.filters'
+				})
+				if(auditFilterCollValueIndex != -1) {
+					var auditFilterCollValue = configs[auditFilterCollValueIndex];
+					configs.splice(auditFilterCollValueIndex, 1);
+					auditFilterCollValue = JSON.parse((auditFilterCollValue.defaultValue).replace(/'/g, '"'));
+					console.log(auditFilterCollValue);
+					auditFilterCollValue.forEach(function(model) {
+						that.auditFilterColl.add(new Backbone.Model(model));
+					})
+				}
 			}
 		},
 		setupForm : function() {
@@ -136,6 +183,37 @@ define(function(require){
 				model 	   : this.model,
 				fieldLabel : localization.tt('lbl.addNewConfig')
 			}).render().el);
+		},
+
+		/**Audit filters rendering**/
+		renderAuditFilterFields: function(){
+			this.$('[data-customfields="aduitFilterConfig"]').html(new AuditFilterConfig({
+				collection : this.auditFilterColl,
+				rangerServiceDefModel : this.rangerServiceDefModel,
+				serviceName : (!_.isUndefined(this.model) && !_.isEmpty(this.model.get('name')) ? this.model.get('name') : ''),
+			}).render().el);
+		},
+
+		renderAuditFilter : function(e) {
+			var that = this;
+			if (_.isUndefined(e)) {
+				if(this.auditFilterColl.length > 0) {
+					this.$el.find('input[data-id="renderAuditFilter"]').prop('checked', true);
+				}
+			} else {
+				if ($(e.currentTarget).is(":checked")) {
+					if (!_.isUndefined(this.newauditFilterColl) && this.newauditFilterColl.length > 0) {
+						this.$el.find('.emptySet').remove();
+						this.newauditFilterColl.forEach(function(model){
+							that.auditFilterColl.add(model);
+						})
+					}
+				} else {
+					this.newauditFilterColl= this.auditFilterColl.clone();
+					this.auditFilterColl.reset()
+					this.renderAuditFilterFields()
+				}
+			}
 		},
 
 		/** all post render plugin initialization */
@@ -185,6 +263,15 @@ define(function(require){
 			this.extraConfigColl.each(function(obj){
 				if(!_.isEmpty(obj.attributes)) config[obj.get('name')] = obj.get('value');
 			});
+			if (this.auditFilterColl.length > 0) {
+				var auditFiltter = [];
+				this.auditFilterColl.each(function (e) {
+					auditFiltter.push(e.attributes);
+				})
+				config['ranger.plugin.audit.filters'] = (JSON.stringify(auditFiltter)).replace(/"/g, "'");
+			} else {
+				config['ranger.plugin.audit.filters'] = "";
+			}
 			this.model.set('configs',config);
 
 			//Set service type

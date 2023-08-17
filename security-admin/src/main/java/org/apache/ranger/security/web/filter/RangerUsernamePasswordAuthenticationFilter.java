@@ -22,14 +22,15 @@
  */
 package org.apache.ranger.security.web.filter;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 public class RangerUsernamePasswordAuthenticationFilter extends
 	UsernamePasswordAuthenticationFilter {
 
-    private static final Logger logger = Logger
+    private static final Logger logger = LoggerFactory
 	    .getLogger(RangerUsernamePasswordAuthenticationFilter.class);
 
     /*

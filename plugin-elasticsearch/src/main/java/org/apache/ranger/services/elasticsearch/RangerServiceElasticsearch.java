@@ -18,10 +18,15 @@
 package org.apache.ranger.services.elasticsearch;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.ranger.plugin.model.RangerPolicy;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
+import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItemAccess;
 import org.slf4j.Logger;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.model.RangerServiceDef;
@@ -33,6 +38,7 @@ import org.slf4j.LoggerFactory;
 public class RangerServiceElasticsearch extends RangerBaseService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceElasticsearch.class);
+	public static final String ACCESS_TYPE_READ  = "read";
 
 	public RangerServiceElasticsearch() {
 		super();
@@ -41,6 +47,31 @@ public class RangerServiceElasticsearch extends RangerBaseService {
 	@Override
 	public void init(RangerServiceDef serviceDef, RangerService service) {
 		super.init(serviceDef, service);
+	}
+
+	@Override
+	public List<RangerPolicy> getDefaultRangerPolicies() throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RangerServiceElasticsearch.getDefaultRangerPolicies()");
+		}
+
+		List<RangerPolicy> ret = super.getDefaultRangerPolicies();
+		for (RangerPolicy defaultPolicy : ret) {
+			if (defaultPolicy.getName().contains("all") && StringUtils.isNotBlank(lookUpUser)) {
+				List<RangerPolicyItemAccess> accessListForLookupUser = new ArrayList<RangerPolicyItemAccess>();
+				accessListForLookupUser.add(new RangerPolicyItemAccess(ACCESS_TYPE_READ));
+				RangerPolicyItem policyItemForLookupUser = new RangerPolicyItem();
+				policyItemForLookupUser.setUsers(Collections.singletonList(lookUpUser));
+				policyItemForLookupUser.setAccesses(accessListForLookupUser);
+				policyItemForLookupUser.setDelegateAdmin(false);
+				defaultPolicy.getPolicyItems().add(policyItemForLookupUser);
+			}
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== RangerServiceElasticsearch.getDefaultRangerPolicies()");
+		}
+		return ret;
 	}
 
 	@Override

@@ -19,37 +19,25 @@
 
 package org.apache.ranger.unixusersync.process;
 
-import java.util.Map;
-
 import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.KeyManager;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLSession;
 import javax.net.ssl.TrustManager;
-import javax.ws.rs.core.Cookie;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.security.SecureClientLogin;
 import org.apache.ranger.plugin.util.RangerRESTClient;
-import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.codehaus.jackson.jaxrs.JacksonJsonProvider;
 
 import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientHandlerException;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.config.ClientConfig;
 import com.sun.jersey.api.client.config.DefaultClientConfig;
 import com.sun.jersey.api.client.filter.HTTPBasicAuthFilter;
 import com.sun.jersey.client.urlconnection.HTTPSProperties;
 
 public class RangerUgSyncRESTClient extends RangerRESTClient {
-
-	private static final Log LOG = LogFactory.getLog(RangerUgSyncRESTClient.class);
-
 	private String AUTH_KERBEROS = "kerberos";
 
 	public RangerUgSyncRESTClient(String policyMgrBaseUrls, String ugKeyStoreFile, String ugKeyStoreFilepwd,
@@ -83,81 +71,10 @@ public class RangerUgSyncRESTClient extends RangerRESTClient {
 				getClient().addFilter(new HTTPBasicAuthFilter(getUsername(), getPassword()));
 			}
 		}
-	}
 
-	public ClientResponse get(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
-		ClientResponse response = null;
-		int startIndex = getLastKnownActiveUrlIndex();
-		int currentIndex = 0;
+		UserGroupSyncConfig config = UserGroupSyncConfig.getInstance();
 
-		for (int index = 0; index < getConfiguredURLs().size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % getConfiguredURLs().size();
-
-				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
-				webResource = setQueryParams(webResource, params);
-				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
-				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).get(ClientResponse.class);
-				if (response != null) {
-					setLastKnownActiveUrlIndex(currentIndex);
-					break;
-				}
-			} catch (ClientHandlerException e) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + getConfiguredURLs().get(currentIndex));
-				processException(index, e);
-			}
-		}
-		return response;
-	}
-
-	public ClientResponse post(String relativeURL, Map<String, String> params, Object obj, Cookie sessionId)
-			throws Exception {
-		ClientResponse response = null;
-		int startIndex = getLastKnownActiveUrlIndex();
-		int currentIndex = 0;
-
-		for (int index = 0; index < getConfiguredURLs().size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % getConfiguredURLs().size();
-
-				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
-				webResource = setQueryParams(webResource, params);
-				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
-				response = br.accept(RangerRESTUtils.REST_EXPECTED_MIME_TYPE).type(RangerRESTUtils.REST_MIME_TYPE_JSON)
-						.post(ClientResponse.class, toJson(obj));
-				if (response != null) {
-					setLastKnownActiveUrlIndex(currentIndex);
-					break;
-				}
-			} catch (ClientHandlerException e) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + getConfiguredURLs().get(currentIndex));
-				processException(index, e);
-			}
-		}
-		return response;
-	}
-
-	public ClientResponse delete(String relativeURL, Map<String, String> params, Cookie sessionId) throws Exception {
-		ClientResponse response = null;
-		int startIndex = getLastKnownActiveUrlIndex();
-		int currentIndex = 0;
-		for (int index = 0; index < getConfiguredURLs().size(); index++) {
-			try {
-				currentIndex = (startIndex + index) % getConfiguredURLs().size();
-
-				WebResource webResource = createWebResourceForCookieAuth(currentIndex, relativeURL);
-				webResource = setQueryParams(webResource, params);
-				WebResource.Builder br = webResource.getRequestBuilder().cookie(sessionId);
-				response = br.delete(ClientResponse.class);
-				if (response != null) {
-					setLastKnownActiveUrlIndex(currentIndex);
-					break;
-				}
-			} catch (ClientHandlerException e) {
-				LOG.warn("Failed to communicate with Ranger Admin, URL : " + getConfiguredURLs().get(currentIndex));
-				processException(index, e);
-			}
-		}
-		return response;
+		super.setMaxRetryAttempts(config.getPolicyMgrMaxRetryAttempts());
+		super.setRetryIntervalMs(config.getPolicyMgrRetryIntervalMs());
 	}
 }

@@ -19,11 +19,12 @@
 package org.apache.ranger.plugin.conditionevaluator;
 
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 public class RangerAccessedFromClusterTypeCondition extends RangerAbstractConditionEvaluator{
-	private static final Log LOG = LogFactory.getLog(RangerAccessedFromClusterTypeCondition.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAccessedFromClusterTypeCondition.class);
 
 	private boolean isAlwaysTrue = false;
 

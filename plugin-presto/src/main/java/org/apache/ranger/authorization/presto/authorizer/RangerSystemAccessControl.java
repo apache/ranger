@@ -290,7 +290,7 @@ public class RangerSystemAccessControl
   @Override
   public void checkCanSetCatalogSessionProperty(SystemSecurityContext context, String catalogName, String propertyName) {
     if (!hasPermission(createCatalogSessionResource(catalogName, propertyName), context, PrestoAccessType.ALTER)) {
-      LOG.debug("RangerSystemAccessControl.checkCanSetSystemSessionProperty(" + catalogName + ") denied");
+      LOG.debug("RangerSystemAccessControl.checkCanSetCatalogSessionProperty(" + catalogName + ") denied");
       AccessDeniedException.denySetCatalogSessionProperty(catalogName, propertyName);
     }
   }
@@ -485,7 +485,7 @@ public class RangerSystemAccessControl
   public void checkCanDropView(SystemSecurityContext context, CatalogSchemaTableName view) {
     if (!hasPermission(createResource(view), context, PrestoAccessType.DROP)) {
       LOG.debug("RangerSystemAccessControl.checkCanDropView(" + view.getSchemaTableName().getTableName() + ") denied");
-      AccessDeniedException.denyCreateView(view.getSchemaTableName().getTableName());
+      AccessDeniedException.denyDropView(view.getSchemaTableName().getTableName());
     }
   }
 
@@ -642,23 +642,26 @@ public class RangerSystemAccessControl
   /** HELPER FUNCTIONS **/
 
   private RangerPrestoAccessRequest createAccessRequest(RangerPrestoResource resource, SystemSecurityContext context, PrestoAccessType accessType) {
-    Set<String> userGroups = null;
+	String userName = null;
+	Set<String> userGroups = null;
 
     if (useUgi) {
       UserGroupInformation ugi = UserGroupInformation.createRemoteUser(context.getIdentity().getUser());
 
+      userName = ugi.getShortUserName();
       String[] groups = ugi != null ? ugi.getGroupNames() : null;
 
       if (groups != null && groups.length > 0) {
         userGroups = new HashSet<>(Arrays.asList(groups));
       }
     } else {
+      userName = context.getIdentity().getUser();
       userGroups = context.getIdentity().getGroups();
     }
 
     RangerPrestoAccessRequest request = new RangerPrestoAccessRequest(
       resource,
-      context.getIdentity().getUser(),
+      userName,
       userGroups,
       accessType
     );

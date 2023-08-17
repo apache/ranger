@@ -17,17 +17,17 @@ package org.apache.ranger.service;
 
 import java.util.Iterator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.ldap.NameNotFoundException;
 import org.springframework.ldap.core.DirContextOperations;
 import org.springframework.ldap.core.support.BaseLdapPathContextSource;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.authentication.encoding.LdapShaPasswordEncoder;
-import org.springframework.security.authentication.encoding.PasswordEncoder;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.LdapShaPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.ldap.SpringSecurityLdapTemplate;
 import org.springframework.security.ldap.authentication.AbstractLdapAuthenticator;
 import org.springframework.util.Assert;
@@ -51,8 +51,8 @@ public final class PasswordComparisonAuthenticator extends
 	// ~ Static fields/initializers
 	// =====================================================================================
 
-	private static final Log logger = LogFactory
-			.getLog(PasswordComparisonAuthenticator.class);
+	private static final Logger logger = LoggerFactory
+			.getLogger(PasswordComparisonAuthenticator.class);
 
 	// ~ Instance fields
 	// ================================================================================================
@@ -109,7 +109,7 @@ public final class PasswordComparisonAuthenticator extends
 					+ "'");
 		}
 
-		String encodedPassword = passwordEncoder.encodePassword(password, null);
+		String encodedPassword = passwordEncoder.encode(password);
 		byte[] passwordBytes = encodedPassword.getBytes();
 
 		if (!ldapTemplate.compare(user.getDn().toString(),

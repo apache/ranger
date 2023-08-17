@@ -20,8 +20,11 @@
 package org.apache.ranger.authorization.hive.authorizer;
 
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.plugin.policyengine.RangerAccessResourceImpl;
 
+import java.io.File;
+import java.util.ArrayList;
 
 
 public class RangerHiveResource extends RangerAccessResourceImpl {
@@ -78,7 +81,18 @@ public class RangerHiveResource extends RangerAccessResourceImpl {
 			break;
 
 			case URI:
-				setValue(KEY_URL,firstLevelResource);
+				ArrayList<String> objectList = new ArrayList<>();
+				if (StringUtils.isNotEmpty(firstLevelResource)) {
+					objectList.add(firstLevelResource);
+					if (!firstLevelResource.substring(firstLevelResource.length()-1).equals(File.separator)) {
+						firstLevelResource = firstLevelResource + File.separator;
+						objectList.add(firstLevelResource);
+					} else {
+						firstLevelResource = firstLevelResource.substring(firstLevelResource.length()-2);
+						objectList.add(firstLevelResource);
+					}
+				}
+				setValue(KEY_URL,objectList);
 			break;
 
 			case SERVICE_NAME:

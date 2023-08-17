@@ -19,11 +19,12 @@
 
 package org.apache.ranger.policyengine;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.ranger.authorization.hadoop.config.RangerConfiguration;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngineOptions;
 import org.apache.ranger.plugin.policyevaluator.RangerPolicyEvaluator;
 import org.apache.ranger.plugin.util.PerfDataRecorder;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -36,7 +37,7 @@ import java.util.Arrays;
 import java.util.List;
 
 public class RangerPolicyenginePerfTester {
-    static final Log LOG = LogFactory.getLog(RangerPolicyenginePerfTester.class);
+    static final Logger LOG = LoggerFactory.getLogger(RangerPolicyenginePerfTester.class);
 
     public static void main(String[] args) {
         if (LOG.isDebugEnabled()) {
@@ -62,8 +63,15 @@ public class RangerPolicyenginePerfTester {
             policyEngineOptions.cacheAuditResults = false;
             policyEngineOptions.disableTrieLookupPrefilter = perfTestOptions.getIsTrieLookupPrefixDisabled();
             policyEngineOptions.optimizeTrieForRetrieval = perfTestOptions.getIsOnDemandTriePostSetupDisabled();
+            policyEngineOptions.optimizeTagTrieForSpace = perfTestOptions.getIsTagTrieOptimizedForSpace();
+            policyEngineOptions.optimizeTrieForSpace = perfTestOptions.getIsPolicyTrieOptimizedForSpace();
 
             URL configurationFileURL = perfTestOptions.getPerfConfigurationFileURL();
+
+            RangerConfiguration configuration = new PerfTestConfiguration(configurationFileURL);
+            policyEngineOptions.optimizeTrieForSpace = configuration.getBoolean("ranger.policyengine.option.optimize.policy.trie.for.space", false);
+            policyEngineOptions.optimizeTagTrieForSpace = configuration.getBoolean("ranger.policyengine.option.optimize.tag.trie.for.space", false);
+            policyEngineOptions.optimizeTagTrieForRetrieval = configuration.getBoolean("ranger.policyengine.option.optimize.tag.trie.for.retrieval", false);
 
             PerfTestEngine perfTestEngine = new PerfTestEngine(servicePoliciesFileURL, policyEngineOptions, configurationFileURL);
             if (!perfTestEngine.init()) {
@@ -115,12 +123,12 @@ public class RangerPolicyenginePerfTester {
             }
 
             Runtime runtime = Runtime.getRuntime();
-            runtime.gc();
 
+            runtime.gc();
             long totalMemory = runtime.totalMemory();
             long freeMemory = runtime.freeMemory();
 
-            LOG.info("Memory stats: max-available=:" + runtime.maxMemory() + "; in-use=" + (totalMemory-freeMemory) + "; free=" + freeMemory);
+            LOG.info("Before performance-run start: Memory stats: max-available=:" + runtime.maxMemory() + "; in-use=" + (totalMemory-freeMemory) + "; free=" + freeMemory);
 
             LOG.info("Starting " + perfTestClients.size() + " clients..");
             for (PerfTestClient client : perfTestClients) {
@@ -138,14 +146,6 @@ public class RangerPolicyenginePerfTester {
                 while (client.isAlive()) {
                     try {
                         client.join(1000);
-
-                        runtime.gc();
-
-                        totalMemory = runtime.totalMemory();
-                        freeMemory = runtime.freeMemory();
-
-                        LOG.info("Memory stats: max-available=:" + runtime.maxMemory() + "; in-use=" + (totalMemory-freeMemory) + "; free=" + freeMemory);
-
                     } catch (InterruptedException interruptedException) {
                         LOG.error("PerfTestClient.join() was interrupted");
                     }
@@ -157,6 +157,14 @@ public class RangerPolicyenginePerfTester {
             }
 
             LOG.info("Completed performance-run");
+
+            runtime.gc();
+            totalMemory = runtime.totalMemory();
+            freeMemory = runtime.freeMemory();
+
+            LOG.info("After performance-run end: Memory stats: max-available=:" + runtime.maxMemory() + "; in-use=" + (totalMemory-freeMemory) + "; free=" + freeMemory);
+
+            perfTestEngine.cleanUp();
 
             PerfDataRecorder.printStatistics();
         }

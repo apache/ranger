@@ -26,8 +26,6 @@
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.RangerConstants;
@@ -40,7 +38,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
 public class VXAccessAudit extends VXDataObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -151,6 +148,9 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 	// Policy Version
 
 	protected Long policyVersion;
+
+	// Event ID
+	protected String eventId;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -604,6 +604,13 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		this.policyVersion = policyVersion;
 	}
 
+	public String getEventId() {
+		return eventId;
+	}
+
+	public void setEventId(String eventId) {
+		this.eventId = eventId;
+	}
 
 	/**
 	 * This return the bean content in string format
@@ -641,6 +648,7 @@ public class VXAccessAudit extends VXDataObject implements java.io.Serializable 
 		str += "clusterName={" + clusterName + "}";
 		str += "zoneName={" + zoneName + "}";
 		str += "agentHost={" + agentHost + "}";
+		str += "eventId={" + eventId + "}";
 		str += "}";
 		return str;
 	}

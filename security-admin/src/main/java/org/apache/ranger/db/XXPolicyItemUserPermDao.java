@@ -58,4 +58,13 @@ public class XXPolicyItemUserPermDao extends BaseDao<XXPolicyItemUserPerm> {
 			return new ArrayList<XXPolicyItemUserPerm>();
 		}
 	}
+
+	public void deleteByPolicyId(Long policyId) {
+		if(policyId == null) {
+			return;
+		}
+		getEntityManager()
+			.createNamedQuery("XXPolicyItemUserPerm.deleteByPolicyId", tClass)
+			.setParameter("policyId", policyId).executeUpdate();
+	}
 }

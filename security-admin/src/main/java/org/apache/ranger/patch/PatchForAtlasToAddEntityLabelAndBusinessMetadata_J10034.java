@@ -23,7 +23,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.ServiceDBStore;
 import org.apache.ranger.common.GUIDUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -49,12 +48,14 @@ import org.apache.ranger.plugin.model.validation.RangerValidator.Action;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public class PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034 extends BaseLoader {
-    private static final Logger logger = Logger.getLogger(PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034.class);
+    private static final Logger logger = LoggerFactory.getLogger(PatchForAtlasToAddEntityLabelAndBusinessMetadata_J10034.class);
 
     private static final String RESOURCE_DEF_ENTITY_LABEL = "all - entity-type, entity-classification, entity, entity-label";
     private static final String RESOURCE_DEF_ENTITY_BUSINESS_METADATA = "all - entity-type, entity-classification, entity, entity-business-metadata";

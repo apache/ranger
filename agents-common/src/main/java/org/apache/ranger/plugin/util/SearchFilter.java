@@ -59,6 +59,7 @@ public class SearchFilter {
     public static final String POLICY_LABEL_ID       = "policyLabelId";      // search, sort
     public static final String ZONE_ID               = "zoneId";      // search, sort
     public static final String ZONE_NAME             = "zoneName";      // search, sort
+    public static final String NOT_ZONE_NAME         = "notZoneName";   // search
 	public static final String ROLE_ID               = "roleId";      // search, sort
 	public static final String ROLE_NAME             = "roleName";      // search, sort
 	public static final String GROUP_NAME            = "groupName";      // search, sort
@@ -86,8 +87,10 @@ public class SearchFilter {
 	public static final String PLUGIN_ENTITY_TYPE        = "pluginEntityType";
 	public static final String PLUGIN_IP_ADDRESS         = "pluginIpAddress";
 	public static final String CLUSTER_NAME              = "clusterName";
-	public static final String FETCH_ZONE_UNZONE_POLICIES        = "fetchZoneAndUnzonePolicies";
+	public static final String FETCH_ZONE_UNZONE_POLICIES= "fetchZoneAndUnzonePolicies";
 	public static final String FETCH_TAG_POLICIES        = "fetchTagPolicies";
+	public static final String FETCH_ZONE_NAME			 = "zoneName";
+	public static final String FETCH_DENY_CONDITION      = "denyCondition";
 
 	public static final String SERVICE_DISPLAY_NAME			= "serviceDisplayName";			// search, sort
 	public static final String SERVICE_DISPLAY_NAME_PARTIAL	= "serviceDisplayNamePartial";	// search
@@ -101,7 +104,20 @@ public class SearchFilter {
 	private String              sortType;
 
 	public SearchFilter() {
-		this(null);
+		this((Map<String, String>) null);
+	}
+
+	public SearchFilter(SearchFilter other) {
+		if (other != null) {
+			setParams(other.params != null ? new HashMap<>(other.params) : null);
+			setStartIndex(other.startIndex);
+			setMaxRows(other.maxRows);
+			setGetCount(other.getCount);
+			setSortBy(other.sortBy);
+			setSortType(other.sortType);
+		} else {
+			setParams(null);
+		}
 	}
 
 	public SearchFilter(String name, String value) {

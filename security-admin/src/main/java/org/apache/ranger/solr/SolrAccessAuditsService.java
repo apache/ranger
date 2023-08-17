@@ -23,8 +23,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import org.apache.log4j.Logger;
 import org.apache.ranger.AccessAuditsService;
+import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.PropertiesUtil;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -39,6 +39,8 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
@@ -46,7 +48,7 @@ import org.springframework.stereotype.Service;
 @Service
 @Scope("singleton")
 public class SolrAccessAuditsService extends AccessAuditsService {
-	private static final Logger LOGGER = Logger.getLogger(SolrAccessAuditsService.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(SolrAccessAuditsService.class);
 
 	@Autowired
 	SolrMgr solrMgr;
@@ -75,6 +77,12 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		List<VXAccessAudit> xAccessAuditList = new ArrayList<VXAccessAudit>();
 
 		Map<String, Object> paramList = searchCriteria.getParamList();
+
+		Object eventIdObj = paramList.get("eventId");
+		if (eventIdObj != null) {
+			paramList.put("id", eventIdObj.toString());
+		}
+
 		updateUserExclusion(paramList);
 
 		QueryResponse response = solrUtil.searchResources(searchCriteria,
@@ -127,6 +135,7 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		if (value != null) {
 			// TODO: Converting ID to hashcode for now
 			accessAudit.setId((long) value.hashCode());
+			accessAudit.setEventId(value.toString());
 		}
 		
 		value = doc.getFieldValue("cluster");
@@ -146,7 +155,7 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 
 		value = doc.getFieldValue("policyVersion");
 		if (value != null) {
-			accessAudit.setPolicyVersion(solrUtil.toLong(value));
+			accessAudit.setPolicyVersion(MiscUtil.toLong(value));
 		}
 
 		value = doc.getFieldValue("access");
@@ -198,15 +207,15 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		//}
 		value = doc.getFieldValue("result");
 		if (value != null) {
-			accessAudit.setAccessResult(solrUtil.toInt(value));
+			accessAudit.setAccessResult(MiscUtil.toInt(value));
 		}
 		value = doc.getFieldValue("policy");
 		if (value != null) {
-			accessAudit.setPolicyId(solrUtil.toLong(value));
+			accessAudit.setPolicyId(MiscUtil.toLong(value));
 		}
 		value = doc.getFieldValue("repoType");
 		if (value != null) {
-			accessAudit.setRepoType(solrUtil.toInt(value));
+			accessAudit.setRepoType(MiscUtil.toInt(value));
 			XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById((long) accessAudit.getRepoType());
 			if (xServiceDef != null) {
 				accessAudit.setServiceType(xServiceDef.getName());
@@ -227,19 +236,19 @@ public class SolrAccessAuditsService extends AccessAuditsService {
 		}
 		value = doc.getFieldValue("evtTime");
 		if (value != null) {
-			accessAudit.setEventTime(solrUtil.toDate(value));
+			accessAudit.setEventTime(MiscUtil.toDate(value));
 		}
 		value = doc.getFieldValue("seq_num");
 		if (value != null) {
-			accessAudit.setSequenceNumber(solrUtil.toLong(value));
+			accessAudit.setSequenceNumber(MiscUtil.toLong(value));
 		}
 		value = doc.getFieldValue("event_count");
 		if (value != null) {
-			accessAudit.setEventCount(solrUtil.toLong(value));
+			accessAudit.setEventCount(MiscUtil.toLong(value));
 		}
 		value = doc.getFieldValue("event_dur_ms");
 		if (value != null) {
-			accessAudit.setEventDuration(solrUtil.toLong(value));
+			accessAudit.setEventDuration(MiscUtil.toLong(value));
 		}
 		value = doc.getFieldValue("tags");
 		if (value != null) {

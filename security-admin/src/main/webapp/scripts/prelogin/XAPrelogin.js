@@ -69,6 +69,9 @@ function doLogin() {
 			"cache-control" : "no-cache"
 		},
 		success : function() {
+			if (localStorage && localStorage['backgrid-colmgr']) {
+				delete localStorage['backgrid-colmgr'];
+			}
 			if(location.hash.length > 2)
 				window.location.replace('index.html'+location.hash);
 			else
@@ -76,7 +79,7 @@ function doLogin() {
 		},
 		error : function(jqXHR, textStatus, err ) {
 			$('#signIn').removeAttr('disabled');
-			$('#signInLoading').css("visibility", "hidden");
+			$('#signInLoading').hide();
 
 			if(jqXHR.status && jqXHR.status == 412){
 				$('#errorBox').hide();
@@ -102,7 +105,7 @@ $(function() {
   	// register handlers
 	$('#signIn').on('click', function() {
 		$('#signIn').attr('disabled',true);
-		$('#signInLoading').css("visibility", "visible");
+		$('#signInLoading').show();
 		doLogin();
 		return false;
 	});

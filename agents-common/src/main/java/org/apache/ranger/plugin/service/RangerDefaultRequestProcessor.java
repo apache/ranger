@@ -29,11 +29,17 @@ import org.apache.ranger.plugin.policyengine.RangerAccessRequestProcessor;
 import org.apache.ranger.plugin.policyengine.RangerAccessResource;
 import org.apache.ranger.plugin.policyengine.RangerMutableResource;
 import org.apache.ranger.plugin.util.RangerAccessRequestUtil;
+import org.apache.ranger.plugin.util.RangerPerfTracer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.Set;
 
 public class RangerDefaultRequestProcessor implements RangerAccessRequestProcessor {
+
+    private static final Logger PERF_CONTEXTENRICHER_REQUEST_LOG = RangerPerfTracer.getPerfLogger("contextenricher.request");
+    private static final Logger LOG = LoggerFactory.getLogger(RangerDefaultRequestProcessor.class);
 
     protected final PolicyEngine policyEngine;
 
@@ -44,9 +50,23 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
     @Override
     public void preProcess(RangerAccessRequest request) {
 
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> preProcess(" + request + ")");
+        }
+
+        if (RangerAccessRequestUtil.getIsRequestPreprocessed(request.getContext())) {
+            if (LOG.isDebugEnabled()) {
+                LOG.debug("<== preProcess(" + request + ")");
+            }
+            return;
+        }
+
         setResourceServiceDef(request);
+
+        RangerAccessRequestImpl reqImpl = null;
+
         if (request instanceof RangerAccessRequestImpl) {
-            RangerAccessRequestImpl reqImpl = (RangerAccessRequestImpl) request;
+            reqImpl = (RangerAccessRequestImpl) request;
 
             if (reqImpl.getClientIPAddress() == null) {
                 reqImpl.extractAndSetClientIPAddress(policyEngine.getUseForwardedIPAddress(), policyEngine.getTrustedProxyAddresses());
@@ -74,6 +94,10 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         Set<String> roles = request.getUserRoles();
         if (CollectionUtils.isEmpty(roles)) {
             roles = policyEngine.getPluginContext().getAuthContext().getRolesForUserAndGroups(request.getUser(), request.getUserGroups());
+
+            if (reqImpl != null && roles != null && !roles.isEmpty()) {
+                reqImpl.setUserRoles(roles);
+            }
         }
 
         if (CollectionUtils.isNotEmpty(roles)) {
@@ -81,6 +105,13 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
         }
 
         enrich(request);
+
+        RangerAccessRequestUtil.setIsRequestPreprocessed(request.getContext(), Boolean.TRUE);
+
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== preProcess(" + request + ")");
+        }
+
     }
 
     @Override
@@ -89,7 +120,19 @@ public class RangerDefaultRequestProcessor implements RangerAccessRequestProcess
 
         if (!CollectionUtils.isEmpty(enrichers)) {
             for(RangerContextEnricher enricher : enrichers) {
+                RangerPerfTracer perf = null;
+
+                if(RangerPerfTracer.isPerfTraceEnabled(PERF_CONTEXTENRICHER_REQUEST_LOG)) {
+                    perf = RangerPerfTracer.getPerfTracer(PERF_CONTEXTENRICHER_REQUEST_LOG, "RangerContextEnricher.enrich(requestHashCode=" + Integer.toHexString(System.identityHashCode(request)) + ", enricherName=" + enricher.getName() + ")");
+                }
+
                 enricher.enrich(request);
+
+                RangerPerfTracer.log(perf);
+            }
+        } else {
+            if (LOG.isDebugEnabled()){
+                LOG.debug("No context-enrichers!!!");
             }
         }
     }

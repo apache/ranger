@@ -18,11 +18,14 @@
 package org.apache.ranger.db;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.NoResultException;
 
 import org.apache.commons.collections.ListUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXPolicy;
 import org.apache.ranger.plugin.model.RangerSecurityZone;
@@ -250,5 +253,168 @@ public class XXPolicyDao extends BaseDao<XXPolicy> {
 		} catch (Exception e) {
 		}
 		return ret;
+	}
+
+	public XXPolicy findPolicy(String policyName, String serviceName, String zoneName) {
+		if (policyName == null || serviceName == null) {
+			return null;
+		}
+
+		try {
+			if (zoneName == null) {
+				return getEntityManager().createNamedQuery("XXPolicy.findPolicyByPolicyNameAndServiceName", tClass)
+						.setParameter("policyName", policyName).setParameter("serviceName", serviceName)
+						.setParameter("zoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+						.getSingleResult();
+			} else {
+				return getEntityManager()
+						.createNamedQuery("XXPolicy.findPolicyByPolicyNameAndServiceNameAndZoneName", tClass)
+						.setParameter("policyName", policyName).setParameter("serviceName", serviceName)
+						.setParameter("zoneName", zoneName).getSingleResult();
+			}
+		} catch (NoResultException e) {
+			return null;
+		}
+
+	}
+
+	public List<XXPolicy> getAllByPolicyItem() {
+		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+		try {
+			ret = getEntityManager().createNamedQuery("XXPolicy.getAllByPolicyItem", tClass)
+					.getResultList();
+		} catch (NoResultException excp) {
+		}
+		return ret;
+	}
+
+	public XXPolicy findPolicyByGUIDAndServiceNameAndZoneName(String guid, String serviceName, String zoneName) {
+		if (guid == null) {
+			return null;
+		}
+
+		try {
+			if (StringUtils.isNotBlank(serviceName)) {
+				if (StringUtils.isNotBlank(zoneName)) {
+					return getEntityManager()
+						.createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndServiceNameAndZoneName", tClass)
+						.setParameter("guid", guid)
+						.setParameter("serviceName", serviceName)
+						.setParameter("zoneName", zoneName)
+						.getSingleResult();
+				} else {
+					return getEntityManager().createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndServiceName", tClass)
+						.setParameter("guid", guid)
+						.setParameter("serviceName", serviceName)
+						.setParameter("zoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+						.getSingleResult();
+				}
+			} else {
+				if (StringUtils.isNotBlank(zoneName)) {
+					return getEntityManager()
+						.createNamedQuery("XXPolicy.findPolicyByPolicyGUIDAndZoneName", tClass)
+						.setParameter("guid", guid)
+						.setParameter("zoneName", zoneName)
+						.getSingleResult();
+				} else {
+					return getEntityManager()
+						.createNamedQuery("XXPolicy.findPolicyByPolicyGUID", tClass)
+						.setParameter("guid", guid)
+						.setParameter("zoneId", RangerSecurityZone.RANGER_UNZONED_SECURITY_ZONE_ID)
+						.getSingleResult();
+				}
+			}
+		} catch (NoResultException e) {
+			return null;
+		}
+	}
+
+	public List<XXPolicy> findByPolicyStatus(Boolean isPolicyEnabled) {
+		if (isPolicyEnabled == null) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicy.findByPolicyStatus", tClass)
+					.setParameter("isPolicyEnabled", isPolicyEnabled)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
+	}
+
+	public List<String> findDuplicateGUIDByServiceIdAndZoneId(Long serviceId, Long zoneId) {
+		List<String> ret = ListUtils.EMPTY_LIST;
+		if(serviceId == null || zoneId == null) {
+			return ret;
+		}
+		try {
+			ret = getEntityManager().createNamedQuery("XXPolicy.findDuplicateGUIDByServiceIdAndZoneId", String.class)
+					.setParameter("serviceId", serviceId)
+					.setParameter("zoneId", zoneId)
+					.getResultList();
+
+		} catch (Exception e) {
+		}
+		return ret;
+	}
+
+	public List<XXPolicy> findPolicyByGUIDAndServiceIdAndZoneId(String guid, Long serviceId, Long zoneId) {
+		List<XXPolicy> ret = ListUtils.EMPTY_LIST;
+		if (guid == null || serviceId == null ||  zoneId == null) {
+			return ret;
+		}
+		try {
+			ret = getEntityManager().createNamedQuery("XXPolicy.findPolicyByGUIDAndServiceIdAndZoneId", tClass)
+					.setParameter("guid", guid)
+					.setParameter("serviceId", serviceId)
+					.setParameter("zoneId", zoneId)
+					.getResultList();
+
+		} catch (NoResultException excp) {
+		}
+		return ret;
+	}
+
+	public Map<String, Long> findDuplicatePoliciesByServiceAndResourceSignature() {
+		Map<String, Long> policies = new HashMap<String, Long>();
+		try {
+			List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXPolicy.findDuplicatePoliciesByServiceAndResourceSignature").getResultList();
+			if (rows != null) {
+				for (Object[] row : rows) {
+					policies.put((String) row[0], (Long) row[1]);
+				}
+			}
+		} catch (NoResultException e) {
+			return null;
+		} catch (Exception ex) {
+		}
+		return policies;
+	}
+
+	public List<XXPolicy> findByServiceIdAndResourceSignature(Long serviceId, String policySignature) {
+		if (policySignature == null || serviceId == null) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager().createNamedQuery("XXPolicy.findByServiceIdAndResourceSignature", tClass)
+					.setParameter("serviceId", serviceId)
+					.setParameter("resSignature", policySignature)
+					.getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
+	}
+
+	public List<XXPolicy> findByZoneId(Long zoneId) {
+		if (zoneId == null) {
+			return new ArrayList<XXPolicy>();
+		}
+		try {
+			return getEntityManager()
+					.createNamedQuery("XXPolicy.findByZoneId", tClass)
+					.setParameter("zoneId", zoneId).getResultList();
+		} catch (NoResultException e) {
+			return new ArrayList<XXPolicy>();
+		}
 	}
 }

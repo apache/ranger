@@ -24,8 +24,8 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.kstruct.gethostname4j.Hostname;
 
 /**
@@ -34,7 +34,7 @@ import com.kstruct.gethostname4j.Hostname;
  */
 public class RangerRESTUtils {
 
-	private static final Log LOG = LogFactory.getLog(RangerRESTUtils.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerRESTUtils.class);
 
 	public static final String REST_URL_POLICY_GET_FOR_SERVICE_IF_UPDATED = "/service/plugins/policies/download/";
 	public static final String REST_URL_SERVICE_GRANT_ACCESS              = "/service/plugins/services/grant/";
@@ -73,7 +73,8 @@ public class RangerRESTUtils {
 	public static final String REST_PARAM_LAST_KNOWN_ROLE_VERSION = "lastKnownRoleVersion";
 
 	public static final String REST_PARAM_LAST_KNOWN_USERSTORE_VERSION = "lastKnownUserStoreVersion";
-	public static final String REST_URL_SERVICE_SERCURE_GET_USERSTORE = "/service/xusers/secure/download/";
+	public static final String REST_URL_SERVICE_GET_USERSTORE          = "/service/xusers/download/";
+	public static final String REST_URL_SERVICE_SERCURE_GET_USERSTORE  = "/service/xusers/secure/download/";
 
 	private static final int MAX_PLUGIN_ID_LEN = 255;
 	

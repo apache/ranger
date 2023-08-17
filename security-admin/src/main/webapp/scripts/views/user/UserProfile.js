@@ -120,6 +120,7 @@ define(function(require){
 			if(! _.isEmpty(errors)){
 				return;
 			}
+			XAUtil.blockUI();
 			this.form.afterCommit();
 			if(this.showBasicFields){
 				this.saveUserDetail();
@@ -131,12 +132,14 @@ define(function(require){
 			this.model.saveUserProfile(this.model,{
 				wait: true,
 				success: function () {
+					XAUtil.blockUI('unblock');
 					XAUtil.notifySuccess('Success', "User profile updated successfully !!");
 					SessionMgr.updateUserProfile();
 					App.appRouter.navigate("#!/policymanager/resource",{trigger: true});
 					Communicator.vent.trigger('ProfileBar:rerender');
 				},
 				error: function (model, response, options) {
+					XAUtil.blockUI('unblock');
 					if(model.responseJSON != undefined && _.isArray(model.responseJSON.messageList)){
 						if(model.responseJSON.messageList[0].name == "INVALID_INPUT_DATA"){
 							if (model.responseJSON.msgDesc == "Validation failure"){
@@ -173,11 +176,13 @@ define(function(require){
 			this.model.changePassword(this.model.get('id'),vPasswordChange,{
 				wait: true,
 				success: function () {
+					XAUtil.blockUI('unblock');
 					XAUtil.notifySuccess('Success', "User profile updated successfully !!");
 					App.appRouter.navigate("#!/policymanager/resource",{trigger: true});
 					that.clearPasswordFields();
 				},
 				error: function (msResponse, options) {
+					XAUtil.blockUI('unblock');
 					XAUtil.notifyError('Error', 'Error occured while updating user profile');
 					if(localization.tt(msResponse.responseJSON.msgDesc) == "Invalid new password"){
 						that.form.fields.newPassword.setError(localization.tt('validationMessages.newPasswordError'));

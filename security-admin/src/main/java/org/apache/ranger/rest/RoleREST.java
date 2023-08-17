@@ -19,6 +19,8 @@
 
 package org.apache.ranger.rest;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -30,17 +32,18 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.*;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.MediaType;
 
-import org.apache.commons.codec.binary.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.io.IOUtils;
 import org.apache.ranger.admin.client.datatype.RESTResponse;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
 import org.apache.ranger.biz.RoleDBStore;
 import org.apache.ranger.biz.ServiceDBStore;
+import org.apache.ranger.biz.ServiceDBStore.JSON_FILE_NAME_TYPE;
 import org.apache.ranger.biz.XUserMgr;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerSearchUtil;
@@ -48,10 +51,13 @@ import org.apache.ranger.common.RangerValidatorFactory;
 import org.apache.ranger.common.ServiceUtil;
 import org.apache.ranger.common.UserSessionBase;
 import org.apache.ranger.common.PropertiesUtil;
+import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.ContextUtil;
+import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
+import org.apache.ranger.entity.XXTrxLog;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
 import org.apache.ranger.plugin.model.RangerRole;
 import org.apache.ranger.plugin.model.RangerService;
@@ -60,28 +66,40 @@ import org.apache.ranger.plugin.model.validation.RangerValidator;
 import org.apache.ranger.plugin.policyengine.RangerPolicyEngine;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.GrantRevokeRoleRequest;
+import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
 import org.apache.ranger.plugin.util.RangerRoles;
 import org.apache.ranger.plugin.util.SearchFilter;
+import org.apache.ranger.security.context.RangerContextHolder;
 import org.apache.ranger.service.RangerRoleService;
 import org.apache.ranger.service.XUserService;
+import org.apache.ranger.view.RangerExportRoleList;
 import org.apache.ranger.view.RangerRoleList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import com.google.gson.JsonSyntaxException;
+import com.sun.jersey.multipart.FormDataParam;
+import com.sun.jersey.core.header.FormDataContentDisposition;
 
 @Path("roles")
 @Component
 @Scope("request")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class RoleREST {
-    private static final Log LOG = LogFactory.getLog(RoleREST.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RoleREST.class);
 
     private static List<String> INVALID_USERS = new ArrayList<>();
 
     public static final String POLICY_DOWNLOAD_USERS = "policy.download.auth.users";
+    public static final String PARAM_ROLE_NAME = "roleName";
+    public static final String PARAM_IMPORT_IN_PROGRESS = "importInProgress";
 
     @Autowired
     RESTErrorUtil restErrorUtil;
@@ -132,6 +150,8 @@ public class RoleREST {
 
     @POST
     @Path("/roles")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     public RangerRole createRole(@QueryParam("serviceName") String serviceName,  RangerRole role
            , @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
            ) {
@@ -169,6 +189,8 @@ public class RoleREST {
 
     @PUT
     @Path("/roles/{id}")
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     public RangerRole updateRole(@PathParam("id") Long roleId
                                 , RangerRole role
                                 , @DefaultValue("false") @QueryParam("createNonExistUserGroup") Boolean createNonExistUserGroup
@@ -184,10 +206,19 @@ public class RoleREST {
         }
         RangerRole ret;
         try {
+            UserSessionBase usb          = ContextUtil.getCurrentUserSession();
+            String          loggedInUser = usb != null ? usb.getLoginId() : null;
+            RangerRole      existingRole = getRole(roleId);
+
+            if (!bizUtil.isUserRangerAdmin(loggedInUser) && !ensureRoleAccess(loggedInUser, userMgr.getGroupsForUser(loggedInUser), existingRole)) {
+                LOG.error("User " + loggedInUser + " does not have permission for this operation");
+
+                throw new Exception("User does not have permission for this operation");
+            }
+
             RangerRoleValidator validator = validatorFactory.getRangerRoleValidator(roleStore);
             validator.validate(role, RangerValidator.Action.UPDATE);
 
-            ensureAdminAccess(null, null);
             if (containsInvalidMember(role.getUsers())) {
                 throw new Exception("Invalid role user(s)");
             }
@@ -256,7 +287,10 @@ public class RoleREST {
         } catch(Throwable excp) {
             LOG.error("deleteRole(" + roleId + ") failed", excp);
 
-            throw restErrorUtil.createRESTException(excp.getMessage());
+            throw restErrorUtil.createRESTException(
+					"Data Not Found for given Id",
+					MessageEnums.DATA_NOT_FOUND, roleId, null,
+					"readResource : No Object found with given id.");
         }
         if (LOG.isDebugEnabled()) {
             LOG.debug("<== deleteRole(id=" + roleId + ")");
@@ -270,13 +304,17 @@ public class RoleREST {
 
     @GET
     @Path("/roles/name/{name}")
+    @Produces({ "application/json" })
     public RangerRole getRole(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String execUser, @PathParam("name") String roleName) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> getRole(name=" + roleName + ")");
+            LOG.debug("==> getRole(name=" + roleName + ", execUser=" + execUser + ")");
         }
         RangerRole ret;
+
         try {
-            ret = getRoleIfAccessible(roleName, serviceName, execUser, userMgr.getGroupsForUser(execUser));
+            Set<String> userGroups = StringUtils.isNotEmpty(execUser) ? userMgr.getGroupsForUser(execUser) : new HashSet<>();
+
+            ret = getRoleIfAccessible(roleName, serviceName, execUser, userGroups);
             if (ret == null) {
                 throw restErrorUtil.createRESTException("User doesn't have permissions to get details for " + roleName);
             }
@@ -284,18 +322,18 @@ public class RoleREST {
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
-            LOG.error("getRole(" + roleName + ") failed", excp);
-
+            LOG.error("getRole(name=" + roleName + ", execUser=" + execUser + ") failed", excp);
             throw restErrorUtil.createRESTException(excp.getMessage());
         }
         if (LOG.isDebugEnabled()) {
-            LOG.debug("<== getRole(name=" + roleName + "):" + ret);
+            LOG.debug("<== getRole(name=" + roleName + ", execUser=" + execUser + "):" + ret);
         }
         return ret;
     }
 
     @GET
     @Path("/roles/{id}")
+    @Produces({ "application/json" })
     public RangerRole getRole(@PathParam("id") Long id) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getRole(id=" + id + ")");
@@ -316,7 +354,7 @@ public class RoleREST {
         return ret;
     }
 
-    /* This operation is allowed only when effective User has ranger admin privilege
+    /* This operation is allowed only when effective User has ranger admin or auditor privilege
      * if execUser is not same as logged-in user then effective user is execUser
      * else  effective user is logged-in user.
      * This logic is implemented as part of ensureAdminAccess(String serviceName, String userName);
@@ -324,6 +362,7 @@ public class RoleREST {
 
     @GET
     @Path("/roles")
+    @Produces({ "application/json" })
     public RangerRoleList getAllRoles(@Context HttpServletRequest request) {
         RangerRoleList ret = new RangerRoleList();
         if (LOG.isDebugEnabled()) {
@@ -331,8 +370,239 @@ public class RoleREST {
         }
         SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
         try {
-            ensureAdminAccess(null, null);
             roleStore.getRoles(filter,ret);
+        } catch(WebApplicationException excp) {
+            throw excp;
+        } catch(Throwable excp) {
+            LOG.error("getRoles() failed", excp);
+
+            throw restErrorUtil.createRESTException(excp.getMessage());
+        }
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("<== getAllRoles():" + ret);
+        }
+        return ret;
+    }
+
+	@GET
+	@Path("/roles/exportJson")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAdminRole()")
+	public void getRolesInJson(@Context HttpServletRequest request, @Context HttpServletResponse response) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> getRolesInJson()");
+		}
+		try {
+			List<RangerRole> roleLists = getAllFilteredRoleList(request);
+
+			if (CollectionUtils.isNotEmpty(roleLists)) {
+				svcStore.getObjectInJson(roleLists, response, JSON_FILE_NAME_TYPE.ROLE);
+			} else {
+				response.setStatus(HttpServletResponse.SC_NO_CONTENT);
+				LOG.error("There is no Role to Export!!");
+			}
+
+		} catch (WebApplicationException excp) {
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("Error while exporting policy file!!", excp);
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== getRolesInJson()");
+		}
+	}
+
+	@POST
+	@Path("/roles/importRolesFromFile")
+	@Consumes({ MediaType.MULTIPART_FORM_DATA, MediaType.APPLICATION_JSON })
+	@Produces({ "application/json", "application/xml" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAdminRole()")
+	public RESTResponse importRolesFromFile(@Context HttpServletRequest request,
+			@FormDataParam("file") InputStream uploadedInputStream,
+			@FormDataParam("file") FormDataContentDisposition fileDetail,
+			@QueryParam("updateIfExists") Boolean updateIfExists,
+			@DefaultValue("false") @QueryParam("createNonExistUserGroupRole") Boolean createNonExistUserGroupRole) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> RoleREST.importRolesFromFile()");
+		}
+		RESTResponse ret = new RESTResponse();
+
+		RangerContextHolder.getOrCreateOpContext().setBulkModeContext(true);
+
+		String metaDataInfo = null;
+		List<XXTrxLog> trxLogListError = new ArrayList<XXTrxLog>();
+		XXTrxLog xxTrxLogError = new XXTrxLog();
+		request.setAttribute(PARAM_IMPORT_IN_PROGRESS, true);
+
+		try {
+			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
+			XXTrxLog xxTrxLog = new XXTrxLog();
+			xxTrxLog.setAction("IMPORT START");
+			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
+			xxTrxLog.setPreviousValue("IMPORT START");
+			trxLogList.add(xxTrxLog);
+			bizUtil.createTrxLog(trxLogList);
+
+			if (updateIfExists == null) {
+				updateIfExists = false;
+			}
+			List<String> roleNameList = new ArrayList<String>();
+
+			roleNameList = getRoleNameList(request, roleNameList);
+
+			String fileName = fileDetail.getFileName();
+			int totalRoleCreate = 0;
+			int totalRoleUpdate = 0;
+			int totalRoleUnchange = 0;
+			String msg;
+
+			if (fileName.endsWith("json")) {
+				try {
+					RangerExportRoleList rangerExportRoleList = null;
+					List<RangerRole> roles = null;
+					rangerExportRoleList = processRoleInputJsonForMetaData(uploadedInputStream, rangerExportRoleList);
+
+					if (rangerExportRoleList != null
+							&& !CollectionUtils.sizeIsEmpty(rangerExportRoleList.getMetaDataInfo())) {
+						metaDataInfo = JsonUtilsV2.mapToJson(rangerExportRoleList.getMetaDataInfo());
+					} else {
+						LOG.info("metadata info is not provided!!");
+					}
+					roles = getRolesFromProvidedJson(rangerExportRoleList);
+
+					if (roles != null && !CollectionUtils.sizeIsEmpty(roles)) {
+						for (RangerRole roleInJson : roles) {
+
+							if (roleInJson != null && StringUtils.isNotEmpty(roleInJson.getName().trim())) {
+								String roleNameInJson = roleInJson.getName().trim();
+								if (CollectionUtils.isNotEmpty(roleNameList) && roleNameList.contains(roleNameInJson)) {
+
+									// check updateIfExists
+									if (updateIfExists) {
+										try {
+											RangerRole exitingRole = roleStore.getRole(roleNameInJson);
+											if (!exitingRole.getId().equals(roleInJson.getId())) {
+												roleInJson.setId(exitingRole.getId());
+											}
+											if(exitingRole.equals(roleInJson)){
+												totalRoleUnchange++;
+												if (LOG.isDebugEnabled()) {
+													LOG.debug("Ignoring Roles from provided role in Json file... "+ roleNameInJson);
+												}
+											}
+											else {
+												roleStore.updateRole(roleInJson, createNonExistUserGroupRole);
+												totalRoleUpdate++;
+											}
+										} catch (WebApplicationException excp) {
+											throw excp;
+										} catch (Throwable excp) {
+											LOG.error("updateRole(" + roleInJson + ") failed", excp);
+
+											throw restErrorUtil.createRESTException(excp.getMessage());
+										}
+									} else {
+										totalRoleUnchange++;
+										if (LOG.isDebugEnabled()) {
+											LOG.debug("Ignoring Roles from provided role in Json file... " + roleNameInJson);
+										}
+									}
+									ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+								} else if (!roleNameList.contains(roleNameInJson) && (!roleNameInJson.isEmpty())) {
+									try {
+										roleStore.createRole(roleInJson, createNonExistUserGroupRole);
+									} catch (WebApplicationException excp) {
+										throw excp;
+									} catch (Throwable excp) {
+										LOG.error("createRole(" + roleInJson + ") failed", excp);
+
+										throw restErrorUtil.createRESTException(excp.getMessage());
+									}
+									totalRoleCreate++;
+									ret.setStatusCode(RESTResponse.STATUS_SUCCESS);
+								}
+							}
+						}
+					} else {
+						LOG.error("Json File does not contain any role.");
+						throw restErrorUtil.createRESTException("Json File does not contain any role.");
+					}
+					if (updateIfExists) {
+						msg = "Total Role Created = " + totalRoleCreate + " , Total Role Updated = " + totalRoleUpdate + " , Total Role Unchanged = " + totalRoleUnchange;
+						ret.setMsgDesc(msg);
+					} else {
+						msg = "Total Role Created = " + totalRoleCreate + " , Total Role Unchanged = " + totalRoleUnchange;
+						ret.setMsgDesc(msg);
+					}
+
+				} catch (IOException e) {
+					LOG.error(e.getMessage());
+					throw restErrorUtil.createRESTException(e.getMessage());
+				}
+			} else {
+				LOG.error("Provided file format is not supported!!");
+				throw restErrorUtil.createRESTException("Provided file format is not supported!!");
+			}
+		} catch (JsonSyntaxException ex) {
+			LOG.error("Provided json file is not valid!!", ex);
+			xxTrxLogError.setAction("IMPORT ERROR");
+			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
+			if (StringUtils.isNotEmpty(metaDataInfo)) {
+				xxTrxLogError.setPreviousValue(metaDataInfo);
+			}
+			trxLogListError.add(xxTrxLogError);
+			bizUtil.createTrxLog(trxLogListError);
+			throw restErrorUtil.createRESTException(ex.getMessage());
+		} catch (WebApplicationException excp) {
+			LOG.error("Error while importing role from file!!", excp);
+			xxTrxLogError.setAction("IMPORT ERROR");
+			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
+			if (StringUtils.isNotEmpty(metaDataInfo)) {
+				xxTrxLogError.setPreviousValue(metaDataInfo);
+			}
+			trxLogListError.add(xxTrxLogError);
+			bizUtil.createTrxLog(trxLogListError);
+			throw excp;
+		} catch (Throwable excp) {
+			LOG.error("Error while importing role from file!!", excp);
+			xxTrxLogError.setAction("IMPORT ERROR");
+			xxTrxLogError.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
+			if (StringUtils.isNotEmpty(metaDataInfo)) {
+				xxTrxLogError.setPreviousValue(metaDataInfo);
+			}
+			trxLogListError.add(xxTrxLogError);
+			bizUtil.createTrxLog(trxLogListError);
+			throw restErrorUtil.createRESTException(excp.getMessage());
+		} finally {
+			List<XXTrxLog> trxLogListEnd = new ArrayList<XXTrxLog>();
+			XXTrxLog xxTrxLogEnd = new XXTrxLog();
+			xxTrxLogEnd.setAction("IMPORT END");
+			xxTrxLogEnd.setObjectClassType(AppConstants.CLASS_TYPE_RANGER_ROLE);
+			if (StringUtils.isNotEmpty(metaDataInfo)) {
+				xxTrxLogEnd.setPreviousValue(metaDataInfo);
+			}
+			trxLogListEnd.add(xxTrxLogEnd);
+			bizUtil.createTrxLog(trxLogListEnd);
+			if (LOG.isDebugEnabled()) {
+				LOG.debug("<== RoleREST.importRolesFromFile()");
+			}
+		}
+
+		return ret;
+	}
+
+    @GET
+    @Path("/lookup/roles")
+    @Produces({ "application/json" })
+    public RangerRoleList getAllRolesForUser(@Context HttpServletRequest request) {
+        RangerRoleList ret = new RangerRoleList();
+        if (LOG.isDebugEnabled()) {
+            LOG.debug("==> getAllRolesForUser()");
+        }
+        SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
+        try {
+            roleStore.getRolesForUser(filter,ret);
         } catch(WebApplicationException excp) {
             throw excp;
         } catch(Throwable excp) {
@@ -354,6 +624,7 @@ public class RoleREST {
 
     @GET
     @Path("/roles/names")
+    @Produces({ "application/json" })
     public List<String> getAllRoleNames(@QueryParam("serviceName") String serviceName, @QueryParam("execUser") String userName, @Context HttpServletRequest request) {
         final List<String> ret;
         if (LOG.isDebugEnabled()) {
@@ -382,7 +653,9 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/addUsersAndGroups")
-    public RangerRole addUsersAndGroups(Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole addUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups, Boolean isAdmin) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> addUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ", isAdmin=" + isAdmin + ")");
         }
@@ -447,7 +720,9 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/removeUsersAndGroups")
-    public RangerRole removeUsersAndGroups(Long roleId, List<String> users, List<String> groups) {
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole removeUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> removeUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
         }
@@ -500,7 +775,9 @@ public class RoleREST {
      */
     @PUT
     @Path("/roles/{id}/removeAdminFromUsersAndGroups")
-    public RangerRole removeAdminFromUsersAndGroups(Long roleId, List<String> users, List<String> groups) {
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
+    public RangerRole removeAdminFromUsersAndGroups(@PathParam("id") Long roleId, List<String> users, List<String> groups) {
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> removeAdminFromUsersAndGroups(id=" + roleId + ", users=" + Arrays.toString(users.toArray()) + ", groups=" + Arrays.toString(groups.toArray()) + ")");
         }
@@ -548,8 +825,8 @@ public class RoleREST {
      */
 
     @PUT
-    @Consumes({ "application/json", "application/xml" })
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     @Path("/roles/grant/{serviceName}")
     public RESTResponse grantRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest grantRoleRequest, @Context HttpServletRequest request) {
         if(LOG.isDebugEnabled()) {
@@ -603,8 +880,8 @@ public class RoleREST {
 
     @PUT
     @Path("/roles/revoke/{serviceName}")
-    @Consumes({ "application/json", "application/xml" })
-    @Produces({ "application/json", "application/xml" })
+    @Consumes({ "application/json" })
+    @Produces({ "application/json" })
     public RESTResponse revokeRole(@PathParam("serviceName") String serviceName, GrantRevokeRoleRequest revokeRoleRequest, @Context HttpServletRequest request) {
 
         if(LOG.isDebugEnabled()) {
@@ -660,13 +937,16 @@ public class RoleREST {
 
     @GET
     @Path("/roles/user/{user}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public List<String> getUserRoles(@PathParam("user") String userName, @Context HttpServletRequest request) {
         Set<String> ret = new HashSet<>();
         if (LOG.isDebugEnabled()) {
             LOG.debug("==> getUserRoles()");
         }
         try {
+            if (xUserService.getXUserByUserName(userName) == null) {
+                throw restErrorUtil.createRESTException(HttpServletResponse.SC_NOT_FOUND, "User:" + userName + " not found", false);
+            }
             Set<RangerRole> roleList = roleStore.getRoleNames(userName, userMgr.getGroupsForUser(userName));
             for (RangerRole role : roleList) {
                 ret.add(role.getName());
@@ -689,10 +969,10 @@ public class RoleREST {
 
     @GET
     @Path("/download/{serviceName}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public RangerRoles getRangerRolesIfUpdated(
             @PathParam("serviceName") String serviceName,
-            @QueryParam("lastKnownRoleVersion") Long lastKnownRoleVersion,
+            @DefaultValue("-1") @QueryParam("lastKnownRoleVersion") Long lastKnownRoleVersion,
             @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
             @QueryParam("pluginId") String pluginId,
             @DefaultValue("") @QueryParam("clusterName") String clusterName,
@@ -710,7 +990,7 @@ public class RoleREST {
         String  logMsg            = null;
 
         try {
-            bizUtil.failUnauthenticatedIfNotAllowed();
+            bizUtil.failUnauthenticatedDownloadIfNotAllowed();
             isValid = serviceUtil.isValidService(serviceName, request);
         } catch (WebApplicationException webException) {
             httpCode = webException.getResponse().getStatus();
@@ -720,9 +1000,6 @@ public class RoleREST {
             logMsg = e.getMessage();
         }
         if (isValid) {
-            if (lastKnownRoleVersion == null) {
-                lastKnownRoleVersion = Long.valueOf(-1);
-            }
             try {
                 RangerRoles roles = roleStore.getRoles(serviceName, lastKnownRoleVersion);
                 if (roles == null) {
@@ -759,10 +1036,10 @@ public class RoleREST {
 
     @GET
     @Path("/secure/download/{serviceName}")
-    @Produces({ "application/json", "application/xml" })
+    @Produces({ "application/json" })
     public RangerRoles getSecureRangerRolesIfUpdated(
             @PathParam("serviceName") String serviceName,
-            @QueryParam("lastKnownRoleVersion") Long lastKnownRoleVersion,
+            @DefaultValue("-1") @QueryParam("lastKnownRoleVersion") Long lastKnownRoleVersion,
             @DefaultValue("0") @QueryParam("lastActivationTime") Long lastActivationTime,
             @QueryParam("pluginId") String pluginId,
             @DefaultValue("") @QueryParam("clusterName") String clusterName,
@@ -793,9 +1070,6 @@ public class RoleREST {
             logMsg = e.getMessage();
         }
         if (isValid) {
-            if (lastKnownRoleVersion == null) {
-                lastKnownRoleVersion = Long.valueOf(-1);
-            }
             try {
                 XXService xService = daoManager.getXXService().findByName(serviceName);
                 if (xService == null) {
@@ -806,7 +1080,7 @@ public class RoleREST {
                 XXServiceDef xServiceDef = daoManager.getXXServiceDef().getById(xService.getType());
                 RangerService rangerService = svcStore.getServiceByName(serviceName);
 
-                if (org.apache.commons.lang.StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
+                if (StringUtils.equals(xServiceDef.getImplclassname(), EmbeddedServiceDefsUtil.KMS_IMPL_CLASS_NAME)) {
                     if (isKeyAdmin) {
                         isAllowed = true;
                     }else {
@@ -835,7 +1109,7 @@ public class RoleREST {
                     }
                 } else {
                     LOG.error("getSecureRangerRolesIfUpdated(" + serviceName + ", " + lastKnownRoleVersion + ") failed as User doesn't have permission to UserGroupRoles");
-                    httpCode = HttpServletResponse.SC_UNAUTHORIZED;
+                    httpCode = HttpServletResponse.SC_FORBIDDEN; // assert user is authenticated.
                     logMsg = "User doesn't have permission to download UserGroupRoles";
                 }
 
@@ -881,7 +1155,7 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
 
-        if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
+        if (!bizUtil.isUserRangerAdmin(effectiveUser) && !svcStore.isServiceAdminUser(serviceName, effectiveUser)) {
             throw new Exception("User " + effectiveUser + " does not have permission for this operation");
         }
     }
@@ -909,7 +1183,7 @@ public class RoleREST {
             effectiveUser = loggedInUser;
         }
         try {
-            if (!bizUtil.isUserRangerAdmin(effectiveUser)) {
+            if (!bizUtil.isUserRangerAdmin(effectiveUser) && !svcStore.isServiceAdminUser(serviceName, effectiveUser)) {
                 existingRole = roleStore.getRole(roleName);
                 ensureRoleAccess(effectiveUser, userGroups, existingRole);
 
@@ -1051,14 +1325,13 @@ public class RoleREST {
             Set<RangerRole.RoleMember> roleGroups = new HashSet<>();
             Set<RangerRole.RoleMember> roleRoles = new HashSet<>();
 
-            for (RangerRole.RoleMember user : role.getUsers()) {
-                if (users.contains(user.getName()) && isAdmin == Boolean.TRUE) {
-                    user.setIsAdmin(isAdmin);
-                    roleUsers.add(user);
-                } else if (!users.contains(user.getName())) {
-                    roleUsers.add(user);
-                }
-            }
+			for (RangerRole.RoleMember user : role.getUsers()) {
+				String userName = user.getName();
+				if (users.contains(userName)) {
+					user.setIsAdmin(isAdmin);
+				}
+				roleUsers.add(user);
+			}
 
             Set<String> existingUsernames = getUserNames(role);
             for (String user : users) {
@@ -1067,14 +1340,13 @@ public class RoleREST {
                 }
             }
 
-            for (RangerRole.RoleMember group : role.getGroups()) {
-                if (groups.contains(group.getName()) && isAdmin == Boolean.TRUE) {
-                    group.setIsAdmin(isAdmin);
-                    roleGroups.add(group);
-                } else if (!groups.contains(group.getName())) {
-                    roleGroups.add(group);
-                }
-            }
+			for (RangerRole.RoleMember group : role.getGroups()) {
+				String groupName = group.getName();
+				if (groups.contains(groupName)) {
+					group.setIsAdmin(isAdmin);
+				}
+				roleGroups.add(group);
+			}
 
             Set<String> existingGroupnames = getGroupNames(role);
             for (String group : groups) {
@@ -1083,14 +1355,14 @@ public class RoleREST {
                 }
             }
 
-            for (RangerRole.RoleMember roleMember : role.getRoles()) {
-                if (roles.contains(roleMember.getName()) && isAdmin == Boolean.TRUE) {
-                    roleMember.setIsAdmin(isAdmin);
-                    roleRoles.add(roleMember);
-                } else if (!roles.contains(roleMember.getName())) {
-                    roleRoles.add(roleMember);
-                }
-            }
+			for (RangerRole.RoleMember roleMember : role.getRoles()) {
+				String roleName = roleMember.getName();
+				if (roles.contains(roleName)) {
+					roleMember.setIsAdmin(isAdmin);
+				}
+				roleRoles.add(roleMember);
+			}
+
             Set<String> existingRolenames = getRoleNames(role);
             for (String newRole : roles) {
                 if (!existingRolenames.contains(newRole)) {
@@ -1280,4 +1552,83 @@ public class RoleREST {
             request.setRoles(new HashSet<>());
         }
     }
+
+	protected List<RangerRole> getAllFilteredRoleList(HttpServletRequest request) throws Exception {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> getAllFilteredRoleList()");
+		}
+		String roleNames = null;
+		List<String> roleNameList = null;
+		List<RangerRole> roleLists = new ArrayList<>();
+
+		if (request.getParameter(PARAM_ROLE_NAME) != null) {
+			roleNames = request.getParameter(PARAM_ROLE_NAME);
+		}
+		if (StringUtils.isNotEmpty(roleNames)) {
+			roleNameList = new ArrayList<String>(Arrays.asList(roleNames.split(",")));
+		}
+
+		List<RangerRole> rangerRoleList = new ArrayList<RangerRole>();
+		SearchFilter filter = new SearchFilter();
+
+		rangerRoleList = roleStore.getRoles(filter);
+
+		if (!CollectionUtils.isEmpty(rangerRoleList)) {
+			for (RangerRole role : rangerRoleList) {
+				if (role != null) {
+					if (CollectionUtils.isNotEmpty(roleNameList)) {
+						if (roleNameList.contains(role.getName())) {
+							// set createTime & updateTime Time as null since exported Roles don't need this
+							role.setCreateTime(null);
+							role.setUpdateTime(null);
+							roleLists.add(role);
+							roleNameList.remove(role.getName());
+							if (roleNameList.size() == 0) {
+								break;
+							}
+						}
+					} else {
+						// set createTime & updateTime Time as null since exported Roles don't need this
+						role.setCreateTime(null);
+						role.setUpdateTime(null);
+						roleLists.add(role);
+					}
+				}
+			}
+		}
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== getAllFilteredRoleList()" + roleLists.size());
+		}
+		return roleLists;
+	}
+
+	private List<String> getRoleNameList(HttpServletRequest request, List<String> roleNameList) throws Exception {
+		SearchFilter filter = searchUtil.getSearchFilter(request, roleService.sortFields);
+		roleNameList = roleStore.getRoleNames(filter);
+		return roleNameList;
+	}
+
+	private RangerExportRoleList processRoleInputJsonForMetaData(InputStream uploadedInputStream,
+			RangerExportRoleList rangerExportRoleList) throws Exception {
+		String rolesString = IOUtils.toString(uploadedInputStream);
+		rolesString = rolesString.trim();
+		if (StringUtils.isNotEmpty(rolesString)) {
+			rangerExportRoleList = JsonUtilsV2.jsonToObj(rolesString, RangerExportRoleList.class);
+		} else {
+			LOG.error("Provided json file is empty!!");
+			throw restErrorUtil.createRESTException("Provided json file is empty!!");
+		}
+		return rangerExportRoleList;
+	}
+
+	private List<RangerRole> getRolesFromProvidedJson(RangerExportRoleList rangerExportRoleList) {
+		List<RangerRole> roles = null;
+		if (rangerExportRoleList != null && !CollectionUtils.sizeIsEmpty(rangerExportRoleList.getSecurityRoles())) {
+			roles = rangerExportRoleList.getSecurityRoles();
+		} else {
+			LOG.error("Provided json file does not contain any role!!");
+			throw restErrorUtil.createRESTException("Provided json file does not contain any role!!");
+		}
+		return roles;
+	}
 }

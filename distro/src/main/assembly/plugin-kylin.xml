@@ -19,7 +19,6 @@
   <id>kylin-plugin</id>
   <formats>
     <format>tar.gz</format>
-    <format>zip</format>
   </formats>
   <baseDirectory>${project.parent.name}-${project.version}-kylin-plugin</baseDirectory>
   <includeBaseDirectory>true</includeBaseDirectory>
@@ -58,13 +57,12 @@
             <outputDirectory>lib/ranger-kylin-plugin-impl</outputDirectory>
             <unpack>false</unpack>
             <includes>
-              <include>org.eclipse.persistence:eclipselink</include>
-              <include>org.eclipse.persistence:javax.persistence</include>
+              <include>org.eclipse.jetty:jetty-client:jar:${jetty-client.version}</include>
               <include>org.apache.httpcomponents:httpmime:jar:${httpcomponents.httpmime.version}</include>
               <include>org.apache.httpcomponents:httpclient:jar:${httpcomponents.httpclient.version}</include>
               <include>org.apache.httpcomponents:httpcore:jar:${httpcomponents.httpcore.version}</include>
               <include>org.noggit:noggit:jar:${noggit.version}</include>
-              <include>org.apache.solr:solr-solrj</include>
+              <include>org.apache.solr:solr-solrj:jar:${solr.version}</include>
               <include>com.kstruct:gethostname4j:jar:${kstruct.gethostname4j.version}</include>
               <include>net.java.dev.jna:jna:jar:${jna.version}</include>
               <include>net.java.dev.jna:jna-platform:jar:${jna-platform.version}</include>

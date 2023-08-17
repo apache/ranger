@@ -21,11 +21,8 @@
 
 import java.io.Serializable;
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.AppConstants;
 
-@XmlRootElement
 public class VTrxLogAttr extends ViewBaseBean implements Serializable{
 	private static final long serialVersionUID = 1L;
 	

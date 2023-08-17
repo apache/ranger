@@ -71,7 +71,7 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 				"XXGroup xGrp , XXPolicyRefGroup refGroup", "obj.id = refGroup.policyId "
 						+ "and xGrp.id = refGroup.groupId"));
 		searchFields.add(new SearchField(SearchFilter.ROLE, "xRole.name", DATA_TYPE.STRING, SEARCH_TYPE.FULL,
-				"XXRole xRole , XXPolicyRefRole refRole", "obj.id = reRole.policyId "
+				"XXRole xRole , XXPolicyRefRole refRole", "obj.id = refRole.policyId "
 				+ "and xRole.id = refRole.roleId"));
 		//might need updation
 		/*searchFields.add(new SearchField(SearchFilter.POL_RESOURCE, "resMap.value", DATA_TYPE.STRING,
@@ -96,20 +96,39 @@ public abstract class RangerPolicyServiceBase<T extends XXPolicyBase, V extends 
 
 	@Override
 	protected T mapViewToEntityBean(V vObj, T xObj, int OPERATION_CONTEXT) {
-		String guid = (StringUtils.isEmpty(vObj.getGuid())) ? guidUtil.genGUID() : vObj.getGuid();
-
-		xObj.setGuid(guid);
-		xObj.setVersion(vObj.getVersion());
-
 		XXService xService = daoMgr.getXXService().findByName(vObj.getService());
 		if (xService == null) {
 			throw restErrorUtil.createRESTException("No corresponding service found for policyName: " + vObj.getName()
 					+ "Service Not Found : " + vObj.getService(), MessageEnums.INVALID_INPUT_DATA);
 		}
+
+		XXServiceDef xServiceDef = daoMgr.getXXServiceDef().getById(xService.getType());
+		if (xServiceDef != null) {
+			vObj.setServiceType(xServiceDef.getName());
+		}
+
+		String guid = vObj.getGuid();
+		if (StringUtils.isEmpty(guid)) {
+			guid = guidUtil.genGUID();
+			vObj.setGuid(guid);
+		}
+		Integer policyPriority = vObj.getPolicyPriority();
+		if (policyPriority == null) {
+			policyPriority = RangerPolicy.POLICY_PRIORITY_NORMAL;
+			vObj.setPolicyPriority(policyPriority);
+		}
+		Integer policyType = vObj.getPolicyType();
+		if (policyType == null) {
+			policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+			vObj.setPolicyType(policyType);
+		}
+
+		xObj.setGuid(guid);
+		xObj.setVersion(vObj.getVersion());
 		xObj.setService(xService.getId());
 		xObj.setName(StringUtils.trim(vObj.getName()));
-		xObj.setPolicyType(vObj.getPolicyType() == null ? RangerPolicy.POLICY_TYPE_ACCESS : vObj.getPolicyType());
-		xObj.setPolicyPriority(vObj.getPolicyPriority() == null ? RangerPolicy.POLICY_PRIORITY_NORMAL : vObj.getPolicyPriority());
+		xObj.setPolicyType(policyType);
+		xObj.setPolicyPriority(policyPriority);
 		xObj.setDescription(vObj.getDescription());
 		xObj.setResourceSignature(vObj.getResourceSignature());
 		xObj.setIsAuditEnabled(vObj.getIsAuditEnabled());

@@ -31,10 +31,8 @@ import javax.persistence.Column;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
-import javax.xml.bind.annotation.XmlRootElement;
 
 @MappedSuperclass
-@XmlRootElement
 public abstract class XXDBBase implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 	public static final int CLASS_TYPE_NONE = 0;

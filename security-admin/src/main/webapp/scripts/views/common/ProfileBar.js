@@ -26,6 +26,7 @@ define(function(require){
 	var Communicator	= require('communicator');
 	var SessionMgr 		= require('mgrs/SessionMgr');
 	var vError 			= require('views/common/ErrorView');
+	var XAUtil			= require('utils/XAUtils');
 	
 	var ProfileBar_tmpl = require('hbs!tmpl/common/ProfileBar_tmpl'); 
 	
@@ -36,9 +37,14 @@ define(function(require){
 		
     	template: ProfileBar_tmpl,
     	templateHelpers : function(){
+			var urlString = XAUtil.getBaseUrl();
+			if(urlString.slice(-1) == "/") {
+				urlString = urlString.slice(0,-1);
+			};
     		return {
     			userProfile : this.userProfile,
     			oldUi : localStorage.getItem('setOldUI') == "true" ? false : true ,
+				swaggerUI : urlString+"/apidocs/swagger.html"
     		};
     	},
         
@@ -66,6 +72,9 @@ define(function(require){
 					"cache-control" : "no-cache"
 				},
 				success : function() {
+					if (localStorage && localStorage['backgrid-colmgr']) {
+						delete localStorage['backgrid-colmgr'];
+					}
 					if(!_.isUndefined(checksso) && checksso){
 						if(checksso == 'false'){
 							window.location.replace('locallogin');
@@ -92,7 +101,16 @@ define(function(require){
 					"cache-control" : "no-cache"
 				},
 				success : function(resp) {
-					that.onLogout(resp);
+					if (localStorage.getItem('idleTimerLoggedOut') == "true" && resp == "true") {
+						window.location.replace('index.html?action=timeout');
+					} else {
+						if (App.userProfile && App.userProfile.get('configProperties') && App.userProfile.get('configProperties').inactivityTimeout
+							&& App.userProfile.get('configProperties').inactivityTimeout > 0 && resp == "true") {
+								window.location.replace('index.html?action=timeout');
+						} else {
+							that.onLogout(resp);
+						}
+					}
 				},
 				error : function(jqXHR, textStatus, err ) {
 					if( jqXHR.status == 419 ){

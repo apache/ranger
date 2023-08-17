@@ -308,7 +308,7 @@ define(function(require) {
 		    			if(!(parseInt(id) <= 0) && (!_.isNaN(parseInt(id)))){
 			    			var obj = _.findWhere(srcData,{'value' : parseInt(id)});
 			    			permTypeArr.push({permType : obj.value});
-			    			return "<span class='label label-inverse'>" + obj.text + "</span>";
+							return "<span class='badge badge-dark'>" + obj.text + "</span>";
 		    			}
 		    		});
 		    		if(that.model.has('_vPermList')){

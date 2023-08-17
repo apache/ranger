@@ -24,8 +24,6 @@
  *
  */
 
-import javax.xml.bind.annotation.XmlRootElement;
-
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.view.ViewBaseBean;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
@@ -36,7 +34,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
 public class VXPasswordChange extends ViewBaseBean implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -185,13 +182,13 @@ public class VXPasswordChange extends ViewBaseBean implements java.io.Serializab
 	*/
 	public String toString( ) {
 		String str = "VXPasswordChange={";
-		str += super.toString();
+		str += super.toString() + " ";
 		str += "id={" + id + "} ";
 		str += "loginId={" + loginId + "} ";
 		str += "emailAddress={" + emailAddress + "} ";
 		str += "resetCode={" + resetCode + "} ";
-		str += "oldPassword={***length=" + (oldPassword == null? 0 : oldPassword.length()) + "***} ";
-		str += "updPassword={***length=" + (updPassword == null? 0 : updPassword.length()) + "***} ";
+		str += "isOldPasswordNull={" + (oldPassword == null) + "} ";
+		str += "isUpdPasswordNull={" + (updPassword == null) + "}";
 		str += "}";
 		return str;
 	}

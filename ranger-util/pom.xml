@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.apache.ranger</groupId>
         <artifactId>ranger</artifactId>
-        <version>2.1.0-SNAPSHOT</version>
+        <version>3.0.0-SNAPSHOT</version>
     </parent>
     <artifactId>ranger-util</artifactId>
     <name>Ranger Util</name>
@@ -46,7 +46,7 @@
                         <phase>generate-sources</phase>
                         <configuration>
                             <target>
-                                <exec executable="python" failonerror="true">
+                                <exec executable="python3" failonerror="true">
                                     <arg value="${project.basedir}/src/scripts/saveVersion.py"/>
                                     <arg value="${project.version}"/>
                                     <arg value="${ranger.version.shortname}"/>

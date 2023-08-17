@@ -81,6 +81,9 @@ define(function(require){
                                 var exportUrl = urlString +urls+ '?serviceName='+serviceName;
                         }
 			XAUtil.blockUI();
+            if (!_.isUndefined($('.latestResponse')) && $('.latestResponse').length > 0) {
+                $('.latestResponse').html('<b>Last Response Time : </b>' + Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt"));
+            }
 			$.ajax({
 		        type: "GET",
                         url:exportUrl+'&checkPoliciesExists=true',
@@ -125,8 +128,7 @@ define(function(require){
 				multiple: true,
 				closeOnSelect: true,
 				placeholder: 'Select Component',
-			    //maximumSelectionSize : 1,
-			    width: '530px',
+			    width: '700px',
 			    allowClear: true,
 			    data: options
 			}).on('change', function(e){
@@ -159,7 +161,7 @@ define(function(require){
 				multiple: true,
 				closeOnSelect: true,
 				placeholder: 'Select Service Name',
-			    width: '530px',
+			    width: '700px',
 			    allowClear: true,
 			    data: options
 			})

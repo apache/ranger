@@ -20,15 +20,19 @@
 
 package org.apache.ranger.authorization.hadoop.config;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.Properties;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 public class RangerConfiguration extends Configuration {
-	private static final Logger LOG = Logger.getLogger(RangerConfiguration.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerConfiguration.class);
 
 	protected RangerConfiguration() {
 		super(false);
@@ -43,10 +47,7 @@ public class RangerConfiguration extends Configuration {
 
 		URL fUrl = getFileLocation(aResourceName);
 		if (fUrl != null) {
-			if(LOG.isInfoEnabled()) {
-				LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fUrl);
-			}
-
+			LOG.info("addResourceIfReadable(" + aResourceName + "): resource file is " + fUrl);
 			try {
 				addResource(fUrl);
 				ret = true;
@@ -70,12 +71,29 @@ public class RangerConfiguration extends Configuration {
 		return getProps();
 	}
 
-
 	private URL getFileLocation(String fileName) {
-		URL lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
-		
-		if (lurl == null ) {
-			lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName);
+		URL lurl = null;
+		if (!StringUtils.isEmpty(fileName)) {
+			lurl = RangerConfiguration.class.getClassLoader().getResource(fileName);
+
+			if (lurl == null ) {
+				lurl = RangerConfiguration.class.getClassLoader().getResource("/" + fileName);
+			}
+
+			if (lurl == null ) {
+				File f = new File(fileName);
+				if (f.exists()) {
+					try {
+						lurl=f.toURI().toURL();
+					} catch (MalformedURLException e) {
+						LOG.error("Unable to load the resource name [" + fileName + "]. Ignoring the resource:" + f.getPath());
+					}
+				} else {
+					if(LOG.isDebugEnabled()) {
+						LOG.debug("Conf file path " + fileName + " does not exists");
+					}
+				}
+			}
 		}
 		return lurl;
 	}

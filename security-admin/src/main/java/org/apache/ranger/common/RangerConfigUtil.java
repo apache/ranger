@@ -19,7 +19,8 @@
 
 package org.apache.ranger.common;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 /**
@@ -28,7 +29,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class RangerConfigUtil {
-	private static final Logger logger = Logger.getLogger(RangerConfigUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(RangerConfigUtil.class);
 
 	String webappRootURL;
 	int defaultMaxRows = 250;

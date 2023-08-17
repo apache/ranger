@@ -22,16 +22,17 @@ import java.util.List;
 
 import javax.persistence.NoResultException;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.RangerCommonEnums;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXGroupPermission;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 @Service
 public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 
-	private static final Logger logger = Logger.getLogger(XXGroupPermissionDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(XXGroupPermissionDao.class);
 
 	public XXGroupPermissionDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -44,13 +45,13 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 				if (isUpdate) {
 					return getEntityManager()
 							.createNamedQuery(
-									"XXGroupPermissionUpdate.findByModuleId",
+									"XXGroupPermissionUpdates.findByModuleId",
 									XXGroupPermission.class)
 							.setParameter("moduleId", moduleId).getResultList();
 				}
 				return getEntityManager()
 						.createNamedQuery(
-								"XXGroupPermissionUpdates.findByModuleId",
+								"XXGroupPermission.findByModuleId",
 								XXGroupPermission.class)
 						.setParameter("moduleId", moduleId)
 						.setParameter("isAllowed", RangerCommonEnums.IS_ALLOWED)
@@ -130,4 +131,19 @@ public class XXGroupPermissionDao extends BaseDao<XXGroupPermission> {
 		}
 	}
 
+	public List<String> findModuleGroupsByModuleId(Long moduleId) {
+		if (moduleId != null) {
+			try {
+				return getEntityManager().createNamedQuery("XXGroupPermission.findModuleGroupsByModuleId", String.class)
+				.setParameter("moduleId", moduleId)
+				.setParameter("isAllowed",RangerCommonEnums.IS_ALLOWED)
+				.getResultList();
+			} catch (Exception e) {
+				logger.debug(e.getMessage());
+			}
+		} else {
+			logger.debug("ModuleId not provided.");
+		}
+		return null;
+	}
 }

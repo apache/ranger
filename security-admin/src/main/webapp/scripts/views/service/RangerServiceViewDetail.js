@@ -35,21 +35,35 @@ define(function(require) {
 
                 template: RangerServiceViewDetailTmpl,
                 templateHelpers: function() {
-                    var that = this, tagDetails = [];
-                    if(this.options.rangerService.get('tagService') && !_.isEmpty(this.options.rangerService.get('tagService'))) {
-                        tagDetails = this.options.rangerSeviceList.find(function(m) {
-                            return m.get('name') == that.options.rangerService.get('tagService')
+                    var that = this, tagDetails = []; this.isExcludes = "", this.isRecursive = "";
+                    if(this.rangerService.get('tagService') && !_.isEmpty(this.rangerService.get('tagService'))) {
+                        tagDetails = this.rangerSeviceList.find(function(m) {
+                            return m.get('name') == that.rangerService.get('tagService')
                         })
                     }
+                    _.filter(this.auditFilters, function(model, modVal) {
+                        model.isAudited = model.isAudited ? 'Yes' : 'No'
+                        _.filter(model.resources, function(key){
+                            var $toggleBtn =''
+                            if(!_.isUndefined(key.isExcludes)) {
+                                key.isExcludes = key.isExcludes ? XAEnums.ExcludeStatus.STATUS_EXCLUDE.label : XAEnums.ExcludeStatus.STATUS_INCLUDE.label;
+                            }
+                            if (!_.isUndefined(key.isRecursive)) {
+                                key.isRecursive = key.isRecursive ? XAEnums.RecursiveStatus.STATUS_RECURSIVE.label : XAEnums.RecursiveStatus.STATUS_NONRECURSIVE.label;
+                            }
+                            key.values = key.values.join(', ')
+                        })
+                    })
                     return {
                        configsList : this.conf,
                        customConfigs : this.customConfigs,
-                       serviceName : this.options.rangerService.get('name'),
-                       description : this.options.rangerService.get('description'),
-                       isEnabled   : this.options.rangerService.get('isEnabled'),
+                       serviceName : this.rangerService.get('name'),
+                       description : this.rangerService.get('description'),
+                       isEnabled   : this.rangerService.get('isEnabled'),
                        tagService  : (!_.isEmpty(tagDetails)) ? tagDetails.get('displayName') : false,
-                       displayName : this.options.rangerService.get('displayName'),
-                   }
+                       displayName : this.rangerService.get('displayName'),
+                       auditFilters : this.auditFilters,
+                    }
                 },
 
                 /**
@@ -58,8 +72,9 @@ define(function(require) {
                  */
                 initialize: function(options) {
                     console.log("initialized a Ranger Service View Diff");
+                    _.extend(this, _.pick(options, 'serviceDef', 'rangerService', 'rangerSeviceList'));
                     var that = this;
-                    that.getTemplateForservice(this.options);
+                    that.getTemplateForservice(this);
                 },
                 getTemplateForservice : function(options){
                     var configList = options.serviceDef.get('configs');
@@ -74,10 +89,13 @@ define(function(require) {
                         customConfigs = _.omit(customConfigs , m.name);
                     })
                     this.conf = configs;
-                    if(_.isEmpty(customConfigs)){
-                        this.customConfigs = false
-                    }else{
-                        this.customConfigs = customConfigs;
+                    this.auditFilters = (_.isEmpty(this.conf) && _.isUndefined(this.conf['Ranger Default Audit Filters'])) ?
+                        false : this.conf['Ranger Default Audit Filters'];
+                    this.conf = _.omit(this.conf, 'Ranger Default Audit Filters')
+                    this.customConfigs = _.isEmpty(_.omit(customConfigs, 'Ranger Default Audit Filters')) ?
+                        false : _.omit(customConfigs, 'Ranger Default Audit Filters');
+                    if(this.auditFilters){
+                        this.auditFilters = JSON.parse((this.auditFilters).replace(/'/g, '"'));
                     }
                 },
                 /** on close */

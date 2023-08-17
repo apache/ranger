@@ -14,25 +14,25 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<div class="control-group">
-	<label class="control-label">{{fieldLabel}}</label>
-	<div class="controls">
-		<table class="table table-bordered table-condensed" style="width:30%">
-			<thead>
-				<tr>
-					<th style="text-align: center;">Name</th>
-					<th style="text-align: center;">Value</th>
-				</tr>
-			</thead>
-			<tbody class="js-formInput">
-			</tbody>
-		</table>
-	</div>
+<div class="form-group">
+    <label class="control-label col-sm-3">{{fieldLabel}}</label>
+    <div class="col-sm-5">
+        <table class="table table-bordered table-sm">
+            <thead>
+                <tr>
+                    <th style="text-align: center;">Name</th>
+                    <th style="text-align: center;" colspan="2">Value</th>
+                </tr>
+            </thead>
+            <tbody class="js-formInput">
+            </tbody>
+        </table>
+    </div>
 </div>
-<div class="control-group">
-	<div class="controls" style="margin-top:-14px">
-		<button type="button" class="btn btn-small" data-action="addGroup" title="Add">
-			<i class="icon-plus"></i>
-		</button>
-	</div>
+<div class="form-group">
+    <div class="col-sm-4 offset-sm-3">
+        <button type="button" class="btn btn-sm" data-action="addGroup" title="Add">
+            <i class="fa-fw fa fa-plus"></i>
+        </button>
+    </div>
 </div>

@@ -19,9 +19,10 @@
 
 package org.apache.ranger.plugin.conditionevaluator;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
+import org.apache.ranger.plugin.policyengine.RangerRequestScriptEvaluator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.HashSet;
@@ -31,7 +32,7 @@ import java.util.Set;
 
 public class RangerNoneOfExpectedTagsPresentConditionEvaluator extends RangerAbstractConditionEvaluator {
 
-	private static final Log LOG = LogFactory.getLog(RangerNoneOfExpectedTagsPresentConditionEvaluator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerNoneOfExpectedTagsPresentConditionEvaluator.class);
 
 	private final Set<String> policyConditionTags = new HashSet<>();
 
@@ -61,11 +62,9 @@ public class RangerNoneOfExpectedTagsPresentConditionEvaluator extends RangerAbs
 			LOG.debug("==> RangerNoneOfExpectedTagsPresentConditionEvaluator.isMatched(" + request + ")");
 		}
 
-		boolean matched = true;
-
-		RangerAccessRequest readOnlyRequest = request.getReadOnlyCopy();
-		RangerScriptExecutionContext context = new RangerScriptExecutionContext(readOnlyRequest);
-		Set<String> resourceTags = context.getAllTagTypes();
+		boolean                      matched      = true;
+		RangerRequestScriptEvaluator evaluator    = new RangerRequestScriptEvaluator(request);
+		Set<String>                  resourceTags = evaluator.getAllTagTypes();
 
 		if (resourceTags != null) {
 			// check if resource Tags does not contain any tags in the policy condition

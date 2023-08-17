@@ -23,8 +23,6 @@ import java.util.*;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.errors.ValidationErrorCode;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
@@ -40,10 +38,12 @@ import org.apache.ranger.plugin.model.RangerServiceDef.RangerAccessTypeDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
 import org.apache.ranger.plugin.model.RangerValiditySchedule;
 import org.apache.ranger.plugin.store.ServiceStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerPolicyValidator extends RangerValidator {
 
-	private static final Log LOG = LogFactory.getLog(RangerPolicyValidator.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyValidator.class);
 
 	public RangerPolicyValidator(ServiceStore store) {
 		super(store);
@@ -168,6 +168,7 @@ public class RangerPolicyValidator extends RangerValidator {
 			}
 			String policyName  = policy.getName();
 			String serviceName = policy.getService();
+			String policyServicetype = policy.getServiceType();
 			String zoneName    = policy.getZoneName();
 
 			RangerService service = null;
@@ -195,6 +196,22 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = false;
 				} else {
 					serviceNameValid = true;
+
+					String serviceType = service.getType();
+
+					if (StringUtils.isNotEmpty(serviceType) && StringUtils.isNotEmpty(policyServicetype)) {
+						if (!serviceType.equalsIgnoreCase(policyServicetype)) {
+							ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE;
+
+							failures.add(new ValidationFailureDetailsBuilder()
+									.field("service type")
+									.isSemanticallyIncorrect()
+									.becauseOf(error.getMessage(policyServicetype,serviceName))
+									.errorCode(error.getErrorCode())
+									.build());
+							valid = false;
+						}
+					}
 				}
 			}
 
@@ -472,6 +489,15 @@ public class RangerPolicyValidator extends RangerValidator {
 				valid = isValidResourceNames(policy, failures, serviceDef) && valid;
 				valid = isValidResourceValues(resourceMap, failures, serviceDef) && valid;
 				valid = isValidResourceFlags(resourceMap, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName(), isAdmin) && valid;
+
+				List<Map<String, RangerPolicyResource>> additionalResources = policy.getAdditionalResources();
+
+				if (additionalResources != null) {
+					for (Map<String, RangerPolicyResource> additionalResource : additionalResources) {
+						valid = isValidResourceValues(additionalResource, failures, serviceDef) && valid;
+						valid = isValidResourceFlags(additionalResource, failures, serviceDef.getResources(), serviceDef.getName(), policy.getName(), isAdmin) && valid;
+					}
+				}
 			}
 		}
 
@@ -522,25 +548,22 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 
 		boolean valid = true;
-		if (!Boolean.TRUE.equals(policy.getIsEnabled())) {
-			LOG.debug("Policy is disabled. Skipping resource uniqueness validation.");
-		} else {
-			RangerPolicyResourceSignature policySignature = _factory.createPolicyResourceSignature(policy);
-			String signature = policySignature.getSignature();
-			List<RangerPolicy> policies = getPoliciesForResourceSignature(policy.getService(), signature);
-			if (CollectionUtils.isNotEmpty(policies)) {
-				ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_POLICY_RESOURCE;
-				RangerPolicy matchedPolicy = policies.iterator().next();
-				// there shouldn't be a matching policy for create.  During update only match should be to itself
-				if (action == Action.CREATE || (action == Action.UPDATE && (policies.size() > 1 || !matchedPolicy.getId().equals(policy.getId())))) {
-					failures.add(new ValidationFailureDetailsBuilder()
-							.field("resources")
-							.isSemanticallyIncorrect()
-							.becauseOf(error.getMessage(matchedPolicy.getName(), policy.getService()))
-							.errorCode(error.getErrorCode())
-							.build());
-					valid = false;
-				}
+
+		RangerPolicyResourceSignature policySignature = _factory.createPolicyResourceSignature(policy);
+		String signature = policySignature.getSignature();
+		List<RangerPolicy> policies = getPoliciesForResourceSignature(policy.getService(), signature);
+		if (CollectionUtils.isNotEmpty(policies)) {
+			ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_DUPLICATE_POLICY_RESOURCE;
+			RangerPolicy matchedPolicy = policies.iterator().next();
+			// there shouldn't be a matching policy for create.  During update only match should be to itself
+			if (action == Action.CREATE || (action == Action.UPDATE && !matchedPolicy.getId().equals(policy.getId()))) {
+				failures.add(new ValidationFailureDetailsBuilder()
+						.field("resources")
+						.isSemanticallyIncorrect()
+						.becauseOf(error.getMessage(matchedPolicy.getName(), policy.getService()))
+						.errorCode(error.getErrorCode())
+						.build());
+				valid = false;
 			}
 		}
 
@@ -551,17 +574,43 @@ public class RangerPolicyValidator extends RangerValidator {
 	}
 	
 	boolean isValidResourceNames(final RangerPolicy policy, final List<ValidationFailureDetails> failures, final RangerServiceDef serviceDef) {
-		
-		if(LOG.isDebugEnabled()) {
+
+		if (LOG.isDebugEnabled()) {
 			LOG.debug(String.format("==> RangerPolicyValidator.isValidResourceNames(%s, %s, %s)", policy, failures, serviceDef));
 		}
 
 		boolean valid = true;
-		convertPolicyResourceNamesToLower(policy);
-		Set<String> policyResources = policy.getResources().keySet();
+
+		Map<String, RangerPolicyResource> resources = policy.getResources();
+
+		if (resources != null) {
+			valid = isValidResourceNames(resources, failures, serviceDef, policy.getPolicyType()) && valid;
+
+			List<Map<String, RangerPolicyResource>> additionalResources  = policy.getAdditionalResources();
+
+			if (additionalResources != null) {
+				for (Map<String, RangerPolicyResource> additionalResource : additionalResources) {
+					valid = isValidResourceNames(additionalResource, failures, serviceDef, policy.getPolicyType()) && valid;
+				}
+			}
+
+		}
+
+		if(LOG.isDebugEnabled()) {
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceNames(%s, %s, %s): %s", policy, failures, serviceDef, valid));
+		}
+
+		return valid;
+	}
+
+	boolean isValidResourceNames(Map<String, RangerPolicyResource> resources, List<ValidationFailureDetails> failures, RangerServiceDef serviceDef, Integer policyType) {
+		boolean valid = true;
+
+		convertPolicyResourceNamesToLower(resources);
+		Set<String> policyResources = resources.keySet();
 
 		RangerServiceDefHelper defHelper = new RangerServiceDefHelper(serviceDef);
-		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(policy.getPolicyType()); // this can be empty but not null!
+		Set<List<RangerResourceDef>> hierarchies = defHelper.getResourceHierarchies(policyType); // this can be empty but not null!
 		if (hierarchies.isEmpty()) {
 			if (LOG.isDebugEnabled()) {
 				LOG.debug("RangerPolicyValidator.isValidResourceNames: serviceDef does not have any resource hierarchies, possibly due to invalid service def!!");
@@ -636,7 +685,7 @@ public class RangerPolicyValidator extends RangerValidator {
 		}
 
 		if(LOG.isDebugEnabled()) {
-			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceNames(%s, %s, %s): %s", policy, failures, serviceDef, valid));
+			LOG.debug(String.format("<== RangerPolicyValidator.isValidResourceNames(%s, %s, %s): %s", resources, failures, serviceDef, valid));
 		}
 		return valid;
 	}
@@ -949,7 +998,10 @@ public class RangerPolicyValidator extends RangerValidator {
 			LOG.debug("policy item accesses collection was null/empty!");
 		} else {
 			Set<String> accessTypes = getAccessTypes(serviceDef);
-			for (RangerPolicyItemAccess access : accesses) {
+			Set<String> uniqueAccesses = new HashSet<>();
+			Iterator<RangerPolicyItemAccess> accessTypeIterator = accesses.iterator();
+			while (accessTypeIterator.hasNext()) {
+				RangerPolicyItemAccess access = accessTypeIterator.next();
 				if (access == null) {
 					ValidationErrorCode error = ValidationErrorCode.POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ACCESS;
 					failures.add(new ValidationFailureDetailsBuilder()
@@ -961,7 +1013,12 @@ public class RangerPolicyValidator extends RangerValidator {
 					valid = false;
 				} else {
 					// we want to go through all elements even though one may be bad so all failures are captured
-					valid = isValidPolicyItemAccess(access, failures, accessTypes) && valid;
+					if (uniqueAccesses.contains(access.getType())) {
+						accessTypeIterator.remove();
+					} else {
+						valid = isValidPolicyItemAccess(access, failures, accessTypes) && valid;
+						uniqueAccesses.add(access.getType());
+					}
 				}
 			}
 		}

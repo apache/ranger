@@ -18,7 +18,8 @@
  */
 package org.apache.ranger.unixusersync.process;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.assertEquals;
 
 import org.apache.ranger.unixusersync.config.UserGroupSyncConfig;
 import org.apache.ranger.usergroupsync.PolicyMgrUserGroupBuilderTest;
@@ -156,5 +157,36 @@ public class TestFileSourceUserGroupBuilder {
 
         assertTrue(sink.getAllGroups().contains("group1"));
         assertTrue(sink.getAllGroups().contains("group2"));
+    }
+
+    @Test
+    public void testUpdateSinkDisableInvalidNameCheck() throws Throwable {
+        config.setProperty(UserGroupSyncConfig.UGSYNC_SOURCE_FILE_PROC, "src/test/resources/usergroups-special-characters.csv");
+
+        FileSourceUserGroupBuilder fileBuilder = new FileSourceUserGroupBuilder();
+        fileBuilder.init();
+
+        PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
+        sink.init();
+        fileBuilder.updateSink(sink);
+
+        assertEquals(0, sink.getTotalInvalidGroups());
+        assertEquals(0, sink.getTotalInvalidUsers());
+    }
+
+    @Test
+    public void testUpdateSinkEnableInvalidNameCheck() throws Throwable {
+        config.setProperty(UserGroupSyncConfig.UGSYNC_SOURCE_FILE_PROC, "src/test/resources/usergroups-special-characters.csv");
+
+        FileSourceUserGroupBuilder fileBuilder = new FileSourceUserGroupBuilder();
+        fileBuilder.init();
+
+        PolicyMgrUserGroupBuilderTest sink = new PolicyMgrUserGroupBuilderTest();
+        sink.init();
+        sink.setUserSyncNameValidationEnabled("true");
+        fileBuilder.updateSink(sink);
+
+        assertEquals(2, sink.getTotalInvalidGroups());
+        assertEquals(1, sink.getTotalInvalidUsers());
     }
 }

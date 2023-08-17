@@ -21,14 +21,15 @@ package org.apache.ranger.services.knox.client;
 
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.plugin.model.RangerService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 
 
 public class KnoxConnectionMgr {
 
-	private static final Logger LOG = Logger.getLogger(KnoxConnectionMgr.class);
+	private static final Logger LOG = LoggerFactory.getLogger(KnoxConnectionMgr.class);
 	
 	public KnoxClient getKnoxClientbyService(RangerService service) {
 		KnoxClient 		   knoxClient = null;

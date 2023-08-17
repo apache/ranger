@@ -34,18 +34,18 @@ import java.util.concurrent.ConcurrentHashMap;
 import com.google.common.collect.Sets;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.model.RangerServiceDef.RangerResourceDef;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.common.collect.Lists;
 import org.apache.ranger.plugin.resourcematcher.RangerAbstractResourceMatcher;
 import org.apache.ranger.plugin.resourcematcher.RangerPathResourceMatcher;
 
 public class RangerServiceDefHelper {
-	private static final Log LOG = LogFactory.getLog(RangerServiceDefHelper.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceDefHelper.class);
 	
 	static final Map<String, Delegate> _Cache = new ConcurrentHashMap<>();
 	final Delegate _delegate;
@@ -206,6 +206,10 @@ public class RangerServiceDefHelper {
 
 		Set<List<RangerResourceDef>> ret = new HashSet<List<RangerResourceDef>>();
 
+		if (policyType == RangerPolicy.POLICY_TYPE_AUDIT) {
+			policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+		}
+
 		for (List<RangerResourceDef> hierarchy : getResourceHierarchies(policyType)) {
 			if (hierarchyHasAllResources(hierarchy, keys)) {
 				ret.add(hierarchy);
@@ -285,16 +289,40 @@ public class RangerServiceDefHelper {
 		return _delegate.isResourceGraphValid();
 	}
 
+	public List<String> getOrderedResourceNames(Collection<String> resourceNames) {
+		final List<String> ret;
+		if (resourceNames != null) {
+			ret = new ArrayList<>();
+			for (String orderedName : _delegate.getAllOrderedResourceNames()) {
+				for (String resourceName : resourceNames) {
+					if (StringUtils.equals(orderedName, resourceName) && !ret.contains(resourceName)) {
+						ret.add(resourceName);
+						break;
+					}
+				}
+			}
+		} else {
+			ret = Collections.EMPTY_LIST;
+		}
+		return ret;
+	}
+
+	public RangerResourceDef getWildcardEnabledResourceDef(String resourceName, Integer policyType) {
+		return _delegate.getWildcardEnabledResourceDef(resourceName, policyType);
+	}
+
 	/**
 	 * Not designed for public access.  Package level only for testability.
 	 */
 	static class Delegate {
 		final RangerServiceDef _serviceDef;
 		final Map<Integer, Set<List<RangerResourceDef>>> _hierarchies = new HashMap<>();
+		final Map<Integer, Map<String, RangerResourceDef>> _wildcardEnabledResourceDefs = new HashMap<>();
 		final Date _serviceDefFreshnessDate;
 		final String _serviceName;
 		final boolean _checkForCycles;
 		final boolean _valid;
+		final List<String> _orderedResourceNames;
 		final static Set<List<RangerResourceDef>> EMPTY_RESOURCE_HIERARCHY = Collections.unmodifiableSet(new HashSet<List<RangerResourceDef>>());
 
 
@@ -323,6 +351,13 @@ public class RangerServiceDefHelper {
 					_hierarchies.put(policyType, EMPTY_RESOURCE_HIERARCHY);
 				}
 			}
+
+			if (isValid) {
+				_orderedResourceNames = buildSortedResourceNames();
+			} else {
+				_orderedResourceNames = new ArrayList<>();
+			}
+
 			_valid = isValid;
 			if (LOG.isDebugEnabled()) {
 				String message = String.format("Found [%d] resource hierarchies for service [%s] update-date[%s]: %s", _hierarchies.size(), _serviceName,
@@ -397,6 +432,44 @@ public class RangerServiceDefHelper {
 				LOG.debug("Created graph for resources: " + graph);
 			}
 			return graph;
+		}
+
+		RangerResourceDef getWildcardEnabledResourceDef(String resourceName, Integer policyType) {
+			if (policyType == null) {
+				policyType = RangerPolicy.POLICY_TYPE_ACCESS;
+			}
+
+			Map<String, RangerResourceDef> wResourceDefs = _wildcardEnabledResourceDefs.get(policyType);
+
+			if (wResourceDefs == null) {
+				wResourceDefs = new HashMap<>();
+
+				_wildcardEnabledResourceDefs.put(policyType, wResourceDefs);
+			}
+
+			RangerResourceDef ret = null;
+
+			if (!wResourceDefs.containsKey(resourceName)) {
+				List<RangerResourceDef> resourceDefs = getResourceDefs(_serviceDef, policyType);
+
+				if (resourceDefs != null) {
+					for (RangerResourceDef resourceDef : resourceDefs) {
+						if (StringUtils.equals(resourceName, resourceDef.getName())) {
+							ret = new RangerResourceDef(resourceDef);
+
+							ret.getMatcherOptions().put(RangerAbstractResourceMatcher.OPTION_WILD_CARD, Boolean.TRUE.toString());
+
+							break;
+						}
+					}
+				}
+
+				wResourceDefs.put(resourceName, ret);
+			} else {
+				ret = wResourceDefs.get(resourceName);
+			}
+
+			return ret;
 		}
 
 		List<RangerResourceDef> getResourceDefs(RangerServiceDef serviceDef, Integer policyType) {
@@ -532,6 +605,53 @@ public class RangerServiceDefHelper {
 				map.put(resourceDef.getName(), resourceDef);
 			}
 			return map;
+		}
+
+		List<String> getAllOrderedResourceNames() {
+			return this._orderedResourceNames;
+		}
+
+		private static class ResourceNameLevel implements Comparable<ResourceNameLevel> {
+			private String resourceName;
+			private int    level;
+
+			ResourceNameLevel(String resourceName, int level) {
+				this.resourceName = resourceName;
+				this.level        = level;
+			}
+
+			@Override
+			public int compareTo(ResourceNameLevel other) {
+				return Integer.compare(this.level, other.level);
+			}
+		}
+
+		private List<String> buildSortedResourceNames() {
+			final List<String> ret = new ArrayList<>();
+
+			boolean isValid = true;
+			List<ResourceNameLevel> resourceNameLevels = new ArrayList<>();
+			for (RangerResourceDef resourceDef : _serviceDef.getResources()) {
+				String name = resourceDef.getName();
+				Integer level = resourceDef.getLevel();
+				if (name != null && level != null) {
+					ResourceNameLevel resourceNameLevel = new ResourceNameLevel(name, level);
+					resourceNameLevels.add(resourceNameLevel);
+				} else {
+					LOG.error("Incorrect resourceDef:[name=" + name + "]");
+					isValid = false;
+					break;
+				}
+			}
+
+			if (isValid) {
+				Collections.sort(resourceNameLevels);
+
+				for (ResourceNameLevel resourceNameLevel : resourceNameLevels) {
+					ret.add(resourceNameLevel.resourceName);
+				}
+			}
+			return ret;
 		}
 	}
 

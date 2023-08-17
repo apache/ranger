@@ -33,7 +33,6 @@ import javax.servlet.http.HttpSession;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.HTTPUtil;
 import org.apache.ranger.common.MessageEnums;
@@ -58,6 +57,8 @@ import org.apache.ranger.util.RestUtil;
 import org.apache.ranger.view.VXAuthSession;
 import org.apache.ranger.view.VXAuthSessionList;
 import org.apache.ranger.view.VXLong;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -70,7 +71,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class SessionMgr {
 
-	static final Logger logger = Logger.getLogger(SessionMgr.class);
+	static final Logger logger = LoggerFactory.getLogger(SessionMgr.class);
 
 	@Autowired
 	RESTErrorUtil restErrorUtil;
@@ -452,7 +453,33 @@ public class SessionMgr {
 		VXAuthSession vXAuthSession = authSessionService.populateViewBean(xXAuthSession);
 		return vXAuthSession;
 	}
-	
+
+	/**
+	 * Check whether the user failed to log in so many times that we need to lock it for
+	 * a while. The current limit of is to fail at most n times in a sliding time window,
+	 * otherwise the login verification will not be performed in the future.
+	 * @param loginId
+	 * @return
+	 */
+	public boolean isLoginIdLocked(String loginId) {
+		boolean ret             = false;
+		boolean autoLockEnabled = PropertiesUtil.getBooleanProperty("ranger.admin.login.autolock.enabled", true);
+
+		if (autoLockEnabled) {
+			int  windowSeconds    = PropertiesUtil.getIntProperty("ranger.admin.login.autolock.window.seconds", 300);
+			int  maxFailuresCount = PropertiesUtil.getIntProperty("ranger.admin.login.autolock.maxfailure", 5);
+			long failuresCount    = daoManager.getXXAuthSession().getRecentAuthFailureCountByLoginId(loginId, windowSeconds);
+
+			ret = failuresCount >= maxFailuresCount;
+
+			if (logger.isDebugEnabled()) {
+				logger.debug("isLoginIdLocked(loginId={}): windowSeconds={}, maxFailuresCount={}, failuresCount={}, ret={}", loginId, windowSeconds, maxFailuresCount, failuresCount, ret);
+			}
+		}
+
+		return ret;
+	}
+
 	public boolean isValidXAUser(String loginId) {
 		XXPortalUser pUser = daoManager.getXXPortalUser().findByLoginId(loginId);
 		if (pUser == null) {

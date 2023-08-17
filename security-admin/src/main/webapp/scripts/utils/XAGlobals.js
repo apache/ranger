@@ -25,6 +25,8 @@ define(function(require){
 	
 	XAGlobals.settings = {};
 	XAGlobals.settings.PAGE_SIZE = 25;
+	XAGlobals.settings.MAX_PAGE_SIZE = 1000;
+	
 	XAGlobals.settings.AUDIT_REPORT_POLLING = 100000;
 	XAGlobals.settings.uploadDefaultOpts = {
 		disableImageResize: false,
@@ -72,6 +74,7 @@ define(function(require){
 			'Encryption'     : {'Key Manager' : ['kmsManagerAction','kmsKeyCreateAction'] },
 			'Settings'		 : {'Users/Groups' : ['userManagerAction','userCreateAction','userEditAction','groupCreateAction','groupEditAction'],
 								'Permissions' : ['modulePermissionsAction','modulePermissionEditAction'] },
+			'Security Zone'  : ['zoneManagmentAction', 'RangerZoneCreateAction', 'RangerZoneEditAction'],
 		};
 	
 	XAGlobals.ActionType = {

@@ -20,22 +20,23 @@ package org.apache.ranger.admin.client.datatype;
 
 import java.util.List;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.authorization.utils.StringUtil;
 import org.apache.ranger.plugin.util.JsonUtilsV2;
 import org.codehaus.jackson.annotate.JsonAutoDetect;
 import org.codehaus.jackson.annotate.JsonIgnoreProperties;
 import org.codehaus.jackson.annotate.JsonAutoDetect.Visibility;
 import org.codehaus.jackson.map.annotate.JsonSerialize;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.sun.jersey.api.client.ClientResponse;
 
 
 @JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RESTResponse implements java.io.Serializable {
-	private static final Logger LOG = Logger.getLogger(RESTResponse.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RESTResponse.class);
 
 	/**
 	 * values for statusCode
@@ -139,7 +140,7 @@ public class RESTResponse implements java.io.Serializable {
 	}
 
 	@JsonAutoDetect(getterVisibility = Visibility.NONE, setterVisibility = Visibility.NONE, fieldVisibility = Visibility.ANY)
-	@JsonSerialize(include = JsonSerialize.Inclusion.NON_NULL)
+	@JsonSerialize(include = JsonSerialize.Inclusion.NON_EMPTY)
 	@JsonIgnoreProperties(ignoreUnknown = true)
 	public static class Message implements java.io.Serializable {
 		private String name;

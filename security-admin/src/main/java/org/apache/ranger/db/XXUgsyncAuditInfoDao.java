@@ -17,10 +17,11 @@
 
 package org.apache.ranger.db;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUgsyncAuditInfo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import javax.persistence.NoResultException;
@@ -31,7 +32,7 @@ import java.util.List;
 
 @Service
 public class XXUgsyncAuditInfoDao extends BaseDao<XXUgsyncAuditInfo> {
-	protected static final Logger logger = Logger
+	protected static final Logger logger = LoggerFactory
 			.getLogger(XXUgsyncAuditInfoDao.class);
 	/**
 	 * Default Constructor

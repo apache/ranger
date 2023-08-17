@@ -79,7 +79,8 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a KmsTableLayout Layout");
-                        _.extend(this, _.pick(options, 'tab','kmsServiceName','kmsManagePage', 'urlQueryParams'));
+            _.extend(this, _.pick(options, 'tab','kmsServiceName','kmsManagePage'));
+            this.urlQueryParams = XAUtil.urlQueryParams();
 			this.showKeyList = true;
 			this.isKnownKmsServicePage =  this.kmsManagePage == 'new' ? false : true;
 			this.initializeKMSServices();
@@ -199,7 +200,7 @@ define(function(require){
 						fromRaw: function (rawValue) {
 							var html = '';
 							_.each(rawValue, function(val, key) {
-								html += key+' <i class="icon-long-arrow-right icon-3"></i>  '+val+'<br/>';
+								html += key+' <i class="fa-fw fa fa-long-arrow-right fa-fw fa fa-3"></i>  '+val+'<br/>';
 							});
 							return html;
 						}	
@@ -230,8 +231,8 @@ define(function(require){
 						label : localization.tt("lbl.action"),
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue,model) {
-								return '<a href="javascript:void(0);" data-name ="rolloverKey" data-id="'+model.get('name')+'" class="btn btn-mini" title="Rollover"><i class="icon-edit"></i></a>\
-										<a href="javascript:void(0);" data-name ="deleteKey" data-id="'+model.get('name')+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash"></i></a>';
+								return '<a href="javascript:void(0);" data-name ="rolloverKey" data-id="'+model.get('name')+'" class="btn btn-sm" title="Rollover"><i class="fa-fw fa fa-edit"></i></a>\
+										<a href="javascript:void(0);" data-name ="deleteKey" data-id="'+model.get('name')+'"  class="btn btn-sm btn-danger" title="Delete"><i class="fa-fw fa fa-trash"></i></a>';
 								//You can use rawValue to custom your html, you can change this value using the name parameter.
 							}
 						}),

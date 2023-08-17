@@ -19,6 +19,7 @@
 package org.apache.ranger.rest;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -29,7 +30,6 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.biz.KmsKeyMgr;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
@@ -40,6 +40,8 @@ import org.apache.ranger.view.VXKmsKey;
 import org.apache.ranger.view.VXKmsKeyList;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -56,7 +58,7 @@ import com.sun.jersey.api.client.UniformInterfaceException;
 @RangerAnnotationJSMgrName("KeyMgr")
 @Transactional(propagation = Propagation.REQUIRES_NEW)
 public class XKeyREST {
-	private static final Logger logger = Logger.getLogger(XKeyREST.class);
+	private static final Logger logger = LoggerFactory.getLogger(XKeyREST.class);
 
 	private static String UNAUTHENTICATED_MSG = "Unauthenticated : Please check the permission in the policy for the user";
 	
@@ -77,7 +79,7 @@ public class XKeyREST {
 	 */
 	@GET
 	@Path("/keys")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.SEARCH_KEYS + "\")")
 	public VXKmsKeyList searchKeys(@Context HttpServletRequest request, @QueryParam("provider") String provider) {
 		VXKmsKeyList vxKmsKeyList = new VXKmsKeyList();
@@ -96,7 +98,8 @@ public class XKeyREST {
 	 */
 	@PUT
 	@Path("/key")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.ROLLOVER_KEYS + "\")")
 	public VXKmsKey rolloverKey(@QueryParam("provider") String provider, VXKmsKey vXKey) {
 		VXKmsKey vxKmsKey = new VXKmsKey();
@@ -123,7 +126,6 @@ public class XKeyREST {
 	 */
 	@DELETE
 	@Path("/key/{alias}")
-	@Produces({ "application/xml", "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.DELETE_KEY + "\")")
 	public void deleteKey(@PathParam("alias") String name, @QueryParam("provider") String provider, @Context HttpServletRequest request) {
 		try{
@@ -144,7 +146,8 @@ public class XKeyREST {
 	 */
 	@POST
 	@Path("/key")
-	@Produces({ "application/xml", "application/json" })
+	@Consumes({ "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.CREATE_KEY + "\")")
 	public VXKmsKey createKey(@QueryParam("provider") String provider, VXKmsKey vXKey) {
 		VXKmsKey vxKmsKey = new VXKmsKey();
@@ -172,7 +175,7 @@ public class XKeyREST {
 	 */
 	@GET
 	@Path("/key/{alias}")
-	@Produces({ "application/xml", "application/json" })
+	@Produces({ "application/json" })
 	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" + RangerAPIList.GET_KEY + "\")")
 	public VXKmsKey getKey(@PathParam("alias") String name,@QueryParam("provider") String provider){
 		VXKmsKey vxKmsKey = new VXKmsKey();
@@ -200,11 +203,11 @@ public class XKeyREST {
 				JSONObject obj = new JSONObject(message);
 				message = obj.getString("message");
 			} catch (JSONException e1) {
-				message = e1.getMessage();
-			}			
-		}			
+				logger.error("Unable to parse the error message, So sending error message as it is - Error : " + e1.getMessage());
+			}
+		}
 		if (!(message==null) && !(message.isEmpty()) && message.contains("Connection refused")){
-			message = "Connection refused : Please check the KMS provider URL and whether the Ranger KMS is running";			
+			message = "Connection refused : Please check the KMS provider URL and whether the Ranger KMS is running";
 		} else if (!(message==null) && !(message.isEmpty()) && (message.contains("response status of 403") || message.contains("HTTP Status 403"))){
 			message = UNAUTHENTICATED_MSG;
 		} else if (!(message==null) && !(message.isEmpty()) && (message.contains("response status of 401") || message.contains("HTTP Status 401 - Authentication required"))){

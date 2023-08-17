@@ -28,8 +28,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.destination.FileAuditDestination;
 import org.apache.ranger.audit.model.AuthzAuditEvent;
 import org.apache.ranger.audit.provider.AuditHandler;
@@ -45,10 +43,12 @@ import org.apache.ranger.audit.queue.AuditSummaryQueue;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class TestAuditQueue {
 
-	private static final Log logger = LogFactory.getLog(TestAuditQueue.class);
+	private static final Logger logger = LoggerFactory.getLogger(TestAuditQueue.class);
 
 	@BeforeClass
 	public static void setUpBeforeClass() throws Exception {
@@ -255,7 +255,7 @@ public class TestAuditQueue {
 		int batchSize = messageToSend / 3;
 		int expectedBatchSize = batchSize
 				+ (batchSize * 3 < messageToSend ? 1 : 0);
-		int queueSize = messageToSend * 2;
+		int queueSize = batchSize * 2;
 		int intervalMS = messageToSend * 100; // Deliberately big interval
 		Properties props = new Properties();
 		props.put(basePropName + "." + AuditQueue.PROP_BATCH_SIZE, ""

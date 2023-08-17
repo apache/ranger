@@ -80,7 +80,7 @@ define(function(require) {
             },
 
             onPanelToggle : function(e){
-                $(e.currentTarget).children().toggleClass('icon-chevron-down');
+                $(e.currentTarget).children().toggleClass('fa-chevron-down');
                 $(e.currentTarget).next().slideToggle();
             }
         });

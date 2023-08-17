@@ -19,22 +19,22 @@
 
 package org.apache.ranger.plugin.model.validation;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerServiceDef;
 import org.apache.ranger.plugin.policyresourcematcher.RangerDefaultPolicyResourceMatcher;
 import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceMatcher;
-import org.apache.ranger.plugin.policyresourcematcher.RangerPolicyResourceEvaluator;
+import org.apache.ranger.plugin.policyresourcematcher.RangerResourceEvaluator;
 import org.apache.ranger.plugin.resourcematcher.RangerResourceMatcher;
 import org.apache.ranger.plugin.util.ServiceDefUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator {
-    private static final Log LOG = LogFactory.getLog(RangerZoneResourceMatcher.class);
+public class RangerZoneResourceMatcher implements RangerResourceEvaluator {
+    private static final Logger LOG = LoggerFactory.getLogger(RangerZoneResourceMatcher.class);
 
     private final String                                         securityZoneName;
     private final Map<String, RangerPolicy.RangerPolicyResource> policyResource;
@@ -42,11 +42,13 @@ public class RangerZoneResourceMatcher implements RangerPolicyResourceEvaluator 
     private RangerServiceDef.RangerResourceDef                   leafResourceDef;
 
     public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDef serviceDef) {
+        this(securityZoneName, policyResource, new RangerServiceDefHelper(serviceDef));
+    }
 
-        RangerServiceDefHelper             serviceDefHelper = new RangerServiceDefHelper(serviceDef);
-        final Collection<String>           resourceKeys     = policyResource.keySet();
-
-        RangerDefaultPolicyResourceMatcher matcher          = new RangerDefaultPolicyResourceMatcher();
+    public RangerZoneResourceMatcher(final String securityZoneName, final Map<String, RangerPolicy.RangerPolicyResource> policyResource, final RangerServiceDefHelper serviceDefHelper) {
+        final RangerServiceDef                   serviceDef   = serviceDefHelper.getServiceDef();
+        final Collection<String>                 resourceKeys = policyResource.keySet();
+        final RangerDefaultPolicyResourceMatcher matcher      = new RangerDefaultPolicyResourceMatcher();
 
         matcher.setServiceDef(serviceDef);
         matcher.setServiceDefHelper(serviceDefHelper);

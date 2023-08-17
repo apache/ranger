@@ -40,7 +40,7 @@ define(function(require) {
             var resources = _.map(this.model.get('resources'), function(val, key) {
                 return {
                     'key': key,
-                    'value': val
+                    'value': val.join(",  ")
                 }
             })
             return {
@@ -197,7 +197,11 @@ define(function(require) {
             _.each(that.rangerServiceDefModel.get('resources'), function(obj) {
                 var tmpObj = that.form.model.get(obj.name);
                 if (!_.isUndefined(tmpObj) && _.isObject(tmpObj) && !_.isEmpty(tmpObj.resource)) {
-                    tmpResource[obj.name] = tmpObj.resource.split(',');
+                    if (obj.type == "path") {
+                        tmpResource[obj.name] = tmpObj.resource;
+                    } else {
+                        tmpResource[obj.name] = _.map(tmpObj.resource, function(val){return val.text});
+                    }
                     that.form.model.unset(obj.name);
                 }
             });

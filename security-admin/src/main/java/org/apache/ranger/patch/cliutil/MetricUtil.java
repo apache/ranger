@@ -26,8 +26,6 @@ import java.util.Date;
 
 import org.apache.ranger.common.DateUtil;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Level;
-import org.apache.log4j.Logger;
 import org.apache.ranger.audit.provider.MiscUtil;
 import org.apache.ranger.biz.AssetMgr;
 import org.apache.ranger.biz.RangerBizUtil;
@@ -56,6 +54,8 @@ import org.apache.ranger.view.VXMetricServiceCount;
 import org.apache.ranger.view.VXMetricPolicyCount;
 import org.apache.ranger.view.VXMetricUserGroupCount;
 import org.apache.ranger.view.VXUserList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -65,7 +65,7 @@ import com.google.gson.GsonBuilder;
 @Component
 public class MetricUtil extends BaseLoader  {
 	
-	private static final Logger logger = Logger.getLogger(MetricUtil.class);
+	private static final Logger logger = LoggerFactory.getLogger(MetricUtil.class);
 	
 	public static String metricType;
 		
@@ -85,7 +85,9 @@ public class MetricUtil extends BaseLoader  {
 	RESTErrorUtil restErrorUtil;
 	
 	public static void main(String[] args) {
+		/* LOG4J2: TODO
 		logger.getRootLogger().setLevel(Level.OFF);
+		 */
 		logger.info("MetricUtil : main()");
 		try {
 			MetricUtil loader = (MetricUtil) CLIUtil.getBean(MetricUtil.class);
@@ -283,14 +285,14 @@ public class MetricUtil extends BaseLoader  {
 						vXMetricPolicyCount.setTotalCount(paginatedSvcsList.getTotalCount());
 						Map<String, VXMetricServiceCount> servicesWithPolicy = new HashMap<String, VXMetricServiceCount>();
 						for (int k = 2; k >= 0; k--) {
-							String serviceType = String.valueOf(k);
-							VXMetricServiceCount vXMetricServiceCount = getVXMetricServiceCount(serviceType);
+							String policyType = String.valueOf(k);
+							VXMetricServiceCount vXMetricServiceCount = getVXMetricServiceCount(policyType);
 							if (k == 2) {
 								servicesWithPolicy.put("rowFilteringPolicies", vXMetricServiceCount); }
 							else if (k == 1) {
 								servicesWithPolicy.put("maskingPolicies", vXMetricServiceCount); }
 							else if (k == 0) {
-								servicesWithPolicy.put("resourcePolicy", vXMetricServiceCount);}
+								servicesWithPolicy.put("resourceAccessPolicies", vXMetricServiceCount);}
 						}
 						boolean tagFlag = false;
 						if (tagFlag == false) {
@@ -302,7 +304,7 @@ public class MetricUtil extends BaseLoader  {
 							VXMetricServiceCount vXMetricServiceCount = new VXMetricServiceCount();
 							vXMetricServiceCount.setServiceBasedCountList(tagMap);
 							vXMetricServiceCount.setTotalCount(tagCount);
-							servicesWithPolicy.put("tagBasedPolicies", vXMetricServiceCount);
+							servicesWithPolicy.put("tagAccessPolicies", vXMetricServiceCount);
 							tagFlag = true;
 						}
 						vXMetricPolicyCount.setPolicyCountList(servicesWithPolicy);
@@ -316,7 +318,7 @@ public class MetricUtil extends BaseLoader  {
 				case "database" :
 					try {
 						int dbFlavor = RangerBizUtil.getDBFlavor();
-						String dbFlavourType = "Unknow ";
+						String dbFlavourType = "Unknown";
 						if (dbFlavor == AppConstants.DB_FLAVOR_MYSQL) {
 							dbFlavourType = "MYSQL ";
 						} else if (dbFlavor == AppConstants.DB_FLAVOR_ORACLE) {
@@ -328,10 +330,11 @@ public class MetricUtil extends BaseLoader  {
 						} else if (dbFlavor == AppConstants.DB_FLAVOR_SQLSERVER) {
 							dbFlavourType = "SQLSERVER ";
 						}
+
 						String dbDetail = dbFlavourType + xaBizUtil.getDBVersion();
 						Gson gson = new GsonBuilder().create();
 						final String jsonDBDetail = gson.toJson(dbDetail);
-						System.out.println(jsonDBDetail);
+						logger.info("jsonDBDetail:" + jsonDBDetail);
 					} catch (Exception e) {
 						logger.error("Error calculating Metric for database : " + e.getMessage());
 					}
@@ -381,6 +384,7 @@ public class MetricUtil extends BaseLoader  {
 										String serviceDef = rangerServiceDef.getName();
 										if (!StringUtils.isEmpty(serviceDef)) {
 											policyFilter1.setParam("serviceType", serviceDef);
+											policyFilter1.setParam("denyCondition", "true");
 											PList<RangerPolicy> policiesList = svcStore.getPaginatedPolicies(policyFilter1);
 											if (policiesList != null && policiesList.getListSize() > 0) {
 												int policyListCount = policiesList.getListSize();
@@ -433,7 +437,7 @@ public class MetricUtil extends BaseLoader  {
 		}		
 	}
 	
-	private VXMetricServiceCount getVXMetricServiceCount(String serviceType)
+	private VXMetricServiceCount getVXMetricServiceCount(String policyType)
 			throws Exception {
 		SearchFilter policyFilter1 = new SearchFilter();
 		policyFilter1.setMaxRows(200);
@@ -441,7 +445,7 @@ public class MetricUtil extends BaseLoader  {
 		policyFilter1.setGetCount(true);
 		policyFilter1.setSortBy("serviceId");
 		policyFilter1.setSortType("asc");
-		policyFilter1.setParam("policyType", serviceType);
+		policyFilter1.setParam("policyType", policyType);
 		PList<RangerPolicy> policies = svcStore.getPaginatedPolicies(policyFilter1);
 		PList<RangerService> paginatedSvcsSevice = svcStore.getPaginatedServices(policyFilter1);
 
@@ -490,6 +494,8 @@ public class MetricUtil extends BaseLoader  {
 			searchCriteriaWithType.getParamList().put("accessResult", accessResult);
 			searchCriteriaWithType.addParam("startDate", startDate);
 			searchCriteriaWithType.addParam("endDate", endDate);
+			searchCriteriaWithType.setMaxRows(0);
+			searchCriteriaWithType.setGetCount(true);
 			VXAccessAuditList vXAccessAuditListwithType = assetMgr.getAccessLogs(searchCriteriaWithType);
 			long toltalCountOfRepo = vXAccessAuditListwithType.getTotalCount();
 			if (toltalCountOfRepo != 0) {

@@ -1,7 +1,7 @@
-/*! X-editable - v1.5.0 
+/*! X-editable - v1.5.3 
 * In-place editing with Twitter Bootstrap, jQuery UI or pure jQuery
 * http://github.com/vitalets/x-editable
-* Copyright (c) 2013 Vitaliy Potapov; Licensed MIT */
+* Copyright (c) 2018 Vitaliy Potapov; Licensed MIT */
 .editableform {
     margin-bottom: 0; /* overwrites bootstrap margin */
 }
@@ -10,6 +10,24 @@
     margin-bottom: 0; /* overwrites bootstrap margin */
     white-space: nowrap; /* prevent wrapping buttons on new line */
     line-height: 20px; /* overwriting bootstrap line-height. See #133 */
+}
+
+/*
+    BS3 fix: stop css from breaking when the form is inside a popup and inside a form with the class .form-horizontal
+    See: https://github.com/vitalets/x-editable/issues/682
+*/
+.form-horizontal .editable-popup .editableform .form-group {
+    margin-left:0;
+    margin-right:0;
+}
+
+
+/* 
+  BS3 width:1005 for inputs breaks editable form in popup 
+  See: https://github.com/vitalets/x-editable/issues/393
+*/
+.editableform .form-control {
+    width: auto;
 }
 
 .editable-buttons {
@@ -137,8 +155,9 @@
 .editable-pre-wrapped {
    white-space: pre-wrap;
 }
+
 .editable-container.editable-popup {
-    max-width: none; /* without this rule poshytip/tooltip does not stretch */
+    max-width: none !important; /* without this rule poshytip/tooltip does not stretch */
 }  
 
 .editable-container.popover {
@@ -220,8 +239,8 @@ a.editable-click.editable-disabled:hover {
   border-radius: 4px;
   direction: ltr;
   /*.dow {
-		border-top: 1px solid #ddd !important;
-	}*/
+    border-top: 1px solid #ddd !important;
+  }*/
 
 }
 .datepicker-inline {

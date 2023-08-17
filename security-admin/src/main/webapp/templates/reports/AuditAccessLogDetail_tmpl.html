@@ -14,9 +14,26 @@
   See the License for the specific language governing permissions and
   limitations under the License.
 --}}
-<div id="serviceDetails" class="row-fluid">
+<div id="serviceDetails">
     <table class="table table-bordered table-condensed">
+        {{#if auditAccessView}}
+            <thead>
+                <h4>Ranger – audit log</h4>
+            </thead>
+        {{/if}}
         <tbody>
+            <tr>
+                <td>
+                    {{tt 'lbl.auditId'}}
+                </td>
+                {{#compare auditaccessDetail.eventId "eq" ''}}
+                    <td> -- </td>
+                {{else}}
+                    <td>
+                        {{auditaccessDetail.eventId}}
+                    </td>
+                {{/compare}}
+            </tr>
            <tr>
                 <td>
                     {{tt 'lbl.policyId'}}
@@ -111,8 +128,47 @@
                         {{tt 'lbl.hiveQuery'}}
                     </td>
                     <td>
-                        <span class="pull-right link-tag query-icon copyQuery btn btn-mini" data-name="copyQuery" title="Copy Query">
-                            <i class="icon-copy"></i>
+                        <span class="pull-right link-tag query-icon copyQuery btn btn-sm" data-name="copyQuery" title="Copy Query">
+                            <i class="fa-fw fa fa-copy"></i>
+                        </span>
+                        <span>{{auditaccessDetail.requestData}}</span>
+                    </td>
+                </tr>
+            {{/if}}
+            {{#if hbaseAudit}}
+                <tr>
+                    <td>
+                        {{tt 'lbl.hbaseAudit'}}
+                    </td>
+                    <td>
+                        <span class="pull-right link-tag query-icon copyQuery btn btn-sm" data-name="copyQuery" title="Copy Query">
+                            <i class="fa-fw fa fa-copy"></i>
+                        </span>
+                        <span>{{auditaccessDetail.requestData}}</span>
+                    </td>
+                </tr>
+            {{/if}}
+            {{#if solrQuery}}
+                <tr>
+                    <td>
+                        {{tt 'lbl.solrQuery'}}
+                    </td>
+                    <td>
+                        <span class="pull-right link-tag query-icon copyQuery btn btn-sm" data-name="copyQuery" title="Copy Query">
+                            <i class="fa-fw fa fa-copy"></i>
+                        </span>
+                        <span>{{auditaccessDetail.requestData}}</span>
+                    </td>
+                </tr>
+            {{/if}}
+            {{#if hdfsOperation}}
+                <tr>
+                    <td>
+                        {{tt 'lbl.hdfsOperation'}}
+                    </td>
+                    <td>
+                        <span class="pull-right link-tag query-icon copyQuery btn btn-sm" data-name="copyQuery" title="Copy Query">
+                            <i class="fa-fw fa fa-copy"></i>
                         </span>
                         <span>{{auditaccessDetail.requestData}}</span>
                     </td>
@@ -221,3 +277,9 @@
         </tbody>
     </table>
 </div>
+{{#if policyDetailsView}}
+    <div>
+         <div><h4>Policy Details</h4><span class="policyVersionHistory"></span></div>
+        <div id="policyDetails" data-id="PolicyDetaissInfo"></div>
+    </div>
+{{/if}}

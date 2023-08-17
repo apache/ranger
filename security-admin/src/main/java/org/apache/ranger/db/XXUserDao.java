@@ -21,20 +21,22 @@ package org.apache.ranger.db;
 
 import javax.persistence.NoResultException;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.entity.XXUser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Set;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 @Service
 public class XXUserDao extends BaseDao<XXUser> {
-	private static final Logger logger = Logger.getLogger(XXResourceDao.class);
+	private static final Logger logger = LoggerFactory.getLogger(XXResourceDao.class);
 
 	public XXUserDao(RangerDaoManagerBase daoManager) {
 		super(daoManager);
@@ -92,4 +94,32 @@ public class XXUserDao extends BaseDao<XXUser> {
 		return userGroups;
 	}
 
+	public Map<String, Long> getAllUserIds() {
+		Map<String, Long> users = new HashMap<>();
+		try {
+			List<Object[]> rows = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.getAllUserIds").getResultList();
+			if (rows != null) {
+				for (Object[] row : rows) {
+					users.put((String)row[0], (Long)row[1]);
+				}
+			}
+		} catch (NoResultException e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug(e.getMessage());
+			}
+		}
+		return users;
+	}
+
+	public List<Object[]> getAllUserIdNames() {
+		List<Object[]> users = new ArrayList<Object[]>();
+		try {
+			users = (List<Object[]>) getEntityManager().createNamedQuery("XXUser.getAllUserIdNames").getResultList();
+		} catch (NoResultException e) {
+			if (logger.isDebugEnabled()) {
+				logger.debug(e.getMessage());
+			}
+		}
+		return users;
+	}
 }

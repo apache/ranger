@@ -33,12 +33,12 @@ import org.apache.ranger.plugin.service.RangerBaseService;
 import org.apache.ranger.plugin.service.ResourceLookupContext;
 import org.apache.ranger.services.knox.client.KnoxResourceMgr;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RangerServiceKnox extends RangerBaseService {
 
-	private static final Log LOG = LogFactory.getLog(RangerServiceKnox.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerServiceKnox.class);
 	public static final String ACCESS_TYPE_ALLOW  = "allow";
 	
 	public RangerServiceKnox() {

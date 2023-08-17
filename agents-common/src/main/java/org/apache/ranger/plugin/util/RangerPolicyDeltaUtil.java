@@ -21,31 +21,32 @@ package org.apache.ranger.plugin.util;
 
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicyDelta;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RangerPolicyDeltaUtil {
 
-    private static final Log LOG = LogFactory.getLog(RangerPolicyDeltaUtil.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RangerPolicyDeltaUtil.class);
 
-    private static final Log PERF_POLICY_DELTA_LOG = RangerPerfTracer.getPerfLogger("policy.delta");
+    private static final Logger PERF_POLICY_DELTA_LOG = RangerPerfTracer.getPerfLogger("policy.delta");
 
     public static List<RangerPolicy> applyDeltas(List<RangerPolicy> policies, List<RangerPolicyDelta> deltas, String serviceType) {
         if (LOG.isDebugEnabled()) {
-            LOG.debug("==> applyDeltas(serviceType=" + serviceType + ")");
+            LOG.debug("==> applyDeltas(serviceType=" + serviceType + ", deltas=" + deltas + ")");
         }
 
         List<RangerPolicy> ret;
-
-        RangerPerfTracer perf = null;
+        RangerPerfTracer   perf = null;
 
         if(RangerPerfTracer.isPerfTraceEnabled(PERF_POLICY_DELTA_LOG)) {
             perf = RangerPerfTracer.getPerfTracer(PERF_POLICY_DELTA_LOG, "RangerPolicyDelta.applyDeltas()");
@@ -53,53 +54,66 @@ public class RangerPolicyDeltaUtil {
 
         if (CollectionUtils.isNotEmpty(deltas)) {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("applyDeltas(deltas=" + Arrays.toString(deltas.toArray()) + ", serviceType=" + serviceType +")");
+                LOG.debug("applyDeltas(deltas=" + Arrays.toString(deltas.toArray()) + ", serviceType=" + serviceType + ")");
             }
-            ret = new ArrayList<>(policies);
+
+            Map<Long, RangerPolicy> retMap = new HashMap<>();
+
+            for (RangerPolicy policy : policies) {
+                retMap.put(policy.getId(), policy);
+            }
 
             for (RangerPolicyDelta delta : deltas) {
-                int changeType = delta.getChangeType();
-                if (!serviceType.equals(delta.getServiceType())) {
-                    if (!serviceType.equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME) && !delta.getServiceType().equals(EmbeddedServiceDefsUtil.EMBEDDED_SERVICEDEF_TAG_NAME)) {
-                        LOG.error("Found unexpected serviceType in policyDelta:[" + delta + "]. Was expecting serviceType:[" + serviceType + "]. Should NOT have come here!! Ignoring delta and continuing");
-                    }
+                if (!StringUtils.equals(serviceType, delta.getServiceType()) || delta.getPolicyId() == null) {
                     continue;
                 }
-                if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE || changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
-                    if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE) {
-                        if (delta.getPolicy() != null) {
-                            ret.add(delta.getPolicy());
-                        }
-                    } else {
-                        // Either UPDATE or DELETE
-                        Long policyId       = delta.getPolicyId();
 
-                        Iterator<RangerPolicy> iter = ret.iterator();
-                        while (iter.hasNext()) {
-                            if (policyId.equals(iter.next().getId())) {
-                                iter.remove();
-                                break;
-                            }
+                int changeType = delta.getChangeType();
+
+                if (changeType != RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE && changeType != RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE && changeType != RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
+                    LOG.warn("Found unexpected changeType in policyDelta:[" + delta + "]. Ignoring delta");
+
+                    continue;
+                }
+
+                Long         policyId      = delta.getPolicyId();
+                RangerPolicy deletedPolicy = retMap.remove(policyId);
+
+                switch(changeType) {
+                    case RangerPolicyDelta.CHANGE_TYPE_POLICY_CREATE: {
+                        if (deletedPolicy != null) {
+                            LOG.warn("Unexpected: found existing policy for CHANGE_TYPE_POLICY_CREATE: " + deletedPolicy);
                         }
-                        if (changeType == RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE) {
-                            if (delta.getPolicy() != null) {
-                                ret.add(delta.getPolicy());
-                            }
-                        }
+                        break;
                     }
-                } else {
-                    LOG.warn("Found unexpected changeType in policyDelta:[" + delta +"]. Ignoring delta");
+                    case RangerPolicyDelta.CHANGE_TYPE_POLICY_UPDATE: {
+                        if (deletedPolicy == null) {
+                            LOG.warn("Unexpected: found no existing policy for CHANGE_TYPE_POLICY_UPDATE: " + deletedPolicy);
+                        }
+                        break;
+                    }
+                    case RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE: {
+                        if (deletedPolicy == null) {
+                            LOG.warn("Unexpected: found no existing policy for CHANGE_TYPE_POLICY_DELETE: " + deletedPolicy);
+                        }
+                        break;
+                    }
+                    default:
+                        break;
+                }
+
+                if (changeType != RangerPolicyDelta.CHANGE_TYPE_POLICY_DELETE) {
+                    retMap.put(policyId, delta.getPolicy());
                 }
             }
+
+            ret = new ArrayList<>(retMap.values());
+            ret.sort(RangerPolicy.POLICY_ID_COMPARATOR);
         } else {
             if (LOG.isDebugEnabled()) {
-                LOG.debug("applyDeltas(deltas=null, serviceType=" + serviceType +")");
+                LOG.debug("applyDeltas called with empty deltas. Will return policies without change");
             }
             ret = policies;
-        }
-
-        if (CollectionUtils.isNotEmpty(deltas) && CollectionUtils.isNotEmpty(ret)) {
-            ret.sort(RangerPolicy.POLICY_ID_COMPARATOR);
         }
 
         RangerPerfTracer.log(perf);
@@ -165,28 +179,43 @@ public class RangerPolicyDeltaUtil {
             LOG.error("ServicePolicies are null!");
             ret = null;
         } else {
-            Boolean isDeltasInSecurityZones = null;
+            boolean isPoliciesExistInSecurityZones     = false;
+            boolean isPolicyDeltasExistInSecurityZones = false;
 
             if (MapUtils.isNotEmpty(servicePolicies.getSecurityZones())) {
                 for (ServicePolicies.SecurityZoneInfo element : servicePolicies.getSecurityZones().values()) {
                     if (CollectionUtils.isNotEmpty(element.getPolicies()) && CollectionUtils.isEmpty(element.getPolicyDeltas())) {
-                        isDeltasInSecurityZones = false;
-                        break;
+                        isPoliciesExistInSecurityZones = true;
                     }
                     if (CollectionUtils.isEmpty(element.getPolicies()) && CollectionUtils.isNotEmpty(element.getPolicyDeltas())) {
-                        isDeltasInSecurityZones = true;
-                        break;
+                        isPolicyDeltasExistInSecurityZones = true;
                     }
                 }
             }
 
-            if (CollectionUtils.isNotEmpty(servicePolicies.getPolicies()) || (servicePolicies.getTagPolicies() != null && CollectionUtils.isNotEmpty(servicePolicies.getTagPolicies().getPolicies())) || (isDeltasInSecurityZones != null && isDeltasInSecurityZones.equals(Boolean.FALSE))) {
-                ret = false;
-            } else if (CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) || (isDeltasInSecurityZones != null && isDeltasInSecurityZones.equals(Boolean.TRUE))) {
-                ret = true;
-            } else {
-                LOG.warn("ServicePolicies contain either both policies and policy-deltas or contain neither policies nor policy-deltas!");
+            boolean isPoliciesExist     = CollectionUtils.isNotEmpty(servicePolicies.getPolicies()) || (servicePolicies.getTagPolicies() != null && CollectionUtils.isNotEmpty(servicePolicies.getTagPolicies().getPolicies())) || isPoliciesExistInSecurityZones;
+            boolean isPolicyDeltasExist = CollectionUtils.isNotEmpty(servicePolicies.getPolicyDeltas()) || isPolicyDeltasExistInSecurityZones;
+
+            if (isPoliciesExist && isPolicyDeltasExist) {
+                LOG.warn("ServicePolicies contain both policies and policy-deltas!! Cannot build policy-engine from these servicePolicies. Please check server-side code!");
+                LOG.warn("Downloaded ServicePolicies are [" + servicePolicies + "]");
                 ret = null;
+            } else if (!isPoliciesExist && !isPolicyDeltasExist) {
+                LOG.warn("ServicePolicies do not contain any policies or policy-deltas!!");
+                LOG.warn("Downloaded ServicePolicies are [" + servicePolicies + "]");
+                if (servicePolicies.getPolicyDeltas() == null) {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("Complete set of servicePolicies is received. There may be a change to service. Forcing to create a new policy engine!");
+                    }
+                    ret = false;    // Force new policy engine creation from servicePolicies
+                } else {
+                    if (LOG.isDebugEnabled()) {
+                        LOG.debug("servicePolicy deltas are received. There are no material changes in the policies.");
+                    }
+                    ret = null;
+                }
+            } else {
+                ret = isPolicyDeltasExist;
             }
         }
         if (LOG.isDebugEnabled()) {

@@ -19,10 +19,12 @@ package org.apache.ranger.patch;
 
 import com.google.gson.Gson;
 import org.apache.commons.collections.MapUtils;
-import org.apache.log4j.Logger;
+import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXGlobalState;
 import org.apache.ranger.util.CLIUtil;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -30,7 +32,7 @@ import java.util.Map;
 
 @Component
 public class PatchForXGlobalState_J10036 extends BaseLoader {
-	private static final Logger logger = Logger
+	private static final Logger logger = LoggerFactory
 			.getLogger(PatchForXGlobalState_J10036.class);
 
 	@Autowired
@@ -74,10 +76,12 @@ public class PatchForXGlobalState_J10036 extends BaseLoader {
 			if (MapUtils.isNotEmpty(appDataVersionJson)) {
 				logger.info("Updating globalstate appdata version for = " + appDataVersionJson);
 				String roleVersion = appDataVersionJson.get("RangerRoleVersion");
-				appDataVersionJson.put("Version", roleVersion);
-				appDataVersionJson.remove("RangerRoleVersion");
-				globalState.setAppData(appDataVersionJson.toString());
-				daoManager.getXXGlobalState().update(globalState);
+				if (StringUtils.isNotEmpty(roleVersion)) {
+					appDataVersionJson.put("Version", roleVersion);
+					appDataVersionJson.remove("RangerRoleVersion");
+					globalState.setAppData(new Gson().toJson(appDataVersionJson));
+					daoManager.getXXGlobalState().update(globalState);
+				}
 			}
 		}
 	}

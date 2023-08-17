@@ -22,9 +22,9 @@ package org.apache.ranger.plugin.contextenricher;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.util.ServiceTags;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.*;
 import java.net.MalformedURLException;
@@ -33,12 +33,13 @@ import java.nio.charset.Charset;
 import java.util.Map;
 
 public class RangerFileBasedTagRetriever extends RangerTagRetriever {
-	private static final Log LOG = LogFactory.getLog(RangerFileBasedTagRetriever.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerFileBasedTagRetriever.class);
 
 
 	private URL serviceTagsFileURL;
 	private String serviceTagsFileName;
 	private Gson gsonBuilder;
+	private boolean deDupTags;
 
 	@Override
 	public void init(Map<String, String> options) {
@@ -53,6 +54,7 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 
 		String serviceTagsFileNameProperty = "serviceTagsFileName";
 		String serviceTagsDefaultFileName = "/testdata/test_servicetags_hive.json";
+		String deDupTagsProperty          = "deDupTags";
 
 		if (StringUtils.isNotBlank(serviceName) && serviceDef != null && StringUtils.isNotBlank(appId)) {
 			InputStream serviceTagsFileStream = null;
@@ -61,6 +63,8 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 			// Open specified file from options- it should contain service-tags
 
 			serviceTagsFileName = options != null? options.get(serviceTagsFileNameProperty) : null;
+			String deDupTagsVal = options != null? options.get(deDupTagsProperty) : "false";
+			deDupTags           = Boolean.parseBoolean(deDupTagsVal);
 
 			serviceTagsFileName = serviceTagsFileName == null ? serviceTagsDefaultFileName : serviceTagsFileName;
 
@@ -137,6 +141,11 @@ public class RangerFileBasedTagRetriever extends RangerTagRetriever {
 				if (serviceTags.getTagVersion() <= lastKnownVersion) {
 					// No change in serviceTags
 					serviceTags = null;
+				} else {
+					if (deDupTags) {
+						final int countOfDuplicateTags = serviceTags.dedupTags();
+						LOG.info("Number of duplicate tags removed from the received serviceTags:[" + countOfDuplicateTags + "]. Number of tags in the de-duplicated serviceTags :[" + serviceTags.getTags().size() + "].");
+					}
 				}
 			} catch (IOException e) {
 				LOG.warn("Error processing input file: or no privilege for reading file " + serviceTagsFileName);

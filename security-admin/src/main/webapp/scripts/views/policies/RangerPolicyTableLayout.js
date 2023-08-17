@@ -40,7 +40,6 @@ define(function(require){
 
 	require('backgrid-filter');
 	require('backgrid-paginator');
-	require('bootbox');
 
 	var RangerPolicyTableLayout = Backbone.Marionette.Layout.extend(
 	/** @lends RangerPolicyTableLayout */
@@ -50,6 +49,13 @@ define(function(require){
     	template: RangerPolicyTableLayoutTmpl,
 
 		templateHelpers : function(){
+			var infoMsg ="", displayClass = "d-none";
+			if(this.rangerService && this.rangerService.get('type')){
+				if(this.rangerService.get('type') == XAEnums.ServiceType.Service_HDFS.label || this.rangerService.get('type') == XAEnums.ServiceType.Service_YARN.label) {
+					infoMsg = XAUtil.pluginConfigInfo(this.rangerService.get('type').toUpperCase())
+					displayClass = "show"
+				}
+			}
 			return {
 				rangerService : this.rangerService,
 				rangerServiceDef : this.rangerServiceDefModel,
@@ -58,6 +64,8 @@ define(function(require){
                                         : XAUtil.isRenderRowFilter(this.rangerServiceDefModel.get('rowFilterDef')) ? true : false,
                 isAddNewPolicyButtonShow : !(XAUtil.isAuditorOrKMSAuditor(SessionMgr)) && this.rangerService.get('isEnabled'),
                 setNewUi : localStorage.getItem('setOldUI') == "true" ? false : true,
+                displayClass : displayClass,
+                infoMsg : infoMsg,
 			};
 		},
         
@@ -112,7 +120,8 @@ define(function(require){
 		*/
 		initialize: function(options) {
 			console.log("initialized a RangerPolicyTableLayout Layout");
-                        _.extend(this, _.pick(options,'rangerService', 'urlQueryParams'));
+			_.extend(this, _.pick(options,'rangerService', 'urlQueryParams'));
+			this.urlQueryParams = XAUtil.urlQueryParams(); 
 			this.bindEvents();
 			this.initializeServiceDef();
 			if(_.isUndefined(App.vZone)) {
@@ -211,11 +220,13 @@ define(function(require){
 
 		onView : function(e){
 			var that = this;
+			XAUtil.blockUI();
 			var policyId = $(e.currentTarget).data('id');
 			var rangerPolicy = new RangerPolicy({ id : policyId});
 			rangerPolicy.fetch({
 				cache : false,
 			}).done(function(){
+				XAUtil.blockUI('unblock');
 				var policyVersionList = rangerPolicy.fetchVersions();
 				var view = new RangerPolicyRO({
 					model : rangerPolicy,
@@ -228,14 +239,15 @@ define(function(require){
 					title	: localization.tt("h.policyDetails"),
 					okText 	: localization.tt("lbl.ok"),
 					allowCancel : true,
-					escape 	: true
+					escape 	: true,
+					focusOk : false
 				}).open();
 				var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
-				policyVerEl.append('<i id="preVer" class="icon-chevron-left ' + ((rangerPolicy.get('version') > 1) ? 'active' : '') + '"></i><text>Version ' + rangerPolicy.get('version') + '</text>').find('#preVer').click(function(e) {
+				policyVerEl.append('<i id="preVer" class="fa-fw fa fa-chevron-left ' + ((rangerPolicy.get('version') > 1) ? 'active' : '') + '"></i><text>Version ' + rangerPolicy.get('version') + '</text>').find('#preVer').click(function(e) {
 					view.previousVer(e);
 				});
                                 var policyVerIndexAt = policyVersionList.indexOf(rangerPolicy.get('version'));
-				policyVerEl.append('<i id="nextVer" class="icon-chevron-right ' + (!_.isUndefined(policyVersionList[++policyVerIndexAt]) ? 'active' : '') + '"></i>').find('#nextVer').click(function(e) {
+				policyVerEl.append('<i id="nextVer" class="fa-fw fa fa-chevron-right ' + (!_.isUndefined(policyVersionList[++policyVerIndexAt]) ? 'active' : '') + '"></i>').find('#nextVer').click(function(e) {
 					view.nextVer(e);
 				});
 				policyVerEl.after('<a id="revert" href="#" class="btn btn-primary" style="display:none;">Revert</a>').next('#revert').click(function(e){
@@ -248,15 +260,15 @@ define(function(require){
 		getColumns : function(){
 			var that = this;
 			var cols = {
-				id : {
+				policyId : {
                     cell : 'html',
-					label	: localization.tt("lbl.policyId"),
+                    label : localization.tt("lbl.policyId"),
                     formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw: function (rawValue, model) {
                             if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
                                 if(!_.isEmpty(model.get('validitySchedules')) && XAUtil.isPolicyExpierd(model)){
                                     return '<div class="expiredIconPosition">\
-                                                <i class="icon-exclamation-sign backgrigModelId" title="Policy expired"></i>\
+                                                <i class="fa-fw fa fa-exclamation-circle backgrigModelId" title="Policy expired"></i>\
                                                 '+model.id+'\
                                              </div>';
                                 }else{
@@ -267,7 +279,7 @@ define(function(require){
                             }else{
                                 if(!_.isEmpty(model.get('validitySchedules')) && XAUtil.isPolicyExpierd(model)){
                                     return '<div class="expiredIconPosition">\
-                                                <i class="icon-exclamation-sign backgrigModelId" title="Policy expired"></i>\
+                                                <i class="fa-fw fa fa-exclamation-circle backgrigModelId" title="Policy expired"></i>\
                                                 <a class="" href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit">'+model.id+'</a>\
                                              </div>';
                                 }else{
@@ -278,14 +290,24 @@ define(function(require){
                             }
                         }
                     }),
-					editable: false,
-					sortable : false
-				},
-				name : {
-					cell : 'string',
-					label	: localization.tt("lbl.policyName"),
-					editable: false,
-					sortable : false
+                    editable: false,
+                    sortable : true,
+                    direction: "ascending",
+                },
+                policyName : {
+                    cell : 'string',
+                    label : localization.tt("lbl.policyName"),
+                    editable: false,
+                    sortable:true,
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            if(model) {
+                                return model.get('name');
+                            } else {
+                                return '--';
+                            }
+                        }
+                    })
                 },
                 policyLabels: {
                     cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
@@ -308,7 +330,7 @@ define(function(require){
 					editable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue) {
-							return rawValue ? '<label class="label label-success">Enabled</label>' : '<label class="label label-important">Disabled</label>';
+							return rawValue ? '<label class="badge badge-success">Enabled</label>' : '<label class="badge badge-danger">Disabled</label>';
 						}
 					}),
 					click : false,
@@ -321,7 +343,7 @@ define(function(require){
 					editable:false,
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue) {
-							return rawValue ? '<label class="label label-success">Enabled</label>' : '<label class="label label-important">Disabled</label>';
+							return rawValue ? '<label class="badge badge-success">Enabled</label>' : '<label class="badge badge-danger">Disabled</label>';
 						}
 					}),
 					click : false,
@@ -334,27 +356,24 @@ define(function(require){
                                         label : localization.tt("lbl.roles"),
                                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                                                 fromRaw: function (rawValue, model) {
-                                                        return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, 'roles', that.rangerServiceDefModel);
+                                                        return XAUtil.showGroupsOrUsersForPolicy(model, 'roles', that.rangerServiceDefModel);
                                                 }
                                         }),
                                         editable : false,
                                         sortable : false
                                 },
-				policyItems : {
-					reName : 'groupName',
-					cell	: Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
-					label : localization.tt("lbl.group"),
-					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
-						fromRaw: function (rawValue, model) {
-							if(!_.isUndefined(rawValue)){
-                                                                return XAUtil.showGroupsOrUsersForPolicy(rawValue, model, 'groups', that.rangerServiceDefModel);
-							}
-							return '--';
-						}
-					}),
-					editable : false,
-					sortable : false
-				},
+                groups : {
+                    reName : 'groupName',
+                    cell : Backgrid.HtmlCell.extend({className: 'cellWidth-1'}),
+                    label : localization.tt("lbl.group"),
+                    formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
+                        fromRaw: function (rawValue, model) {
+                            return XAUtil.showGroupsOrUsersForPolicy(model, 'groups', that.rangerServiceDefModel);
+                        }
+                    }),
+                    editable : false,
+                    sortable : false
+                },
 				//Hack for backgrid plugin doesn't allow to have same column name 
 				users : {
 					reName : 'userName',
@@ -362,7 +381,7 @@ define(function(require){
 					label : localization.tt("lbl.users"),
 					formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 						fromRaw: function (rawValue, model) {
-                                                                return XAUtil.showGroupsOrUsersForPolicy(model.get('policyItems'), model, 'users', that.rangerServiceDefModel);
+                                                                return XAUtil.showGroupsOrUsersForPolicy(model, 'users', that.rangerServiceDefModel);
                                                 }
                                         }),
                                         editable : false,
@@ -375,11 +394,11 @@ define(function(require){
 				formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 					fromRaw: function (rawValue,model) {
                         if(XAUtil.isAuditorOrKMSAuditor(SessionMgr)){
-                            return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="'+model.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open icon-large"></i></a>';
+                            return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="'+model.id+'" class="btn btn-mini" title="View"><i class="fa-fw fa fa-eye fa-fw fa fa-large"></i></a>';
                         }else{
-                            return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="'+model.id+'" class="btn btn-mini" title="View"><i class="icon-eye-open icon-large"></i></a>\
-                                    <a href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit" class="btn btn-mini" title="Edit"><i class="icon-edit icon-large"></i></a>\
-                                    <a href="javascript:void(0);" data-name ="deletePolicy" data-id="'+model.id+'"  class="btn btn-mini btn-danger" title="Delete"><i class="icon-trash icon-large"></i></a>';
+                            return '<a href="javascript:void(0);" data-name ="viewPolicy" data-id="'+model.id+'" class="btn btn-mini" title="View"><i class="fa-fw fa fa-eye fa-fw fa fa-large"></i></a>\
+                                    <a href="#!/service/'+that.rangerService.id+'/policies/'+model.id+'/edit" class="btn btn-mini" title="Edit"><i class="fa-fw fa fa-edit fa-fw fa fa-large"></i></a>\
+                                    <a href="javascript:void(0);" data-name ="deletePolicy" data-id="'+model.id+'"  class="btn btn-mini btn-danger" title="Delete"><i class="fa-fw fa fa-trash fa-fw fa fa-large"></i></a>';
 						//You can use rawValue to custom your html, you can change this value using the name parameter.
                         }
 					}
@@ -463,21 +482,20 @@ define(function(require){
                                 resources = this.rangerServiceDefModel.get('rowFilterDef')['resources'];
                         }
                         var resourceSearchOpt = _.map(resources, function(resource){
-                                        return { 'name' : resource.name, 'label' : resource.label };
+                                        return { 'name' : resource.name, 'label' : resource.label, 'description':resource.description };
                         });
 			var PolicyStatusValue = _.map(XAEnums.ActiveStatus, function(status) { return { 'label': status.label, 'value': Boolean(status.value)}; });
 	
-                        var searchOpt = ['Policy Name','Group Name','User Name','Status', 'Policy Label'];//,'Start Date','End Date','Today'];
+                        var searchOpt = ['Policy Name','Group Name','User Name','Status', 'Policy Label', 'Role Name'];//,'Start Date','End Date','Today'];
                         searchOpt = _.union(searchOpt, _.map(resourceSearchOpt, function(opt){ return opt.label }))
                         var serverAttrName  = [{text : "Group Name",  label :"group",   info:localization.tt('h.groupNameMsg'), urlLabel : 'groupName'},
                                                {text : "Policy Name", label :"policyNamePartial",  info :localization.tt('msg.policyNameMsg'), urlLabel : 'policyName'},
                                                {text : "Status",      info : localization.tt('msg.statusMsg') ,  label :"isEnabled",'multiple' : true, 'optionsArr' : PolicyStatusValue, urlLabel : 'status'},
                                                {text : "User Name",   label :"user" ,  info :localization.tt('h.userMsg'), urlLabel : 'userName'},
+                                               {text : "Role Name",   label :"role" ,  info :localization.tt('h.roleMsg'), urlLabel : 'roleName'},
                                                {text : "Policy Label",   label :"policyLabelsPartial" ,  info :localization.tt('h.policyLabelsinfo'), urlLabel : 'policyLabel'},
                                                ];
-			                     // {text : 'Start Date',label :'startDate'},{text : 'End Date',label :'endDate'},
-				                 //  {text : 'Today',label :'today'}];
-                        var info = { collection : localization.tt('h.collection')    , column   :localization.tt('lbl.columnName'),
+			            var info = { collection : localization.tt('h.collection')    , column   :localization.tt('lbl.columnName'),
                                          'column-family':localization.tt('msg.columnfamily') , database :localization.tt('h.database'),
                                           entity        :localization.tt('h.entity') , keyname  :localization.tt('lbl.keyName'),
                                           path:localization.tt('h.path'), queue: localization.tt('h.queue'), service:localization.tt('h.serviceNameMsg'),
@@ -493,7 +511,7 @@ define(function(require){
                                         return {
                                                 'text': opt.label,
                                                 'label': 'resource:'+ opt.name,
-                                                'info' : info[opt.name],
+                                                'info' : !_.isUndefined(info[opt.name]) ? info[opt.name] : opt.description,
                                                 'urlLabel' : XAUtil.stringToCamelCase(opt.label.toLowerCase()),
                                         };
 			});

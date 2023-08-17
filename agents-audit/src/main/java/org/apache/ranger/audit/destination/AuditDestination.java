@@ -21,16 +21,16 @@ package org.apache.ranger.audit.destination;
 
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.audit.provider.BaseAuditHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This class needs to be extended by anyone who wants to build custom
  * destination
  */
 public abstract class AuditDestination extends BaseAuditHandler {
-	private static final Log logger = LogFactory.getLog(AuditDestination.class);
+	private static final Logger logger = LoggerFactory.getLogger(AuditDestination.class);
 
 	public AuditDestination() {
 		logger.info("AuditDestination() enter");

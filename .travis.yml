@@ -15,31 +15,47 @@
 
 
 sudo: false
-language: java
+dist: bionic
+language: generic
+
 cache:
   directories:
-  - $HOME/.m2
-jdk:
-  - oraclejdk8
-  - oraclejdk11
-  - openjdk10
-  - openjdk11
+    - $HOME/.m2
 
 env:
-  - KEY=default VALUE=default
+  global:
+    - KEY=default VALUE=default
+
 # Environment to testing with different versions, disabled because ranger is not compatible
 #  - KEY=hadoop.version VALUE=2.8.0
 
+jobs:
+  include:
+    - name: Linux AMD64 OpenJDK8
+      env: JDK_VERSION=8
+    - name: Linux AMD64 OpenJDK11
+      env: JDK_VERSION=11
+    - name: Linux ARM64 OpenJDK11
+      arch: arm64-graviton2
+      dist: focal
+      virt: lxd
+      group: edge
+      env:
+        - JDK_VERSION=11
+        - MAVEN_ARGS="-DskipJSTests=true -P!all"
+
 before_install:
   - export MAVEN_OPTS="-Xmx1200M -XX:MaxPermSize=768m -Xms512m"
+  - sudo apt update -y
+  - sudo apt install openjdk-${JDK_VERSION}-jdk maven
 
 install:
-  - mvn package -D$KEY=$VALUE -DskipTests -Dmaven.javadoc.skip=true -B -V
+  - mvn install $MAVEN_ARGS -D$KEY=$VALUE -DskipTests -Dmaven.javadoc.skip=true --no-transfer-progress -B -V
 
 # KafkaRangerAuthorizerGSSTest is a failing test, TestLdapUserGroup needs too much memory for travis
 script:
-  - mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl !plugin-kafka,!ugsync,!hive-agent
-  - mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl plugin-kafka -Dtest="*,!KafkaRangerAuthorizerGSSTest"
-  - mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl ugsync -Dtest="*,!TestLdapUserGroup"
-  - if [[ "$TRAVIS_JDK_VERSION" != "oraclejdk8" ]]; then mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl hive-agent -Dtest="*,!HIVERangerAuthorizerTest" -DfailIfNoTests=false ; fi
-  - if [[ "$TRAVIS_JDK_VERSION" == "oraclejdk8" ]]; then mvn test -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl hive-agent ; fi
+  - mvn test $MAVEN_ARGS -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl !plugin-kafka,!ugsync,!hive-agent
+  - mvn test $MAVEN_ARGS -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl plugin-kafka -Dtest="*,!KafkaRangerAuthorizerGSSTest"
+  - mvn test $MAVEN_ARGS -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl ugsync -Dtest="*,!TestLdapUserGroup"
+  - if [[ "$JDK_VERSION" != "8" ]]; then mvn test $MAVEN_ARGS -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl hive-agent -Dtest="*,!HIVERangerAuthorizerTest" -DfailIfNoTests=false ; fi
+  - if [[ "$JDK_VERSION" == "8" ]]; then mvn test $MAVEN_ARGS -D$KEY=$VALUE -Dmaven.javadoc.skip=true -B -V -pl hive-agent ; fi

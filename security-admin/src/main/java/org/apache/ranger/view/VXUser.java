@@ -25,9 +25,6 @@
  */
 
 import java.util.Collection;
-import java.util.Objects;
-
-import javax.xml.bind.annotation.XmlRootElement;
 
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.RangerCommonEnums;
@@ -39,7 +36,6 @@ import org.codehaus.jackson.map.annotate.JsonSerialize;
 @JsonAutoDetect(getterVisibility=Visibility.NONE, setterVisibility=Visibility.NONE, fieldVisibility=Visibility.ANY)
 @JsonSerialize(include=JsonSerialize.Inclusion.NON_NULL )
 @JsonIgnoreProperties(ignoreUnknown=true)
-@XmlRootElement
 public class VXUser extends VXDataObject implements java.io.Serializable {
 	private static final long serialVersionUID = 1L;
 
@@ -91,6 +87,11 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 	 *
 	 */
 	protected String otherAttributes;
+
+	/**
+	 * Sync Source
+	 */
+	protected String syncSource;
 
 	/**
 	 * Default constructor. This will set all the attributes to default value.
@@ -306,23 +307,16 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 		this.otherAttributes = otherAttributes;
 	}
 
-	@Override
-	public boolean equals(Object o) {
-		if (this == o) return true;
-		if (o == null || getClass() != o.getClass()) return false;
+	/**
+	 * @return {@link String} - sync Source.
+	 */
+	public String getSyncSource() { return syncSource; }
 
-		VXUser vxUser = (VXUser) o;
-
-		return Objects.equals(status, vxUser.status) &&
-				Objects.equals(name, vxUser.name) &&
-				Objects.equals(description, vxUser.description) &&
-				Objects.equals(credStoreId, vxUser.credStoreId);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(super.hashCode(), name, description, credStoreId, status);
-	}
+	/**
+	 * This method sets additional attributes.
+	 * @param syncSource
+	 */
+	public void setSyncSource(String syncSource) { this.syncSource = syncSource; }
 
 	/**
 	 * This return the bean content in string format
@@ -342,6 +336,7 @@ public class VXUser extends VXDataObject implements java.io.Serializable {
 		str += "groupNameList={" + groupNameList + "} ";
         str += "roleList={" + userRoleList + "} ";
 		str += "otherAttributes={" + otherAttributes + "} ";
+		str += "syncSource={" + syncSource + "} ";
 		str += "}";
 		return str;
 	}

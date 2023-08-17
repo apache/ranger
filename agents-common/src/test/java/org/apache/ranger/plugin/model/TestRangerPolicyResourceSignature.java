@@ -89,6 +89,7 @@ public class TestRangerPolicyResourceSignature {
 		// empty resources map is ok!
 		Map<String, RangerPolicyResource> policyResources = new HashMap<>();
 		when(rangerPolicy.getResources()).thenReturn(policyResources);
+		when(rangerPolicy.getGuid()).thenReturn("TEST_GUID");
 		policySerializer = new PolicySerializer(rangerPolicy);
 		Assert.assertTrue("policy.getResources().isEmpty()", policySerializer.isPolicyValidForResourceSignatureComputation());
 		
@@ -159,6 +160,8 @@ public class TestRangerPolicyResourceSignature {
 		Map<String, RangerPolicyResource> policyResources = _utils.createPolicyResourceMap(first);
 		when(policy.getResources()).thenReturn(policyResources);
 		when(policy.getZoneName()).thenReturn(null);
+		when(policy.getGuid()).thenReturn("TEST_GUID");
+		when(policy.getIsEnabled()).thenReturn(true);
 		serializer = new PolicySerializer(policy);
 		String expectedVersion = "version=1";
 		String expectedType = "type=0";
@@ -190,6 +193,9 @@ public class TestRangerPolicyResourceSignature {
 		RangerPolicy policy2 = createPolicy(first_recursive_null_or_false);
 		RangerPolicyResourceSignature signature1 = new RangerPolicyResourceSignature(policy1);
 		RangerPolicyResourceSignature signature2 = new RangerPolicyResourceSignature(policy2);
+		when(policy1.getGuid()).thenReturn("TEST_GUID-1");
+		when(policy2.getGuid()).thenReturn("TEST_GUID-2");
+
 		Assert.assertEquals("Recursive flag: null is same as false", signature1.toString(), signature2.toString());
 	}
 	
@@ -198,6 +204,8 @@ public class TestRangerPolicyResourceSignature {
 		// create two policies with resources that differ only in the recursive flag, i.e. null/false in one and true in another
 		RangerPolicy policy1 = createPolicy(first);
 		RangerPolicy policy2 = createPolicy(first_recursive_flag_different);
+		when(policy1.getGuid()).thenReturn("TEST_GUID-1");
+		when(policy2.getGuid()).thenReturn("TEST_GUID-2");
 		RangerPolicyResourceSignature signature1 = new RangerPolicyResourceSignature(policy1);
 		RangerPolicyResourceSignature signature2 = new RangerPolicyResourceSignature(policy2);
 		Assert.assertFalse("Resources differ only by recursive flag true vs false/null", signature1.toString().equals(signature2.toString()));
@@ -208,6 +216,8 @@ public class TestRangerPolicyResourceSignature {
 		// create two policies with resources that differ only in the excludes flag such that flags are null in one and false in another
 		RangerPolicy policy1 = createPolicy(first);
 		RangerPolicy policy2 = createPolicy(first_excludes_null_or_false);
+		when(policy1.getGuid()).thenReturn("TEST_GUID-1");
+		when(policy2.getGuid()).thenReturn("TEST_GUID-2");
 		RangerPolicyResourceSignature signature1 = new RangerPolicyResourceSignature(policy1);
 		RangerPolicyResourceSignature signature2 = new RangerPolicyResourceSignature(policy2);
 		Assert.assertEquals("Excludes flag: null is same as false", signature1.toString(), signature2.toString());
@@ -218,6 +228,8 @@ public class TestRangerPolicyResourceSignature {
 		// create two policies with resources that differ only in the excludes flag, i.e. null/false in one and true in another
 		RangerPolicy policy1 = createPolicy(first);
 		RangerPolicy policy2 = createPolicy(first_excludes_flag_different);
+		when(policy1.getGuid()).thenReturn("TEST_GUID-1");
+		when(policy2.getGuid()).thenReturn("TEST_GUID-2");
 		RangerPolicyResourceSignature signature1 = new RangerPolicyResourceSignature(policy1);
 		RangerPolicyResourceSignature signature2 = new RangerPolicyResourceSignature(policy2);
 		Assert.assertFalse("Resources differ only by excludes flag true vs false/null", signature1.toString().equals(signature2.toString()));
@@ -227,6 +239,7 @@ public class TestRangerPolicyResourceSignature {
 		RangerPolicy policy = mock(RangerPolicy.class);
 		Map<String, RangerPolicyResource> resources = _utils.createPolicyResourceMap(data);
 		when(policy.getResources()).thenReturn(resources);
+		when(policy.getIsEnabled()).thenReturn(true);
 		return policy;
 	}
 
@@ -236,11 +249,16 @@ public class TestRangerPolicyResourceSignature {
 		RangerPolicy aPolicy = mock(RangerPolicy.class);
 		Map<String, RangerPolicyResource> resources = _utils.createPolicyResourceMap(first);
 		when(aPolicy.getResources()).thenReturn(resources);
+		when(aPolicy.getIsEnabled()).thenReturn(true);
+		when(aPolicy.getGuid()).thenReturn("TEST_GUID-1");
 		RangerPolicyResourceSignature signature = new RangerPolicyResourceSignature(aPolicy);
 		
 		RangerPolicy anotherPolicy = mock(RangerPolicy.class);
 		resources = _utils.createPolicyResourceMap(data_second);
 		when(anotherPolicy.getResources()).thenReturn(resources);
+		when(anotherPolicy.getIsEnabled()).thenReturn(true);
+		when(anotherPolicy.getGuid()).thenReturn("TEST_GUID-2");
+
 		RangerPolicyResourceSignature anotherSignature = new RangerPolicyResourceSignature(anotherPolicy);
 		Assert.assertTrue(signature.equals(anotherSignature));
 		Assert.assertTrue(anotherSignature.equals(signature));

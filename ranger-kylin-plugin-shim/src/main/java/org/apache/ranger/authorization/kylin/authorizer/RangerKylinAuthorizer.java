@@ -21,22 +21,22 @@ package org.apache.ranger.authorization.kylin.authorizer;
 
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.kylin.common.util.Pair;
 import org.apache.kylin.rest.security.AclPermission;
 import org.apache.kylin.rest.security.ExternalAclProvider;
 import org.apache.ranger.plugin.classloader.RangerPluginClassLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.acls.model.Permission;
 
 public class RangerKylinAuthorizer extends ExternalAclProvider {
-	private static final Log LOG = LogFactory.getLog(RangerKylinAuthorizer.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerKylinAuthorizer.class);
 
 	private static final String RANGER_PLUGIN_TYPE = "kylin";
 	private static final String RANGER_KYLIN_AUTHORIZER_IMPL_CLASSNAME = "org.apache.ranger.authorization.kylin.authorizer.RangerKylinAuthorizer";
 
-	private ExternalAclProvider externalAclProvider = null;
-	private static RangerPluginClassLoader rangerPluginClassLoader = null;
+	private ExternalAclProvider     externalAclProvider     = null;
+	private RangerPluginClassLoader rangerPluginClassLoader = null;
 
 	public RangerKylinAuthorizer() {
 		if (LOG.isDebugEnabled()) {

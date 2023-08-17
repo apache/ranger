@@ -22,16 +22,22 @@ import subprocess
 from os.path import basename
 import time
 import socket
+import glob
+import getpass
 globalDict = {}
 
 os_name = platform.system()
 os_name = os_name.upper()
+os_user = getpass.getuser()
 ranger_version=''
 jisql_debug=True
 retryPatchAfterSeconds=120
 stalePatchEntryHoldTimeInMinutes=10
 java_patch_regex="^Patch.*?J\d{5}.class$"
 is_unix = os_name == "LINUX" or os_name == "DARWIN"
+pre_sql_prefix="PatchPreSql_"
+post_sql_prefix="PatchPostSql_"
+java_patch_version_regex="Patch.*?_J(.*).class"
 
 RANGER_ADMIN_HOME = os.getenv("RANGER_ADMIN_HOME")
 if RANGER_ADMIN_HOME is None:
@@ -90,6 +96,16 @@ def populate_global_dict():
 			globalDict[key] = value
 		if 'ranger_admin_max_heap_size' not in globalDict:
 			globalDict['ranger_admin_max_heap_size']='1g'
+		elif 'ranger_admin_max_heap_size' in globalDict:
+			ranger_admin_heap_size = globalDict['ranger_admin_max_heap_size']
+			if str(ranger_admin_heap_size.lower()).endswith("g"):
+				ranger_admin_heap_size_numeric = int(str(ranger_admin_heap_size).lower().rstrip("g"))
+				if ranger_admin_heap_size_numeric < 1:
+					globalDict['ranger_admin_max_heap_size']='1g'
+			if str(ranger_admin_heap_size.lower()).endswith("m"):
+				ranger_admin_heap_size_numeric = int(str(ranger_admin_heap_size).lower().rstrip("m"))
+				if ranger_admin_heap_size_numeric < 1024:
+					globalDict['ranger_admin_max_heap_size']='1g'
 
 def jisql_log(query, db_password):
 	if jisql_debug == True:
@@ -130,6 +146,22 @@ def dbversionBasedOnUserName(userName):
 		version = 'DEFAULT_KEYADMIN_UPDATE'
 	return version
 
+def set_env_val(command):
+	proc = subprocess.Popen(command, stdout = subprocess.PIPE)
+	for line in proc.stdout:
+		(key, _, value) = line.decode('utf8').partition('=')
+		os.environ[key] = value.rstrip()
+	proc.communicate()
+
+def run_env_file(path):
+	for filename in glob.glob(path):
+		log("[I] Env filename : "+filename, "info")
+		if not os.path.exists(filename):
+			log("[I] File dose not exist : "+filename, "info")
+		else:
+			command = shlex.split("env -i /bin/bash -c 'source "+filename+" && env'")
+			set_env_val(command)
+
 class BaseDB(object):
 
 	def check_connection(self, db_name, db_user, db_password):
@@ -148,6 +180,8 @@ class BaseDB(object):
 
 	def apply_patches(self, db_name, db_user, db_password, PATCHES_PATH):
 		#first get all patches and then apply each patch
+		global globalDict
+		xa_db_host = globalDict['db_host']
 		if not os.path.exists(PATCHES_PATH):
 			log("[I] No patches to apply!","info")
 		else:
@@ -157,7 +191,22 @@ class BaseDB(object):
 				sorted_files = sorted(files, key=lambda x: str(x.split('.')[0]))
 				for filename in sorted_files:
 					currentPatch = os.path.join(PATCHES_PATH, filename)
+					pre_dict = {}
+					post_dict = {}
+					version = filename.split('-')[0]
+					prefix_for_preSql_patch=pre_sql_prefix + version
+					prefix_for_postSql_patch=post_sql_prefix +version
+					#getting Java patch which needs to be run before this DB patch.
+					pre_dict = self.get_pre_post_java_patches(prefix_for_preSql_patch)
+					if pre_dict:
+						log ("[I] ruunig pre java patch:[{}]".format(pre_dict),"info")
+						self.execute_java_patches(xa_db_host, db_user, db_password, db_name, pre_dict)
 					self.import_db_patches(db_name, db_user, db_password, currentPatch)
+					#getting Java patch which needs to be run immediately after this DB patch.
+					post_dict = self.get_pre_post_java_patches(prefix_for_postSql_patch)
+					if post_dict:
+						log ("[I] ruunig post java patch:[{}]".format(post_dict),"info")
+						self.execute_java_patches(xa_db_host, db_user, db_password, db_name, post_dict)
 				self.update_applied_patches_status(db_name, db_user, db_password, "DB_PATCHES")
 			else:
 				log("[I] No patches to apply!","info")
@@ -297,7 +346,7 @@ class BaseDB(object):
 						sys.exit(1)
 					isSchemaCreated=False
 					countTries = 0
-					while(isSchemaCreated==False or countTries<2):
+					while(isSchemaCreated==False and countTries<3):
 						countTries=countTries+1
 						isFirstTableExist = self.check_table(db_name, db_user, db_password, first_table)
 						isLastTableExist = self.check_table(db_name, db_user, db_password, last_table)
@@ -327,6 +376,29 @@ class BaseDB(object):
 						ret = self.execute_update(self.delete_version_updatedby_query(version,'N',client_host))
 						log("[E] "+version + " import failed!","error")
 						sys.exit(1)
+
+	def get_pre_post_java_patches(self, patch_name_prefix):
+		my_dict = {}
+		version = ""
+		className = ""
+		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
+		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
+		if not os.path.exists(javaFiles):
+			log("[I] No java patches to apply!","info")
+		else:
+			files = os.listdir(javaFiles)
+			if files:
+				for filename in files:
+					f = re.match(java_patch_regex,filename)
+					if f:
+						if patch_name_prefix != "":
+							p = re.match(patch_name_prefix, filename)
+							if p:
+								version = re.match(java_patch_version_regex,filename)
+								version = version.group(1)
+								key3 = int(version)
+								my_dict[key3] = filename
+		return my_dict
 
 	def import_db_patches(self, db_name, db_user, db_password, file_name):
 		if self.XA_DB_FLAVOR == "POSTGRES":
@@ -402,26 +474,36 @@ class BaseDB(object):
 						log("[E] "+name + " import failed!","error")
 						sys.exit(1)
 
-	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name):
+
+	def execute_java_patches(self, xa_db_host, db_user, db_password, db_name, my_dict):
 		global globalDict
-		my_dict = {}
 		version = ""
 		className = ""
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
-		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
+		ranger_log_dir = globalDict['RANGER_ADMIN_LOG_DIR']
+		if ranger_log_dir == "$PWD":
+			ranger_log_dir = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		javaFiles = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch")
+		logback_conf_file = globalDict['RANGER_ADMIN_LOGBACK_CONF_FILE']
+		if not logback_conf_file:
+			logback_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "classes", "conf", "logback.xml")
+		else:
+			logback_conf_file = "file:" + logback_conf_file
+		log("[I] RANGER ADMIN LOG DIR : " + ranger_log_dir, "info")
+		log("[I] LOGBACK CONF FILE : " + logback_conf_file, "info")
 		if not os.path.exists(javaFiles):
 			log("[I] No java patches to apply!","info")
 		else:
 			files = os.listdir(javaFiles)
 			if files:
-				for filename in files:
-					f = re.match(java_patch_regex,filename)
-					if f:
-						version = re.match("Patch.*?_(.*).class",filename)
-						version = version.group(1)
-						key3 = int(version.strip("J"))
-						my_dict[key3] = filename
+				if not my_dict:
+					for filename in files:
+						f = re.match(java_patch_regex,filename)
+						if f:
+							version = re.match(java_patch_version_regex,filename)
+							version = version.group(1)
+							key3 = int(version)
+							my_dict[key3] = filename
 
 			keylist = list(my_dict)
 			keylist.sort()
@@ -477,7 +559,7 @@ class BaseDB(object):
 								path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 							elif os_name == "WINDOWS":
 								path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log,path,className)
+							get_java_cmd = "%s -XX:MetaspaceSize=100m -XX:MaxMetaspaceSize=200m -Xmx%s -Xms1g -Dlogdir=%s -Dlogback.configurationFile=%s -Duser=%s -Dhostname=%s -cp %s org.apache.ranger.patch.%s"%(self.JAVA_BIN,globalDict['ranger_admin_max_heap_size'],ranger_log_dir,logback_conf_file,os_user,client_host,path,className)
 							if is_unix:
 								ret = subprocess.call(shlex.split(get_java_cmd))
 							elif os_name == "WINDOWS":
@@ -501,8 +583,18 @@ class BaseDB(object):
 		className = "ChangePasswordUtil"
 		version = dbversionBasedOnUserName(userName)
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
-		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
+		ranger_log_dir = globalDict['RANGER_ADMIN_LOG_DIR']
+		if ranger_log_dir == "$PWD":
+			ranger_log_dir = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
+		logback_conf_file = globalDict['RANGER_ADMIN_LOGBACK_CONF_FILE']
+		if not logback_conf_file:
+			logback_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "classes", "conf", "logback.xml")
+		else:
+			logback_conf_file = "file:" + logback_conf_file
+
+		log("[I] RANGER ADMIN LOG DIR : " + ranger_log_dir, "info")
+		log("[I] LOGBACK CONF FILE : " + logback_conf_file, "info")
 		if os.path.exists(filePath):
 			if version != "":
 				output = self.execute_query(self.get_version_query(version,'Y'))
@@ -558,7 +650,7 @@ class BaseDB(object):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,ranger_log,path,className,'"'+userName+'"','"'+oldPassword+'"','"'+newPassword+'"')
+						get_java_cmd = "%s -Dlogdir=%s -Dlogback.configurationFile=%s -Duser=%s -Dhostname=%s -cp %s org.apache.ranger.patch.cliutil.%s %s %s %s -default"%(self.JAVA_BIN,ranger_log_dir,logback_conf_file,os_user,client_host,path,className,'"'+userName+'"','"'+oldPassword+'"','"'+newPassword+'"')
 						if is_unix:
 							status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
@@ -589,8 +681,18 @@ class BaseDB(object):
 		className = "ChangePasswordUtil"
 		version = "DEFAULT_ALL_ADMIN_UPDATE"
 		app_home = os.path.join(RANGER_ADMIN_HOME,"ews","webapp")
-		ranger_log = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
+		ranger_log_dir = globalDict['RANGER_ADMIN_LOG_DIR']
+		if ranger_log_dir == "$PWD":
+			ranger_log_dir = os.path.join(RANGER_ADMIN_HOME,"ews","logs")
 		filePath = os.path.join(app_home,"WEB-INF","classes","org","apache","ranger","patch","cliutil","ChangePasswordUtil.class")
+		logback_conf_file = globalDict['RANGER_ADMIN_LOGBACK_CONF_FILE']
+		if not logback_conf_file:
+			logback_conf_file = "file:" + os.path.join(app_home, "WEB-INF", "classes", "conf", "logback.xml")
+		else:
+			logback_conf_file = "file:" + logback_conf_file
+
+		log("[I] RANGER ADMIN LOG DIR : " + ranger_log_dir, "info")
+		log("[I] LOGBACK CONF FILE : " + logback_conf_file, "info")
 		if os.path.exists(filePath):
 			if version != "":
 				output = self.execute_query(self.get_version_query(version,'Y'))
@@ -646,7 +748,7 @@ class BaseDB(object):
 							path = os.path.join("%s","WEB-INF","classes","conf:%s","WEB-INF","classes","lib","*:%s","WEB-INF",":%s","META-INF",":%s","WEB-INF","lib","*:%s","WEB-INF","classes",":%s","WEB-INF","classes","META-INF:%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
 						elif os_name == "WINDOWS":
 							path = os.path.join("%s","WEB-INF","classes","conf;%s","WEB-INF","classes","lib","*;%s","WEB-INF",";%s","META-INF",";%s","WEB-INF","lib","*;%s","WEB-INF","classes",";%s","WEB-INF","classes","META-INF;%s" )%(app_home ,app_home ,app_home, app_home, app_home, app_home ,app_home ,self.SQL_CONNECTOR_JAR)
-						get_java_cmd = "%s -Dlogdir=%s -Dlog4j.configuration=db_patch.log4j.xml -cp %s org.apache.ranger.patch.cliutil.%s %s -default"%(self.JAVA_BIN,ranger_log,path,className, userPwdString)
+						get_java_cmd = "%s -Dlogdir=%s -Dlogback.configurationFile=%s -Duser=%s -Dhostname=%s -cp %s org.apache.ranger.patch.cliutil.%s %s -default"%(self.JAVA_BIN,ranger_log_dir,logback_conf_file,os_user,client_host,path,className, userPwdString)
 						if is_unix:
 							status = subprocess.call(shlex.split(get_java_cmd))
 						elif os_name == "WINDOWS":
@@ -717,7 +819,7 @@ class BaseDB(object):
 
 class MysqlConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
@@ -731,6 +833,8 @@ class MysqlConf(BaseDB):
 		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
 		self.commandTerminator=" "
 		self.XA_DB_FLAVOR = "MYSQL"
+		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
+		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		path = RANGER_ADMIN_HOME
@@ -743,11 +847,20 @@ class MysqlConf(BaseDB):
 					db_ssl_cert_param=" -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
 				else:
 					db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
+		else:
+			if "useSSL" not in db_name:
+				db_ssl_param="?useSSL=false"
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
-			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring %s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.db_override_jdbc_connection_string,user,password)
+			else:
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u '%s' -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path,self.host,db_name,db_ssl_param,user,password)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string,user, password)
+			else:
+				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver mysqlconj -cstring jdbc:mysql://%s/%s%s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN,db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
 		return jisql_cmd
 
 	def get_check_table_query(self, TABLE_NAME):
@@ -767,12 +880,14 @@ class MysqlConf(BaseDB):
 
 class OracleConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
 		self.host = host 
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
 		self.commandTerminator=" -c \\; "
 		self.XA_DB_FLAVOR = "ORACLE"
+		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
+		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password ,db_name):
 		path = RANGER_ADMIN_HOME
@@ -789,9 +904,15 @@ class OracleConf(BaseDB):
 			cstring="jdbc:oracle:thin:@//%s" %(self.host)
 
 		if is_unix:
-			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, cstring, user, password)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string, user, password)
+			else:
+				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u '%s' -p '%s' -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, cstring, user, password)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, cstring, user, password)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string, user, password)
+			else:
+				jisql_cmd = "%s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver oraclethin -cstring %s -u \"%s\" -p \"%s\" -noheader -trim" %(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, cstring, user, password)
 		return jisql_cmd
 
 	def execute_file(self, file_name):
@@ -837,7 +958,7 @@ class OracleConf(BaseDB):
 
 class PostgresConf(BaseDB):
 	# Constructor
-	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type):
+	def __init__(self, host,SQL_CONNECTOR_JAR,JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type,is_db_override_jdbc_connection_string,db_override_jdbc_connection_string):
 		self.host = host.lower()
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
@@ -845,12 +966,17 @@ class PostgresConf(BaseDB):
 		self.db_ssl_required=db_ssl_required.lower()
 		self.db_ssl_verifyServerCertificate=db_ssl_verifyServerCertificate.lower()
 		self.db_ssl_auth_type=db_ssl_auth_type.lower()
+		self.db_ssl_certificate_file=db_ssl_certificate_file
 		self.javax_net_ssl_keyStore=javax_net_ssl_keyStore
 		self.javax_net_ssl_keyStorePassword=javax_net_ssl_keyStorePassword
+		self.javax_net_ssl_keyStore_type=javax_net_ssl_keyStore_type.lower()
 		self.javax_net_ssl_trustStore=javax_net_ssl_trustStore
 		self.javax_net_ssl_trustStorePassword=javax_net_ssl_trustStorePassword
+		self.javax_net_ssl_trustStore_type=javax_net_ssl_trustStore_type.lower()
 		self.commandTerminator=" "
 		self.XA_DB_FLAVOR = "POSTGRES"
+		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
+		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password, db_name):
 		path = RANGER_ADMIN_HOME
@@ -858,19 +984,26 @@ class PostgresConf(BaseDB):
 		db_ssl_param=''
 		db_ssl_cert_param=''
 		if self.db_ssl_enabled == 'true':
-			db_ssl_param="?ssl=%s" %(self.db_ssl_enabled)
-			if self.db_ssl_verifyServerCertificate == 'true' or self.db_ssl_required == 'true':
-				db_ssl_param="?ssl=%s" %(self.db_ssl_enabled)
+			if self.db_ssl_certificate_file != "":
+				db_ssl_param="?ssl=%s&sslmode=verify-full&sslrootcert=%s" %(self.db_ssl_enabled,self.db_ssl_certificate_file)
+			elif self.db_ssl_verifyServerCertificate == 'true' or self.db_ssl_required == 'true':
+				db_ssl_param="?ssl=%s&sslmode=verify-full&sslfactory=org.postgresql.ssl.DefaultJavaSSLFactory" %(self.db_ssl_enabled)
 				if self.db_ssl_auth_type == '1-way':
-					db_ssl_cert_param=" -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
+					db_ssl_cert_param=" -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s  -Djavax.net.ssl.trustStoreType=%s" %(self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword,self.javax_net_ssl_trustStore_type)
 				else:
-					db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s " %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword)
+					db_ssl_cert_param=" -Djavax.net.ssl.keyStore=%s -Djavax.net.ssl.keyStorePassword=%s -Djavax.net.ssl.trustStore=%s -Djavax.net.ssl.trustStorePassword=%s -Djavax.net.ssl.trustStoreType=%s -Djavax.net.ssl.keyStoreType=%s" %(self.javax_net_ssl_keyStore,self.javax_net_ssl_keyStorePassword,self.javax_net_ssl_trustStore,self.javax_net_ssl_trustStorePassword,self.javax_net_ssl_trustStore_type,self.javax_net_ssl_keyStore_type)
 			else:
-				db_ssl_param="?ssl=%s&sslfactory=org.postgresql.ssl.NonValidatingFactory" %(self.db_ssl_enabled)
+				db_ssl_param="?ssl=%s" %(self.db_ssl_enabled)
 		if is_unix:
-			jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, password)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.db_override_jdbc_connection_string, user, password)
+			else:
+				jisql_cmd = "%s %s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p '%s' -noheader -trim -c \;" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR,path, self.host, db_name, db_ssl_param,user, password)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring %s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.db_override_jdbc_connection_string,user, password)
+			else:
+				jisql_cmd = "%s %s -cp %s;%s\jisql\\lib\\* org.apache.util.sql.Jisql -driver postgresql -cstring jdbc:postgresql://%s/%s%s -u %s -p \"%s\" -noheader -trim" %(self.JAVA_BIN, db_ssl_cert_param,self.SQL_CONNECTOR_JAR, path, self.host, db_name, db_ssl_param,user, password)
 		return jisql_cmd
 
 	def create_language_plpgsql(self,db_user, db_password, db_name):
@@ -914,21 +1047,29 @@ class PostgresConf(BaseDB):
 
 class SqlServerConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
 		self.commandTerminator=" -c \\; "
 		self.XA_DB_FLAVOR = "MSSQL"
+		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
+		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password, db_name):
 		#TODO: User array for forming command
 		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
-			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring %s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.db_override_jdbc_connection_string)
+			else:
+				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -p '%s' -driver mssql -cstring jdbc:sqlserver://%s\\;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring jdbc:sqlserver://%s;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring %s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.db_override_jdbc_connection_string)
+			else:
+				jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -p \"%s\" -driver mssql -cstring jdbc:sqlserver://%s;databaseName=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password, self.host,db_name)
 		return jisql_cmd
 
 	def get_check_table_query(self, TABLE_NAME):
@@ -948,20 +1089,28 @@ class SqlServerConf(BaseDB):
 
 class SqlAnywhereConf(BaseDB):
 	# Constructor
-	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN):
+	def __init__(self, host, SQL_CONNECTOR_JAR, JAVA_BIN, is_db_override_jdbc_connection_string, db_override_jdbc_connection_string):
 		self.host = host
 		self.SQL_CONNECTOR_JAR = SQL_CONNECTOR_JAR
 		self.JAVA_BIN = JAVA_BIN
 		self.commandTerminator=" -c \\; "
 		self.XA_DB_FLAVOR = "SQLA"
+		self.is_db_override_jdbc_connection_string = is_db_override_jdbc_connection_string
+		self.db_override_jdbc_connection_string = db_override_jdbc_connection_string
 
 	def get_jisql_cmd(self, user, password, db_name):
 		path = RANGER_ADMIN_HOME
 		self.JAVA_BIN = self.JAVA_BIN.strip("'")
 		if is_unix:
-			jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring %s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,self.db_override_jdbc_connection_string)
+			else:
+				jisql_cmd = "%s -cp %s:%s/jisql/lib/* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path,user, password,db_name,self.host)
 		elif os_name == "WINDOWS":
-			jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
+			if self.is_db_override_jdbc_connection_string == 'true' and self.db_override_jdbc_connection_string is not None and len(self.db_override_jdbc_connection_string) > 0:
+				jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring %s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,self.db_override_jdbc_connection_string)
+			else:
+				jisql_cmd = "%s -cp %s;%s\\jisql\\lib\\* org.apache.util.sql.Jisql -user %s -password '%s' -driver sapsajdbc4 -cstring jdbc:sqlanywhere:database=%s;host=%s -noheader -trim"%(self.JAVA_BIN, self.SQL_CONNECTOR_JAR, path, user, password,db_name,self.host)
 		return jisql_cmd
 
 	def get_check_table_query(self, TABLE_NAME):
@@ -1113,6 +1262,11 @@ def main(argv):
 	javax_net_ssl_keyStorePassword=''
 	javax_net_ssl_trustStore=''
 	javax_net_ssl_trustStorePassword=''
+	db_ssl_certificate_file=''
+	javax_net_ssl_trustStore_type='bcfks'
+	javax_net_ssl_keyStore_type='bcfks'
+	is_override_db_connection_string='false'
+	db_override_jdbc_connection_string=''
 
 	if XA_DB_FLAVOR == "MYSQL" or XA_DB_FLAVOR == "POSTGRES":
 		if 'db_ssl_enabled' in globalDict:
@@ -1124,32 +1278,48 @@ def main(argv):
 					db_ssl_verifyServerCertificate=globalDict['db_ssl_verifyServerCertificate'].lower()
 				if 'db_ssl_auth_type' in globalDict:
 					db_ssl_auth_type=globalDict['db_ssl_auth_type'].lower()
+				if 'db_ssl_certificate_file' in globalDict:
+					db_ssl_certificate_file=globalDict['db_ssl_certificate_file']
+				if 'javax_net_ssl_trustStore' in globalDict:
+					javax_net_ssl_trustStore=globalDict['javax_net_ssl_trustStore']
+				if 'javax_net_ssl_trustStorePassword' in globalDict:
+					javax_net_ssl_trustStorePassword=globalDict['javax_net_ssl_trustStorePassword']
+				if 'javax_net_ssl_trustStore_type' in globalDict:
+					javax_net_ssl_trustStore_type=globalDict['javax_net_ssl_trustStore_type']
 				if db_ssl_verifyServerCertificate == 'true':
-					if 'javax_net_ssl_trustStore' in globalDict:
-						javax_net_ssl_trustStore=globalDict['javax_net_ssl_trustStore']
-					if 'javax_net_ssl_trustStorePassword' in globalDict:
-						javax_net_ssl_trustStorePassword=globalDict['javax_net_ssl_trustStorePassword']
-					if not os.path.exists(javax_net_ssl_trustStore):
-						log("[E] Invalid file Name! Unable to find truststore file:"+javax_net_ssl_trustStore,"error")
-						sys.exit(1)
-					if javax_net_ssl_trustStorePassword is None or javax_net_ssl_trustStorePassword =="":
-						log("[E] Invalid ssl truststore password!","error")
-						sys.exit(1)
+					if  db_ssl_certificate_file != "":
+						if not os.path.exists(db_ssl_certificate_file):
+							log("[E] Invalid file Name! Unable to find certificate file:"+db_ssl_certificate_file,"error")
+							sys.exit(1)
+					elif db_ssl_auth_type == '1-way' and db_ssl_certificate_file == "" :
+						if not os.path.exists(javax_net_ssl_trustStore):
+							log("[E] Invalid file Name! Unable to find truststore file:"+javax_net_ssl_trustStore,"error")
+							sys.exit(1)
+						if javax_net_ssl_trustStorePassword is None or javax_net_ssl_trustStorePassword =="":
+							log("[E] Invalid ssl truststore password!","error")
+							sys.exit(1)
 					if db_ssl_auth_type == '2-way':
 						if 'javax_net_ssl_keyStore' in globalDict:
 							javax_net_ssl_keyStore=globalDict['javax_net_ssl_keyStore']
 						if 'javax_net_ssl_keyStorePassword' in globalDict:
 							javax_net_ssl_keyStorePassword=globalDict['javax_net_ssl_keyStorePassword']
+						if 'javax_net_ssl_keyStore_type' in globalDict:
+							javax_net_ssl_keyStore_type=globalDict['javax_net_ssl_keyStore_type']
 						if not os.path.exists(javax_net_ssl_keyStore):
 							log("[E] Invalid file Name! Unable to find keystore file:"+javax_net_ssl_keyStore,"error")
 							sys.exit(1)
 						if javax_net_ssl_keyStorePassword is None or javax_net_ssl_keyStorePassword =="":
 							log("[E] Invalid ssl keystore password!","error")
 							sys.exit(1)
+	if 'is_override_db_connection_string' in globalDict:
+		is_override_db_connection_string=globalDict['is_override_db_connection_string'].lower()
+	if 'db_override_jdbc_connection_string' in globalDict:
+		db_override_jdbc_connection_string=globalDict['db_override_jdbc_connection_string'].strip()
+
 
 	if XA_DB_FLAVOR == "MYSQL":
 		MYSQL_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type)
+		xa_sqlObj = MysqlConf(xa_db_host, MYSQL_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,is_override_db_connection_string,db_override_jdbc_connection_string)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME , mysql_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME , mysql_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME ,mysql_patches)
@@ -1158,7 +1328,7 @@ def main(argv):
 		
 	elif XA_DB_FLAVOR == "ORACLE":
 		ORACLE_CONNECTOR_JAR=globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN)
+		xa_sqlObj = OracleConf(xa_db_host, ORACLE_CONNECTOR_JAR, JAVA_BIN, is_override_db_connection_string, db_override_jdbc_connection_string)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME ,oracle_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME ,oracle_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME ,oracle_patches)
@@ -1166,10 +1336,8 @@ def main(argv):
 		last_table='X_POLICY_REF_GROUP'
 
 	elif XA_DB_FLAVOR == "POSTGRES":
-		db_user=db_user.lower()
-		db_name=db_name.lower()
 		POSTGRES_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type)
+		xa_sqlObj = PostgresConf(xa_db_host, POSTGRES_CONNECTOR_JAR, JAVA_BIN,db_ssl_enabled,db_ssl_required,db_ssl_verifyServerCertificate,javax_net_ssl_keyStore,javax_net_ssl_keyStorePassword,javax_net_ssl_trustStore,javax_net_ssl_trustStorePassword,db_ssl_auth_type,db_ssl_certificate_file,javax_net_ssl_trustStore_type,javax_net_ssl_keyStore_type,is_override_db_connection_string,db_override_jdbc_connection_string)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME , postgres_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME , postgres_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME , postgres_patches)
@@ -1178,7 +1346,7 @@ def main(argv):
 
 	elif XA_DB_FLAVOR == "MSSQL":
 		SQLSERVER_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN)
+		xa_sqlObj = SqlServerConf(xa_db_host, SQLSERVER_CONNECTOR_JAR, JAVA_BIN, is_override_db_connection_string, db_override_jdbc_connection_string)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME ,sqlserver_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME , sqlserver_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME , sqlserver_patches)
@@ -1191,7 +1359,7 @@ def main(argv):
 				log("[E] ---------- LD_LIBRARY_PATH environment property not defined, aborting installation. ----------", "error")
 				sys.exit(1)
 		SQLANYWHERE_CONNECTOR_JAR = globalDict['SQL_CONNECTOR_JAR']
-		xa_sqlObj = SqlAnywhereConf(xa_db_host, SQLANYWHERE_CONNECTOR_JAR, JAVA_BIN)
+		xa_sqlObj = SqlAnywhereConf(xa_db_host, SQLANYWHERE_CONNECTOR_JAR, JAVA_BIN, is_override_db_connection_string, db_override_jdbc_connection_string)
 		xa_db_version_file = os.path.join(RANGER_ADMIN_HOME ,sqlanywhere_dbversion_catalog)
 		xa_db_core_file = os.path.join(RANGER_ADMIN_HOME , sqlanywhere_core_file)
 		xa_patch_file = os.path.join(RANGER_ADMIN_HOME , sqlanywhere_patches)
@@ -1227,7 +1395,8 @@ def main(argv):
 				applyJavaPatches=xa_sqlObj.hasPendingPatches(db_name, db_user, db_password, "JAVA_PATCHES")
 				if applyJavaPatches == True:
 					log("[I] ----------------- Applying java patches ------------", "info")
-					xa_sqlObj.execute_java_patches(xa_db_host, db_user, db_password, db_name)
+					my_dict = {}
+					xa_sqlObj.execute_java_patches(xa_db_host, db_user, db_password, db_name, my_dict)
 					xa_sqlObj.update_applied_patches_status(db_name,db_user, db_password,"JAVA_PATCHES")
 				else:
 					log("[I] JAVA_PATCHES have already been applied","info")
@@ -1235,6 +1404,19 @@ def main(argv):
 						xa_sqlObj.is_new_install(xa_db_host, db_user, db_password, db_name)
 
 			if str(argv[i]) == "-changepassword":
+				rangerAdminConf="/etc/ranger/admin/conf"
+				if os.path.exists(rangerAdminConf):
+					RANGER_ADMIN_ENV_PATH = rangerAdminConf
+				else:
+					RANGER_ADMIN_ENV_PATH = RANGER_ADMIN_CONF
+				log("[I] RANGER_ADMIN_ENV_PATH : "+RANGER_ADMIN_ENV_PATH,"info")
+				if not os.path.exists(RANGER_ADMIN_ENV_PATH):
+					log("[I] path  dose not exist" +RANGER_ADMIN_ENV_PATH,"info")
+				else:
+					env_file_path = RANGER_ADMIN_ENV_PATH + '/' + 'ranger-admin-env*.sh'
+					log("[I] env_file_path : " +env_file_path,"info")
+					run_env_file(env_file_path)
+
 				if len(argv)>5:
 					isValidPassWord = False
 					for j in range(len(argv)):

@@ -20,18 +20,18 @@
 package org.apache.ranger.plugin.contextenricher;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.ranger.plugin.geo.RangerGeolocationData;
 import org.apache.ranger.plugin.geo.RangerGeolocationDatabase;
 import org.apache.ranger.plugin.policyengine.RangerAccessRequest;
 import org.apache.ranger.plugin.store.GeolocationStore;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
 public abstract class RangerAbstractGeolocationProvider extends RangerAbstractContextEnricher {
 
-	private static final Log LOG = LogFactory.getLog(RangerAbstractGeolocationProvider.class);
+	private static final Logger LOG = LoggerFactory.getLogger(RangerAbstractGeolocationProvider.class);
 
 	public static final String ENRICHER_OPTION_GEOLOCATION_META_PREFIX = "geolocation.meta.prefix";
 

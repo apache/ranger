@@ -125,6 +125,8 @@ PROJ_LIB_PLUGIN_DIR=${PROJ_INSTALL_DIR}/${PLUGIN_DEPENDENT_LIB_DIR}
 
 HCOMPONENT_INSTALL_DIR_NAME=$(getInstallProperty 'COMPONENT_INSTALL_DIR_NAME')
 
+# Install Environment property used for trino plugin.
+INSTALL_ENV=$(getInstallProperty 'INSTALL_ENV')
 
 CUSTOM_USER=$(getInstallProperty 'CUSTOM_USER')
 CUSTOM_USER=${CUSTOM_USER// }
@@ -218,6 +220,17 @@ elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
         echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
         mkdir -p ${HCOMPONENT_LIB_DIR}
     fi
+elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
+    HCOMPONENT_LIB_DIR=${HCOMPONENT_INSTALL_DIR}/plugin/ranger
+	#Configure ranger plugin location for trino docker environment
+    if [ "${INSTALL_ENV}" = "docker" ];then
+	   HCOMPONENT_LIB_DIR=/usr/lib/trino/plugin/ranger
+    fi
+
+    if [ ! -d "${HCOMPONENT_LIB_DIR}" ]; then
+        echo "INFO: Creating ${HCOMPONENT_LIB_DIR}"
+        mkdir -p ${HCOMPONENT_LIB_DIR}
+    fi
 fi
 
 HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/conf
@@ -248,6 +261,11 @@ elif [ "${HCOMPONENT_NAME}" = "elasticsearch" ]; then
     fi
 elif [ "${HCOMPONENT_NAME}" = "presto" ]; then
     HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
+elif [ "${HCOMPONENT_NAME}" = "trino" ]; then
+    HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}/etc
+	if [ "${INSTALL_ENV}" = "docker" ];then
+	   HCOMPONENT_CONF_DIR=${HCOMPONENT_INSTALL_DIR}
+    fi
 fi
 
 HCOMPONENT_ARCHIVE_CONF_DIR=${HCOMPONENT_CONF_DIR}/.archive
@@ -808,6 +826,40 @@ then
 	ln -sf ${HCOMPONENT_CONF_DIR} conf
 fi
 
+if [ "${HCOMPONENT_NAME}" = "trino" ]
+then
+  # Configure logback file using System Property logback.configurationFile in jvm.config
+  jvm_config_file=`ls ${HCOMPONENT_CONF_DIR}/jvm.config 2> /dev/null`
+  cp -n ${PROJ_INSTALL_DIR}/trino-ranger-plugin-logback.xml ${HCOMPONENT_CONF_DIR}/trino-ranger-plugin-logback.xml
+  logback_file=`ls ${HCOMPONENT_CONF_DIR}/trino-ranger-plugin-logback.xml 2> /dev/null`
+
+	if [ "${action}" = "enable" ]
+	then
+		controlName="ranger"
+		addOrUpdatePropertyToFile -Dlogback.configurationFile ${logback_file} ${jvm_config_file}
+	else
+		controlName="allow-all"
+		sed -i '/-Dlogback.configurationFile/d' ${HCOMPONENT_CONF_DIR}/jvm.config
+		rm ${HCOMPONENT_CONF_DIR}/trino-ranger-plugin-logback.xml
+	fi
+	dt=`date '+%Y%m%d%H%M%S'`
+	fn=`ls ${HCOMPONENT_CONF_DIR}/access-control.properties 2> /dev/null`
+	if [ -f "${fn}" ]
+	then
+		dn=`dirname ${fn}`
+		bn=`basename ${fn}`
+		bf=${dn}/.${bn}.${dt}
+		echo "backup of ${fn} to ${bf} ..."
+		cp ${fn} ${bf}
+	else
+	    fn=${HCOMPONENT_CONF_DIR}/access-control.properties
+	fi
+	echo "Add or Update properties file: [${fn}] ... "
+	addOrUpdatePropertyToFile access-control.name $controlName ${fn}
+	echo "Linking config files"
+	cd ${HCOMPONENT_LIB_DIR}/ranger-trino-plugin-impl/
+	ln -sf ${HCOMPONENT_CONF_DIR} conf
+fi
 
 #
 # Set notice to restart the ${HCOMPONENT_NAME}

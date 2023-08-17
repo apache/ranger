@@ -47,13 +47,14 @@ define(function(require) {
 	var RangerPolicyRO				= require('views/policies/RangerPolicyRO');
 	var vPlugableServiceDiffDetail	= require('views/reports/PlugableServiceDiffDetail');
     var vLoginSessionDetail         = require('views/reports/LoginSessionDetail');
-    var RangerZoneList              = require('collections/RangerZoneList');
+    var RangerZoneBase              = require('model_bases/RangerZoneBase');
     var AuditAccessLogDetail        = require('views/reports/AuditAccessLogDetailView');
 
 	var moment = require('moment');
 	require('bootstrap-datepicker');
 	require('Backbone.BootstrapModal');
 	require('visualsearch');
+	require('Backgrid.ColumnManager');
 	
 	var AuditLayout = Backbone.Marionette.Layout.extend(
 	/** @lends AuditLayout */
@@ -101,6 +102,7 @@ define(function(require) {
             excludeServiceUser : '[data-id="excludeServiceUser"]',
             serviceUsersExclude:'[data-id="serviceUsersExclude"]',
             showPageDetail:'[data-id="showPageDetail"]',
+            colManager: "[data-id='colManager']",
 		},
 
 		/** ui events hash */
@@ -128,7 +130,8 @@ define(function(require) {
 			console.log("initialized a AuditLayout Layout");
 
             _.extend(this, _.pick(options, 'accessAuditList','tab'));
-                        var that = this;
+            var that = this;
+            $('.latestResponse').hide();
 			this.bindEvents();
                         this.currentTab = '#'+this.tab.split('?')[0];
 			var date = new Date().toString();
@@ -138,11 +141,15 @@ define(function(require) {
                 App.vsHistory = {'bigData':[], 'admin':[], 'loginSession':[], 'agent':[],'pluginStatus':[], 'userSync': []};
             }
             //Add url params to vsHistory
-            if(!_.isUndefined(this.tab.split('?')[1])) {
+           	this.urlQueryParams = XAUtils.urlQueryParams();
+            if(!_.isUndefined(this.urlQueryParams)) {
                 App.vsHistory[that.tab.split('?')[0]] = [];
-                var searchFregment = XAUtils.changeUrlToSearchQuery(decodeURIComponent(this.tab.substring(this.tab.indexOf("?") + 1)));
+                var searchFregment = XAUtils.changeUrlToSearchQuery(decodeURIComponent(this.urlQueryParams));
+                if (this.urlQueryParams && _.has(searchFregment, 'excludeServiceUser')) {
+                    App.excludeServiceUser = searchFregment.excludeServiceUser == "true";
+                }
                 _.map (searchFregment, function(val, key) {
-                    if (key !== "sortBy" && key !== "sortType" && key !== "sortKey") {
+                    if (key !== "sortBy" && key !== "sortType" && key !== "sortKey" && key !== "excludeServiceUser") {
                         if (_.isArray(val)) {
                             _.map(val, function (v) {
                                 App.vsHistory[that.tab.split('?')[0]].push(new Backbone.Model( {'category': key, 'value' : v}));
@@ -174,13 +181,14 @@ define(function(require) {
 
 		initializeServiceDefColl : function() {
 			this.serviceDefList	= new RangerServiceDefList();
+			this.serviceDefList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
 			this.serviceDefList.fetch({ 
 				cache : false,
 				async:false,
 				data :{'pageSource':'Audit'}
 			});
             this.serviceList = new RangerServiceList();
-            this.serviceList.setPageSize(100)
+            this.serviceList.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE)
             this.serviceList.fetch({
                 cache : false,
                 async:false,
@@ -189,10 +197,12 @@ define(function(require) {
 		},
 		/** on render callback */
 		onRender : function() {
+			var that = this;
+			this.ui.tab.find('[href="'+this.currentTab+'"]').addClass('active');
 			if(this.currentTab != '#bigData'){
 				this.onTabChange();
-				this.ui.tab.find('li[class="active"]').removeClass();
-				this.ui.tab.find('[href="'+this.currentTab+'"]').parent().addClass('active');
+			// 	this.ui.tab.find('li[class="active"]').removeClass();
+			// 	this.ui.tab.find('[href="'+this.currentTab+'"]').parent().addClass('active');
 			} else {
                 var sortObj = {};
                 if(Backbone.history.fragment.indexOf("?") !== -1) {
@@ -204,31 +214,10 @@ define(function(require) {
                 }
 				this.renderBigDataTable();
 				this.addSearchForBigDataTab();
-				this.modifyTableForSubcolumns();
+				XAUtils.resizeableColumn(this, 'resourceType');
 			}
 			this.showTagsAttributes();
 
-		},
-		modifyTableForSubcolumns : function(){
-			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
-					<th class="renderable pid"></th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable ruser"></th>\
-					<th class="renderable ruser"></th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable cip">Service</th>\
-					<th class="renderable name">Resource</th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable cip"></th>\
-					<th class="renderable cip"> </th>\
-					<th class="renderable aip" > </th>\
-					<th class="renderable aip" > </th>\
-					<th class="renderable aip" > </th>\
-					<th class="renderable ruser"></th>\
-                                        <th class="renderable ruser"></th>\
-                                        <th class="renderable ruser"></th>\
-                    </tr>');
 		},
 		modifyPluginStatusTableSubcolumns : function(){
 			this.$el.find('[data-id="r_tableList"] table thead').prepend('<tr>\
@@ -238,8 +227,8 @@ define(function(require) {
 					<th class="renderable ruser"></th>\
                                         <th class="renderable ruser"></th>\
 					<th class="renderable ruser"></th>\
-					<th class="renderable cip" colspan="3">Policy ( Time )<i class="icon-info-sign m-l-sm" data-id ="policyTimeDetails"></th>\
-                    <th class="renderable cip" colspan="3">Tag ( Time )<i class="icon-info-sign m-l-sm" data-id ="tagPolicyTimeDetails"></th>\
+					<th class="renderable cip" colspan="3">Policy ( Time )<i class="fa-fw fa fa-info-circle m-l-sm" data-id ="policyTimeDetails"></th>\
+                    <th class="renderable cip" colspan="3">Tag ( Time )<i class="fa-fw fa fa-info-circle m-l-sm" data-id ="tagPolicyTimeDetails"></th>\
 			 	</tr>');
 		},
         modifyUserSyncTableSubcolumns : function(){
@@ -272,12 +261,13 @@ define(function(require) {
 					this.ui.visualSearch.show();
 					this.ui.visualSearch.parents('.well').show();
 					this.renderBigDataTable();
-					this.modifyTableForSubcolumns();
 					this.addSearchForBigDataTab();
+					XAUtils.resizeableColumn(this, 'resourceType');
                     this.listenTo(this.accessAuditList, "request", that.updateLastRefresh);
                     this.ui.iconSearchInfo.show();
                     this.showTagsAttributes();
                     this.ui.excludeServiceUser.show();
+                    this.ui.colManager.show();
 					break;
 				case "#admin":
 					this.currentTab = '#admin';
@@ -298,6 +288,7 @@ define(function(require) {
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
                     this.ui.excludeServiceUser.hide();
+                    this.ui.colManager.hide();
 					break;
 				case "#loginSession":
 					this.currentTab = '#loginSession';
@@ -322,6 +313,7 @@ define(function(require) {
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
                     this.ui.excludeServiceUser.hide();
+                    this.ui.colManager.hide();
 					break;
 				case "#agent":
 					this.currentTab = '#agent';
@@ -347,6 +339,7 @@ define(function(require) {
                     this.ui.iconSearchInfo.hide();
                     $('.popover').remove();
                     this.ui.excludeServiceUser.hide();
+                    this.ui.colManager.hide();
 					break;
 				case "#pluginStatus":
 					 this.currentTab = '#pluginStatus';
@@ -373,6 +366,7 @@ define(function(require) {
 					 this.ui.iconSearchInfo.hide();
                      $('.popover').remove();
                      this.ui.excludeServiceUser.hide();
+                     this.ui.colManager.hide();
 					 break;
                 case "#userSync":
                      this.currentTab = '#userSync';
@@ -394,6 +388,7 @@ define(function(require) {
                      this.listenTo(this.userSyncAuditList, "sync reset", that.showPageDetail);
                      this.ui.iconSearchInfo.hide();
                      this.ui.excludeServiceUser.hide();
+                     this.ui.colManager.hide();
                      break;
 			}
 			var lastUpdateTime = Globalize.format(new Date(),  "MM/dd/yyyy hh:mm:ss tt");
@@ -426,10 +421,11 @@ define(function(require) {
                                     {text : 'Cluster Name',label : 'cluster', urlLabel : 'clusterName'},
                                     {text : 'Zone Name',label : 'zoneName', urlLabel : 'zoneName'},
                                     {text : localization.tt("lbl.agentHost"), label :"agentHost", urlLabel : 'agentHost'},
+                                    {text : 'Audit ID', label : 'eventId', urlLabel : 'eventId'}
                                    //{text : localization.tt("lbl.permission"), label :'action', urlLabel : 'permission'}
                                 ];
             var searchOpt = ['Resource Type','Start Date','End Date','Application','User','Service Name','Service Type','Resource Name','Access Type','Result','Access Enforcer',
-            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude User', localization.tt("lbl.agentHost"), 'Policy ID'];//, localization.tt("lbl.permission")];
+            'Client IP','Tags','Cluster Name', 'Zone Name', 'Exclude User', localization.tt("lbl.agentHost"), 'Policy ID', 'Audit ID'];//, localization.tt("lbl.permission")];
                         this.clearVisualSearch(this.accessAuditList, serverAttrName);
                         this.searchInfoArr =[{text :'Access Enforcer', info :localization.tt('msg.accessEnforcer')},
                                             {text :'Access Type' 	, info :localization.tt('msg.accessTypeMsg')},
@@ -529,24 +525,26 @@ define(function(require) {
 								XAUtils.displayDatepicker(that.ui.visualSearch, facet, startDate, callback);
 								break;
 							case 'Zone Name' :
-								var rangerZoneList = new RangerZoneList(), zoneList = [];
+								var rangerZoneList = new RangerZoneBase(), zoneList = [];
 								rangerZoneList.fetch({
 									cache : false,
-									async : false
+									async : false,
+									url: "service/public/v2/api/zone-headers",
 								})
-								rangerZoneList.each(function(m){
-									zoneList.push({'label' : m.get('name'), 'value' : m.get('name')});
-								});
+								if (rangerZoneList && rangerZoneList.attributes) {
+									_.map(rangerZoneList.attributes,function(m){
+										zoneList.push({'label' : m.name, 'value' : m.name});
+									});
+								}
+								zoneList = _.sortBy(zoneList, 'label')
 								callback(zoneList);
 								break;
 						}
 					}
                 }
 			};
-            if(App.excludeServiceUser){
-                this.accessAuditList.queryParams.excludeServiceUser = true;
-                this.ui.serviceUsersExclude.prop('checked', true);
-            }
+            this.accessAuditList.queryParams.excludeServiceUser = App.excludeServiceUser || false;
+            this.ui.serviceUsersExclude.prop('checked', App.excludeServiceUser || false);
             this.visualSearch = XAUtils.addVisualSearch(searchOpt,serverAttrName, this.accessAuditList, pluginAttr);
             this.setEventsToFacets(this.visualSearch, App.vsHistory.bigData);
         },
@@ -880,7 +878,7 @@ define(function(require) {
 				},
 				onClick: function (e) {
 					var self = this;
-					if($(e.target).is('.icon-edit,.icon-trash,a,code'))
+					if($(e.target).is('.fa-fw fa fa-edit,.fa-fw fa fa-trash,a,code'))
 						return;
 					this.$el.parent('tbody').find('tr').removeClass('tr-active');
 					this.$el.toggleClass('tr-active');
@@ -916,7 +914,8 @@ define(function(require) {
 								objectId   : self.model.get('objectId'),
 								objectCreatedDate : objectCreatedDate,
 								userName :self.model.get('owner'),
-								action : action
+								action : action,
+								repoName : self.model.get('parentObjectName'),
 							});
 						} else if (self.model.get('objectClassType') == XAEnums.ClassTypes.CLASS_TYPE_RANGER_SECURITY_ZONE.value){
 							var view = new vOperationDiffDetail({
@@ -945,9 +944,10 @@ define(function(require) {
 							title: localization.tt("h.operationDiff")+' : '+action,
 							okText :localization.tt("lbl.ok"),
 							allowCancel : true,
-							escape : true
+							escape : true,
+							focusOk : false
 						}).open();
-						modal.$el.addClass('modal-diff').attr('tabindex',-1);
+						//modal.$el.addClass('modal-diff').attr('tabindex',-1);
 						modal.$el.find('.cancel').hide();
 					});
 				}
@@ -995,7 +995,7 @@ define(function(require) {
 						</ol>\
 					</div>\
 					<div class="diff-right">\
-						<ol class="unstyled data">'+values+'\
+						<ol class="list-unstyled data">'+values+'\
 						</ol>\
 					</div>\
 				</div>\
@@ -1098,18 +1098,18 @@ define(function(require) {
 						fromRaw: function (rawValue) {
 							var html = '';
 							if(rawValue =='create'){
-								html = 	'<label class="label label-success capitalize">'+rawValue+'</label>';
+								html = 	'<label class="badge badge-success capitalize">'+rawValue+'</label>';
 							} else if(rawValue == 'update'){
-								html = 	'<label class="label label-yellow capitalize">'+rawValue+'</label>';
+								html = 	'<label class="badge badge-yellow capitalize">'+rawValue+'</label>';
 							}else if(rawValue == 'delete'){
-								html = 	'<label class="label label-important capitalize">'+rawValue+'</label>';
+								html = 	'<label class="badge badge-danger capitalize">'+rawValue+'</label>';
 							}else if(rawValue =='IMPORT START'){
-								html = 	'<label class="label label-info capitalize">'+rawValue+'</label>';
+								html = 	'<label class="badge badge-info capitalize">'+rawValue+'</label>';
 							}else if(rawValue =='IMPORT END'){
-								html = 	'<label class="label label-info capitalize">'+rawValue+'</label>';
+								html = 	'<label class="badge badge-info capitalize">'+rawValue+'</label>';
 							}							else {
 								rawValue = rawValue.toLowerCase() 
-								html = 	'<label class="label capitalize ">'+rawValue+'</label>';
+								html = 	'<label class="badge badge-secondary capitalize ">'+rawValue+'</label>';
 							}
 							return html;
 						}
@@ -1155,6 +1155,8 @@ define(function(require) {
 				onClick: function (e) {
                     var self = this ;
                     if($(e.target).hasClass('policyIdColumn') || $(e.target).closest('td').hasClass("policyIdColumn")) {
+                        if($(e.target).is('.fa-external-link'))
+                            return;
                         if(this.model.get('repoType')){
                                     var repoType =  this.model.get('repoType');
                                 }
@@ -1186,15 +1188,16 @@ define(function(require) {
                                                         title: localization.tt("h.policyDetails"),
                                                         okText :localization.tt("lbl.ok"),
                                     allowCancel : true,
-                                                        escape : true
+                                                        escape : true,
+                                                        focusOk : false
                                                 }).open();
                                 modal.$el.find('.cancel').hide();
                                                 var policyVerEl = modal.$el.find('.modal-footer').prepend('<div class="policyVer pull-left"></div>').find('.policyVer');
-                                                policyVerEl.append('<i id="preVer" class="icon-chevron-left '+ ((policy.get('version')>1) ? 'active' : '') +'"></i><text>Version '+ policy.get('version') +'</text>').find('#preVer').click(function(e){
+                                                policyVerEl.append('<i id="preVer" class="fa-fw fa fa-chevron-left '+ ((policy.get('version')>1) ? 'active' : '') +'"></i><text>Version '+ policy.get('version') +'</text>').find('#preVer').click(function(e){
                                                         view.previousVer(e);
                                                 });
                                                     var policyVerIndexAt = policyVersionList.indexOf(policy.get('version'));
-                                                policyVerEl.append('<i id="nextVer" class="icon-chevron-right '+ (!_.isUndefined(policyVersionList[++policyVerIndexAt])? 'active' : '')+'"></i>').find('#nextVer').click(function(e){
+                                                policyVerEl.append('<i id="nextVer" class="fa-fw fa fa-chevron-right '+ (!_.isUndefined(policyVersionList[++policyVerIndexAt])? 'active' : '')+'"></i>').find('#nextVer').click(function(e){
                                                         view.nextVer(e);
                                                 });
                     } else {
@@ -1204,17 +1207,17 @@ define(function(require) {
                         var view = new AuditAccessLogDetail({
                             auditaccessDetail : this.model.attributes,
                         });
+                        var url =Backbone.history.location.href.substring(0, Backbone.history.location.href.indexOf('#!'))+'#!/reports/audit/eventlog/'+this.model.get('eventId');
+                        var eventUrl = '<a href="'+url+'" target="_blank" title="Show log details in next tab"> <i class="fa-fw fa fa-external-link pull-right"></i> </a>';
                         var modal = new Backbone.BootstrapModal({
                             animate : true,
                             content     : view,
-                            title: localization.tt("lbl.auditAccessDetail"),
+                            title: localization.tt("lbl.auditAccessDetail") + eventUrl,
                             okText :localization.tt("lbl.ok"),
                             allowCancel : true,
                             escape : true,
                         }).open();
                         modal.$el.find('.cancel').hide();
-                        modal.$el.addClass('modal-dialog-size');
-                        modal.$el.find('.modal-body').addClass('modal-body-size');
                     }
 				}
 			});
@@ -1224,11 +1227,23 @@ define(function(require) {
 				columns: this.getColumns(),
 				collection: this.accessAuditList,
 				includeFilter : false,
+				backgridColumnManager: true,
 				gridOpts : {
 					row: TableRow,
 					header : XABackgrid,
 					emptyText : 'No Access Audit found!'
-				}
+				},
+				columnManagerOpts: {
+                    opts: {
+                        // initialColumnsVisible: null,
+                        saveState: true,
+                        loadStateOnInit: true,
+                    },
+                    visibilityControlOpts: {
+                        buttonTemplate: _.template("<span class='btn btn-sm'>&nbspColumns&nbsp<i class='fa fa-caret-down'></i></span>")
+                    },
+                    el: this.ui.colManager
+                },
 			}));
             XAUtils.backgridSort(this.accessAuditList);
 		},
@@ -1243,20 +1258,18 @@ define(function(require) {
                                                 }),
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
-								if(rawValue == -1){
+								var serviceDef = that.serviceDefList.findWhere({'id' : model.get('repoType')}),
+								href = 'javascript:void(0)';
+								if(rawValue == -1 || _.isUndefined(serviceDef)){
 									return '--';
-								}	
-								var serviceDef = that.serviceDefList.findWhere({'id' : model.get('repoType')})
-								if(_.isUndefined(serviceDef)){
-									return rawValue;
 								}
-								var href = 'javascript:void(0)';
 								return '<a href="'+href+'" title="'+rawValue+'">'+rawValue+'</a>';
 							}
 						}),
 						label	: localization.tt("lbl.policyId"),
 						editable: false,
-						sortable : false
+						sortable : true,
+						sortType: 'toggle',
 					},
                     policyVersion: {
                         label : localization.tt("lbl.policyVersion"),
@@ -1279,9 +1292,9 @@ define(function(require) {
 					eventTime : {
 						label : 'Event Time',
 						cell: "String",
-						click : false,
-						drag : false,
 						editable:false,
+						sortable : true,
+						direction: "descending",
                         sortType: 'toggle',
                         formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw: function (rawValue, model) {
@@ -1303,10 +1316,11 @@ define(function(require) {
 						click : false,
 						drag : false,
                                                 editable:false,
-                        sortable : false,
+                        sortable : true,
+                        sortType: 'toggle',
 					},
 					repoName : {
-						label : 'Name / Type',
+						label : 'Service (Name / Type)',
 						cell: "html",
 						click : false,
 						drag : false,
@@ -1320,40 +1334,40 @@ define(function(require) {
 						})
 					},
 					resourceType: {
-						label : 'Name / Type',
+						label : 'Resource (Name / Type)',
 						cell: "html",
-						click: false,
 						formatter: _.extend({},Backgrid.CellFormatter.prototype,{
 							 fromRaw: function(rawValue,model) {
 							     return XAViewUtils.resourceTypeFormatter(rawValue, model);
 							 }
 						}),
 						drag: false,
-						sortable: false,
+						sortable: true,
+						sortType: 'toggle',
 						editable: false,
 					},
 					accessType : {
 						label : localization.tt("lbl.accessType"),
 						cell: "String",
-						click : false,
 						drag : false,
-						sortable:false,
+						sortable:true,
+						sortType: 'toggle',
 						editable:false
 					},
 					action : {
 						label : localization.tt("lbl.permission"),
 						cell: "html",
-						click : false,
 						drag : false,
 						editable:false,
-						sortable : false,
+						sortable : true,
+						sortType: 'toggle',
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
 							fromRaw : function (rawValue, model) {
 								rawValue = _.escape(rawValue);
 								if(_.isUndefined(rawValue) || _.isEmpty(rawValue)){
 									return '<center>--</center>';
 								}else{
-									return '<span  class="label label-info" title="'+rawValue+'">'+rawValue+'</span>';
+									return '<span  class="badge badge-info" title="'+rawValue+'">'+rawValue+'</span>';
 								}
 							}
 						})
@@ -1372,9 +1386,9 @@ define(function(require) {
 									if(parseInt(rawValue) == m.value){
 										label=  m.label;
 										if(m.value == XAEnums.AccessResult.ACCESS_RESULT_ALLOWED.value){
-											html = 	'<label class="label label-success">'+label+'</label>';
+											html = 	'<label class="badge badge-success">'+label+'</label>';
 										} else {
-											html = 	'<label class="label label-important">'+label+'</label>';
+											html = 	'<label class="badge badge-danger">'+label+'</label>';
 										} 
 									}	
 								});
@@ -1385,9 +1399,9 @@ define(function(require) {
 					aclEnforcer : {
 						label :localization.tt("lbl.aclEnforcer"),
 						cell: "String",
-						click : false,
 						drag : false,
-						sortable:false,
+						sortable:true,
+						sortType: 'toggle',
 						editable:false
 					},
 					agentHost : {
@@ -1409,9 +1423,9 @@ define(function(require) {
 					clientIP : {
 						label : 'Client IP',
 						cell: "string",
-						click : false,
 						drag : false,
-						sortable:false,
+						sortable:true,
+						sortType: 'toggle',
 						editable:false
 					},
                     clusterName : {
@@ -1435,19 +1449,19 @@ define(function(require) {
                     zoneName: {
 						label : localization.tt("lbl.zoneName"),
 						cell: "html",
-						click: false,
 						formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                             fromRaw: function (rawValue, model) {
                                 rawValue = _.escape(rawValue);
                                 if (_.isUndefined(rawValue) || _.isEmpty(rawValue)) {
                                     '--'
                                 } else {
-                                    return '<span class="label label-inverse" title="'+rawValue+'">'+rawValue+'</span>';
+                                    return '<span class="badge badge-dark" title="'+rawValue+'">'+rawValue+'</span>';
                                 }
                             }
                         }),
 						drag: false,
-						sortable: false,
+						sortable: true,
+						sortType: 'toggle',
 						editable: false,
 					},
 
@@ -1543,9 +1557,9 @@ define(function(require) {
 								if(parseInt(rawValue) == m.value){
 									label=  m.label;
 									if(m.value == 1){
-										html = 	'<label class="label label-success">'+label+'</label>';
+										html = 	'<label class="badge badge-success">'+label+'</label>';
 									} else if(m.value == 2){
-										html = 	'<label class="label label-important">'+label+'</label>';
+										html = 	'<label class="badge badge-danger">'+label+'</label>';
 									} else {
 										html = 	'<label class="label">'+label+'</label>';
 									}
@@ -1837,10 +1851,10 @@ define(function(require) {
                                                                 var lastUpdateDate = new Date(parseInt(model.get('info')['lastPolicyUpdateTime']));
                                                                 if(that.isDateDifferenceMoreThanHr(downloadDate, lastUpdateDate)){
                                                                         if(moment(downloadDate).diff(moment(lastUpdateDate),'minutes') >= -2) {
-                                                                                return '<span class="text-warning"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
+                                                                                return '<span class="text-warning"><i class="fa-fw fa fa-exclamation-circle activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
                                                                                 + that.setTimeStamp(downloadDate , moment) +'</span>';
                                                                         } else {
-                                                                                return '<span class="text-error"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
+                                                                                return '<span class="text-error"><i class="fa-fw fa fa-exclamation-circle activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
                                                                                 + that.setTimeStamp(downloadDate , moment)+'</span>';
                                                                         }
 
@@ -1870,10 +1884,10 @@ define(function(require) {
 								var lastUpdateDate = new Date(parseInt(model.get('info')['lastPolicyUpdateTime']));
 								if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
                                                                         if(moment(activeDate).diff(moment(lastUpdateDate),'minutes') >= -2) {
-                                                                                return '<span class="text-warning"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
+                                                                                return '<span class="text-warning"><i class="fa-fw fa fa-exclamation-circle activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
                                                                                 + that.setTimeStamp(activeDate , moment) +'</span>';
                                                                         } else {
-                                                                                return '<span class="text-error"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
+                                                                                return '<span class="text-error"><i class="fa-fw fa fa-exclamation-circle activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
                                                                                 + that.setTimeStamp(activeDate , moment)+'</span>';
                                                                         }
 
@@ -1924,10 +1938,10 @@ define(function(require) {
                                                                 var lastUpdateDate = new Date(parseInt(model.get('info')['lastTagUpdateTime']));
                                                                 if(that.isDateDifferenceMoreThanHr(downloadTagDate, lastUpdateDate)){
                                                                         if(moment(downloadTagDate).diff(moment(lastUpdateDate),'minutes') >= -2) {
-                                                                                return '<span class="text-warning"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
+                                                                                return '<span class="text-warning"><i class="fa-fw fa fa-exclamation-circle activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
                                                                                 + that.setTimeStamp(downloadTagDate , moment) +'</span>';
                                                                         } else {
-                                                                                return '<span class="text-error"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
+                                                                                return '<span class="text-error"><i class="fa-fw fa fa-exclamation-circle activePolicyAlert" title="'+localization.tt("msg.downloadTimeDelayMsg")+'"></i>'
                                                                                 + that.setTimeStamp(downloadTagDate , moment)+'</span>';
                                                                         }
 
@@ -1957,10 +1971,10 @@ define(function(require) {
 									var lastUpdateDate = new Date(parseInt(model.get('info')['lastTagUpdateTime']));
 									if(that.isDateDifferenceMoreThanHr(activeDate, lastUpdateDate)){
                                                                                 if(moment(activeDate).diff(moment(lastUpdateDate),'minutes') >= -2) {
-                                                                                        return '<span class="text-warning"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
+                                                                                        return '<span class="text-warning"><i class="fa-fw fa fa-exclamation-circle activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
                                                                                         + that.setTimeStamp(activeDate , moment) +'</span>';
                                                                                 } else {
-                                                                                        return '<span class="text-error"><i class="icon-exclamation-sign activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
+                                                                                        return '<span class="text-error"><i class="fa-fw fa fa-exclamation-circle activePolicyAlert" title="'+localization.tt("msg.activationTimeDelayMsg")+'"></i>'
                                                                                         + that.setTimeStamp(activeDate , moment)+'</span>';
                                                                                 }
 									}
@@ -2007,7 +2021,7 @@ define(function(require) {
                     formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw: function (rawValue, model) {
                             var label = rawValue == "Unix" ? 'success' : (rawValue == "File" ? 'info' : 'yellow');
-                            return '<center><label class="label label-'+label+'">'+_.escape(rawValue)+'</label></center>';
+                            return '<center><label class="badge badge-'+label+'">'+_.escape(rawValue)+'</label></center>';
                         }
                     }),
                 },
@@ -2056,7 +2070,7 @@ define(function(require) {
                     sortable:false,
                     formatter: _.extend({}, Backgrid.CellFormatter.prototype, {
                         fromRaw: function (rawValue, model) {
-                            return('<button data-id="syncDetailes" title="Sync Details" id="'+ model.get('id') +'" ><i class="icon-eye-open"> </i></button>');
+                            return('<button data-id="syncDetailes" title="Sync Details" id="'+ model.get('id') +'" ><i class="fa-fw fa fa-eye"> </i></button>');
                         }
                     }),
                 }
@@ -2088,9 +2102,10 @@ define(function(require) {
                     title : localization.tt("lbl.sessionDetail"),
                     okText : localization.tt("lbl.ok"),
                     allowCancel : true,
-                    escape : true
+                    escape : true,
+                    focusOk : false
                 }).open();
-                modal.$el.addClass('modal-diff').attr('tabindex', -1);
+                //modal.$el.addClass('modal-diff').attr('tabindex', -1);
                 modal.$el.find('.cancel').hide();
             });
         },
@@ -2248,6 +2263,9 @@ define(function(require) {
                 App.excludeServiceUser = e.currentTarget.checked;
                 this.accessAuditList.state.currentPage = this.accessAuditList.state.firstPage;
                 XAUtils.blockUI();
+                var urlParams = XAUtils.changeUrlToSearchQuery(decodeURIComponent(XAUtils.urlQueryParams()))
+                urlParams['excludeServiceUser'] = e.currentTarget.checked;
+                XAUtils.changeParamToUrlFragment(urlParams);
                 this.accessAuditList.fetch({
                     reset : true,
                     cache : false,
@@ -2284,6 +2302,7 @@ define(function(require) {
 			clearInterval(this.timerId);
 			clearInterval(this.clearTimeUpdateInterval);
             XAUtils.removeUnwantedDomElement();
+            $('.latestResponse').show();
 		}
 	});
 

@@ -36,7 +36,7 @@ define(function(require){
     var RangerServiceViewDetail  = require('views/service/RangerServiceViewDetail');
     var RangerServiceDefList    = require('collections/RangerServiceDefList');
     var RangerServiceDef        = require('models/RangerServiceDef');
-    var RangerZoneList      = require('collections/RangerZoneList');
+    var RangerZoneList      = require('model_bases/RangerZoneBase');
 
     require('Backbone.BootstrapModal');
     return Backbone.Marionette.Layout.extend(
@@ -49,8 +49,8 @@ define(function(require){
         templateHelpers: function(){
             return {
                 operation   : SessionMgr.isSystemAdmin() || SessionMgr.isKeyAdmin(),
-                serviceDefs : _.sortBy(this.componentCollectionModels(App.vZone.vZoneName), function(m) {return m.get('name')}),
-                services    : this.componentServicesModels(App.vZone.vZoneName),
+                serviceDefs : _.sortBy(this.componentCollectionModels(App.vZone.vZoneName, App.vZone.vZoneId), function(m) {return m.get('name')}),
+                services    : this.componentServicesModels(App.vZone.vZoneName, App.vZone.vZoneId),
                 showImportExportBtn : (SessionMgr.isUser() || XAUtil.isAuditorOrKMSAuditor(SessionMgr)) ? false : true,
                 isZoneAdministration : (SessionMgr.isSystemAdmin()|| SessionMgr.isUser() || SessionMgr.isAuditor()) ? true : false,
                 isServiceManager : (App.vZone && _.isEmpty(App.vZone.vZoneName)) ? true : false,
@@ -111,7 +111,8 @@ define(function(require){
             'searchBtn'           : '[data-js="searchBtn"]',
             'userName'            : '[data-js="userName"]',
             'selectServiceName'   : '[data-js="serviceName"]',
-            'profileTab'          : '.profile-tab'
+            'profileTab'          : '.profile-tab',
+            'roleName'            : '[data-js="roleName"]',
 
         },
 
@@ -127,7 +128,7 @@ define(function(require){
             events['click ' + this.ui.panel]   = 'onPanelToggle';
             events['click ' + this.ui.serviceActive]   = 'serviceActive';
             events['keyup ' + this.ui.zoneSearch] = 'zoneSearch';
-            events['click ' + this.ui.sideCollapes] = 'sideCollapes';
+            events['mousedown ' + this.ui.sideCollapes] = 'sideCollapes';
             events['click ' + this.ui.selectComponet] = 'selectComponet';
             events['click ' + this.ui.expandCollapes] = 'expandCollapes';
             events['click .autoText']  = 'autocompleteFilter';
@@ -149,17 +150,18 @@ define(function(require){
            // this.initializeServices();
             if (!App.vZone) {
                 App.vZone = {
-                    vZoneName: ""
+                    vZoneName: "",
+                    vZoneId: "",
                 }
             }
-            if(this.type && this.type.split('?')[1]) {
-                var searchFregment = XAUtil.changeUrlToSearchQuery(decodeURIComponent(this.type.substring(this.type.indexOf("?") + 1)));
-                console.log(searchFregment);
+            if (!_.isUndefined(XAUtil.urlQueryParams())) {
+                var searchFregment = XAUtil.changeUrlToSearchQuery(decodeURIComponent(XAUtil.urlQueryParams()));
                 if(_.has(searchFregment, 'securityZone')) {
-                        App.vZone.vZoneName = searchFregment['securityZone'];
+                    App.vZone.vZoneName = searchFregment['securityZone'];
                 }
             }
             this.initialCall = true;
+            this.zoneServiceList = new RangerService();
         },
 
         /** all events binding here */
@@ -172,23 +174,24 @@ define(function(require){
         },
 
         sideCollapes : function (e) {
+            e.stopImmediatePropagation()
             if (this.collapes) {
                 this.collapes = false;
                 App.rSideBar.$el.addClass('expanded');
+                App.rContent.$el.addClass('expanded-contant');
                 App.rSideBar.$el.removeClass('collapsed');
-                //$(e.target).toggleClass('icon-double-angle-left icon-2x');
-                e.target.setAttribute('class' , 'icon-double-angle-left icon-2x')
+                e.target.setAttribute('class' , 'fa-fw fa fa-angle-double-left fa-fw fa fa-2x')
             } else {
                 this.collapes = true;
                 App.rSideBar.$el.addClass('collapsed');
+                App.rContent.$el.removeClass('expanded-contant');
                 App.rSideBar.$el.removeClass('expanded');
-                //$(e.target).toggleClass('icon-double-angle-right icon-2x');
-                e.target.setAttribute('class' , 'icon-double-angle-right icon-2x');
+                e.target.setAttribute('class' , 'fa-fw fa fa-angle-double-right fa-fw fa fa-2x');
             }
         },
 
         onPanelToggle : function (e) {
-            $(e.currentTarget).toggleClass('icon-caret-down');
+            $(e.currentTarget).toggleClass('fa-caret-down');
             $(e.currentTarget).parent().next().slideToggle();
         },
 
@@ -196,7 +199,7 @@ define(function(require){
             console.log(e);
             e.stopPropagation();
             this.$el.find('[data-id="panel"] i#collapesService').each(function(){
-                $(this).toggleClass('icon-caret-down');
+                $(this).toggleClass('fa-caret-down');
                 $(this).parent().next().slideToggle();
             })
         },
@@ -205,7 +208,7 @@ define(function(require){
         onRender: function() {
             var that = this;
             this.$('[data-id="r_tableSpinner"]').removeClass('loading').addClass('display-none');
-            if (this.rangerZoneList.length > 0) {
+            if (!_.isUndefined(this.rangerZoneList.attributes) && !_.isEmpty(this.rangerZoneList.attributes)) {
                 this.ui.selectZoneName.removeAttr('disabled');
                 this.$el.find('.zoneEmptyMsg').removeAttr('title');
             }
@@ -218,7 +221,7 @@ define(function(require){
                 this.ui.resource.removeClass("btn-primary");
                 this.ui.tag.addClass("btn-primary");
             }
-            this.setupZoneList(this.rangerZoneList.models);
+            this.setupZoneList(this.rangerZoneList.attributes);
             // if(this.selectedService) {
             //     this.ui.serviceActive.each(function() {
             //         if($(this).data('id') == that.selectedService) {
@@ -246,6 +249,7 @@ define(function(require){
         componentListing: function(type) {
             this.collection = new RangerServiceDefList();
             this.collection.queryParams.sortBy = 'serviceTypeId';
+            this.collection.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             if(type == 'tag'){
                 var tagServiceDef    = new RangerServiceDef();
                 tagServiceDef.url    = XAUtil.getRangerServiceDef(XAEnums.ServiceType.SERVICE_TAG.label)
@@ -269,12 +273,13 @@ define(function(require){
             this.rangerZoneList.fetch({
                 cache : false,
                 async : false,
+                url: "service/public/v2/api/zone-headers",
             })
         },
 
         initializeServices : function(){
             this.services = new RangerServiceList();
-            this.services.setPageSize(100);
+            this.services.setPageSize(XAGlobals.settings.MAX_PAGE_SIZE);
             this.services.fetch({
                cache : false,
                async : false
@@ -373,16 +378,18 @@ define(function(require){
                 content : view,
                 okText  :"Import",
                                 title   : App.vZone && App.vZone.vZoneName && !_.isEmpty(App.vZone.vZoneName) ? 'Import Policy For Zone' : 'Import Policy',
-                animate : true
+                animate : true,
+                focusOk : false
             }).open();
 
         },
 
         selectZoneName : function(){
             var that = this;
-            var zoneName = _.map(this.rangerZoneList.models, function(m){
-                return { 'id':m.get('name'), 'text':m.get('name'), 'zoneId' : m.get('id')}
+            var zoneName = _.map(this.rangerZoneList.attributes, function(m){
+                return { 'id':m.name, 'text':m.name, 'zoneId' : m.id}
             });
+            zoneName = _.sortBy(zoneName, 'id')
             if(!_.isEmpty(App.vZone.vZoneName) && !_.isUndefined(App.vZone.vZoneName)){
                 this.ui.selectZoneName.val(App.vZone.vZoneName);
             }
@@ -398,6 +405,12 @@ define(function(require){
                 App.vZone.vZoneName = e.val;
                 if(e.added){
                     App.vZone.vZoneId = e.added.zoneId;
+                    that.zoneServiceList.clear();
+                    that.zoneServiceList.fetch({
+                        cache : false,
+                        async : false,
+                        url : "service/public/v2/api/zones/"+e.added.zoneId+"/service-headers",
+                    })
                     XAUtil.changeParamToUrlFragment({"securityZone" : e.val}, that.collection.modelName);
                 } else {
                     App.vZone.vZoneId = null;
@@ -422,7 +435,7 @@ define(function(require){
         selectComponet : function(){
             var that = this, options;
             if(!_.isEmpty(App.vZone.vZoneName) && !_.isUndefined(App.vZone.vZoneName)) {
-                var serviceType = _.keys(that.componentServicesModels(App.vZone.vZoneName));
+                var serviceType = _.keys(that.componentServicesModels(App.vZone.vZoneName, App.vZone.vZoneId));
                 options = serviceType.map(function(m){ return { 'id' : m, 'text' : m.toUpperCase()}})
             } else {
                 options = this.collection.map(function(m){ return { 'id' : (m.get('name')), 'text' : (m.get('name')).toUpperCase()}});
@@ -446,10 +459,10 @@ define(function(require){
             });
         },
 
-        componentCollectionModels: function(zoneName) {
+        componentCollectionModels: function(zoneName, zoneID) {
             var that = this;
             if (!_.isEmpty(zoneName) && !_.isUndefined(zoneName) && this.type !== XAEnums.ServiceType.SERVICE_TAG.label) {
-                var serviceType = _.keys(that.componentServicesModels(zoneName));
+                var serviceType = _.keys(that.componentServicesModels(zoneName, zoneID));
                 if(!_.isEmpty(that.selectedComponets)) {
                     serviceType = _.intersection(serviceType,that.selectedComponets);
                 }
@@ -467,30 +480,31 @@ define(function(require){
             }
         },
 
-        componentServicesModels: function(zoneName) {
+        componentServicesModels: function(zoneName, zoneID) {
             var that = this;
             this.initializeServices();
             this.zoneCollection();
-            if(!_.isEmpty(zoneName) && !_.isUndefined(zoneName) && that.rangerZoneList.length > 0){
-                var selectedZone = that.rangerZoneList.find(function(m) {
-                    return zoneName === m.get('name');
-                });
-            }
-            if (selectedZone && !_.isEmpty(selectedZone)) {
+            if(!_.isEmpty(zoneName) && !_.isUndefined(zoneName) && !_.isEmpty(that.rangerZoneList.attributes)){
                 var selectedZoneServices = [], model;
-                if(this.type !== XAEnums.ServiceType.SERVICE_TAG.label){
-                    _.each(selectedZone.get('services'), function(value, key) {
+                if (_.isEmpty(zoneID)) {
+                    var zoneModal = _.find(that.rangerZoneList.attributes, function (m){
+                        return m.name == zoneName;
+                    })
+                    zoneID = zoneModal.id;
+                    App.vZone.vZoneId = zoneID;
+                }
+                if (_.isEmpty(this.zoneServiceList.attributes)) {
+                    this.zoneServiceList.fetch({
+                        cache : false,
+                        async : false,
+                        url : "/service/zones/service/list",
+                        data : {"zoneId" : zoneID},
+                    })
+                }
+                if(!_.isEmpty(this.zoneServiceList.attributes)) {
+                    _.filter(this.zoneServiceList.attributes, function(obj) {
                         model = that.services.find(function(m) {
-                            return m.get('name') == key
-                        });
-                        if (model) {
-                            selectedZoneServices.push(model);
-                        }
-                    });
-                }else{
-                    _.each(selectedZone.get('tagServices'), function(value){
-                        model = that.services.find(function(m) {
-                            return m.get('name') == value
+                            return m.get('name') == obj.name;
                         });
                         if (model) {
                             selectedZoneServices.push(model);
@@ -516,13 +530,6 @@ define(function(require){
             this.render();
         },
 
-        // serviceActive: function (e) {
-        //     this.ui.serviceActive.parent().removeClass('selectedList')
-        //     e.stopPropagation();
-        //     $(e.currentTarget).parent().addClass('selectedList');
-        //     this.selectedService = e.currentTarget.dataset.id
-        // },
-
         selectedList: function(target) {
             console.log(target);
             this.ui.viewManager.find('.selected').removeClass('selected')
@@ -536,29 +543,29 @@ define(function(require){
             that.zoneSearchList = [];
 
             if (!_.isEmpty(input)) {
-                that.zoneSearchList = this.rangerZoneList.filter(
+                that.zoneSearchList = _.filter(this.rangerZoneList.attributes,
                     function(zone) {
-                        return (zone.get('name').toLowerCase().indexOf(input.toLowerCase()) > -1)
+                        return (zone.name.toLowerCase().indexOf(input.toLowerCase()) > -1)
                     }
                 );
                 this.setupZoneList(that.zoneSearchList);
             } else {
-                this.setupZoneList(this.rangerZoneList.models);
+                this.setupZoneList(this.rangerZoneList.attributes);
             }
         },
 
         setupZoneList: function(zoneArray) {
             var that = this;
             this.ui.zoneUlList.empty();
-            if(zoneArray.length > 0) {
+            if(!_.isEmpty(zoneArray)) {
                 _.each(zoneArray,
                     function(zone) {
-                        if(that.rangerZoneList.models[0].get('name') == zone.get('name')) {
-                            that.ui.zoneUlList.append('<li class="trim-containt" title="'+_.escape(zone.get('name'))+
-                                '" data-action="zoneListing" data-id="' + _.escape(zone.get('name')) + '">' + _.escape(zone.get('name')) + '</li>');
+                        if(that.rangerZoneList.attributes[0].name == zone.name) {
+                            that.ui.zoneUlList.append('<li class="trim-containt" title="'+_.escape(zone.name)+
+                                '" data-action="zoneListing" data-id="' + _.escape(zone.name) + '"><a href="#!/zones/zone/'+zone.id+'">' + _.escape(zone.name) + '</a></li>');
                         } else {
                             that.ui.zoneUlList.append('<li class="trim-containt" data-action="zoneListing" title="'
-                                +_.escape(zone.get('name'))+'" data-id="' + _.escape(zone.get('name')) + '">' + _.escape(zone.get('name')) + '</li>');
+                                +_.escape(zone.name)+'" data-id="' + _.escape(zone.name) + '"><a href="#!/zones/zone/'+zone.id+'">' + _.escape(zone.name) + '</a></li>');
                         }
                     }
                 );

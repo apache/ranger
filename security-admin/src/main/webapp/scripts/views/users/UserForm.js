@@ -29,26 +29,15 @@ define(function(require){
 	var XAEnums			= require('utils/XAEnums');
 	var XAUtils			= require('utils/XAUtils');
 	var AddGroup 		= require('views/common/AddGroup');
+	var XAViewUtils		= require('utils/XAViewUtils');
 
 	require('backbone-forms');
 	require('backbone-forms.templates');
-	require('bootbox');
 	var UserForm = Backbone.Form.extend(
 	/** @lends UserForm */
 	{
 		_viewName : 'UserForm',
 
-		/**
-		* intialize a new UserForm Form View
-		* @constructs
-		*/
-		initialize: function(options) {
-			console.log("initialized a UserForm Form View");
-			_.extend(this, _.pick(options,'groupList','showBasicFields'));
-    		Backbone.Form.prototype.initialize.call(this, options);
-
-			this.bindEvents();
-		},
 
 		/** all events binding here */
 		bindEvents : function(){
@@ -59,6 +48,26 @@ define(function(require){
 					XAUtils.alertPopup({msg : externalUserRoleProperty});
 				}
     		});
+		},
+
+		/**Form template**/
+
+		templateData : function(){
+			return {syncSourceInfo : this.syncData}
+		},
+		/**
+		* intialize a new UserForm Form View
+		* @constructs
+		*/
+		initialize: function(options) {
+			console.log("initialized a UserForm Form View");
+			_.extend(this, _.pick(options,'groupList','showBasicFields'));
+			Backbone.Form.prototype.initialize.call(this, options);
+			if (this.model && !_.isUndefined(this.model.get('otherAttributes'))) {
+				this.syncData = XAViewUtils.syncUsersGroupsDetails(this);
+			}
+
+			this.bindEvents();
 		},
 
 	    /** fields for the form
@@ -78,7 +87,7 @@ define(function(require){
 					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.newPassword") +' *',
 					validators  : ['required',
-					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :' Invalid password'}],
+					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$/,message :' Invalid password'}],
 					editorAttrs : {'oncopy':'return false;','autocomplete':'off'},
 					errorMsg    : localization.tt('validationMessages.passwordError')
 				},
@@ -86,7 +95,7 @@ define(function(require){
 					type		: 'PasswordFiled',
 					title		: localization.tt("lbl.passwordConfirm") +' *',
 					validators  : ['required',{type: 'match', field: 'password', message: 'Passwords must match !'},
-					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*\d)(?=.*[a-zA-Z]).*$/,message :' Invalid password'}],
+					               {type:'regexp',regexp:/^.*(?=.{8,256})(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z]).*$/,message :' Invalid password'}],
 					editorAttrs : {'oncopy':'return false;','autocomplete':'off'},
 					errorMsg    : localization.tt('validationMessages.passwordError')
 				},
@@ -209,6 +218,7 @@ define(function(require){
 
 				this.fields.password.$el.show();
 				this.fields.passwordConfirm.$el.show();
+				this.$el.children('fieldset').hide()
 			}
 			if(	(!this.model.isNew() && (this.showBasicFields))){
 				this.fields.password.$el.hide();
@@ -222,6 +232,7 @@ define(function(require){
 					var labelStr = this.fields.firstName.$el.find('label').html().replace('*','');
 					this.fields.firstName.$el.find('label').html(labelStr);
 				}
+				this.$el.children('fieldset').show()
 			}
 		},
 		removeElementFromArr : function(arr ,elem){

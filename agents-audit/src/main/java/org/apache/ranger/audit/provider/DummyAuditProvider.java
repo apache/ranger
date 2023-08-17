@@ -17,6 +17,7 @@
  */
 package org.apache.ranger.audit.provider;
 
+import java.io.File;
 import java.util.Collection;
 import java.util.Properties;
 
@@ -101,6 +102,14 @@ public class DummyAuditProvider implements AuditHandler {
 	@Override
 	public String getName() {
 		return this.getClass().getName();
+	}
+
+	/* (non-Javadoc)
+	* @see org.apache.ranger.audit.provider.AuditProvider#getAuditFileType()
+	*/
+	@Override
+	public boolean logFile(File file) {
+		return logFile(file);
 	}
 
 }

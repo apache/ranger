@@ -22,19 +22,20 @@
  */
 package org.apache.ranger.biz;
 
-import org.apache.log4j.Logger;
 import org.apache.ranger.common.MessageEnums;
 import org.apache.ranger.common.RESTErrorUtil;
 import org.apache.ranger.common.RangerConstants;
 import org.apache.ranger.common.db.BaseDao;
 import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXDBBase;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 @Component
 public abstract class BaseMgr {
-    static final Logger logger = Logger.getLogger(BaseMgr.class);
+    static final Logger logger = LoggerFactory.getLogger(BaseMgr.class);
 
     @Autowired
     RangerDaoManager daoManager;
