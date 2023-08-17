@@ -4401,40 +4401,52 @@ public class ServiceDBStore extends AbstractServiceStore {
                                 filterInfo = rowFilterPolicyItem.getRowFilterInfo();
                                 filterExpr = filterInfo.getFilterExpr();
                         }
-                        if (CollectionUtils.isNotEmpty(accesses)) {
-                                for (RangerPolicyItemAccess access : accesses) {
-                                        accessType = accessType
-                                                        + access.getType().replace("#", "")
-                                                                        .replace("|", "") + "#";
-                                }
-                                accessType = accessType.substring(0,
-                                                accessType.lastIndexOf("#"));
-                        }
-                        if (CollectionUtils.isNotEmpty(roles)) {
-                            for (String role : roles) {
-                                role = role.replace("|", "");
-                                role = role.replace("#", "");
-                                roleNames = roleNames + role + "#";
-                            }
-                            roleNames = roleNames.substring(0, roleNames.lastIndexOf("#"));
-                        }
-                        if (CollectionUtils.isNotEmpty(groups)) {
-                                for (String group : groups) {
-                                        group = group.replace("|", "");
-                                        group = group.replace("#", "");
-                                        groupNames = groupNames + group + "#";
-                                }
-                                groupNames = groupNames.substring(0,
-                                                groupNames.lastIndexOf("#"));
-                        }
-                        if (CollectionUtils.isNotEmpty(users)) {
-                                for (String user : users) {
-                                        user = user.replace("|", "");
-                                        user = user.replace("#", "");
-                                        userNames = userNames + user + "#";
-                                }
-                                userNames = userNames.substring(0, userNames.lastIndexOf("#"));
-                        }
+						if (CollectionUtils.isNotEmpty(accesses)) {
+							for (RangerPolicyItemAccess access : accesses) {
+								if (access != null) {
+									accessType = accessType + access.getType().replace("#", "").replace("|", "") + "#";
+								}
+							}
+							if (accessType.length() > 0) {
+								accessType = accessType.substring(0, accessType.lastIndexOf("#"));
+							}
+						}
+						if (CollectionUtils.isNotEmpty(roles)) {
+							for (String role : roles) {
+								if (StringUtils.isNotBlank(role)) {
+									role = role.replace("|", "");
+									role = role.replace("#", "");
+									roleNames = roleNames + role + "#";
+								}
+							}
+							if (roleNames.length() > 0) {
+								roleNames = roleNames.substring(0, roleNames.lastIndexOf("#"));
+							}
+						}
+						if (CollectionUtils.isNotEmpty(groups)) {
+							for (String group : groups) {
+								if (StringUtils.isNotBlank(group)) {
+									group = group.replace("|", "");
+									group = group.replace("#", "");
+									groupNames = groupNames + group + "#";
+								}
+							}
+							if (groupNames.length() > 0) {
+								groupNames = groupNames.substring(0, groupNames.lastIndexOf("#"));
+							}
+						}
+						if (CollectionUtils.isNotEmpty(users)) {
+							for (String user : users) {
+								if (StringUtils.isNotBlank(user)) {
+									user = user.replace("|", "");
+									user = user.replace("#", "");
+									userNames = userNames + user + "#";
+								}
+							}
+							if (userNames.length() > 0) {
+								userNames = userNames.substring(0, userNames.lastIndexOf("#"));
+							}
+						}
                         String conditionValue = "";
                         for (RangerPolicyItemCondition conditions : conditionsList) {
                                 String conditionType = conditions.getType();
@@ -4478,15 +4490,18 @@ public class ServiceDBStore extends AbstractServiceStore {
                         policyType = POLICY_TYPE_ROWFILTER;
                         break;
                 }
-                if (CollectionUtils.isNotEmpty(policyLabels)) {
-                        for (String policyLabel : policyLabels) {
-                                policyLabel = policyLabel.replace("|", "");
-                                policyLabel = policyLabel.replace("#", "");
-                                policyLabelName = policyLabelName + policyLabel + "#";
-                        }
-                        policyLabelName = policyLabelName.substring(0,
-                                        policyLabelName.lastIndexOf("#"));
-                }
+				if (CollectionUtils.isNotEmpty(policyLabels)) {
+					for (String policyLabel : policyLabels) {
+						if (StringUtils.isNotBlank(policyLabel)) {
+							policyLabel = policyLabel.replace("|", "");
+							policyLabel = policyLabel.replace("#", "");
+							policyLabelName = policyLabelName + policyLabel + "#";
+						}
+					}
+					if (policyLabelName.length() > 0) {
+						policyLabelName = policyLabelName.substring(0, policyLabelName.lastIndexOf("#"));
+					}
+				}
 
                 csvBuffer.append(policy.getId());
                 csvBuffer.append(COMMA_DELIMITER);

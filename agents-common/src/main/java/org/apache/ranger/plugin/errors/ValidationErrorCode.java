@@ -104,6 +104,9 @@ public enum ValidationErrorCode {
     POLICY_VALIDATION_ERR_NONEXISTANT_ZONE_NAME(3033, "Non-existent Zone name={0} in policy create"),
     POLICY_VALIDATION_ERR_SERVICE_NOT_ASSOCIATED_TO_ZONE(3048, "Service name = {0} is not associated to Zone name = {1}"),
     POLICY_VALIDATION_ERR_UNSUPPORTED_POLICY_ITEM_TYPE(3049, "Deny or deny-exceptions are not supported if policy has isDenyAllElse flag set to true"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_USER(3053, "policy items user was null"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_GROUP(3054, "policy items group was null"),
+    POLICY_VALIDATION_ERR_NULL_POLICY_ITEM_ROLE(3055, "policy items role was null"),
     POLICY_VALIDATION_ERR_INVALID_SERVICE_TYPE(4009," Invalid service type [{0}] provided for service [{1}]"),
 
     // SECURITY_ZONE Validations
