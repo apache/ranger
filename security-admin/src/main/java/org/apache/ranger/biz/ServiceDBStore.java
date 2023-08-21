@@ -254,6 +254,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 	public static Integer TAG_RETENTION_PERIOD_IN_DAYS = 3;
 	public static boolean SUPPORTS_PURGE_LOGIN_RECORDS = false;
 	public static Integer LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS = 0;
+	public static boolean SUPPORTS_PURGE_TRANSACTION_RECORDS = false;
+	public static Integer TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS = 0;
 
 	private static final String RANGER_PLUGIN_CONFIG_PREFIX = "ranger.plugin.";
 	public static final String RANGER_PLUGIN_AUDIT_FILTERS  = "ranger.plugin.audit.filters";
@@ -399,6 +401,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 					SUPPORTS_PURGE_LOGIN_RECORDS           = config.getBoolean("ranger.admin.init.purge.login_records", false);
 					LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS = config.getInt("ranger.admin.init.purge.login_records.retention.days", 0);
+					SUPPORTS_PURGE_TRANSACTION_RECORDS           = config.getBoolean("ranger.admin.init.purge.transaction_records", false);
+					TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS = config.getInt("ranger.admin.init.purge.transaction_records.retention.days", 0);
 
 					isRolesDownloadedByService   = config.getBoolean("ranger.support.for.service.specific.role.download", false);
 					SUPPORTS_IN_PLACE_POLICY_UPDATES    = SUPPORTS_POLICY_DELTAS && config.getBoolean("ranger.admin" + RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES, RangerCommonConstants.RANGER_ADMIN_SUFFIX_IN_PLACE_POLICY_UPDATES_DEFAULT);
@@ -408,6 +412,8 @@ public class ServiceDBStore extends AbstractServiceStore {
 					LOG.info("TAG_RETENTION_PERIOD_IN_DAYS=" + TAG_RETENTION_PERIOD_IN_DAYS);
 					LOG.info("SUPPORTS_PURGE_LOGIN_RECORDS=" + SUPPORTS_PURGE_LOGIN_RECORDS);
 					LOG.info("LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS=" + LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS);
+					LOG.info("SUPPORTS_PURGE_TRANSACTION_RECORDS=" + SUPPORTS_PURGE_TRANSACTION_RECORDS);
+					LOG.info("TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS=" + TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS);
 					LOG.info("isRolesDownloadedByService=" + isRolesDownloadedByService);
 					LOG.info("SUPPORTS_IN_PLACE_POLICY_UPDATES=" + SUPPORTS_IN_PLACE_POLICY_UPDATES);
 
@@ -427,6 +433,9 @@ public class ServiceDBStore extends AbstractServiceStore {
 								resetTagUpdateLog(TAG_RETENTION_PERIOD_IN_DAYS, ServiceTags.TagsChangeType.RANGER_ADMIN_START);
 								if (SUPPORTS_PURGE_LOGIN_RECORDS) {
 									removeAuthSessions(LOGIN_RECORDS_RETENTION_PERIOD_IN_DAYS);
+								}
+								if (SUPPORTS_PURGE_TRANSACTION_RECORDS) {
+									removeTransactionLogs(TRANSACTION_RECORDS_RETENTION_PERIOD_IN_DAYS);
 								}
 								//createUnzonedSecurityZone();
 								initRMSDaos();
@@ -5341,6 +5350,31 @@ public class ServiceDBStore extends AbstractServiceStore {
 
 		if (LOG.isDebugEnabled()) {
 			LOG.debug("<== removeAuthSessions(" + retentionInDays + ")");
+
+		}
+	}
+
+	public void removeTransactionLogs(int retentionInDays) {
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("==> removeTransactionLogs(" + retentionInDays + ")");
+		}
+
+		if (retentionInDays > 0) {
+			long rowsCount = daoMgr.getXXTrxLog().getAllCount();
+			long rowsDeleted = daoMgr.getXXTrxLog().deleteOlderThan(retentionInDays);
+			LOG.info("Deleted " + rowsDeleted + " records from x_trx_log that are older than " + retentionInDays + " days");
+			List<XXTrxLog> trxLogList = new ArrayList<XXTrxLog>();
+			XXTrxLog xxTrxLog = new XXTrxLog();
+			xxTrxLog.setAction("Deleted Transaction records");
+			xxTrxLog.setObjectClassType(AppConstants.CLASS_TYPE_AUTH_SESS);
+			xxTrxLog.setPreviousValue("Total Records : "+rowsCount);
+			xxTrxLog.setNewValue("Deleted Records : "+rowsDeleted);
+			trxLogList.add(xxTrxLog);
+			bizUtil.createTrxLog(trxLogList);
+		}
+
+		if (LOG.isDebugEnabled()) {
+			LOG.debug("<== removeTransactionLogs(" + retentionInDays + ")");
 
 		}
 	}
