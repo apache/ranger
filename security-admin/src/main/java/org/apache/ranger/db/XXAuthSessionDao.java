@@ -95,14 +95,17 @@ public class XXAuthSessionDao extends BaseDao<XXAuthSession> {
 		batchDeleteByIds("XXAuthSession.deleteByIds", ids, "ids");
 	}
 
-    public long deleteOlderThan(int olderThanInDays) {
-        Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanInDays));
-        LOG.info("Deleting x_auth_sess records that are older than " + olderThanInDays + " days, that is, older than " + since);
+	public long deleteOlderThan(int olderThanInDays) {
+		Date since = new Date(System.currentTimeMillis() - TimeUnit.DAYS.toMillis(olderThanInDays));
 
-        long ret = getEntityManager().createNamedQuery("XXAuthSession.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
+		LOG.info("Deleting x_auth_sess records that are older than " + olderThanInDays + " days, that is, older than " + since);
+		long ret = getEntityManager().createNamedQuery("XXAuthSession.deleteOlderThan").setParameter("olderThan", since).executeUpdate();
+		LOG.info("Deleted " + ret + " x_auth_sess records");
 
-        LOG.info("Deleted " + ret + " x_auth_sess records");
-        return ret;
-    }
+		LOG.info("Updating x_trx_log.sess_id with null which are older than " + olderThanInDays + " days, that is, older than " + since);
+		long updated = getEntityManager().createNamedQuery("XXTrxLog.updateSessIdWithNull").setParameter("olderThan", since).executeUpdate();
+		LOG.info("Updated " + updated + " x_trx_log records");
+		return ret;
+	}
 }
 

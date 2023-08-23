@@ -3949,7 +3949,7 @@ public class ServiceREST {
 			LOG.debug("==> ServiceREST.purgeRecords(" + recordType + ", " + olderThan + ")");
 		}
 
-		if (StringUtils.isEmpty(recordType) || !"login_records".equalsIgnoreCase(recordType)) {
+		if (!"login_records".equalsIgnoreCase(recordType) && !"trx_records".equalsIgnoreCase(recordType)) {
 			throw restErrorUtil.createRESTException(HttpServletResponse.SC_BAD_REQUEST, "Invalid record type - " + recordType, true);
 		}
 
@@ -3964,7 +3964,11 @@ public class ServiceREST {
 				perf = RangerPerfTracer.getPerfTracer(PERF_LOG, "ServiceREST.purgeRecords(recordType=" + recordType + ", olderThan=" + olderThan + ")");
 			}
 
-			svcStore.removeAuthSessions(olderThan);
+			if ("login_records".equalsIgnoreCase(recordType)) {
+				svcStore.removeAuthSessions(olderThan);
+			} else if ("trx_records".equalsIgnoreCase(recordType)) {
+				svcStore.removeTransactionLogs(olderThan);
+			}
 
 		} catch (WebApplicationException excp) {
 			throw excp;
