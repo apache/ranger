@@ -45,6 +45,7 @@ import org.apache.ranger.plugin.model.RangerPolicy;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerDataMaskPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerPolicyItem;
 import org.apache.ranger.plugin.model.RangerPolicy.RangerRowFilterPolicyItem;
+import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.UserInfo;
 import org.apache.ranger.plugin.util.RangerUserStore;
 import org.apache.ranger.security.context.RangerAPIMapping;
@@ -2027,6 +2028,16 @@ public class XUserMgr extends XUserMgrBase {
 			}
 		}
 		return listMasked;
+	}
+
+	public List<RangerPrincipal> getRangerPrincipals(SearchCriteria searchCriteria){
+		String searchString = (String) searchCriteria.getParamValue("name");
+		int    startIdx     = searchCriteria.getStartIndex();
+		int    maxRows      = searchCriteria.getMaxRows();
+
+		List<RangerPrincipal> ret = daoManager.getXXUser().lookupPrincipalByName(searchString, startIdx, maxRows);
+
+		return ret;
 	}
 
 	public boolean hasAccessToModule(String moduleName){

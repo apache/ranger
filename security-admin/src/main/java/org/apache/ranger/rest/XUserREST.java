@@ -63,6 +63,7 @@ import org.apache.ranger.db.RangerDaoManager;
 import org.apache.ranger.entity.XXService;
 import org.apache.ranger.entity.XXServiceDef;
 import org.apache.ranger.plugin.model.RangerPluginInfo;
+import org.apache.ranger.plugin.model.RangerPrincipal;
 import org.apache.ranger.plugin.model.RangerService;
 import org.apache.ranger.plugin.store.EmbeddedServiceDefsUtil;
 import org.apache.ranger.plugin.util.RangerRESTUtils;
@@ -166,7 +167,8 @@ public class XUserREST {
 
 	@Autowired
 	ServiceDBStore svcStore;
-	
+
+
 	static final Logger logger = LoggerFactory.getLogger(XUserMgr.class);
 
 	// Handle XGroup
@@ -504,6 +506,19 @@ public class XUserREST {
 		return ret;
 	}
 
+	@GET
+	@Path("/lookup/principals")
+	@Produces({ "application/json" })
+	@PreAuthorize("@rangerPreAuthSecurityHandler.isAPIAccessible(\"" +  RangerAPIList.GET_PRINCIPALS_LOOKUP + "\")")
+	public List<RangerPrincipal> getPrincipalsLookup(@Context HttpServletRequest request) {
+		SearchCriteria searchCriteria = searchUtil.extractCommonCriterias(request, xGroupService.sortFields);
+
+		searchUtil.extractString(request, searchCriteria, "name", null, null);
+
+		List<RangerPrincipal> ret = xUserMgr.getRangerPrincipals(searchCriteria);
+
+		return ret;
+	}
 	@GET
 	@Path("/users/count")
 	@Produces({ "application/json" })

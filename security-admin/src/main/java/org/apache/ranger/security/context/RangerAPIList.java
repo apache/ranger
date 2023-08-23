@@ -151,6 +151,7 @@ public class RangerAPIList {
 	public static final String SEARCH_X_USERS = "XUserREST.searchXUsers";
 	public static final String GET_USERS_LOOKUP = "XUserREST.getUsersLookup";
 	public static final String GET_GROUPS_LOOKUP = "XUserREST.getGroupsLookup";
+	public static final String GET_PRINCIPALS_LOOKUP = "XUserREST.getPrincipalsLookup";
 	public static final String COUNT_X_USERS = "XUserREST.countXUsers";
 	public static final String GET_X_GROUP_USER = "XUserREST.getXGroupUser";
 	public static final String CREATE_X_GROUP_USER = "XUserREST.createXGroupUser";
