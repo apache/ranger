@@ -178,6 +178,13 @@
 		</query>
 	</named-query>
 
+	<named-query name="VXXPrincipal.lookupByName">
+		<query>SELECT p.principalName, p.principalType FROM VXXPrincipal p
+			    WHERE p.principalName LIKE :principalName
+			      AND p.isVisible = 1
+			    ORDER BY p.principalName</query>
+	</named-query>
+
 	<named-query name="XXGroupUser.findUsersByGroupIds">
                <query>SELECT group.name, user.name FROM XXUser user, XXGroup group, XXGroupUser groupUser
                        WHERE user.id=groupUser.userId and group.id=groupUser.parentGroupId
