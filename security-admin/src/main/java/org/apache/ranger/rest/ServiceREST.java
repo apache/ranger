@@ -134,7 +134,6 @@ import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
-import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.RangerExportPolicyList;
 import org.apache.ranger.view.RangerPluginInfoList;
@@ -248,9 +247,6 @@ public class ServiceREST {
 
 	@Autowired
 	TagDBStore tagStore;
-
-	@Autowired
-	RangerTransactionService transactionService;
 
 	@Autowired
 	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;
