@@ -505,36 +505,40 @@ const KeyManager = (props) => {
         Header: "Action",
         accessor: "action",
         Cell: (rawValue) => {
-          return (
-            <div className="text-center">
-              <Button
-                className="btn btn-outline-dark btn-sm m-r-5"
-                size="sm"
-                title="Edit"
-                onClick={() => {
-                  editModal(rawValue.row.original.name);
-                }}
-                data-name="rolloverKey"
-                data-id={rawValue.row.original.name}
-                data-cy={rawValue.row.original.name}
-              >
-                <i className="fa-fw fa fa-edit"></i>
-              </Button>
-              <Button
-                variant="danger"
-                size="sm"
-                title="Delete"
-                onClick={() => {
-                  deleteModal(rawValue.row.original.name);
-                }}
-                data-name="deleteKey"
-                data-id={rawValue.row.original.name}
-                data-cy={rawValue.row.original.name}
-              >
-                <i className="fa-fw fa fa-trash"></i>
-              </Button>
-            </div>
-          );
+          if (isKeyAdmin()) {
+            return (
+              <div className="text-center">
+                <Button
+                  className="btn btn-outline-dark btn-sm m-r-5"
+                  size="sm"
+                  title="Edit"
+                  onClick={() => {
+                    editModal(rawValue.row.original.name);
+                  }}
+                  data-name="rolloverKey"
+                  data-id={rawValue.row.original.name}
+                  data-cy={rawValue.row.original.name}
+                >
+                  <i className="fa-fw fa fa-edit"></i>
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  title="Delete"
+                  onClick={() => {
+                    deleteModal(rawValue.row.original.name);
+                  }}
+                  data-name="deleteKey"
+                  data-id={rawValue.row.original.name}
+                  data-cy={rawValue.row.original.name}
+                >
+                  <i className="fa-fw fa fa-trash"></i>
+                </Button>
+              </div>
+            );
+          } else {
+            return <div className="text-center">--</div>;
+          }
         },
         width: 80
       }
@@ -600,7 +604,7 @@ const KeyManager = (props) => {
               defaultSelected={defaultSearchFilterParams}
             />
           </Col>
-          {isKeyAdmin && (
+          {isKeyAdmin() && (
             <Col sm={2} className="text-right">
               <Button
                 className={onchangeval !== null ? "" : "button-disabled"}
