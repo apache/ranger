@@ -34,6 +34,7 @@ import { MoreLess } from "Components/CommonComponents";
 import XATableLayout from "Components/XATableLayout";
 import { fetchApi } from "Utils/fetchAPI";
 import { Loader } from "../../components/CommonComponents";
+import { isAuditor, isKMSAuditor } from "../../utils/XAUtils";
 
 function SearchPolicyTable(props) {
   const [searchPoliciesData, setSearchPolicies] = useState([]);
@@ -95,16 +96,26 @@ function SearchPolicyTable(props) {
         Header: "Policy ID",
         accessor: "id",
         Cell: (rawValue) => {
-          return (
-            <Link
-              title="Edit"
-              to={`/service/${getServiceId(
-                rawValue.row.original.service
-              )}/policies/${rawValue.value}/edit`}
-            >
-              {rawValue.value}
-            </Link>
-          );
+          if (isAuditor() || isKMSAuditor()) {
+            return (
+              <div className="position-relative text-center">
+                {rawValue.value}
+              </div>
+            );
+          } else {
+            return (
+              <div className="position-relative text-center">
+                <Link
+                  title="Edit"
+                  to={`/service/${getServiceId(
+                    rawValue.row.original.service
+                  )}/policies/${rawValue.value}/edit`}
+                >
+                  {rawValue.value}
+                </Link>
+              </div>
+            );
+          }
         },
         width: 65
       },

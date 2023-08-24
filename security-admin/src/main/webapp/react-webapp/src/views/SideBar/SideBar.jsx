@@ -345,7 +345,7 @@ export const SideBar = () => {
 
           {hasAccessToTab("Security Zone") && (
             <React.Fragment>
-              {!isKeyAdmin() && (
+              {!isKMSRole && (
                 <li>
                   <NavLink
                     className={activeClass("Security Zone")}
@@ -366,22 +366,20 @@ export const SideBar = () => {
 
           {hasAccessToTab("Key Manager") && (
             <React.Fragment>
-              {(isKeyAdmin() || isKMSAuditor()) && (
-                <li>
-                  <NavLink
-                    className={activeClass("Key Manager")}
-                    to="/kms/keys/new/manage/service"
-                    onClick={() => {
-                      setActive(null);
-                      setDrawer(false);
-                      setAccountDrawer(false);
-                    }}
-                  >
-                    <i className="fa fa-fw fa-key"></i>
-                    <span>Key Manager</span>
-                  </NavLink>
-                </li>
-              )}
+              <li>
+                <NavLink
+                  className={activeClass("Key Manager")}
+                  to="/kms/keys/new/manage/service"
+                  onClick={() => {
+                    setActive(null);
+                    setDrawer(false);
+                    setAccountDrawer(false);
+                  }}
+                >
+                  <i className="fa fa-fw fa-key"></i>
+                  <span>Key Manager</span>
+                </NavLink>
+              </li>
             </React.Fragment>
           )}
 
