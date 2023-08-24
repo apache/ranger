@@ -94,7 +94,6 @@ import org.apache.ranger.service.RangerPolicyLabelsService;
 import org.apache.ranger.service.RangerPolicyService;
 import org.apache.ranger.service.RangerServiceDefService;
 import org.apache.ranger.service.RangerServiceService;
-import org.apache.ranger.service.RangerTransactionService;
 import org.apache.ranger.service.XUserService;
 import org.apache.ranger.view.*;
 import org.junit.Assert;
@@ -222,9 +221,6 @@ public class TestServiceREST {
 	
 	@Mock
     RangerPolicyAdmin policyAdmin;
-
-	@Mock
-	RangerTransactionService rangerTransactionService;
 
 	@Mock
 	RangerTransactionSynchronizationAdapter rangerTransactionSynchronizationAdapter;

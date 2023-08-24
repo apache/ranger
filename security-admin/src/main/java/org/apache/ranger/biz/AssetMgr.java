@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import javax.annotation.PostConstruct;
 import javax.naming.InvalidNameException;
 import javax.naming.ldap.LdapName;
 import javax.naming.ldap.Rdn;
@@ -38,6 +39,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.ranger.amazon.cloudwatch.CloudWatchAccessAuditsService;
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.apache.ranger.common.AppConstants;
 import org.apache.ranger.common.DateUtil;
 import org.apache.ranger.common.JSONUtil;
@@ -134,9 +136,22 @@ public class AssetMgr extends AssetMgrBase {
 	@Autowired
 	ServiceMgr serviceMgr;
 
+	boolean pluginActivityAuditCommitInline = false;
+
 	private static final Logger logger = LoggerFactory.getLogger(AssetMgr.class);
 
 	private static final String adminCapabilities = Long.toHexString(new RangerPluginCapability().getPluginCapabilities());
+
+	@PostConstruct
+	public void init() {
+		logger.info("==> AssetMgr.init()");
+
+		pluginActivityAuditCommitInline = RangerAdminConfig.getInstance().getBoolean("ranger.plugin.activity.audit.commit.inline", false);
+
+		logger.info("ranger.plugin.activity.audit.commit.inline={}", pluginActivityAuditCommitInline);
+
+		logger.info("<== AssetMgr.init()");
+	}
 
 	public File getXResourceFile(Long id, String fileType) {
 		VXResource xResource = xResourceService.readResource(id);
@@ -644,13 +659,13 @@ public class AssetMgr extends AssetMgrBase {
 
 	}
 
-	public XXPolicyExportAudit createPolicyAudit(
-			final XXPolicyExportAudit xXPolicyExportAudit) {
-
-		XXPolicyExportAudit ret = null;
+	public void createPolicyAudit(final XXPolicyExportAudit xXPolicyExportAudit) {
+		final Runnable commitWork;
 		if (xXPolicyExportAudit.getHttpRetCode() == HttpServletResponse.SC_NOT_MODIFIED) {
 			boolean logNotModified = PropertiesUtil.getBooleanProperty("ranger.log.SC_NOT_MODIFIED", false);
 			if (!logNotModified) {
+				commitWork = null;
+
 				logger.debug("Not logging HttpServletResponse."
 						+ "SC_NOT_MODIFIED, to enable, update "
 						+ ": ranger.log.SC_NOT_MODIFIED");
@@ -658,20 +673,29 @@ public class AssetMgr extends AssetMgrBase {
 				// Create PolicyExportAudit record after transaction is completed. If it is created in-line here
 				// then the TransactionManager will roll-back the changes because the HTTP return code is
 				// HttpServletResponse.SC_NOT_MODIFIED
-				Runnable commitWork = new Runnable() {
+				commitWork = new Runnable() {
 					@Override
 					public void run() {
 						rangerDaoManager.getXXPolicyExportAudit().create(xXPolicyExportAudit);
-
 					}
 				};
-				transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
 			}
 		} else {
-			ret = rangerDaoManager.getXXPolicyExportAudit().create(xXPolicyExportAudit);
+			commitWork = new Runnable() {
+				@Override
+				public void run() {
+					rangerDaoManager.getXXPolicyExportAudit().create(xXPolicyExportAudit);
+				}
+			};
 		}
 
-		return ret;
+		if (commitWork != null) {
+			if (pluginActivityAuditCommitInline) {
+				transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
+			} else {
+				transactionSynchronizationAdapter.executeAsyncOnTransactionComplete(commitWork);
+			}
+		}
 	}
 
 	public void createPluginInfo(String serviceName, String pluginId, HttpServletRequest request, int entityType, Long downloadedVersion, Long lastKnownVersion, long lastActivationTime, int httpCode, String clusterName, String pluginCapabilities) {
@@ -787,12 +811,19 @@ public class AssetMgr extends AssetMgrBase {
 			}
 		} else {
 			isTagVersionResetNeeded = false;
-			commitWork = null;
-			doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
+
+			commitWork = new Runnable() {
+				@Override
+				public void run() {
+					doCreateOrUpdateXXPluginInfo(pluginInfo, entityType, isTagVersionResetNeeded, clusterName);
+				}
+			};
 		}
 
-		if (commitWork != null) {
+		if (pluginActivityAuditCommitInline) {
 			transactionSynchronizationAdapter.executeOnTransactionCompletion(commitWork);
+		} else {
+			transactionSynchronizationAdapter.executeAsyncOnTransactionComplete(commitWork);
 		}
 
 		if (logger.isDebugEnabled()) {
