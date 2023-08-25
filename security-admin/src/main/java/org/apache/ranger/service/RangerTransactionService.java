@@ -19,6 +19,7 @@
 
 package org.apache.ranger.service;
 
+import org.apache.ranger.authorization.hadoop.config.RangerAdminConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,22 +36,41 @@ import javax.annotation.PreDestroy;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicLong;
 
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 @Service
 public class RangerTransactionService {
+    private static final String PROP_THREADPOOL_SIZE          = "ranger.admin.transaction.service.threadpool.size";
+    private static final String PROP_SUMMARY_LOG_INTERVAL_SEC = "ranger.admin.transaction.service.summary.log.interval.sec";
+
     @Autowired
     @Qualifier(value = "transactionManager")
     PlatformTransactionManager txManager;
 
     private static final Logger LOG = LoggerFactory.getLogger(RangerTransactionService.class);
 
-    private ScheduledExecutorService scheduler = null;
+    private ScheduledExecutorService scheduler            = null;
+    private AtomicLong               scheduledTaskCount   = new AtomicLong(0);
+    private AtomicLong               executedTaskCount    = new AtomicLong(0);
+    private AtomicLong               failedTaskCount      = new AtomicLong(0);
+    private long                     summaryLogIntervalMs = 5 * 60 * 1000;
+    private long                     nextLogSummaryTime   = System.currentTimeMillis() + summaryLogIntervalMs;
 
     @PostConstruct
     public void init() {
-        scheduler = Executors.newScheduledThreadPool(1);
+        RangerAdminConfig config = RangerAdminConfig.getInstance();
+
+        int  numOfThreads          = config.getInt(PROP_THREADPOOL_SIZE, 1);
+        long summaryLogIntervalSec = config.getInt(PROP_SUMMARY_LOG_INTERVAL_SEC, 5 * 60);
+
+        scheduler            = Executors.newScheduledThreadPool(numOfThreads);
+        summaryLogIntervalMs = summaryLogIntervalSec * 1000;
+        nextLogSummaryTime   = System.currentTimeMillis() + summaryLogIntervalSec;
+
+        LOG.info("{}={}", PROP_THREADPOOL_SIZE, numOfThreads);
+        LOG.info("{}={}", PROP_SUMMARY_LOG_INTERVAL_SEC, summaryLogIntervalSec);
     }
 
     @PreDestroy
@@ -59,6 +79,8 @@ public class RangerTransactionService {
             LOG.info("attempt to shutdown RangerTransactionService");
             scheduler.shutdown();
             scheduler.awaitTermination(5, TimeUnit.SECONDS);
+
+            logSummary();
         }
         catch (InterruptedException e) {
             LOG.error("RangerTransactionService tasks interrupted");
@@ -90,16 +112,47 @@ public class RangerTransactionService {
                                 }
                             });
                         } catch (Exception e) {
+                            failedTaskCount.getAndIncrement();
+
                             LOG.error("Failed to commit TransactionService transaction", e);
                             LOG.error("Ignoring...");
+                        } finally {
+                            executedTaskCount.getAndIncrement();
+                            logSummaryIfNeeded();
                         }
                     }
                 }
             }, delayInMillis, MILLISECONDS);
+
+            scheduledTaskCount.getAndIncrement();
+
+            logSummaryIfNeeded();
         } catch (Exception e) {
             LOG.error("Failed to schedule TransactionService transaction:", e);
             LOG.error("Ignroing...");
         }
     }
 
+    private void logSummaryIfNeeded() {
+        long now = System.currentTimeMillis();
+
+        if (summaryLogIntervalMs > 0 && now > nextLogSummaryTime) {
+            synchronized (this) {
+                if (now > nextLogSummaryTime) {
+                    nextLogSummaryTime = now + summaryLogIntervalMs;
+
+                    logSummary();
+                }
+            }
+        }
+    }
+
+    private void logSummary() {
+        long scheduled = scheduledTaskCount.get();
+        long executed  = executedTaskCount.get();
+        long failed    = failedTaskCount.get();
+        long pending   = scheduled - executed;
+
+        LOG.info("RangerTransactionService: tasks(scheduled={}, executed={}, failed={}, pending={})", scheduled, executed, failed, pending);
+    }
 }
