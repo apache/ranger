@@ -460,6 +460,11 @@
 		<query>select obj from XXPolicy obj where obj.service = :serviceId and obj.resourceSignature = :resSignature</query>
 	</named-query>
 
+	<!-- XXPolicyExportAudit -->
+	<named-query name="XXPolicyExportAudit.deleteOlderThan">
+		<query>DELETE FROM XXPolicyExportAudit obj WHERE obj.createTime &lt; :olderThan</query>
+	</named-query>
+
 	<!-- XXServiceDef -->
 	<named-query name="XXServiceDef.findByName">
 		<query>select obj from XXServiceDef obj where obj.name = :name</query>
