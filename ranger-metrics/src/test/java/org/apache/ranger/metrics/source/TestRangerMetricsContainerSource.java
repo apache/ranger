@@ -21,7 +21,6 @@ package org.apache.ranger.metrics.source;
 import org.apache.hadoop.metrics2.MetricsSystem;
 import org.apache.hadoop.metrics2.lib.DefaultMetricsSystem;
 import org.apache.ranger.metrics.RangerMetricsSystemWrapper;
-import org.apache.ranger.server.tomcat.EmbeddedServer;
 import org.apache.ranger.server.tomcat.EmbeddedServerMetricsCollector;
 import org.junit.*;
 
@@ -34,7 +33,6 @@ public class TestRangerMetricsContainerSource {
 
     private static final String CONTAINER_METRIC_SOURCE_NAME = "RangerContainer";
     private static RangerMetricsSystemWrapper rangerMetricsSystemWrapper;
-    private static EmbeddedServer tomcatServer;
 
     private EmbeddedServerMetricsCollector embeddedServerMetricsCollector;
 
@@ -52,8 +50,7 @@ public class TestRangerMetricsContainerSource {
     }
 
     @AfterClass
-    public static void tearDown()
-    {
+    public static void tearDownAfterClass() {
         metricsSystem.shutdown();
     }
 
